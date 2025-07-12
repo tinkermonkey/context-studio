@@ -1,4 +1,4 @@
-# Phase 1: Basic Term Management
+# Phase 1: Basic Management APIs
 
 ## 1. Overview
 
@@ -50,6 +50,14 @@ The system manages four interconnected entity types:
 - **Constraints:** Must handle cascade deletion of associated domains, terms, and relationships
 - **Response:** Success confirmation
 
+#### 3.1.5 Find Layer
+
+- **Endpoint:** `POST /api/layers/find`
+- **Purpose:**  Search for layers via vector search
+- **Optional Fields:** `title`, `definition`, `created_at`, `minimum_score` (default value = 0.7)
+- **Behavior:** Perform a vector search for layers which match the provided `title` or `definition`, and optionally filter for only record with a `created_at` data after the provided date
+- **Response:** List of matching layers with a score greater than the minimum score provided
+
 ### 3.2 Domain Management APIs
 
 #### 3.2.1 Create Domain
@@ -66,7 +74,7 @@ The system manages four interconnected entity types:
 - **Endpoint:** `GET /api/domains/{id}` (single), `GET /api/domains` (list)
 - **Purpose:** Retrieve domain information
 - **Query Parameters:** For list - `layer_id` filter, pagination, sorting
-- **Response:** Domain object(s) with associated layer info and term count, including title, definition, vector embeddings, and creation date
+- **Response:** Domain object(s) including title, definition, vector embeddings, and creation date
 
 #### 3.2.3 Update Domain
 
@@ -83,6 +91,14 @@ The system manages four interconnected entity types:
 - **Purpose:** Remove domain and cascade delete dependencies
 - **Constraints:** Must handle cascade deletion of associated terms and relationships
 - **Response:** Success confirmation
+
+#### 3.2.5 Find Domain
+
+- **Endpoint:** `POST /api/domains/find`
+- **Purpose:**  Search for domains via vector search
+- **Optional Fields:** `title`, `definition`, `layer_id`, `created_at`, `minimum_score` (default value = 0.7)
+- **Behavior:** Perform a vector search for domains which match the provided `title` or `definition`, and optionally filter for only record with a `created_at` data after the provided date, or records with the provided `layer_id`
+- **Response:** List of matching domains with a score greater than the minimum score provided
 
 ### 3.3 Term Management APIs
 
@@ -101,7 +117,7 @@ The system manages four interconnected entity types:
 - **Endpoint:** `GET /api/terms/{id}` (single), `GET /api/terms` (list)
 - **Purpose:** Retrieve term information
 - **Query Parameters:** For list - `domain_id` filter, `layer_id` filter, `parent_term_id` filter, pagination, sorting
-- **Response:** Term object(s) with hierarchy information (parent/children), including title, definition, vector embeddings, creation date, version, and last modified date
+- **Response:** Term object(s) including title, definition, vector embeddings, creation date, version, and last modified date
 
 #### 3.3.3 Update Term
 
@@ -118,6 +134,14 @@ The system manages four interconnected entity types:
 - **Purpose:** Remove term and handle hierarchy/relationship cleanup
 - **Constraints:** Must handle orphaned child terms and remove associated relationships
 - **Response:** Success confirmation
+
+#### 3.3.5 Find Term
+
+- **Endpoint:** `POST /api/term/find`
+- **Purpose:**  Search for terms via vector search
+- **Optional Fields:** `title`, `definition`, `layer_id`, `domain_id`, `created_at`, `minimum_score` (default value = 0.7)
+- **Behavior:** Perform a vector search for terms which match the provided `title` or `definition`, and optionally filter for only record with a `created_at` data after the provided date, or records with the provided `layer_id`, or records with the provided `domain_id`
+- **Response:** List of matching terms with a score greater than the minimum score provided
 
 ### 3.4 Term Relationship Management APIs
 

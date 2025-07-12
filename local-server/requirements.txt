@@ -1,0 +1,8 @@
+fastapi
+uvicorn
+pydantic
+sqlalchemy
+sentence-transformers
+python-dotenv
+sqlite-vec
+pytest
