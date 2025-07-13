@@ -1,6 +1,8 @@
 import threading
 import datetime
 from fastapi import APIRouter, HTTPException, Query, Depends
+from fastapi.responses import JSONResponse
+from fastapi.exception_handlers import RequestValidationError
 from pydantic import BaseModel, Field
 from typing import List, Optional
 from uuid import UUID, uuid4
@@ -12,6 +14,7 @@ from embeddings.generate_embeddings import generate_embedding
 from utils.vector import cosine_similarity, decode_emb
 from utils.logger import get_logger
 from utils.watchdog import start_watchdog
+from api.api_errors import validation_error_response, conflict_error_response, bad_request_error_response
 
 logger = get_logger("layers_api")
 router = APIRouter()
@@ -19,8 +22,8 @@ router = APIRouter()
 
 # Pydantic models for Layer
 class LayerBase(BaseModel):
-    title: str = Field(...)
-    definition: Optional[str] = None
+    title: str = Field(..., min_length=2)
+    definition: Optional[str] = Field(None, min_length=1)
     primary_predicate: Optional[str] = None
 
 
@@ -71,7 +74,28 @@ def to_layer_out(layer):
     )
 
 
-@router.post("/find", response_model=List[FindLayerResult])
+@router.post(
+    "/find",
+    response_model=List[FindLayerResult],
+    responses={
+        405: {"description": "Method Not Allowed"},
+        400: {"description": "Bad Request"},
+        409: {"description": "Conflict"},
+        500: {"description": "Internal Server Error"},
+    },
+)
+@router.put("/find", response_model=None, responses={405: {"description": "Method Not Allowed"}})
+@router.get("/find", response_model=None, responses={405: {"description": "Method Not Allowed"}})
+@router.delete("/find", response_model=None, responses={405: {"description": "Method Not Allowed"}})
+def find_layer_unsupported_method_delete():
+    """Return 405 for unsupported DELETE method on /find endpoint."""
+    raise HTTPException(status_code=405, detail="Method Not Allowed")
+def find_layer_unsupported_method_get():
+    """Return 405 for unsupported GET method on /find endpoint."""
+    raise HTTPException(status_code=405, detail="Method Not Allowed")
+def find_layer_unsupported_method():
+    """Return 405 for unsupported PUT method on /find endpoint."""
+    raise HTTPException(status_code=405, detail="Method Not Allowed")
 def find_layer(req: FindLayerRequest, db: Session = Depends(get_db)):
     # Validate created_at if provided
     if req.created_at is not None:
@@ -161,13 +185,24 @@ def find_layer(req: FindLayerRequest, db: Session = Depends(get_db)):
     return []
 
 
-@router.post("/", response_model=LayerOut, status_code=201)
+@router.post(
+    "/",
+    response_model=LayerOut,
+    status_code=201,
+    responses={
+        201: {"description": "Layer created."},
+        400: {"description": "Bad Request"},
+        409: {"description": "Conflict"},
+        422: {"description": "Validation Error"},
+    },
+)
 def create_layer(layer: LayerCreate, db: Session = Depends(get_db)):
-    # Uniqueness check
+    if not layer.title or not layer.title.strip():
+        return validation_error_response("Layer title must not be empty.", loc=["body", "title"])
     if db.query(models.Layer).filter_by(title=layer.title).first():
-        raise HTTPException(status_code=400, detail="Layer title must be unique.")
+        return conflict_error_response("Layer title must be unique.")
     title_emb = generate_embedding(layer.title)
-    def_emb = generate_embedding(layer.definition) if layer.definition else None
+    def_emb = generate_embedding(layer.definition if layer.definition is not None else "")
     db_layer = models.Layer(
         id=str(uuid4()),
         title=layer.title,
@@ -180,13 +215,11 @@ def create_layer(layer: LayerCreate, db: Session = Depends(get_db)):
     db.add(db_layer)
     db.commit()
     db.refresh(db_layer)
-
-    # Insert the sqlite vector index with the new embeddings
     sql = text(
         """
         INSERT INTO layers_vec (id, title_embedding, definition_embedding)
         VALUES (:id, :title_embedding, :definition_embedding)
-    """
+        """
     )
     db.execute(
         sql,
@@ -197,12 +230,11 @@ def create_layer(layer: LayerCreate, db: Session = Depends(get_db)):
         },
     )
     db.commit()
-
-    db.close()  # Ensure connection is closed after commit for SQLite visibility
+    db.close()
     return to_layer_out(db_layer)
 
 
-@router.get("/{id}", response_model=LayerOut)
+@router.get("/{id}", response_model=LayerOut, responses={404: {"description": "Layer not found"}})
 def get_layer(id: str, db: Session = Depends(get_db)):
     layer = db.query(models.Layer).filter_by(id=id).first()
     if not layer:
@@ -212,11 +244,14 @@ def get_layer(id: str, db: Session = Depends(get_db)):
 
 @router.get("/", response_model=List[LayerOut])
 def list_layers(
-    skip: int = 0,
-    limit: int = Query(50, le=100),
-    sort: Optional[str] = None,
+    skip: int = Query(0, ge=0),
+    limit: int = Query(50, ge=1, le=100),
+    sort: Optional[str] = Query(None, pattern="^(title|created_at)$"),
     db: Session = Depends(get_db),
 ):
+    # Validation now handled by Query pattern
+    if sort == "":
+        return validation_error_response("Sort parameter cannot be empty.", loc=["query", "sort"])
     q = db.query(models.Layer)
     if sort == "title":
         q = q.order_by(models.Layer.title)
@@ -229,32 +264,33 @@ def list_layers(
     return result
 
 
-@router.put("/{id}", response_model=LayerOut)
+@router.put("/{id}", response_model=LayerOut, responses={404: {"description": "Layer not found"}})
 def update_layer(id: str, layer: LayerUpdate, db: Session = Depends(get_db)):
     db_layer = db.query(models.Layer).filter_by(id=id).first()
     if not db_layer:
         raise HTTPException(status_code=404, detail="Layer not found.")
-    if layer.title and layer.title != db_layer.title:
-        if db.query(models.Layer).filter(models.Layer.title == layer.title, models.Layer.id != str(id)).first():
-            raise HTTPException(status_code=400, detail="Layer title must be unique.")
-        db_layer.title = layer.title
-        db_layer.title_embedding = generate_embedding(layer.title)
+    if layer.title is not None:
+        if not layer.title.strip():
+            return validation_error_response("Layer title must not be empty.", loc=["body", "title"])
+        if layer.title != db_layer.title:
+            if db.query(models.Layer).filter(models.Layer.title == layer.title, models.Layer.id != str(id)).first():
+                return conflict_error_response("Layer title must be unique.")
+            db_layer.title = layer.title
+            db_layer.title_embedding = generate_embedding(layer.title)
     if layer.definition is not None:
         db_layer.definition = layer.definition
-        db_layer.definition_embedding = generate_embedding(layer.definition) if layer.definition else None
+        db_layer.definition_embedding = generate_embedding(layer.definition if layer.definition is not None else "")
     if layer.primary_predicate is not None:
         db_layer.primary_predicate = layer.primary_predicate
     db.commit()
     db.refresh(db_layer)
-
-    # Update the sqlite vector index with the new embeddings
     sql = text(
         """
         UPDATE layers_vec
         SET title_embedding = :title_embedding,
             definition_embedding = :definition_embedding
         WHERE id = :id
-    """
+        """
     )
     db.execute(
         sql,
@@ -265,12 +301,11 @@ def update_layer(id: str, layer: LayerUpdate, db: Session = Depends(get_db)):
         },
     )
     db.commit()
-
-    db.close()  # Ensure connection is closed after commit for SQLite visibility
+    db.close()
     return to_layer_out(db_layer)
 
 
-@router.delete("/{id}", status_code=200)
+@router.delete("/{id}", status_code=200, responses={404: {"description": "Layer not found"}})
 def delete_layer(id: str, db: Session = Depends(get_db)):
     db_layer = db.query(models.Layer).filter_by(id=id).first()
     if not db_layer:

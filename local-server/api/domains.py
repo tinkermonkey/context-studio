@@ -12,6 +12,7 @@ from embeddings.generate_embeddings import generate_embedding
 from utils.logger import get_logger
 from utils.watchdog import start_watchdog
 from utils.vector import decode_emb, cosine_similarity
+from api.api_errors import validation_error_response, conflict_error_response, bad_request_error_response
 
 logger = get_logger("domains_api")
 router = APIRouter()
@@ -19,8 +20,8 @@ router = APIRouter()
 
 # Pydantic models for Domain
 class DomainBase(BaseModel):
-    title: str = Field(...)
-    definition: str = Field(...)
+    title: str = Field(..., min_length=2)
+    definition: str = Field(..., min_length=1)
     layer_id: UUID
 
 
@@ -57,7 +58,28 @@ class FindDomainResult(DomainOut):
     distance: float
 
 
-@router.post("/find", response_model=List[FindDomainResult])
+@router.post(
+    "/find",
+    response_model=List[FindDomainResult],
+    responses={
+        405: {"description": "Method Not Allowed"},
+        400: {"description": "Bad Request"},
+        409: {"description": "Conflict"},
+        500: {"description": "Internal Server Error"},
+    },
+)
+@router.put("/find", response_model=None, responses={405: {"description": "Method Not Allowed"}})
+@router.get("/find", response_model=None, responses={405: {"description": "Method Not Allowed"}})
+@router.delete("/find", response_model=None, responses={405: {"description": "Method Not Allowed"}})
+def find_domain_unsupported_method_delete():
+    """Return 405 for unsupported DELETE method on /find endpoint."""
+    raise HTTPException(status_code=405, detail="Method Not Allowed")
+def find_domain_unsupported_method_get():
+    """Return 405 for unsupported GET method on /find endpoint."""
+    raise HTTPException(status_code=405, detail="Method Not Allowed")
+def find_domain_unsupported_method():
+    """Return 405 for unsupported PUT method on /find endpoint."""
+    raise HTTPException(status_code=405, detail="Method Not Allowed")
 def find_domain(req: FindDomainRequest, db: Session = Depends(get_db)):
     # Validate created_at if provided
     if req.created_at is not None:
@@ -163,13 +185,15 @@ def to_domain_out(domain):
 
 @router.post("/", response_model=DomainOut, status_code=201)
 def create_domain(domain: DomainCreate, db: Session = Depends(get_db)):
+    if not domain.title or not domain.title.strip():
+        return validation_error_response("Domain title must not be empty.", loc=["body", "title"])
     if db.query(models.Domain).filter_by(title=domain.title).first():
-        raise HTTPException(status_code=400, detail="Domain title must be unique.")
-    # Convert layer_id to string for DB comparison (UUID vs str issue)
+        return conflict_error_response("Domain title must be unique.")
     if not db.query(models.Layer).filter_by(id=str(domain.layer_id)).first():
-        raise HTTPException(status_code=400, detail="Layer does not exist.")
+        return bad_request_error_response("Layer does not exist.")
     title_emb = generate_embedding(domain.title)
-    def_emb = generate_embedding(domain.definition)
+    # Always generate a valid embedding for definition (empty string if None)
+    def_emb = generate_embedding(domain.definition if domain.definition is not None else "")
     db_domain = models.Domain(
         id=str(uuid4()),
         title=domain.title,
@@ -204,7 +228,7 @@ def create_domain(domain: DomainCreate, db: Session = Depends(get_db)):
     return to_domain_out(db_domain)
 
 
-@router.get("/{id}", response_model=DomainOut)
+@router.get("/{id}", response_model=DomainOut, responses={404: {"description": "Domain not found"}})
 def get_domain(id: str, db: Session = Depends(get_db)):
     domain = db.query(models.Domain).filter_by(id=id).first()
     if not domain:
@@ -217,7 +241,7 @@ def list_domains(
     layer_id: str = None,
     skip: int = 0,
     limit: int = Query(50, le=100),
-    sort: Optional[str] = None,
+    sort: Optional[str] = Query(None, pattern="^(title|created_at)?$"),
     db: Session = Depends(get_db),
 ):
     q = db.query(models.Domain)
@@ -234,22 +258,25 @@ def list_domains(
     return result
 
 
-@router.put("/{id}", response_model=DomainOut)
+@router.put("/{id}", response_model=DomainOut, responses={404: {"description": "Domain not found"}})
 def update_domain(id: str, domain: DomainUpdate, db: Session = Depends(get_db)):
     db_domain = db.query(models.Domain).filter_by(id=id).first()
     if not db_domain:
         raise HTTPException(status_code=404, detail="Domain not found.")
-    if domain.title and domain.title != db_domain.title:
-        if db.query(models.Domain).filter(models.Domain.title == domain.title, models.Domain.id != str(id)).first():
-            raise HTTPException(status_code=400, detail="Domain title must be unique.")
-        db_domain.title = domain.title
-        db_domain.title_embedding = generate_embedding(domain.title)
+    if domain.title is not None:
+        if not domain.title.strip():
+            return validation_error_response("Domain title must not be empty.", loc=["body", "title"])
+        if domain.title != db_domain.title:
+            if db.query(models.Domain).filter(models.Domain.title == domain.title, models.Domain.id != str(id)).first():
+                return conflict_error_response("Domain title must be unique.")
+            db_domain.title = domain.title
+            db_domain.title_embedding = generate_embedding(domain.title)
     if domain.definition is not None:
         db_domain.definition = domain.definition
-        db_domain.definition_embedding = generate_embedding(domain.definition)
-    if domain.layer_id and str(domain.layer_id) != str(db_domain.layer_id):
+        db_domain.definition_embedding = generate_embedding(domain.definition if domain.definition is not None else "")
+    if domain.layer_id is not None and str(domain.layer_id) != str(db_domain.layer_id):
         if not db.query(models.Layer).filter_by(id=str(domain.layer_id)).first():
-            raise HTTPException(status_code=400, detail="Layer does not exist.")
+            return bad_request_error_response("Layer does not exist.")
         db_domain.layer_id = str(domain.layer_id)
     db.commit()
     db.refresh(db_domain)
@@ -277,7 +304,7 @@ def update_domain(id: str, domain: DomainUpdate, db: Session = Depends(get_db)):
     return to_domain_out(db_domain)
 
 
-@router.delete("/{id}", status_code=200)
+@router.delete("/{id}", status_code=200, responses={404: {"description": "Domain not found"}})
 def delete_domain(id: str, db: Session = Depends(get_db)):
     db_domain = db.query(models.Domain).filter_by(id=id).first()
     if not db_domain:

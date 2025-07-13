@@ -12,6 +12,11 @@ def get_engine(database_url=None, use_static_pool=False, connect_args={"check_sa
     logger.info("SQLite Version: %s", sqlite3.sqlite_version)
     logger.info("SQLite File: %s", sqlite3.__file__)
 
+    if connect_args is None:
+        connect_args = {"check_same_thread": False}
+    else:
+        logger.info("Using custom connect_args: %s", connect_args)
+
     url = database_url or os.getenv('DATABASE_URL', 'sqlite:///./local.db')
     if use_static_pool and url.startswith("sqlite:///:memory:"):
         from sqlalchemy.pool import StaticPool

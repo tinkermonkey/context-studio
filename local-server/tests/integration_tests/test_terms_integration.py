@@ -92,8 +92,8 @@ def test_create_term_duplicate_title_within_domain(client):
     domain_id = create_domain(client, layer_id)
     t1 = create_term(client, domain_id, layer_id, title="DupTerm")
     resp = client.post("/api/terms/", json={"title": "DupTerm", "definition": "D", "domain_id": domain_id, "layer_id": layer_id})
-    assert resp.status_code == 400
-    assert "unique" in resp.json()["detail"].lower()
+    assert resp.status_code == 409
+    assert "unique" in resp.json()["detail"][0]["msg"].lower()
 
 def test_create_term_with_parent_and_circular_reference(client):
     layer_id = create_layer(client)
@@ -106,7 +106,7 @@ def test_create_term_with_parent_and_circular_reference(client):
     # Circular reference
     resp = client.put(f"/api/terms/{parent['id']}", json={"parent_term_id": child["id"]})
     assert resp.status_code == 400
-    assert "circular" in resp.json()["detail"].lower()
+    assert "circular" in resp.json()["detail"][0]["msg"].lower()
 
 def test_update_term(client):
     layer_id = create_layer(client)
@@ -125,8 +125,8 @@ def test_update_term_duplicate_title(client):
     t1 = create_term(client, domain_id, layer_id, title="T1")
     t2 = create_term(client, domain_id, layer_id, title="T2")
     resp = client.put(f"/api/terms/{t2['id']}", json={"title": "T1"})
-    assert resp.status_code == 400
-    assert "unique" in resp.json()["detail"].lower()
+    assert resp.status_code == 409
+    assert "unique" in resp.json()["detail"][0]["msg"].lower()
 
 def test_update_term_not_found(client):
     layer_id = create_layer(client)

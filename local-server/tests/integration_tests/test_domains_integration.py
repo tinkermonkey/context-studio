@@ -55,8 +55,8 @@ def create_domain(client, layer_id, title=None, definition=None):
     return resp.json()["id"]
 
 
-def test_create_and_get_domain(client, create_layer):
-    layer_id = create_layer()
+def test_create_and_get_domain(client):
+    layer_id = create_layer(client)
     domain_id = create_domain(client, layer_id, title="Physics", definition="The study of matter and energy.")
     get_resp = client.get(f"/api/domains/{domain_id}")
     assert get_resp.status_code == 200
@@ -66,8 +66,8 @@ def test_create_and_get_domain(client, create_layer):
     assert get_data["definition"] == "The study of matter and energy."
 
 
-def test_list_domains(client, create_layer):
-    layer_id = create_layer("Layer2")
+def test_list_domains(client):
+    layer_id = create_layer(client)
     # Create two domains
     for i in range(2):
         client.post("/api/domains/", json={"title": f"Domain {i}", "definition": f"Def {i}", "layer_id": layer_id})
@@ -77,8 +77,8 @@ def test_list_domains(client, create_layer):
     assert len(data) >= 2
 
 
-def test_update_domain(client, create_layer):
-    layer_id = create_layer()
+def test_update_domain(client):
+    layer_id = create_layer(client)
     domain_id = create_domain(client, layer_id, title="Chemistry")
     update = {"title": "Advanced Chemistry", "definition": "Advanced study."}
     put_resp = client.put(f"/api/domains/{domain_id}", json=update)
@@ -86,8 +86,8 @@ def test_update_domain(client, create_layer):
     assert put_resp.json()["title"] == "Advanced Chemistry"
 
 
-def test_delete_domain(client, create_layer):
-    layer_id = create_layer()
+def test_delete_domain(client):
+    layer_id = create_layer(client)
     domain_id = create_domain(client, layer_id, title="Biology")
     del_resp = client.delete(f"/api/domains/{domain_id}")
     assert del_resp.status_code == 200
@@ -98,17 +98,18 @@ def test_delete_domain(client, create_layer):
 
 
 def test_find_domain(client):
-    l1 = create_domain(client, title="Alpha Domain", definition="Physics")
-    l2 = create_domain(client, title="Beta Domain", definition="Chemistry")
+    layer_id = create_layer(client)
+    l1 = create_domain(client, layer_id, title="Alpha Domain", definition="Physics")
+    l2 = create_domain(client, layer_id, title="Beta Domain", definition="Chemistry")
 
     # Search by title
-    resp = client.post("/api/layers/find", json={"title": "Alpha"})
+    resp = client.get(f"/api/domains/?title=Alpha")
     assert resp.status_code == 200
     data = resp.json()
     assert any("Alpha" in d["title"] for d in data)
 
     # Search by definition
-    resp2 = client.post("/api/layers/find", json={"definition": "Chemistry"})
+    resp2 = client.post("/api/domains/find", json={"definition": "Chemistry"})
     assert resp2.status_code == 200
     data2 = resp2.json()
     assert any("Chemistry" in d["definition"] for d in data2)

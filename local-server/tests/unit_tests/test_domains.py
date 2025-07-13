@@ -19,8 +19,8 @@ def test_app():
     try:
         engine = get_engine(db_url)
         session_local = get_session_local(engine)
-        init_db(engine=engine, skip_vec=True)
-        app = create_app(engine=engine, session_local=session_local, skip_vec=True)
+        init_db(engine=engine, skip_vec=False)
+        app = create_app(engine=engine, session_local=session_local, skip_vec=False)
         yield app
     finally:
         os.unlink(tf.name)
@@ -84,10 +84,10 @@ def test_domain_duplicate_title(client):
         "definition": "Another domain.",
         "layer_id": layer_id
     })
-    if resp2.status_code != 400:
+    if resp2.status_code != 409:
         print(f"Duplicate domain test failed: {resp2.status_code} {resp2.text}")
-    assert resp2.status_code == 400
-    assert "unique" in resp2.json()["detail"].lower()
+    assert resp2.status_code == 409
+    assert "unique" in resp2.json()["detail"][0]["msg"].lower()
 
 def test_domain_invalid_layer(client):
     resp = client.post("/api/domains/", json={
@@ -96,7 +96,7 @@ def test_domain_invalid_layer(client):
         "layer_id": str(uuid.uuid4())
     })
     assert resp.status_code == 400
-    assert "layer does not exist" in resp.json()["detail"].lower()
+    assert "layer does not exist" in resp.json()["detail"][0]["msg"].lower()
 
 def test_list_domains(client):
     layer_id = create_layer(client, str(uuid.uuid4()))

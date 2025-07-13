@@ -55,8 +55,8 @@ def test_create_layer(client):
 def test_create_layer_duplicate_title(client):
     layer = create_layer(client, title="UniqueLayer")
     resp = client.post("/api/layers/", json={"title": "UniqueLayer", "definition": "Dup test."})
-    assert resp.status_code == 400
-    assert "unique" in resp.json()["detail"].lower()
+    assert resp.status_code == 409
+    assert "unique" in resp.json()["detail"][0]["msg"].lower()
 
 def test_get_layer(client):
     layer = create_layer(client)
@@ -99,8 +99,8 @@ def test_update_layer_duplicate_title(client):
     l2 = create_layer(client, title="LayerDup2")
     update = {"title": "LayerDup1"}
     resp = client.put(f"/api/layers/{l2['id']}", json=update)
-    assert resp.status_code == 400
-    assert "unique" in resp.json()["detail"].lower()
+    assert resp.status_code == 409
+    assert "unique" in resp.json()["detail"][0]["msg"].lower()
 
 def test_update_layer_not_found(client):
     resp = client.put("/api/layers/nonexistent-id", json={"title": "X"})

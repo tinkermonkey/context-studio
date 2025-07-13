@@ -6,6 +6,7 @@ from uuid import UUID, uuid4
 from sqlalchemy.orm import Session
 from database import models
 from database.utils import get_db
+from api.api_errors import validation_error_response, conflict_error_response, bad_request_error_response
 
 router = APIRouter()
 
@@ -43,9 +44,9 @@ def create_relationship(rel: TermRelationshipCreate, db: Session = Depends(get_d
     source_term_id = str(rel.source_term_id)
     target_term_id = str(rel.target_term_id)
     if not db.query(models.Term).filter_by(id=str(source_term_id)).first() or not db.query(models.Term).filter_by(id=str(target_term_id)).first():
-        raise HTTPException(status_code=400, detail="Both term IDs must exist.")
+        return bad_request_error_response("Both term IDs must exist.")
     if db.query(models.TermRelationship).filter_by(source_term_id=str(source_term_id), target_term_id=str(target_term_id), predicate=rel.predicate).first():
-        raise HTTPException(status_code=400, detail="Duplicate relationship.")
+        return conflict_error_response("Duplicate relationship.")
     db_rel = models.TermRelationship(
         id=str(uuid4()),
         source_term_id=str(source_term_id),

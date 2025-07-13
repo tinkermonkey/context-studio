@@ -1,9 +1,9 @@
+import os
 from fastapi import FastAPI
 from contextlib import asynccontextmanager
-from database.utils import init_db, get_db
+from database.utils import init_db, get_db, get_engine, get_session_local
 from api import layers, domains, terms, term_relationships
 from utils.logger import get_logger
-import os
 from utils.event_processor import EventProcessor
 
 logger = get_logger(__name__)
@@ -61,7 +61,9 @@ def create_app(engine=None, session_local=None, skip_vec=False):
     return app
 
 # Default app for production
-app = create_app()
+engine = get_engine()
+SessionLocal = get_session_local(engine)
+app = create_app(engine=engine, session_local=SessionLocal)
 
 if __name__ == "__main__":
     import uvicorn

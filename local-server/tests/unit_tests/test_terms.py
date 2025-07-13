@@ -17,8 +17,8 @@ def test_app():
     try:
         engine = get_engine(db_url)
         session_local = get_session_local(engine)
-        init_db(engine=engine, skip_vec=True)
-        app = create_app(engine=engine, session_local=session_local, skip_vec=True)
+        init_db(engine=engine, skip_vec=False)
+        app = create_app(engine=engine, session_local=session_local, skip_vec=False)
         yield app
     finally:
         os.unlink(tf.name)
@@ -78,8 +78,8 @@ def test_term_duplicate_title_within_domain(client):
     layer_id, domain_id = create_layer_and_domain(client)
     create_term(client, domain_id, layer_id, title="T1")
     resp = client.post("/api/terms/", json={"title": "T1", "definition": "def", "domain_id": domain_id, "layer_id": layer_id})
-    assert resp.status_code == 400
-    assert "unique" in resp.json()["detail"].lower()
+    assert resp.status_code == 409
+    assert "unique" in resp.json()["detail"][0]["msg"].lower()
 
 def test_term_invalid_domain_or_layer(client):
     layer_id, domain_id = create_layer_and_domain(client)
@@ -100,7 +100,7 @@ def test_term_parent_and_circular_reference(client):
     # Circular reference
     resp = client.put(f"/api/terms/{t1['id']}", json={"parent_term_id": t2["id"]})
     assert resp.status_code == 400
-    detail = resp.json()["detail"].lower()
+    detail = resp.json()["detail"][0]["msg"].lower()
     print(f"DEBUG: circular reference error detail: {detail}")
     assert "circular" in detail
 
@@ -153,8 +153,8 @@ def test_term_relationship_invalid_cases(client):
     resp1 = client.post("/api/term-relationships/", json={"source_term_id": t1["id"], "target_term_id": t2["id"], "predicate": "rel"})
     assert resp1.status_code == 201
     resp2 = client.post("/api/term-relationships/", json={"source_term_id": t1["id"], "target_term_id": t2["id"], "predicate": "rel"})
-    assert resp2.status_code == 400
-    assert "duplicate" in resp2.json()["detail"].lower()
+    assert resp2.status_code == 409
+    assert "duplicate" in resp2.json()["detail"][0]["msg"].lower()
     # Update non-existent
     resp = client.put(f"/api/term-relationships/{bad_uuid}", json={"predicate": "x"})
     assert resp.status_code == 404

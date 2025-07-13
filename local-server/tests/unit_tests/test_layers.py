@@ -60,8 +60,8 @@ def test_app():
     try:
         engine = get_engine(db_url)
         session_local = get_session_local(engine)
-        init_db(engine=engine, skip_vec=True)
-        app = create_app(engine=engine, session_local=session_local, skip_vec=True)
+        init_db(engine=engine, skip_vec=False)
+        app = create_app(engine=engine, session_local=session_local, skip_vec=False)
         yield app
     finally:
         os.unlink(tf.name)
@@ -97,8 +97,8 @@ def test_layer_duplicate_title(client):
     resp1 = client.post("/api/layers/", json={"title": "Layer X"})
     assert resp1.status_code == 201
     resp2 = client.post("/api/layers/", json={"title": "Layer X"})
-    assert resp2.status_code == 400
-    assert "unique" in resp2.json()["detail"].lower()
+    assert resp2.status_code == 409
+    assert "unique" in resp2.json()["detail"][0]["msg"].lower()
 
 def test_update_layer_to_duplicate_title(client):
     resp1 = client.post("/api/layers/", json={"title": "Layer A"})
@@ -106,8 +106,8 @@ def test_update_layer_to_duplicate_title(client):
     id_a = resp1.json()["id"]
     id_b = resp2.json()["id"]
     resp = client.put(f"/api/layers/{id_b}", json={"title": "Layer A"})
-    assert resp.status_code == 400
-    assert "unique" in resp.json()["detail"].lower()
+    assert resp.status_code == 409
+    assert "unique" in resp.json()["detail"][0]["msg"].lower()
 
 def test_get_nonexistent_layer(client):
     resp = client.get(f"/api/layers/{uuid.uuid4()}")

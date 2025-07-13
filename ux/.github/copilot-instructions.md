@@ -9,8 +9,32 @@ Front-end code for the Context Studio app. This is front-end code only, the back
 - **Components**: Gluestack-UI V2
 - **CSS Framework**: Tailwind CSS (via Nativewind)
 - **Icons**: Lucide React Native
+- **State Management**: React Query (TanStack Query)
+- **API Client**: Type-safe API client built with Axios and OpenAPI
+- **Testing**: Jest, React Testing Library
 
 ## Best Practices
+
+### Code Style
+- All markdown reports and summaries other than README.md should be placed in the `documentation/task_reports` directory
+
+### API Client Architecture
+- Prefer type-safe clients generated from OpenAPI specs
+- Use TanStack Query for state management and caching
+- Implement proper error handling with custom error classes
+- Structure API code in services layer with React hooks
+
+### Testing Strategy
+- Unit tests for services and utilities
+- Integration tests for React hooks and components
+- Mock external dependencies (APIs, native modules)
+- Separate test configs for different test types (API vs integration)
+
+### Documentation Standards
+- Technical reports should include implementation details, architecture decisions, and current status
+- Include code examples and usage patterns
+- Document known issues and workarounds
+
 
 ### Code Structure
 ```text

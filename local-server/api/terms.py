@@ -13,6 +13,7 @@ from embeddings.generate_embeddings import generate_embedding
 from utils.logger import get_logger
 from utils.watchdog import start_watchdog
 from utils.vector import decode_emb, cosine_similarity
+from api.api_errors import validation_error_response, conflict_error_response, bad_request_error_response
 
 
 logger = get_logger("terms_api")
@@ -21,8 +22,8 @@ router = APIRouter()
 
 # Pydantic models for Term
 class TermBase(BaseModel):
-    title: str = Field(...)
-    definition: str = Field(...)
+    title: str = Field(..., min_length=2)
+    definition: str = Field(..., min_length=1)
     domain_id: UUID
     layer_id: UUID
     parent_term_id: Optional[UUID] = None
@@ -79,7 +80,28 @@ def to_term_out(term):
     )
 
 
-@router.post("/find", response_model=List[FindTermResult])
+@router.post(
+    "/find",
+    response_model=List[FindTermResult],
+    responses={
+        405: {"description": "Method Not Allowed"},
+        400: {"description": "Bad Request"},
+        409: {"description": "Conflict"},
+        500: {"description": "Internal Server Error"},
+    },
+)
+@router.put("/find", response_model=None, responses={405: {"description": "Method Not Allowed"}})
+@router.get("/find", response_model=None, responses={405: {"description": "Method Not Allowed"}})
+@router.delete("/find", response_model=None, responses={405: {"description": "Method Not Allowed"}})
+def find_term_unsupported_method_delete():
+    """Return 405 for unsupported DELETE method on /find endpoint."""
+    raise HTTPException(status_code=405, detail="Method Not Allowed")
+def find_term_unsupported_method_get():
+    """Return 405 for unsupported GET method on /find endpoint."""
+    raise HTTPException(status_code=405, detail="Method Not Allowed")
+def find_term_unsupported_method():
+    """Return 405 for unsupported PUT method on /find endpoint."""
+    raise HTTPException(status_code=405, detail="Method Not Allowed")
 def find_term(req: FindTermRequest, db: Session = Depends(get_db)):
     # Validate created_at if provided
     if req.created_at is not None:
@@ -191,21 +213,23 @@ def create_term(term: TermCreate, db: Session = Depends(get_db)):
     domain_id = str(term.domain_id)
     layer_id = str(term.layer_id)
     parent_term_id = str(term.parent_term_id) if term.parent_term_id else None
-
+    if not term.title or not term.title.strip():
+        return validation_error_response("Term title must not be empty.")
     if not db.query(models.Domain).filter_by(id=str(domain_id)).first():
-        raise HTTPException(status_code=400, detail="Domain does not exist.")
+        return bad_request_error_response("Domain does not exist.")
     if not db.query(models.Layer).filter_by(id=str(layer_id)).first():
-        raise HTTPException(status_code=400, detail="Layer does not exist.")
+        return bad_request_error_response("Layer does not exist.")
     if db.query(models.Term).filter_by(domain_id=str(domain_id), title=term.title).first():
-        raise HTTPException(status_code=400, detail="Term title must be unique within domain.")
+        return conflict_error_response("Term title must be unique within domain.")
     if parent_term_id:
         parent = db.query(models.Term).filter_by(id=str(parent_term_id)).first()
         if not parent or str(parent.domain_id) != str(domain_id):
-            raise HTTPException(status_code=400, detail="Parent term must exist and belong to same domain.")
+            return bad_request_error_response("Parent term must exist and belong to same domain.")
         if check_circular_reference(db, None, str(parent_term_id)):
-            raise HTTPException(status_code=400, detail="Circular reference detected.")
+            return bad_request_error_response("Circular reference detected.")
     title_emb = generate_embedding(term.title)
-    def_emb = generate_embedding(term.definition)
+    # Always generate a valid embedding for definition (empty string if None)
+    def_emb = generate_embedding(term.definition if term.definition is not None else "")
     now = datetime.datetime.now(datetime.UTC)
     db_term = models.Term(
         id=str(uuid4()),
@@ -245,7 +269,7 @@ def create_term(term: TermCreate, db: Session = Depends(get_db)):
     return to_term_out(db_term)
 
 
-@router.get("/{id}", response_model=TermOut)
+@router.get("/{id}", response_model=TermOut, responses={404: {"description": "Term not found"}})
 def get_term(id: str, db: Session = Depends(get_db)):
     term = db.query(models.Term).filter_by(id=id).first()
     if not term:
@@ -260,7 +284,7 @@ def list_terms(
     parent_term_id: str = None,
     skip: int = 0,
     limit: int = Query(50, le=100),
-    sort: Optional[str] = None,
+    sort: Optional[str] = Query(None, pattern="^(title|created_at)?$"),
     db: Session = Depends(get_db),
 ):
     q = db.query(models.Term)
@@ -286,30 +310,33 @@ def update_term(id: str, term: TermUpdate, db: Session = Depends(get_db)):
     db_term = db.query(models.Term).filter_by(id=id).first()
     if not db_term:
         raise HTTPException(status_code=404, detail="Term not found.")
-    if term.title and term.title != db_term.title:
-        if (
-            db.query(models.Term)
-            .filter(
-                models.Term.domain_id == str(db_term.domain_id),
-                models.Term.title == term.title,
-                models.Term.id != str(id),
-            )
-            .first()
-        ):
-            raise HTTPException(status_code=400, detail="Term title must be unique within domain.")
-        db_term.title = term.title
-        db_term.title_embedding = generate_embedding(term.title)
+    if term.title is not None:
+        if not term.title.strip():
+            return validation_error_response("Term title must not be empty.")
+        if term.title != db_term.title:
+            if (
+                db.query(models.Term)
+                .filter(
+                    models.Term.domain_id == str(db_term.domain_id),
+                    models.Term.title == term.title,
+                    models.Term.id != str(id),
+                )
+                .first()
+            ):
+                return conflict_error_response("Term title must be unique within domain.")
+            db_term.title = term.title
+            db_term.title_embedding = generate_embedding(term.title)
     if term.definition is not None:
         db_term.definition = term.definition
-        db_term.definition_embedding = generate_embedding(term.definition)
+        db_term.definition_embedding = generate_embedding(term.definition if term.definition is not None else "")
     if term.parent_term_id is not None:
         parent_term_id = str(term.parent_term_id) if term.parent_term_id else None
         if parent_term_id:
             parent = db.query(models.Term).filter_by(id=str(parent_term_id)).first()
             if not parent or str(parent.domain_id) != str(db_term.domain_id):
-                raise HTTPException(status_code=400, detail="Parent term must exist and belong to same domain.")
+                return bad_request_error_response("Parent term must exist and belong to same domain.")
             if check_circular_reference(db, str(id), str(parent_term_id)):
-                raise HTTPException(status_code=400, detail="Circular reference detected.")
+                return bad_request_error_response("Circular reference detected.")
         db_term.parent_term_id = parent_term_id
     db_term.version += 1
     db_term.last_modified = datetime.datetime.now(datetime.UTC)
