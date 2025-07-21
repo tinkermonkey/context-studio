@@ -17,6 +17,8 @@ Front-end code for the Context Studio app. This is front-end code only, the back
 
 ### Code Style
 - All markdown reports and summaries other than README.md should be placed in the `documentation/task_reports` directory
+- use absolute imports for components and hooks
+- Use `@/` as the base path for imports
 
 ### API Client Architecture
 - Prefer type-safe clients generated from OpenAPI specs

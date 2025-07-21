@@ -57,13 +57,6 @@ export default function HomeScreen() {
           <ThemedText type="defaultSemiBold">app</ThemedText> to{" "}
           <ThemedText type="defaultSemiBold">app-example</ThemedText>.
         </ThemedText>
-        <Button
-          action={"primary"}
-          variant={"solid"}
-          size={"sm"}
-          isDisabled={false}>
-          <ButtonText>Hello World</ButtonText>
-        </Button>
       </ThemedView>
     </ParallaxScrollView>
   );

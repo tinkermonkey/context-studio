@@ -2,6 +2,7 @@ import { Fab } from "@/components/ui/fab"
 import { GluestackUIProvider } from "@/components/ui/gluestack-ui-provider"
 import { ChevronLeftIcon, Icon, MoonIcon, SunIcon } from "@/components/ui/icon"
 import { Pressable } from "@/components/ui/pressable"
+import { ApiProvider } from "@/api/ApiProvider"
 import FontAwesome from "@expo/vector-icons/FontAwesome"
 import { DarkTheme, DefaultTheme, ThemeProvider } from "@react-navigation/native"
 import { useFonts } from "expo-font"
@@ -89,14 +90,16 @@ export default function RootLayout() {
     <>
       <ColorModeContext.Provider value={{ colorMode, setColorMode }}>
         <GluestackUIProvider mode={colorMode === "dark" ? "dark" : "light"}>
-          <ThemeProvider value={colorMode === "dark" ? DarkTheme : DefaultTheme}>
-            <Stack>
-              <Stack.Screen name="(tabs)" options={getHeaderOptions("Thread")} />
-            </Stack>
-            <Fab className="bottom-10 sm:right-10 right-6 p-4 z-0" onPress={handleColorMode}>
-              <Icon as={colorMode === "light" ? SunIcon : MoonIcon} className="text-typography-0" />
-            </Fab>
-          </ThemeProvider>
+          <ApiProvider>
+            <ThemeProvider value={colorMode === "dark" ? DarkTheme : DefaultTheme}>
+              <Stack>
+                <Stack.Screen name="(tabs)" options={getHeaderOptions("Thread")} />
+              </Stack>
+              <Fab className="bottom-10 sm:right-10 right-6 p-4 z-0" onPress={handleColorMode}>
+                <Icon as={colorMode === "light" ? SunIcon : MoonIcon} className="text-typography-0" />
+              </Fab>
+            </ThemeProvider>
+          </ApiProvider>
         </GluestackUIProvider>
       </ColorModeContext.Provider>
     </>

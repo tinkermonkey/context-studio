@@ -34,6 +34,27 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
+        name="layers"
+        options={{
+          title: 'Layers',
+          tabBarIcon: ({ color }) => <IconSymbol size={28} name="square.stack.3d.up.fill" color={color} />,
+        }}
+      />
+      <Tabs.Screen
+        name="domains"
+        options={{
+          title: 'Domains',
+          tabBarIcon: ({ color }) => <IconSymbol size={28} name="folder.fill" color={color} />,
+        }}
+      />
+      <Tabs.Screen
+        name="terms"
+        options={{
+          title: 'Terms',
+          tabBarIcon: ({ color }) => <IconSymbol size={28} name="text.book.closed.fill" color={color} />,
+        }}
+      />
+      <Tabs.Screen
         name="explore"
         options={{
           title: 'Explore',

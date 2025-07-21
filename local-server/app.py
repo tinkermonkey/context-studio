@@ -1,5 +1,6 @@
 import os
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
 from database.utils import init_db, get_db, get_engine, get_session_local
 from api import layers, domains, terms, term_relationships
@@ -64,6 +65,14 @@ def create_app(engine=None, session_local=None, skip_vec=False):
 engine = get_engine()
 SessionLocal = get_session_local(engine)
 app = create_app(engine=engine, session_local=SessionLocal)
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # In production, be more specific
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 if __name__ == "__main__":
     import uvicorn

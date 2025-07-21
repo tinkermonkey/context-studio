@@ -260,6 +260,10 @@ def list_layers(
     layers = q.offset(skip).limit(limit).all()
     result = []
     for l in layers:
+        # Defensive: skip layers with invalid title
+        if not l.title or len(l.title) < 2:
+            logger.warning(f"Skipping layer with invalid title (id={l.id}): '{l.title}'")
+            continue
         result.append(to_layer_out(l))
     return result
 
