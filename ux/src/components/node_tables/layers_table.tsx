@@ -1,10 +1,10 @@
+import React from "react";
 import {
   createColumnHelper,
   flexRender,
   getCoreRowModel,
   useReactTable,
 } from "@tanstack/react-table";
-
 import {
   Table,
   TableHead,
@@ -12,12 +12,37 @@ import {
   TableBody,
   TableRow,
   TableCell,
+  Checkbox,
 } from "flowbite-react";
 import { LayerOut } from "@/api/services/layers";
 import { renderShortDateTime, renderShortUuid } from "@/utils/renderers";
+
 const columnHelper = createColumnHelper<LayerOut>();
 
 const columns = [
+  columnHelper.display({
+    id: 'select',
+    header: ({ table }) => (
+      <Checkbox
+        checked={table.getIsAllRowsSelected()}
+        indeterminate={table.getIsSomeRowsSelected()}
+        onChange={() => {
+          if (table.getIsAllRowsSelected() || table.getIsSomeRowsSelected()) {
+            table.toggleAllRowsSelected(false);
+          } else {
+            table.toggleAllRowsSelected(true);
+          }
+        }}
+      />
+    ),
+    cell: ({ row }) => (
+      <Checkbox
+        checked={row.getIsSelected()}
+        onChange={() => row.toggleSelected()}
+      />
+    ),
+    size: 32,
+  }),
   columnHelper.accessor("id", {
     cell: (info) => info.getValue() ? renderShortUuid(info.getValue()) : "null",
     header: () => "ID",
@@ -54,12 +79,26 @@ const columns = [
   }),
 ];
 
-export function LayersTable({ data }: { data?: LayerOut[] }) {
+export interface LayersTableProps {
+  data?: LayerOut[];
+  onSelectionChange?: (count: number) => void;
+}
+
+const LayersTable = React.forwardRef<any, LayersTableProps>((props, ref) => {
   const table = useReactTable({
-    data: data ?? [],
+    data: props.data ?? [],
     columns,
     getCoreRowModel: getCoreRowModel(),
+    enableRowSelection: true,
   });
+
+  React.useImperativeHandle(ref, () => table, [table]);
+
+  React.useEffect(() => {
+    if (props.onSelectionChange) {
+      props.onSelectionChange(table.getSelectedRowModel().rows.length);
+    }
+  }, [table.getSelectedRowModel().rows.length]);
 
   return (
     <Table hoverable className="max-w-full">
@@ -92,4 +131,6 @@ export function LayersTable({ data }: { data?: LayerOut[] }) {
       </TableBody>
     </Table>
   );
-}
+});
+
+export { LayersTable };

@@ -197,6 +197,7 @@ def find_layer(req: FindLayerRequest, db: Session = Depends(get_db)):
     },
 )
 def create_layer(layer: LayerCreate, db: Session = Depends(get_db)):
+    logger.info(f"Creating layer with payload: {layer}")
     if not layer.title or not layer.title.strip():
         return validation_error_response("Layer title must not be empty.", loc=["body", "title"])
     if db.query(models.Layer).filter_by(title=layer.title).first():

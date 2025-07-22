@@ -4,7 +4,8 @@ Front-end code for the Context Studio app. This is front-end code only, the back
 
 ## Technology Stack
 - **Language**: TypeScript
-- **Components**: Flowbite React
+- **Components**: Flowbite React, TanStack Tables, TanStack Forms
+- **Build Tool**: Vite
 - **Routing**: TanStack Router
 - **State Management**: TanStack Query
 - **CSS Framework**: Tailwind CSS
@@ -54,6 +55,15 @@ Front-end code for the Context Studio app. This is front-end code only, the back
 │
 ├── src/                            # Source code
 │   ├── api/                        # API client and services
+│   │   ├── services/               # API service files
+│   │   ├── hooks/                  # Custom React hooks for API interactions
+│   │   └── types/                  # Type definitions for API responses
+│   │
+│   ├── components/                 # Reusable React components
+│   │   ├── node_selectors/         # Components for selecting nodes (e.g., layers, nodes)
+│   │   ├── node_tables/            # Components for displaying node tables
+│   │   ├── ui/                     # UI components (e.g., buttons, inputs)
+│   │   └── layout/                 # Layout components
 ```
 
 ### UI Architecture
