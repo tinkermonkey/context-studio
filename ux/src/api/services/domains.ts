@@ -9,10 +9,10 @@ import { ENDPOINTS } from '../config';
 import type { components } from '../client/types';
 
 // Type aliases for better readability
-type DomainOut = components['schemas']['DomainOut'];
-type DomainCreate = components['schemas']['DomainCreate'];
-type DomainUpdate = components['schemas']['DomainUpdate'];
-type FindDomainResult = components['schemas']['FindDomainResult'];
+export type DomainOut = components['schemas']['DomainOut'];
+export type DomainCreate = components['schemas']['DomainCreate'];
+export type DomainUpdate = components['schemas']['DomainUpdate'];
+export type FindDomainResult = components['schemas']['FindDomainResult'];
 
 export interface DomainListParams extends ListParams {
   layer_id?: string;

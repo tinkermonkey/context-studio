@@ -6,20 +6,6 @@
 
 // Get the correct localhost URL based on platform
 const getDefaultBaseURL = () => {
-  if (process.env.EXPO_PUBLIC_API_URL) {
-    return process.env.EXPO_PUBLIC_API_URL;
-  }
-  
-  // For development, use platform-specific localhost
-  if (__DEV__) {
-    // For web platform, use localhost
-    if (typeof window !== 'undefined') {
-      return 'http://127.0.0.1:8000';
-    }
-    // For iOS simulator, use localhost
-    return 'http://127.0.0.1:8000';
-  }
-  
   return 'http://127.0.0.1:8000';
 };
 

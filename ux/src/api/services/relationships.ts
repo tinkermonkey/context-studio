@@ -9,9 +9,9 @@ import { ENDPOINTS } from '../config';
 import type { components } from '../client/types';
 
 // Type aliases for better readability
-type TermRelationshipOut = components['schemas']['TermRelationshipOut'];
-type TermRelationshipCreate = components['schemas']['TermRelationshipCreate'];
-type TermRelationshipUpdate = components['schemas']['TermRelationshipUpdate'];
+export type TermRelationshipOut = components['schemas']['TermRelationshipOut'];
+export type TermRelationshipCreate = components['schemas']['TermRelationshipCreate'];
+export type TermRelationshipUpdate = components['schemas']['TermRelationshipUpdate'];
 
 export interface RelationshipListParams extends ListParams {
   source_term_id?: string;

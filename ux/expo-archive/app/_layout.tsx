@@ -1,15 +1,15 @@
-import { Fab } from "@/components/ui/fab"
-import { GluestackUIProvider } from "@/components/ui/gluestack-ui-provider"
-import { ChevronLeftIcon, Icon, MoonIcon, SunIcon } from "@/components/ui/icon"
-import { Pressable } from "@/components/ui/pressable"
-import { ApiProvider } from "@/api/ApiProvider"
+import React, { useEffect } from "react"
+import { Platform, StyleSheet } from "react-native"
 import FontAwesome from "@expo/vector-icons/FontAwesome"
-import { DarkTheme, DefaultTheme, ThemeProvider } from "@react-navigation/native"
 import { useFonts } from "expo-font"
 import { Stack, useRouter } from "expo-router"
 import * as SplashScreen from "expo-splash-screen"
-import React, { useEffect } from "react"
-import { Platform, StyleSheet } from "react-native"
+import { DarkTheme, DefaultTheme, ThemeProvider } from "@react-navigation/native"
+import { GluestackUIProvider } from "@/components/ui/gluestack-ui-provider"
+import { Fab } from "@/components/ui/fab"
+import { ChevronLeftIcon, Icon, MoonIcon, SunIcon } from "@/components/ui/icon"
+import { Pressable } from "@/components/ui/pressable"
+import { ApiProvider } from "@/api/ApiProvider"
 
 import "../global.css"
 
@@ -88,7 +88,6 @@ export default function RootLayout() {
 
   return (
     <>
-      <ColorModeContext.Provider value={{ colorMode, setColorMode }}>
         <GluestackUIProvider mode={colorMode === "dark" ? "dark" : "light"}>
           <ApiProvider>
             <ThemeProvider value={colorMode === "dark" ? DarkTheme : DefaultTheme}>
@@ -101,7 +100,6 @@ export default function RootLayout() {
             </ThemeProvider>
           </ApiProvider>
         </GluestackUIProvider>
-      </ColorModeContext.Provider>
     </>
   )
 }

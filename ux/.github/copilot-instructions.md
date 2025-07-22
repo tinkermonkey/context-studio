@@ -4,12 +4,11 @@ Front-end code for the Context Studio app. This is front-end code only, the back
 
 ## Technology Stack
 - **Language**: TypeScript
-- **Platform**: Expo
-- **Framework**: React
-- **Components**: Gluestack-UI V2
-- **CSS Framework**: Tailwind CSS (via Nativewind)
+- **Components**: Flowbite React
+- **Routing**: TanStack Router
+- **State Management**: TanStack Query
+- **CSS Framework**: Tailwind CSS
 - **Icons**: Lucide React Native
-- **State Management**: React Query (TanStack Query)
 - **API Client**: Type-safe API client built with Axios and OpenAPI
 - **Testing**: Jest, React Testing Library
 
@@ -44,47 +43,24 @@ Front-end code for the Context Studio app. This is front-end code only, the back
 ├── .env                            # Dev environment variables (not in git)
 ├── .env.example                    # Environment variables example (in git)
 ├── .env.production                 # Production environment variables (not in git, very sensitive)
-├── app.json                        # Expo app config
-├── global.css                      # Global tailwind directives for nativewind
-├── metro.config.js                 # Metro build config for Expo
-├── nativewind-env.d.ts             # Nativewind typescript bindings
 ├── README.md                       # Project documentation
 ├── tailwind.config.js              # Tailwind configuration
 ├── tsconfig.json                   # Typescript config
 │
-├── android/                        # Android app build files
-├── ios/                            # iOS app build files
-│
-├── app/                            # Expo app
-│   ├── _layout.tsx                 # Global Expo layout
-│   ├── +html.tsx                   # Global Expo html configuration for web clients
-|
-├── assets/                         # Static assets
-│   ├── fonts/                      # Fonts
-│   ├── Icons/                      # Custom icons not provided by lucide-react-native
-│   └── images/                     # Custom images used in the app
-|
-├── components/                    # Reusable components
-│   ├── common/                     # Common components used across the app
-│   ├── custom/                     # Components specific to the Context Studio
-│   └── ui/                         # UI components from gluestack-ui
-|
-├── constants/                      # Static data elements used throughout the app
-│   └── Colors.ts                   # Theme colors
-│
-├── hooks/                          # React hooks
-│   ├── useColorScheme.ts           # Color scheme hook
-│   ├── useColorScheme.web.ts       # Color scheme hook for web
-│   └── useThemeColors.ts           # Expo hook for themeing
+├── package.json                    # Project dependencies and scripts
 │
 ├── node_modules/                   # Ignore this, managed by npm
+├── expo-archive/                   # Ignore this, it is for historical purposes only and contains the old Expo app which this is replacing
+│
+├── src/                            # Source code
+│   ├── api/                        # API client and services
 ```
 
 ### UI Architecture
 
-1. **React Native**: All UX must be compatible with `react-native`, native HTML is not permissible except in platform specific (web-only) components
+1. **React**: All UX must be `react` components
 
-2. **Gluestack-UI V2**: gluestack-ui v2 components should be used for layout
+2. **Flowbite React**: Flowbite React components should be used for layout
 
 3. **Responsive Layout**: A single UX will be used for desktop, tablet, and phones. Where possible, handle the responsiveness in the layout. Where needed, ensure the styling is responsive.
 

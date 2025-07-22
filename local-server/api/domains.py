@@ -74,12 +74,18 @@ class FindDomainResult(DomainOut):
 def find_domain_unsupported_method_delete():
     """Return 405 for unsupported DELETE method on /find endpoint."""
     raise HTTPException(status_code=405, detail="Method Not Allowed")
+
+
 def find_domain_unsupported_method_get():
     """Return 405 for unsupported GET method on /find endpoint."""
     raise HTTPException(status_code=405, detail="Method Not Allowed")
+
+
 def find_domain_unsupported_method():
     """Return 405 for unsupported PUT method on /find endpoint."""
     raise HTTPException(status_code=405, detail="Method Not Allowed")
+
+
 def find_domain(req: FindDomainRequest, db: Session = Depends(get_db)):
     # Validate created_at if provided
     if req.created_at is not None:
@@ -319,5 +325,5 @@ def delete_domain(id: str, db: Session = Depends(get_db)):
         db.commit()
     except Exception as e:
         logger.warning(f"Failed to delete virtual table entry for domain {id}: {e}")
-        
+
     return {"success": True}

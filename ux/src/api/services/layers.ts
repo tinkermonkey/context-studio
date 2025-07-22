@@ -9,10 +9,10 @@ import { ENDPOINTS } from '../config';
 import type { components } from '../client/types';
 
 // Type aliases for better readability
-type LayerOut = components['schemas']['LayerOut'];
-type LayerCreate = components['schemas']['LayerCreate'];
-type LayerUpdate = components['schemas']['LayerUpdate'];
-type FindLayerResult = components['schemas']['FindLayerResult'];
+export type LayerOut = components['schemas']['LayerOut'];
+export type LayerCreate = components['schemas']['LayerCreate'];
+export type LayerUpdate = components['schemas']['LayerUpdate'];
+export type FindLayerResult = components['schemas']['FindLayerResult'];
 
 export interface LayerListParams extends ListParams {
   sort?: 'title' | 'created_at';

@@ -9,10 +9,10 @@ import { ENDPOINTS } from '../config';
 import type { components } from '../client/types';
 
 // Type aliases for better readability
-type TermOut = components['schemas']['TermOut'];
-type TermCreate = components['schemas']['TermCreate'];
-type TermUpdate = components['schemas']['TermUpdate'];
-type FindTermResult = components['schemas']['FindTermResult'];
+export type TermOut = components['schemas']['TermOut'];
+export type TermCreate = components['schemas']['TermCreate'];
+export type TermUpdate = components['schemas']['TermUpdate'];
+export type FindTermResult = components['schemas']['FindTermResult'];
 
 export interface TermListParams extends ListParams {
   domain_id?: string;
