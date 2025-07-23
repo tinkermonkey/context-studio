@@ -1,29 +1,19 @@
-
 import React from "react";
-import {
-  createColumnHelper,
-  flexRender,
-  getCoreRowModel,
-  useReactTable,
-} from "@tanstack/react-table";
-import {
-  Table,
-  TableHead,
-  TableHeadCell,
-  TableBody,
-  TableRow,
-  TableCell,
-  Checkbox
-} from "flowbite-react";
+import { createColumnHelper } from "@tanstack/react-table";
+import { Checkbox } from "flowbite-react";
 import { TermOut } from "@/api/services/terms";
 import { renderShortDateTime, renderShortUuid } from "@/utils/renderers";
-import { Edit } from "lucide-react";
+import { Term } from "@/components/nodes/term";
+import { BaseNodeTable } from './node_table';
+import { useTerms } from '@/api/hooks/terms';
+import { useDeleteTerm } from '@/api/hooks/terms';
+import { TermForm } from '@/components/forms/term_form';
 
 const columnHelper = createColumnHelper<TermOut>();
 
 const columns = [
   columnHelper.display({
-    id: 'select',
+    id: "select",
     header: ({ table }) => (
       <Checkbox
         checked={table.getIsAllRowsSelected()}
@@ -46,7 +36,8 @@ const columns = [
     size: 32,
   }),
   columnHelper.accessor("id", {
-    cell: (info) => info.getValue() ? renderShortUuid(info.getValue()) : "null",
+    cell: (info) =>
+      info.getValue() ? renderShortUuid(info.getValue()) : "null",
     header: () => "ID",
   }),
   columnHelper.accessor("title", {
@@ -71,7 +62,7 @@ const columns = [
   columnHelper.accessor("parent_term_id", {
     cell: (info) => {
       const value = info.getValue() ?? "";
-      return value ? renderShortUuid(value) : "";
+      return value ? <Term term_id={value} /> : "";
     },
     header: () => "Parent Term",
   }),
@@ -82,86 +73,63 @@ const columns = [
   columnHelper.accessor("created_at", {
     cell: (info) => {
       const value = info.getValue();
-      return value !== null && value !== undefined ? renderShortDateTime(value) : "";
+      return value !== null && value !== undefined
+        ? renderShortDateTime(value)
+        : "";
     },
     header: () => "Created",
   }),
   columnHelper.accessor("last_modified", {
     cell: (info) => {
       const value = info.getValue();
-      return value !== null && value !== undefined ? renderShortDateTime(value) : "";
+      return value !== null && value !== undefined
+        ? renderShortDateTime(value)
+        : "";
     },
     header: () => "Modified",
   }),
 ];
 
-
 export interface TermsTableProps {
   data?: TermOut[];
   onSelectionChange?: (count: number) => void;
   onEdit?: (id: string) => void;
+  columnVisibility?: Record<string, boolean>;
 }
 
 const TermsTable = React.forwardRef<any, TermsTableProps>((props, ref) => {
-  const table = useReactTable({
-    data: props.data ?? [],
-    columns,
-    getCoreRowModel: getCoreRowModel(),
-    enableRowSelection: true,
-  });
-
-  React.useImperativeHandle(ref, () => table, [table]);
-
-  React.useEffect(() => {
-    if (props.onSelectionChange) {
-      props.onSelectionChange(table.getSelectedRowModel().rows.length);
-    }
-  }, [table.getSelectedRowModel().rows.length]);
+  const { data: terms, isLoading, error, refetch } = useTerms();
+  const deleteTerm = useDeleteTerm();
+  // Default hidden columns: id, domain_id, layer_id, version, created_at, last_modified
+  const defaultColumnVisibility: Record<string, boolean> = {
+    id: false,
+    domain_id: false,
+    layer_id: false,
+    version: false,
+    created_at: false,
+    last_modified: false,
+  };
+  const columnVisibility = {
+    ...defaultColumnVisibility,
+    ...props.columnVisibility,
+  };
 
   return (
-    <Table hoverable className="max-w-full">
-      <TableHead>
-        <TableRow>
-          {table
-            .getHeaderGroups()
-            .map((headerGroup) =>
-              headerGroup.headers.map((header) => (
-                <TableHeadCell key={header.id}>
-                  {flexRender(
-                    header.column.columnDef.header,
-                    header.getContext(),
-                  )}
-                </TableHeadCell>
-              )),
-            )}
-          <TableHeadCell/>
-        </TableRow>
-      </TableHead>
-      <TableBody>
-        {table.getRowModel().rows.map((row) => (
-          <TableRow key={row.id}>
-            {row.getVisibleCells().map((cell) => (
-              <TableCell key={cell.id}>
-                {flexRender(cell.column.columnDef.cell, cell.getContext())}
-              </TableCell>
-            ))}
-            <TableCell>
-              <Edit
-                className="cursor-pointer hover:stroke-primary-600"
-                onClick={() => {
-                  const id = row.original.id;
-                  if (props.onEdit && id) {
-                    props.onEdit(id);
-                  } else {
-                    console.log("Edit", row.id);
-                  }
-                }}
-              />
-            </TableCell>
-          </TableRow>
-        ))}
-      </TableBody>
-    </Table>
+    <BaseNodeTable
+      columns={columns}
+      data={terms ?? []}
+      isLoading={isLoading}
+      error={error}
+      onRefetch={refetch}
+      onDelete={async (ids: string[]) => {
+        await Promise.all(ids.map((id) => deleteTerm.mutateAsync(id)));
+      }}
+      createForm={({ onSuccess }) => <TermForm onSuccess={onSuccess} />}
+      editForm={({ node, onSuccess }) => <TermForm term={node} onSuccess={onSuccess} />}
+      typeName="Term"
+      getId={(item) => item.id}
+      columnVisibility={columnVisibility}
+    />
   );
 });
 

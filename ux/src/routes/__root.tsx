@@ -9,6 +9,17 @@ const customTheme = createTheme({
       secondary: "#6B7280",
     },
   },
+  table: {
+    root:{
+      shadow: "drop-shadow-none",
+    },
+    head: {
+      base: "rounded-none border-t-1 border-gray-300 dark:border-gray-600",
+    },
+    body: {
+      base: "rounded-none border-t-1 border-b-1 border-gray-300 dark:border-gray-600",
+    }
+  },
 });
 
 export const Route = createRootRoute({

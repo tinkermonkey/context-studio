@@ -1,9 +1,12 @@
 import React from "react";
 import { useForm } from "@tanstack/react-form";
-import { TextInput, Textarea, Button, Alert } from "flowbite-react";
+import { TextInput, Textarea, Button, Alert, Label } from "flowbite-react";
 import { Info } from "lucide-react";
 import type { DomainCreate, DomainOut } from "@/api/services/domains";
-import { useCreateDomain, useUpdateDomain } from "@/api/hooks/domains/useDomainMutations";
+import {
+  useCreateDomain,
+  useUpdateDomain,
+} from "@/api/hooks/domains/useDomainMutations";
 import { LayerSelector } from "@/components/node_selectors/layer_selector";
 
 interface DomainFormProps {
@@ -32,7 +35,9 @@ const DomainForm: React.FC<DomainFormProps> = ({ onSuccess, domain }) => {
             data: value,
           });
         } else {
-          result = await createDomainMutation.mutateAsync(value as DomainCreate);
+          result = await createDomainMutation.mutateAsync(
+            value as DomainCreate,
+          );
         }
         if (onSuccess) onSuccess(result);
         form.reset();
@@ -84,25 +89,48 @@ const DomainForm: React.FC<DomainFormProps> = ({ onSuccess, domain }) => {
           }}
         >
           {(field) => (
-            <TextInput
-              id="domain-title"
-              placeholder="Title"
-              value={field.state.value}
-              color={field.state.meta.errors.length ? "failure" : undefined}
-              onChange={(e) => field.handleChange(e.target.value)}
-              required
-              autoFocus
-            />
+            <div>
+              <Label htmlFor="domain-title" className="mb-1 block font-medium">
+                Title
+              </Label>
+              <TextInput
+                id="domain-title"
+                placeholder="Title"
+                value={field.state.value}
+                color={field.state.meta.errors.length ? "failure" : undefined}
+                onChange={(e) => field.handleChange(e.target.value)}
+                required
+                autoFocus
+              />
+              {field.state.meta.errors.length > 0 && (
+                <div className="mt-1 text-sm text-red-600">
+                  {field.state.meta.errors[0]}
+                </div>
+              )}
+            </div>
           )}
         </form.Field>
         <form.Field name="definition">
           {(field) => (
-            <Textarea
-              id="domain-definition"
-              placeholder="Definition"
-              value={field.state.value}
-              onChange={(e) => field.handleChange(e.target.value)}
-            />
+            <div>
+              <Label
+                htmlFor="domain-definition"
+                className="mb-1 block font-medium"
+              >
+                Definition
+              </Label>
+              <Textarea
+                id="domain-definition"
+                placeholder="Definition"
+                value={field.state.value}
+                onChange={(e) => field.handleChange(e.target.value)}
+              />
+              {field.state.meta.errors.length > 0 && (
+                <div className="mt-1 text-sm text-red-600">
+                  {field.state.meta.errors[0]}
+                </div>
+              )}
+            </div>
           )}
         </form.Field>
         <form.Field
@@ -113,15 +141,17 @@ const DomainForm: React.FC<DomainFormProps> = ({ onSuccess, domain }) => {
         >
           {(field) => (
             <div>
-              <label htmlFor="domain-layer" className="block mb-1 font-medium">
+              <Label htmlFor="domain-layer" className="mb-1 block font-medium">
                 Layer
-              </label>
+              </Label>
               <LayerSelector
                 value={field.state.value}
                 onSelect={(layer) => field.handleChange(layer?.id || "")}
               />
               {field.state.meta.errors.length > 0 && (
-                <div className="text-red-600 text-sm mt-1">{field.state.meta.errors[0]}</div>
+                <div className="mt-1 text-sm text-red-600">
+                  {field.state.meta.errors[0]}
+                </div>
               )}
             </div>
           )}

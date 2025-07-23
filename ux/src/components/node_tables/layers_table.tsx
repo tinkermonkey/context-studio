@@ -1,22 +1,12 @@
 import React from "react";
-import {
-  createColumnHelper,
-  flexRender,
-  getCoreRowModel,
-  useReactTable,
-} from "@tanstack/react-table";
-import {
-  Table,
-  TableHead,
-  TableHeadCell,
-  TableBody,
-  TableRow,
-  TableCell,
-  Checkbox
-} from "flowbite-react";
+import { createColumnHelper } from "@tanstack/react-table";
+import { Checkbox } from "flowbite-react";
 import { LayerOut } from "@/api/services/layers";
 import { renderShortDateTime, renderShortUuid } from "@/utils/renderers";
-import { Edit } from "lucide-react";
+import { useLayers } from '@/api/hooks/layers';
+import { useDeleteLayer } from '@/api/hooks/layers';
+import { LayerForm } from '@/components/forms/layer_form';
+import { BaseNodeTable } from './node_table';
 
 const columnHelper = createColumnHelper<LayerOut>();
 
@@ -80,72 +70,47 @@ const columns = [
   }),
 ];
 
+
 export interface LayersTableProps {
   data?: LayerOut[];
   onSelectionChange?: (count: number) => void;
   onEdit?: (id: string) => void;
+  columnVisibility?: Record<string, boolean>;
 }
 
+
 const LayersTable = React.forwardRef<any, LayersTableProps>((props, ref) => {
-  const table = useReactTable({
-    data: props.data ?? [],
-    columns,
-    getCoreRowModel: getCoreRowModel(),
-    enableRowSelection: true,
-  });
-
-  React.useImperativeHandle(ref, () => table, [table]);
-
-  React.useEffect(() => {
-    if (props.onSelectionChange) {
-      props.onSelectionChange(table.getSelectedRowModel().rows.length);
-    }
-  }, [table.getSelectedRowModel().rows.length]);
+  const { data: layers, isLoading, error, refetch } = useLayers();
+  const deleteLayer = useDeleteLayer();
+  
+  // Default hidden columns: id, version, created_at, last_modified
+  const defaultColumnVisibility: Record<string, boolean> = {
+    id: false,
+    version: false,
+    created_at: false,
+    last_modified: false,
+  };
+  const columnVisibility = {
+    ...defaultColumnVisibility,
+    ...props.columnVisibility,
+  };
 
   return (
-    <Table hoverable className="max-w-full">
-      <TableHead>
-        <TableRow>
-          {table
-            .getHeaderGroups()
-            .map((headerGroup) =>
-              headerGroup.headers.map((header) => (
-                <TableHeadCell key={header.id}>
-                  {flexRender(
-                    header.column.columnDef.header,
-                    header.getContext(),
-                  )}
-                </TableHeadCell>
-              )),
-            )}
-            <TableHeadCell/>
-        </TableRow>
-      </TableHead>
-      <TableBody>
-        {table.getRowModel().rows.map((row) => (
-          <TableRow key={row.id}>
-            {row.getVisibleCells().map((cell) => (
-              <TableCell key={cell.id}>
-                {flexRender(cell.column.columnDef.cell, cell.getContext())}
-              </TableCell>
-            ))}
-            <TableCell>
-              <Edit
-                className="cursor-pointer hover:stroke-primary-600"
-                onClick={() => {
-                  const id = row.original.id;
-                  if (props.onEdit && id) {
-                    props.onEdit(id);
-                  } else {
-                    console.log("Edit", row.id);
-                  }
-                }}
-              />
-            </TableCell>
-          </TableRow>
-        ))}
-      </TableBody>
-    </Table>
+    <BaseNodeTable
+      columns={columns}
+      data={layers ?? []}
+      isLoading={isLoading}
+      error={error}
+      onRefetch={refetch}
+      onDelete={async (ids: string[]) => {
+        await Promise.all(ids.map((id) => deleteLayer.mutateAsync(id)));
+      }}
+      createForm={({ onSuccess }) => <LayerForm onSuccess={onSuccess} />}
+      editForm={({ node, onSuccess }) => <LayerForm layer={node} onSuccess={onSuccess} />}
+      typeName="Layer"
+      getId={(item) => item.id}
+      columnVisibility={columnVisibility}
+    />
   );
 });
 

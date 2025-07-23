@@ -1,6 +1,5 @@
 import threading
 import datetime
-import numpy as np
 from fastapi import APIRouter, HTTPException, Query, Depends, Request
 from pydantic import BaseModel, Field
 from typing import List, Optional

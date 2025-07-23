@@ -1,23 +1,13 @@
 
 import React from "react";
-import {
-  createColumnHelper,
-  flexRender,
-  getCoreRowModel,
-  useReactTable,
-} from "@tanstack/react-table";
-import {
-  Table,
-  TableHead,
-  TableHeadCell,
-  TableBody,
-  TableRow,
-  TableCell,
-  Checkbox
-} from "flowbite-react";
+import { createColumnHelper } from "@tanstack/react-table";
+import { Checkbox } from "flowbite-react";
 import { DomainOut } from "@/api/services/domains";
 import { renderShortDateTime, renderShortUuid } from "@/utils/renderers";
-import { Edit } from "lucide-react";
+import { BaseNodeTable } from './node_table';
+import { useDomains } from '@/api/hooks/domains';
+import { useDeleteDomain } from '@/api/hooks/domains';
+import { DomainForm } from '@/components/forms/domain_form';
 
 const columnHelper = createColumnHelper<DomainOut>();
 
@@ -86,68 +76,45 @@ export interface DomainsTableProps {
   data?: DomainOut[];
   onSelectionChange?: (count: number) => void;
   onEdit?: (id: string) => void;
+  columnVisibility?: Record<string, boolean>;
 }
 
+
+
+
 const DomainsTable = React.forwardRef<any, DomainsTableProps>((props, ref) => {
-  const table = useReactTable({
-    data: props.data ?? [],
-    columns,
-    getCoreRowModel: getCoreRowModel(),
-    enableRowSelection: true,
-  });
-
-  React.useImperativeHandle(ref, () => table, [table]);
-
-  React.useEffect(() => {
-    if (props.onSelectionChange) {
-      props.onSelectionChange(table.getSelectedRowModel().rows.length);
-    }
-  }, [table.getSelectedRowModel().rows.length]);
+  const { data: domains, isLoading, error, refetch } = useDomains();
+  const deleteDomain = useDeleteDomain();
+  
+  // Default hidden columns: id, layer_id, version, created_at, last_modified
+  const defaultColumnVisibility: Record<string, boolean> = {
+    id: false,
+    layer_id: false,
+    version: false,
+    created_at: false,
+    last_modified: false,
+  };
+  const columnVisibility = {
+    ...defaultColumnVisibility,
+    ...props.columnVisibility,
+  };
 
   return (
-    <Table hoverable className="max-w-full">
-      <TableHead>
-        <TableRow>
-          {table
-            .getHeaderGroups()
-            .map((headerGroup) =>
-              headerGroup.headers.map((header) => (
-                <TableHeadCell key={header.id}>
-                  {flexRender(
-                    header.column.columnDef.header,
-                    header.getContext(),
-                  )}
-                </TableHeadCell>
-              )),
-            )}
-          <TableHeadCell/>
-        </TableRow>
-      </TableHead>
-      <TableBody>
-        {table.getRowModel().rows.map((row) => (
-          <TableRow key={row.id}>
-            {row.getVisibleCells().map((cell) => (
-              <TableCell key={cell.id}>
-                {flexRender(cell.column.columnDef.cell, cell.getContext())}
-              </TableCell>
-            ))}
-            <TableCell>
-              <Edit
-                className="cursor-pointer hover:stroke-primary-600"
-                onClick={() => {
-                  const id = row.original.id;
-                  if (props.onEdit && id) {
-                    props.onEdit(id);
-                  } else {
-                    console.log("Edit", row.id);
-                  }
-                }}
-              />
-            </TableCell>
-          </TableRow>
-        ))}
-      </TableBody>
-    </Table>
+    <BaseNodeTable
+      columns={columns}
+      data={domains ?? []}
+      isLoading={isLoading}
+      error={error}
+      onRefetch={refetch}
+      onDelete={async (ids: string[]) => {
+        await Promise.all(ids.map((id) => deleteDomain.mutateAsync(id)));
+      }}
+      createForm={({ onSuccess }) => <DomainForm onSuccess={onSuccess} />}
+      editForm={({ node, onSuccess }) => <DomainForm domain={node} onSuccess={onSuccess} />}
+      typeName="Domain"
+      getId={(item) => item.id}
+      columnVisibility={columnVisibility}
+    />
   );
 });
 

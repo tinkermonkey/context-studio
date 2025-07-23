@@ -7,7 +7,6 @@ import {
   useCreateTerm,
   useUpdateTerm,
 } from "@/api/hooks/terms/useTermMutations";
-import { LayerSelector } from "@/components/node_selectors/layer_selector";
 import { DomainSelector } from "@/components/node_selectors/domain_selector";
 import { TermSelector } from "@/components/node_selectors/term_selector";
 

@@ -1,9 +1,12 @@
 import React from "react";
 import { useForm } from "@tanstack/react-form";
-import { TextInput, Textarea, Button, Alert } from "flowbite-react";
+import { TextInput, Textarea, Button, Alert, Label } from "flowbite-react";
 import { Info } from "lucide-react";
 import type { LayerCreate } from "@/api/services/layers";
-import { useCreateLayer, useUpdateLayer } from "@/api/hooks/layers/useLayerMutations";
+import {
+  useCreateLayer,
+  useUpdateLayer,
+} from "@/api/hooks/layers/useLayerMutations";
 import type { LayerOut } from "@/api/services/layers";
 
 interface LayerFormProps {
@@ -84,35 +87,71 @@ const LayerForm: React.FC<LayerFormProps> = ({ onSuccess, layer }) => {
           }}
         >
           {(field) => (
-            <TextInput
-              id="layer-title"
-              placeholder="Title"
-              value={field.state.value}
-              color={field.state.meta.errors.length ? "failure" : undefined}
-              onChange={(e) => field.handleChange(e.target.value)}
-              required
-              autoFocus
-            />
+            <div>
+              <Label htmlFor="layer-title" className="mb-1 block font-medium">
+                Title
+              </Label>
+              <TextInput
+                id="layer-title"
+                placeholder="Title"
+                value={field.state.value}
+                color={field.state.meta.errors.length ? "failure" : undefined}
+                onChange={(e) => field.handleChange(e.target.value)}
+                required
+                autoFocus
+              />
+              {field.state.meta.errors.length > 0 && (
+                <div className="mt-1 text-sm text-red-600">
+                  {field.state.meta.errors[0]}
+                </div>
+              )}
+            </div>
           )}
         </form.Field>
         <form.Field name="definition">
           {(field) => (
-            <Textarea
-              id="layer-definition"
-              placeholder="Definition (optional)"
-              value={field.state.value}
-              onChange={(e) => field.handleChange(e.target.value)}
-            />
+            <div>
+              <Label
+                htmlFor="layer-definition"
+                className="mb-1 block font-medium"
+              >
+                Definition (optional)
+              </Label>
+              <Textarea
+                id="layer-definition"
+                placeholder="Definition (optional)"
+                value={field.state.value}
+                onChange={(e) => field.handleChange(e.target.value)}
+              />
+              {field.state.meta.errors.length > 0 && (
+                <div className="mt-1 text-sm text-red-600">
+                  {field.state.meta.errors[0]}
+                </div>
+              )}
+            </div>
           )}
         </form.Field>
         <form.Field name="primary_predicate">
           {(field) => (
-            <TextInput
-              id="layer-primary-predicate"
-              placeholder="Primary Predicate (optional)"
-              value={field.state.value}
-              onChange={(e) => field.handleChange(e.target.value)}
-            />
+            <div>
+              <Label
+                htmlFor="layer-primary-predicate"
+                className="mb-1 block font-medium"
+              >
+                Primary Predicate (optional)
+              </Label>
+              <TextInput
+                id="layer-primary-predicate"
+                placeholder="Primary Predicate (optional)"
+                value={field.state.value}
+                onChange={(e) => field.handleChange(e.target.value)}
+              />
+              {field.state.meta.errors.length > 0 && (
+                <div className="mt-1 text-sm text-red-600">
+                  {field.state.meta.errors[0]}
+                </div>
+              )}
+            </div>
           )}
         </form.Field>
 
@@ -121,6 +160,7 @@ const LayerForm: React.FC<LayerFormProps> = ({ onSuccess, layer }) => {
             {submitError}
           </Alert>
         )}
+        
         <div className="flex items-center gap-2">
           <Button
             type="submit"
