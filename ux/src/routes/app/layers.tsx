@@ -8,23 +8,28 @@ import { RefreshCcw, PlusCircle, CircleX } from "lucide-react";
 import { CsSidebar, CsSidebarTitle } from "@/components/layout/cs_sidebar";
 import { CsMain, CsMainTitle } from "@/components/layout/cs_main";
 import { LayerSelector } from "@/components/node_selectors/layer_selector";
-import { CreateLayerForm } from "@/components/forms/layer_form";
+import { LayerForm } from "@/components/forms/layer_form";
 
 export const Route = createFileRoute("/app/layers")({
   component: LayersPage,
 });
 
+
 function LayersPage() {
   const { data: layers, isLoading, error, refetch } = useLayers();
   const deleteLayer = useDeleteLayer();
-  const [currentLayer, setCurrentLayer] = React.useState<string | undefined>(
-    undefined,
-  );
   const [showModal, setShowModal] = React.useState(false);
   const [selectedCount, setSelectedCount] = React.useState(0);
   const tableRef = React.useRef<any>(null);
   const [showDeleteModal, setShowDeleteModal] = React.useState(false);
   const [pendingDeleteRows, setPendingDeleteRows] = React.useState<any[]>([]);
+  const [editLayerId, setEditLayerId] = React.useState<string | undefined>(undefined);
+
+  // Find the layer object for editing
+  const editLayer = React.useMemo(() => {
+    if (!editLayerId || !layers) return undefined;
+    return layers.find((l: any) => l.id === editLayerId);
+  }, [editLayerId, layers]);
 
   if (isLoading) {
     return <Spinner />;
@@ -76,6 +81,7 @@ function LayersPage() {
           ref={tableRef}
           data={layers}
           onSelectionChange={setSelectedCount}
+          onEdit={(id: string) => setEditLayerId(id)}
         />
         <div className="mt-4 flex items-center justify-between gap-3 whitespace-nowrap">
           <Button
@@ -90,10 +96,6 @@ function LayersPage() {
             <RefreshCcw className="mr-2 h-4 w-4" />
             Refresh
           </Button>
-          <LayerSelector
-            onSelect={(layer) => setCurrentLayer(layer ? layer.id : undefined)}
-            value={currentLayer}
-          />
           <Button
             color="green"
             onClick={() => setShowModal(true)}
@@ -122,14 +124,29 @@ function LayersPage() {
             </div>
           </ModalBody>
         </Modal>
+        {/* Create Layer Modal */}
         <Modal show={showModal} onClose={() => setShowModal(false)}>
           <ModalHeader className="border-b-0">Create New Layer</ModalHeader>
           <ModalBody>
-            <CreateLayerForm
-              onSuccess={(layer) => {
+            <LayerForm
+              onSuccess={() => {
                 setShowModal(false);
               }}
             />
+          </ModalBody>
+        </Modal>
+        {/* Edit Layer Modal */}
+        <Modal show={!!editLayerId} onClose={() => setEditLayerId(undefined)}>
+          <ModalHeader className="border-b-0">Edit Layer</ModalHeader>
+          <ModalBody>
+            {editLayer && (
+              <LayerForm
+                layer={editLayer}
+                onSuccess={() => {
+                  setEditLayerId(undefined);
+                }}
+              />
+            )}
           </ModalBody>
         </Modal>
       </CsMain>

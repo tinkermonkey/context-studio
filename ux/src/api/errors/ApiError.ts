@@ -9,7 +9,7 @@ export class ApiError extends Error {
     public status: number,
     public message: string,
     public code?: string,
-    public details?: unknown
+    public detail?: unknown
   ) {
     super(message);
     this.name = 'ApiError';
@@ -31,34 +31,39 @@ export class ApiError extends Error {
   }
 }
 
+
 export class ValidationError extends ApiError {
-  constructor(message: string, public validationErrors: Record<string, string[]>) {
-    super(422, message, 'VALIDATION_ERROR', validationErrors);
+  constructor(message: string, public validationErrors: Record<string, string[]>, detail?: unknown) {
+    super(422, message, 'VALIDATION_ERROR', detail ?? validationErrors);
     this.name = 'ValidationError';
   }
 }
 
+
 export class NotFoundError extends ApiError {
-  constructor(resource: string, id?: string) {
+  constructor(resource: string, id?: string, detail?: unknown) {
     super(
       404,
       id ? `${resource} with ID ${id} not found` : `${resource} not found`,
-      'NOT_FOUND'
+      'NOT_FOUND',
+      detail
     );
     this.name = 'NotFoundError';
   }
 }
 
+
 export class ConflictError extends ApiError {
-  constructor(message: string) {
-    super(409, message, 'CONFLICT');
+  constructor(message: string, detail?: unknown) {
+    super(409, message, 'CONFLICT', detail);
     this.name = 'ConflictError';
   }
 }
 
+
 export class NetworkError extends ApiError {
-  constructor(message: string = 'Network error occurred') {
-    super(0, message, 'NETWORK_ERROR');
+  constructor(message: string = 'Network error occurred', detail?: unknown) {
+    super(0, message, 'NETWORK_ERROR', detail);
     this.name = 'NetworkError';
   }
 }

@@ -77,7 +77,7 @@ export const RecordSelector: React.FC<RecordSelectorProps> = ({
           )}
           {!loading && !error && (
             <DropdownHeader>
-              <span className="flex pb-2">
+              <span className="flex pb-4">
                 <TextInput
                   id="record-selector-search"
                   className="flex min-w-48 lg:flex"

@@ -2,37 +2,37 @@ import React from "react";
 import { useForm } from "@tanstack/react-form";
 import { TextInput, Textarea, Button, Alert } from "flowbite-react";
 import { Info } from "lucide-react";
-import type { LayerCreate } from "@/api/services/layers";
-import { useCreateLayer, useUpdateLayer } from "@/api/hooks/layers/useLayerMutations";
-import type { LayerOut } from "@/api/services/layers";
+import type { DomainCreate, DomainOut } from "@/api/services/domains";
+import { useCreateDomain, useUpdateDomain } from "@/api/hooks/domains/useDomainMutations";
+import { LayerSelector } from "@/components/node_selectors/layer_selector";
 
-interface LayerFormProps {
-  onSuccess?: (layer: any) => void;
-  layer?: LayerOut;
+interface DomainFormProps {
+  onSuccess?: (domain: any) => void;
+  domain?: DomainOut;
 }
 
-const LayerForm: React.FC<LayerFormProps> = ({ onSuccess, layer }) => {
-  const createLayerMutation = useCreateLayer();
-  const updateLayerMutation = useUpdateLayer();
-  const isEdit = !!layer;
+const DomainForm: React.FC<DomainFormProps> = ({ onSuccess, domain }) => {
+  const createDomainMutation = useCreateDomain();
+  const updateDomainMutation = useUpdateDomain();
+  const isEdit = !!domain;
   const [submitError, setSubmitError] = React.useState<string | null>(null);
   const form = useForm({
     defaultValues: {
-      title: layer?.title ?? "",
-      definition: layer?.definition ?? "",
-      primary_predicate: layer?.primary_predicate ?? "",
+      title: domain?.title ?? "",
+      definition: domain?.definition ?? "",
+      layer_id: domain?.layer_id ?? "",
     },
     onSubmit: async ({ value }) => {
       setSubmitError(null);
       try {
         let result;
-        if (isEdit && layer?.id) {
-          result = await updateLayerMutation.mutateAsync({
-            id: layer.id,
+        if (isEdit && domain?.id) {
+          result = await updateDomainMutation.mutateAsync({
+            id: domain.id,
             data: value,
           });
         } else {
-          result = await createLayerMutation.mutateAsync(value as LayerCreate);
+          result = await createDomainMutation.mutateAsync(value as DomainCreate);
         }
         if (onSuccess) onSuccess(result);
         form.reset();
@@ -61,7 +61,7 @@ const LayerForm: React.FC<LayerFormProps> = ({ onSuccess, layer }) => {
         setSubmitError(message);
         // TODO: Use useButterToast for error notification
         console.error(
-          isEdit ? "Failed to update layer:" : "Failed to create layer:",
+          isEdit ? "Failed to update domain:" : "Failed to create domain:",
           error,
         );
       }
@@ -85,7 +85,7 @@ const LayerForm: React.FC<LayerFormProps> = ({ onSuccess, layer }) => {
         >
           {(field) => (
             <TextInput
-              id="layer-title"
+              id="domain-title"
               placeholder="Title"
               value={field.state.value}
               color={field.state.meta.errors.length ? "failure" : undefined}
@@ -98,21 +98,32 @@ const LayerForm: React.FC<LayerFormProps> = ({ onSuccess, layer }) => {
         <form.Field name="definition">
           {(field) => (
             <Textarea
-              id="layer-definition"
-              placeholder="Definition (optional)"
+              id="domain-definition"
+              placeholder="Definition"
               value={field.state.value}
               onChange={(e) => field.handleChange(e.target.value)}
             />
           )}
         </form.Field>
-        <form.Field name="primary_predicate">
+        <form.Field
+          name="layer_id"
+          validators={{
+            onChange: ({ value }) => (!value ? "Layer is required" : undefined),
+          }}
+        >
           {(field) => (
-            <TextInput
-              id="layer-primary-predicate"
-              placeholder="Primary Predicate (optional)"
-              value={field.state.value}
-              onChange={(e) => field.handleChange(e.target.value)}
-            />
+            <div>
+              <label htmlFor="domain-layer" className="block mb-1 font-medium">
+                Layer
+              </label>
+              <LayerSelector
+                value={field.state.value}
+                onSelect={(layer) => field.handleChange(layer?.id || "")}
+              />
+              {field.state.meta.errors.length > 0 && (
+                <div className="text-red-600 text-sm mt-1">{field.state.meta.errors[0]}</div>
+              )}
+            </div>
           )}
         </form.Field>
 
@@ -126,19 +137,19 @@ const LayerForm: React.FC<LayerFormProps> = ({ onSuccess, layer }) => {
             type="submit"
             disabled={
               form.state.isSubmitting ||
-              createLayerMutation.isPending ||
-              updateLayerMutation.isPending
+              createDomainMutation.isPending ||
+              updateDomainMutation.isPending
             }
           >
             {form.state.isSubmitting ||
-            createLayerMutation.isPending ||
-            updateLayerMutation.isPending
+            createDomainMutation.isPending ||
+            updateDomainMutation.isPending
               ? isEdit
                 ? "Saving..."
                 : "Creating..."
               : isEdit
                 ? "Save Changes"
-                : "Create Layer"}
+                : "Create Domain"}
           </Button>
         </div>
       </form>
@@ -146,4 +157,4 @@ const LayerForm: React.FC<LayerFormProps> = ({ onSuccess, layer }) => {
   );
 };
 
-export { LayerForm };
+export { DomainForm };

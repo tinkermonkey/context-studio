@@ -59,7 +59,12 @@ export const errorInterceptor = (error: AxiosError) => {
         return Promise.reject(new NotFoundError('Resource'));
       
       case 409:
-        return Promise.reject(new ConflictError('Resource conflict'));
+        return Promise.reject(
+          new ConflictError(
+            'Resource conflict',
+            (data && typeof data === 'object' && 'detail' in data) ? (data as any).detail : data
+          )
+        );
       
       case 422:
         // Handle validation errors
@@ -94,6 +99,6 @@ export const errorInterceptor = (error: AxiosError) => {
     return Promise.reject(new NetworkError('Network error - no response received'));
   } else {
     // Something else happened
-    return Promise.reject(new ApiError(0, error.message || 'An unknown error occurred'));
+    return Promise.reject(new ApiError(0, error.message || 'An unknown error occurred', 'UNKNOWN_ERROR', error));
   }
 };

@@ -12,10 +12,11 @@ import {
   TableBody,
   TableRow,
   TableCell,
-  Checkbox,
+  Checkbox
 } from "flowbite-react";
 import { LayerOut } from "@/api/services/layers";
 import { renderShortDateTime, renderShortUuid } from "@/utils/renderers";
+import { Edit } from "lucide-react";
 
 const columnHelper = createColumnHelper<LayerOut>();
 
@@ -82,6 +83,7 @@ const columns = [
 export interface LayersTableProps {
   data?: LayerOut[];
   onSelectionChange?: (count: number) => void;
+  onEdit?: (id: string) => void;
 }
 
 const LayersTable = React.forwardRef<any, LayersTableProps>((props, ref) => {
@@ -116,6 +118,7 @@ const LayersTable = React.forwardRef<any, LayersTableProps>((props, ref) => {
                 </TableHeadCell>
               )),
             )}
+            <TableHeadCell/>
         </TableRow>
       </TableHead>
       <TableBody>
@@ -126,6 +129,19 @@ const LayersTable = React.forwardRef<any, LayersTableProps>((props, ref) => {
                 {flexRender(cell.column.columnDef.cell, cell.getContext())}
               </TableCell>
             ))}
+            <TableCell>
+              <Edit
+                className="cursor-pointer hover:stroke-primary-600"
+                onClick={() => {
+                  const id = row.original.id;
+                  if (props.onEdit && id) {
+                    props.onEdit(id);
+                  } else {
+                    console.log("Edit", row.id);
+                  }
+                }}
+              />
+            </TableCell>
           </TableRow>
         ))}
       </TableBody>

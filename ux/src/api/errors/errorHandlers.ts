@@ -56,7 +56,7 @@ export const handleApiError = (
       status: apiError.status,
       message: apiError.message,
       code: apiError.code,
-      details: apiError.details,
+      detail: apiError.detail,
     });
   }
 

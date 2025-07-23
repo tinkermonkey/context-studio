@@ -16,6 +16,7 @@ export function useCreateTerm() {
   return useMutation({
     mutationFn: async (data: TermCreate): Promise<TermOut> => {
       apiLogger.info('Creating term', { data });
+      data.parent_term_id = data.parent_term_id && data.parent_term_id !== '' ? data.parent_term_id : null; // Ensure parent_term_id is null if not a valid uuid
       const response = await termService.create(data);
       apiLogger.info('Term created successfully', { id: response.id });
       return response;
@@ -54,6 +55,7 @@ export function useUpdateTerm() {
   return useMutation({
     mutationFn: async ({ id, data }: { id: string; data: TermUpdate }): Promise<TermOut> => {
       apiLogger.info('Updating term', { id, data });
+      data.parent_term_id = data.parent_term_id && data.parent_term_id !== '' ? data.parent_term_id : null; // Ensure parent_term_id is null if not a valid uuid
       const response = await termService.update(id, data);
       apiLogger.info('Term updated successfully', { id });
       return response;
