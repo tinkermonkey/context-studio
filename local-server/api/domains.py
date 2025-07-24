@@ -5,7 +5,7 @@ from pydantic import BaseModel, Field
 from typing import List, Optional
 from uuid import UUID, uuid4
 from sqlalchemy.orm import Session
-from sqlalchemy import text
+from sqlalchemy import text, func
 from database import models
 from database.utils import get_db
 from embeddings.generate_embeddings import generate_embedding
@@ -58,6 +58,13 @@ class FindDomainResult(DomainOut):
     distance: float
 
 
+class PaginatedDomainsResponse(BaseModel):
+    data: List[DomainOut]
+    total: int
+    skip: int
+    limit: int
+
+
 @router.post(
     "/find",
     response_model=List[FindDomainResult],
@@ -68,24 +75,6 @@ class FindDomainResult(DomainOut):
         500: {"description": "Internal Server Error"},
     },
 )
-@router.put("/find", response_model=None, responses={405: {"description": "Method Not Allowed"}})
-@router.get("/find", response_model=None, responses={405: {"description": "Method Not Allowed"}})
-@router.delete("/find", response_model=None, responses={405: {"description": "Method Not Allowed"}})
-def find_domain_unsupported_method_delete():
-    """Return 405 for unsupported DELETE method on /find endpoint."""
-    raise HTTPException(status_code=405, detail="Method Not Allowed")
-
-
-def find_domain_unsupported_method_get():
-    """Return 405 for unsupported GET method on /find endpoint."""
-    raise HTTPException(status_code=405, detail="Method Not Allowed")
-
-
-def find_domain_unsupported_method():
-    """Return 405 for unsupported PUT method on /find endpoint."""
-    raise HTTPException(status_code=405, detail="Method Not Allowed")
-
-
 def find_domain(req: FindDomainRequest, db: Session = Depends(get_db)):
     # Validate created_at if provided
     if req.created_at is not None:
@@ -242,7 +231,7 @@ def get_domain(id: str, db: Session = Depends(get_db)):
     return to_domain_out(domain)
 
 
-@router.get("/", response_model=List[DomainOut])
+@router.get("/", response_model=PaginatedDomainsResponse)
 def list_domains(
     layer_id: str = None,
     skip: int = 0,
@@ -250,18 +239,31 @@ def list_domains(
     sort: Optional[str] = Query(None, pattern="^(title|created_at)?$"),
     db: Session = Depends(get_db),
 ):
+    # Build base query for both count and data
     q = db.query(models.Domain)
     if layer_id:
         q = q.filter(models.Domain.layer_id == layer_id)
+    
+    # Get total count
+    total = q.count()
+    
+    # Apply sorting and pagination to get data
     if sort == "title":
         q = q.order_by(models.Domain.title)
     elif sort == "created_at":
         q = q.order_by(models.Domain.created_at.desc())
     domains = q.offset(skip).limit(limit).all()
+    
     result = []
     for d in domains:
         result.append(to_domain_out(d))
-    return result
+    
+    return PaginatedDomainsResponse(
+        data=result,
+        total=total,
+        skip=skip,
+        limit=limit
+    )
 
 
 @router.put("/{id}", response_model=DomainOut, responses={404: {"description": "Domain not found"}})

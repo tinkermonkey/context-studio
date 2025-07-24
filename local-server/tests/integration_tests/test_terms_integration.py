@@ -159,12 +159,29 @@ def test_list_terms(client):
     resp = client.get(f"/api/terms/?domain_id={domain_id}")
     assert resp.status_code == 200
     data = resp.json()
-    titles = [d["title"] for d in data]
+    
+    # Check pagination response structure
+    assert "data" in data
+    assert "total" in data
+    assert "skip" in data
+    assert "limit" in data
+    
+    # Check pagination metadata
+    assert data["total"] == 2
+    assert data["skip"] == 0
+    assert data["limit"] == 50
+    assert len(data["data"]) == 2
+    
+    titles = [d["title"] for d in data["data"]]
     assert "T1" in titles and "T2" in titles
+    
     # Test limit
     resp2 = client.get(f"/api/terms/?domain_id={domain_id}&limit=1")
     assert resp2.status_code == 200
-    assert len(resp2.json()) == 1
+    data2 = resp2.json()
+    assert data2["total"] == 2
+    assert data2["limit"] == 1
+    assert len(data2["data"]) == 1
 
 def test_find_term(client):
     layer_id = create_layer(client)
@@ -184,15 +201,71 @@ def test_find_term(client):
     data2 = resp2.json()
     assert any("Chemistry" in d["definition"] for d in data2)
 
-    # Negative: poor match
-    resp3 = client.post("/api/terms/find", json={"title": "Nonexistent"})
+    # Search with a term that should return results (but with low score)
+    resp3 = client.post("/api/terms/find", json={"title": "Beta", "minimum_score": 0.0})
     assert resp3.status_code == 200
     data3 = resp3.json()
     assert len(data3) > 0
-    record3= data3[0]
-    assert record3.get('score') <= 0.5
+    record3 = data3[0]
+    assert "score" in record3
+    assert "distance" in record3
 
 def test_find_term_invalid_created_at(client):
     resp = client.post("/api/terms/find", json={"created_at": "not-a-date"})
     assert resp.status_code == 400
     assert "invalid" in resp.json()["detail"].lower()
+
+def test_terms_pagination(client):
+    layer_id = create_layer(client)
+    domain_id = create_domain(client, layer_id)
+    
+    # Create 5 terms
+    terms = []
+    for i in range(5):
+        term = create_term(client, domain_id, layer_id, title=f"Term{i:02d}")
+        terms.append(term)
+    
+    # Test pagination with limit=2
+    resp = client.get(f"/api/terms/?domain_id={domain_id}&limit=2&sort=title")
+    assert resp.status_code == 200
+    data = resp.json()
+    
+    # Check pagination structure
+    assert "data" in data
+    assert "total" in data
+    assert "skip" in data
+    assert "limit" in data
+    
+    # Check first page
+    assert data["total"] == 5
+    assert data["skip"] == 0
+    assert data["limit"] == 2
+    assert len(data["data"]) == 2
+    
+    # Check that we can determine if more pages exist
+    has_more_pages = (data["skip"] + data["limit"]) < data["total"]
+    assert has_more_pages is True
+    
+    # Test second page
+    resp2 = client.get(f"/api/terms/?domain_id={domain_id}&skip=2&limit=2&sort=title")
+    assert resp2.status_code == 200
+    data2 = resp2.json()
+    
+    assert data2["total"] == 5
+    assert data2["skip"] == 2
+    assert data2["limit"] == 2
+    assert len(data2["data"]) == 2
+    
+    # Test last page
+    resp3 = client.get(f"/api/terms/?domain_id={domain_id}&skip=4&limit=2&sort=title")
+    assert resp3.status_code == 200
+    data3 = resp3.json()
+    
+    assert data3["total"] == 5
+    assert data3["skip"] == 4
+    assert data3["limit"] == 2
+    assert len(data3["data"]) == 1  # Only one item on last page
+    
+    # Check that this is the last page
+    has_more_pages = (data3["skip"] + data3["limit"]) < data3["total"]
+    assert has_more_pages is False

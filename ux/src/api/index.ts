@@ -5,6 +5,7 @@
  */
 
 // Services
+export * from './services/base';
 export * from './services/layers';
 export * from './services/domains';
 export * from './services/terms';

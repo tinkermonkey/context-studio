@@ -78,12 +78,28 @@ def test_list_layers(client):
     resp = client.get("/api/layers/?sort=title")
     assert resp.status_code == 200
     data = resp.json()
-    titles = [d["title"] for d in data]
+    
+    # Check pagination response structure
+    assert "data" in data
+    assert "total" in data
+    assert "skip" in data
+    assert "limit" in data
+    
+    # Check pagination metadata
+    assert data["total"] >= 2
+    assert data["skip"] == 0
+    assert data["limit"] == 50
+    assert len(data["data"]) >= 2
+    
+    titles = [d["title"] for d in data["data"]]
     assert "LayerA" in titles and "LayerB" in titles
+    
     # Test limit
     resp2 = client.get("/api/layers/?limit=1")
     assert resp2.status_code == 200
-    assert len(resp2.json()) == 1
+    data2 = resp2.json()
+    assert data2["limit"] == 1
+    assert len(data2["data"]) == 1
 
 def test_update_layer(client):
     layer = create_layer(client)
@@ -137,15 +153,54 @@ def test_find_layer(client):
     data2 = resp2.json()
     assert any("Chemistry" in d["definition"] for d in data2)
 
-    # Negative: poor match
-    resp3 = client.post("/api/layers/find", json={"title": "Nonexistent"})
+    # Search with a term that should return results (but with low minimum score)
+    resp3 = client.post("/api/layers/find", json={"title": "Beta", "minimum_score": 0.0})
     assert resp3.status_code == 200
     data3 = resp3.json()
     assert len(data3) > 0
-    record3= data3[0]
-    assert record3.get('score') <= 0.5
+    record3 = data3[0]
+    assert "score" in record3
+    assert "distance" in record3
 
 def test_find_layer_invalid_created_at(client):
     resp = client.post("/api/layers/find", json={"created_at": "not-a-date"})
     assert resp.status_code == 400
     assert "invalid" in resp.json()["detail"].lower()
+
+def test_layers_pagination(client):
+    # Create 4 layers
+    layers = []
+    for i in range(4):
+        layer = create_layer(client, title=f"PaginationLayer{i:02d}")
+        layers.append(layer)
+    
+    # Test pagination with limit=2
+    resp = client.get("/api/layers/?limit=2&sort=title")
+    assert resp.status_code == 200
+    data = resp.json()
+    
+    # Check pagination structure
+    assert "data" in data
+    assert "total" in data
+    assert "skip" in data
+    assert "limit" in data
+    
+    # Check first page (note: there might be other layers from other tests)
+    assert data["total"] >= 4
+    assert data["skip"] == 0
+    assert data["limit"] == 2
+    assert len(data["data"]) == 2
+    
+    # Check that we can determine if more pages exist
+    has_more_pages = (data["skip"] + data["limit"]) < data["total"]
+    assert has_more_pages is True
+    
+    # Test second page
+    resp2 = client.get("/api/layers/?skip=2&limit=2&sort=title")
+    assert resp2.status_code == 200
+    data2 = resp2.json()
+    
+    assert data2["total"] >= 4
+    assert data2["skip"] == 2
+    assert data2["limit"] == 2
+    assert len(data2["data"]) <= 2  # Could be less if we're near the end

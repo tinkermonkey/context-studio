@@ -4,7 +4,7 @@
  * Service for managing layer entities
  */
 
-import { BaseService, ListParams, FindParams } from './base';
+import { BaseService, ListParams, FindParams, PaginatedResponse } from './base';
 import { ENDPOINTS } from '../config';
 import type { components } from '../client/types';
 
@@ -13,6 +13,7 @@ export type LayerOut = components['schemas']['LayerOut'];
 export type LayerCreate = components['schemas']['LayerCreate'];
 export type LayerUpdate = components['schemas']['LayerUpdate'];
 export type FindLayerResult = components['schemas']['FindLayerResult'];
+export type PaginatedLayersResponse = components['schemas']['PaginatedLayersResponse'];
 
 export interface LayerListParams extends ListParams {
   sort?: 'title' | 'created_at';
@@ -24,10 +25,33 @@ export interface LayerFindParams extends FindParams {
 
 export class LayerService extends BaseService {
   /**
-   * List all layers
+   * List layers with optional pagination
+   * If no limit is specified, loads all layers across multiple pages
    */
   async list(params?: LayerListParams): Promise<LayerOut[]> {
-    return this.getResource<LayerOut[]>(ENDPOINTS.LAYERS + '/', params);
+    const url = ENDPOINTS.LAYERS + '/';
+    
+    // If limit is explicitly set, use single page request
+    if (params?.limit !== undefined) {
+      return this.getPage<LayerOut>(url, params);
+    }
+    
+    // Otherwise, load all layers across all pages
+    return this.getAllPaginated<LayerOut>(url, params);
+  }
+
+  /**
+   * List a specific page of layers
+   */
+  async listPage(params?: LayerListParams): Promise<LayerOut[]> {
+    return this.getPage<LayerOut>(ENDPOINTS.LAYERS + '/', params);
+  }
+
+  /**
+   * List a specific page of layers with pagination metadata
+   */
+  async listPageWithMetadata(params?: LayerListParams): Promise<PaginatedResponse<LayerOut>> {
+    return this.getPaginatedResponse<LayerOut>(ENDPOINTS.LAYERS + '/', params);
   }
 
   /**

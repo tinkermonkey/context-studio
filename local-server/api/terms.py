@@ -5,7 +5,7 @@ from pydantic import BaseModel, Field
 from typing import List, Optional
 from uuid import UUID, uuid4
 from sqlalchemy.orm import Session
-from sqlalchemy import text
+from sqlalchemy import text, func
 from database import models
 from database.utils import get_db
 from embeddings.generate_embeddings import generate_embedding
@@ -38,8 +38,13 @@ class TermUpdate(BaseModel):
     parent_term_id: Optional[UUID] = None
 
 
-class TermOut(TermBase):
+class TermOut(BaseModel):
     id: UUID
+    title: str
+    definition: str  # No min_length constraint for output
+    domain_id: UUID
+    layer_id: UUID
+    parent_term_id: Optional[UUID] = None
     title_embedding: Optional[List[float]] = None
     definition_embedding: Optional[List[float]] = None
     created_at: str
@@ -61,6 +66,13 @@ class FindTermRequest(BaseModel):
 class FindTermResult(TermOut):
     score: float
     distance: float
+
+
+class PaginatedTermsResponse(BaseModel):
+    data: List[TermOut]
+    total: int
+    skip: int
+    limit: int
 
 
 def to_term_out(term):
@@ -89,18 +101,6 @@ def to_term_out(term):
         500: {"description": "Internal Server Error"},
     },
 )
-@router.put("/find", response_model=None, responses={405: {"description": "Method Not Allowed"}})
-@router.get("/find", response_model=None, responses={405: {"description": "Method Not Allowed"}})
-@router.delete("/find", response_model=None, responses={405: {"description": "Method Not Allowed"}})
-def find_term_unsupported_method_delete():
-    """Return 405 for unsupported DELETE method on /find endpoint."""
-    raise HTTPException(status_code=405, detail="Method Not Allowed")
-def find_term_unsupported_method_get():
-    """Return 405 for unsupported GET method on /find endpoint."""
-    raise HTTPException(status_code=405, detail="Method Not Allowed")
-def find_term_unsupported_method():
-    """Return 405 for unsupported PUT method on /find endpoint."""
-    raise HTTPException(status_code=405, detail="Method Not Allowed")
 def find_term(req: FindTermRequest, db: Session = Depends(get_db)):
     # Validate created_at if provided
     if req.created_at is not None:
@@ -276,7 +276,7 @@ def get_term(id: str, db: Session = Depends(get_db)):
     return to_term_out(term)
 
 
-@router.get("/", response_model=List[TermOut])
+@router.get("/", response_model=PaginatedTermsResponse)
 def list_terms(
     domain_id: str = None,
     layer_id: str = None,
@@ -286,6 +286,7 @@ def list_terms(
     sort: Optional[str] = Query(None, pattern="^(title|created_at)?$"),
     db: Session = Depends(get_db),
 ):
+    # Build base query for both count and data
     q = db.query(models.Term)
     if domain_id:
         q = q.filter(models.Term.domain_id == str(domain_id))
@@ -293,15 +294,27 @@ def list_terms(
         q = q.filter(models.Term.layer_id == str(layer_id))
     if parent_term_id:
         q = q.filter(models.Term.parent_term_id == str(parent_term_id))
+    
+    # Get total count
+    total = q.count()
+    
+    # Apply sorting and pagination to get data
     if sort == "title":
         q = q.order_by(models.Term.title)
     elif sort == "created_at":
         q = q.order_by(models.Term.created_at.desc())
     terms = q.offset(skip).limit(limit).all()
+    
     result = []
     for t in terms:
         result.append(to_term_out(t))
-    return result
+    
+    return PaginatedTermsResponse(
+        data=result,
+        total=total,
+        skip=skip,
+        limit=limit
+    )
 
 
 @router.put("/{id}", response_model=TermOut)

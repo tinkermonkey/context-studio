@@ -6,7 +6,7 @@ from fastapi.exception_handlers import RequestValidationError
 from pydantic import BaseModel, Field
 from typing import List, Optional
 from uuid import UUID, uuid4
-from sqlalchemy import text
+from sqlalchemy import text, func
 from sqlalchemy.orm import Session
 from database import models
 from database.utils import get_db
@@ -60,6 +60,13 @@ class FindLayerResult(LayerOut):
     distance: float
 
 
+class PaginatedLayersResponse(BaseModel):
+    data: List[LayerOut]
+    total: int
+    skip: int
+    limit: int
+
+
 def to_layer_out(layer):
     return LayerOut(
         id=layer.id,
@@ -84,18 +91,6 @@ def to_layer_out(layer):
         500: {"description": "Internal Server Error"},
     },
 )
-@router.put("/find", response_model=None, responses={405: {"description": "Method Not Allowed"}})
-@router.get("/find", response_model=None, responses={405: {"description": "Method Not Allowed"}})
-@router.delete("/find", response_model=None, responses={405: {"description": "Method Not Allowed"}})
-def find_layer_unsupported_method_delete():
-    """Return 405 for unsupported DELETE method on /find endpoint."""
-    raise HTTPException(status_code=405, detail="Method Not Allowed")
-def find_layer_unsupported_method_get():
-    """Return 405 for unsupported GET method on /find endpoint."""
-    raise HTTPException(status_code=405, detail="Method Not Allowed")
-def find_layer_unsupported_method():
-    """Return 405 for unsupported PUT method on /find endpoint."""
-    raise HTTPException(status_code=405, detail="Method Not Allowed")
 def find_layer(req: FindLayerRequest, db: Session = Depends(get_db)):
     # Validate created_at if provided
     if req.created_at is not None:
@@ -243,7 +238,7 @@ def get_layer(id: str, db: Session = Depends(get_db)):
     return to_layer_out(layer)
 
 
-@router.get("/", response_model=List[LayerOut])
+@router.get("/", response_model=PaginatedLayersResponse)
 def list_layers(
     skip: int = Query(0, ge=0),
     limit: int = Query(50, ge=1, le=100),
@@ -253,12 +248,20 @@ def list_layers(
     # Validation now handled by Query pattern
     if sort == "":
         return validation_error_response("Sort parameter cannot be empty.", loc=["query", "sort"])
+    
+    # Build base query for both count and data
     q = db.query(models.Layer)
+    
+    # Get total count
+    total = q.count()
+    
+    # Apply sorting and pagination to get data
     if sort == "title":
         q = q.order_by(models.Layer.title)
     elif sort == "created_at":
         q = q.order_by(models.Layer.created_at.desc())
     layers = q.offset(skip).limit(limit).all()
+    
     result = []
     for l in layers:
         # Defensive: skip layers with invalid title
@@ -266,7 +269,13 @@ def list_layers(
             logger.warning(f"Skipping layer with invalid title (id={l.id}): '{l.title}'")
             continue
         result.append(to_layer_out(l))
-    return result
+    
+    return PaginatedLayersResponse(
+        data=result,
+        total=total,
+        skip=skip,
+        limit=limit
+    )
 
 
 @router.put("/{id}", response_model=LayerOut, responses={404: {"description": "Layer not found"}})

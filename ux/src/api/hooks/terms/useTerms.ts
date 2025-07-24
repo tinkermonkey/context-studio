@@ -1,6 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { termService } from '../../services/terms';
 import { apiLogger } from '../../utils/logger';
+import type { PaginatedResponse } from '../../services/base';
 import type { components } from '../../client/types';
 
 // Type definitions for terms
@@ -17,7 +18,7 @@ export const termsQueryKeys = {
   search: (query: string) => [...termsQueryKeys.all, 'search', query] as const,
 };
 
-// List terms hook
+// List terms hook - automatically handles pagination to load all data
 export function useTerms(params?: { 
   skip?: number; 
   limit?: number; 
@@ -30,6 +31,53 @@ export function useTerms(params?: {
       apiLogger.info('Fetching terms', { params });
       const response = await termService.list(params);
       apiLogger.info('Terms fetched successfully', { count: response.length });
+      return response;
+    },
+    staleTime: 1000 * 60 * 5, // 5 minutes
+    retry: 3,
+    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
+  });
+}
+
+// List single page of terms hook
+export function useTermsPage(params?: { 
+  skip?: number; 
+  limit?: number; 
+  domain_id?: string; 
+  layer_id?: string; 
+}) {
+  return useQuery({
+    queryKey: [...termsQueryKeys.lists(), 'page', params],
+    queryFn: async (): Promise<TermOut[]> => {
+      apiLogger.info('Fetching terms page', { params });
+      const response = await termService.listPage(params);
+      apiLogger.info('Terms page fetched successfully', { count: response.length });
+      return response;
+    },
+    staleTime: 1000 * 60 * 5, // 5 minutes
+    retry: 3,
+    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
+  });
+}
+
+// List single page of terms with metadata hook
+export function useTermsPageWithMetadata(params?: { 
+  skip?: number; 
+  limit?: number; 
+  domain_id?: string; 
+  layer_id?: string; 
+}) {
+  return useQuery({
+    queryKey: [...termsQueryKeys.lists(), 'page-metadata', params],
+    queryFn: async (): Promise<PaginatedResponse<TermOut>> => {
+      apiLogger.info('Fetching terms page with metadata', { params });
+      const response = await termService.listPageWithMetadata(params);
+      apiLogger.info('Terms page with metadata fetched successfully', { 
+        count: response.data.length, 
+        total: response.total,
+        skip: response.skip,
+        limit: response.limit
+      });
       return response;
     },
     staleTime: 1000 * 60 * 5, // 5 minutes

@@ -17,7 +17,7 @@ export const relationshipsQueryKeys = {
   byPredicate: (predicate: string) => [...relationshipsQueryKeys.all, 'byPredicate', predicate] as const,
 };
 
-// List relationships hook
+// List relationships hook - automatically handles pagination to load all data
 export function useRelationships(params?: { 
   skip?: number; 
   limit?: number; 
@@ -31,6 +31,28 @@ export function useRelationships(params?: {
       apiLogger.info('Fetching relationships', { params });
       const response = await relationshipService.list(params);
       apiLogger.info('Relationships fetched successfully', { count: response.length });
+      return response;
+    },
+    staleTime: 1000 * 60 * 5, // 5 minutes
+    retry: 3,
+    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
+  });
+}
+
+// List single page of relationships hook
+export function useRelationshipsPage(params?: { 
+  skip?: number; 
+  limit?: number; 
+  source_term_id?: string; 
+  target_term_id?: string; 
+  predicate?: string; 
+}) {
+  return useQuery({
+    queryKey: [...relationshipsQueryKeys.lists(), 'page', params],
+    queryFn: async (): Promise<TermRelationshipOut[]> => {
+      apiLogger.info('Fetching relationships page', { params });
+      const response = await relationshipService.listPage(params);
+      apiLogger.info('Relationships page fetched successfully', { count: response.length });
       return response;
     },
     staleTime: 1000 * 60 * 5, // 5 minutes

@@ -4,7 +4,7 @@
  * Service for managing term entities
  */
 
-import { BaseService, ListParams, FindParams } from './base';
+import { BaseService, ListParams, FindParams, PaginatedResponse } from './base';
 import { ENDPOINTS } from '../config';
 import type { components } from '../client/types';
 
@@ -13,6 +13,7 @@ export type TermOut = components['schemas']['TermOut'];
 export type TermCreate = components['schemas']['TermCreate'];
 export type TermUpdate = components['schemas']['TermUpdate'];
 export type FindTermResult = components['schemas']['FindTermResult'];
+export type PaginatedTermsResponse = components['schemas']['PaginatedTermsResponse'];
 
 export interface TermListParams extends ListParams {
   domain_id?: string;
@@ -27,10 +28,33 @@ export interface TermFindParams extends FindParams {
 
 export class TermService extends BaseService {
   /**
-   * List all terms
+   * List terms with optional pagination
+   * If no limit is specified, loads all terms across multiple pages
    */
   async list(params?: TermListParams): Promise<TermOut[]> {
-    return this.getResource<TermOut[]>(ENDPOINTS.TERMS + '/', params);
+    const url = ENDPOINTS.TERMS + '/';
+    
+    // If limit is explicitly set, use single page request
+    if (params?.limit !== undefined) {
+      return this.getPage<TermOut>(url, params);
+    }
+    
+    // Otherwise, load all terms across all pages
+    return this.getAllPaginated<TermOut>(url, params);
+  }
+
+  /**
+   * List a specific page of terms
+   */
+  async listPage(params?: TermListParams): Promise<TermOut[]> {
+    return this.getPage<TermOut>(ENDPOINTS.TERMS + '/', params);
+  }
+
+  /**
+   * List a specific page of terms with pagination metadata
+   */
+  async listPageWithMetadata(params?: TermListParams): Promise<PaginatedResponse<TermOut>> {
+    return this.getPaginatedResponse<TermOut>(ENDPOINTS.TERMS + '/', params);
   }
 
   /**

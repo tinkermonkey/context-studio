@@ -21,10 +21,26 @@ export interface RelationshipListParams extends ListParams {
 
 export class RelationshipService extends BaseService {
   /**
-   * List all term relationships
+   * List term relationships with optional pagination
+   * If no limit is specified, loads all relationships across multiple pages
    */
   async list(params?: RelationshipListParams): Promise<TermRelationshipOut[]> {
-    return this.getResource<TermRelationshipOut[]>(ENDPOINTS.RELATIONSHIPS + '/', params);
+    const url = ENDPOINTS.RELATIONSHIPS + '/';
+    
+    // If limit is explicitly set, use single page request
+    if (params?.limit !== undefined) {
+      return this.getPage<TermRelationshipOut>(url, params);
+    }
+    
+    // Otherwise, load all relationships across all pages
+    return this.getAllPaginated<TermRelationshipOut>(url, params);
+  }
+
+  /**
+   * List a specific page of term relationships
+   */
+  async listPage(params?: RelationshipListParams): Promise<TermRelationshipOut[]> {
+    return this.getPage<TermRelationshipOut>(ENDPOINTS.RELATIONSHIPS + '/', params);
   }
 
   /**

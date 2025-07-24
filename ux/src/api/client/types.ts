@@ -11,26 +11,11 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /**
-         * Find Layer Unsupported Method Delete
-         * @description Return 405 for unsupported DELETE method on /find endpoint.
-         */
-        get: operations["find_layer_unsupported_method_delete_api_layers_find_get"];
-        /**
-         * Find Layer Unsupported Method Delete
-         * @description Return 405 for unsupported DELETE method on /find endpoint.
-         */
-        put: operations["find_layer_unsupported_method_delete_api_layers_find_put"];
-        /**
-         * Find Layer Unsupported Method Delete
-         * @description Return 405 for unsupported DELETE method on /find endpoint.
-         */
-        post: operations["find_layer_unsupported_method_delete_api_layers_find_post"];
-        /**
-         * Find Layer Unsupported Method Delete
-         * @description Return 405 for unsupported DELETE method on /find endpoint.
-         */
-        delete: operations["find_layer_unsupported_method_delete_api_layers_find_delete"];
+        get?: never;
+        put?: never;
+        /** Find Layer */
+        post: operations["find_layer_api_layers_find_post"];
+        delete?: never;
         options?: never;
         head?: never;
         patch?: never;
@@ -80,26 +65,11 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /**
-         * Find Domain Unsupported Method Delete
-         * @description Return 405 for unsupported DELETE method on /find endpoint.
-         */
-        get: operations["find_domain_unsupported_method_delete_api_domains_find_get"];
-        /**
-         * Find Domain Unsupported Method Delete
-         * @description Return 405 for unsupported DELETE method on /find endpoint.
-         */
-        put: operations["find_domain_unsupported_method_delete_api_domains_find_put"];
-        /**
-         * Find Domain Unsupported Method Delete
-         * @description Return 405 for unsupported DELETE method on /find endpoint.
-         */
-        post: operations["find_domain_unsupported_method_delete_api_domains_find_post"];
-        /**
-         * Find Domain Unsupported Method Delete
-         * @description Return 405 for unsupported DELETE method on /find endpoint.
-         */
-        delete: operations["find_domain_unsupported_method_delete_api_domains_find_delete"];
+        get?: never;
+        put?: never;
+        /** Find Domain */
+        post: operations["find_domain_api_domains_find_post"];
+        delete?: never;
         options?: never;
         head?: never;
         patch?: never;
@@ -149,26 +119,11 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /**
-         * Find Term Unsupported Method Delete
-         * @description Return 405 for unsupported DELETE method on /find endpoint.
-         */
-        get: operations["find_term_unsupported_method_delete_api_terms_find_get"];
-        /**
-         * Find Term Unsupported Method Delete
-         * @description Return 405 for unsupported DELETE method on /find endpoint.
-         */
-        put: operations["find_term_unsupported_method_delete_api_terms_find_put"];
-        /**
-         * Find Term Unsupported Method Delete
-         * @description Return 405 for unsupported DELETE method on /find endpoint.
-         */
-        post: operations["find_term_unsupported_method_delete_api_terms_find_post"];
-        /**
-         * Find Term Unsupported Method Delete
-         * @description Return 405 for unsupported DELETE method on /find endpoint.
-         */
-        delete: operations["find_term_unsupported_method_delete_api_terms_find_delete"];
+        get?: never;
+        put?: never;
+        /** Find Term */
+        post: operations["find_term_api_terms_find_post"];
+        delete?: never;
         options?: never;
         head?: never;
         patch?: never;
@@ -300,6 +255,27 @@ export interface components {
             /** Layer Id */
             layer_id?: string | null;
         };
+        /** FindDomainRequest */
+        FindDomainRequest: {
+            /** Title */
+            title?: string | null;
+            /** Definition */
+            definition?: string | null;
+            /** Layer Id */
+            layer_id?: string | null;
+            /** Created At */
+            created_at?: string | null;
+            /**
+             * Minimum Score
+             * @default 0.1
+             */
+            minimum_score: number | null;
+            /**
+             * Limit
+             * @default 1
+             */
+            limit: number | null;
+        };
         /** FindDomainResult */
         FindDomainResult: {
             /** Title */
@@ -331,6 +307,25 @@ export interface components {
             /** Distance */
             distance: number;
         };
+        /** FindLayerRequest */
+        FindLayerRequest: {
+            /** Title */
+            title?: string | null;
+            /** Definition */
+            definition?: string | null;
+            /** Created At */
+            created_at?: string | null;
+            /**
+             * Minimum Score
+             * @default 0.1
+             */
+            minimum_score: number | null;
+            /**
+             * Limit
+             * @default 1
+             */
+            limit: number | null;
+        };
         /** FindLayerResult */
         FindLayerResult: {
             /** Title */
@@ -358,6 +353,29 @@ export interface components {
             score: number;
             /** Distance */
             distance: number;
+        };
+        /** FindTermRequest */
+        FindTermRequest: {
+            /** Title */
+            title?: string | null;
+            /** Definition */
+            definition?: string | null;
+            /** Layer Id */
+            layer_id?: string | null;
+            /** Domain Id */
+            domain_id?: string | null;
+            /** Created At */
+            created_at?: string | null;
+            /**
+             * Minimum Score
+             * @default 0.1
+             */
+            minimum_score: number | null;
+            /**
+             * Limit
+             * @default 1
+             */
+            limit: number | null;
         };
         /** FindTermResult */
         FindTermResult: {
@@ -443,6 +461,39 @@ export interface components {
             definition?: string | null;
             /** Primary Predicate */
             primary_predicate?: string | null;
+        };
+        /** PaginatedDomainsResponse */
+        PaginatedDomainsResponse: {
+            /** Data */
+            data: components["schemas"]["DomainOut"][];
+            /** Total */
+            total: number;
+            /** Skip */
+            skip: number;
+            /** Limit */
+            limit: number;
+        };
+        /** PaginatedLayersResponse */
+        PaginatedLayersResponse: {
+            /** Data */
+            data: components["schemas"]["LayerOut"][];
+            /** Total */
+            total: number;
+            /** Skip */
+            skip: number;
+            /** Limit */
+            limit: number;
+        };
+        /** PaginatedTermsResponse */
+        PaginatedTermsResponse: {
+            /** Data */
+            data: components["schemas"]["TermOut"][];
+            /** Total */
+            total: number;
+            /** Skip */
+            skip: number;
+            /** Limit */
+            limit: number;
         };
         /** TermCreate */
         TermCreate: {
@@ -574,68 +625,20 @@ export interface components {
 }
 export type $defs = Record<string, never>;
 export interface operations {
-    find_layer_unsupported_method_delete_api_layers_find_get: {
+    find_layer_api_layers_find_post: {
         parameters: {
-            query?: never;
+            query?: {
+                SessionLocal?: unknown;
+            };
             header?: never;
             path?: never;
             cookie?: never;
         };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": unknown;
-                };
-            };
-            /** @description Method Not Allowed */
-            405: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["FindLayerRequest"];
             };
         };
-    };
-    find_layer_unsupported_method_delete_api_layers_find_put: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": unknown;
-                };
-            };
-            /** @description Method Not Allowed */
-            405: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    find_layer_unsupported_method_delete_api_layers_find_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
         responses: {
             /** @description Successful Response */
             200: {
@@ -667,35 +670,17 @@ export interface operations {
                 };
                 content?: never;
             };
-            /** @description Internal Server Error */
-            500: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    find_layer_unsupported_method_delete_api_layers_find_delete: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
+            /** @description Validation Error */
+            422: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": unknown;
+                    "application/json": components["schemas"]["HTTPValidationError"];
                 };
             };
-            /** @description Method Not Allowed */
-            405: {
+            /** @description Internal Server Error */
+            500: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -723,7 +708,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["LayerOut"][];
+                    "application/json": components["schemas"]["PaginatedLayersResponse"];
                 };
             };
             /** @description Validation Error */
@@ -908,68 +893,20 @@ export interface operations {
             };
         };
     };
-    find_domain_unsupported_method_delete_api_domains_find_get: {
+    find_domain_api_domains_find_post: {
         parameters: {
-            query?: never;
+            query?: {
+                SessionLocal?: unknown;
+            };
             header?: never;
             path?: never;
             cookie?: never;
         };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": unknown;
-                };
-            };
-            /** @description Method Not Allowed */
-            405: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["FindDomainRequest"];
             };
         };
-    };
-    find_domain_unsupported_method_delete_api_domains_find_put: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": unknown;
-                };
-            };
-            /** @description Method Not Allowed */
-            405: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    find_domain_unsupported_method_delete_api_domains_find_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
         responses: {
             /** @description Successful Response */
             200: {
@@ -1001,35 +938,17 @@ export interface operations {
                 };
                 content?: never;
             };
-            /** @description Internal Server Error */
-            500: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    find_domain_unsupported_method_delete_api_domains_find_delete: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
+            /** @description Validation Error */
+            422: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": unknown;
+                    "application/json": components["schemas"]["HTTPValidationError"];
                 };
             };
-            /** @description Method Not Allowed */
-            405: {
+            /** @description Internal Server Error */
+            500: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -1058,7 +977,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["DomainOut"][];
+                    "application/json": components["schemas"]["PaginatedDomainsResponse"];
                 };
             };
             /** @description Validation Error */
@@ -1231,68 +1150,20 @@ export interface operations {
             };
         };
     };
-    find_term_unsupported_method_delete_api_terms_find_get: {
+    find_term_api_terms_find_post: {
         parameters: {
-            query?: never;
+            query?: {
+                SessionLocal?: unknown;
+            };
             header?: never;
             path?: never;
             cookie?: never;
         };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": unknown;
-                };
-            };
-            /** @description Method Not Allowed */
-            405: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["FindTermRequest"];
             };
         };
-    };
-    find_term_unsupported_method_delete_api_terms_find_put: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": unknown;
-                };
-            };
-            /** @description Method Not Allowed */
-            405: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    find_term_unsupported_method_delete_api_terms_find_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
         responses: {
             /** @description Successful Response */
             200: {
@@ -1324,35 +1195,17 @@ export interface operations {
                 };
                 content?: never;
             };
-            /** @description Internal Server Error */
-            500: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    find_term_unsupported_method_delete_api_terms_find_delete: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
+            /** @description Validation Error */
+            422: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": unknown;
+                    "application/json": components["schemas"]["HTTPValidationError"];
                 };
             };
-            /** @description Method Not Allowed */
-            405: {
+            /** @description Internal Server Error */
+            500: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -1383,7 +1236,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["TermOut"][];
+                    "application/json": components["schemas"]["PaginatedTermsResponse"];
                 };
             };
             /** @description Validation Error */
