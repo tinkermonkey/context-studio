@@ -10,7 +10,7 @@ const customTheme = createTheme({
     },
   },
   table: {
-    root:{
+    root: {
       shadow: "drop-shadow-none",
     },
     head: {
@@ -18,7 +18,18 @@ const customTheme = createTheme({
     },
     body: {
       base: "rounded-none border-t-1 border-b-1 border-gray-300 dark:border-gray-600",
-    }
+    },
+  },
+  textInput: {
+    field: {
+      input: {
+        sizes: {
+          sm: "p-2 sm:text-xs",
+          md: "p-2 sm:text-sm",
+          lg: "p-2 sm:text-base",
+        },
+      },
+    },
   },
 });
 
@@ -30,7 +41,7 @@ function RootComponent() {
   return (
     <ThemeProvider theme={customTheme}>
       <Outlet />
-      <TanStackRouterDevtools position="bottom-right" />
+      {/* <TanStackRouterDevtools position="bottom-right" /> */}
     </ThemeProvider>
   );
 }

@@ -1,4 +1,3 @@
-from sys import version
 from sqlalchemy import Column, String, Text, Integer, DateTime, ForeignKey, UniqueConstraint
 from sqlalchemy.dialects.sqlite import BLOB
 from sqlalchemy.orm import declarative_base, relationship

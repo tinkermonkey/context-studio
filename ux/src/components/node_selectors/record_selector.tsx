@@ -52,6 +52,7 @@ export const RecordSelector: React.FC<RecordSelectorProps> = ({
     <div className="relative w-full">
       <div className="flex items-center gap-0">
         <Dropdown
+          color={"light"}
           label={
             loading
               ? "Loading..."

@@ -3,6 +3,7 @@ import {
   flexRender,
   getCoreRowModel,
   useReactTable,
+  getPaginationRowModel,
 } from "@tanstack/react-table";
 import {
   Table,
@@ -12,12 +13,18 @@ import {
   TableRow,
   TableCell,
   Button,
+  Badge,
   Spinner,
   Modal,
   ModalHeader,
   ModalBody,
+  Dropdown,
+  DropdownItem,
+  TextInput,
+  Pagination,
+  Select,
 } from "flowbite-react";
-import { RefreshCcw, Plus } from "lucide-react";
+import { RefreshCcw, Plus, Search } from "lucide-react";
 
 export interface BaseNodeTableProps<T> {
   columns: any[];
@@ -31,6 +38,8 @@ export interface BaseNodeTableProps<T> {
   typeName: string;
   getId: (item: T) => string;
   columnVisibility?: Record<string, boolean>;
+  pageSizeOptions?: number[];
+  defaultPageSize?: number;
 }
 
 function BaseNodeTable<T>({
@@ -45,6 +54,8 @@ function BaseNodeTable<T>({
   typeName,
   getId,
   columnVisibility: propColumnVisibility,
+  pageSizeOptions = [10, 20, 50, 100],
+  defaultPageSize = 20,
 }: BaseNodeTableProps<T>) {
   const [showCreateModal, setShowCreateModal] = React.useState(false);
   const [showDeleteModal, setShowDeleteModal] = React.useState(false);
@@ -66,19 +77,35 @@ function BaseNodeTable<T>({
     return data.find((item) => getId(item) === editNodeId);
   }, [editNodeId, data, getId]);
 
+  const [pageIndex, setPageIndex] = React.useState(0);
+  const [pageSize, setPageSize] = React.useState(defaultPageSize);
+
   const table = useReactTable({
     data: data ?? [],
     columns,
-    state: { columnVisibility },
+    state: {
+      columnVisibility,
+      pagination: { pageIndex, pageSize },
+    },
     onColumnVisibilityChange: setColumnVisibility,
     getCoreRowModel: getCoreRowModel(),
+    getPaginationRowModel: getPaginationRowModel(),
     enableRowSelection: true,
+    manualPagination: false,
+    pageCount: Math.ceil((data?.length ?? 0) / pageSize),
   });
   React.useImperativeHandle(tableRef, () => table, [table]);
 
   React.useEffect(() => {
     setSelectedCount(table.getSelectedRowModel().rows.length);
   }, [table.getSelectedRowModel().rows.length]);
+
+  // Reset to first page if data changes and current page is out of range
+  React.useEffect(() => {
+    if (pageIndex > 0 && pageIndex >= table.getPageCount()) {
+      setPageIndex(0);
+    }
+  }, [data, pageIndex, table]);
 
   if (isLoading) return <Spinner />;
   if (error) {
@@ -114,7 +141,7 @@ function BaseNodeTable<T>({
     <>
       <div className="mb-4 flex items-center justify-between">
         <div className="flex grow justify-start">
-
+          <TextInput placeholder={`Search ${typeName}s...`} icon={Search} />
         </div>
         <div className="flex justify-end gap-2">
           <Button
@@ -123,18 +150,22 @@ function BaseNodeTable<T>({
             onClick={() => setShowCreateModal(true)}
             className="w-auto whitespace-nowrap"
           >
-            <Plus className="h-4 w-4 mr-2" />
+            <Plus className="mr-2 h-4 w-4" />
             Add {typeName}
           </Button>
 
-          <Button
+          <Dropdown
+            label="Actions"
             color="light"
             size="sm"
-            onClick={handleDeleteSelected}
+            className="w-auto whitespace-nowrap"
+            dismissOnClick={true}
             disabled={selectedCount === 0}
           >
-            Delete Selected
-          </Button>
+            <DropdownItem onClick={handleDeleteSelected}>
+              Delete Selected
+            </DropdownItem>
+          </Dropdown>
 
           {onRefetch && (
             <Button color="light" size="sm" onClick={onRefetch}>
@@ -143,6 +174,7 @@ function BaseNodeTable<T>({
           )}
         </div>
       </div>
+
       <Table hoverable className="max-w-full">
         <TableHead>
           <TableRow>
@@ -183,6 +215,51 @@ function BaseNodeTable<T>({
           ))}
         </TableBody>
       </Table>
+
+      <div className="mt-4 flex w-full items-center justify-between px-4">
+        <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2">
+            <Select
+              value={pageSize}
+              onChange={(e) => {
+                setPageSize(Number(e.target.value));
+                setPageIndex(0);
+              }}
+              className="w-20"
+            >
+              {pageSizeOptions.map((size) => (
+                <option key={size} value={size}>
+                  {size}
+                </option>
+              ))}
+            </Select>
+            <span className="text-sm text-gray-600">per page,</span>
+          </div>
+          <div className="text-sm font-normal text-gray-700">
+            showing <Badge className="inline" color="gray">{typeName.toLowerCase()}s</Badge>{" "}
+            <span className="font-bold">
+              {data.length === 0 ? 0 : pageIndex * pageSize + 1}
+            </span>
+            -
+            <span className="font-bold">
+              {Math.min((pageIndex + 1) * pageSize, data.length)}
+            </span>
+            &nbsp;of&nbsp;<span className="font-bold">{data.length}</span>
+          </div>
+          
+        </div>
+        <div>
+          <Pagination
+            layout="pagination"
+            currentPage={pageIndex + 1}
+            totalPages={Math.ceil(data.length / pageSize)}
+            onPageChange={(page) => setPageIndex(page - 1)}
+            showIcons
+            nextLabel=""
+            previousLabel=""
+          />
+        </div>
+      </div>
       {/* Delete Confirmation Modal */}
       <Modal show={showDeleteModal} onClose={() => setShowDeleteModal(false)}>
         <ModalHeader className="border-b-0">Confirm Delete</ModalHeader>
