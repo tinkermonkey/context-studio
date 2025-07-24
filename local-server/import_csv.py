@@ -36,48 +36,74 @@ def read_csv_rows(file_path):
     return rows
 
 def import_records(rows, session: Session, layer: Layer):
-    # Map domain title to domain id for quick lookup
-    domain_title_to_id = {}
-    # First pass: create/update domains
+    # Track last seen Layer, Domain, and Term by depth for parent relationships
+    last_layer = None
+    last_domain = None
+    last_terms_by_depth = {}
+
     for row in rows:
-        if row.get("Type") == "Domain":
+        try:
+            depth = int(str(row.get("Depth")).strip())
+        except (TypeError, ValueError):
+            logger.warning(f"Row missing or invalid Depth: {row}")
+            continue
+
+        if depth == 0:
+            # Layer
+            layer_id = row.get("ID") or str(uuid.uuid4())
+            title = row.get("Title")
+            definition = row.get("Definition")
+            lyr = session.query(Layer).filter_by(id=layer_id).first()
+            if not lyr:
+                lyr = Layer(
+                    id=layer_id,
+                    title=title,
+                    definition=definition,
+                )
+                session.add(lyr)
+                logger.info(f"Created Layer: {title} (ID: {layer_id})")
+            else:
+                lyr.title = title
+                lyr.definition = definition
+                logger.info(f"Updated Layer: {title} (ID: {layer_id})")
+            session.commit()
+            last_layer = lyr
+        elif depth == 1:
+            # Domain
             domain_id = row.get("ID") or str(uuid.uuid4())
             title = row.get("Title")
             definition = row.get("Definition")
+            # Use last_layer if present, else fallback to provided layer
+            layer_id = last_layer.id if last_layer else layer.id
             domain = session.query(Domain).filter_by(id=domain_id).first()
             if not domain:
                 domain = Domain(
                     id=domain_id,
                     title=title,
                     definition=definition,
-                    layer_id=layer.id,
+                    layer_id=layer_id,
                 )
                 session.add(domain)
                 logger.info(f"Created Domain: {title} (ID: {domain_id})")
             else:
                 domain.title = title
                 domain.definition = definition
-                domain.layer_id = layer.id
+                domain.layer_id = layer_id
                 logger.info(f"Updated Domain: {title} (ID: {domain_id})")
-            domain_title_to_id[title] = domain_id
-    session.commit()
-
-    # Second pass: create/update terms
-    term_id_to_obj = {}
-    for row in rows:
-        if row.get("Type") == "Term":
+            session.commit()
+            last_domain = domain
+        elif depth > 1:
+            # Term
             term_id = row.get("ID") or str(uuid.uuid4())
             title = row.get("Title")
             definition = row.get("Definition")
-            parent_id = row.get("Parent") or None
-            # Find domain for this term (by walking up until a Domain row)
-            domain_id = None
-            idx = rows.index(row)
-            while idx >= 0:
-                if rows[idx].get("Type") == "Domain":
-                    domain_id = rows[idx].get("ID")
-                    break
-                idx -= 1
+            parent_id = None
+            # Set parent_term_id if previous term at depth-1 exists
+            if (depth - 1) in last_terms_by_depth:
+                parent_id = last_terms_by_depth[depth - 1].id
+            # Use last_domain for domain_id, last_layer for layer_id
+            domain_id = last_domain.id if last_domain else None
+            layer_id = last_layer.id if last_layer else layer.id
             if not domain_id:
                 logger.warning(f"No domain found for term {title} (ID: {term_id}), skipping.")
                 continue
@@ -89,7 +115,7 @@ def import_records(rows, session: Session, layer: Layer):
                         title=title,
                         definition=definition,
                         domain_id=domain_id,
-                        layer_id=layer.id,
+                        layer_id=layer_id,
                         parent_term_id=parent_id if parent_id else None,
                     )
                     session.add(term)
@@ -98,10 +124,10 @@ def import_records(rows, session: Session, layer: Layer):
                     term.title = title
                     term.definition = definition
                     term.domain_id = domain_id
-                    term.layer_id = layer.id
+                    term.layer_id = layer_id
                     term.parent_term_id = parent_id if parent_id else None
                     logger.info(f"Updated Term: {title} (ID: {term_id})")
-                term_id_to_obj[term_id] = term
+                last_terms_by_depth[depth] = term
                 session.commit()
             except Exception as e:
                 session.rollback()
