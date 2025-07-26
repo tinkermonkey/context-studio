@@ -236,7 +236,7 @@ def list_domains(
     layer_id: str = None,
     skip: int = 0,
     limit: int = Query(50, le=100),
-    sort: Optional[str] = Query(None, pattern="^(title|created_at)?$"),
+    sortBy: str = Query("title", pattern="^(title|created_at)$"),
     db: Session = Depends(get_db),
 ):
     # Build base query for both count and data
@@ -248,9 +248,9 @@ def list_domains(
     total = q.count()
     
     # Apply sorting and pagination to get data
-    if sort == "title":
+    if sortBy == "title":
         q = q.order_by(models.Domain.title)
-    elif sort == "created_at":
+    elif sortBy == "created_at":
         q = q.order_by(models.Domain.created_at.desc())
     domains = q.offset(skip).limit(limit).all()
     

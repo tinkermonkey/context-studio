@@ -162,7 +162,7 @@ const DomainForm: React.FC<DomainFormProps> = ({ onSuccess, domain }) => {
             {submitError}
           </Alert>
         )}
-        <div className="flex items-center gap-2">
+        <div className="flex justify-end items-center gap-2">
           <Button
             type="submit"
             disabled={

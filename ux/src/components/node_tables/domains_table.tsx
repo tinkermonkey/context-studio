@@ -8,6 +8,7 @@ import { BaseNodeTable } from './node_table';
 import { useDomains } from '@/api/hooks/domains';
 import { useDeleteDomain } from '@/api/hooks/domains';
 import { DomainForm } from '@/components/forms/domain_form';
+import type { FieldDefinition } from "@/components/misc/query_filters";
 
 const columnHelper = createColumnHelper<DomainOut>();
 
@@ -72,21 +73,64 @@ const columns = [
 ];
 
 
+// Define filter fields for domains
+const domainFilterFields: FieldDefinition[] = [
+  {
+    field: 'title',
+    label: 'Title',
+    type: 'text',
+    operators: ['equals', 'contains', 'starts_with', 'ends_with'],
+  },
+  {
+    field: 'definition',
+    label: 'Definition',
+    type: 'text',
+    operators: ['contains'],
+  },
+  {
+    field: 'layer_id',
+    label: 'Layer',
+    type: 'select',
+    operators: ['equals'],
+    // TODO: Populate this from the layers API and use the LayerSelector component
+    options: [
+      { value: 'layer1', label: 'Layer 1' },
+      { value: 'layer2', label: 'Layer 2' },
+    ],
+  },
+  {
+    field: 'created_at',
+    label: 'Created Date',
+    type: 'date',
+    operators: ['gte', 'lte', 'between'],
+  },
+  {
+    field: 'last_modified',
+    label: 'Date Modified',
+    type: 'date',
+    operators: ['gte', 'lte', 'between'],
+  },
+];
+
 export interface DomainsTableProps {
   data?: DomainOut[];
   onSelectionChange?: (count: number) => void;
   onEdit?: (id: string) => void;
   columnVisibility?: Record<string, boolean>;
+  queryParams?: Record<string, unknown>;
+  onQueryParamsChange?: (params: Record<string, unknown>) => void;
 }
 
-
-
-
 const DomainsTable = React.forwardRef<any, DomainsTableProps>((props, ref) => {
-  const { data: domains, isLoading, error, refetch } = useDomains();
+  const { 
+    queryParams = {}, 
+    onQueryParamsChange 
+  } = props;
+  
+  // Use query params in the domains hook
+  const { data: domains, isLoading, error, refetch } = useDomains(queryParams);
   const deleteDomain = useDeleteDomain();
   
-  // Default hidden columns: id, layer_id, version, created_at, last_modified
   const defaultColumnVisibility: Record<string, boolean> = {
     id: false,
     layer_id: false,
@@ -114,6 +158,10 @@ const DomainsTable = React.forwardRef<any, DomainsTableProps>((props, ref) => {
       typeName="Domain"
       getId={(item) => item.id}
       columnVisibility={columnVisibility}
+      queryParams={queryParams}
+      onQueryParamsChange={onQueryParamsChange}
+      filterFields={domainFilterFields}
+      searchPlaceholder="Search..."
     />
   );
 });

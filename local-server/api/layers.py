@@ -242,13 +242,9 @@ def get_layer(id: str, db: Session = Depends(get_db)):
 def list_layers(
     skip: int = Query(0, ge=0),
     limit: int = Query(50, ge=1, le=100),
-    sort: Optional[str] = Query(None, pattern="^(title|created_at)$"),
+    sortBy: str = Query("title", pattern="^(title|created_at)$"),
     db: Session = Depends(get_db),
 ):
-    # Validation now handled by Query pattern
-    if sort == "":
-        return validation_error_response("Sort parameter cannot be empty.", loc=["query", "sort"])
-    
     # Build base query for both count and data
     q = db.query(models.Layer)
     
@@ -256,9 +252,9 @@ def list_layers(
     total = q.count()
     
     # Apply sorting and pagination to get data
-    if sort == "title":
+    if sortBy == "title":
         q = q.order_by(models.Layer.title)
-    elif sort == "created_at":
+    elif sortBy == "created_at":
         q = q.order_by(models.Layer.created_at.desc())
     layers = q.offset(skip).limit(limit).all()
     

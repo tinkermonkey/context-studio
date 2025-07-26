@@ -152,20 +152,14 @@
             }
           },
           {
-            "name": "sort",
+            "name": "sortBy",
             "in": "query",
             "required": false,
             "schema": {
-              "anyOf": [
-                {
-                  "type": "string",
-                  "pattern": "^(title|created_at)$"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "title": "Sort"
+              "type": "string",
+              "pattern": "^(title|created_at)$",
+              "default": "title",
+              "title": "Sortby"
             }
           },
           {
@@ -519,20 +513,14 @@
             }
           },
           {
-            "name": "sort",
+            "name": "sortBy",
             "in": "query",
             "required": false,
             "schema": {
-              "anyOf": [
-                {
-                  "type": "string",
-                  "pattern": "^(title|created_at)?$"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "title": "Sort"
+              "type": "string",
+              "pattern": "^(title|created_at)$",
+              "default": "title",
+              "title": "Sortby"
             }
           },
           {
@@ -904,20 +892,14 @@
             }
           },
           {
-            "name": "sort",
+            "name": "sortBy",
             "in": "query",
             "required": false,
             "schema": {
-              "anyOf": [
-                {
-                  "type": "string",
-                  "pattern": "^(title|created_at)?$"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "title": "Sort"
+              "type": "string",
+              "pattern": "^(title|created_at)$",
+              "default": "title",
+              "title": "Sortby"
             }
           },
           {
@@ -1990,14 +1972,17 @@
       },
       "FindTermResult": {
         "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
           "title": {
             "type": "string",
-            "minLength": 2,
             "title": "Title"
           },
           "definition": {
             "type": "string",
-            "minLength": 1,
             "title": "Definition"
           },
           "domain_id": {
@@ -2021,11 +2006,6 @@
               }
             ],
             "title": "Parent Term Id"
-          },
-          "id": {
-            "type": "string",
-            "format": "uuid",
-            "title": "Id"
           },
           "title_embedding": {
             "anyOf": [
@@ -2078,11 +2058,11 @@
         },
         "type": "object",
         "required": [
+          "id",
           "title",
           "definition",
           "domain_id",
           "layer_id",
-          "id",
           "created_at",
           "version",
           "last_modified",
@@ -2417,14 +2397,17 @@
       },
       "TermOut": {
         "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
           "title": {
             "type": "string",
-            "minLength": 2,
             "title": "Title"
           },
           "definition": {
             "type": "string",
-            "minLength": 1,
             "title": "Definition"
           },
           "domain_id": {
@@ -2448,11 +2431,6 @@
               }
             ],
             "title": "Parent Term Id"
-          },
-          "id": {
-            "type": "string",
-            "format": "uuid",
-            "title": "Id"
           },
           "title_embedding": {
             "anyOf": [
@@ -2497,11 +2475,11 @@
         },
         "type": "object",
         "required": [
+          "id",
           "title",
           "definition",
           "domain_id",
           "layer_id",
-          "id",
           "created_at",
           "version",
           "last_modified"

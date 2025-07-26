@@ -161,7 +161,7 @@ const LayerForm: React.FC<LayerFormProps> = ({ onSuccess, layer }) => {
           </Alert>
         )}
         
-        <div className="flex items-center gap-2">
+        <div className="flex justify-end items-center gap-2">
           <Button
             type="submit"
             disabled={
