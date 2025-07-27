@@ -3,7 +3,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
 from database.utils import init_db, get_db, get_engine, get_session_local
-from api import layers, domains, terms, term_relationships
+from api import layers, domains, terms, term_relationships, graph
 from utils.logger import get_logger
 from utils.event_processor import EventProcessor
 
@@ -59,6 +59,7 @@ def create_app(engine=None, session_local=None, skip_vec=False):
     app.include_router(domains.router, prefix="/api/domains", tags=["domains"])
     app.include_router(terms.router, prefix="/api/terms", tags=["terms"])
     app.include_router(term_relationships.router, prefix="/api/term-relationships", tags=["term-relationships"])
+    app.include_router(graph.router, prefix="/api", tags=["graph"])
     return app
 
 # Default app for production

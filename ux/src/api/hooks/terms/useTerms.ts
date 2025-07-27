@@ -24,6 +24,7 @@ export function useTerms(params?: {
   limit?: number; 
   domain_id?: string; 
   layer_id?: string; 
+  parent_term_id?: string; 
 }) {
   return useQuery({
     queryKey: termsQueryKeys.list(params),
@@ -45,6 +46,7 @@ export function useTermsPage(params?: {
   limit?: number; 
   domain_id?: string; 
   layer_id?: string; 
+  parent_term_id?: string; 
 }) {
   return useQuery({
     queryKey: [...termsQueryKeys.lists(), 'page', params],
@@ -66,6 +68,7 @@ export function useTermsPageWithMetadata(params?: {
   limit?: number; 
   domain_id?: string; 
   layer_id?: string; 
+  parent_term_id?: string; 
 }) {
   return useQuery({
     queryKey: [...termsQueryKeys.lists(), 'page-metadata', params],

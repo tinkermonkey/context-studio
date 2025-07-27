@@ -24,7 +24,7 @@ import {
   Pagination,
   Select,
 } from "flowbite-react";
-import { RefreshCcw, Plus, Search, ExternalLink } from "lucide-react";
+import { RefreshCcw, Plus, Search, CircleArrowRight } from "lucide-react";
 import {
   QueryFilters,
   type QueryFilter,
@@ -449,12 +449,11 @@ function BaseNodeTable<T>({
                     return url ? (
                       <a
                         href={url}
-                        target="_blank"
                         rel="noopener noreferrer"
                         className="inline-flex items-center text-blue-600 hover:text-blue-800"
                         title="Open in new tab"
                       >
-                        <ExternalLink className="h-4 w-4" />
+                        <CircleArrowRight className="h-4 w-4" />
                       </a>
                     ) : null;
                   })()}

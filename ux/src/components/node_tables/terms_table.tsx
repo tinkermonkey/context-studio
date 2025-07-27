@@ -3,7 +3,7 @@ import { createColumnHelper } from "@tanstack/react-table";
 import { Checkbox } from "flowbite-react";
 import { TermOut } from "@/api/services/terms";
 import { renderShortDateTime, renderShortUuid } from "@/utils/renderers";
-import { Term } from "@/components/nodes/term";
+import { TermRenderer } from "@/components/node_renderers/term_renderer";
 import { BaseNodeTable } from "./node_table";
 import { useTerms } from "@/api/hooks/terms";
 import { useDeleteTerm } from "@/api/hooks/terms";
@@ -63,7 +63,7 @@ const columns = [
   columnHelper.accessor("parent_term_id", {
     cell: (info) => {
       const value = info.getValue() ?? "";
-      return value ? <Term term_id={value} /> : "";
+      return value ? <TermRenderer term_id={value} /> : "";
     },
     header: () => "Parent Term",
   }),
@@ -194,6 +194,7 @@ const TermsTable = React.forwardRef<any, TermsTableProps>((props, ref) => {
       onQueryParamsChange={onQueryParamsChange}
       filterFields={domainFilterFields}
       searchPlaceholder="Search..."
+      linkGenerator={(term: TermOut) => `/app/nodes/term/${term.id}`}
     />
   );
 });

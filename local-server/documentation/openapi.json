@@ -1386,10 +1386,985 @@
           }
         }
       }
+    },
+    "/api/graph/stats": {
+      "get": {
+        "tags": [
+          "graph",
+          "Graph"
+        ],
+        "summary": "Get Graph Stats",
+        "description": "Get comprehensive graph statistics from both SPARQL and NetworkX services.",
+        "operationId": "get_graph_stats_api_graph_stats_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "type": "object",
+                  "title": "Response Get Graph Stats Api Graph Stats Get"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/graph/refresh": {
+      "post": {
+        "tags": [
+          "graph",
+          "Graph"
+        ],
+        "summary": "Refresh Graphs",
+        "description": "Refresh both SPARQL and NetworkX graphs from the database.",
+        "operationId": "refresh_graphs_api_graph_refresh_post",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": {
+                    "type": "string"
+                  },
+                  "type": "object",
+                  "title": "Response Refresh Graphs Api Graph Refresh Post"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/graph/sparql/query": {
+      "post": {
+        "tags": [
+          "graph",
+          "Graph"
+        ],
+        "summary": "Execute Sparql Query",
+        "description": "Execute a SPARQL query against the RDF graph.",
+        "operationId": "execute_sparql_query_api_graph_sparql_query_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SPARQLQuery"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "additionalProperties": true,
+                    "type": "object"
+                  },
+                  "type": "array",
+                  "title": "Response Execute Sparql Query Api Graph Sparql Query Post"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/graph/sparql/export": {
+      "get": {
+        "tags": [
+          "graph",
+          "Graph"
+        ],
+        "summary": "Export Rdf",
+        "description": "Export the RDF graph in various formats.",
+        "operationId": "export_rdf_api_graph_sparql_export_get",
+        "parameters": [
+          {
+            "name": "format",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "description": "RDF serialization format",
+              "default": "turtle",
+              "title": "Format"
+            },
+            "description": "RDF serialization format"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string",
+                  "title": "Response Export Rdf Api Graph Sparql Export Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/graph/search/terms": {
+      "get": {
+        "tags": [
+          "graph",
+          "Graph"
+        ],
+        "summary": "Search Terms",
+        "description": "Search for terms by title using SPARQL.",
+        "operationId": "search_terms_api_graph_search_terms_get",
+        "parameters": [
+          {
+            "name": "title",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Term title to search for",
+              "title": "Title"
+            },
+            "description": "Term title to search for"
+          },
+          {
+            "name": "exact",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "description": "Whether to do exact match",
+              "default": false,
+              "title": "Exact"
+            },
+            "description": "Whether to do exact match"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "additionalProperties": true
+                  },
+                  "title": "Response Search Terms Api Graph Search Terms Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/graph/search/analyze": {
+      "post": {
+        "tags": [
+          "graph",
+          "Graph"
+        ],
+        "summary": "Search And Analyze",
+        "description": "Search for terms and provide comprehensive analysis.",
+        "operationId": "search_and_analyze_api_graph_search_analyze_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SearchRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "type": "object",
+                  "title": "Response Search And Analyze Api Graph Search Analyze Post"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/graph/analytics/centrality": {
+      "post": {
+        "tags": [
+          "graph",
+          "Graph"
+        ],
+        "summary": "Calculate Centrality",
+        "description": "Calculate node centrality using NetworkX algorithms.",
+        "operationId": "calculate_centrality_api_graph_analytics_centrality_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CentralityRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": {
+                    "type": "number"
+                  },
+                  "type": "object",
+                  "title": "Response Calculate Centrality Api Graph Analytics Centrality Post"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/graph/analytics/communities": {
+      "get": {
+        "tags": [
+          "graph",
+          "Graph"
+        ],
+        "summary": "Detect Communities",
+        "description": "Detect communities in the graph using NetworkX algorithms.",
+        "operationId": "detect_communities_api_graph_analytics_communities_get",
+        "parameters": [
+          {
+            "name": "method",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "description": "Community detection method",
+              "default": "louvain",
+              "title": "Method"
+            },
+            "description": "Community detection method"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  "title": "Response Detect Communities Api Graph Analytics Communities Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/graph/path/shortest": {
+      "post": {
+        "tags": [
+          "graph",
+          "Graph"
+        ],
+        "summary": "Find Shortest Path",
+        "description": "Find the shortest path between two nodes.",
+        "operationId": "find_shortest_path_api_graph_path_shortest_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PathRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "anyOf": [
+                    {
+                      "items": {
+                        "type": "string"
+                      },
+                      "type": "array"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ],
+                  "title": "Response Find Shortest Path Api Graph Path Shortest Post"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/graph/neighbors": {
+      "post": {
+        "tags": [
+          "graph",
+          "Graph"
+        ],
+        "summary": "Get Neighbors",
+        "description": "Get neighbors of a node at specified depth.",
+        "operationId": "get_neighbors_api_graph_neighbors_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/NeighborsRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": {
+                    "items": {
+                      "type": "string"
+                    },
+                    "type": "array"
+                  },
+                  "type": "object",
+                  "title": "Response Get Neighbors Api Graph Neighbors Post"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/graph/terms/{term_id}/related": {
+      "get": {
+        "tags": [
+          "graph",
+          "Graph"
+        ],
+        "summary": "Find Related Terms",
+        "description": "Find related terms using both SPARQL and NetworkX for comprehensive results.",
+        "operationId": "find_related_terms_api_graph_terms__term_id__related_get",
+        "parameters": [
+          {
+            "name": "term_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Term Id"
+            }
+          },
+          {
+            "name": "max_depth",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "description": "Maximum depth of relationships to traverse",
+              "default": 2,
+              "title": "Max Depth"
+            },
+            "description": "Maximum depth of relationships to traverse"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": true,
+                  "title": "Response Find Related Terms Api Graph Terms  Term Id  Related Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/graph/terms/{term_id}/hierarchy": {
+      "get": {
+        "tags": [
+          "graph",
+          "Graph"
+        ],
+        "summary": "Get Term Hierarchy",
+        "description": "Get the full hierarchy for a term (ancestors and descendants).",
+        "operationId": "get_term_hierarchy_api_graph_terms__term_id__hierarchy_get",
+        "parameters": [
+          {
+            "name": "term_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Term Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": true,
+                  "title": "Response Get Term Hierarchy Api Graph Terms  Term Id  Hierarchy Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/graph/terms/{term_id}/info": {
+      "get": {
+        "tags": [
+          "graph",
+          "Graph"
+        ],
+        "summary": "Get Term Info",
+        "description": "Get detailed information about a specific term.",
+        "operationId": "get_term_info_api_graph_terms__term_id__info_get",
+        "parameters": [
+          {
+            "name": "term_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Term Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "anyOf": [
+                    {
+                      "type": "object",
+                      "additionalProperties": true
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ],
+                  "title": "Response Get Term Info Api Graph Terms  Term Id  Info Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/graph/domains/{domain_id}/analyze": {
+      "get": {
+        "tags": [
+          "graph",
+          "Graph"
+        ],
+        "summary": "Analyze Domain",
+        "description": "Comprehensive analysis of a domain's structure.",
+        "operationId": "analyze_domain_api_graph_domains__domain_id__analyze_get",
+        "parameters": [
+          {
+            "name": "domain_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Domain Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": true,
+                  "title": "Response Analyze Domain Api Graph Domains  Domain Id  Analyze Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/graph/domains/hierarchy": {
+      "get": {
+        "tags": [
+          "graph",
+          "Graph"
+        ],
+        "summary": "Get Domain Hierarchy",
+        "description": "Get the domain hierarchy for a layer or all layers.",
+        "operationId": "get_domain_hierarchy_api_graph_domains_hierarchy_get",
+        "parameters": [
+          {
+            "name": "layer_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Optional layer ID to filter by",
+              "title": "Layer Id"
+            },
+            "description": "Optional layer ID to filter by"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "additionalProperties": true
+                  },
+                  "title": "Response Get Domain Hierarchy Api Graph Domains Hierarchy Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/graph/layers/analytics": {
+      "get": {
+        "tags": [
+          "graph",
+          "Graph"
+        ],
+        "summary": "Get Layer Analytics",
+        "description": "Get comprehensive analytics for a layer or all layers.",
+        "operationId": "get_layer_analytics_api_graph_layers_analytics_get",
+        "parameters": [
+          {
+            "name": "layer_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Optional layer ID to analyze",
+              "title": "Layer Id"
+            },
+            "description": "Optional layer ID to analyze"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": true,
+                  "title": "Response Get Layer Analytics Api Graph Layers Analytics Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/graph/layers/{layer_id}/info": {
+      "get": {
+        "tags": [
+          "graph",
+          "Graph"
+        ],
+        "summary": "Get Layer Info",
+        "description": "Get detailed information about a specific layer.",
+        "operationId": "get_layer_info_api_graph_layers__layer_id__info_get",
+        "parameters": [
+          {
+            "name": "layer_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Layer Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "anyOf": [
+                    {
+                      "type": "object",
+                      "additionalProperties": true
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ],
+                  "title": "Response Get Layer Info Api Graph Layers  Layer Id  Info Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/graph/domains/{domain_id}/info": {
+      "get": {
+        "tags": [
+          "graph",
+          "Graph"
+        ],
+        "summary": "Get Domain Info",
+        "description": "Get detailed information about a specific domain.",
+        "operationId": "get_domain_info_api_graph_domains__domain_id__info_get",
+        "parameters": [
+          {
+            "name": "domain_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Domain Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "anyOf": [
+                    {
+                      "type": "object",
+                      "additionalProperties": true
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ],
+                  "title": "Response Get Domain Info Api Graph Domains  Domain Id  Info Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/graph/export": {
+      "get": {
+        "tags": [
+          "graph",
+          "Graph"
+        ],
+        "summary": "Export Graph Data",
+        "description": "Export comprehensive graph data in various formats.",
+        "operationId": "export_graph_data_api_graph_export_get",
+        "parameters": [
+          {
+            "name": "format",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "description": "Export format (json, turtle, graphml)",
+              "default": "json",
+              "title": "Format"
+            },
+            "description": "Export format (json, turtle, graphml)"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "title": "Response Export Graph Data Api Graph Export Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/graph/examples/sparql": {
+      "get": {
+        "tags": [
+          "graph",
+          "Graph"
+        ],
+        "summary": "Get Sparql Examples",
+        "description": "Get example SPARQL queries for the Context Studio graph.",
+        "operationId": "get_sparql_examples_api_graph_examples_sparql_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": {
+                    "type": "string"
+                  },
+                  "type": "object",
+                  "title": "Response Get Sparql Examples Api Graph Examples Sparql Get"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
     "schemas": {
+      "CentralityRequest": {
+        "properties": {
+          "method": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Method",
+            "default": "pagerank"
+          }
+        },
+        "type": "object",
+        "title": "CentralityRequest"
+      },
       "DomainCreate": {
         "properties": {
           "title": {
@@ -2258,6 +3233,55 @@
         "type": "object",
         "title": "LayerUpdate"
       },
+      "NeighborsRequest": {
+        "properties": {
+          "entity_id": {
+            "type": "string",
+            "title": "Entity Id"
+          },
+          "entity_type": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Entity Type",
+            "default": "term"
+          },
+          "depth": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Depth",
+            "default": 1
+          },
+          "direction": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Direction",
+            "default": "both"
+          }
+        },
+        "type": "object",
+        "required": [
+          "entity_id"
+        ],
+        "title": "NeighborsRequest"
+      },
       "PaginatedDomainsResponse": {
         "properties": {
           "data": {
@@ -2350,6 +3374,110 @@
           "limit"
         ],
         "title": "PaginatedTermsResponse"
+      },
+      "PathRequest": {
+        "properties": {
+          "source_id": {
+            "type": "string",
+            "title": "Source Id"
+          },
+          "target_id": {
+            "type": "string",
+            "title": "Target Id"
+          },
+          "source_type": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Source Type",
+            "default": "term"
+          },
+          "target_type": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Target Type",
+            "default": "term"
+          }
+        },
+        "type": "object",
+        "required": [
+          "source_id",
+          "target_id"
+        ],
+        "title": "PathRequest"
+      },
+      "SPARQLQuery": {
+        "properties": {
+          "query": {
+            "type": "string",
+            "title": "Query"
+          },
+          "format": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Format",
+            "default": "json"
+          }
+        },
+        "type": "object",
+        "required": [
+          "query"
+        ],
+        "title": "SPARQLQuery"
+      },
+      "SearchRequest": {
+        "properties": {
+          "term": {
+            "type": "string",
+            "title": "Term"
+          },
+          "exact": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Exact",
+            "default": false
+          },
+          "analysis_depth": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Analysis Depth",
+            "default": 1
+          }
+        },
+        "type": "object",
+        "required": [
+          "term"
+        ],
+        "title": "SearchRequest"
       },
       "TermCreate": {
         "properties": {

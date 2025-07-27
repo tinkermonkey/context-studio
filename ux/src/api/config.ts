@@ -23,6 +23,7 @@ export const QUERY_KEYS = {
   DOMAINS: 'domains',
   TERMS: 'terms',
   RELATIONSHIPS: 'relationships',
+  GRAPH: 'graph',
   FIND: 'find',
 } as const;
 
@@ -31,4 +32,5 @@ export const ENDPOINTS = {
   DOMAINS: '/api/domains',
   TERMS: '/api/terms',
   RELATIONSHIPS: '/api/term-relationships',
+  GRAPH: '/api/graph',
 } as const;

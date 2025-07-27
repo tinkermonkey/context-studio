@@ -6,7 +6,7 @@ type TermProps = {
   term_id: string;
 };
 
-export const Term: React.FC<TermProps> = ({ term_id }) => {
+export const TermRenderer: React.FC<TermProps> = ({ term_id }) => {
   const { data, isLoading, isError } = useTerm(term_id);
 
   if (isLoading) return <span>Loading...</span>;

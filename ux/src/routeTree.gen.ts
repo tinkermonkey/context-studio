@@ -15,6 +15,9 @@ import { Route as AppIndexRouteImport } from './routes/app/index'
 import { Route as AppTermsRouteImport } from './routes/app/terms'
 import { Route as AppLayersRouteImport } from './routes/app/layers'
 import { Route as AppDomainsRouteImport } from './routes/app/domains'
+import { Route as AppNodesTermTermIdRouteImport } from './routes/app/nodes/term/$termId'
+import { Route as AppNodesLayerLayerIdRouteImport } from './routes/app/nodes/layer/$layerId'
+import { Route as AppNodesDomainDomainIdRouteImport } from './routes/app/nodes/domain/$domainId'
 
 const AppRoute = AppRouteImport.update({
   id: '/app',
@@ -46,6 +49,21 @@ const AppDomainsRoute = AppDomainsRouteImport.update({
   path: '/domains',
   getParentRoute: () => AppRoute,
 } as any)
+const AppNodesTermTermIdRoute = AppNodesTermTermIdRouteImport.update({
+  id: '/nodes/term/$termId',
+  path: '/nodes/term/$termId',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppNodesLayerLayerIdRoute = AppNodesLayerLayerIdRouteImport.update({
+  id: '/nodes/layer/$layerId',
+  path: '/nodes/layer/$layerId',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppNodesDomainDomainIdRoute = AppNodesDomainDomainIdRouteImport.update({
+  id: '/nodes/domain/$domainId',
+  path: '/nodes/domain/$domainId',
+  getParentRoute: () => AppRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -54,6 +72,9 @@ export interface FileRoutesByFullPath {
   '/app/layers': typeof AppLayersRoute
   '/app/terms': typeof AppTermsRoute
   '/app/': typeof AppIndexRoute
+  '/app/nodes/domain/$domainId': typeof AppNodesDomainDomainIdRoute
+  '/app/nodes/layer/$layerId': typeof AppNodesLayerLayerIdRoute
+  '/app/nodes/term/$termId': typeof AppNodesTermTermIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -61,6 +82,9 @@ export interface FileRoutesByTo {
   '/app/layers': typeof AppLayersRoute
   '/app/terms': typeof AppTermsRoute
   '/app': typeof AppIndexRoute
+  '/app/nodes/domain/$domainId': typeof AppNodesDomainDomainIdRoute
+  '/app/nodes/layer/$layerId': typeof AppNodesLayerLayerIdRoute
+  '/app/nodes/term/$termId': typeof AppNodesTermTermIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -70,6 +94,9 @@ export interface FileRoutesById {
   '/app/layers': typeof AppLayersRoute
   '/app/terms': typeof AppTermsRoute
   '/app/': typeof AppIndexRoute
+  '/app/nodes/domain/$domainId': typeof AppNodesDomainDomainIdRoute
+  '/app/nodes/layer/$layerId': typeof AppNodesLayerLayerIdRoute
+  '/app/nodes/term/$termId': typeof AppNodesTermTermIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -80,8 +107,19 @@ export interface FileRouteTypes {
     | '/app/layers'
     | '/app/terms'
     | '/app/'
+    | '/app/nodes/domain/$domainId'
+    | '/app/nodes/layer/$layerId'
+    | '/app/nodes/term/$termId'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/app/domains' | '/app/layers' | '/app/terms' | '/app'
+  to:
+    | '/'
+    | '/app/domains'
+    | '/app/layers'
+    | '/app/terms'
+    | '/app'
+    | '/app/nodes/domain/$domainId'
+    | '/app/nodes/layer/$layerId'
+    | '/app/nodes/term/$termId'
   id:
     | '__root__'
     | '/'
@@ -90,6 +128,9 @@ export interface FileRouteTypes {
     | '/app/layers'
     | '/app/terms'
     | '/app/'
+    | '/app/nodes/domain/$domainId'
+    | '/app/nodes/layer/$layerId'
+    | '/app/nodes/term/$termId'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -141,6 +182,27 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppDomainsRouteImport
       parentRoute: typeof AppRoute
     }
+    '/app/nodes/term/$termId': {
+      id: '/app/nodes/term/$termId'
+      path: '/nodes/term/$termId'
+      fullPath: '/app/nodes/term/$termId'
+      preLoaderRoute: typeof AppNodesTermTermIdRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/app/nodes/layer/$layerId': {
+      id: '/app/nodes/layer/$layerId'
+      path: '/nodes/layer/$layerId'
+      fullPath: '/app/nodes/layer/$layerId'
+      preLoaderRoute: typeof AppNodesLayerLayerIdRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/app/nodes/domain/$domainId': {
+      id: '/app/nodes/domain/$domainId'
+      path: '/nodes/domain/$domainId'
+      fullPath: '/app/nodes/domain/$domainId'
+      preLoaderRoute: typeof AppNodesDomainDomainIdRouteImport
+      parentRoute: typeof AppRoute
+    }
   }
 }
 
@@ -149,6 +211,9 @@ interface AppRouteChildren {
   AppLayersRoute: typeof AppLayersRoute
   AppTermsRoute: typeof AppTermsRoute
   AppIndexRoute: typeof AppIndexRoute
+  AppNodesDomainDomainIdRoute: typeof AppNodesDomainDomainIdRoute
+  AppNodesLayerLayerIdRoute: typeof AppNodesLayerLayerIdRoute
+  AppNodesTermTermIdRoute: typeof AppNodesTermTermIdRoute
 }
 
 const AppRouteChildren: AppRouteChildren = {
@@ -156,6 +221,9 @@ const AppRouteChildren: AppRouteChildren = {
   AppLayersRoute: AppLayersRoute,
   AppTermsRoute: AppTermsRoute,
   AppIndexRoute: AppIndexRoute,
+  AppNodesDomainDomainIdRoute: AppNodesDomainDomainIdRoute,
+  AppNodesLayerLayerIdRoute: AppNodesLayerLayerIdRoute,
+  AppNodesTermTermIdRoute: AppNodesTermTermIdRoute,
 }
 
 const AppRouteWithChildren = AppRoute._addFileChildren(AppRouteChildren)

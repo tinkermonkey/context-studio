@@ -139,6 +139,75 @@ function SearchLayers() {
 }
 ```
 
+### Graph Operations
+
+```tsx
+import { 
+  useGraphStats, 
+  useTermSearch, 
+  useRelatedTerms, 
+  useSparqlQuery,
+  useGraphRefresh 
+} from '@/api/hooks/graph';
+
+function GraphAnalytics() {
+  const { data: stats } = useGraphStats();
+  const { data: terms } = useTermSearch({ title: 'concept', exact: false });
+  const { data: related } = useRelatedTerms('term-id-123', { max_depth: 2 });
+  
+  const sparqlQuery = useSparqlQuery();
+  const refreshGraph = useGraphRefresh();
+
+  const handleSparqlQuery = async () => {
+    try {
+      const results = await sparqlQuery.mutateAsync({
+        query: `
+          SELECT ?term ?title WHERE {
+            ?term a :Term .
+            ?term :title ?title .
+          } LIMIT 10
+        `
+      });
+      console.log('SPARQL Results:', results);
+    } catch (error) {
+      console.error('SPARQL Error:', error);
+    }
+  };
+
+  const handleRefresh = async () => {
+    try {
+      await refreshGraph.mutateAsync();
+      console.log('Graph refreshed successfully');
+    } catch (error) {
+      console.error('Refresh failed:', error);
+    }
+  };
+
+  return (
+    <div>
+      <h2>Graph Statistics</h2>
+      <pre>{JSON.stringify(stats, null, 2)}</pre>
+      
+      <h2>Term Search Results</h2>
+      {terms?.map((term, index) => (
+        <div key={index}>{JSON.stringify(term)}</div>
+      ))}
+      
+      <h2>Related Terms</h2>
+      <pre>{JSON.stringify(related, null, 2)}</pre>
+      
+      <button onClick={handleSparqlQuery} disabled={sparqlQuery.isPending}>
+        {sparqlQuery.isPending ? 'Executing...' : 'Execute SPARQL Query'}
+      </button>
+      
+      <button onClick={handleRefresh} disabled={refreshGraph.isPending}>
+        {refreshGraph.isPending ? 'Refreshing...' : 'Refresh Graph'}
+      </button>
+    </div>
+  );
+}
+```
+
 ## API Structure
 
 The API follows a hierarchical structure:
@@ -146,6 +215,7 @@ The API follows a hierarchical structure:
 - **Domains**: Belong to layers, represent subject areas
 - **Terms**: Belong to domains, represent specific concepts
 - **Relationships**: Connect terms with semantic relationships
+- **Graph**: Provides advanced analytics, SPARQL queries, and graph operations across all entities
 
 ## Available Hooks
 
@@ -174,6 +244,30 @@ The API follows a hierarchical structure:
 - `useCreateTerm(options?)` - Create a new term
 - `useUpdateTerm(options?)` - Update a term
 - `useDeleteTerm(options?)` - Delete a term
+
+### Graph Analytics & Operations
+- `useGraphStats(options?)` - Get comprehensive graph statistics
+- `useTermSearch(params, options?)` - Search terms using SPARQL
+- `useTermInfo(termId, options?)` - Get detailed term information
+- `useRelatedTerms(termId, params?, options?)` - Find related terms
+- `useTermHierarchy(termId, options?)` - Get term hierarchy
+- `useDomainAnalysis(domainId, options?)` - Analyze domain structure
+- `useDomainInfo(domainId, options?)` - Get domain information
+- `useDomainHierarchy(params?, options?)` - Get domain hierarchy
+- `useLayerAnalytics(params?, options?)` - Get layer analytics
+- `useLayerInfo(layerId, options?)` - Get layer information
+- `useCommunityDetection(params?, options?)` - Detect graph communities
+- `useSparqlExamples(options?)` - Get example SPARQL queries
+- `useRdfExport(params?, options?)` - Export RDF data
+- `useGraphExport(params?, options?)` - Export graph data
+
+### Graph Mutations
+- `useGraphRefresh(options?)` - Refresh graph from database
+- `useSparqlQuery(options?)` - Execute SPARQL queries
+- `useSearchAndAnalyze(options?)` - Search and analyze terms
+- `useCentralityCalculation(options?)` - Calculate node centrality
+- `useShortestPath(options?)` - Find shortest path between nodes
+- `useNeighborsQuery(options?)` - Get node neighbors
 
 ## Configuration
 

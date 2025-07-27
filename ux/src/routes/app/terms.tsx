@@ -13,6 +13,7 @@ import { CsSidebar, CsSidebarTitle } from "@/components/layout/cs_sidebar";
 import { CsMain, CsMainTitle } from "@/components/layout/cs_main";
 import { CollapsibleDomainsList } from "@/components/misc/collapsible_domains_list";
 import type { components } from "@/api/client/types";
+import { Hash } from "lucide-react";
 
 type LayerOut = components["schemas"]["LayerOut"];
 
@@ -138,7 +139,7 @@ function TermsPage() {
         </div>
       </CsSidebar>
       <CsMain>
-        <CsMainTitle>Terms</CsMainTitle>
+        <CsMainTitle icon={Hash}>Terms</CsMainTitle>
         {!!queryParams.layer_id && (
           <>
             <div className="text-md">

@@ -332,17 +332,17 @@ class NetworkService:
         if domain_node not in self.graph:
             return []
         
-        # Find all terms that have a path to this domain
+        # Find all nodes that can reach this domain (terms that belong to this domain)
+        # Since edges go from child to parent, we use nx.ancestors to find terms
+        # that have a path to this domain
+        ancestor_nodes = nx.ancestors(self.graph, domain_node)
+        
+        # Filter to only term nodes
         terms = []
-        for node in self.graph.nodes():
+        for node in ancestor_nodes:
             if node.startswith("term:"):
-                try:
-                    path = nx.shortest_path(self.graph, node, domain_node)
-                    if path:  # If there's a path, the term belongs to this domain tree
-                        term_id = node.split(":", 1)[1]
-                        terms.append(term_id)
-                except nx.NetworkXNoPath:
-                    continue
+                term_id = node.split(":", 1)[1]
+                terms.append(term_id)
         
         return terms
     
@@ -361,38 +361,45 @@ class NetworkService:
         if term_node not in self.graph:
             return {"ancestors": [], "descendants": []}
         
-        # Find ancestors (nodes that have a path to this term)
-        ancestors = []
-        descendants = []
+        # Use NetworkX built-in functions to find ancestors and descendants
+        # In our graph structure, edges go from child to parent, so:
+        # - Ancestors are reachable by following outgoing edges (descendants in NetworkX terms)
+        # - Descendants are nodes that can reach this term (ancestors in NetworkX terms)
         
-        for node in self.graph.nodes():
+        ancestor_nodes = nx.descendants(self.graph, term_node)
+        descendant_nodes = nx.ancestors(self.graph, term_node)
+        
+        # Build ancestor list with distances
+        ancestors = []
+        for node in ancestor_nodes:
+            node_data = self.graph.nodes[node]
             try:
-                # Check if there's a path from node to term (node is ancestor)
-                path = nx.shortest_path(self.graph, node, term_node)
-                if len(path) > 1:  # Don't include the term itself
-                    node_data = self.graph.nodes[node]
-                    ancestors.append({
-                        "id": node.split(":", 1)[1],
-                        "type": node_data.get("type"),
-                        "title": node_data.get("title"),
-                        "distance": len(path) - 1
-                    })
+                distance = nx.shortest_path_length(self.graph, term_node, node)
+                ancestors.append({
+                    "id": node.split(":", 1)[1],
+                    "type": node_data.get("type"),
+                    "title": node_data.get("title"),
+                    "distance": distance
+                })
             except nx.NetworkXNoPath:
-                pass
-            
+                # This shouldn't happen since we got the node from descendants
+                continue
+        
+        # Build descendant list with distances
+        descendants = []
+        for node in descendant_nodes:
+            node_data = self.graph.nodes[node]
             try:
-                # Check if there's a path from term to node (node is descendant)
-                path = nx.shortest_path(self.graph, term_node, node)
-                if len(path) > 1:  # Don't include the term itself
-                    node_data = self.graph.nodes[node]
-                    descendants.append({
-                        "id": node.split(":", 1)[1],
-                        "type": node_data.get("type"),
-                        "title": node_data.get("title"),
-                        "distance": len(path) - 1
-                    })
+                distance = nx.shortest_path_length(self.graph, node, term_node)
+                descendants.append({
+                    "id": node.split(":", 1)[1],
+                    "type": node_data.get("type"),
+                    "title": node_data.get("title"),
+                    "distance": distance
+                })
             except nx.NetworkXNoPath:
-                pass
+                # This shouldn't happen since we got the node from ancestors
+                continue
         
         # Sort by distance
         ancestors.sort(key=lambda x: x["distance"])

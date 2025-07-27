@@ -17,3 +17,6 @@ dist/
 !.vscode/extensions.json
 !.vscode/settings.json
 .idea
+
+# Tanstack
+.tanstack/*

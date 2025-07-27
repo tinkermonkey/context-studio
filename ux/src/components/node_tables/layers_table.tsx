@@ -110,6 +110,7 @@ const LayersTable = React.forwardRef<any, LayersTableProps>((props, ref) => {
       typeName="Layer"
       getId={(item) => item.id}
       columnVisibility={columnVisibility}
+      linkGenerator={(layer: LayerOut) => `/app/nodes/layer/${layer.id}`}
     />
   );
 });

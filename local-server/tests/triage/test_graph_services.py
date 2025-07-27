@@ -179,10 +179,75 @@ def test_individual_services():
         print(f"Node types: {network_stats.get('node_types', {})}")
         print(f"Edge types: {network_stats.get('edge_types', {})}")
         
+        # Test term hierarchy algorithm
+        logger.info("Testing term hierarchy algorithm...")
+        test_term_hierarchy(network_service)
+        
         session.close()
         
     except Exception as e:
         logger.error(f"Individual services test failed: {e}")
+        raise
+
+
+def test_term_hierarchy(network_service):
+    """Test the term hierarchy algorithm specifically."""
+    try:
+        logger.info("Testing get_term_hierarchy method...")
+        
+        # First, get some sample terms to test with
+        sample_nodes = list(network_service.graph.nodes())
+        term_nodes = [node for node in sample_nodes if node.startswith("term:")]
+        
+        if not term_nodes:
+            logger.warning("No term nodes found in graph")
+            return
+        
+        # Test with the first available term
+        test_term_node = term_nodes[0]
+        term_id = test_term_node.split(":", 1)[1]
+        
+        logger.info(f"Testing hierarchy for term: {term_id}")
+        
+        # Get hierarchy using the updated algorithm
+        hierarchy = network_service.get_term_hierarchy(term_id)
+        
+        print(f"\n=== TERM HIERARCHY TEST ===")
+        print(f"Term ID: {term_id}")
+        print(f"Number of ancestors: {len(hierarchy['ancestors'])}")
+        print(f"Number of descendants: {len(hierarchy['descendants'])}")
+        
+        # Print ancestors
+        if hierarchy['ancestors']:
+            print(f"Ancestors:")
+            for ancestor in hierarchy['ancestors']:
+                print(f"  - {ancestor['type']}: {ancestor['title']} (distance: {ancestor['distance']})")
+        
+        # Print descendants
+        if hierarchy['descendants']:
+            print(f"Descendants:")
+            for descendant in hierarchy['descendants']:
+                print(f"  - {descendant['type']}: {descendant['title']} (distance: {descendant['distance']})")
+        
+        # Also test find_terms_in_domain_tree if there are domains
+        domain_nodes = [node for node in sample_nodes if node.startswith("domain:")]
+        if domain_nodes:
+            test_domain_node = domain_nodes[0]
+            domain_id = test_domain_node.split(":", 1)[1]
+            
+            logger.info(f"Testing find_terms_in_domain_tree for domain: {domain_id}")
+            terms_in_domain = network_service.find_terms_in_domain_tree(domain_id)
+            
+            print(f"\n=== DOMAIN TREE TEST ===")
+            print(f"Domain ID: {domain_id}")
+            print(f"Number of terms in domain tree: {len(terms_in_domain)}")
+            if terms_in_domain:
+                print(f"First few terms: {terms_in_domain[:5]}")
+        
+        logger.info("Term hierarchy test completed successfully!")
+        
+    except Exception as e:
+        logger.error(f"Term hierarchy test failed: {e}")
         raise
 
 

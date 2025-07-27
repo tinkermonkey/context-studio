@@ -1,7 +1,13 @@
 import React, { ReactNode } from "react";
+import { LucideIcon } from "lucide-react";
 
 interface CsSidebarProps {
   children?: ReactNode;
+}
+
+interface CsSidebarSectionTitleProps {
+  children?: ReactNode;
+  icon?: LucideIcon;
 }
 
 const CsSidebar: React.FC<CsSidebarProps> = ({ children }) => {
@@ -16,10 +22,29 @@ const CsSidebar: React.FC<CsSidebarProps> = ({ children }) => {
 
 const CsSidebarTitle: React.FC<CsSidebarProps> = ({ children }) => {
   return (
-    <div className="mb-2 text-sm font-semibold uppercase tracking-wide text-gray-900 lg:text-xs dark:text-white">
+    <div className="mb-4 text-md font-semibold uppercase tracking-wide text-gray-900 lg:text-xs dark:text-white">
       {children}
     </div>
   );
 };
 
-export { CsSidebar, CsSidebarTitle };
+const CsSidebarSection: React.FC<CsSidebarProps> = ({ children }) => {
+  return (
+    <div className="mb-6">
+      {children}
+    </div>
+  );
+};
+
+const CsSidebarSectionTitle: React.FC<CsSidebarSectionTitleProps> = ({ children, icon: Icon }) => {
+  return (
+    <div className="mb-4 text-md font-semibold text-gray-900 lg:text-xs dark:text-white">
+      <div className="flex items-center gap-2">
+        {Icon && <Icon className="h-4 w-4" />}
+        {children}
+      </div>
+    </div>
+  );
+}
+
+export { CsSidebar, CsSidebarTitle, CsSidebarSection, CsSidebarSectionTitle };

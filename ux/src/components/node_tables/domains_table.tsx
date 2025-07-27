@@ -162,6 +162,7 @@ const DomainsTable = React.forwardRef<any, DomainsTableProps>((props, ref) => {
       onQueryParamsChange={onQueryParamsChange}
       filterFields={domainFilterFields}
       searchPlaceholder="Search..."
+      linkGenerator={(domain: DomainOut) => `/app/nodes/domain/${domain.id}`}
     />
   );
 });

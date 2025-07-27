@@ -9,6 +9,7 @@ import { CsSidebar, CsSidebarTitle } from "@/components/layout/cs_sidebar";
 import { CsMain, CsMainTitle } from "@/components/layout/cs_main";
 import { CollapsibleLayersList } from "@/components/misc/collapsible_layers_list";
 import { useLayer } from "@/api/hooks/layers";
+import { Database } from "lucide-react"
 
 // Define the search parameters schema
 interface DomainsSearch {
@@ -82,7 +83,7 @@ function DomainsPage() {
         />
       </CsSidebar>
       <CsMain>
-        <CsMainTitle>
+        <CsMainTitle icon={Database}>
           Domains
           {!!queryParams.layer_id && (
             <span className="ml-2 text-sm font-normal text-gray-600 dark:text-gray-400">
