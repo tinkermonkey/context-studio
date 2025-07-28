@@ -17,6 +17,11 @@ export const ChartStyles = {
     fill: '#333',
     dominantBaseline: 'middle' as const,
   },
+  nodeDefinition: {
+    font: '14px sans-serif',
+    color: '#333',
+    padding: '5px 5px',
+  },
   mainNode: {
     fill: '#4a90e2',
     stroke: '#fff',

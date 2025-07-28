@@ -68,6 +68,7 @@ export function buildHierarchicalTree(input: TreeBuilderInput): HierarchyNode {
         const layerNode: HierarchyNode = {
           id: `${layer.id}`,
           title: layer.title || layer.name || `Layer ${layer.id}`,
+          definition: layer.definition || '',
           type: 'layer',
           children: [],
           depth: rootNode.depth + 1,
@@ -82,6 +83,7 @@ export function buildHierarchicalTree(input: TreeBuilderInput): HierarchyNode {
             const domainNode: HierarchyNode = {
               id: `${domain.id}`,
               title: domain.title || domain.name || `Domain ${domain.id}`,
+              definition: domain.definition || '',
               type: 'domain',
               children: [],
               depth: layerNode.depth + 1,
@@ -129,6 +131,7 @@ function buildTermHierarchy(terms: any[]): {
     termMap.set(term.id, {
       id: `${term.id}`,
       title: term.title || term.name || `Term ${term.id}`,
+      definition: term.definition || '',
       type: 'term',
       children: [],
       depth: 0,

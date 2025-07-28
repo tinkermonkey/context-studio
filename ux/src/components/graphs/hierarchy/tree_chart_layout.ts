@@ -4,7 +4,12 @@ import type {
   LayoutConfig,
   ChartData,
 } from "./tree_data";
-import { measureTextWidth, getTextOptionsFromStyles } from "./tree_chart_utils";
+import { ChartStyles } from "./tree_styles";
+import {
+  measureSvgTextWidth,
+  extractFontPropertiesFromStyles,
+  measureHtmlTextHeight,
+} from "./tree_chart_utils";
 
 // Default layout configuration
 export const defaultLayoutConfig: LayoutConfig = {
@@ -22,7 +27,7 @@ export const defaultLayoutConfig: LayoutConfig = {
 // Function to recalculate layout with external expanded state (using Map<string, boolean>)
 export type ExpandState = Map<string, boolean>;
 
-const defaultExpandState = false
+const defaultExpandState = false;
 export function toggleExpandState(
   expandState: ExpandState,
   nodeId: string,
@@ -36,11 +41,11 @@ export function toggleExpandState(
   return newState;
 }
 
-// Text measurement cache to avoid recalculating widths for the same text
+// Text width measurement cache to avoid recalculating widths for the same text
 // Font changes will require a complete chart redraw, so we only cache by text content
-class TextMeasurementCache {
+class SvgTextWidthCache {
   private cache = new Map<string, number>();
-  private textOptions = getTextOptionsFromStyles();
+  private textOptions = extractFontPropertiesFromStyles(ChartStyles.nodeLabel);
 
   // Get cached width or measure and cache it using current font styles
   getTextWidth(text: string): number {
@@ -48,7 +53,7 @@ class TextMeasurementCache {
       return this.cache.get(text)!;
     }
 
-    const width = measureTextWidth(text, this.textOptions);
+    const width = measureSvgTextWidth(text, this.textOptions);
     this.cache.set(text, width);
     return width;
   }
@@ -70,7 +75,42 @@ class TextMeasurementCache {
 }
 
 // Global cache instance
-const textWidthCache = new TextMeasurementCache();
+const textWidthCache = new SvgTextWidthCache();
+
+// Text height measurement cache to avoid recalculating heights for the same text
+// Font changes will require a complete chart redraw, so we only cache by text content
+class HtmlTextHeightCache {
+  private cache = new Map<string, number>();
+  private textOptions = extractFontPropertiesFromStyles(
+    ChartStyles.nodeDefinition,
+  );
+
+  // Get cached height or measure and cache it using current font styles
+  getTextHeight(text: string, width: number): number {
+    if (this.cache.has(`${text}-${width}`)) {
+      return this.cache.get(`${text}-${width}`)!;
+    }
+
+    const height = measureHtmlTextHeight(text, width, this.textOptions);
+    this.cache.set(`${text}-${width}`, height);
+    return height;
+  }
+
+  // Set a cached value (useful for preserving existing measurements)
+  setCachedHeight(text: string, height: number): void {
+    this.cache.set(text, height);
+  }
+
+  // Clear the cache (useful for testing or font changes)
+  clear(): void {
+    this.cache.clear();
+  }
+
+  // Get cache size for debugging
+  size(): number {
+    return this.cache.size;
+  }
+}
 
 // Helper function to calculate maximum depth of the tree
 export function calculateMaxDepth(
@@ -101,10 +141,9 @@ export function calculateLayout(
   expandState: ExpandState,
   config: LayoutConfig = defaultLayoutConfig,
   existingTextWidths?: Map<string, number>,
+  maxWidth?: number,
 ): ChartData {
   let maxY = config.margins.top;
-
-  console.log("Calculating layout with expand state:", expandState);
 
   // Pre-populate cache with existing text widths to avoid remeasurement
   if (existingTextWidths) {
@@ -143,17 +182,27 @@ export function calculateLayout(
     const y = startY ?? config.margins.top;
 
     // Get expanded state from existing tree or default to true
-    const isExpanded = expandState.get(node.id || node.title) ?? depth === 0 ? true : defaultExpandState;
+    const isExpanded =
+      (expandState.get(node.id || node.title) ?? depth === 0)
+        ? true
+        : defaultExpandState;
 
     node.x = x;
     node.y = y;
     node.depth = depth;
     node.textWidth = textWidthCache.getTextWidth(node.title);
+    node.definitionWidth = maxWidth
+      ? maxWidth - 10 - node.x - (node.textWidth || 0)
+      : 0;
+    node.definitionHeight = measureHtmlTextHeight(
+      node.definition || '',
+      node.definitionWidth
+    );
     node.expanded = isExpanded;
     node.hasChildren = node.children && node.children.length > 0;
 
     maxY = Math.max(maxY, y);
-    let currentBottomY = y + config.spacing.vertical;
+    let currentBottomY = y + Math.max(config.spacing.vertical, node.definitionHeight || 0);
 
     // Only process children if node is expanded
     if (node.children && node.children.length > 0 && isExpanded) {
@@ -177,8 +226,35 @@ export function calculateLayout(
   const maxDepth = calculateMaxDepth(chartData.root);
   const maxX = config.margins.left + maxDepth * config.spacing.horizontal;
   const textPadding = 20;
+
+  // Calculate natural width based on content
+  const naturalWidth = maxX + maxTextWidth + textPadding;
+
+  // Define minimum width to ensure chart remains usable
+  const minimumWidth = 300;
+
+  // Use maxWidth constraint if provided, otherwise use natural width
+  let finalWidth = naturalWidth;
+
+  if (maxWidth && maxWidth > 0) {
+    // Ensure we don't go below minimum width
+    //const constrainedWidth = Math.max(maxWidth, minimumWidth);
+    //finalWidth = Math.min(naturalWidth, constrainedWidth);
+    finalWidth = maxWidth;
+
+    /*
+    console.log("Layout calculation:", {
+      naturalWidth,
+      maxWidth,
+      constrainedWidth,
+      finalWidth,
+      willBeTruncated: finalWidth < naturalWidth
+    });
+    */
+  }
+
   const dimensions: Dimensions = {
-    width: maxX + maxTextWidth + textPadding,
+    width: finalWidth,
     height: maxY + config.spacing.vertical,
   };
 

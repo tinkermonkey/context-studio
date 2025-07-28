@@ -15,12 +15,15 @@ interface LayoutConfig {
 interface HierarchyNode {
   id: string;
   title: string;
+  definition?: string;
   type?: 'dataset' | 'layer' | 'domain' | 'term';
   x?: number;
   y?: number;
   depth: number;
   children: HierarchyNode[];
   textWidth?: number; // Measured width of the text label
+  definitionHeight?: number; // Height of the definition box
+  definitionWidth?: number; // Width of the definition box
   expanded?: boolean; // Whether the node is currently expanded
   hasChildren?: boolean; // Whether the node has children in the original data
 }
