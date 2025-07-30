@@ -2,7 +2,26 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { termService } from '../../services/terms';
 import { apiLogger } from '../../utils/logger';
 import { termsQueryKeys } from './useTerms';
-import type { components } from '../../client/types';
+import type { components } from '@/api/types/openapi';
+// Move terms mutation
+export function useMoveTerms() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (data: components['schemas']['MoveTermRequest']): Promise<components['schemas']['MoveTermResponse']> => {
+      apiLogger.info('Moving terms', { data });
+      const response = await termService.moveTerms(data);
+      apiLogger.info('Terms moved successfully', { response });
+      return response;
+    },
+    onSuccess: () => {
+      // Invalidate all term-related queries
+      queryClient.invalidateQueries({ queryKey: termsQueryKeys.all });
+    },
+    onError: (error) => {
+      apiLogger.error('Failed to move terms', { error });
+    },
+  });
+}
 
 // Type definitions
 type TermOut = components['schemas']['TermOut'];

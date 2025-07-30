@@ -21,6 +21,15 @@ export function DatasetHistory({
 }: DatasetHistoryProps) {
   const { data: actionLog, isLoading, error } = useDatasetActionLog(days);
   const [showAll, setShowAll] = useState(false);
+  
+  // State to trigger re-render every minute
+  const [, setTick] = useState(0);
+  React.useEffect(() => {
+    const interval = setInterval(() => {
+      setTick(t => t + 1);
+    }, 60000); // 1 minute
+    return () => clearInterval(interval);
+  }, []);
 
   if (isLoading) {
     return (

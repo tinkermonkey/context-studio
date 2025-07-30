@@ -21,7 +21,6 @@ Front-end code for the Context Studio app. This is front-end code only, the back
 - use absolute imports for components and hooks
 - Use `@/` as the base path for imports
 
-
 ### API Client Architecture
 - Prefer type-safe clients generated from OpenAPI specs
 - Use TanStack Query for state management and caching

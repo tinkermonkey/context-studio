@@ -405,3 +405,155 @@ def delete_term(id: str, db: Session = Depends(get_db)):
         logger.warning(f"Failed to remove term from sqlite vector index: {e}")
 
     return {"success": True}
+
+
+# Move functionality
+class MoveTermRequest(BaseModel):
+    term_ids: List[UUID]
+    target_domain_id: UUID
+    move_children: bool = True
+
+
+class MoveTermResponse(BaseModel):
+    moved_terms: List[TermOut]
+    warnings: List[str]
+
+
+def collect_term_hierarchy(db: Session, term_ids: List[str]) -> List[str]:
+    """Recursively collect all child terms"""
+    all_terms = set(term_ids)
+    to_process = list(term_ids)
+    
+    while to_process:
+        current_batch = to_process
+        to_process = []
+        
+        children = db.query(models.Term).filter(
+            models.Term.parent_term_id.in_(current_batch)
+        ).all()
+        
+        for child in children:
+            if child.id not in all_terms:
+                all_terms.add(child.id)
+                to_process.append(child.id)
+    
+    return list(all_terms)
+
+
+def move_terms_with_lineage(
+    db: Session,
+    term_ids: List[str],
+    target_domain_id: str,
+    move_children: bool = True
+) -> MoveTermResponse:
+    """
+    Move terms to a new domain with all their children.
+    """
+    moved_terms = []
+    warnings = []
+    
+    # 1. Validate target domain exists and get its layer_id
+    target_domain = db.query(models.Domain).filter_by(id=str(target_domain_id)).first()
+    if not target_domain:
+        raise HTTPException(status_code=400, detail="Target domain does not exist.")
+    
+    target_layer_id = target_domain.layer_id
+    
+    # 2. Validate all terms exist and get current state
+    terms_to_move = []
+    old_data = {}
+    
+    for term_id in term_ids:
+        term = db.query(models.Term).filter_by(id=str(term_id)).first()
+        if not term:
+            warnings.append(f"Term {term_id} not found, skipping.")
+            continue
+        
+        # Store old data for event logging
+        old_data[term.id] = {
+            "id": term.id,
+            "domain_id": term.domain_id,
+            "layer_id": term.layer_id,
+            "title": term.title
+        }
+        
+        terms_to_move.append(term)
+    
+    if not terms_to_move:
+        raise HTTPException(status_code=400, detail="No valid terms found to move.")
+    
+    # 3. Check for title conflicts in target domain
+    existing_titles = {t.title for t in db.query(models.Term).filter_by(domain_id=str(target_domain_id)).all()}
+    
+    for term in terms_to_move:
+        if term.title in existing_titles and str(term.domain_id) != str(target_domain_id):
+            warnings.append(f"Term '{term.title}' already exists in target domain.")
+    
+    # 4. Collect all child terms recursively (if move_children=True)
+    all_term_ids = [term.id for term in terms_to_move]
+    if move_children:
+        all_term_ids = collect_term_hierarchy(db, all_term_ids)
+        
+        # Get all terms including children
+        all_terms = db.query(models.Term).filter(models.Term.id.in_(all_term_ids)).all()
+    else:
+        all_terms = terms_to_move
+    
+    # 5. Begin transaction and update terms
+    try:
+        # Update terms' domain_id and layer_id
+        for term in all_terms:
+            if str(term.domain_id) != str(target_domain_id) or str(term.layer_id) != str(target_layer_id):
+                term.domain_id = str(target_domain_id)
+                term.layer_id = str(target_layer_id)
+                term.last_modified = datetime.datetime.now(datetime.UTC)
+                term.version += 1
+                moved_terms.append(to_term_out(term))
+        
+        # 6. Log changes to GraphEvent
+        for term in all_terms:
+            if term.id in old_data:  # Only log originally requested terms
+                event = models.GraphEvent(
+                    event_type="update",
+                    entity_type="term",
+                    old_data=old_data.get(term.id),
+                    new_data={
+                        "id": term.id,
+                        "domain_id": term.domain_id,
+                        "layer_id": term.layer_id,
+                        "title": term.title
+                    },
+                    timestamp=datetime.datetime.now(datetime.UTC),
+                    processed=False
+                )
+                db.add(event)
+        
+        db.commit()
+        
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(status_code=500, detail=f"Failed to move terms: {str(e)}")
+    
+    return MoveTermResponse(
+        moved_terms=moved_terms,
+        warnings=warnings
+    )
+
+
+@router.post("/move", response_model=MoveTermResponse)
+def move_terms(request: MoveTermRequest, db: Session = Depends(get_db)):
+    """Move terms to a new domain with all their children."""
+    try:
+        result = move_terms_with_lineage(
+            db, 
+            [str(id) for id in request.term_ids], 
+            str(request.target_domain_id), 
+            request.move_children
+        )
+        db.close()  # Ensure SQLite visibility
+        return result
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error moving terms: {e}")
+        raise HTTPException(status_code=500, detail=str(e))

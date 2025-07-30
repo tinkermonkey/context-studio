@@ -5,9 +5,10 @@ import { useDomains } from "@/api/hooks/domains";
 export interface DomainSelectorProps {
   onSelect?: (domain: DomainOut | undefined) => void;
   value?: string;
+  className?: string;
 }
 
-export const DomainSelector: React.FC<DomainSelectorProps> = ({ onSelect, value }) => {
+export const DomainSelector: React.FC<DomainSelectorProps> = ({ onSelect, value, className }) => {
   const { data: domains, isLoading, error } = useDomains();
   return (
     <RecordSelector
@@ -17,6 +18,7 @@ export const DomainSelector: React.FC<DomainSelectorProps> = ({ onSelect, value 
       fieldMap={{ value: "id", title: "title", definition: "definition" }}
       onSelect={onSelect}
       value={value}
+      className={className}
     />
   );
 };

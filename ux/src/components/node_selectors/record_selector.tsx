@@ -25,6 +25,7 @@ interface RecordSelectorProps {
   fieldMap?: FieldMap;
   onSelect?: (record: any) => void;
   value?: string;
+  className?: string;
 }
 
 const defaultFieldMap: FieldMap = {
@@ -40,6 +41,7 @@ export const RecordSelector: React.FC<RecordSelectorProps> = ({
   fieldMap = defaultFieldMap,
   onSelect,
   value,
+  className = "",
 }) => {
   const [showDefinitions, setShowDefinitions] = useState(false);
   const [search, setSearch] = useState("");
@@ -49,7 +51,7 @@ export const RecordSelector: React.FC<RecordSelectorProps> = ({
     : undefined;
 
   return (
-    <div className="relative w-full">
+    <div className={`relative w-full ${className}`}>
       <div className="flex items-center gap-0">
         <Dropdown
           color={"light"}

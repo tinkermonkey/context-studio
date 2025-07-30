@@ -9,7 +9,25 @@ import { domainService } from '../../services/domains';
 import { QUERY_KEYS } from '../../config';
 import { createQueryKey } from '../../utils/queryClient';
 import { handleApiError, isValidationError, formatFormError } from '../../errors/errorHandlers';
-import type { components } from '../../client/types';
+import type { components } from '@/api/types/openapi';
+/**
+ * Hook to move domains between layers (with lineage)
+ */
+export const useMoveDomains = (options?: UseMutationOptions<components['schemas']['MoveDomainResponse'], Error, components['schemas']['MoveDomainRequest']>) => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (data: components['schemas']['MoveDomainRequest']) => domainService.moveDomains(data),
+    onSuccess: (data) => {
+      // Invalidate domains and terms queries to reflect changes
+      queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.DOMAINS] });
+      queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.TERMS] });
+    },
+    onError: (error) => {
+      handleApiError(error, { context: 'Moving domains', showToast: true });
+    },
+    ...options,
+  });
+};
 
 type DomainOut = components['schemas']['DomainOut'];
 type DomainCreate = components['schemas']['DomainCreate'];

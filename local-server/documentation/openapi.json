@@ -719,6 +719,58 @@
         }
       }
     },
+    "/api/domains/move": {
+      "post": {
+        "tags": [
+          "domains"
+        ],
+        "summary": "Move Domains",
+        "description": "Move domains to a new layer with all their terms.",
+        "operationId": "move_domains_api_domains_move_post",
+        "parameters": [
+          {
+            "name": "SessionLocal",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "title": "Sessionlocal"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MoveDomainRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MoveDomainResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/terms/find": {
       "post": {
         "tags": [
@@ -1076,6 +1128,58 @@
             "content": {
               "application/json": {
                 "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/terms/move": {
+      "post": {
+        "tags": [
+          "terms"
+        ],
+        "summary": "Move Terms",
+        "description": "Move terms to a new domain with all their children.",
+        "operationId": "move_terms_api_terms_move_post",
+        "parameters": [
+          {
+            "name": "SessionLocal",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "title": "Sessionlocal"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MoveTermRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MoveTermResponse"
+                }
               }
             }
           },
@@ -4028,6 +4132,118 @@
         ],
         "title": "MigrationStatus",
         "description": "Status of database migrations."
+      },
+      "MoveDomainRequest": {
+        "properties": {
+          "domain_ids": {
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "type": "array",
+            "title": "Domain Ids"
+          },
+          "target_layer_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Target Layer Id"
+          },
+          "move_terms": {
+            "type": "boolean",
+            "title": "Move Terms",
+            "default": true
+          }
+        },
+        "type": "object",
+        "required": [
+          "domain_ids",
+          "target_layer_id"
+        ],
+        "title": "MoveDomainRequest"
+      },
+      "MoveDomainResponse": {
+        "properties": {
+          "moved_domains": {
+            "items": {
+              "$ref": "#/components/schemas/DomainOut"
+            },
+            "type": "array",
+            "title": "Moved Domains"
+          },
+          "moved_terms": {
+            "items": {
+              "$ref": "#/components/schemas/DomainOut"
+            },
+            "type": "array",
+            "title": "Moved Terms"
+          },
+          "warnings": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Warnings"
+          }
+        },
+        "type": "object",
+        "required": [
+          "moved_domains",
+          "moved_terms",
+          "warnings"
+        ],
+        "title": "MoveDomainResponse"
+      },
+      "MoveTermRequest": {
+        "properties": {
+          "term_ids": {
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "type": "array",
+            "title": "Term Ids"
+          },
+          "target_domain_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Target Domain Id"
+          },
+          "move_children": {
+            "type": "boolean",
+            "title": "Move Children",
+            "default": true
+          }
+        },
+        "type": "object",
+        "required": [
+          "term_ids",
+          "target_domain_id"
+        ],
+        "title": "MoveTermRequest"
+      },
+      "MoveTermResponse": {
+        "properties": {
+          "moved_terms": {
+            "items": {
+              "$ref": "#/components/schemas/TermOut"
+            },
+            "type": "array",
+            "title": "Moved Terms"
+          },
+          "warnings": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Warnings"
+          }
+        },
+        "type": "object",
+        "required": [
+          "moved_terms",
+          "warnings"
+        ],
+        "title": "MoveTermResponse"
       },
       "NeighborsRequest": {
         "properties": {

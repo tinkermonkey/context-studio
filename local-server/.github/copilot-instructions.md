@@ -57,6 +57,8 @@ Python server for the Context Studio, a React Native app built with Expo and Glu
 ```
 
 ## Code Style
+- Don't create documentation files unless explicitly requested
+- All markdown reports and summaries other than README.md should be placed in the `documentation/claudes_thoughts` directory
 - Always place all import statements at the top of the file.
 - Use snake_case for variable and function names.
 - Use CamelCase for class names.

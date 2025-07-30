@@ -103,38 +103,10 @@ function HomeComponent() {
         </svg>
       ),
     },
-    {
-      title: "Flowbite Pro",
-      description:
-        "Upgrade your development stack with more components and templates from Flowbite",
-      url: "https://flowbite.com/pro/",
-      icon: <img alt="Flowbite Pro logo" src="/flowbite.svg" />,
-    },
-    {
-      title: "Flowbite Figma",
-      description:
-        "Use our Figma Design System to design and collaborate better within your team",
-      url: "https://flowbite.com/figma/",
-      icon: <img alt="Figma logo" src="/figma.svg" />,
-    },
   ];
 
   return (
     <main className="flex min-h-screen flex-col items-center justify-center bg-white px-4 py-24 dark:bg-gray-900">
-      <div className="absolute inset-0 size-full">
-        <div className="relative h-full w-full select-none">
-          <img
-            className="absolute right-0 min-w-dvh dark:hidden"
-            alt="Pattern Light"
-            src="/pattern-light.svg"
-          />
-          <img
-            className="absolute right-0 hidden min-w-dvh dark:block"
-            alt="Pattern Dark"
-            src="/pattern-dark.svg"
-          />
-        </div>
-      </div>
       <div className="absolute top-4 right-4">
         <DarkThemeToggle />
       </div>
@@ -152,11 +124,6 @@ function HomeComponent() {
               Your app is ready, start building with
             </span>
             <span className="relative inline-flex items-center gap-2">
-              <img
-                className="size-6"
-                alt="Flowbite React logo"
-                src="/flowbite-react.svg"
-              />
               <span className="relative w-fit text-xl font-semibold whitespace-nowrap text-[#111928] dark:text-white">
                 Flowbite React
               </span>

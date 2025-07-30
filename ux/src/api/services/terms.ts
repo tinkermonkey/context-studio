@@ -6,7 +6,7 @@
 
 import { BaseService, ListParams, FindParams, PaginatedResponse } from './base';
 import { ENDPOINTS } from '../config';
-import type { components } from '../client/types';
+import type { components } from '@/api/types/openapi';
 
 // Type aliases for better readability
 export type TermOut = components['schemas']['TermOut'];
@@ -135,10 +135,22 @@ export class TermService extends BaseService {
         this.validateRequired(params, 'Search parameters');
         this.validateRequired(params.query, 'Search query');
         this.sanitizeString(params.query, 'Search query', 1000);
-        
         return this.postResource<FindTermResult[]>(`${ENDPOINTS.TERMS}/find`, params);
       },
       'find terms'
+    );
+  }
+
+  /**
+   * Move terms between domains (with lineage)
+   */
+  async moveTerms(data: components['schemas']['MoveTermRequest']): Promise<components['schemas']['MoveTermResponse']> {
+    return this.withErrorContext(
+      () => {
+        this.validateRequired(data, 'MoveTermRequest');
+        return this.postResource<components['schemas']['MoveTermResponse']>(`${ENDPOINTS.TERMS}/move`, data);
+      },
+      'move terms'
     );
   }
 }

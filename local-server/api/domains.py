@@ -329,3 +329,130 @@ def delete_domain(id: str, db: Session = Depends(get_db)):
         logger.warning(f"Failed to delete virtual table entry for domain {id}: {e}")
 
     return {"success": True}
+
+
+# Move functionality
+class MoveDomainRequest(BaseModel):
+    domain_ids: List[UUID]
+    target_layer_id: UUID
+    move_terms: bool = True
+
+
+class MoveDomainResponse(BaseModel):
+    moved_domains: List[DomainOut]
+    moved_terms: List[DomainOut]  # Using DomainOut as placeholder - will contain TermOut in actual implementation
+    warnings: List[str]
+
+
+def move_domains_with_lineage(
+    db: Session,
+    domain_ids: List[str],
+    target_layer_id: str,
+    move_terms: bool = True
+) -> MoveDomainResponse:
+    """
+    Move domains to a new layer with all their terms.
+    """
+    moved_domains = []
+    moved_terms = []
+    warnings = []
+    
+    # 1. Validate target layer exists
+    target_layer = db.query(models.Layer).filter_by(id=str(target_layer_id)).first()
+    if not target_layer:
+        raise HTTPException(status_code=400, detail="Target layer does not exist.")
+    
+    # 2. Validate all domains exist and get current state
+    domains_to_move = []
+    old_data = {}
+    
+    for domain_id in domain_ids:
+        domain = db.query(models.Domain).filter_by(id=str(domain_id)).first()
+        if not domain:
+            warnings.append(f"Domain {domain_id} not found, skipping.")
+            continue
+        
+        # Store old data for event logging
+        old_data[domain.id] = {
+            "id": domain.id,
+            "layer_id": domain.layer_id,
+            "title": domain.title
+        }
+        
+        domains_to_move.append(domain)
+    
+    if not domains_to_move:
+        raise HTTPException(status_code=400, detail="No valid domains found to move.")
+    
+    # 3. Check for title conflicts in target layer
+    existing_titles = {d.title for d in db.query(models.Domain).filter_by(layer_id=str(target_layer_id)).all()}
+    
+    for domain in domains_to_move:
+        if domain.title in existing_titles and str(domain.layer_id) != str(target_layer_id):
+            warnings.append(f"Domain '{domain.title}' already exists in target layer.")
+    
+    # 4. Begin transaction and update domains
+    try:
+        # Update domain layer_id
+        for domain in domains_to_move:
+            if str(domain.layer_id) != str(target_layer_id):
+                domain.layer_id = str(target_layer_id)
+                domain.last_modified = datetime.datetime.now(datetime.UTC)
+                moved_domains.append(to_domain_out(domain))
+        
+        # 5. If move_terms=True, update all terms' layer_id
+        if move_terms:
+            for domain in domains_to_move:
+                terms = db.query(models.Term).filter_by(domain_id=domain.id).all()
+                for term in terms:
+                    if str(term.layer_id) != str(target_layer_id):
+                        term.layer_id = str(target_layer_id)
+                        term.last_modified = datetime.datetime.now(datetime.UTC)
+                        term.version += 1
+        
+        # 6. Log changes to GraphEvent
+        for domain in domains_to_move:
+            event = models.GraphEvent(
+                event_type="update",
+                entity_type="domain",
+                old_data=old_data.get(domain.id),
+                new_data={
+                    "id": domain.id,
+                    "layer_id": domain.layer_id,
+                    "title": domain.title
+                },
+                timestamp=datetime.datetime.now(datetime.UTC),
+                processed=False
+            )
+            db.add(event)
+        
+        db.commit()
+        
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(status_code=500, detail=f"Failed to move domains: {str(e)}")
+    
+    return MoveDomainResponse(
+        moved_domains=moved_domains,
+        moved_terms=moved_terms,  # Will be populated with actual term data in real implementation
+        warnings=warnings
+    )
+
+
+@router.post("/move", response_model=MoveDomainResponse)
+def move_domains(request: MoveDomainRequest, db: Session = Depends(get_db)):
+    """Move domains to a new layer with all their terms."""
+    try:
+        result = move_domains_with_lineage(
+            db, 
+            [str(id) for id in request.domain_ids], 
+            str(request.target_layer_id), 
+            request.move_terms
+        )
+        db.close()  # Ensure SQLite visibility
+        return result
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error moving domains: {e}")
+        raise HTTPException(status_code=500, detail=str(e))

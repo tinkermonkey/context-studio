@@ -23,8 +23,10 @@ import {
   TextInput,
   Pagination,
   Select,
+  Radio,
+  Label,
 } from "flowbite-react";
-import { RefreshCcw, Plus, Search, CircleArrowRight } from "lucide-react";
+import { RefreshCcw, Plus, Search, CircleArrowRight, Move, AlertTriangle } from "lucide-react";
 import {
   QueryFilters,
   type QueryFilter,
@@ -73,6 +75,15 @@ export interface BaseNodeTableProps<T> {
   }>;
   // Optional custom button bar to replace the default create button
   buttonBar?: React.ReactNode;
+  // Move functionality
+  moveForm?: React.ComponentType<{ 
+    selectedNodes: T[];
+    onSuccess: () => void;
+    onCancel: () => void;
+  }>;
+  // Safe deletion functionality
+  onGetChildren?: (id: string) => Promise<T[]>;
+  onMoveChildren?: (childIds: string[], newParentId: string | null) => Promise<void>;
 }
 
 function BaseNodeTable<T>({
@@ -100,14 +111,22 @@ function BaseNodeTable<T>({
   customRowAction,
   customBulkActions = [],
   buttonBar,
+  moveForm: MoveForm,
+  onGetChildren,
+  onMoveChildren,
 }: BaseNodeTableProps<T>) {
   const [showCreateModal, setShowCreateModal] = React.useState(false);
   const [showDeleteModal, setShowDeleteModal] = React.useState(false);
+  const [showMoveModal, setShowMoveModal] = React.useState(false);
   const [pendingDeleteRows, setPendingDeleteRows] = React.useState<any[]>([]);
+  const [pendingMoveRows, setPendingMoveRows] = React.useState<any[]>([]);
+  const [childrenToHandle, setChildrenToHandle] = React.useState<T[]>([]);
+  const [deleteOption, setDeleteOption] = React.useState<'delete' | 'orphan'>('orphan');
   const [editNodeId, setEditNodeId] = React.useState<string | undefined>(
     undefined,
   );
   const [selectedCount, setSelectedCount] = React.useState(0);
+  const [isProcessing, setIsProcessing] = React.useState(false);
   const tableRef = React.useRef<any>(null);
   const [columnVisibility, setColumnVisibility] = React.useState<
     Record<string, boolean>
@@ -342,25 +361,103 @@ function BaseNodeTable<T>({
     }
   }, [data, pageIndex, totalPages]);
 
+  // Debug effect to track modal state changes
+  React.useEffect(() => {
+    console.log('showMoveModal changed to:', showMoveModal);
+  }, [showMoveModal]);
+
+  React.useEffect(() => {
+    console.log('selectedCount changed to:', selectedCount);
+  }, [selectedCount]);
+
+  React.useEffect(() => {
+    console.log('pendingMoveRows changed to:', pendingMoveRows.length);
+  }, [pendingMoveRows]);
+
   if (isLoading) return <Spinner />;
   if (error) {
     console.error(error);
     return <div>Error loading {typeName.toLowerCase()}s</div>;
   }
 
+  const handleMoveSelected = () => {
+    console.log('handleMoveSelected called');
+    const selectedRows = table.getSelectedRowModel().rows;
+    console.log('Selected rows:', selectedRows.length);
+    
+    if (selectedRows.length === 0 || !MoveForm) {
+      console.log('No rows selected or no move form');
+      return;
+    }
+    
+    setIsProcessing(true);
+    setPendingMoveRows(selectedRows);
+    setShowMoveModal(true);
+    console.log('Move modal should be shown');
+  };
+
   const handleDeleteSelected = () => {
     const selectedRows = table.getSelectedRowModel().rows;
     if (selectedRows.length === 0) return;
+    
     setPendingDeleteRows(selectedRows);
-    setShowDeleteModal(true);
+    
+    // Check for children if onGetChildren is provided (safe deletion workflow)
+    if (onGetChildren) {
+      (async () => {
+        try {
+          let allChildren: T[] = [];
+          for (const row of selectedRows) {
+            const nodeId = getId(row.original);
+            const children = await onGetChildren(nodeId);
+            allChildren = [...allChildren, ...children];
+          }
+          
+          setChildrenToHandle(allChildren);
+          
+          if (allChildren.length > 0) {
+            // Show the safe deletion modal with options
+            setDeleteOption('orphan'); // Default to orphan
+            setShowDeleteModal(true);
+          } else {
+            // No children, proceed with normal deletion
+            setShowDeleteModal(true);
+          }
+        } catch (err) {
+          console.error('Failed to check for children:', err);
+          // Fall back to normal delete modal
+          setShowDeleteModal(true);
+        }
+      })();
+    } else {
+      // No safe deletion workflow, show normal delete modal
+      setShowDeleteModal(true);
+    }
   };
 
   const confirmDeleteSelected = async () => {
     setShowDeleteModal(false);
     if (pendingDeleteRows.length === 0) return;
+    
     try {
+      // Handle children first if needed
+      if (childrenToHandle.length > 0 && onMoveChildren) {
+        if (deleteOption === 'orphan') {
+          // Move children to orphan state (null parent)
+          const childIds = childrenToHandle.map(child => getId(child));
+          await onMoveChildren(childIds, null);
+        } else if (deleteOption === 'delete') {
+          // Delete children first
+          const childIds = childrenToHandle.map(child => getId(child));
+          await onDelete(childIds);
+        }
+      }
+      
+      // Then delete the selected items
       await onDelete(pendingDeleteRows.map((row: any) => getId(row.original)));
       setPendingDeleteRows([]);
+      setChildrenToHandle([]);
+      
       if (typeof table.resetRowSelection === "function") {
         table.resetRowSelection();
       }
@@ -419,6 +516,12 @@ function BaseNodeTable<T>({
             dismissOnClick={true}
             disabled={selectedCount === 0}
           >
+            {MoveForm && (
+              <DropdownItem onClick={handleMoveSelected}>
+                <Move className="mr-2 h-4 w-4" />
+                Move Selected
+              </DropdownItem>
+            )}
             <DropdownItem onClick={handleDeleteSelected}>
               Delete Selected
             </DropdownItem>
@@ -599,14 +702,63 @@ function BaseNodeTable<T>({
       </div>
       {/* Delete Confirmation Modal */}
       <Modal show={showDeleteModal} onClose={() => setShowDeleteModal(false)}>
-        <ModalHeader className="border-b-0">Confirm Delete</ModalHeader>
+        <ModalHeader className="border-b-0">
+          <div className="flex items-center gap-2">
+            <AlertTriangle className="h-5 w-5 text-red-500" />
+            Confirm Delete
+          </div>
+        </ModalHeader>
         <ModalBody>
           <div className="mb-4">
             Are you sure you want to delete {pendingDeleteRows.length} selected{" "}
             {typeName.toLowerCase()}
-            {pendingDeleteRows.length > 1 ? "s" : ""}? This action cannot be
-            undone.
+            {pendingDeleteRows.length > 1 ? "s" : ""}?
           </div>
+          
+          {childrenToHandle.length > 0 && (
+            <div className="mb-6 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+              <div className="flex items-center gap-2 mb-3">
+                <AlertTriangle className="h-4 w-4 text-yellow-600" />
+                <span className="text-yellow-800 font-medium">
+                  Warning: {childrenToHandle.length} child {typeName.toLowerCase()}
+                  {childrenToHandle.length > 1 ? "s" : ""} found
+                </span>
+              </div>
+              <p className="text-yellow-700 text-sm mb-4">
+                What would you like to do with the child {typeName.toLowerCase()}s?
+              </p>
+              
+              <div className="space-y-3">
+                <div className="flex items-center gap-2">
+                  <Radio
+                    id="orphan"
+                    value="orphan"
+                    checked={deleteOption === 'orphan'}
+                    onChange={(e) => setDeleteOption(e.target.value as 'delete' | 'orphan')}
+                  />
+                  <Label htmlFor="orphan" className="text-sm">
+                    Keep children but remove parent relationship (orphan them)
+                  </Label>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Radio
+                    id="delete"
+                    value="delete"
+                    checked={deleteOption === 'delete'}
+                    onChange={(e) => setDeleteOption(e.target.value as 'delete' | 'orphan')}
+                  />
+                  <Label htmlFor="delete" className="text-sm text-red-600">
+                    Delete children as well (cascade delete)
+                  </Label>
+                </div>
+              </div>
+            </div>
+          )}
+          
+          <div className="mb-4 text-sm text-gray-600">
+            This action cannot be undone.
+          </div>
+          
           <div className="flex justify-end gap-2">
             <Button color="gray" onClick={() => setShowDeleteModal(false)}>
               Cancel
@@ -617,6 +769,44 @@ function BaseNodeTable<T>({
           </div>
         </ModalBody>
       </Modal>
+      
+      {/* Move Modal */}
+      {MoveForm && (
+        <Modal 
+          show={showMoveModal} 
+          onClose={() => {
+            console.log('Move modal closing');
+            setShowMoveModal(false);
+            setPendingMoveRows([]);
+            setIsProcessing(false);
+          }}
+        >
+          <ModalHeader className="border-b-0">
+            Move {pendingMoveRows.length} {typeName.toLowerCase()}
+            {pendingMoveRows.length > 1 ? "s" : ""}
+          </ModalHeader>
+          <ModalBody>
+            <MoveForm
+              selectedNodes={pendingMoveRows.map(row => row.original)}
+              onSuccess={() => {
+                console.log('Move success');
+                setShowMoveModal(false);
+                setPendingMoveRows([]);
+                setIsProcessing(false);
+                if (typeof table.resetRowSelection === "function") {
+                  table.resetRowSelection();
+                }
+              }}
+              onCancel={() => {
+                console.log('Move cancelled');
+                setShowMoveModal(false);
+                setPendingMoveRows([]);
+                setIsProcessing(false);
+              }}
+            />
+          </ModalBody>
+        </Modal>
+      )}
       {/* Create Modal */}
       <Modal show={showCreateModal} onClose={() => setShowCreateModal(false)}>
         <ModalHeader className="border-b-0">Create New {typeName}</ModalHeader>

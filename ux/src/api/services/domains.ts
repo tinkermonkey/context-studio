@@ -6,7 +6,7 @@
 
 import { BaseService, ListParams, FindParams, PaginatedResponse } from './base';
 import { ENDPOINTS } from '../config';
-import type { components } from '../client/types';
+import type { components } from '@/api/types/openapi';
 
 // Type aliases for better readability
 export type DomainOut = components['schemas']['DomainOut'];
@@ -125,10 +125,22 @@ export class DomainService extends BaseService {
         this.validateRequired(params, 'Search parameters');
         this.validateRequired(params.query, 'Search query');
         this.sanitizeString(params.query, 'Search query', 1000);
-        
         return this.postResource<FindDomainResult[]>(`${ENDPOINTS.DOMAINS}/find`, params);
       },
       'find domains'
+    );
+  }
+
+  /**
+   * Move domains between layers (with lineage)
+   */
+  async moveDomains(data: components['schemas']['MoveDomainRequest']): Promise<components['schemas']['MoveDomainResponse']> {
+    return this.withErrorContext(
+      () => {
+        this.validateRequired(data, 'MoveDomainRequest');
+        return this.postResource<components['schemas']['MoveDomainResponse']>(`${ENDPOINTS.DOMAINS}/move`, data);
+      },
+      'move domains'
     );
   }
 }
