@@ -57,6 +57,22 @@ export interface BaseNodeTableProps<T> {
   filtersEnabled?: boolean;
   // Link generation for external links
   linkGenerator?: (item: T) => string | null | undefined;
+  // Custom row action to replace default Edit action
+  customRowAction?: {
+    label: string | ((item: T) => string);
+    onClick: (item: T) => void;
+    className?: string | ((item: T) => string);
+    disabled?: (item: T) => boolean;
+  };
+  // Additional bulk actions for the Actions dropdown
+  customBulkActions?: Array<{
+    label: string;
+    onClick: (selectedItems: T[], selectedIds: string[]) => void;
+    className?: string;
+    disabled?: boolean;
+  }>;
+  // Optional custom button bar to replace the default create button
+  buttonBar?: React.ReactNode;
 }
 
 function BaseNodeTable<T>({
@@ -81,6 +97,9 @@ function BaseNodeTable<T>({
   filterFields = [],
   filtersEnabled = false,
   linkGenerator,
+  customRowAction,
+  customBulkActions = [],
+  buttonBar,
 }: BaseNodeTableProps<T>) {
   const [showCreateModal, setShowCreateModal] = React.useState(false);
   const [showDeleteModal, setShowDeleteModal] = React.useState(false);
@@ -378,15 +397,19 @@ function BaseNodeTable<T>({
           )}
         </div>
         <div className="flex justify-end gap-2">
-          <Button
-            color="blue"
-            size="sm"
-            onClick={() => setShowCreateModal(true)}
-            className="w-auto whitespace-nowrap"
-          >
-            <Plus className="mr-2 h-4 w-4" />
-            Add {typeName}
-          </Button>
+          {buttonBar ? (
+            buttonBar
+          ) : (
+            <Button
+              color="blue"
+              size="sm"
+              onClick={() => setShowCreateModal(true)}
+              className="w-auto whitespace-nowrap"
+            >
+              <Plus className="mr-2 h-4 w-4" />
+              Add {typeName}
+            </Button>
+          )}
 
           <Dropdown
             label="Actions"
@@ -399,6 +422,21 @@ function BaseNodeTable<T>({
             <DropdownItem onClick={handleDeleteSelected}>
               Delete Selected
             </DropdownItem>
+            {customBulkActions.map((action, index) => (
+              <DropdownItem
+                key={index}
+                onClick={() => {
+                  const selectedRows = table.getFilteredSelectedRowModel().rows;
+                  const selectedItems = selectedRows.map(row => row.original);
+                  const selectedIds = selectedRows.map(row => getId(row.original));
+                  action.onClick(selectedItems, selectedIds);
+                }}
+                className={action.className}
+                disabled={action.disabled}
+              >
+                {action.label}
+              </DropdownItem>
+            ))}
           </Dropdown>
 
           {onRefetch && (
@@ -460,14 +498,34 @@ function BaseNodeTable<T>({
                 </TableCell>
               )}
               <TableCell>
-                <a
-                  onClick={() => {
-                    setEditNodeId(getId(row.original));
-                  }}
-                  className="cursor-pointer text-blue-600 hover:underline"
-                >
-                  Edit
-                </a>
+                {customRowAction ? (
+                  <a
+                    onClick={() => customRowAction.onClick(row.original)}
+                    className={
+                      typeof customRowAction.className === 'function' 
+                        ? customRowAction.className(row.original)
+                        : customRowAction.className || "cursor-pointer text-blue-600 hover:underline"
+                    }
+                    style={{
+                      pointerEvents: customRowAction.disabled?.(row.original) ? 'none' : 'auto',
+                      opacity: customRowAction.disabled?.(row.original) ? 0.5 : 1
+                    }}
+                  >
+                    {typeof customRowAction.label === 'function' 
+                      ? customRowAction.label(row.original)
+                      : customRowAction.label
+                    }
+                  </a>
+                ) : (
+                  <a
+                    onClick={() => {
+                      setEditNodeId(getId(row.original));
+                    }}
+                    className="cursor-pointer text-blue-600 hover:underline"
+                  >
+                    Edit
+                  </a>
+                )}
               </TableCell>
             </TableRow>
           ))}

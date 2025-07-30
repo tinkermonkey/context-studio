@@ -2343,10 +2343,676 @@
           }
         }
       }
+    },
+    "/api/datasets": {
+      "get": {
+        "tags": [
+          "datasets"
+        ],
+        "summary": "List Datasets",
+        "description": "List all known datasets with metrics.",
+        "operationId": "list_datasets_api_datasets_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/DatasetResponse"
+                  },
+                  "type": "array",
+                  "title": "Response List Datasets Api Datasets Get"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "datasets"
+        ],
+        "summary": "Create Dataset",
+        "description": "Create a new dataset.",
+        "operationId": "create_dataset_api_datasets_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateDatasetRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DatasetResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/datasets/active": {
+      "get": {
+        "tags": [
+          "datasets"
+        ],
+        "summary": "Get Active Dataset",
+        "description": "Get currently active dataset information.",
+        "operationId": "get_active_dataset_api_datasets_active_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DatasetResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/datasets/directory": {
+      "get": {
+        "tags": [
+          "datasets"
+        ],
+        "summary": "Get Datasets Directory",
+        "description": "Get the current datasets directory path.",
+        "operationId": "get_datasets_directory_api_datasets_directory_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "datasets"
+        ],
+        "summary": "Update Datasets Directory",
+        "description": "Update the datasets directory path.",
+        "operationId": "update_datasets_directory_api_datasets_directory_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateDatasetDirectoryRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/datasets/startup-info": {
+      "get": {
+        "tags": [
+          "datasets"
+        ],
+        "summary": "Get Startup Info",
+        "description": "Get information about which dataset will be loaded on server startup.",
+        "operationId": "get_startup_info_api_datasets_startup_info_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/datasets/add-existing": {
+      "post": {
+        "tags": [
+          "datasets"
+        ],
+        "summary": "Add Existing Dataset",
+        "description": "Add an existing dataset file to the inventory.",
+        "operationId": "add_existing_dataset_api_datasets_add_existing_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AddExistingDatasetRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DatasetResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/datasets/action-log": {
+      "get": {
+        "tags": [
+          "datasets"
+        ],
+        "summary": "Get Action Log",
+        "description": "Get dataset action log for the specified number of days.",
+        "operationId": "get_action_log_api_datasets_action_log_get",
+        "parameters": [
+          {
+            "name": "days",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "default": 30,
+              "title": "Days"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ActionLogResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/datasets/{dataset_id}": {
+      "get": {
+        "tags": [
+          "datasets"
+        ],
+        "summary": "Get Dataset",
+        "description": "Get dataset details and metrics.",
+        "operationId": "get_dataset_api_datasets__dataset_id__get",
+        "parameters": [
+          {
+            "name": "dataset_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Dataset Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DatasetResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "datasets"
+        ],
+        "summary": "Delete Dataset",
+        "description": "Delete a dataset.",
+        "operationId": "delete_dataset_api_datasets__dataset_id__delete",
+        "parameters": [
+          {
+            "name": "dataset_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Dataset Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/datasets/{dataset_id}/activate": {
+      "post": {
+        "tags": [
+          "datasets"
+        ],
+        "summary": "Activate Dataset",
+        "description": "Switch to the specified dataset.",
+        "operationId": "activate_dataset_api_datasets__dataset_id__activate_post",
+        "parameters": [
+          {
+            "name": "dataset_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Dataset Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/datasets/{dataset_id}/forget": {
+      "post": {
+        "tags": [
+          "datasets"
+        ],
+        "summary": "Forget Dataset",
+        "description": "Remove a dataset from inventory but leave the file intact.",
+        "operationId": "forget_dataset_api_datasets__dataset_id__forget_post",
+        "parameters": [
+          {
+            "name": "dataset_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Dataset Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/schema/status": {
+      "get": {
+        "tags": [
+          "schema"
+        ],
+        "summary": "Get Schema Status",
+        "description": "Get current schema version and migration status.",
+        "operationId": "get_schema_status_api_schema_status_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MigrationStatus"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/schema/migrate": {
+      "post": {
+        "tags": [
+          "schema"
+        ],
+        "summary": "Migrate Schema",
+        "description": "Apply pending migrations to current dataset.",
+        "operationId": "migrate_schema_api_schema_migrate_post",
+        "parameters": [
+          {
+            "name": "skip_on_error",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "default": false,
+              "title": "Skip On Error"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/schema/history": {
+      "get": {
+        "tags": [
+          "schema"
+        ],
+        "summary": "Get Migration History",
+        "description": "Get migration history for current dataset.",
+        "operationId": "get_migration_history_api_schema_history_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/schema/rollback/{target_version}": {
+      "post": {
+        "tags": [
+          "schema"
+        ],
+        "summary": "Rollback Schema",
+        "description": "Rollback schema to a specific version.",
+        "operationId": "rollback_schema_api_schema_rollback__target_version__post",
+        "parameters": [
+          {
+            "name": "target_version",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Target Version"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/schema/generate-migration": {
+      "post": {
+        "tags": [
+          "schema"
+        ],
+        "summary": "Generate Migration",
+        "description": "Generate a new migration file template.",
+        "operationId": "generate_migration_api_schema_generate_migration_post",
+        "parameters": [
+          {
+            "name": "description",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Description"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
     "schemas": {
+      "ActionLogEntry": {
+        "properties": {
+          "timestamp": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Timestamp"
+          },
+          "action": {
+            "type": "string",
+            "title": "Action"
+          },
+          "dataset_id": {
+            "type": "string",
+            "title": "Dataset Id"
+          },
+          "dataset_title": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Dataset Title"
+          },
+          "details": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Details"
+          }
+        },
+        "type": "object",
+        "required": [
+          "timestamp",
+          "action",
+          "dataset_id",
+          "dataset_title",
+          "details"
+        ],
+        "title": "ActionLogEntry",
+        "description": "A single action log entry."
+      },
+      "ActionLogResponse": {
+        "properties": {
+          "entries": {
+            "items": {
+              "$ref": "#/components/schemas/ActionLogEntry"
+            },
+            "type": "array",
+            "title": "Entries"
+          },
+          "total_count": {
+            "type": "integer",
+            "title": "Total Count"
+          }
+        },
+        "type": "object",
+        "required": [
+          "entries",
+          "total_count"
+        ],
+        "title": "ActionLogResponse",
+        "description": "Response model for action log."
+      },
+      "AddExistingDatasetRequest": {
+        "properties": {
+          "title": {
+            "type": "string",
+            "title": "Title"
+          },
+          "file_path": {
+            "type": "string",
+            "title": "File Path"
+          }
+        },
+        "type": "object",
+        "required": [
+          "title",
+          "file_path"
+        ],
+        "title": "AddExistingDatasetRequest",
+        "description": "Request to add an existing dataset file."
+      },
       "CentralityRequest": {
         "properties": {
           "method": {
@@ -2364,6 +3030,104 @@
         },
         "type": "object",
         "title": "CentralityRequest"
+      },
+      "CreateDatasetRequest": {
+        "properties": {
+          "title": {
+            "type": "string",
+            "title": "Title"
+          },
+          "filename": {
+            "type": "string",
+            "title": "Filename"
+          }
+        },
+        "type": "object",
+        "required": [
+          "title",
+          "filename"
+        ],
+        "title": "CreateDatasetRequest",
+        "description": "Request to create a new dataset."
+      },
+      "DatasetMetrics": {
+        "properties": {
+          "layers_count": {
+            "type": "integer",
+            "title": "Layers Count"
+          },
+          "domains_count": {
+            "type": "integer",
+            "title": "Domains Count"
+          },
+          "terms_count": {
+            "type": "integer",
+            "title": "Terms Count"
+          },
+          "relationships_count": {
+            "type": "integer",
+            "title": "Relationships Count"
+          }
+        },
+        "type": "object",
+        "required": [
+          "layers_count",
+          "domains_count",
+          "terms_count",
+          "relationships_count"
+        ],
+        "title": "DatasetMetrics",
+        "description": "Metrics for a dataset."
+      },
+      "DatasetResponse": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "title": {
+            "type": "string",
+            "title": "Title"
+          },
+          "filename": {
+            "type": "string",
+            "title": "Filename"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          },
+          "last_accessed": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Last Accessed"
+          },
+          "schema_version": {
+            "type": "integer",
+            "title": "Schema Version"
+          },
+          "metrics": {
+            "$ref": "#/components/schemas/DatasetMetrics"
+          },
+          "is_active": {
+            "type": "boolean",
+            "title": "Is Active"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "title",
+          "filename",
+          "created_at",
+          "last_accessed",
+          "schema_version",
+          "metrics",
+          "is_active"
+        ],
+        "title": "DatasetResponse",
+        "description": "Response model for dataset operations."
       },
       "DomainCreate": {
         "properties": {
@@ -3233,6 +3997,38 @@
         "type": "object",
         "title": "LayerUpdate"
       },
+      "MigrationStatus": {
+        "properties": {
+          "current_version": {
+            "type": "integer",
+            "title": "Current Version"
+          },
+          "target_version": {
+            "type": "integer",
+            "title": "Target Version"
+          },
+          "pending_migrations": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Pending Migrations"
+          },
+          "needs_migration": {
+            "type": "boolean",
+            "title": "Needs Migration"
+          }
+        },
+        "type": "object",
+        "required": [
+          "current_version",
+          "target_version",
+          "pending_migrations",
+          "needs_migration"
+        ],
+        "title": "MigrationStatus",
+        "description": "Status of database migrations."
+      },
       "NeighborsRequest": {
         "properties": {
           "entity_id": {
@@ -3751,6 +4547,20 @@
         },
         "type": "object",
         "title": "TermUpdate"
+      },
+      "UpdateDatasetDirectoryRequest": {
+        "properties": {
+          "datasets_directory": {
+            "type": "string",
+            "title": "Datasets Directory"
+          }
+        },
+        "type": "object",
+        "required": [
+          "datasets_directory"
+        ],
+        "title": "UpdateDatasetDirectoryRequest",
+        "description": "Request to update the datasets directory."
       },
       "ValidationError": {
         "properties": {

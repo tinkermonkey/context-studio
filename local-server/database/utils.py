@@ -8,6 +8,48 @@ import os
 
 logger = get_logger(__name__)
 
+# Global state for current dataset
+_current_engine = None
+_current_session_local = None
+_dataset_manager = None
+
+def get_dataset_manager():
+    """Get the global dataset manager instance."""
+    global _dataset_manager
+    if _dataset_manager is None:
+        from dataset.manager import DatasetManager
+        _dataset_manager = DatasetManager()
+    return _dataset_manager
+
+def switch_active_database(dataset_id: str) -> bool:
+    """Switch the active database connection."""
+    global _current_engine, _current_session_local
+    
+    dataset_manager = get_dataset_manager()
+    if dataset_manager.switch_dataset(dataset_id):
+        _current_engine = dataset_manager.active_engine
+        _current_session_local = dataset_manager.active_session_local
+        return True
+    return False
+
+def get_current_engine():
+    """Get the current active engine."""
+    global _current_engine
+    if _current_engine is None:
+        # Initialize with default dataset
+        dataset_manager = get_dataset_manager()
+        _current_engine = dataset_manager.active_engine
+    return _current_engine
+
+def get_current_session_local():
+    """Get the current active session local."""
+    global _current_session_local
+    if _current_session_local is None:
+        # Initialize with default dataset
+        dataset_manager = get_dataset_manager()
+        _current_session_local = dataset_manager.active_session_local
+    return _current_session_local
+
 def get_engine(database_url=None, use_static_pool=False, connect_args={"check_same_thread": False}):
     logger.info("SQLite Version: %s", sqlite3.sqlite_version)
     logger.info("SQLite File: %s", sqlite3.__file__)
@@ -51,35 +93,30 @@ def init_db(engine=None, skip_vec=False, database_url=None, connect_args=None):
 
     logger.info("Creating database tables...")
     Base.metadata.create_all(bind=engine)
-
-    # Only create sqlite-vec virtual tables if not running in test/in-memory mode
-    url = str(engine.url)
-    # Defensive: skip if in-memory, skip_vec True, or SKIP_SQLITE_VEC env var is set
-    if not (url.startswith("sqlite:///:memory:") or skip_vec or os.getenv("SKIP_SQLITE_VEC", "0") == "1"):
-        from sqlalchemy import text
-        with engine.connect() as conn:
-            logger.info("Database connection established, checking vec_version...")
-            vec_version, = conn.execute(text("select vec_version()")).fetchone()
-            logger.info(f"vec_version={vec_version}")
-
-            # Create virtual tables for vector search if not present
-            for table in ("terms_vec", "domains_vec", "layers_vec"):
-                logger.info(f"Creating virtual table {table} if not exists...")
-                conn.execute(text(f'''
-                    CREATE VIRTUAL TABLE IF NOT EXISTS {table} USING vec0(
-                        id TEXT PRIMARY KEY,
-                        title_embedding FLOAT[384],
-                        definition_embedding FLOAT[384]
-                    );
-                '''))
-
-            logger.info(f"Virtual tables created.")
     return engine
 
 def get_db(SessionLocal=None):
+    """Get database session for dependency injection."""
     if SessionLocal is None:
-        raise RuntimeError("get_db must be called with an explicit SessionLocal. Do not use the default in tests or production; always inject the session.")
+        # Use current dataset's session local
+        SessionLocal = get_current_session_local()
+        if SessionLocal is None:
+            raise RuntimeError("No active dataset or session available")
+    
     db = SessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()
+
+def get_db_for_current_dataset():
+    """Get database session for currently active dataset."""
+    session_local = get_current_session_local()
+    if not session_local:
+        from fastapi import HTTPException
+        raise HTTPException(status_code=500, detail="No active dataset")
+    
+    db = session_local()
     try:
         yield db
     finally:

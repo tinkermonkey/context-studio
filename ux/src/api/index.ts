@@ -11,6 +11,8 @@ export * from './services/domains';
 export * from './services/terms';
 export * from './services/relationships';
 export * from './services/graph';
+export * from './services/datasets';
+export * from './services/schema';
 
 // Hooks
 export * from './hooks/layers';
@@ -18,6 +20,10 @@ export * from './hooks/domains';
 export * from './hooks/terms';
 export * from './hooks/relationships';
 export * from './hooks/graph';
+export * from './hooks/datasets';
+export * from './hooks/schema';
+export * from './hooks/datasets';
+export * from './hooks/schema';
 
 // Client configuration
 export * from './config';

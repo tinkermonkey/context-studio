@@ -45,8 +45,16 @@ export abstract class BaseService {
   }
 
   protected async request<T>(config: AxiosRequestConfig): Promise<T> {
-    const response = await this.client.request<T>(config);
-    return response.data;
+    try {
+      const response = await this.client.request<T>(config);
+      return response.data;
+    } catch (error) {
+      // Add service context to errors
+      if (error instanceof Error) {
+        error.message = `${this.constructor.name}: ${error.message}`;
+      }
+      throw error;
+    }
   }
 
   protected async getResource<T>(url: string, params?: Record<string, unknown>): Promise<T> {
@@ -57,29 +65,29 @@ export abstract class BaseService {
     });
   }
 
-  protected async postResource<T>(url: string, data?: unknown, params?: Record<string, unknown>): Promise<T> {
+  protected async postResource<T>(url: string, data?: unknown, config?: { params?: Record<string, unknown> }): Promise<T> {
     return this.request<T>({
       method: 'POST',
       url,
       data,
-      params,
+      params: config?.params,
     });
   }
 
-  protected async putResource<T>(url: string, data?: unknown, params?: Record<string, unknown>): Promise<T> {
+  protected async putResource<T>(url: string, data?: unknown, config?: { params?: Record<string, unknown> }): Promise<T> {
     return this.request<T>({
       method: 'PUT',
       url,
       data,
-      params,
+      params: config?.params,
     });
   }
 
-  protected async deleteResource<T>(url: string, params?: Record<string, unknown>): Promise<T> {
+  protected async deleteResource<T>(url: string, config?: { params?: Record<string, unknown> }): Promise<T> {
     return this.request<T>({
       method: 'DELETE',
       url,
-      params,
+      params: config?.params,
     });
   }
 
@@ -140,5 +148,48 @@ export abstract class BaseService {
    */
   protected async getPaginatedResponse<T>(url: string, params?: Record<string, unknown>): Promise<PaginatedResponse<T>> {
     return this.getResource<PaginatedResponse<T>>(url, params);
+  }
+
+  /**
+   * Enhanced error handling wrapper for service methods
+   */
+  protected async withErrorContext<T>(
+    operation: () => Promise<T>,
+    context: string
+  ): Promise<T> {
+    try {
+      return await operation();
+    } catch (error) {
+      // Add service and operation context to errors
+      if (error instanceof Error) {
+        const serviceName = this.constructor.name.replace('Service', '');
+        error.message = `${serviceName} ${context}: ${error.message}`;
+      }
+      throw error;
+    }
+  }
+
+  /**
+   * Validate required parameters
+   */
+  protected validateRequired<T>(value: T, paramName: string): T {
+    if (value === null || value === undefined || value === '') {
+      throw new Error(`${paramName} is required`);
+    }
+    return value;
+  }
+
+  /**
+   * Validate and sanitize string parameters
+   */
+  protected sanitizeString(value: string, paramName: string, maxLength?: number): string {
+    const sanitized = value?.trim();
+    if (!sanitized) {
+      throw new Error(`${paramName} cannot be empty`);
+    }
+    if (maxLength && sanitized.length > maxLength) {
+      throw new Error(`${paramName} cannot exceed ${maxLength} characters`);
+    }
+    return sanitized;
   }
 }

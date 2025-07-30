@@ -1,3 +1,11 @@
+import numpy as np
+import threading
+import time
+import sqlite3
+import json
+from datetime import datetime, timedelta, timezone
+from utils.logger import get_logger
+
 class GraphEvent:
     def __init__(self, id, entity_type, entity_id, event_type, data, timestamp, processed):
         self.id = id
@@ -22,24 +30,17 @@ class GraphEvent:
             self.timestamp = timestamp
         self.processed = bool(processed)
 
-import threading
-import time
-import sqlite3
-import json
-from datetime import datetime, timedelta, timezone
-from utils.logger import get_logger
-
 class EventProcessor:
-    def __init__(self, db_path, poll_interval=1.0, max_events=100, faiss_manager=None):
+    def __init__(self, db_path, poll_interval=1.0, max_events=100):
         self.db_path = db_path
         self.poll_interval = poll_interval
         self.max_events = max_events
         self._stop_event = threading.Event()
         self._thread = None
         self._cleanup_thread = None
-        self.faiss_manager = faiss_manager
+
         # Ensure logger is always set, even if __init__ is called multiple times
-        if not hasattr(self, 'logger') or self.logger is None:
+        if not hasattr(self, "logger") or self.logger is None:
             self.logger = get_logger(__name__)
 
     def start(self):
@@ -84,13 +85,13 @@ class EventProcessor:
         rows = cur.fetchall()
         for row in rows:
             event = GraphEvent(
-                id=row['id'],
-                entity_type=row['entity_type'],
-                entity_id=row['entity_id'],
-                event_type=row['event_type'],
-                data=row['data'],
-                timestamp=row['timestamp'],
-                processed=row['processed']
+                id=row["id"],
+                entity_type=row["entity_type"],
+                entity_id=row["entity_id"],
+                event_type=row["event_type"],
+                data=row["data"],
+                timestamp=row["timestamp"],
+                processed=row["processed"],
             )
             entity_type = event.entity_type
             handler = getattr(self, f"process_{entity_type}_event", None)
@@ -104,65 +105,18 @@ class EventProcessor:
 
     def process_layer_event(self, event):
         self.logger.info(f"[EventProcessor] Processing layer event: {event.event_type} id={event.id}")
-        if not self.faiss_manager:
-            return
-        index = self.faiss_manager.get_index('layer')
-        if not index:
-            return
-        # Only handle title_embedding for now
-        if event.event_type == 'create':
-            emb = self._extract_embedding(event, 'title_embedding')
-            if emb is not None:
-                index.add(event.entity_id, emb)
-        elif event.event_type == 'update':
-            emb = self._extract_embedding(event, 'title_embedding')
-            if emb is not None:
-                index.update(event.entity_id, emb)
-        elif event.event_type == 'delete':
-            index.remove(event.entity_id)
 
     def process_domain_event(self, event):
         self.logger.info(f"[EventProcessor] Processing domain event: {event.event_type} id={event.id}")
-        if not self.faiss_manager:
-            return
-        index = self.faiss_manager.get_index('domain')
-        if not index:
-            return
-        if event.event_type == 'create':
-            emb = self._extract_embedding(event, 'title_embedding')
-            if emb is not None:
-                index.add(event.entity_id, emb)
-        elif event.event_type == 'update':
-            emb = self._extract_embedding(event, 'title_embedding')
-            if emb is not None:
-                index.update(event.entity_id, emb)
-        elif event.event_type == 'delete':
-            index.remove(event.entity_id)
 
     def process_term_event(self, event):
         self.logger.info(f"[EventProcessor] Processing term event: {event.event_type} id={event.id}")
-        if not self.faiss_manager:
-            return
-        index = self.faiss_manager.get_index('term')
-        if not index:
-            return
-        if event.event_type == 'create':
-            emb = self._extract_embedding(event, 'title_embedding')
-            if emb is not None:
-                index.add(event.entity_id, emb)
-        elif event.event_type == 'update':
-            emb = self._extract_embedding(event, 'title_embedding')
-            if emb is not None:
-                index.update(event.entity_id, emb)
-        elif event.event_type == 'delete':
-            index.remove(event.entity_id)
+
     def _extract_embedding(self, event, field):
-        # Try new_data, fallback to old_data for deletes
-        import numpy as np
         data = event.data or {}
-        if event.event_type == 'delete':
+        if event.event_type == "delete":
             # For deletes, embedding may be in old_data
-            data = event.data.get('old_data', {}) if event.data else {}
+            data = event.data.get("old_data", {}) if event.data else {}
         emb_bytes = data.get(field)
         if emb_bytes is None:
             return None
@@ -203,6 +157,7 @@ class EventProcessor:
         conn.close()
         if deleted:
             self.logger.info(f"[EventProcessor] Deleted {deleted} old processed events.")
+
     # Remove duplicate __init__ definition (if present)
 
     def start(self):
@@ -246,13 +201,13 @@ class EventProcessor:
         cur.execute("SELECT * FROM graph_events WHERE processed=0 ORDER BY timestamp LIMIT ?", (self.max_events,))
         events = cur.fetchall()
         for event in events:
-            entity_type = event['entity_type']
+            entity_type = event["entity_type"]
             handler = getattr(self, f"process_{entity_type}_event", None)
             if handler:
                 handler(event)
             else:
                 self.logger.warning(f"[EventProcessor] No handler for entity_type: {entity_type}")
-            cur.execute("UPDATE graph_events SET processed=1 WHERE id=?", (event['id'],))
+            cur.execute("UPDATE graph_events SET processed=1 WHERE id=?", (event["id"],))
         conn.commit()
         conn.close()
 

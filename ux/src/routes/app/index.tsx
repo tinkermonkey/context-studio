@@ -32,7 +32,7 @@ function RouteComponent() {
         <CsSidebarTitle>Context</CsSidebarTitle>
       </CsSidebar>
       <CsMain>
-        <CsMainTitle>Interactive Hierarchy Chart</CsMainTitle>
+        <CsMainTitle>Context Studio Dashboard</CsMainTitle>
         {chartData ? <TreeChart chartData={chartData} /> : <Spinner />}
       </CsMain>
     </>

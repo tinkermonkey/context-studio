@@ -6,7 +6,22 @@
 
 import { InternalAxiosRequestConfig, AxiosResponse, AxiosError } from 'axios';
 import { apiLogger } from '../utils/logger';
-import { ApiError, ValidationError, NotFoundError, ConflictError, NetworkError } from '../errors/ApiError';
+import { 
+  ApiError, 
+  ValidationError, 
+  NotFoundError, 
+  ConflictError, 
+  BadRequestError,
+  UnauthorizedError,
+  ForbiddenError,
+  TooManyRequestsError,
+  InternalServerError,
+  ServiceUnavailableError,
+  NetworkError 
+} from '../errors/ApiError';
+import type { components } from './types';
+
+type HTTPValidationError = components['schemas']['HTTPValidationError'];
 
 export const requestInterceptor = (config: InternalAxiosRequestConfig) => {
   // Log outgoing requests
@@ -32,11 +47,13 @@ export const responseInterceptor = (response: AxiosResponse) => {
 
 export const errorInterceptor = (error: AxiosError) => {
   const { response, request, config } = error;
+  const endpoint = config?.url;
+  const method = config?.method?.toUpperCase();
 
   // Log the error
   apiLogger.requestError(
-    config?.method || 'GET',
-    config?.url || '',
+    method || 'GET',
+    endpoint || '',
     error
   );
 
@@ -47,58 +64,152 @@ export const errorInterceptor = (error: AxiosError) => {
 
     switch (status) {
       case 400:
-        return Promise.reject(new ApiError(400, 'Bad Request', 'BAD_REQUEST', data));
+        return Promise.reject(
+          new BadRequestError(
+            extractErrorMessage(data, 'Bad Request'),
+            data,
+            endpoint,
+            method
+          )
+        );
       
       case 401:
-        return Promise.reject(new ApiError(401, 'Unauthorized', 'UNAUTHORIZED', data));
+        return Promise.reject(
+          new UnauthorizedError(
+            extractErrorMessage(data, 'Unauthorized'),
+            data,
+            endpoint,
+            method
+          )
+        );
       
       case 403:
-        return Promise.reject(new ApiError(403, 'Forbidden', 'FORBIDDEN', data));
+        return Promise.reject(
+          new ForbiddenError(
+            extractErrorMessage(data, 'Forbidden'),
+            data,
+            endpoint,
+            method
+          )
+        );
       
       case 404:
-        return Promise.reject(new NotFoundError('Resource'));
+        return Promise.reject(
+          new NotFoundError(
+            'Resource',
+            undefined,
+            data,
+            endpoint,
+            method
+          )
+        );
       
       case 409:
         return Promise.reject(
           new ConflictError(
-            'Resource conflict',
-            (data && typeof data === 'object' && 'detail' in data) ? (data as any).detail : data
+            extractErrorMessage(data, 'Resource conflict'),
+            data,
+            endpoint,
+            method
           )
         );
       
       case 422:
-        // Handle validation errors
-        if (data && typeof data === 'object' && 'detail' in data) {
-          const validationErrors: Record<string, string[]> = {};
-          
-          // Parse FastAPI validation errors
-          if (Array.isArray(data.detail)) {
-            data.detail.forEach((error: any) => {
-              if (error.loc && error.msg) {
-                const field = error.loc.join('.');
-                if (!validationErrors[field]) {
-                  validationErrors[field] = [];
-                }
-                validationErrors[field].push(error.msg);
-              }
-            });
-          }
-          
-          return Promise.reject(new ValidationError('Validation failed', validationErrors));
+        // Handle FastAPI validation errors
+        if (isValidationErrorResponse(data)) {
+          return Promise.reject(
+            ValidationError.fromValidationResponse(data, endpoint, method)
+          );
         }
-        return Promise.reject(new ApiError(422, 'Validation Error', 'VALIDATION_ERROR', data));
+        return Promise.reject(
+          new ValidationError(
+            'Validation failed',
+            {},
+            data,
+            endpoint,
+            method
+          )
+        );
+
+      case 429:
+        return Promise.reject(
+          new TooManyRequestsError(
+            extractErrorMessage(data, 'Too many requests'),
+            data,
+            endpoint,
+            method
+          )
+        );
       
       case 500:
-        return Promise.reject(new ApiError(500, 'Internal Server Error', 'INTERNAL_ERROR', data));
+        return Promise.reject(
+          new InternalServerError(
+            extractErrorMessage(data, 'Internal Server Error'),
+            data,
+            endpoint,
+            method
+          )
+        );
+
+      case 503:
+        return Promise.reject(
+          new ServiceUnavailableError(
+            extractErrorMessage(data, 'Service Unavailable'),
+            data,
+            endpoint,
+            method
+          )
+        );
       
       default:
-        return Promise.reject(ApiError.fromResponse(response, 'An error occurred'));
+        return Promise.reject(
+          ApiError.fromResponse(response, 'An error occurred', endpoint, method)
+        );
     }
   } else if (request) {
     // Network error
-    return Promise.reject(new NetworkError('Network error - no response received'));
+    return Promise.reject(
+      new NetworkError(
+        'Network error - no response received',
+        undefined,
+        endpoint,
+        method
+      )
+    );
   } else {
     // Something else happened
-    return Promise.reject(new ApiError(0, error.message || 'An unknown error occurred', 'UNKNOWN_ERROR', error));
+    return Promise.reject(
+      new ApiError(
+        0, 
+        error.message || 'An unknown error occurred', 
+        'UNKNOWN_ERROR', 
+        error,
+        endpoint,
+        method
+      )
+    );
   }
 };
+
+/**
+ * Extract error message from response data
+ */
+function extractErrorMessage(data: unknown, fallback: string): string {
+  if (typeof data === 'object' && data !== null) {
+    const errorData = data as any;
+    return errorData.message || errorData.detail || fallback;
+  }
+  return fallback;
+}
+
+/**
+ * Check if response data is a validation error response
+ */
+function isValidationErrorResponse(data: unknown): data is HTTPValidationError {
+  return (
+    typeof data === 'object' && 
+    data !== null && 
+    'detail' in data && 
+    Array.isArray((data as any).detail)
+  );
+}

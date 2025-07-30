@@ -8,6 +8,7 @@ import { useMutation, useQueryClient, UseMutationOptions } from '@tanstack/react
 import { domainService } from '../../services/domains';
 import { QUERY_KEYS } from '../../config';
 import { createQueryKey } from '../../utils/queryClient';
+import { handleApiError, isValidationError, formatFormError } from '../../errors/errorHandlers';
 import type { components } from '../../client/types';
 
 type DomainOut = components['schemas']['DomainOut'];
@@ -36,6 +37,13 @@ export const useCreateDomain = (
         data
       );
     },
+    onError: (error) => {
+      // Handle and log the error with context
+      handleApiError(error, { 
+        context: 'Creating domain',
+        showToast: true 
+      });
+    },
     ...options,
   });
 };
@@ -61,6 +69,13 @@ export const useUpdateDomain = (
       // Invalidate the domains list to refresh it
       queryClient.invalidateQueries({
         queryKey: [QUERY_KEYS.DOMAINS],
+      });
+    },
+    onError: (error) => {
+      // Handle and log the error with context
+      handleApiError(error, { 
+        context: 'Updating domain',
+        showToast: true 
       });
     },
     ...options,
@@ -93,6 +108,47 @@ export const useDeleteDomain = (
         queryKey: [QUERY_KEYS.TERMS],
       });
     },
+    onError: (error) => {
+      // Handle and log the error with context
+      handleApiError(error, { 
+        context: 'Deleting domain',
+        showToast: true 
+      });
+    },
     ...options,
   });
+};
+
+/**
+ * Enhanced mutation hook that provides form-friendly error handling
+ */
+export const useCreateDomainWithFormErrors = () => {
+  const createMutation = useCreateDomain({
+    onError: () => {
+      // Don't show toast, let the form handle the error display
+    }
+  });
+
+  return {
+    ...createMutation,
+    formError: createMutation.error ? formatFormError(createMutation.error) : null,
+    isValidationError: isValidationError(createMutation.error),
+  };
+};
+
+/**
+ * Enhanced mutation hook for updates with form-friendly error handling
+ */
+export const useUpdateDomainWithFormErrors = () => {
+  const updateMutation = useUpdateDomain({
+    onError: () => {
+      // Don't show toast, let the form handle the error display
+    }
+  });
+
+  return {
+    ...updateMutation,
+    formError: updateMutation.error ? formatFormError(updateMutation.error) : null,
+    isValidationError: isValidationError(updateMutation.error),
+  };
 };

@@ -61,35 +61,85 @@ export class TermService extends BaseService {
    * Get a specific term by ID
    */
   async get(id: string): Promise<TermOut> {
-    return this.getResource<TermOut>(`${ENDPOINTS.TERMS}/${id}`);
+    return this.withErrorContext(
+      () => {
+        this.validateRequired(id, 'Term ID');
+        return this.getResource<TermOut>(`${ENDPOINTS.TERMS}/${id}`);
+      },
+      'get term'
+    );
   }
 
   /**
    * Create a new term
    */
   async create(data: TermCreate): Promise<TermOut> {
-    return this.postResource<TermOut>(ENDPOINTS.TERMS + '/', data);
+    return this.withErrorContext(
+      () => {
+        this.validateRequired(data, 'Term data');
+        this.validateRequired(data.title, 'Term title');
+        this.sanitizeString(data.title, 'Term title', 255);
+        
+        if (data.definition) {
+          this.sanitizeString(data.definition, 'Term definition', 2000);
+        }
+        
+        return this.postResource<TermOut>(ENDPOINTS.TERMS + '/', data);
+      },
+      'create term'
+    );
   }
 
   /**
    * Update an existing term
    */
   async update(id: string, data: TermUpdate): Promise<TermOut> {
-    return this.putResource<TermOut>(`${ENDPOINTS.TERMS}/${id}`, data);
+    return this.withErrorContext(
+      () => {
+        this.validateRequired(id, 'Term ID');
+        this.validateRequired(data, 'Term update data');
+        
+        if (data.title) {
+          this.sanitizeString(data.title, 'Term title', 255);
+        }
+        
+        if (data.definition) {
+          this.sanitizeString(data.definition, 'Term definition', 2000);
+        }
+        
+        return this.putResource<TermOut>(`${ENDPOINTS.TERMS}/${id}`, data);
+      },
+      'update term'
+    );
   }
 
   /**
    * Delete a term
    */
   async delete(id: string): Promise<void> {
-    return this.deleteResource<void>(`${ENDPOINTS.TERMS}/${id}`);
+    return this.withErrorContext(
+      () => {
+        this.validateRequired(id, 'Term ID');
+        return this.deleteResource<void>(`${ENDPOINTS.TERMS}/${id}`);
+      },
+      'delete term'
+    );
   }
 
   /**
    * Find terms using semantic search
    */
   async find(params: TermFindParams): Promise<FindTermResult[]> {
-    return this.postResource<FindTermResult[]>(`${ENDPOINTS.TERMS}/find`, params);
+    return this.withErrorContext(
+      () => {
+        this.validateRequired(params, 'Search parameters');
+        this.validateRequired(params.query, 'Search query');
+        this.sanitizeString(params.query, 'Search query', 1000);
+        
+        return this.postResource<FindTermResult[]>(`${ENDPOINTS.TERMS}/find`, params);
+      },
+      'find terms'
+    );
   }
 }
 

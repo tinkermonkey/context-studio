@@ -59,35 +59,77 @@ export class DomainService extends BaseService {
    * Get a specific domain by ID
    */
   async get(id: string): Promise<DomainOut> {
-    return this.getResource<DomainOut>(`${ENDPOINTS.DOMAINS}/${id}`);
+    return this.withErrorContext(
+      () => {
+        this.validateRequired(id, 'Domain ID');
+        return this.getResource<DomainOut>(`${ENDPOINTS.DOMAINS}/${id}`);
+      },
+      'get domain'
+    );
   }
 
   /**
    * Create a new domain
    */
   async create(data: DomainCreate): Promise<DomainOut> {
-    return this.postResource<DomainOut>(ENDPOINTS.DOMAINS + '/', data);
+    return this.withErrorContext(
+      () => {
+        this.validateRequired(data, 'Domain data');
+        this.validateRequired(data.title, 'Domain title');
+        this.sanitizeString(data.title, 'Domain title', 255);
+        
+        return this.postResource<DomainOut>(ENDPOINTS.DOMAINS + '/', data);
+      },
+      'create domain'
+    );
   }
 
   /**
    * Update an existing domain
    */
   async update(id: string, data: DomainUpdate): Promise<DomainOut> {
-    return this.putResource<DomainOut>(`${ENDPOINTS.DOMAINS}/${id}`, data);
+    return this.withErrorContext(
+      () => {
+        this.validateRequired(id, 'Domain ID');
+        this.validateRequired(data, 'Domain update data');
+        
+        if (data.title) {
+          this.sanitizeString(data.title, 'Domain title', 255);
+        }
+        
+        return this.putResource<DomainOut>(`${ENDPOINTS.DOMAINS}/${id}`, data);
+      },
+      'update domain'
+    );
   }
 
   /**
    * Delete a domain
    */
   async delete(id: string): Promise<void> {
-    return this.deleteResource<void>(`${ENDPOINTS.DOMAINS}/${id}`);
+    return this.withErrorContext(
+      () => {
+        this.validateRequired(id, 'Domain ID');
+        return this.deleteResource<void>(`${ENDPOINTS.DOMAINS}/${id}`);
+      },
+      'delete domain'
+    );
   }
 
   /**
    * Find domains using semantic search
    */
   async find(params: DomainFindParams): Promise<FindDomainResult[]> {
-    return this.postResource<FindDomainResult[]>(`${ENDPOINTS.DOMAINS}/find`, params);
+    return this.withErrorContext(
+      () => {
+        this.validateRequired(params, 'Search parameters');
+        this.validateRequired(params.query, 'Search query');
+        this.sanitizeString(params.query, 'Search query', 1000);
+        
+        return this.postResource<FindDomainResult[]>(`${ENDPOINTS.DOMAINS}/find`, params);
+      },
+      'find domains'
+    );
   }
 }
 

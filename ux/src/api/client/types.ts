@@ -603,10 +603,343 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/datasets": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Datasets
+         * @description List all known datasets with metrics.
+         */
+        get: operations["list_datasets_api_datasets_get"];
+        put?: never;
+        /**
+         * Create Dataset
+         * @description Create a new dataset.
+         */
+        post: operations["create_dataset_api_datasets_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/datasets/active": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Active Dataset
+         * @description Get currently active dataset information.
+         */
+        get: operations["get_active_dataset_api_datasets_active_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/datasets/directory": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Datasets Directory
+         * @description Get the current datasets directory path.
+         */
+        get: operations["get_datasets_directory_api_datasets_directory_get"];
+        put?: never;
+        /**
+         * Update Datasets Directory
+         * @description Update the datasets directory path.
+         */
+        post: operations["update_datasets_directory_api_datasets_directory_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/datasets/startup-info": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Startup Info
+         * @description Get information about which dataset will be loaded on server startup.
+         */
+        get: operations["get_startup_info_api_datasets_startup_info_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/datasets/add-existing": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Add Existing Dataset
+         * @description Add an existing dataset file to the inventory.
+         */
+        post: operations["add_existing_dataset_api_datasets_add_existing_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/datasets/action-log": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Action Log
+         * @description Get dataset action log for the specified number of days.
+         */
+        get: operations["get_action_log_api_datasets_action_log_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/datasets/{dataset_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Dataset
+         * @description Get dataset details and metrics.
+         */
+        get: operations["get_dataset_api_datasets__dataset_id__get"];
+        put?: never;
+        post?: never;
+        /**
+         * Delete Dataset
+         * @description Delete a dataset.
+         */
+        delete: operations["delete_dataset_api_datasets__dataset_id__delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/datasets/{dataset_id}/activate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Activate Dataset
+         * @description Switch to the specified dataset.
+         */
+        post: operations["activate_dataset_api_datasets__dataset_id__activate_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/datasets/{dataset_id}/forget": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Forget Dataset
+         * @description Remove a dataset from inventory but leave the file intact.
+         */
+        post: operations["forget_dataset_api_datasets__dataset_id__forget_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/schema/status": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Schema Status
+         * @description Get current schema version and migration status.
+         */
+        get: operations["get_schema_status_api_schema_status_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/schema/migrate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Migrate Schema
+         * @description Apply pending migrations to current dataset.
+         */
+        post: operations["migrate_schema_api_schema_migrate_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/schema/history": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Migration History
+         * @description Get migration history for current dataset.
+         */
+        get: operations["get_migration_history_api_schema_history_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/schema/rollback/{target_version}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Rollback Schema
+         * @description Rollback schema to a specific version.
+         */
+        post: operations["rollback_schema_api_schema_rollback__target_version__post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/schema/generate-migration": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Generate Migration
+         * @description Generate a new migration file template.
+         */
+        post: operations["generate_migration_api_schema_generate_migration_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        /**
+         * ActionLogEntry
+         * @description A single action log entry.
+         */
+        ActionLogEntry: {
+            /**
+             * Timestamp
+             * Format: date-time
+             */
+            timestamp: string;
+            /** Action */
+            action: string;
+            /** Dataset Id */
+            dataset_id: string;
+            /** Dataset Title */
+            dataset_title: string | null;
+            /** Details */
+            details: {
+                [key: string]: unknown;
+            };
+        };
+        /**
+         * ActionLogResponse
+         * @description Response model for action log.
+         */
+        ActionLogResponse: {
+            /** Entries */
+            entries: components["schemas"]["ActionLogEntry"][];
+            /** Total Count */
+            total_count: number;
+        };
+        /**
+         * AddExistingDatasetRequest
+         * @description Request to add an existing dataset file.
+         */
+        AddExistingDatasetRequest: {
+            /** Title */
+            title: string;
+            /** File Path */
+            file_path: string;
+        };
         /** CentralityRequest */
         CentralityRequest: {
             /**
@@ -614,6 +947,57 @@ export interface components {
              * @default pagerank
              */
             method: string | null;
+        };
+        /**
+         * CreateDatasetRequest
+         * @description Request to create a new dataset.
+         */
+        CreateDatasetRequest: {
+            /** Title */
+            title: string;
+            /** Filename */
+            filename: string;
+        };
+        /**
+         * DatasetMetrics
+         * @description Metrics for a dataset.
+         */
+        DatasetMetrics: {
+            /** Layers Count */
+            layers_count: number;
+            /** Domains Count */
+            domains_count: number;
+            /** Terms Count */
+            terms_count: number;
+            /** Relationships Count */
+            relationships_count: number;
+        };
+        /**
+         * DatasetResponse
+         * @description Response model for dataset operations.
+         */
+        DatasetResponse: {
+            /** Id */
+            id: string;
+            /** Title */
+            title: string;
+            /** Filename */
+            filename: string;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /**
+             * Last Accessed
+             * Format: date-time
+             */
+            last_accessed: string;
+            /** Schema Version */
+            schema_version: number;
+            metrics: components["schemas"]["DatasetMetrics"];
+            /** Is Active */
+            is_active: boolean;
         };
         /** DomainCreate */
         DomainCreate: {
@@ -870,6 +1254,20 @@ export interface components {
             /** Primary Predicate */
             primary_predicate?: string | null;
         };
+        /**
+         * MigrationStatus
+         * @description Status of database migrations.
+         */
+        MigrationStatus: {
+            /** Current Version */
+            current_version: number;
+            /** Target Version */
+            target_version: number;
+            /** Pending Migrations */
+            pending_migrations: string[];
+            /** Needs Migration */
+            needs_migration: boolean;
+        };
         /** NeighborsRequest */
         NeighborsRequest: {
             /** Entity Id */
@@ -1076,6 +1474,14 @@ export interface components {
             definition?: string | null;
             /** Parent Term Id */
             parent_term_id?: string | null;
+        };
+        /**
+         * UpdateDatasetDirectoryRequest
+         * @description Request to update the datasets directory.
+         */
+        UpdateDatasetDirectoryRequest: {
+            /** Datasets Directory */
+            datasets_directory: string;
         };
         /** ValidationError */
         ValidationError: {
@@ -2675,6 +3081,473 @@ export interface operations {
                     "application/json": {
                         [key: string]: string;
                     };
+                };
+            };
+        };
+    };
+    list_datasets_api_datasets_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DatasetResponse"][];
+                };
+            };
+        };
+    };
+    create_dataset_api_datasets_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateDatasetRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DatasetResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_active_dataset_api_datasets_active_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DatasetResponse"];
+                };
+            };
+        };
+    };
+    get_datasets_directory_api_datasets_directory_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+        };
+    };
+    update_datasets_directory_api_datasets_directory_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateDatasetDirectoryRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_startup_info_api_datasets_startup_info_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+        };
+    };
+    add_existing_dataset_api_datasets_add_existing_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AddExistingDatasetRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DatasetResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_action_log_api_datasets_action_log_get: {
+        parameters: {
+            query?: {
+                days?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionLogResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_dataset_api_datasets__dataset_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                dataset_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DatasetResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    delete_dataset_api_datasets__dataset_id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                dataset_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    activate_dataset_api_datasets__dataset_id__activate_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                dataset_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    forget_dataset_api_datasets__dataset_id__forget_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                dataset_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_schema_status_api_schema_status_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MigrationStatus"];
+                };
+            };
+        };
+    };
+    migrate_schema_api_schema_migrate_post: {
+        parameters: {
+            query?: {
+                skip_on_error?: boolean;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_migration_history_api_schema_history_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+        };
+    };
+    rollback_schema_api_schema_rollback__target_version__post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                target_version: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    generate_migration_api_schema_generate_migration_post: {
+        parameters: {
+            query: {
+                description: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
                 };
             };
         };

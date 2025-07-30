@@ -2,48 +2,64 @@ import os
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
-from database.utils import init_db, get_db, get_engine, get_session_local
-from api import layers, domains, terms, term_relationships, graph
+from database.utils import init_db, get_db, get_dataset_manager, get_current_engine
+from api import layers, domains, terms, term_relationships, graph, datasets, schema
 from utils.logger import get_logger
 from utils.event_processor import EventProcessor
 
 logger = get_logger(__name__)
 
 # Dependency injection for testability
-def create_app(engine=None, session_local=None, skip_vec=False):
+def create_app(dataset_id=None, engine=None, session_local=None, skip_vec=False):
     logger.info("Creating FastAPI application...")
     @asynccontextmanager
     async def lifespan(app):
         try:
+            logger.info("Initializing dataset management...")
+            
+            # Initialize dataset manager
+            dataset_manager = get_dataset_manager()
+            
+            # Set active dataset
+            if dataset_id:
+                # Explicit dataset specified (for testing or specific startup)
+                success = dataset_manager.switch_dataset(dataset_id)
+                if not success:
+                    logger.error(f"Failed to switch to specified dataset: {dataset_id}")
+                    raise RuntimeError(f"Cannot start with dataset {dataset_id}")
+            elif not dataset_manager.get_active_dataset():
+                # No active dataset - check if any datasets exist
+                existing_datasets = dataset_manager.list_datasets()
+                if existing_datasets:
+                    # Use the most recently accessed dataset
+                    most_recent = max(existing_datasets, key=lambda d: d.last_accessed)
+                    logger.info(f"No active dataset set, using most recent: {most_recent.title}")
+                    dataset_manager.switch_dataset(most_recent.id)
+                else:
+                    # No datasets exist at all - create default
+                    logger.info("No datasets found, creating default dataset...")
+                    dataset_manager.create_dataset("Default Dataset", "default.db")
+            
+            # Initialize database with current active dataset
             logger.info("Initializing database...")
-            init_db(engine=engine, skip_vec=skip_vec)
+            init_db(engine=engine or get_current_engine(), skip_vec=skip_vec)
             logger.info("Database initialized.")
+            
+            # Initialize event processor with current dataset
+            active_dataset = dataset_manager.get_active_dataset()
+            if active_dataset:
+                dataset_path = dataset_manager.get_dataset_file_path(active_dataset.filename)
+                app.state.event_processor = EventProcessor(dataset_path)
+                app.state.event_processor.start()
+                logger.info(f"Event processor started for dataset: {active_dataset.title}")
+            
             yield
         finally:
+            if hasattr(app.state, 'event_processor') and app.state.event_processor:
+                app.state.event_processor.stop()
             logger.info("Shutting down application.")
 
     app = FastAPI(lifespan=lifespan)
-
-    # --- FAISS Manager and Event Processor Initialization ---
-    db_url = os.environ.get("SQLALCHEMY_DATABASE_URL")
-    if not db_url:
-        try:
-            from config import settings as _settings
-            db_url = getattr(_settings, "SQLALCHEMY_DATABASE_URL", None)
-        except Exception:
-            db_url = None
-    if db_url and db_url.startswith("sqlite:///"):
-        db_path = db_url.replace("sqlite:///", "")
-        # Load FAISS indexes at startup
-        from utils.faiss_manager import FaissManager
-        app.state.faiss_manager = FaissManager(db_path)
-        app.state.faiss_manager.load_all_indexes()
-        # Pass faiss_manager to EventProcessor
-        app.state.event_processor = EventProcessor(db_path, faiss_manager=app.state.faiss_manager)
-        app.state.event_processor.start()
-    else:
-        app.state.faiss_manager = None
-        app.state.event_processor = None
 
     # Dependency override for DB session
     if session_local:
@@ -60,12 +76,13 @@ def create_app(engine=None, session_local=None, skip_vec=False):
     app.include_router(terms.router, prefix="/api/terms", tags=["terms"])
     app.include_router(term_relationships.router, prefix="/api/term-relationships", tags=["term-relationships"])
     app.include_router(graph.router, prefix="/api", tags=["graph"])
+    app.include_router(datasets.router, prefix="/api", tags=["datasets"])
+    app.include_router(schema.router, prefix="/api", tags=["schema"])
     return app
 
 # Default app for production
-engine = get_engine()
-SessionLocal = get_session_local(engine)
-app = create_app(engine=engine, session_local=SessionLocal)
+dataset_manager = get_dataset_manager()
+app = create_app()
 
 app.add_middleware(
     CORSMiddleware,

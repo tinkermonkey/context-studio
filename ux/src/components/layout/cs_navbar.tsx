@@ -1,4 +1,3 @@
-
 import {
   Badge,
   Dropdown,
@@ -16,14 +15,17 @@ export function CsNavbar() {
   const matchRoute = useMatchRoute();
 
   return (
-    <Navbar className="sticky top-0 z-[60] p-0 mx-auto flex w-full items-center justify-between border-b border-gray-200 bg-white text-gray-500 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400">
+    <Navbar className="sticky top-0 z-[60] mx-auto flex w-full items-center justify-between border-b border-gray-200 bg-white p-0 text-gray-500 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400">
       <div className="mx-auto flex w-full max-w-7xl flex-wrap items-center justify-between px-4 py-2.5 lg:px-4">
         <div className="flex items-center">
-          <NavbarBrand href="/" className="flex items-center gap-3 text-2xl font-semibold text-gray-900 dark:text-white">
-              Context Studio
+          <NavbarBrand
+            href="/"
+            className="flex items-center gap-3 text-2xl font-semibold text-gray-900 dark:text-white"
+          >
+            Context Studio
           </NavbarBrand>
           <TextInput
-            className="hidden ml-[6rem] w-64 lg:flex"
+            className="ml-[6rem] hidden w-64 lg:flex"
             placeholder="Search..."
             type="search"
             icon={Search}
@@ -32,13 +34,42 @@ export function CsNavbar() {
         </div>
         <div className="flex items-center">
           <NavbarCollapse>
-            <NavbarLink href="/app" active={!!matchRoute({ to: "/app", fuzzy: false })}>Dashboard</NavbarLink>
-            <NavbarLink href="/app/layers" active={!!matchRoute({ to: "/app/layers", fuzzy: true })}>Layers</NavbarLink>
-            <NavbarLink href="/app/domains" active={!!matchRoute({ to: "/app/domains", fuzzy: true })}>Domains</NavbarLink>
-            <NavbarLink href="/app/terms" active={!!matchRoute({ to: "/app/terms", fuzzy: true })}>Terms</NavbarLink>
+            <NavbarLink
+              href="/app"
+              active={!!matchRoute({ to: "/app", fuzzy: false })}
+            >
+              Dashboard
+            </NavbarLink>
+            <NavbarLink
+              href="/app/datasets"
+              active={!!matchRoute({ to: "/app/datasets", fuzzy: false })}
+            >
+              Datasets
+            </NavbarLink>
+
+            <Dropdown
+              label="Structure"
+              className="hidden lg:block"
+              inline={true}
+            >
+              <DropdownItem href="/app/layers">Layers</DropdownItem>
+              <DropdownItem href="/app/domains">Domains</DropdownItem>
+              <DropdownItem href="/app/terms">Terms</DropdownItem>
+            </Dropdown>
+            <Dropdown label="Data" className="hidden lg:block" inline={true}>
+              <DropdownItem href="/app/data/sources">Sources</DropdownItem>
+              <DropdownItem href="/app/data/transformations">
+                Transformations
+              </DropdownItem>
+              <DropdownItem href="/app/data/visualizations">
+                Visualizations
+              </DropdownItem>
+            </Dropdown>
           </NavbarCollapse>
         </div>
-        <Badge className="hidden lg:block" color="info">v0.1.0</Badge>
+        <Badge className="hidden lg:block" color="info">
+          v0.1.0
+        </Badge>
       </div>
     </Navbar>
   );
