@@ -388,37 +388,3 @@ async def forget_dataset(
             status_code=500, 
             detail=f"An unexpected error occurred while forgetting dataset '{dataset_id}'. Please check the server logs for more details."
         )
-
-
-@router.get("/datasets/directory")
-async def get_datasets_directory(
-    dataset_manager: DatasetManager = Depends(get_dataset_manager_dependency)
-):
-    """Get the current datasets directory path."""
-    try:
-        return {"datasets_directory": dataset_manager.datasets_directory}
-    except Exception as e:
-        logger.error(f"Failed to get datasets directory: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
-
-
-@router.post("/datasets/directory")
-async def update_datasets_directory(
-    request: UpdateDatasetDirectoryRequest,
-    dataset_manager: DatasetManager = Depends(get_dataset_manager_dependency)
-):
-    """Update the datasets directory path."""
-    try:
-        success = dataset_manager.update_datasets_directory(request.datasets_directory)
-        if not success:
-            raise HTTPException(status_code=400, detail="Failed to update datasets directory")
-        
-        return {
-            "message": "Datasets directory updated successfully",
-            "datasets_directory": request.datasets_directory
-        }
-    except HTTPException:
-        raise
-    except Exception as e:
-        logger.error(f"Failed to update datasets directory: {e}")
-        raise HTTPException(status_code=500, detail=str(e))

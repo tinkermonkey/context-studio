@@ -14,23 +14,23 @@
         "operationId": "find_layer_api_layers_find_post",
         "parameters": [
           {
-            "name": "SessionLocal",
-            "in": "query",
             "required": false,
             "schema": {
               "title": "Sessionlocal"
-            }
+            },
+            "name": "SessionLocal",
+            "in": "query"
           }
         ],
         "requestBody": {
-          "required": true,
           "content": {
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/FindLayerRequest"
               }
             }
-          }
+          },
+          "required": true
         },
         "responses": {
           "200": {
@@ -38,10 +38,10 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "array",
                   "items": {
                     "$ref": "#/components/schemas/FindLayerResult"
                   },
+                  "type": "array",
                   "title": "Response Find Layer Api Layers Find Post"
                 }
               }
@@ -73,54 +73,6 @@
       }
     },
     "/api/layers/": {
-      "post": {
-        "tags": [
-          "layers"
-        ],
-        "summary": "Create Layer",
-        "operationId": "create_layer_api_layers__post",
-        "parameters": [
-          {
-            "name": "SessionLocal",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "title": "Sessionlocal"
-            }
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/LayerCreate"
-              }
-            }
-          }
-        },
-        "responses": {
-          "201": {
-            "description": "Layer created.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/LayerOut"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Bad Request"
-          },
-          "409": {
-            "description": "Conflict"
-          },
-          "422": {
-            "description": "Validation Error"
-          }
-        }
-      },
       "get": {
         "tags": [
           "layers"
@@ -129,46 +81,46 @@
         "operationId": "list_layers_api_layers__get",
         "parameters": [
           {
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 0.0,
+              "title": "Skip",
+              "default": 0
+            },
             "name": "skip",
-            "in": "query",
+            "in": "query"
+          },
+          {
             "required": false,
             "schema": {
               "type": "integer",
-              "minimum": 0,
-              "default": 0,
-              "title": "Skip"
-            }
-          },
-          {
+              "maximum": 100.0,
+              "minimum": 1.0,
+              "title": "Limit",
+              "default": 50
+            },
             "name": "limit",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "integer",
-              "maximum": 100,
-              "minimum": 1,
-              "default": 50,
-              "title": "Limit"
-            }
+            "in": "query"
           },
           {
-            "name": "sortBy",
-            "in": "query",
             "required": false,
             "schema": {
               "type": "string",
               "pattern": "^(title|created_at)$",
-              "default": "title",
-              "title": "Sortby"
-            }
+              "title": "Sortby",
+              "default": "title"
+            },
+            "name": "sortBy",
+            "in": "query"
           },
           {
-            "name": "SessionLocal",
-            "in": "query",
             "required": false,
             "schema": {
               "title": "Sessionlocal"
-            }
+            },
+            "name": "SessionLocal",
+            "in": "query"
           }
         ],
         "responses": {
@@ -193,6 +145,54 @@
             }
           }
         }
+      },
+      "post": {
+        "tags": [
+          "layers"
+        ],
+        "summary": "Create Layer",
+        "operationId": "create_layer_api_layers__post",
+        "parameters": [
+          {
+            "required": false,
+            "schema": {
+              "title": "Sessionlocal"
+            },
+            "name": "SessionLocal",
+            "in": "query"
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LayerCreate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Layer created.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LayerOut"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request"
+          },
+          "409": {
+            "description": "Conflict"
+          },
+          "422": {
+            "description": "Validation Error"
+          }
+        }
       }
     },
     "/api/layers/{id}": {
@@ -204,21 +204,21 @@
         "operationId": "get_layer_api_layers__id__get",
         "parameters": [
           {
-            "name": "id",
-            "in": "path",
             "required": true,
             "schema": {
               "type": "string",
               "title": "Id"
-            }
+            },
+            "name": "id",
+            "in": "path"
           },
           {
-            "name": "SessionLocal",
-            "in": "query",
             "required": false,
             "schema": {
               "title": "Sessionlocal"
-            }
+            },
+            "name": "SessionLocal",
+            "in": "query"
           }
         ],
         "responses": {
@@ -255,32 +255,32 @@
         "operationId": "update_layer_api_layers__id__put",
         "parameters": [
           {
-            "name": "id",
-            "in": "path",
             "required": true,
             "schema": {
               "type": "string",
               "title": "Id"
-            }
+            },
+            "name": "id",
+            "in": "path"
           },
           {
-            "name": "SessionLocal",
-            "in": "query",
             "required": false,
             "schema": {
               "title": "Sessionlocal"
-            }
+            },
+            "name": "SessionLocal",
+            "in": "query"
           }
         ],
         "requestBody": {
-          "required": true,
           "content": {
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/LayerUpdate"
               }
             }
-          }
+          },
+          "required": true
         },
         "responses": {
           "200": {
@@ -316,21 +316,21 @@
         "operationId": "delete_layer_api_layers__id__delete",
         "parameters": [
           {
-            "name": "id",
-            "in": "path",
             "required": true,
             "schema": {
               "type": "string",
               "title": "Id"
-            }
+            },
+            "name": "id",
+            "in": "path"
           },
           {
-            "name": "SessionLocal",
-            "in": "query",
             "required": false,
             "schema": {
               "title": "Sessionlocal"
-            }
+            },
+            "name": "SessionLocal",
+            "in": "query"
           }
         ],
         "responses": {
@@ -367,23 +367,23 @@
         "operationId": "find_domain_api_domains_find_post",
         "parameters": [
           {
-            "name": "SessionLocal",
-            "in": "query",
             "required": false,
             "schema": {
               "title": "Sessionlocal"
-            }
+            },
+            "name": "SessionLocal",
+            "in": "query"
           }
         ],
         "requestBody": {
-          "required": true,
           "content": {
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/FindDomainRequest"
               }
             }
-          }
+          },
+          "required": true
         },
         "responses": {
           "200": {
@@ -391,10 +391,10 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "array",
                   "items": {
                     "$ref": "#/components/schemas/FindDomainResult"
                   },
+                  "type": "array",
                   "title": "Response Find Domain Api Domains Find Post"
                 }
               }
@@ -426,39 +426,70 @@
       }
     },
     "/api/domains/": {
-      "post": {
+      "get": {
         "tags": [
           "domains"
         ],
-        "summary": "Create Domain",
-        "operationId": "create_domain_api_domains__post",
+        "summary": "List Domains",
+        "operationId": "list_domains_api_domains__get",
         "parameters": [
           {
-            "name": "SessionLocal",
-            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "title": "Layer Id"
+            },
+            "name": "layer_id",
+            "in": "query"
+          },
+          {
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "title": "Skip",
+              "default": 0
+            },
+            "name": "skip",
+            "in": "query"
+          },
+          {
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 100.0,
+              "title": "Limit",
+              "default": 50
+            },
+            "name": "limit",
+            "in": "query"
+          },
+          {
+            "required": false,
+            "schema": {
+              "type": "string",
+              "pattern": "^(title|created_at)$",
+              "title": "Sortby",
+              "default": "title"
+            },
+            "name": "sortBy",
+            "in": "query"
+          },
+          {
             "required": false,
             "schema": {
               "title": "Sessionlocal"
-            }
+            },
+            "name": "SessionLocal",
+            "in": "query"
           }
         ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/DomainCreate"
-              }
-            }
-          }
-        },
         "responses": {
-          "201": {
+          "200": {
             "description": "Successful Response",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/DomainOut"
+                  "$ref": "#/components/schemas/PaginatedDomainsResponse"
                 }
               }
             }
@@ -475,70 +506,39 @@
           }
         }
       },
-      "get": {
+      "post": {
         "tags": [
           "domains"
         ],
-        "summary": "List Domains",
-        "operationId": "list_domains_api_domains__get",
+        "summary": "Create Domain",
+        "operationId": "create_domain_api_domains__post",
         "parameters": [
           {
-            "name": "layer_id",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "string",
-              "title": "Layer Id"
-            }
-          },
-          {
-            "name": "skip",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "integer",
-              "default": 0,
-              "title": "Skip"
-            }
-          },
-          {
-            "name": "limit",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "integer",
-              "maximum": 100,
-              "default": 50,
-              "title": "Limit"
-            }
-          },
-          {
-            "name": "sortBy",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "string",
-              "pattern": "^(title|created_at)$",
-              "default": "title",
-              "title": "Sortby"
-            }
-          },
-          {
-            "name": "SessionLocal",
-            "in": "query",
             "required": false,
             "schema": {
               "title": "Sessionlocal"
-            }
+            },
+            "name": "SessionLocal",
+            "in": "query"
           }
         ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DomainCreate"
+              }
+            }
+          },
+          "required": true
+        },
         "responses": {
-          "200": {
+          "201": {
             "description": "Successful Response",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/PaginatedDomainsResponse"
+                  "$ref": "#/components/schemas/DomainOut"
                 }
               }
             }
@@ -565,21 +565,21 @@
         "operationId": "get_domain_api_domains__id__get",
         "parameters": [
           {
-            "name": "id",
-            "in": "path",
             "required": true,
             "schema": {
               "type": "string",
               "title": "Id"
-            }
+            },
+            "name": "id",
+            "in": "path"
           },
           {
-            "name": "SessionLocal",
-            "in": "query",
             "required": false,
             "schema": {
               "title": "Sessionlocal"
-            }
+            },
+            "name": "SessionLocal",
+            "in": "query"
           }
         ],
         "responses": {
@@ -616,32 +616,32 @@
         "operationId": "update_domain_api_domains__id__put",
         "parameters": [
           {
-            "name": "id",
-            "in": "path",
             "required": true,
             "schema": {
               "type": "string",
               "title": "Id"
-            }
+            },
+            "name": "id",
+            "in": "path"
           },
           {
-            "name": "SessionLocal",
-            "in": "query",
             "required": false,
             "schema": {
               "title": "Sessionlocal"
-            }
+            },
+            "name": "SessionLocal",
+            "in": "query"
           }
         ],
         "requestBody": {
-          "required": true,
           "content": {
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/DomainUpdate"
               }
             }
-          }
+          },
+          "required": true
         },
         "responses": {
           "200": {
@@ -677,21 +677,21 @@
         "operationId": "delete_domain_api_domains__id__delete",
         "parameters": [
           {
-            "name": "id",
-            "in": "path",
             "required": true,
             "schema": {
               "type": "string",
               "title": "Id"
-            }
+            },
+            "name": "id",
+            "in": "path"
           },
           {
-            "name": "SessionLocal",
-            "in": "query",
             "required": false,
             "schema": {
               "title": "Sessionlocal"
-            }
+            },
+            "name": "SessionLocal",
+            "in": "query"
           }
         ],
         "responses": {
@@ -729,23 +729,23 @@
         "operationId": "move_domains_api_domains_move_post",
         "parameters": [
           {
-            "name": "SessionLocal",
-            "in": "query",
             "required": false,
             "schema": {
               "title": "Sessionlocal"
-            }
+            },
+            "name": "SessionLocal",
+            "in": "query"
           }
         ],
         "requestBody": {
-          "required": true,
           "content": {
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/MoveDomainRequest"
               }
             }
-          }
+          },
+          "required": true
         },
         "responses": {
           "200": {
@@ -780,23 +780,23 @@
         "operationId": "find_term_api_terms_find_post",
         "parameters": [
           {
-            "name": "SessionLocal",
-            "in": "query",
             "required": false,
             "schema": {
               "title": "Sessionlocal"
-            }
+            },
+            "name": "SessionLocal",
+            "in": "query"
           }
         ],
         "requestBody": {
-          "required": true,
           "content": {
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/FindTermRequest"
               }
             }
-          }
+          },
+          "required": true
         },
         "responses": {
           "200": {
@@ -804,10 +804,10 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "array",
                   "items": {
                     "$ref": "#/components/schemas/FindTermResult"
                   },
+                  "type": "array",
                   "title": "Response Find Term Api Terms Find Post"
                 }
               }
@@ -839,39 +839,88 @@
       }
     },
     "/api/terms/": {
-      "post": {
+      "get": {
         "tags": [
           "terms"
         ],
-        "summary": "Create Term",
-        "operationId": "create_term_api_terms__post",
+        "summary": "List Terms",
+        "operationId": "list_terms_api_terms__get",
         "parameters": [
           {
-            "name": "SessionLocal",
-            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "title": "Domain Id"
+            },
+            "name": "domain_id",
+            "in": "query"
+          },
+          {
+            "required": false,
+            "schema": {
+              "type": "string",
+              "title": "Layer Id"
+            },
+            "name": "layer_id",
+            "in": "query"
+          },
+          {
+            "required": false,
+            "schema": {
+              "type": "string",
+              "title": "Parent Term Id"
+            },
+            "name": "parent_term_id",
+            "in": "query"
+          },
+          {
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "title": "Skip",
+              "default": 0
+            },
+            "name": "skip",
+            "in": "query"
+          },
+          {
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 100.0,
+              "title": "Limit",
+              "default": 50
+            },
+            "name": "limit",
+            "in": "query"
+          },
+          {
+            "required": false,
+            "schema": {
+              "type": "string",
+              "pattern": "^(title|created_at)$",
+              "title": "Sortby",
+              "default": "title"
+            },
+            "name": "sortBy",
+            "in": "query"
+          },
+          {
             "required": false,
             "schema": {
               "title": "Sessionlocal"
-            }
+            },
+            "name": "SessionLocal",
+            "in": "query"
           }
         ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/TermCreate"
-              }
-            }
-          }
-        },
         "responses": {
-          "201": {
+          "200": {
             "description": "Successful Response",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/TermOut"
+                  "$ref": "#/components/schemas/PaginatedTermsResponse"
                 }
               }
             }
@@ -888,88 +937,39 @@
           }
         }
       },
-      "get": {
+      "post": {
         "tags": [
           "terms"
         ],
-        "summary": "List Terms",
-        "operationId": "list_terms_api_terms__get",
+        "summary": "Create Term",
+        "operationId": "create_term_api_terms__post",
         "parameters": [
           {
-            "name": "domain_id",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "string",
-              "title": "Domain Id"
-            }
-          },
-          {
-            "name": "layer_id",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "string",
-              "title": "Layer Id"
-            }
-          },
-          {
-            "name": "parent_term_id",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "string",
-              "title": "Parent Term Id"
-            }
-          },
-          {
-            "name": "skip",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "integer",
-              "default": 0,
-              "title": "Skip"
-            }
-          },
-          {
-            "name": "limit",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "integer",
-              "maximum": 100,
-              "default": 50,
-              "title": "Limit"
-            }
-          },
-          {
-            "name": "sortBy",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "string",
-              "pattern": "^(title|created_at)$",
-              "default": "title",
-              "title": "Sortby"
-            }
-          },
-          {
-            "name": "SessionLocal",
-            "in": "query",
             "required": false,
             "schema": {
               "title": "Sessionlocal"
-            }
+            },
+            "name": "SessionLocal",
+            "in": "query"
           }
         ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TermCreate"
+              }
+            }
+          },
+          "required": true
+        },
         "responses": {
-          "200": {
+          "201": {
             "description": "Successful Response",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/PaginatedTermsResponse"
+                  "$ref": "#/components/schemas/TermOut"
                 }
               }
             }
@@ -996,21 +996,21 @@
         "operationId": "get_term_api_terms__id__get",
         "parameters": [
           {
-            "name": "id",
-            "in": "path",
             "required": true,
             "schema": {
               "type": "string",
               "title": "Id"
-            }
+            },
+            "name": "id",
+            "in": "path"
           },
           {
-            "name": "SessionLocal",
-            "in": "query",
             "required": false,
             "schema": {
               "title": "Sessionlocal"
-            }
+            },
+            "name": "SessionLocal",
+            "in": "query"
           }
         ],
         "responses": {
@@ -1047,32 +1047,32 @@
         "operationId": "update_term_api_terms__id__put",
         "parameters": [
           {
-            "name": "id",
-            "in": "path",
             "required": true,
             "schema": {
               "type": "string",
               "title": "Id"
-            }
+            },
+            "name": "id",
+            "in": "path"
           },
           {
-            "name": "SessionLocal",
-            "in": "query",
             "required": false,
             "schema": {
               "title": "Sessionlocal"
-            }
+            },
+            "name": "SessionLocal",
+            "in": "query"
           }
         ],
         "requestBody": {
-          "required": true,
           "content": {
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/TermUpdate"
               }
             }
-          }
+          },
+          "required": true
         },
         "responses": {
           "200": {
@@ -1105,21 +1105,21 @@
         "operationId": "delete_term_api_terms__id__delete",
         "parameters": [
           {
-            "name": "id",
-            "in": "path",
             "required": true,
             "schema": {
               "type": "string",
               "title": "Id"
-            }
+            },
+            "name": "id",
+            "in": "path"
           },
           {
-            "name": "SessionLocal",
-            "in": "query",
             "required": false,
             "schema": {
               "title": "Sessionlocal"
-            }
+            },
+            "name": "SessionLocal",
+            "in": "query"
           }
         ],
         "responses": {
@@ -1154,23 +1154,23 @@
         "operationId": "move_terms_api_terms_move_post",
         "parameters": [
           {
-            "name": "SessionLocal",
-            "in": "query",
             "required": false,
             "schema": {
               "title": "Sessionlocal"
-            }
+            },
+            "name": "SessionLocal",
+            "in": "query"
           }
         ],
         "requestBody": {
-          "required": true,
           "content": {
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/MoveTermRequest"
               }
             }
-          }
+          },
+          "required": true
         },
         "responses": {
           "200": {
@@ -1197,39 +1197,80 @@
       }
     },
     "/api/term-relationships/": {
-      "post": {
+      "get": {
         "tags": [
           "term-relationships"
         ],
-        "summary": "Create Relationship",
-        "operationId": "create_relationship_api_term_relationships__post",
+        "summary": "List Relationships",
+        "operationId": "list_relationships_api_term_relationships__get",
         "parameters": [
           {
-            "name": "SessionLocal",
-            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "title": "Source Term Id"
+            },
+            "name": "source_term_id",
+            "in": "query"
+          },
+          {
+            "required": false,
+            "schema": {
+              "type": "string",
+              "title": "Target Term Id"
+            },
+            "name": "target_term_id",
+            "in": "query"
+          },
+          {
+            "required": false,
+            "schema": {
+              "type": "string",
+              "title": "Predicate"
+            },
+            "name": "predicate",
+            "in": "query"
+          },
+          {
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "title": "Skip",
+              "default": 0
+            },
+            "name": "skip",
+            "in": "query"
+          },
+          {
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "title": "Limit",
+              "default": 50
+            },
+            "name": "limit",
+            "in": "query"
+          },
+          {
             "required": false,
             "schema": {
               "title": "Sessionlocal"
-            }
+            },
+            "name": "SessionLocal",
+            "in": "query"
           }
         ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/TermRelationshipCreate"
-              }
-            }
-          }
-        },
         "responses": {
-          "201": {
+          "200": {
             "description": "Successful Response",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/TermRelationshipOut"
+                  "items": {
+                    "$ref": "#/components/schemas/TermRelationshipOut"
+                  },
+                  "type": "array",
+                  "title": "Response List Relationships Api Term Relationships  Get"
                 }
               }
             }
@@ -1246,80 +1287,39 @@
           }
         }
       },
-      "get": {
+      "post": {
         "tags": [
           "term-relationships"
         ],
-        "summary": "List Relationships",
-        "operationId": "list_relationships_api_term_relationships__get",
+        "summary": "Create Relationship",
+        "operationId": "create_relationship_api_term_relationships__post",
         "parameters": [
           {
-            "name": "source_term_id",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "string",
-              "title": "Source Term Id"
-            }
-          },
-          {
-            "name": "target_term_id",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "string",
-              "title": "Target Term Id"
-            }
-          },
-          {
-            "name": "predicate",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "string",
-              "title": "Predicate"
-            }
-          },
-          {
-            "name": "skip",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "integer",
-              "default": 0,
-              "title": "Skip"
-            }
-          },
-          {
-            "name": "limit",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "integer",
-              "default": 50,
-              "title": "Limit"
-            }
-          },
-          {
-            "name": "SessionLocal",
-            "in": "query",
             "required": false,
             "schema": {
               "title": "Sessionlocal"
-            }
+            },
+            "name": "SessionLocal",
+            "in": "query"
           }
         ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TermRelationshipCreate"
+              }
+            }
+          },
+          "required": true
+        },
         "responses": {
-          "200": {
+          "201": {
             "description": "Successful Response",
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/TermRelationshipOut"
-                  },
-                  "title": "Response List Relationships Api Term Relationships  Get"
+                  "$ref": "#/components/schemas/TermRelationshipOut"
                 }
               }
             }
@@ -1346,21 +1346,21 @@
         "operationId": "get_relationship_api_term_relationships__id__get",
         "parameters": [
           {
-            "name": "id",
-            "in": "path",
             "required": true,
             "schema": {
               "type": "string",
               "title": "Id"
-            }
+            },
+            "name": "id",
+            "in": "path"
           },
           {
-            "name": "SessionLocal",
-            "in": "query",
             "required": false,
             "schema": {
               "title": "Sessionlocal"
-            }
+            },
+            "name": "SessionLocal",
+            "in": "query"
           }
         ],
         "responses": {
@@ -1394,32 +1394,32 @@
         "operationId": "update_relationship_api_term_relationships__id__put",
         "parameters": [
           {
-            "name": "id",
-            "in": "path",
             "required": true,
             "schema": {
               "type": "string",
               "title": "Id"
-            }
+            },
+            "name": "id",
+            "in": "path"
           },
           {
-            "name": "SessionLocal",
-            "in": "query",
             "required": false,
             "schema": {
               "title": "Sessionlocal"
-            }
+            },
+            "name": "SessionLocal",
+            "in": "query"
           }
         ],
         "requestBody": {
-          "required": true,
           "content": {
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/TermRelationshipUpdate"
               }
             }
-          }
+          },
+          "required": true
         },
         "responses": {
           "200": {
@@ -1452,21 +1452,21 @@
         "operationId": "delete_relationship_api_term_relationships__id__delete",
         "parameters": [
           {
-            "name": "id",
-            "in": "path",
             "required": true,
             "schema": {
               "type": "string",
               "title": "Id"
-            }
+            },
+            "name": "id",
+            "in": "path"
           },
           {
-            "name": "SessionLocal",
-            "in": "query",
             "required": false,
             "schema": {
               "title": "Sessionlocal"
-            }
+            },
+            "name": "SessionLocal",
+            "in": "query"
           }
         ],
         "responses": {
@@ -1506,7 +1506,6 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "additionalProperties": true,
                   "type": "object",
                   "title": "Response Get Graph Stats Api Graph Stats Get"
                 }
@@ -1569,7 +1568,6 @@
               "application/json": {
                 "schema": {
                   "items": {
-                    "additionalProperties": true,
                     "type": "object"
                   },
                   "type": "array",
@@ -1602,16 +1600,16 @@
         "operationId": "export_rdf_api_graph_sparql_export_get",
         "parameters": [
           {
-            "name": "format",
-            "in": "query",
+            "description": "RDF serialization format",
             "required": false,
             "schema": {
               "type": "string",
+              "title": "Format",
               "description": "RDF serialization format",
-              "default": "turtle",
-              "title": "Format"
+              "default": "turtle"
             },
-            "description": "RDF serialization format"
+            "name": "format",
+            "in": "query"
           }
         ],
         "responses": {
@@ -1650,27 +1648,27 @@
         "operationId": "search_terms_api_graph_search_terms_get",
         "parameters": [
           {
-            "name": "title",
-            "in": "query",
+            "description": "Term title to search for",
             "required": true,
             "schema": {
               "type": "string",
-              "description": "Term title to search for",
-              "title": "Title"
+              "title": "Title",
+              "description": "Term title to search for"
             },
-            "description": "Term title to search for"
+            "name": "title",
+            "in": "query"
           },
           {
-            "name": "exact",
-            "in": "query",
+            "description": "Whether to do exact match",
             "required": false,
             "schema": {
               "type": "boolean",
+              "title": "Exact",
               "description": "Whether to do exact match",
-              "default": false,
-              "title": "Exact"
+              "default": false
             },
-            "description": "Whether to do exact match"
+            "name": "exact",
+            "in": "query"
           }
         ],
         "responses": {
@@ -1679,11 +1677,10 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "array",
                   "items": {
-                    "type": "object",
-                    "additionalProperties": true
+                    "type": "object"
                   },
+                  "type": "array",
                   "title": "Response Search Terms Api Graph Search Terms Get"
                 }
               }
@@ -1727,7 +1724,6 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "additionalProperties": true,
                   "type": "object",
                   "title": "Response Search And Analyze Api Graph Search Analyze Post"
                 }
@@ -1805,16 +1801,16 @@
         "operationId": "detect_communities_api_graph_analytics_communities_get",
         "parameters": [
           {
-            "name": "method",
-            "in": "query",
+            "description": "Community detection method",
             "required": false,
             "schema": {
               "type": "string",
+              "title": "Method",
               "description": "Community detection method",
-              "default": "louvain",
-              "title": "Method"
+              "default": "louvain"
             },
-            "description": "Community detection method"
+            "name": "method",
+            "in": "query"
           }
         ],
         "responses": {
@@ -1823,13 +1819,13 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "array",
                   "items": {
-                    "type": "array",
                     "items": {
                       "type": "string"
-                    }
+                    },
+                    "type": "array"
                   },
+                  "type": "array",
                   "title": "Response Detect Communities Api Graph Analytics Communities Get"
                 }
               }
@@ -1873,17 +1869,10 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "anyOf": [
-                    {
-                      "items": {
-                        "type": "string"
-                      },
-                      "type": "array"
-                    },
-                    {
-                      "type": "null"
-                    }
-                  ],
+                  "items": {
+                    "type": "string"
+                  },
+                  "type": "array",
                   "title": "Response Find Shortest Path Api Graph Path Shortest Post"
                 }
               }
@@ -1963,25 +1952,25 @@
         "operationId": "find_related_terms_api_graph_terms__term_id__related_get",
         "parameters": [
           {
-            "name": "term_id",
-            "in": "path",
             "required": true,
             "schema": {
               "type": "string",
               "title": "Term Id"
-            }
+            },
+            "name": "term_id",
+            "in": "path"
           },
           {
-            "name": "max_depth",
-            "in": "query",
+            "description": "Maximum depth of relationships to traverse",
             "required": false,
             "schema": {
               "type": "integer",
+              "title": "Max Depth",
               "description": "Maximum depth of relationships to traverse",
-              "default": 2,
-              "title": "Max Depth"
+              "default": 2
             },
-            "description": "Maximum depth of relationships to traverse"
+            "name": "max_depth",
+            "in": "query"
           }
         ],
         "responses": {
@@ -1991,7 +1980,6 @@
               "application/json": {
                 "schema": {
                   "type": "object",
-                  "additionalProperties": true,
                   "title": "Response Find Related Terms Api Graph Terms  Term Id  Related Get"
                 }
               }
@@ -2021,13 +2009,13 @@
         "operationId": "get_term_hierarchy_api_graph_terms__term_id__hierarchy_get",
         "parameters": [
           {
-            "name": "term_id",
-            "in": "path",
             "required": true,
             "schema": {
               "type": "string",
               "title": "Term Id"
-            }
+            },
+            "name": "term_id",
+            "in": "path"
           }
         ],
         "responses": {
@@ -2037,7 +2025,6 @@
               "application/json": {
                 "schema": {
                   "type": "object",
-                  "additionalProperties": true,
                   "title": "Response Get Term Hierarchy Api Graph Terms  Term Id  Hierarchy Get"
                 }
               }
@@ -2067,13 +2054,13 @@
         "operationId": "get_term_info_api_graph_terms__term_id__info_get",
         "parameters": [
           {
-            "name": "term_id",
-            "in": "path",
             "required": true,
             "schema": {
               "type": "string",
               "title": "Term Id"
-            }
+            },
+            "name": "term_id",
+            "in": "path"
           }
         ],
         "responses": {
@@ -2082,15 +2069,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "anyOf": [
-                    {
-                      "type": "object",
-                      "additionalProperties": true
-                    },
-                    {
-                      "type": "null"
-                    }
-                  ],
+                  "type": "object",
                   "title": "Response Get Term Info Api Graph Terms  Term Id  Info Get"
                 }
               }
@@ -2120,13 +2099,13 @@
         "operationId": "analyze_domain_api_graph_domains__domain_id__analyze_get",
         "parameters": [
           {
-            "name": "domain_id",
-            "in": "path",
             "required": true,
             "schema": {
               "type": "string",
               "title": "Domain Id"
-            }
+            },
+            "name": "domain_id",
+            "in": "path"
           }
         ],
         "responses": {
@@ -2136,7 +2115,6 @@
               "application/json": {
                 "schema": {
                   "type": "object",
-                  "additionalProperties": true,
                   "title": "Response Analyze Domain Api Graph Domains  Domain Id  Analyze Get"
                 }
               }
@@ -2166,22 +2144,15 @@
         "operationId": "get_domain_hierarchy_api_graph_domains_hierarchy_get",
         "parameters": [
           {
-            "name": "layer_id",
-            "in": "query",
+            "description": "Optional layer ID to filter by",
             "required": false,
             "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "description": "Optional layer ID to filter by",
-              "title": "Layer Id"
+              "type": "string",
+              "title": "Layer Id",
+              "description": "Optional layer ID to filter by"
             },
-            "description": "Optional layer ID to filter by"
+            "name": "layer_id",
+            "in": "query"
           }
         ],
         "responses": {
@@ -2190,11 +2161,10 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "array",
                   "items": {
-                    "type": "object",
-                    "additionalProperties": true
+                    "type": "object"
                   },
+                  "type": "array",
                   "title": "Response Get Domain Hierarchy Api Graph Domains Hierarchy Get"
                 }
               }
@@ -2224,22 +2194,15 @@
         "operationId": "get_layer_analytics_api_graph_layers_analytics_get",
         "parameters": [
           {
-            "name": "layer_id",
-            "in": "query",
+            "description": "Optional layer ID to analyze",
             "required": false,
             "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "description": "Optional layer ID to analyze",
-              "title": "Layer Id"
+              "type": "string",
+              "title": "Layer Id",
+              "description": "Optional layer ID to analyze"
             },
-            "description": "Optional layer ID to analyze"
+            "name": "layer_id",
+            "in": "query"
           }
         ],
         "responses": {
@@ -2249,7 +2212,6 @@
               "application/json": {
                 "schema": {
                   "type": "object",
-                  "additionalProperties": true,
                   "title": "Response Get Layer Analytics Api Graph Layers Analytics Get"
                 }
               }
@@ -2279,13 +2241,13 @@
         "operationId": "get_layer_info_api_graph_layers__layer_id__info_get",
         "parameters": [
           {
-            "name": "layer_id",
-            "in": "path",
             "required": true,
             "schema": {
               "type": "string",
               "title": "Layer Id"
-            }
+            },
+            "name": "layer_id",
+            "in": "path"
           }
         ],
         "responses": {
@@ -2294,15 +2256,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "anyOf": [
-                    {
-                      "type": "object",
-                      "additionalProperties": true
-                    },
-                    {
-                      "type": "null"
-                    }
-                  ],
+                  "type": "object",
                   "title": "Response Get Layer Info Api Graph Layers  Layer Id  Info Get"
                 }
               }
@@ -2332,13 +2286,13 @@
         "operationId": "get_domain_info_api_graph_domains__domain_id__info_get",
         "parameters": [
           {
-            "name": "domain_id",
-            "in": "path",
             "required": true,
             "schema": {
               "type": "string",
               "title": "Domain Id"
-            }
+            },
+            "name": "domain_id",
+            "in": "path"
           }
         ],
         "responses": {
@@ -2347,15 +2301,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "anyOf": [
-                    {
-                      "type": "object",
-                      "additionalProperties": true
-                    },
-                    {
-                      "type": "null"
-                    }
-                  ],
+                  "type": "object",
                   "title": "Response Get Domain Info Api Graph Domains  Domain Id  Info Get"
                 }
               }
@@ -2385,16 +2331,16 @@
         "operationId": "export_graph_data_api_graph_export_get",
         "parameters": [
           {
-            "name": "format",
-            "in": "query",
+            "description": "Export format (json, turtle, graphml)",
             "required": false,
             "schema": {
               "type": "string",
+              "title": "Format",
               "description": "Export format (json, turtle, graphml)",
-              "default": "json",
-              "title": "Format"
+              "default": "json"
             },
-            "description": "Export format (json, turtle, graphml)"
+            "name": "format",
+            "in": "query"
           }
         ],
         "responses": {
@@ -2666,14 +2612,14 @@
         "operationId": "get_action_log_api_datasets_action_log_get",
         "parameters": [
           {
-            "name": "days",
-            "in": "query",
             "required": false,
             "schema": {
               "type": "integer",
-              "default": 30,
-              "title": "Days"
-            }
+              "title": "Days",
+              "default": 30
+            },
+            "name": "days",
+            "in": "query"
           }
         ],
         "responses": {
@@ -2710,13 +2656,13 @@
         "operationId": "get_dataset_api_datasets__dataset_id__get",
         "parameters": [
           {
-            "name": "dataset_id",
-            "in": "path",
             "required": true,
             "schema": {
               "type": "string",
               "title": "Dataset Id"
-            }
+            },
+            "name": "dataset_id",
+            "in": "path"
           }
         ],
         "responses": {
@@ -2751,13 +2697,13 @@
         "operationId": "delete_dataset_api_datasets__dataset_id__delete",
         "parameters": [
           {
-            "name": "dataset_id",
-            "in": "path",
             "required": true,
             "schema": {
               "type": "string",
               "title": "Dataset Id"
-            }
+            },
+            "name": "dataset_id",
+            "in": "path"
           }
         ],
         "responses": {
@@ -2792,13 +2738,13 @@
         "operationId": "activate_dataset_api_datasets__dataset_id__activate_post",
         "parameters": [
           {
-            "name": "dataset_id",
-            "in": "path",
             "required": true,
             "schema": {
               "type": "string",
               "title": "Dataset Id"
-            }
+            },
+            "name": "dataset_id",
+            "in": "path"
           }
         ],
         "responses": {
@@ -2833,13 +2779,13 @@
         "operationId": "forget_dataset_api_datasets__dataset_id__forget_post",
         "parameters": [
           {
-            "name": "dataset_id",
-            "in": "path",
             "required": true,
             "schema": {
               "type": "string",
               "title": "Dataset Id"
-            }
+            },
+            "name": "dataset_id",
+            "in": "path"
           }
         ],
         "responses": {
@@ -2896,14 +2842,14 @@
         "operationId": "migrate_schema_api_schema_migrate_post",
         "parameters": [
           {
-            "name": "skip_on_error",
-            "in": "query",
             "required": false,
             "schema": {
               "type": "boolean",
-              "default": false,
-              "title": "Skip On Error"
-            }
+              "title": "Skip On Error",
+              "default": false
+            },
+            "name": "skip_on_error",
+            "in": "query"
           }
         ],
         "responses": {
@@ -2958,13 +2904,13 @@
         "operationId": "rollback_schema_api_schema_rollback__target_version__post",
         "parameters": [
           {
-            "name": "target_version",
-            "in": "path",
             "required": true,
             "schema": {
               "type": "integer",
               "title": "Target Version"
-            }
+            },
+            "name": "target_version",
+            "in": "path"
           }
         ],
         "responses": {
@@ -2999,13 +2945,13 @@
         "operationId": "generate_migration_api_schema_generate_migration_post",
         "parameters": [
           {
-            "name": "description",
-            "in": "query",
             "required": true,
             "schema": {
               "type": "string",
               "title": "Description"
-            }
+            },
+            "name": "description",
+            "in": "query"
           }
         ],
         "responses": {
@@ -3023,6 +2969,58 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/nlp_analysis": {
+      "post": {
+        "tags": [
+          "nlp"
+        ],
+        "summary": "Nlp Analysis",
+        "description": "Analyze text using NLP pipeline and return structured response.",
+        "operationId": "nlp_analysis_api_nlp_analysis_post",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SuccessResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Unprocessable Entity",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
                 }
               }
             }
@@ -3049,18 +3047,10 @@
             "title": "Dataset Id"
           },
           "dataset_title": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
+            "type": "string",
             "title": "Dataset Title"
           },
           "details": {
-            "additionalProperties": true,
             "type": "object",
             "title": "Details"
           }
@@ -3070,7 +3060,6 @@
           "timestamp",
           "action",
           "dataset_id",
-          "dataset_title",
           "details"
         ],
         "title": "ActionLogEntry",
@@ -3120,20 +3109,33 @@
       "CentralityRequest": {
         "properties": {
           "method": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
+            "type": "string",
             "title": "Method",
             "default": "pagerank"
           }
         },
         "type": "object",
         "title": "CentralityRequest"
+      },
+      "ConcepcyData": {
+        "properties": {
+          "related_terms": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Related Terms",
+            "description": "Related terms from ConceptNet."
+          },
+          "score": {
+            "type": "number",
+            "title": "Score",
+            "description": "ConceptNet similarity score."
+          }
+        },
+        "type": "object",
+        "title": "ConcepcyData",
+        "description": "ConceptNet/Concepcy data for a token."
       },
       "CreateDatasetRequest": {
         "properties": {
@@ -3153,6 +3155,32 @@
         ],
         "title": "CreateDatasetRequest",
         "description": "Request to create a new dataset."
+      },
+      "DBpediaData": {
+        "properties": {
+          "uri": {
+            "type": "string",
+            "title": "Uri",
+            "description": "DBpedia URI."
+          },
+          "label": {
+            "type": "string",
+            "title": "Label",
+            "description": "DBpedia label."
+          },
+          "similarity": {
+            "type": "number",
+            "title": "Similarity",
+            "description": "DBpedia similarity score."
+          },
+          "raw_result": {
+            "title": "Raw Result",
+            "description": "Raw DBpedia result."
+          }
+        },
+        "type": "object",
+        "title": "DBpediaData",
+        "description": "DBpedia data for an entity."
       },
       "DatasetMetrics": {
         "properties": {
@@ -3282,31 +3310,17 @@
             "title": "Id"
           },
           "title_embedding": {
-            "anyOf": [
-              {
-                "items": {
-                  "type": "number"
-                },
-                "type": "array"
-              },
-              {
-                "type": "null"
-              }
-            ],
+            "items": {
+              "type": "number"
+            },
+            "type": "array",
             "title": "Title Embedding"
           },
           "definition_embedding": {
-            "anyOf": [
-              {
-                "items": {
-                  "type": "number"
-                },
-                "type": "array"
-              },
-              {
-                "type": "null"
-              }
-            ],
+            "items": {
+              "type": "number"
+            },
+            "type": "array",
             "title": "Definition Embedding"
           },
           "created_at": {
@@ -3314,25 +3328,11 @@
             "title": "Created At"
           },
           "version": {
-            "anyOf": [
-              {
-                "type": "integer"
-              },
-              {
-                "type": "null"
-              }
-            ],
+            "type": "integer",
             "title": "Version"
           },
           "last_modified": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
+            "type": "string",
             "title": "Last Modified"
           }
         },
@@ -3349,110 +3349,102 @@
       "DomainUpdate": {
         "properties": {
           "title": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
+            "type": "string",
             "title": "Title"
           },
           "definition": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
+            "type": "string",
             "title": "Definition"
           },
           "layer_id": {
-            "anyOf": [
-              {
-                "type": "string",
-                "format": "uuid"
-              },
-              {
-                "type": "null"
-              }
-            ],
+            "type": "string",
+            "format": "uuid",
             "title": "Layer Id"
           }
         },
         "type": "object",
         "title": "DomainUpdate"
       },
+      "EntityData": {
+        "properties": {
+          "text": {
+            "type": "string",
+            "title": "Text",
+            "description": "Entity text."
+          },
+          "label": {
+            "type": "string",
+            "title": "Label",
+            "description": "Entity label."
+          },
+          "kb_id": {
+            "type": "string",
+            "title": "Kb Id",
+            "description": "Knowledge base ID."
+          },
+          "dbpedia": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/DBpediaData"
+              }
+            ],
+            "title": "Dbpedia",
+            "description": "DBpedia data."
+          }
+        },
+        "type": "object",
+        "required": [
+          "text"
+        ],
+        "title": "EntityData",
+        "description": "Data for a named entity in the analyzed text."
+      },
+      "ErrorResponse": {
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "title": "Success",
+            "description": "Indicates failure.",
+            "default": false
+          },
+          "error": {
+            "type": "string",
+            "title": "Error",
+            "description": "Error message."
+          }
+        },
+        "type": "object",
+        "required": [
+          "error"
+        ],
+        "title": "ErrorResponse",
+        "description": "Error response wrapper for NLP API."
+      },
       "FindDomainRequest": {
         "properties": {
           "title": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
+            "type": "string",
             "title": "Title"
           },
           "definition": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
+            "type": "string",
             "title": "Definition"
           },
           "layer_id": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
+            "type": "string",
             "title": "Layer Id"
           },
           "created_at": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
+            "type": "string",
             "title": "Created At"
           },
           "minimum_score": {
-            "anyOf": [
-              {
-                "type": "number"
-              },
-              {
-                "type": "null"
-              }
-            ],
+            "type": "number",
             "title": "Minimum Score",
             "default": 0.1
           },
           "limit": {
-            "anyOf": [
-              {
-                "type": "integer"
-              },
-              {
-                "type": "null"
-              }
-            ],
+            "type": "integer",
             "title": "Limit",
             "default": 1
           }
@@ -3483,31 +3475,17 @@
             "title": "Id"
           },
           "title_embedding": {
-            "anyOf": [
-              {
-                "items": {
-                  "type": "number"
-                },
-                "type": "array"
-              },
-              {
-                "type": "null"
-              }
-            ],
+            "items": {
+              "type": "number"
+            },
+            "type": "array",
             "title": "Title Embedding"
           },
           "definition_embedding": {
-            "anyOf": [
-              {
-                "items": {
-                  "type": "number"
-                },
-                "type": "array"
-              },
-              {
-                "type": "null"
-              }
-            ],
+            "items": {
+              "type": "number"
+            },
+            "type": "array",
             "title": "Definition Embedding"
           },
           "created_at": {
@@ -3515,25 +3493,11 @@
             "title": "Created At"
           },
           "version": {
-            "anyOf": [
-              {
-                "type": "integer"
-              },
-              {
-                "type": "null"
-              }
-            ],
+            "type": "integer",
             "title": "Version"
           },
           "last_modified": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
+            "type": "string",
             "title": "Last Modified"
           },
           "score": {
@@ -3560,59 +3524,24 @@
       "FindLayerRequest": {
         "properties": {
           "title": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
+            "type": "string",
             "title": "Title"
           },
           "definition": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
+            "type": "string",
             "title": "Definition"
           },
           "created_at": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
+            "type": "string",
             "title": "Created At"
           },
           "minimum_score": {
-            "anyOf": [
-              {
-                "type": "number"
-              },
-              {
-                "type": "null"
-              }
-            ],
+            "type": "number",
             "title": "Minimum Score",
             "default": 0.1
           },
           "limit": {
-            "anyOf": [
-              {
-                "type": "integer"
-              },
-              {
-                "type": "null"
-              }
-            ],
+            "type": "integer",
             "title": "Limit",
             "default": 1
           }
@@ -3628,26 +3557,12 @@
             "title": "Title"
           },
           "definition": {
-            "anyOf": [
-              {
-                "type": "string",
-                "minLength": 1
-              },
-              {
-                "type": "null"
-              }
-            ],
+            "type": "string",
+            "minLength": 1,
             "title": "Definition"
           },
           "primary_predicate": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
+            "type": "string",
             "title": "Primary Predicate"
           },
           "id": {
@@ -3656,31 +3571,17 @@
             "title": "Id"
           },
           "title_embedding": {
-            "anyOf": [
-              {
-                "items": {
-                  "type": "number"
-                },
-                "type": "array"
-              },
-              {
-                "type": "null"
-              }
-            ],
+            "items": {
+              "type": "number"
+            },
+            "type": "array",
             "title": "Title Embedding"
           },
           "definition_embedding": {
-            "anyOf": [
-              {
-                "items": {
-                  "type": "number"
-                },
-                "type": "array"
-              },
-              {
-                "type": "null"
-              }
-            ],
+            "items": {
+              "type": "number"
+            },
+            "type": "array",
             "title": "Definition Embedding"
           },
           "created_at": {
@@ -3688,25 +3589,11 @@
             "title": "Created At"
           },
           "version": {
-            "anyOf": [
-              {
-                "type": "integer"
-              },
-              {
-                "type": "null"
-              }
-            ],
+            "type": "integer",
             "title": "Version"
           },
           "last_modified": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
+            "type": "string",
             "title": "Last Modified"
           },
           "score": {
@@ -3731,81 +3618,32 @@
       "FindTermRequest": {
         "properties": {
           "title": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
+            "type": "string",
             "title": "Title"
           },
           "definition": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
+            "type": "string",
             "title": "Definition"
           },
           "layer_id": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
+            "type": "string",
             "title": "Layer Id"
           },
           "domain_id": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
+            "type": "string",
             "title": "Domain Id"
           },
           "created_at": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
+            "type": "string",
             "title": "Created At"
           },
           "minimum_score": {
-            "anyOf": [
-              {
-                "type": "number"
-              },
-              {
-                "type": "null"
-              }
-            ],
+            "type": "number",
             "title": "Minimum Score",
             "default": 0.1
           },
           "limit": {
-            "anyOf": [
-              {
-                "type": "integer"
-              },
-              {
-                "type": "null"
-              }
-            ],
+            "type": "integer",
             "title": "Limit",
             "default": 1
           }
@@ -3839,43 +3677,22 @@
             "title": "Layer Id"
           },
           "parent_term_id": {
-            "anyOf": [
-              {
-                "type": "string",
-                "format": "uuid"
-              },
-              {
-                "type": "null"
-              }
-            ],
+            "type": "string",
+            "format": "uuid",
             "title": "Parent Term Id"
           },
           "title_embedding": {
-            "anyOf": [
-              {
-                "items": {
-                  "type": "number"
-                },
-                "type": "array"
-              },
-              {
-                "type": "null"
-              }
-            ],
+            "items": {
+              "type": "number"
+            },
+            "type": "array",
             "title": "Title Embedding"
           },
           "definition_embedding": {
-            "anyOf": [
-              {
-                "items": {
-                  "type": "number"
-                },
-                "type": "array"
-              },
-              {
-                "type": "null"
-              }
-            ],
+            "items": {
+              "type": "number"
+            },
+            "type": "array",
             "title": "Definition Embedding"
           },
           "created_at": {
@@ -3935,26 +3752,12 @@
             "title": "Title"
           },
           "definition": {
-            "anyOf": [
-              {
-                "type": "string",
-                "minLength": 1
-              },
-              {
-                "type": "null"
-              }
-            ],
+            "type": "string",
+            "minLength": 1,
             "title": "Definition"
           },
           "primary_predicate": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
+            "type": "string",
             "title": "Primary Predicate"
           }
         },
@@ -3972,26 +3775,12 @@
             "title": "Title"
           },
           "definition": {
-            "anyOf": [
-              {
-                "type": "string",
-                "minLength": 1
-              },
-              {
-                "type": "null"
-              }
-            ],
+            "type": "string",
+            "minLength": 1,
             "title": "Definition"
           },
           "primary_predicate": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
+            "type": "string",
             "title": "Primary Predicate"
           },
           "id": {
@@ -4000,31 +3789,17 @@
             "title": "Id"
           },
           "title_embedding": {
-            "anyOf": [
-              {
-                "items": {
-                  "type": "number"
-                },
-                "type": "array"
-              },
-              {
-                "type": "null"
-              }
-            ],
+            "items": {
+              "type": "number"
+            },
+            "type": "array",
             "title": "Title Embedding"
           },
           "definition_embedding": {
-            "anyOf": [
-              {
-                "items": {
-                  "type": "number"
-                },
-                "type": "array"
-              },
-              {
-                "type": "null"
-              }
-            ],
+            "items": {
+              "type": "number"
+            },
+            "type": "array",
             "title": "Definition Embedding"
           },
           "created_at": {
@@ -4032,25 +3807,11 @@
             "title": "Created At"
           },
           "version": {
-            "anyOf": [
-              {
-                "type": "integer"
-              },
-              {
-                "type": "null"
-              }
-            ],
+            "type": "integer",
             "title": "Version"
           },
           "last_modified": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
+            "type": "string",
             "title": "Last Modified"
           }
         },
@@ -4065,36 +3826,15 @@
       "LayerUpdate": {
         "properties": {
           "title": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
+            "type": "string",
             "title": "Title"
           },
           "definition": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
+            "type": "string",
             "title": "Definition"
           },
           "primary_predicate": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
+            "type": "string",
             "title": "Primary Predicate"
           }
         },
@@ -4245,6 +3985,37 @@
         ],
         "title": "MoveTermResponse"
       },
+      "NLPAnalysisResponse": {
+        "properties": {
+          "tokens": {
+            "items": {
+              "$ref": "#/components/schemas/TokenData"
+            },
+            "type": "array",
+            "title": "Tokens",
+            "description": "List of token data."
+          },
+          "entities": {
+            "items": {
+              "$ref": "#/components/schemas/EntityData"
+            },
+            "type": "array",
+            "title": "Entities",
+            "description": "List of entity data."
+          },
+          "text": {
+            "type": "string",
+            "title": "Text",
+            "description": "Original analyzed text."
+          }
+        },
+        "type": "object",
+        "required": [
+          "text"
+        ],
+        "title": "NLPAnalysisResponse",
+        "description": "Response model for NLP analysis API."
+      },
       "NeighborsRequest": {
         "properties": {
           "entity_id": {
@@ -4252,38 +4023,17 @@
             "title": "Entity Id"
           },
           "entity_type": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
+            "type": "string",
             "title": "Entity Type",
             "default": "term"
           },
           "depth": {
-            "anyOf": [
-              {
-                "type": "integer"
-              },
-              {
-                "type": "null"
-              }
-            ],
+            "type": "integer",
             "title": "Depth",
             "default": 1
           },
           "direction": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
+            "type": "string",
             "title": "Direction",
             "default": "both"
           }
@@ -4398,26 +4148,12 @@
             "title": "Target Id"
           },
           "source_type": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
+            "type": "string",
             "title": "Source Type",
             "default": "term"
           },
           "target_type": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
+            "type": "string",
             "title": "Target Type",
             "default": "term"
           }
@@ -4436,14 +4172,7 @@
             "title": "Query"
           },
           "format": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
+            "type": "string",
             "title": "Format",
             "default": "json"
           }
@@ -4461,26 +4190,12 @@
             "title": "Term"
           },
           "exact": {
-            "anyOf": [
-              {
-                "type": "boolean"
-              },
-              {
-                "type": "null"
-              }
-            ],
+            "type": "boolean",
             "title": "Exact",
             "default": false
           },
           "analysis_depth": {
-            "anyOf": [
-              {
-                "type": "integer"
-              },
-              {
-                "type": "null"
-              }
-            ],
+            "type": "integer",
             "title": "Analysis Depth",
             "default": 1
           }
@@ -4490,6 +4205,64 @@
           "term"
         ],
         "title": "SearchRequest"
+      },
+      "Sense2VecData": {
+        "properties": {
+          "in_s2v": {
+            "type": "boolean",
+            "title": "In S2V",
+            "description": "Whether token is in sense2vec model",
+            "default": false
+          },
+          "key": {
+            "type": "string",
+            "title": "Key",
+            "description": "Sense2vec key (e.g., 'duck NOUN')"
+          },
+          "freq": {
+            "type": "integer",
+            "title": "Freq",
+            "description": "Frequency in sense2vec corpus"
+          },
+          "other_senses": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Other Senses",
+            "description": "Other senses for this word"
+          },
+          "most_similar": {
+            "items": {
+              "type": "object"
+            },
+            "type": "array",
+            "title": "Most Similar",
+            "description": "Most similar words with scores"
+          }
+        },
+        "type": "object",
+        "title": "Sense2VecData",
+        "description": "Sense2Vec data for a token."
+      },
+      "SuccessResponse": {
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "title": "Success",
+            "description": "Indicates success.",
+            "default": true
+          },
+          "data": {
+            "$ref": "#/components/schemas/NLPAnalysisResponse"
+          }
+        },
+        "type": "object",
+        "required": [
+          "data"
+        ],
+        "title": "SuccessResponse",
+        "description": "Success response wrapper for NLP API."
       },
       "TermCreate": {
         "properties": {
@@ -4514,15 +4287,8 @@
             "title": "Layer Id"
           },
           "parent_term_id": {
-            "anyOf": [
-              {
-                "type": "string",
-                "format": "uuid"
-              },
-              {
-                "type": "null"
-              }
-            ],
+            "type": "string",
+            "format": "uuid",
             "title": "Parent Term Id"
           }
         },
@@ -4561,43 +4327,22 @@
             "title": "Layer Id"
           },
           "parent_term_id": {
-            "anyOf": [
-              {
-                "type": "string",
-                "format": "uuid"
-              },
-              {
-                "type": "null"
-              }
-            ],
+            "type": "string",
+            "format": "uuid",
             "title": "Parent Term Id"
           },
           "title_embedding": {
-            "anyOf": [
-              {
-                "items": {
-                  "type": "number"
-                },
-                "type": "array"
-              },
-              {
-                "type": "null"
-              }
-            ],
+            "items": {
+              "type": "number"
+            },
+            "type": "array",
             "title": "Title Embedding"
           },
           "definition_embedding": {
-            "anyOf": [
-              {
-                "items": {
-                  "type": "number"
-                },
-                "type": "array"
-              },
-              {
-                "type": "null"
-              }
-            ],
+            "items": {
+              "type": "number"
+            },
+            "type": "array",
             "title": "Definition Embedding"
           },
           "created_at": {
@@ -4677,27 +4422,11 @@
             "title": "Created At"
           },
           "source_term": {
-            "anyOf": [
-              {
-                "additionalProperties": true,
-                "type": "object"
-              },
-              {
-                "type": "null"
-              }
-            ],
+            "type": "object",
             "title": "Source Term"
           },
           "target_term": {
-            "anyOf": [
-              {
-                "additionalProperties": true,
-                "type": "object"
-              },
-              {
-                "type": "null"
-              }
-            ],
+            "type": "object",
             "title": "Target Term"
           }
         },
@@ -4727,42 +4456,85 @@
       "TermUpdate": {
         "properties": {
           "title": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
+            "type": "string",
             "title": "Title"
           },
           "definition": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
+            "type": "string",
             "title": "Definition"
           },
           "parent_term_id": {
-            "anyOf": [
-              {
-                "type": "string",
-                "format": "uuid"
-              },
-              {
-                "type": "null"
-              }
-            ],
+            "type": "string",
+            "format": "uuid",
             "title": "Parent Term Id"
           }
         },
         "type": "object",
         "title": "TermUpdate"
+      },
+      "TokenData": {
+        "properties": {
+          "text": {
+            "type": "string",
+            "title": "Text",
+            "description": "Token text."
+          },
+          "lemma": {
+            "type": "string",
+            "title": "Lemma",
+            "description": "Token lemma."
+          },
+          "pos": {
+            "type": "string",
+            "title": "Pos",
+            "description": "Part of speech tag."
+          },
+          "tag": {
+            "type": "string",
+            "title": "Tag",
+            "description": "Detailed POS tag."
+          },
+          "start": {
+            "type": "integer",
+            "title": "Start",
+            "description": "Start character position."
+          },
+          "end": {
+            "type": "integer",
+            "title": "End",
+            "description": "End character position."
+          },
+          "concepcy": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ConcepcyData"
+              }
+            ],
+            "title": "Concepcy",
+            "description": "Concepcy data."
+          },
+          "wordnet": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/WordNetData"
+              }
+            ],
+            "title": "Wordnet",
+            "description": "WordNet data."
+          },
+          "sense2vec": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/Sense2VecData"
+              }
+            ],
+            "title": "Sense2Vec",
+            "description": "Sense2vec data."
+          }
+        },
+        "type": "object",
+        "title": "TokenData",
+        "description": "Data for a single token in the analyzed text."
       },
       "UpdateDatasetDirectoryRequest": {
         "properties": {
@@ -4810,6 +4582,37 @@
           "type"
         ],
         "title": "ValidationError"
+      },
+      "WordNetData": {
+        "properties": {
+          "synsets": {
+            "items": {
+              "type": "object"
+            },
+            "type": "array",
+            "title": "Synsets",
+            "description": "WordNet synsets with attributes, including domain context. Each synset dict includes: name, definition, lemmas, pos, offset, domain."
+          },
+          "lemmas": {
+            "items": {
+              "type": "object"
+            },
+            "type": "array",
+            "title": "Lemmas",
+            "description": "WordNet lemmas with attributes."
+          },
+          "definitions": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Definitions",
+            "description": "WordNet definitions."
+          }
+        },
+        "type": "object",
+        "title": "WordNetData",
+        "description": "WordNet data for a token."
       }
     }
   }
