@@ -1,5 +1,8 @@
 # Local logs
-dataset_action_log.json
+logs/
+
+# Local downloads
+downloads/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

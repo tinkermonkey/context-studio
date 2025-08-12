@@ -30,8 +30,11 @@ class DatasetManager:
         self.datasets_config = self._load_datasets_config()
         self._ensure_datasets_directory()
         
-        # Initialize action log
-        self.action_log_path = os.path.join(os.path.dirname(self.config_path), "dataset_action_log.json")
+        # Initialize action log in logs directory
+        logs_dir = os.path.join(os.path.dirname(self.config_path), "logs")
+        if not os.path.exists(logs_dir):
+            os.makedirs(logs_dir, exist_ok=True)
+        self.action_log_path = os.path.join(logs_dir, "dataset_action_log.json")
         self._cleanup_old_log_entries()
         
         # Initialize with most recent dataset by default

@@ -5,7 +5,7 @@ Quick test to verify pagination functionality in the updated APIs.
 
 import sys
 import os
-sys.path.append(os.path.dirname(os.path.abspath(__file__)))
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from pydantic import ValidationError
 from api.terms import PaginatedTermsResponse, TermOut

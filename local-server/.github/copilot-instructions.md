@@ -22,15 +22,22 @@ Python server for the Context Studio, a React Native app built with Expo and Glu
 ├── config.py                                     # Configuration settings
 ├── database                                      # Database models and utilities
 |   ├── __init__.py
+|   ├── migrations                                # Database migrations
+|       ├── migration_manager.py                  # Migration management script
+|       ├── versions                              # Migration version scripts
 |   ├── models.py                                 # Database models
 |   ├── utils.py                                  # Database utilities
 ├── documentation                                 # API and data model documentation
 |   ├── requirements.md                           # High level requirements
 |   ├── api.md                                    # API documentation
 |   ├── data_model.md                             # Data model documentation
+|   ├── claudes_thoughts                          # Claude's thoughts and insights
 ├── embeddings                                    # Embedding generation utilities
 |   ├── __init__.py
 |   ├── generate_embeddings.py                    # Functions to generate embeddings
+├── graph                                         # Graph data structure and utilities
+├── nlp                                           # Natural Language Processing utilities
+├── nlp_sandbox                                   # Experimental NLP POCs
 ├── requirements.txt                              # Python dependencies
 ├── README.md                                     # Project documentation
 ├── tests                                         # Unit tests
@@ -50,6 +57,7 @@ Python server for the Context Studio, a React Native app built with Expo and Glu
 |       ├── test_domains_performance.py           # Performance tests for domain APIs
 |       ├── test_terms_performance.py             # Performance tests for term APIs
 |       ├── test_relationships_performance.py     # Performance tests for term relationship APIs
+├── triage_scripts                                # Scripts for triaging fundamental issues
 ├── utils                                         # Utility functions
 |   ├── __init__.py
 |   ├── logger.py                                 # Logging utilities
@@ -65,10 +73,12 @@ Python server for the Context Studio, a React Native app built with Expo and Glu
 - Use triple double quotes for docstrings.
 
 ## Best Practices
+- **Schema Management**: Use Alembic for database migrations. Always create a migration script when modifying the database schema.
 - **Code Quality**: Follow PEP 8 style guide for Python code.
 - **Documentation**: Maintain clear and concise documentation for APIs and data models.
 - **Testing**: Write unit tests for all critical functionalities using pytest. Write integration tests for API endpoints.
 - **Environment Variables**: Use `.env` files for sensitive configurations and secrets.
+- **Virtual Environment**: Use the `.venv` virtual environment when executing python commands, and activate it with `source .venv/bin/activate` before running the server or tests.
 
 ### Common pitfalls
 - When comparing UUID values, always cast them to strings, as SQLite stores UUIDs as text.

@@ -213,19 +213,19 @@ def create_term(term: TermCreate, db: Session = Depends(get_db)):
     layer_id = str(term.layer_id)
     parent_term_id = str(term.parent_term_id) if term.parent_term_id else None
     if not term.title or not term.title.strip():
-        return validation_error_response("Term title must not be empty.")
+        raise HTTPException(status_code=400, detail="Term title must not be empty.")
     if not db.query(models.Domain).filter_by(id=str(domain_id)).first():
-        return bad_request_error_response("Domain does not exist.")
+        raise HTTPException(status_code=422, detail="Domain does not exist.")
     if not db.query(models.Layer).filter_by(id=str(layer_id)).first():
-        return bad_request_error_response("Layer does not exist.")
+        raise HTTPException(status_code=422, detail="Layer does not exist.")
     if db.query(models.Term).filter_by(domain_id=str(domain_id), title=term.title).first():
-        return conflict_error_response("Term title must be unique within domain.")
+        raise HTTPException(status_code=409, detail="Term title must be unique within domain.")
     if parent_term_id:
         parent = db.query(models.Term).filter_by(id=str(parent_term_id)).first()
         if not parent or str(parent.domain_id) != str(domain_id):
-            return bad_request_error_response("Parent term must exist and belong to same domain.")
+            raise HTTPException(status_code=422, detail="Parent term must exist and belong to same domain.")
         if check_circular_reference(db, None, str(parent_term_id)):
-            return bad_request_error_response("Circular reference detected.")
+            raise HTTPException(status_code=400, detail="Circular reference detected.")
     title_emb = generate_embedding(term.title)
     # Always generate a valid embedding for definition (empty string if None)
     def_emb = generate_embedding(term.definition if term.definition is not None else "")
@@ -324,7 +324,7 @@ def update_term(id: str, term: TermUpdate, db: Session = Depends(get_db)):
         raise HTTPException(status_code=404, detail="Term not found.")
     if term.title is not None:
         if not term.title.strip():
-            return validation_error_response("Term title must not be empty.")
+            raise HTTPException(status_code=400, detail="Term title must not be empty.")
         if term.title != db_term.title:
             if (
                 db.query(models.Term)
@@ -335,20 +335,22 @@ def update_term(id: str, term: TermUpdate, db: Session = Depends(get_db)):
                 )
                 .first()
             ):
-                return conflict_error_response("Term title must be unique within domain.")
+                raise HTTPException(status_code=409, detail="Term title must be unique within domain.")
             db_term.title = term.title
             db_term.title_embedding = generate_embedding(term.title)
     if term.definition is not None:
         db_term.definition = term.definition
         db_term.definition_embedding = generate_embedding(term.definition if term.definition is not None else "")
-    if term.parent_term_id is not None:
-        parent_term_id = str(term.parent_term_id) if term.parent_term_id else None
-        if parent_term_id:
-            parent = db.query(models.Term).filter_by(id=str(parent_term_id)).first()
-            if not parent or str(parent.domain_id) != str(db_term.domain_id):
-                return bad_request_error_response("Parent term must exist and belong to same domain.")
-            if check_circular_reference(db, str(id), str(parent_term_id)):
-                return bad_request_error_response("Circular reference detected.")
+    # If explicitly set to None, orphan the term
+    if term.parent_term_id is None:
+        db_term.parent_term_id = None
+    else:
+        parent_term_id = str(term.parent_term_id)
+        parent = db.query(models.Term).filter_by(id=parent_term_id).first()
+        if not parent or str(parent.domain_id) != str(db_term.domain_id):
+            raise HTTPException(status_code=400, detail="Parent term must exist and belong to same domain.")
+        if check_circular_reference(db, str(id), parent_term_id):
+            raise HTTPException(status_code=400, detail="Circular reference detected.")
         db_term.parent_term_id = parent_term_id
     db_term.version += 1
     db_term.last_modified = datetime.datetime.now(datetime.UTC)
@@ -388,6 +390,10 @@ def delete_term(id: str, db: Session = Depends(get_db)):
     children = db.query(models.Term).filter_by(parent_term_id=id).all()
     for child in children:
         child.parent_term_id = None
+    db.commit()  # Commit orphaning before deleting parent
+    db.flush()
+    for child in children:
+        db.refresh(child)
 
     # Remove associated relationships
     db.query(models.TermRelationship).filter(
@@ -482,34 +488,43 @@ def move_terms_with_lineage(
     if not terms_to_move:
         raise HTTPException(status_code=400, detail="No valid terms found to move.")
     
-    # 3. Check for title conflicts in target domain
-    existing_titles = {t.title for t in db.query(models.Term).filter_by(domain_id=str(target_domain_id)).all()}
-    
+    # 3. Check for (domain_id, title) conflicts in target domain
+    existing_titles_in_domain = {t.title for t in db.query(models.Term).filter_by(domain_id=str(target_domain_id)).all()}
+
+    # Track terms that would violate unique constraint
+    conflict_term_ids = set()
     for term in terms_to_move:
-        if term.title in existing_titles and str(term.domain_id) != str(target_domain_id):
-            warnings.append(f"Term '{term.title}' already exists in target domain.")
-    
+        if term.title in existing_titles_in_domain and str(term.domain_id) != str(target_domain_id):
+            warnings.append(f"Term '{term.title}' already exists in target domain. Skipping move for this term.")
+            conflict_term_ids.add(term.id)
+
     # 4. Collect all child terms recursively (if move_children=True)
-    all_term_ids = [term.id for term in terms_to_move]
+    all_term_ids = [term.id for term in terms_to_move if term.id not in conflict_term_ids]
     if move_children:
         all_term_ids = collect_term_hierarchy(db, all_term_ids)
-        
-        # Get all terms including children
+        # Remove any child terms that would also conflict
         all_terms = db.query(models.Term).filter(models.Term.id.in_(all_term_ids)).all()
+        all_terms = [term for term in all_terms if not (term.title in existing_titles_in_domain and str(term.domain_id) != str(target_domain_id))]
     else:
-        all_terms = terms_to_move
-    
+        all_terms = [term for term in terms_to_move if term.id not in conflict_term_ids]
+
     # 5. Begin transaction and update terms
     try:
-        # Update terms' domain_id and layer_id
+        # Strictly check for (domain_id, title) conflict for every term before updating
         for term in all_terms:
             if str(term.domain_id) != str(target_domain_id) or str(term.layer_id) != str(target_layer_id):
-                term.domain_id = str(target_domain_id)
-                term.layer_id = str(target_layer_id)
-                term.last_modified = datetime.datetime.now(datetime.UTC)
-                term.version += 1
-                moved_terms.append(to_term_out(term))
-        
+                # Check for conflict in target domain
+                conflict = db.query(models.Term).filter_by(domain_id=str(target_domain_id), title=term.title).first()
+                if conflict and str(conflict.id) != str(term.id):
+                    warnings.append(f"Term '{term.title}' already exists in target domain. Skipping move for this term.")
+                    continue
+                else:
+                    term.domain_id = str(target_domain_id)
+                    term.layer_id = str(target_layer_id)
+                    term.last_modified = datetime.datetime.now(datetime.UTC)
+                    term.version += 1
+                    moved_terms.append(to_term_out(term))
+
         # 6. Log changes to GraphEvent
         for term in all_terms:
             if term.id in old_data:  # Only log originally requested terms
@@ -527,13 +542,13 @@ def move_terms_with_lineage(
                     processed=False
                 )
                 db.add(event)
-        
+
         db.commit()
-        
+
     except Exception as e:
         db.rollback()
         raise HTTPException(status_code=500, detail=f"Failed to move terms: {str(e)}")
-    
+
     return MoveTermResponse(
         moved_terms=moved_terms,
         warnings=warnings

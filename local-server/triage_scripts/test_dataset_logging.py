@@ -8,7 +8,7 @@ from datetime import datetime, timezone
 
 # Add the project root to the path
 import sys
-sys.path.append(os.path.dirname(os.path.abspath(__file__)))
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from dataset.manager import DatasetManager
 

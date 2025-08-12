@@ -18,8 +18,8 @@ def test_app():
     try:
         engine = get_engine(db_url)
         session_local = get_session_local(engine)
-        init_db(engine=engine, skip_vec=False)
-        app = create_app(engine=engine, session_local=session_local, skip_vec=False)
+        init_db(engine=engine)
+        app = create_app(engine=engine, session_local=session_local)
         yield app
     finally:
         os.unlink(tf.name)

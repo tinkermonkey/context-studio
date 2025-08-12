@@ -1,4 +1,6 @@
 import logging
+from logging.handlers import TimedRotatingFileHandler
+import os
 
 class ColorFormatter(logging.Formatter):
     COLORS = {
@@ -18,9 +20,20 @@ class ColorFormatter(logging.Formatter):
 def get_logger(name: str = "context_studio"):
     logger = logging.getLogger(name)
     if not logger.handlers:
-        handler = logging.StreamHandler()
+        # Console handler with color
+        stream_handler = logging.StreamHandler()
         formatter = ColorFormatter('[%(asctime)s] %(levelname)s in %(name)s: %(message)s', "%Y-%m-%d %H:%M:%S")
-        handler.setFormatter(formatter)
-        logger.addHandler(handler)
+        stream_handler.setFormatter(formatter)
+        logger.addHandler(stream_handler)
+
+        # File handler with daily rotation, keep 5 days
+        log_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'logs')
+        os.makedirs(log_dir, exist_ok=True)
+        log_file = os.path.join(log_dir, 'context_studio.log')
+        file_handler = TimedRotatingFileHandler(log_file, when="midnight", backupCount=5, encoding="utf-8")
+        file_formatter = logging.Formatter('[%(asctime)s] %(levelname)s in %(name)s: %(message)s', "%Y-%m-%d %H:%M:%S")
+        file_handler.setFormatter(file_formatter)
+        logger.addHandler(file_handler)
+
     logger.setLevel(logging.INFO)
     return logger

@@ -44,30 +44,30 @@ class EventProcessor:
             self.logger = get_logger(__name__)
 
     def start(self):
-        self.logger.info("[EventProcessor] start() called")
+        self.logger.debug("[EventProcessor] start() called")
         if self._thread is None or not self._thread.is_alive():
             self._stop_event.clear()
             self._thread = threading.Thread(target=self._run, daemon=True)
             self._thread.start()
-            self.logger.info("[EventProcessor] main thread started")
+            self.logger.debug("[EventProcessor] main thread started")
             self._cleanup_thread = threading.Thread(target=self._cleanup_loop, daemon=True)
             self._cleanup_thread.start()
-            self.logger.info("[EventProcessor] cleanup thread started")
+            self.logger.debug("[EventProcessor] cleanup thread started")
 
     def stop(self):
-        self.logger.info("[EventProcessor] stop() called")
+        self.logger.debug("[EventProcessor] stop() called")
         self._stop_event.set()
         if self._thread:
-            self.logger.info("[EventProcessor] joining main thread...")
+            self.logger.debug("[EventProcessor] joining main thread...")
             self._thread.join(timeout=5)
-            self.logger.info("[EventProcessor] main thread joined")
+            self.logger.debug("[EventProcessor] main thread joined")
         if self._cleanup_thread:
-            self.logger.info("[EventProcessor] joining cleanup thread...")
+            self.logger.debug("[EventProcessor] joining cleanup thread...")
             self._cleanup_thread.join(timeout=5)
-            self.logger.info("[EventProcessor] cleanup thread joined")
+            self.logger.debug("[EventProcessor] cleanup thread joined")
 
     def _run(self):
-        self.logger.info("[EventProcessor] _run() loop starting")
+        self.logger.debug("[EventProcessor] _run() loop starting")
         while not self._stop_event.is_set():
             try:
                 self.logger.debug("[EventProcessor] processing events...")
@@ -75,7 +75,7 @@ class EventProcessor:
             except Exception as e:
                 self.logger.error(f"[EventProcessor] Error: {e}")
             time.sleep(self.poll_interval)
-        self.logger.info("[EventProcessor] _run() loop exiting")
+        self.logger.debug("[EventProcessor] _run() loop exiting")
 
     def process_events(self):
         conn = sqlite3.connect(self.db_path)
@@ -136,7 +136,7 @@ class EventProcessor:
         # Add your custom logic here
 
     def _cleanup_loop(self):
-        self.logger.info("[EventProcessor] _cleanup_loop() starting")
+        self.logger.debug("[EventProcessor] _cleanup_loop() starting")
         while not self._stop_event.is_set():
             try:
                 self.logger.debug("[EventProcessor] cleanup_old_events() running...")
@@ -145,7 +145,7 @@ class EventProcessor:
                 self.logger.error(f"[EventProcessor] Cleanup error: {e}")
             # Run once per day
             time.sleep(24 * 60 * 60)
-        self.logger.info("[EventProcessor] _cleanup_loop() exiting")
+        self.logger.debug("[EventProcessor] _cleanup_loop() exiting")
 
     def cleanup_old_events(self):
         cutoff = datetime.now(timezone.utc) - timedelta(hours=48)
@@ -156,35 +156,35 @@ class EventProcessor:
         conn.commit()
         conn.close()
         if deleted:
-            self.logger.info(f"[EventProcessor] Deleted {deleted} old processed events.")
+            self.logger.debug(f"[EventProcessor] Deleted {deleted} old processed events.")
 
     # Remove duplicate __init__ definition (if present)
 
     def start(self):
-        self.logger.info("[EventProcessor] start() called")
+        self.logger.debug("[EventProcessor] start() called")
         if self._thread is None or not self._thread.is_alive():
             self._stop_event.clear()
             self._thread = threading.Thread(target=self._run, daemon=True)
             self._thread.start()
-            self.logger.info("[EventProcessor] main thread started")
+            self.logger.debug("[EventProcessor] main thread started")
             self._cleanup_thread = threading.Thread(target=self._cleanup_loop, daemon=True)
             self._cleanup_thread.start()
-            self.logger.info("[EventProcessor] cleanup thread started")
+            self.logger.debug("[EventProcessor] cleanup thread started")
 
     def stop(self):
-        self.logger.info("[EventProcessor] stop() called")
+        self.logger.debug("[EventProcessor] stop() called")
         self._stop_event.set()
         if self._thread:
-            self.logger.info("[EventProcessor] joining main thread...")
+            self.logger.debug("[EventProcessor] joining main thread...")
             self._thread.join(timeout=5)
-            self.logger.info("[EventProcessor] main thread joined")
+            self.logger.debug("[EventProcessor] main thread joined")
         if self._cleanup_thread:
-            self.logger.info("[EventProcessor] joining cleanup thread...")
+            self.logger.debug("[EventProcessor] joining cleanup thread...")
             self._cleanup_thread.join(timeout=5)
-            self.logger.info("[EventProcessor] cleanup thread joined")
+            self.logger.debug("[EventProcessor] cleanup thread joined")
 
     def _run(self):
-        self.logger.info("[EventProcessor] _run() loop starting")
+        self.logger.debug("[EventProcessor] _run() loop starting")
         while not self._stop_event.is_set():
             try:
                 self.logger.debug("[EventProcessor] processing events...")
@@ -192,7 +192,7 @@ class EventProcessor:
             except Exception as e:
                 self.logger.error(f"[EventProcessor] Error: {e}")
             time.sleep(self.poll_interval)
-        self.logger.info("[EventProcessor] _run() loop exiting")
+        self.logger.debug("[EventProcessor] _run() loop exiting")
 
     def process_events(self):
         conn = sqlite3.connect(self.db_path)
@@ -228,7 +228,7 @@ class EventProcessor:
         # Add your custom logic here
 
     def _cleanup_loop(self):
-        self.logger.info("[EventProcessor] _cleanup_loop() starting")
+        self.logger.debug("[EventProcessor] _cleanup_loop() starting")
         while not self._stop_event.is_set():
             try:
                 self.logger.debug("[EventProcessor] cleanup_old_events() running...")
@@ -237,7 +237,7 @@ class EventProcessor:
                 self.logger.error(f"[EventProcessor] Cleanup error: {e}")
             # Run once per day
             time.sleep(24 * 60 * 60)
-        self.logger.info("[EventProcessor] _cleanup_loop() exiting")
+        self.logger.debug("[EventProcessor] _cleanup_loop() exiting")
 
     def cleanup_old_events(self):
         cutoff = datetime.now(timezone.utc) - timedelta(hours=48)
@@ -248,4 +248,4 @@ class EventProcessor:
         conn.commit()
         conn.close()
         if deleted:
-            self.logger.info(f"[EventProcessor] Deleted {deleted} old processed events.")
+            self.logger.debug(f"[EventProcessor] Deleted {deleted} old processed events.")

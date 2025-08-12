@@ -6,6 +6,7 @@ from typing import List, Optional
 from uuid import UUID, uuid4
 from sqlalchemy.orm import Session
 from sqlalchemy import text, func
+from sqlalchemy.exc import IntegrityError
 from database import models
 from database.utils import get_db
 from embeddings.generate_embeddings import generate_embedding
@@ -182,7 +183,8 @@ def to_domain_out(domain):
 def create_domain(domain: DomainCreate, db: Session = Depends(get_db)):
     if not domain.title or not domain.title.strip():
         return validation_error_response("Domain title must not be empty.", loc=["body", "title"])
-    if db.query(models.Domain).filter_by(title=domain.title).first():
+    # Check for duplicate title only within the same layer
+    if db.query(models.Domain).filter_by(title=domain.title, layer_id=str(domain.layer_id)).first():
         return conflict_error_response("Domain title must be unique.")
     if not db.query(models.Layer).filter_by(id=str(domain.layer_id)).first():
         return bad_request_error_response("Layer does not exist.")
@@ -392,6 +394,7 @@ def move_domains_with_lineage(
             warnings.append(f"Domain '{domain.title}' already exists in target layer.")
     
     # 4. Begin transaction and update domains
+    from sqlalchemy.exc import IntegrityError
     try:
         # Update domain layer_id
         for domain in domains_to_move:
@@ -399,7 +402,7 @@ def move_domains_with_lineage(
                 domain.layer_id = str(target_layer_id)
                 domain.last_modified = datetime.datetime.now(datetime.UTC)
                 moved_domains.append(to_domain_out(domain))
-        
+
         # 5. If move_terms=True, update all terms' layer_id
         if move_terms:
             for domain in domains_to_move:
@@ -409,7 +412,7 @@ def move_domains_with_lineage(
                         term.layer_id = str(target_layer_id)
                         term.last_modified = datetime.datetime.now(datetime.UTC)
                         term.version += 1
-        
+
         # 6. Log changes to GraphEvent
         for domain in domains_to_move:
             event = models.GraphEvent(
@@ -425,13 +428,17 @@ def move_domains_with_lineage(
                 processed=False
             )
             db.add(event)
-        
+
         db.commit()
-        
+
+    except IntegrityError:
+        db.rollback()
+        warnings.append("Domain title conflict: a domain with the same title already exists in the target layer.")
+        return MoveDomainResponse(moved_domains=[], moved_terms=[], warnings=warnings)
     except Exception as e:
         db.rollback()
         raise HTTPException(status_code=500, detail=f"Failed to move domains: {str(e)}")
-    
+
     return MoveDomainResponse(
         moved_domains=moved_domains,
         moved_terms=moved_terms,  # Will be populated with actual term data in real implementation
@@ -442,17 +449,10 @@ def move_domains_with_lineage(
 @router.post("/move", response_model=MoveDomainResponse)
 def move_domains(request: MoveDomainRequest, db: Session = Depends(get_db)):
     """Move domains to a new layer with all their terms."""
-    try:
-        result = move_domains_with_lineage(
-            db, 
-            [str(id) for id in request.domain_ids], 
-            str(request.target_layer_id), 
-            request.move_terms
-        )
-        db.close()  # Ensure SQLite visibility
-        return result
-    except HTTPException:
-        raise
-    except Exception as e:
-        logger.error(f"Error moving domains: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+    response = move_domains_with_lineage(
+        db,
+        [str(d) for d in request.domain_ids],
+        str(request.target_layer_id),
+        move_terms=request.move_terms
+    )
+    return response

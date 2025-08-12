@@ -31,11 +31,11 @@ logging.basicConfig(level=logging.INFO)
 # Use a temporary file for the test database
 test_db_fd, test_db_path = tempfile.mkstemp(suffix=".db")
 SQLALCHEMY_DATABASE_URL = f"sqlite:///{test_db_path}"
-engine = init_db(database_url=SQLALCHEMY_DATABASE_URL, connect_args={"check_same_thread": False}, skip_vec=False)
+engine = init_db(database_url=SQLALCHEMY_DATABASE_URL, connect_args={"check_same_thread": False})
 TestingSessionLocal = get_session_local(engine)
 
 # Create a test app instance with test DB engine/session
-app = create_app(engine=engine, session_local=TestingSessionLocal, skip_vec=False)
+app = create_app(engine=engine, session_local=TestingSessionLocal)
 
 @pytest.fixture(scope="session", autouse=True)
 def setup_database():

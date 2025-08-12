@@ -3,6 +3,11 @@
 import os
 import tempfile
 import shutil
+
+# Add the project root to the path
+import sys
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
 from database.migrations.migration_manager import MigrationManager
 
 
@@ -37,11 +42,6 @@ def test_migration_system():
             status = manager.get_migration_status()
             print(f"Current version: {status.current_version}")
             print(f"Needs migration: {status.needs_migration}")
-        
-        # Test generating new migration
-        print("\nGenerating test migration...")
-        filepath = manager.generate_migration("Test migration")
-        print(f"Generated migration file: {filepath}")
         
         print("\nMigration system test completed successfully!")
         

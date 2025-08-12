@@ -3,6 +3,11 @@
 import os
 import tempfile
 import shutil
+
+# Add the project root to the path
+import sys
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
 from dataset.manager import DatasetManager
 
 

@@ -1,14 +1,16 @@
 
-
-# Unit tests for cosine_similarity
+# Unit tests for cosine_similarity and layer API endpoints
 import math
 import pytest
 import numpy as np
 import sys
 import os
+import uuid
+
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../../')))
 from utils.vector import cosine_similarity
 
+# Vector similarity tests
 def test_cosine_similarity_identical_vectors():
     v1 = [1.0, 2.0, 3.0]
     v2 = [1.0, 2.0, 3.0]
@@ -42,35 +44,7 @@ def test_cosine_similarity_bytes_input():
     # Should decode bytes to float array and compute similarity
     assert math.isclose(cosine_similarity(arr.tolist(), np.frombuffer(b, dtype=np.float32).tolist()), 1.0, abs_tol=1e-6)
 
-import sys
-import os
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../../')))
-
-import pytest
-from fastapi.testclient import TestClient
-from app import create_app
-from database.utils import get_engine, get_session_local, init_db
-import uuid
-import tempfile
-
-@pytest.fixture(scope="function")
-def test_app():
-    with tempfile.NamedTemporaryFile(suffix=".db", delete=False) as tf:
-        db_url = f"sqlite:///{tf.name}"
-    try:
-        engine = get_engine(db_url)
-        session_local = get_session_local(engine)
-        init_db(engine=engine, skip_vec=False)
-        app = create_app(engine=engine, session_local=session_local, skip_vec=False)
-        yield app
-    finally:
-        os.unlink(tf.name)
-
-@pytest.fixture(scope="function")
-def client(test_app):
-    with TestClient(test_app) as c:
-        yield c
-
+# Layer API tests - using shared fixtures from conftest.py
 def test_create_get_update_delete_layer(client):
     # Create
     resp = client.post("/api/layers/", json={"title": "Layer 1", "definition": "Def 1"})
@@ -92,6 +66,22 @@ def test_create_get_update_delete_layer(client):
     # Get after delete
     resp = client.get(f"/api/layers/{layer_id}")
     assert resp.status_code == 404
+
+def test_layer_bad_input(client):
+    # Missing required title
+    resp = client.post("/api/layers/", json={"definition": "Def"})
+    assert resp.status_code == 422
+    assert "title" in resp.text.lower()
+
+    # Title too short
+    resp = client.post("/api/layers/", json={"title": "A", "definition": "Def"})
+    assert resp.status_code == 422
+    assert "title" in resp.text.lower()
+
+    # Definition too short (should fail if provided and < 1 char)
+    resp = client.post("/api/layers/", json={"title": "Layer", "definition": ""})
+    assert resp.status_code == 422
+    assert "definition" in resp.text.lower()
 
 def test_layer_duplicate_title(client):
     resp1 = client.post("/api/layers/", json={"title": "Layer X"})

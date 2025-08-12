@@ -34,7 +34,7 @@ class Domain(Base):
     __tablename__ = 'domains'
     id = Column(String, primary_key=True, default=lambda: str(uuid.uuid4()))
     layer_id = Column(String, ForeignKey('layers.id', ondelete='CASCADE'), nullable=False)
-    title = Column(String, unique=True, nullable=False)
+    title = Column(String, nullable=False)
     definition = Column(Text, nullable=False)
     title_embedding = Column(BLOB)
     definition_embedding = Column(BLOB)
@@ -43,6 +43,9 @@ class Domain(Base):
     last_modified = Column(DateTime, default=lambda: datetime.datetime.now(datetime.UTC), onupdate=lambda: datetime.datetime.now(datetime.UTC))
     layer = relationship('Layer', back_populates='domains')
     terms = relationship('Term', back_populates='domain', cascade='all, delete-orphan')
+    __table_args__ = (
+        UniqueConstraint('layer_id', 'title', name='_layer_title_uc'),
+    )
 
 class Term(Base):
     __tablename__ = 'terms'
@@ -59,7 +62,9 @@ class Term(Base):
     parent_term_id = Column(String, ForeignKey('terms.id', ondelete='SET NULL'))
     parent = relationship('Term', remote_side=[id], backref='children', foreign_keys=[parent_term_id])
     domain = relationship('Domain', back_populates='terms')
-    __table_args__ = (UniqueConstraint('domain_id', 'title', name='_domain_title_uc'),)
+    __table_args__ = (
+        UniqueConstraint('domain_id', 'title', name='_domain_title_uc'),
+    )
 
 class TermRelationship(Base):
     __tablename__ = 'term_relationships'

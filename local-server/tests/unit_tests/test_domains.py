@@ -1,34 +1,11 @@
 
 import sys
 import os
+import uuid
+
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../../')))
 
-import pytest
-from fastapi.testclient import TestClient
-from app import create_app
-from database.utils import get_engine, get_session_local, init_db
-import uuid
-import tempfile
-
-
-@pytest.fixture(scope="function")
-def test_app():
-    # Use a temporary file-based SQLite DB for reliable cross-thread access
-    with tempfile.NamedTemporaryFile(suffix=".db", delete=False) as tf:
-        db_url = f"sqlite:///{tf.name}"
-    try:
-        engine = get_engine(db_url)
-        session_local = get_session_local(engine)
-        init_db(engine=engine, skip_vec=False)
-        app = create_app(engine=engine, session_local=session_local, skip_vec=False)
-        yield app
-    finally:
-        os.unlink(tf.name)
-
-@pytest.fixture(scope="function")
-def client(test_app):
-    with TestClient(test_app) as c:
-        yield c
+# All fixtures are now provided by conftest.py
 
 def create_layer(client, title="Test Layer"):
     resp = client.post("/api/layers/", json={"title": title})
@@ -90,6 +67,7 @@ def test_domain_duplicate_title(client):
     assert "unique" in resp2.json()["detail"][0]["msg"].lower()
 
 def test_domain_invalid_layer(client):
+    # Valid UUID but non-existent layer
     resp = client.post("/api/domains/", json={
         "title": "Bad Domain",
         "definition": "No such layer.",
@@ -97,6 +75,23 @@ def test_domain_invalid_layer(client):
     })
     assert resp.status_code == 400
     assert "layer does not exist" in resp.json()["detail"][0]["msg"].lower()
+
+    # Invalid UUID format
+    resp = client.post("/api/domains/", json={
+        "title": "Bad Domain",
+        "definition": "No such layer.",
+        "layer_id": "not-a-uuid"
+    })
+    assert resp.status_code == 422
+    assert "layer_id" in resp.text.lower()
+
+    # Missing required field
+    resp = client.post("/api/domains/", json={
+        "title": "Bad Domain",
+        "definition": "No layer id"
+    })
+    assert resp.status_code == 422
+    assert "layer_id" in resp.text.lower()
 
 def test_list_domains(client):
     layer_id = create_layer(client, str(uuid.uuid4()))
@@ -108,10 +103,10 @@ def test_list_domains(client):
         })
     resp = client.get("/api/domains/?limit=2")
     assert resp.status_code == 200
-    assert len(resp.json()) <= 2
+    assert len(resp.json()["data"]) <= 2
     resp = client.get(f"/api/domains/?layer_id={layer_id}")
     assert resp.status_code == 200
-    assert all(d["layer_id"] == layer_id for d in resp.json())
+    assert all(d["layer_id"] == layer_id for d in resp.json()["data"])
 
 
 def test_move_domains_basic(client):

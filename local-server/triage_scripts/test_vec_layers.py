@@ -2,33 +2,22 @@
 import sys
 import os
 
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../../")))
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "../")))
 
-import tempfile
 from fastapi.testclient import TestClient
-from database.utils import init_db, get_session_local
-from embeddings.generate_embeddings import generate_embedding
-from app import create_app
+from triage_helper import create_test_app_with_migrations, cleanup_test_database, create_test_client
 import uuid
 from sqlalchemy import text
 from utils.logger import get_logger
 
 logger = get_logger(__name__)
 
-
-# Use a temporary file for the test database
-test_db_fd, test_db_path = tempfile.mkstemp(suffix=".db")
-SQLALCHEMY_DATABASE_URL = f"sqlite:///{test_db_path}"
-engine = init_db(database_url=SQLALCHEMY_DATABASE_URL, connect_args={"check_same_thread": False}, skip_vec=False)
-TestingSessionLocal = get_session_local(engine)
-
-# Create a test app instance with test DB engine/session
-app = create_app(engine=engine, session_local=TestingSessionLocal, skip_vec=False)
+# Create test app with migrations applied
+app, test_db_fd, test_db_path, engine, TestingSessionLocal = create_test_app_with_migrations()
 
 
 def client():
-    with TestClient(app) as c:
-        yield c
+    return create_test_client(app)
 
 
 def create_layer(client, title=None, definition=None, primary_predicate=None):
@@ -202,5 +191,4 @@ if __name__ == "__main__":
 
     logger.info("Test completed successfully.")
     # Clean up the temporary database file
-    os.close(test_db_fd)
-    os.unlink(test_db_path)
+    cleanup_test_database(test_db_fd, test_db_path)

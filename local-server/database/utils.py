@@ -72,7 +72,7 @@ def get_engine(database_url=None, use_static_pool=False, connect_args={"check_sa
 def get_session_local(engine):
     return sessionmaker(autocommit=False, autoflush=False, bind=engine, expire_on_commit=False)
 
-def init_db(engine=None, skip_vec=False, database_url=None, connect_args=None):
+def init_db(engine=None, database_url=None, connect_args=None):
     logger.info("init_db retrieving engine...")
     if engine is None:
         engine = get_engine(database_url=database_url, connect_args=connect_args)

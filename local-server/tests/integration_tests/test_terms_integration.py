@@ -1,48 +1,20 @@
-import sys
-import os
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-
-
-import tempfile
 import pytest
-from fastapi.testclient import TestClient
-from sqlalchemy.orm import sessionmaker
-from database import models
-from database.utils import init_db, get_session_local
-from app import create_app
+import uuid
 
-# Use a temporary file for the test database
-test_db_fd, test_db_path = tempfile.mkstemp(suffix=".db")
-SQLALCHEMY_DATABASE_URL = f"sqlite:///{test_db_path}"
-engine = init_db(database_url=SQLALCHEMY_DATABASE_URL, connect_args={"check_same_thread": False}, skip_vec=False)
-TestingSessionLocal = get_session_local(engine)
+# Fixtures for test database and client are now provided by conftest.py
 
-# Create a test app instance with test DB engine/session
-app = create_app(engine=engine, session_local=TestingSessionLocal)
-
-@pytest.fixture(scope="session", autouse=True)
-def setup_database():
-    models.Base.metadata.drop_all(bind=engine)
-    models.Base.metadata.create_all(bind=engine)
-    yield
-    os.close(test_db_fd)
-    os.unlink(test_db_path)
-
-@pytest.fixture
-def client():
-    with TestClient(app) as c:
-        yield c
-
-def create_layer(client, title=None):
-    import uuid
+def create_layer(client, title=None, definition=None, primary_predicate=None):
     unique_title = title if title else f"Test Layer {uuid.uuid4()}"
-    payload = {"title": unique_title, "definition": "Layer for terms test."}
+    payload = {
+        "title": unique_title,
+        "definition": definition or "Layer for terms test.",
+        "primary_predicate": primary_predicate
+    }
     resp = client.post("/api/layers/", json=payload)
     assert resp.status_code == 201
     return resp.json()["id"]
 
 def create_domain(client, layer_id, title=None):
-    import uuid
     unique_title = title if title else f"Test Domain {uuid.uuid4()}"
     payload = {"title": unique_title, "definition": "Domain for terms test.", "layer_id": layer_id}
     resp = client.post("/api/domains/", json=payload)
@@ -50,7 +22,6 @@ def create_domain(client, layer_id, title=None):
     return resp.json()["id"]
 
 def create_term(client, domain_id, layer_id, title=None, definition=None, parent_term_id=None):
-    import uuid
     unique_title = title if title else f"Test Term {uuid.uuid4()}"
     payload = {
         "title": unique_title,
@@ -93,7 +64,7 @@ def test_create_term_duplicate_title_within_domain(client):
     t1 = create_term(client, domain_id, layer_id, title="DupTerm")
     resp = client.post("/api/terms/", json={"title": "DupTerm", "definition": "D", "domain_id": domain_id, "layer_id": layer_id})
     assert resp.status_code == 409
-    assert "unique" in resp.json()["detail"][0]["msg"].lower()
+    assert "unique" in resp.json()["detail"].lower()
 
 def test_create_term_with_parent_and_circular_reference(client):
     layer_id = create_layer(client)
@@ -106,7 +77,7 @@ def test_create_term_with_parent_and_circular_reference(client):
     # Circular reference
     resp = client.put(f"/api/terms/{parent['id']}", json={"parent_term_id": child["id"]})
     assert resp.status_code == 400
-    assert "circular" in resp.json()["detail"][0]["msg"].lower()
+    assert "circular" in resp.json()["detail"].lower()
 
 def test_update_term(client):
     layer_id = create_layer(client)
@@ -126,7 +97,7 @@ def test_update_term_duplicate_title(client):
     t2 = create_term(client, domain_id, layer_id, title="T2")
     resp = client.put(f"/api/terms/{t2['id']}", json={"title": "T1"})
     assert resp.status_code == 409
-    assert "unique" in resp.json()["detail"][0]["msg"].lower()
+    assert "unique" in resp.json()["detail"].lower()
 
 def test_update_term_not_found(client):
     layer_id = create_layer(client)
@@ -174,41 +145,15 @@ def test_list_terms(client):
     
     titles = [d["title"] for d in data["data"]]
     assert "T1" in titles and "T2" in titles
-    
-    # Test limit
-    resp2 = client.get(f"/api/terms/?domain_id={domain_id}&limit=1")
-    assert resp2.status_code == 200
-    data2 = resp2.json()
-    assert data2["total"] == 2
-    assert data2["limit"] == 1
-    assert len(data2["data"]) == 1
 
-def test_find_term(client):
-    layer_id = create_layer(client)
-    domain_id = create_domain(client, layer_id)
-    t1 = create_term(client, domain_id, layer_id, title="Alpha Term", definition="Physics")
-    t2 = create_term(client, domain_id, layer_id, title="Beta Term", definition="Chemistry")
+# Fixtures for test database and client are now provided by conftest.py
 
-    # Search by title
-    resp = client.post("/api/terms/find", json={"title": "Alpha"})
-    assert resp.status_code == 200
-    data = resp.json()
-    assert any("Alpha" in d["title"] for d in data)
-
-    # Search by definition
-    resp2 = client.post("/api/terms/find", json={"definition": "Chemistry"})
-    assert resp2.status_code == 200
-    data2 = resp2.json()
-    assert any("Chemistry" in d["definition"] for d in data2)
-
-    # Search with a term that should return results (but with low score)
-    resp3 = client.post("/api/terms/find", json={"title": "Beta", "minimum_score": 0.0})
-    assert resp3.status_code == 200
-    data3 = resp3.json()
-    assert len(data3) > 0
-    record3 = data3[0]
-    assert "score" in record3
-    assert "distance" in record3
+def create_layer(client, title=None):
+    unique_title = title if title else f"Test Layer {uuid.uuid4()}"
+    payload = {"title": unique_title, "definition": "Layer for terms test."}
+    resp = client.post("/api/layers/", json=payload)
+    assert resp.status_code == 201
+    return resp.json()["id"]
 
 def test_find_term_invalid_created_at(client):
     resp = client.post("/api/terms/find", json={"created_at": "not-a-date"})

@@ -1,32 +1,11 @@
 
 import sys
 import os
+import uuid
+
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../../')))
 
-import pytest
-from fastapi.testclient import TestClient
-from app import create_app
-from database.utils import get_engine, get_session_local, init_db
-import uuid
-import tempfile
-
-@pytest.fixture(scope="function")
-def test_app():
-    with tempfile.NamedTemporaryFile(suffix=".db", delete=False) as tf:
-        db_url = f"sqlite:///{tf.name}"
-    try:
-        engine = get_engine(db_url)
-        session_local = get_session_local(engine)
-        init_db(engine=engine, skip_vec=False)
-        app = create_app(engine=engine, session_local=session_local, skip_vec=False)
-        yield app
-    finally:
-        os.unlink(tf.name)
-
-@pytest.fixture(scope="function")
-def client(test_app):
-    with TestClient(test_app) as c:
-        yield c
+# All fixtures are now provided by conftest.py
 
 def create_layer_and_domain(client):
     layer_resp = client.post("/api/layers/", json={"title": str(uuid.uuid4())})
@@ -79,15 +58,15 @@ def test_term_duplicate_title_within_domain(client):
     create_term(client, domain_id, layer_id, title="T1")
     resp = client.post("/api/terms/", json={"title": "T1", "definition": "def", "domain_id": domain_id, "layer_id": layer_id})
     assert resp.status_code == 409
-    assert "unique" in resp.json()["detail"][0]["msg"].lower()
+    assert "unique" in resp.json()["detail"].lower()
 
 def test_term_invalid_domain_or_layer(client):
     layer_id, domain_id = create_layer_and_domain(client)
     bad_uuid = str(uuid.uuid4())
     resp = client.post("/api/terms/", json={"title": "T", "definition": "D", "domain_id": bad_uuid, "layer_id": layer_id})
-    assert resp.status_code == 400
+    assert resp.status_code == 422
     resp = client.post("/api/terms/", json={"title": "T", "definition": "D", "domain_id": domain_id, "layer_id": bad_uuid})
-    assert resp.status_code == 400
+    assert resp.status_code == 422
 
 def test_term_parent_and_circular_reference(client):
     layer_id, domain_id = create_layer_and_domain(client)
@@ -96,11 +75,11 @@ def test_term_parent_and_circular_reference(client):
     # Parent must exist and belong to same domain
     bad_uuid = str(uuid.uuid4())
     resp = client.post("/api/terms/", json={"title": "Bad", "definition": "D", "domain_id": domain_id, "layer_id": layer_id, "parent_term_id": bad_uuid})
-    assert resp.status_code == 400
+    assert resp.status_code == 422
     # Circular reference
     resp = client.put(f"/api/terms/{t1['id']}", json={"parent_term_id": t2["id"]})
     assert resp.status_code == 400
-    detail = resp.json()["detail"][0]["msg"].lower()
+    detail = resp.json()["detail"].lower()
     print(f"DEBUG: circular reference error detail: {detail}")
     assert "circular" in detail
 
@@ -110,16 +89,16 @@ def test_list_terms_pagination(client):
         create_term(client, domain_id, layer_id, title=f"T{i}")
     resp = client.get(f"/api/terms/?domain_id={domain_id}&limit=2")
     assert resp.status_code == 200
-    assert len(resp.json()) <= 2
+    assert len(resp.json()["data"]) <= 2
     resp = client.get(f"/api/terms/?domain_id={domain_id}&sort=title")
     assert resp.status_code == 200
-    titles = [t["title"] for t in resp.json()]
+    titles = [t["title"] for t in resp.json()["data"]]
     assert titles == sorted(titles)
 
 def test_create_get_update_delete_term_relationship(client):
     layer_id, domain_id = create_layer_and_domain(client)
-    t1 = create_term(client, domain_id, layer_id, title="A")
-    t2 = create_term(client, domain_id, layer_id, title="B")
+    t1 = create_term(client, domain_id, layer_id, title="Abcdef")
+    t2 = create_term(client, domain_id, layer_id, title="Bcdefg")
     # Create
     resp = client.post("/api/term-relationships/", json={"source_term_id": t1["id"], "target_term_id": t2["id"], "predicate": "rel"})
     assert resp.status_code == 201, resp.text
