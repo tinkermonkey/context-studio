@@ -78,10 +78,9 @@ def test_layer_bad_input(client):
     assert resp.status_code == 422
     assert "title" in resp.text.lower()
 
-    # Definition too short (should fail if provided and < 1 char)
+    # Empty definition should now be allowed (no longer fails)
     resp = client.post("/api/layers/", json={"title": "Layer", "definition": ""})
-    assert resp.status_code == 422
-    assert "definition" in resp.text.lower()
+    assert resp.status_code == 201
 
 def test_layer_duplicate_title(client):
     resp1 = client.post("/api/layers/", json={"title": "Layer X"})

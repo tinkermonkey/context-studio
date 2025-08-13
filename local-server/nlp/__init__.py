@@ -12,6 +12,6 @@ from .models import (
     TokenData,
     EntityData,
     NLPAnalysisResponse,
-    SuccessResponse,
-    ErrorResponse,
+    NLPSuccessResponse,
+    NLPErrorResponse,
 )

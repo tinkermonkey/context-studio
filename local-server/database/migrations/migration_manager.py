@@ -44,6 +44,7 @@ class MigrationManager:
         )
         self.current_version = self._get_current_schema_version()
         self.target_version = self._get_latest_migration_version()
+        logger.info(f"MigrationManager initialized: current_version={self.current_version}, target_version={self.target_version}")
     
     def _ensure_schema_history_table(self, connection: Connection) -> None:
         """Ensure the schema_history table exists."""
@@ -129,6 +130,7 @@ class MigrationManager:
     
     def migrate_to_latest(self, skip_on_error: bool = False) -> bool:
         """Apply all pending migrations to bring database to latest version."""
+        logger.info(f"Migrate to latest: current schema version: {self.current_version}, target version: {self.target_version}")
         migrations = self._discover_migrations()
         pending_migrations = [
             m for m in migrations 

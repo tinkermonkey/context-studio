@@ -5,7 +5,7 @@ FastAPI router for NLP Analysis API endpoint.
 from fastapi import APIRouter, HTTPException, status, Request
 from fastapi.responses import JSONResponse
 from pydantic import ValidationError
-from nlp.models import NLPAnalysisRequest, NLPAnalysisResponse, ErrorResponse, SuccessResponse
+from nlp.models import NLPAnalysisRequest, NLPAnalysisResponse, NLPErrorResponse, NLPSuccessResponse
 from nlp.pipeline import get_pipeline
 from nlp.processors import process_nlp_result
 from utils.logger import get_logger
@@ -18,10 +18,10 @@ settings = {
     "NLP_MAX_TEXT_LENGTH": 512
 }
 
-@router.post("/nlp_analysis", response_model=SuccessResponse, responses={
-    400: {"model": ErrorResponse},
-    422: {"model": ErrorResponse},
-    500: {"model": ErrorResponse},
+@router.post("/nlp_analysis", response_model=NLPSuccessResponse, responses={
+    400: {"model": NLPErrorResponse},
+    422: {"model": NLPErrorResponse},
+    500: {"model": NLPErrorResponse},
 })
 async def nlp_analysis(request: Request):
     """
@@ -65,7 +65,7 @@ async def nlp_analysis(request: Request):
             raise RuntimeError("NLP pipeline is not initialized.")
         doc = pipeline(text)
         response_data = process_nlp_result(text, doc)
-        return SuccessResponse(success=True, data=response_data)
+        return NLPSuccessResponse(success=True, data=response_data)
     except Exception as e:
         logger.error(f"NLP pipeline error: {e}")
         return JSONResponse(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, content={

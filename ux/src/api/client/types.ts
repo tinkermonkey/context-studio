@@ -112,6 +112,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/domains/move": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Move Domains
+         * @description Move domains to a new layer with all their terms.
+         */
+        post: operations["move_domains_api_domains_move_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/terms/find": {
         parameters: {
             query?: never;
@@ -161,6 +181,26 @@ export interface paths {
         post?: never;
         /** Delete Term */
         delete: operations["delete_term_api_terms__id__delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/terms/move": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Move Terms
+         * @description Move terms to a new domain with all their children.
+         */
+        post: operations["move_terms_api_terms_move_post"];
+        delete?: never;
         options?: never;
         head?: never;
         patch?: never;
@@ -895,6 +935,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/nlp_analysis": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Nlp Analysis
+         * @description Analyze text using NLP pipeline and return structured response.
+         */
+        post: operations["nlp_analysis_api_nlp_analysis_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -914,11 +974,9 @@ export interface components {
             /** Dataset Id */
             dataset_id: string;
             /** Dataset Title */
-            dataset_title: string | null;
+            dataset_title?: string;
             /** Details */
-            details: {
-                [key: string]: unknown;
-            };
+            details: Record<string, never>;
         };
         /**
          * ActionLogResponse
@@ -946,7 +1004,23 @@ export interface components {
              * Method
              * @default pagerank
              */
-            method: string | null;
+            method: string;
+        };
+        /**
+         * ConcepcyData
+         * @description ConceptNet/Concepcy data for a token.
+         */
+        ConcepcyData: {
+            /**
+             * Related Terms
+             * @description Related terms from ConceptNet.
+             */
+            related_terms?: string[];
+            /**
+             * Score
+             * @description ConceptNet similarity score.
+             */
+            score?: number;
         };
         /**
          * CreateDatasetRequest
@@ -957,6 +1031,32 @@ export interface components {
             title: string;
             /** Filename */
             filename: string;
+        };
+        /**
+         * DBpediaData
+         * @description DBpedia data for an entity.
+         */
+        DBpediaData: {
+            /**
+             * Uri
+             * @description DBpedia URI.
+             */
+            uri?: string;
+            /**
+             * Label
+             * @description DBpedia label.
+             */
+            label?: string;
+            /**
+             * Similarity
+             * @description DBpedia similarity score.
+             */
+            similarity?: number;
+            /**
+             * Raw Result
+             * @description Raw DBpedia result.
+             */
+            raw_result?: unknown;
         };
         /**
          * DatasetMetrics
@@ -1028,45 +1128,91 @@ export interface components {
              */
             id: string;
             /** Title Embedding */
-            title_embedding?: number[] | null;
+            title_embedding?: number[];
             /** Definition Embedding */
-            definition_embedding?: number[] | null;
+            definition_embedding?: number[];
             /** Created At */
             created_at: string;
             /** Version */
-            version?: number | null;
+            version?: number;
             /** Last Modified */
-            last_modified?: string | null;
+            last_modified?: string;
         };
         /** DomainUpdate */
         DomainUpdate: {
             /** Title */
-            title?: string | null;
+            title?: string;
             /** Definition */
-            definition?: string | null;
-            /** Layer Id */
-            layer_id?: string | null;
+            definition?: string;
+            /**
+             * Layer Id
+             * Format: uuid
+             */
+            layer_id?: string;
+        };
+        /**
+         * EntityData
+         * @description Data for a named entity in the analyzed text.
+         */
+        EntityData: {
+            /**
+             * Text
+             * @description Entity text.
+             */
+            text: string;
+            /**
+             * Label
+             * @description Entity label.
+             */
+            label?: string;
+            /**
+             * Kb Id
+             * @description Knowledge base ID.
+             */
+            kb_id?: string;
+            /**
+             * Dbpedia
+             * @description DBpedia data.
+             */
+            dbpedia?: components["schemas"]["DBpediaData"];
+        };
+        /**
+         * ErrorResponse
+         * @description Error response wrapper for NLP API.
+         */
+        ErrorResponse: {
+            /**
+             * Success
+             * @description Indicates failure.
+             * @default false
+             */
+            success: boolean;
+            /**
+             * Error
+             * @description Error message.
+             */
+            error: string;
         };
         /** FindDomainRequest */
         FindDomainRequest: {
             /** Title */
-            title?: string | null;
+            title?: string;
             /** Definition */
-            definition?: string | null;
+            definition?: string;
             /** Layer Id */
-            layer_id?: string | null;
+            layer_id?: string;
             /** Created At */
-            created_at?: string | null;
+            created_at?: string;
             /**
              * Minimum Score
              * @default 0.1
              */
-            minimum_score: number | null;
+            minimum_score: number;
             /**
              * Limit
              * @default 1
              */
-            limit: number | null;
+            limit: number;
         };
         /** FindDomainResult */
         FindDomainResult: {
@@ -1085,15 +1231,15 @@ export interface components {
              */
             id: string;
             /** Title Embedding */
-            title_embedding?: number[] | null;
+            title_embedding?: number[];
             /** Definition Embedding */
-            definition_embedding?: number[] | null;
+            definition_embedding?: number[];
             /** Created At */
             created_at: string;
             /** Version */
-            version?: number | null;
+            version?: number;
             /** Last Modified */
-            last_modified?: string | null;
+            last_modified?: string;
             /** Score */
             score: number;
             /** Distance */
@@ -1102,45 +1248,45 @@ export interface components {
         /** FindLayerRequest */
         FindLayerRequest: {
             /** Title */
-            title?: string | null;
+            title?: string;
             /** Definition */
-            definition?: string | null;
+            definition?: string;
             /** Created At */
-            created_at?: string | null;
+            created_at?: string;
             /**
              * Minimum Score
              * @default 0.1
              */
-            minimum_score: number | null;
+            minimum_score: number;
             /**
              * Limit
              * @default 1
              */
-            limit: number | null;
+            limit: number;
         };
         /** FindLayerResult */
         FindLayerResult: {
             /** Title */
             title: string;
             /** Definition */
-            definition?: string | null;
+            definition?: string;
             /** Primary Predicate */
-            primary_predicate?: string | null;
+            primary_predicate?: string;
             /**
              * Id
              * Format: uuid
              */
             id: string;
             /** Title Embedding */
-            title_embedding?: number[] | null;
+            title_embedding?: number[];
             /** Definition Embedding */
-            definition_embedding?: number[] | null;
+            definition_embedding?: number[];
             /** Created At */
             created_at: string;
             /** Version */
-            version?: number | null;
+            version?: number;
             /** Last Modified */
-            last_modified?: string | null;
+            last_modified?: string;
             /** Score */
             score: number;
             /** Distance */
@@ -1149,25 +1295,25 @@ export interface components {
         /** FindTermRequest */
         FindTermRequest: {
             /** Title */
-            title?: string | null;
+            title?: string;
             /** Definition */
-            definition?: string | null;
+            definition?: string;
             /** Layer Id */
-            layer_id?: string | null;
+            layer_id?: string;
             /** Domain Id */
-            domain_id?: string | null;
+            domain_id?: string;
             /** Created At */
-            created_at?: string | null;
+            created_at?: string;
             /**
              * Minimum Score
              * @default 0.1
              */
-            minimum_score: number | null;
+            minimum_score: number;
             /**
              * Limit
              * @default 1
              */
-            limit: number | null;
+            limit: number;
         };
         /** FindTermResult */
         FindTermResult: {
@@ -1190,12 +1336,15 @@ export interface components {
              * Format: uuid
              */
             layer_id: string;
-            /** Parent Term Id */
-            parent_term_id?: string | null;
+            /**
+             * Parent Term Id
+             * Format: uuid
+             */
+            parent_term_id?: string;
             /** Title Embedding */
-            title_embedding?: number[] | null;
+            title_embedding?: number[];
             /** Definition Embedding */
-            definition_embedding?: number[] | null;
+            definition_embedding?: number[];
             /** Created At */
             created_at: string;
             /** Version */
@@ -1217,42 +1366,42 @@ export interface components {
             /** Title */
             title: string;
             /** Definition */
-            definition?: string | null;
+            definition?: string;
             /** Primary Predicate */
-            primary_predicate?: string | null;
+            primary_predicate?: string;
         };
         /** LayerOut */
         LayerOut: {
             /** Title */
             title: string;
             /** Definition */
-            definition?: string | null;
+            definition?: string;
             /** Primary Predicate */
-            primary_predicate?: string | null;
+            primary_predicate?: string;
             /**
              * Id
              * Format: uuid
              */
             id: string;
             /** Title Embedding */
-            title_embedding?: number[] | null;
+            title_embedding?: number[];
             /** Definition Embedding */
-            definition_embedding?: number[] | null;
+            definition_embedding?: number[];
             /** Created At */
             created_at: string;
             /** Version */
-            version?: number | null;
+            version?: number;
             /** Last Modified */
-            last_modified?: string | null;
+            last_modified?: string;
         };
         /** LayerUpdate */
         LayerUpdate: {
             /** Title */
-            title?: string | null;
+            title?: string;
             /** Definition */
-            definition?: string | null;
+            definition?: string;
             /** Primary Predicate */
-            primary_predicate?: string | null;
+            primary_predicate?: string;
         };
         /**
          * MigrationStatus
@@ -1268,6 +1417,73 @@ export interface components {
             /** Needs Migration */
             needs_migration: boolean;
         };
+        /** MoveDomainRequest */
+        MoveDomainRequest: {
+            /** Domain Ids */
+            domain_ids: string[];
+            /**
+             * Target Layer Id
+             * Format: uuid
+             */
+            target_layer_id: string;
+            /**
+             * Move Terms
+             * @default true
+             */
+            move_terms: boolean;
+        };
+        /** MoveDomainResponse */
+        MoveDomainResponse: {
+            /** Moved Domains */
+            moved_domains: components["schemas"]["DomainOut"][];
+            /** Moved Terms */
+            moved_terms: components["schemas"]["DomainOut"][];
+            /** Warnings */
+            warnings: string[];
+        };
+        /** MoveTermRequest */
+        MoveTermRequest: {
+            /** Term Ids */
+            term_ids: string[];
+            /**
+             * Target Domain Id
+             * Format: uuid
+             */
+            target_domain_id: string;
+            /**
+             * Move Children
+             * @default true
+             */
+            move_children: boolean;
+        };
+        /** MoveTermResponse */
+        MoveTermResponse: {
+            /** Moved Terms */
+            moved_terms: components["schemas"]["TermOut"][];
+            /** Warnings */
+            warnings: string[];
+        };
+        /**
+         * NLPAnalysisResponse
+         * @description Response model for NLP analysis API.
+         */
+        NLPAnalysisResponse: {
+            /**
+             * Tokens
+             * @description List of token data.
+             */
+            tokens?: components["schemas"]["TokenData"][];
+            /**
+             * Entities
+             * @description List of entity data.
+             */
+            entities?: components["schemas"]["EntityData"][];
+            /**
+             * Text
+             * @description Original analyzed text.
+             */
+            text: string;
+        };
         /** NeighborsRequest */
         NeighborsRequest: {
             /** Entity Id */
@@ -1276,17 +1492,17 @@ export interface components {
              * Entity Type
              * @default term
              */
-            entity_type: string | null;
+            entity_type: string;
             /**
              * Depth
              * @default 1
              */
-            depth: number | null;
+            depth: number;
             /**
              * Direction
              * @default both
              */
-            direction: string | null;
+            direction: string;
         };
         /** PaginatedDomainsResponse */
         PaginatedDomainsResponse: {
@@ -1331,12 +1547,12 @@ export interface components {
              * Source Type
              * @default term
              */
-            source_type: string | null;
+            source_type: string;
             /**
              * Target Type
              * @default term
              */
-            target_type: string | null;
+            target_type: string;
         };
         /** SPARQLQuery */
         SPARQLQuery: {
@@ -1346,7 +1562,7 @@ export interface components {
              * Format
              * @default json
              */
-            format: string | null;
+            format: string;
         };
         /** SearchRequest */
         SearchRequest: {
@@ -1356,12 +1572,57 @@ export interface components {
              * Exact
              * @default false
              */
-            exact: boolean | null;
+            exact: boolean;
             /**
              * Analysis Depth
              * @default 1
              */
-            analysis_depth: number | null;
+            analysis_depth: number;
+        };
+        /**
+         * Sense2VecData
+         * @description Sense2Vec data for a token.
+         */
+        Sense2VecData: {
+            /**
+             * In S2V
+             * @description Whether token is in sense2vec model
+             * @default false
+             */
+            in_s2v: boolean;
+            /**
+             * Key
+             * @description Sense2vec key (e.g., 'duck NOUN')
+             */
+            key?: string;
+            /**
+             * Freq
+             * @description Frequency in sense2vec corpus
+             */
+            freq?: number;
+            /**
+             * Other Senses
+             * @description Other senses for this word
+             */
+            other_senses?: string[];
+            /**
+             * Most Similar
+             * @description Most similar words with scores
+             */
+            most_similar?: Record<string, never>[];
+        };
+        /**
+         * SuccessResponse
+         * @description Success response wrapper for NLP API.
+         */
+        SuccessResponse: {
+            /**
+             * Success
+             * @description Indicates success.
+             * @default true
+             */
+            success: boolean;
+            data: components["schemas"]["NLPAnalysisResponse"];
         };
         /** TermCreate */
         TermCreate: {
@@ -1379,8 +1640,11 @@ export interface components {
              * Format: uuid
              */
             layer_id: string;
-            /** Parent Term Id */
-            parent_term_id?: string | null;
+            /**
+             * Parent Term Id
+             * Format: uuid
+             */
+            parent_term_id?: string;
         };
         /** TermOut */
         TermOut: {
@@ -1403,12 +1667,15 @@ export interface components {
              * Format: uuid
              */
             layer_id: string;
-            /** Parent Term Id */
-            parent_term_id?: string | null;
+            /**
+             * Parent Term Id
+             * Format: uuid
+             */
+            parent_term_id?: string;
             /** Title Embedding */
-            title_embedding?: number[] | null;
+            title_embedding?: number[];
             /** Definition Embedding */
-            definition_embedding?: number[] | null;
+            definition_embedding?: number[];
             /** Created At */
             created_at: string;
             /** Version */
@@ -1453,13 +1720,9 @@ export interface components {
             /** Created At */
             created_at: string;
             /** Source Term */
-            source_term?: {
-                [key: string]: unknown;
-            } | null;
+            source_term?: Record<string, never>;
             /** Target Term */
-            target_term?: {
-                [key: string]: unknown;
-            } | null;
+            target_term?: Record<string, never>;
         };
         /** TermRelationshipUpdate */
         TermRelationshipUpdate: {
@@ -1469,11 +1732,65 @@ export interface components {
         /** TermUpdate */
         TermUpdate: {
             /** Title */
-            title?: string | null;
+            title?: string;
             /** Definition */
-            definition?: string | null;
-            /** Parent Term Id */
-            parent_term_id?: string | null;
+            definition?: string;
+            /**
+             * Parent Term Id
+             * Format: uuid
+             */
+            parent_term_id?: string;
+        };
+        /**
+         * TokenData
+         * @description Data for a single token in the analyzed text.
+         */
+        TokenData: {
+            /**
+             * Text
+             * @description Token text.
+             */
+            text?: string;
+            /**
+             * Lemma
+             * @description Token lemma.
+             */
+            lemma?: string;
+            /**
+             * Pos
+             * @description Part of speech tag.
+             */
+            pos?: string;
+            /**
+             * Tag
+             * @description Detailed POS tag.
+             */
+            tag?: string;
+            /**
+             * Start
+             * @description Start character position.
+             */
+            start?: number;
+            /**
+             * End
+             * @description End character position.
+             */
+            end?: number;
+            /**
+             * Concepcy
+             * @description Concepcy data.
+             */
+            concepcy?: components["schemas"]["ConcepcyData"];
+            /**
+             * Wordnet
+             * @description WordNet data.
+             */
+            wordnet?: components["schemas"]["WordNetData"];
+            /**
+             * Sense2Vec
+             * @description Sense2vec data.
+             */
+            sense2vec?: components["schemas"]["Sense2VecData"];
         };
         /**
          * UpdateDatasetDirectoryRequest
@@ -1491,6 +1808,27 @@ export interface components {
             msg: string;
             /** Error Type */
             type: string;
+        };
+        /**
+         * WordNetData
+         * @description WordNet data for a token.
+         */
+        WordNetData: {
+            /**
+             * Synsets
+             * @description WordNet synsets with attributes, including domain context. Each synset dict includes: name, definition, lemmas, pos, offset, domain.
+             */
+            synsets?: Record<string, never>[];
+            /**
+             * Lemmas
+             * @description WordNet lemmas with attributes.
+             */
+            lemmas?: Record<string, never>[];
+            /**
+             * Definitions
+             * @description WordNet definitions.
+             */
+            definitions?: string[];
         };
     };
     responses: never;
@@ -2026,6 +2364,41 @@ export interface operations {
             };
         };
     };
+    move_domains_api_domains_move_post: {
+        parameters: {
+            query?: {
+                SessionLocal?: unknown;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MoveDomainRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MoveDomainResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     find_term_api_terms_find_post: {
         parameters: {
             query?: {
@@ -2271,6 +2644,41 @@ export interface operations {
             };
         };
     };
+    move_terms_api_terms_move_post: {
+        parameters: {
+            query?: {
+                SessionLocal?: unknown;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MoveTermRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MoveTermResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     list_relationships_api_term_relationships__get: {
         parameters: {
             query?: {
@@ -2460,9 +2868,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": {
-                        [key: string]: unknown;
-                    };
+                    "application/json": Record<string, never>;
                 };
             };
         };
@@ -2508,9 +2914,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": {
-                        [key: string]: unknown;
-                    }[];
+                    "application/json": Record<string, never>[];
                 };
             };
             /** @description Validation Error */
@@ -2576,9 +2980,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": {
-                        [key: string]: unknown;
-                    }[];
+                    "application/json": Record<string, never>[];
                 };
             };
             /** @description Validation Error */
@@ -2611,9 +3013,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": {
-                        [key: string]: unknown;
-                    };
+                    "application/json": Record<string, never>;
                 };
             };
             /** @description Validation Error */
@@ -2713,7 +3113,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": string[] | null;
+                    "application/json": string[];
                 };
             };
             /** @description Validation Error */
@@ -2782,9 +3182,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": {
-                        [key: string]: unknown;
-                    };
+                    "application/json": Record<string, never>;
                 };
             };
             /** @description Validation Error */
@@ -2815,9 +3213,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": {
-                        [key: string]: unknown;
-                    };
+                    "application/json": Record<string, never>;
                 };
             };
             /** @description Validation Error */
@@ -2848,9 +3244,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": {
-                        [key: string]: unknown;
-                    } | null;
+                    "application/json": Record<string, never>;
                 };
             };
             /** @description Validation Error */
@@ -2881,9 +3275,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": {
-                        [key: string]: unknown;
-                    };
+                    "application/json": Record<string, never>;
                 };
             };
             /** @description Validation Error */
@@ -2901,7 +3293,7 @@ export interface operations {
         parameters: {
             query?: {
                 /** @description Optional layer ID to filter by */
-                layer_id?: string | null;
+                layer_id?: string;
             };
             header?: never;
             path?: never;
@@ -2915,9 +3307,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": {
-                        [key: string]: unknown;
-                    }[];
+                    "application/json": Record<string, never>[];
                 };
             };
             /** @description Validation Error */
@@ -2935,7 +3325,7 @@ export interface operations {
         parameters: {
             query?: {
                 /** @description Optional layer ID to analyze */
-                layer_id?: string | null;
+                layer_id?: string;
             };
             header?: never;
             path?: never;
@@ -2949,9 +3339,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": {
-                        [key: string]: unknown;
-                    };
+                    "application/json": Record<string, never>;
                 };
             };
             /** @description Validation Error */
@@ -2982,9 +3370,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": {
-                        [key: string]: unknown;
-                    } | null;
+                    "application/json": Record<string, never>;
                 };
             };
             /** @description Validation Error */
@@ -3015,9 +3401,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": {
-                        [key: string]: unknown;
-                    } | null;
+                    "application/json": Record<string, never>;
                 };
             };
             /** @description Validation Error */
@@ -3548,6 +3932,53 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    nlp_analysis_api_nlp_analysis_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SuccessResponse"];
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Unprocessable Entity */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Internal Server Error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
                 };
             };
         };

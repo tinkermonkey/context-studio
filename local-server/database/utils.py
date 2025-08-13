@@ -91,8 +91,8 @@ def init_db(engine=None, database_url=None, connect_args=None):
             logger.info("Extension loaded successfully, disabling further loading.")
             connection.enable_load_extension(False)
 
-    logger.info("Creating database tables...")
-    Base.metadata.create_all(bind=engine)
+    # Do not create tables here; rely on migration manager for schema creation
+    logger.info("init_db complete (no tables created, use migration manager for schema)")
     return engine
 
 def get_db(SessionLocal=None):

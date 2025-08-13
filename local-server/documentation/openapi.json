@@ -2990,7 +2990,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/SuccessResponse"
+                  "$ref": "#/components/schemas/NLPSuccessResponse"
                 }
               }
             }
@@ -3000,7 +3000,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
+                  "$ref": "#/components/schemas/NLPErrorResponse"
                 }
               }
             }
@@ -3010,7 +3010,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
+                  "$ref": "#/components/schemas/NLPErrorResponse"
                 }
               }
             }
@@ -3020,7 +3020,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
+                  "$ref": "#/components/schemas/NLPErrorResponse"
                 }
               }
             }
@@ -3398,27 +3398,6 @@
         ],
         "title": "EntityData",
         "description": "Data for a named entity in the analyzed text."
-      },
-      "ErrorResponse": {
-        "properties": {
-          "success": {
-            "type": "boolean",
-            "title": "Success",
-            "description": "Indicates failure.",
-            "default": false
-          },
-          "error": {
-            "type": "string",
-            "title": "Error",
-            "description": "Error message."
-          }
-        },
-        "type": "object",
-        "required": [
-          "error"
-        ],
-        "title": "ErrorResponse",
-        "description": "Error response wrapper for NLP API."
       },
       "FindDomainRequest": {
         "properties": {
@@ -4016,6 +3995,46 @@
         "title": "NLPAnalysisResponse",
         "description": "Response model for NLP analysis API."
       },
+      "NLPErrorResponse": {
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "title": "Success",
+            "description": "Indicates failure.",
+            "default": false
+          },
+          "error": {
+            "type": "string",
+            "title": "Error",
+            "description": "Error message."
+          }
+        },
+        "type": "object",
+        "required": [
+          "error"
+        ],
+        "title": "NLPErrorResponse",
+        "description": "Error response wrapper for NLP API."
+      },
+      "NLPSuccessResponse": {
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "title": "Success",
+            "description": "Indicates success.",
+            "default": true
+          },
+          "data": {
+            "$ref": "#/components/schemas/NLPAnalysisResponse"
+          }
+        },
+        "type": "object",
+        "required": [
+          "data"
+        ],
+        "title": "NLPSuccessResponse",
+        "description": "Success response wrapper for NLP API."
+      },
       "NeighborsRequest": {
         "properties": {
           "entity_id": {
@@ -4244,25 +4263,6 @@
         "type": "object",
         "title": "Sense2VecData",
         "description": "Sense2Vec data for a token."
-      },
-      "SuccessResponse": {
-        "properties": {
-          "success": {
-            "type": "boolean",
-            "title": "Success",
-            "description": "Indicates success.",
-            "default": true
-          },
-          "data": {
-            "$ref": "#/components/schemas/NLPAnalysisResponse"
-          }
-        },
-        "type": "object",
-        "required": [
-          "data"
-        ],
-        "title": "SuccessResponse",
-        "description": "Success response wrapper for NLP API."
       },
       "TermCreate": {
         "properties": {

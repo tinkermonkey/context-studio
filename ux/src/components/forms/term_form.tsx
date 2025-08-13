@@ -1,8 +1,9 @@
 import React from "react";
 import { useForm } from "@tanstack/react-form";
 import { TextInput, Textarea, Button, Alert, Label } from "flowbite-react";
-import { Info } from "lucide-react";
+import { Info, Database, Hash } from "lucide-react";
 import type { TermCreate, TermOut } from "@/api/services/terms";
+import type { DomainOut } from "@/api/services/domains";
 import {
   useCreateTerm,
   useUpdateTerm,
@@ -11,23 +12,41 @@ import { DomainSelector } from "@/components/node_selectors/domain_selector";
 import { TermSelector } from "@/components/node_selectors/term_selector";
 
 interface TermFormProps {
-  onSuccess?: (term: any) => void;
-  term?: TermOut;
+  onSuccess?: (term: TermOut) => void;
+  term?: TermOut; // For edit mode
+  // Child form props
+  parentDomainId?: string;
+  parentDomain?: DomainOut;
+  parentTermId?: string;
+  parentTerm?: TermOut;
+  mode?: 'create' | 'edit' | 'child';
 }
 
-const TermForm: React.FC<TermFormProps> = ({ onSuccess, term }) => {
+const TermForm: React.FC<TermFormProps> = ({ 
+  onSuccess, 
+  term, 
+  parentDomainId,
+  parentDomain,
+  parentTermId,
+  parentTerm,
+  mode = 'create'
+}) => {
   const createTermMutation = useCreateTerm();
   const updateTermMutation = useUpdateTerm();
   const isEdit = !!term;
+  const isChildMode = mode === 'child' || !!parentDomainId || !!parentTermId;
   const [submitError, setSubmitError] = React.useState<string | null>(null);
+  
+  const getDefaultValues = () => ({
+    title: term?.title ?? "",
+    definition: term?.definition ?? "",
+    domain_id: term?.domain_id ?? parentDomainId ?? parentTerm?.domain_id ?? "",
+    layer_id: term?.layer_id ?? parentDomain?.layer_id ?? parentTerm?.layer_id ?? "",
+    parent_term_id: term?.parent_term_id ?? parentTermId ?? "",
+  });
+  
   const form = useForm({
-    defaultValues: {
-      title: term?.title ?? "",
-      definition: term?.definition ?? "",
-      domain_id: term?.domain_id ?? "",
-      layer_id: term?.layer_id ?? "",
-      parent_term_id: term?.parent_term_id ?? "",
-    },
+    defaultValues: getDefaultValues(),
     onSubmit: async ({ value }) => {
       setSubmitError(null);
       try {
@@ -83,6 +102,26 @@ const TermForm: React.FC<TermFormProps> = ({ onSuccess, term }) => {
         }}
         className="flex flex-col gap-4"
       >
+        {/* Parent Context Display */}
+        {isChildMode && (parentDomain || parentTerm) && (
+          <div className="rounded-lg bg-blue-50 p-4 dark:bg-blue-900/20">
+            <div className="flex items-center gap-2 text-sm text-blue-700 dark:text-blue-300">
+              <Info className="h-4 w-4" />
+              <span>Creating term in {parentDomain ? 'domain' : 'parent term'}:</span>
+            </div>
+            <div className="mt-1 flex items-center gap-2">
+              {parentDomain ? (
+                <Database className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+              ) : (
+                <Hash className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+              )}
+              <span className="font-semibold text-blue-900 dark:text-blue-100">
+                {parentDomain?.title || parentTerm?.title}
+              </span>
+            </div>
+          </div>
+        )}
+
         <form.Field
           name="title"
           validators={{
@@ -132,26 +171,57 @@ const TermForm: React.FC<TermFormProps> = ({ onSuccess, term }) => {
             </div>
           )}
         </form.Field>
-        <form.Field
-          name="domain_id"
-          validators={{
-            onChange: ({ value }) =>
-              !value ? "Domain is required" : undefined,
-          }}
-        >
-          {(field) => {
-            return (
+        
+        {/* Hide domain selector in child mode when parent is provided */}
+        {!isChildMode && (
+          <form.Field
+            name="domain_id"
+            validators={{
+              onChange: ({ value }) =>
+                !value ? "Domain is required" : undefined,
+            }}
+          >
+            {(field) => {
+              return (
+                <div>
+                  <Label htmlFor="term-domain" className="mb-1 block font-medium">
+                    Domain
+                  </Label>
+                  <DomainSelector
+                    value={field.state.value}
+                    onSelect={(domain) => {
+                      field.handleChange(domain?.id || "");
+                      // Set layer_id to the selected domain's layer_id
+                      field.form.setFieldValue("layer_id", domain?.layer_id || "");
+                    }}
+                  />
+                  {field.state.meta.errors.length > 0 && (
+                    <div className="mt-1 text-sm text-red-600">
+                      {field.state.meta.errors[0]}
+                    </div>
+                  )}
+                </div>
+              );
+            }}
+          </form.Field>
+        )}
+        
+        {/* layer_id is now hidden and set automatically from the selected domain */}
+        
+        {/* Hide parent term selector in child mode when creating child of specific term */}
+        {!isChildMode && (
+          <form.Field name="parent_term_id">
+            {(field) => (
               <div>
-                <Label htmlFor="term-domain" className="mb-1 block font-medium">
-                  Domain
+                <Label
+                  htmlFor="term-parent-term"
+                  className="mb-1 block font-medium"
+                >
+                  Parent Term (optional)
                 </Label>
-                <DomainSelector
+                <TermSelector
                   value={field.state.value}
-                  onSelect={(domain) => {
-                    field.handleChange(domain?.id || "");
-                    // Set layer_id to the selected domain's layer_id
-                    field.form.setFieldValue("layer_id", domain?.layer_id || "");
-                  }}
+                  onSelect={(term) => field.handleChange(term?.id || "")}
                 />
                 {field.state.meta.errors.length > 0 && (
                   <div className="mt-1 text-sm text-red-600">
@@ -159,31 +229,10 @@ const TermForm: React.FC<TermFormProps> = ({ onSuccess, term }) => {
                   </div>
                 )}
               </div>
-            );
-          }}
-        </form.Field>
-        {/* layer_id is now hidden and set automatically from the selected domain */}
-        <form.Field name="parent_term_id">
-          {(field) => (
-            <div>
-              <Label
-                htmlFor="term-parent-term"
-                className="mb-1 block font-medium"
-              >
-                Parent Term (optional)
-              </Label>
-              <TermSelector
-                value={field.state.value}
-                onSelect={(term) => field.handleChange(term?.id || "")}
-              />
-              {field.state.meta.errors.length > 0 && (
-                <div className="mt-1 text-sm text-red-600">
-                  {field.state.meta.errors[0]}
-                </div>
-              )}
-            </div>
-          )}
-        </form.Field>
+            )}
+          </form.Field>
+        )}
+        
         {submitError && (
           <Alert color="failure" className="mb-2" icon={Info}>
             {submitError}

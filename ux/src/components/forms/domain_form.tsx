@@ -1,8 +1,9 @@
 import React from "react";
 import { useForm } from "@tanstack/react-form";
 import { TextInput, Textarea, Button, Alert, Label } from "flowbite-react";
-import { Info } from "lucide-react";
+import { Info, Layers } from "lucide-react";
 import type { DomainCreate, DomainOut } from "@/api/services/domains";
+import type { LayerOut } from "@/api/services/layers";
 import {
   useCreateDomain,
   useUpdateDomain,
@@ -10,21 +11,35 @@ import {
 import { LayerSelector } from "@/components/node_selectors/layer_selector";
 
 interface DomainFormProps {
-  onSuccess?: (domain: any) => void;
-  domain?: DomainOut;
+  onSuccess?: (domain: DomainOut) => void;
+  domain?: DomainOut; // For edit mode
+  // Child form props
+  parentLayerId?: string;
+  parentLayer?: LayerOut; // Full object for better UX
+  mode?: 'create' | 'edit' | 'child';
 }
 
-const DomainForm: React.FC<DomainFormProps> = ({ onSuccess, domain }) => {
+const DomainForm: React.FC<DomainFormProps> = ({ 
+  onSuccess, 
+  domain, 
+  parentLayerId,
+  parentLayer,
+  mode = 'create'
+}) => {
   const createDomainMutation = useCreateDomain();
   const updateDomainMutation = useUpdateDomain();
   const isEdit = !!domain;
+  const isChildMode = mode === 'child' || !!parentLayerId;
   const [submitError, setSubmitError] = React.useState<string | null>(null);
+  
+  const getDefaultValues = () => ({
+    title: domain?.title ?? "",
+    definition: domain?.definition ?? "",
+    layer_id: domain?.layer_id ?? parentLayerId ?? "",
+  });
+  
   const form = useForm({
-    defaultValues: {
-      title: domain?.title ?? "",
-      definition: domain?.definition ?? "",
-      layer_id: domain?.layer_id ?? "",
-    },
+    defaultValues: getDefaultValues(),
     onSubmit: async ({ value }) => {
       setSubmitError(null);
       try {
@@ -82,6 +97,22 @@ const DomainForm: React.FC<DomainFormProps> = ({ onSuccess, domain }) => {
         }}
         className="flex flex-col gap-4"
       >
+        {/* Parent Context Display */}
+        {isChildMode && parentLayer && (
+          <div className="rounded-lg bg-blue-50 p-4 dark:bg-blue-900/20">
+            <div className="flex items-center gap-2 text-sm text-blue-700 dark:text-blue-300">
+              <Info className="h-4 w-4" />
+              <span>Creating domain in layer:</span>
+            </div>
+            <div className="mt-1 flex items-center gap-2">
+              <Layers className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+              <span className="font-semibold text-blue-900 dark:text-blue-100">
+                {parentLayer.title}
+              </span>
+            </div>
+          </div>
+        )}
+
         <form.Field
           name="title"
           validators={{
@@ -133,29 +164,33 @@ const DomainForm: React.FC<DomainFormProps> = ({ onSuccess, domain }) => {
             </div>
           )}
         </form.Field>
-        <form.Field
-          name="layer_id"
-          validators={{
-            onChange: ({ value }) => (!value ? "Layer is required" : undefined),
-          }}
-        >
-          {(field) => (
-            <div>
-              <Label htmlFor="domain-layer" className="mb-1 block font-medium">
-                Layer
-              </Label>
-              <LayerSelector
-                value={field.state.value}
-                onSelect={(layer) => field.handleChange(layer?.id || "")}
-              />
-              {field.state.meta.errors.length > 0 && (
-                <div className="mt-1 text-sm text-red-600">
-                  {field.state.meta.errors[0]}
-                </div>
-              )}
-            </div>
-          )}
-        </form.Field>
+        
+        {/* Hide layer selector in child mode */}
+        {!isChildMode && (
+          <form.Field
+            name="layer_id"
+            validators={{
+              onChange: ({ value }) => (!value ? "Layer is required" : undefined),
+            }}
+          >
+            {(field) => (
+              <div>
+                <Label htmlFor="domain-layer" className="mb-1 block font-medium">
+                  Layer
+                </Label>
+                <LayerSelector
+                  value={field.state.value}
+                  onSelect={(layer) => field.handleChange(layer?.id || "")}
+                />
+                {field.state.meta.errors.length > 0 && (
+                  <div className="mt-1 text-sm text-red-600">
+                    {field.state.meta.errors[0]}
+                  </div>
+                )}
+              </div>
+            )}
+          </form.Field>
+        )}
 
         {submitError && (
           <Alert color="failure" className="mb-2" icon={Info}>
@@ -179,7 +214,9 @@ const DomainForm: React.FC<DomainFormProps> = ({ onSuccess, domain }) => {
                 : "Creating..."
               : isEdit
                 ? "Save Changes"
-                : "Create Domain"}
+                : isChildMode
+                  ? "Create Domain"
+                  : "Create Domain"}
           </Button>
         </div>
       </form>

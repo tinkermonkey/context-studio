@@ -27,6 +27,7 @@ export const QUERY_KEYS = {
   FIND: 'find',
   DATASETS: 'datasets',
   SCHEMA: 'schema',
+  NLP: 'nlp',
 } as const;
 
 export const ENDPOINTS = {
@@ -37,4 +38,5 @@ export const ENDPOINTS = {
   GRAPH: '/api/graph',
   DATASETS: '/api/datasets',
   SCHEMA: '/api/schema',
+  NLP: '/api/nlp_analysis',
 } as const;

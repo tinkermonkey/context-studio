@@ -4,6 +4,7 @@ import json
 import os
 import platform
 import uuid
+import shutil
 from datetime import datetime, timezone, timedelta
 from typing import Dict, List, Optional
 from sqlalchemy import create_engine, text
@@ -12,6 +13,7 @@ from sqlalchemy.orm import sessionmaker
 from database.utils import init_db, get_session_local
 from dataset.models import DatasetInfo, DatasetMetrics
 from utils.logger import get_logger
+from database.migrations.migration_manager import MigrationManager
 
 logger = get_logger(__name__)
 
@@ -53,6 +55,8 @@ class DatasetManager:
                 logger.warning(f"Failed to load most recent dataset: {most_recent_id}")
         else:
             logger.info("No existing datasets found during initialization")
+        
+        logger.info(f"DatasetManager initialized with datasets directory: {self.datasets_directory}")
     
     def _get_default_datasets_directory(self) -> str:
         """Get platform-specific default datasets directory."""
@@ -224,6 +228,8 @@ class DatasetManager:
     
     def create_dataset(self, title: str, filename: str) -> DatasetInfo:
         """Create a new dataset."""
+        logger.info(f"Creating new dataset with title '{title}' and filename '{filename}'")
+
         # Ensure filename ends with .db
         if not filename.endswith('.db'):
             filename = f"{filename}.db"
@@ -244,6 +250,8 @@ class DatasetManager:
         
         try:
             init_db(engine=engine)
+            # Run migrations to ensure schema is up to date
+            MigrationManager(dataset_path).migrate_to_latest()
             logger.info(f"Created new dataset database: {dataset_path}")
         except Exception as e:
             logger.error(f"Failed to initialize dataset database: {e}")
@@ -307,14 +315,15 @@ class DatasetManager:
             if self.active_engine:
                 self.active_engine.dispose()
             
-            # Create new connection
+            # Create new connection with proper sqlite-vec extension setup
             database_url = f"sqlite:///{dataset_path}"
-            engine = create_engine(database_url, connect_args={"check_same_thread": False})
+            engine = init_db(database_url=database_url)
             
             # Test connection
             with engine.connect() as conn:
                 conn.execute(text("SELECT 1"))
-            
+            # Run migrations to ensure schema is up to date
+            MigrationManager(dataset_path).migrate_to_latest()
             # Update active dataset
             self.active_dataset_id = dataset_id
             self.active_engine = engine
@@ -325,7 +334,7 @@ class DatasetManager:
             dataset_data["last_accessed"] = datetime.now(timezone.utc).isoformat()
             self._save_datasets_config()
             
-            logger.info(f"Loaded dataset: {dataset_data['title']} ({dataset_id})")
+            logger.info(f"Loaded dataset: {dataset_data['title']} ({dataset_id}) from {dataset_path}")
             return True
             
         except Exception as e:
@@ -334,6 +343,7 @@ class DatasetManager:
     
     def switch_dataset(self, dataset_id: str) -> bool:
         """Switch to the specified dataset."""
+        logger.info(f"Switching to dataset {dataset_id}...")
         if dataset_id not in self.datasets_config.get("datasets", {}):
             logger.error(f"Dataset {dataset_id} not found")
             return False
@@ -353,14 +363,15 @@ class DatasetManager:
             if self.active_engine:
                 self.active_engine.dispose()
             
-            # Create new connection
+            # Create new connection with proper sqlite-vec extension setup
             database_url = f"sqlite:///{dataset_path}"
-            engine = create_engine(database_url, connect_args={"check_same_thread": False})
+            engine = init_db(database_url=database_url)
             
             # Test connection
             with engine.connect() as conn:
                 conn.execute(text("SELECT 1"))
-            
+            # Run migrations to ensure schema is up to date
+            MigrationManager(dataset_path).migrate_to_latest()
             # Update active dataset
             self.active_dataset_id = dataset_id
             self.active_engine = engine
@@ -402,6 +413,7 @@ class DatasetManager:
     
     def delete_dataset(self, dataset_id: str) -> bool:
         """Delete a dataset."""
+        logger.info(f"Deleting dataset {dataset_id}...")
         if dataset_id not in self.datasets_config.get("datasets", {}):
             logger.error(f"Dataset {dataset_id} not found")
             return False
@@ -440,6 +452,7 @@ class DatasetManager:
     
     def add_existing_dataset(self, title: str, file_path: str) -> DatasetInfo:
         """Add an existing dataset file to the inventory."""
+        logger.info(f"Adding existing dataset with title '{title}' from file '{file_path}'")
         # Validate file exists
         if not os.path.exists(file_path):
             raise ValueError(f"Dataset file does not exist: {file_path}")
@@ -460,7 +473,6 @@ class DatasetManager:
         # If the file is not in our datasets directory, copy it
         expected_path = self.get_dataset_file_path(filename)
         if os.path.abspath(file_path) != os.path.abspath(expected_path):
-            import shutil
             shutil.copy2(file_path, expected_path)
             logger.info(f"Copied dataset file from {file_path} to {expected_path}")
             file_path = expected_path
@@ -537,6 +549,7 @@ class DatasetManager:
     
     def forget_dataset(self, dataset_id: str) -> bool:
         """Remove a dataset from inventory but leave the file intact."""
+        logger.info(f"Forgetting dataset {dataset_id} (file will be preserved)...")
         if dataset_id not in self.datasets_config.get("datasets", {}):
             logger.error(f"Dataset {dataset_id} not found")
             return False
@@ -633,6 +646,7 @@ class DatasetManager:
     
     def update_datasets_directory(self, new_directory: str) -> bool:
         """Update the datasets directory path."""
+        logger.info(f"Updating datasets directory to {new_directory}...")
         try:
             # Ensure new directory exists
             if not os.path.exists(new_directory):

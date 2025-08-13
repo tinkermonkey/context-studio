@@ -81,14 +81,14 @@ class NLPAnalysisResponse(BaseModel):
     entities: List[EntityData] = Field(default_factory=list, description="List of entity data.")
     text: str = Field(..., description="Original analyzed text.")
 
-class SuccessResponse(BaseModel):
+class NLPSuccessResponse(BaseModel):
     """
     Success response wrapper for NLP API.
     """
     success: bool = Field(default=True, description="Indicates success.")
     data: NLPAnalysisResponse
 
-class ErrorResponse(BaseModel):
+class NLPErrorResponse(BaseModel):
     """
     Error response wrapper for NLP API.
     """

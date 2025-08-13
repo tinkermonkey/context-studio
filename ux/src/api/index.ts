@@ -13,6 +13,7 @@ export * from './services/relationships';
 export * from './services/graph';
 export * from './services/datasets';
 export * from './services/schema';
+export * from './services/nlp';
 
 // Hooks
 export * from './hooks/layers';
@@ -22,8 +23,7 @@ export * from './hooks/relationships';
 export * from './hooks/graph';
 export * from './hooks/datasets';
 export * from './hooks/schema';
-export * from './hooks/datasets';
-export * from './hooks/schema';
+export * from './hooks/nlp';
 
 // Client configuration
 export * from './config';

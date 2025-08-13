@@ -8,6 +8,7 @@ from database.utils import init_db, get_db, get_dataset_manager, get_current_eng
 from api import layers, domains, terms, term_relationships, graph, datasets, schema
 from utils.logger import get_logger, ColorFormatter
 from utils.event_processor import EventProcessor
+from database.migrations.migration_manager import MigrationManager
 
 logger = get_logger(__name__)
 
@@ -47,6 +48,15 @@ def create_app(dataset_id=None, engine=None, session_local=None):
             init_db(engine=engine or get_current_engine())
             logger.info("Database initialized.")
             
+            # Run migrations to ensure schema is up to date
+            active_dataset = dataset_manager.get_active_dataset()
+            if active_dataset:
+                dataset_path = dataset_manager.get_dataset_file_path(active_dataset.filename)
+                MigrationManager(dataset_path).migrate_to_latest()
+                logger.info(f"Database migrations applied for dataset: {active_dataset.title}")
+            else:
+                logger.warning("No active dataset found after initialization.")
+
             # Initialize event processor with current dataset
             active_dataset = dataset_manager.get_active_dataset()
             if active_dataset:

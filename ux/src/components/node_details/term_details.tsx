@@ -24,6 +24,7 @@ import { useTermRelationships } from "@/api/hooks/relationships/useRelationships
 import { useTermHierarchy } from "@/api/hooks/graph/useGraph";
 import { TermRenderer } from "@/components/node_renderers/term_renderer";
 import { RelationshipTermsDisplay } from "@/components/node_renderers/relationship_terms_renderer";
+import { CreateChildButton } from "@/components/misc/create_child_button";
 import {
   CsSidebar,
   CsSidebarTitle,
@@ -33,6 +34,7 @@ import {
 import { CsMain, CsMainTitle } from "@/components/layout/cs_main";
 import type { components } from "@/api/client/types";
 import { useTerm } from "@/api";
+import { NlpAnalysisPanel } from "@/components/nlp/NlpAnalysisPanel"
 
 type TermOut = components["schemas"]["TermOut"];
 type TermRelationshipOut = components["schemas"]["TermRelationshipOut"];
@@ -114,9 +116,9 @@ export const TermDetails: React.FC<TermPageProps> = ({ term }) => {
       domain_id: term.domain_id, // Same domain
       layer_id: term.layer_id, // Same layer
       definition: "", // Not available in hierarchy data
-      parent_term_id: null, // Not needed for breadcrumb
-      title_embedding: null,
-      definition_embedding: null,
+      parent_term_id: undefined, // Not needed for breadcrumb
+      title_embedding: undefined,
+      definition_embedding: undefined,
       created_at: "",
       version: 1,
       last_modified: "",
@@ -294,7 +296,7 @@ export const TermDetails: React.FC<TermPageProps> = ({ term }) => {
           </Button>
         </div>
 
-{/* Breadcrumb */}
+        {/* Breadcrumb */}
         <div className="mb-4">
           <Breadcrumb aria-label="Term lineage breadcrumb">
             {/* Layer */}
@@ -384,6 +386,9 @@ export const TermDetails: React.FC<TermPageProps> = ({ term }) => {
         </div>
 
         <div className="space-y-6">
+          {/* NLP */}
+          <NlpAnalysisPanel text={term.title} />
+
           {/* Definition */}
           <Card>
             <h2 className="mb-3 text-xl font-semibold">Definition</h2>
@@ -396,9 +401,17 @@ export const TermDetails: React.FC<TermPageProps> = ({ term }) => {
           <Card>
             <div className="mb-4 flex items-center justify-between">
               <h2 className="text-xl font-semibold">Child Terms</h2>
-              <Badge color="gray" size="sm">
-                {childTerms?.length || 0} terms
-              </Badge>
+              <div className="flex items-center gap-2">
+                <Badge color="gray" size="sm">
+                  {childTerms?.length || 0} terms
+                </Badge>
+                <CreateChildButton
+                  parentType="term"
+                  parentId={term.id}
+                  parentObject={term}
+                  childType="term"
+                />
+              </div>
             </div>
 
             {childTermsLoading ? (

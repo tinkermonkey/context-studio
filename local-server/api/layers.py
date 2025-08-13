@@ -23,7 +23,7 @@ router = APIRouter()
 # Pydantic models for Layer
 class LayerBase(BaseModel):
     title: str = Field(..., min_length=2)
-    definition: Optional[str] = Field(None, min_length=1)
+    definition: Optional[str] = None
     primary_predicate: Optional[str] = None
 
 
@@ -198,7 +198,10 @@ def create_layer(layer: LayerCreate, db: Session = Depends(get_db)):
     if db.query(models.Layer).filter_by(title=layer.title).first():
         return conflict_error_response("Layer title must be unique.")
     title_emb = generate_embedding(layer.title)
-    def_emb = generate_embedding(layer.definition if layer.definition is not None else "")
+
+    # Always generate a definition embedding - use empty string if no definition
+    def_emb = generate_embedding(layer.definition if layer.definition and layer.definition.strip() else "")
+
     db_layer = models.Layer(
         id=str(uuid4()),
         title=layer.title,
@@ -289,7 +292,8 @@ def update_layer(id: str, layer: LayerUpdate, db: Session = Depends(get_db)):
             db_layer.title_embedding = generate_embedding(layer.title)
     if layer.definition is not None:
         db_layer.definition = layer.definition
-        db_layer.definition_embedding = generate_embedding(layer.definition if layer.definition is not None else "")
+        # Always generate a definition embedding - use empty string if no definition
+        db_layer.definition_embedding = generate_embedding(layer.definition if layer.definition and layer.definition.strip() else "")
     if layer.primary_predicate is not None:
         db_layer.primary_predicate = layer.primary_predicate
     db.commit()

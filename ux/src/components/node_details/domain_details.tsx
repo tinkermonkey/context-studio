@@ -14,6 +14,7 @@ import { Link } from "@tanstack/react-router";
 import { useLayer } from "@/api/hooks/layers/useLayers";
 import { useTerms } from "@/api/hooks/terms/useTerms";
 import { TermRenderer } from "@/components/node_renderers/term_renderer";
+import { CreateChildButton } from "@/components/misc/create_child_button";
 import {
   CsSidebar,
   CsSidebarTitle,
@@ -210,9 +211,17 @@ export const DomainDetails: React.FC<DomainDetailsProps> = ({ domain }) => {
           <Card>
             <div className="mb-4 flex items-center justify-between">
               <h2 className="text-xl font-semibold">Terms in this Domain</h2>
-              <Badge color="gray" size="sm">
-                {terms?.length || 0} terms
-              </Badge>
+              <div className="flex items-center gap-2">
+                <Badge color="gray" size="sm">
+                  {terms?.length || 0} terms
+                </Badge>
+                <CreateChildButton
+                  parentType="domain"
+                  parentId={domain.id}
+                  parentObject={domain}
+                  childType="term"
+                />
+              </div>
             </div>
 
             {termsLoading ? (

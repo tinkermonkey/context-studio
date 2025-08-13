@@ -12,9 +12,10 @@ import {
   Layers,
 } from "lucide-react";
 import { Link } from "@tanstack/react-router";
-import { useDomain } from "@/api/hooks/domains/useDomains";
+import { useDomain, useDomainsByLayer } from "@/api/hooks/domains/useDomains";
 import { useTerms } from "@/api/hooks/terms/useTerms";
 import { TermRenderer } from "@/components/node_renderers/term_renderer";
+import { CreateChildButton } from "@/components/misc/create_child_button";
 import {
   CsSidebar,
   CsSidebarTitle,
@@ -35,6 +36,10 @@ export const LayerDetails: React.FC<LayerDetailsProps> = ({ layer }) => {
   const { data: terms, isLoading: termsLoading } = useTerms({
     layer_id: layer.id,
   });
+
+  const { data: domains, isLoading: domainsLoading } = useDomainsByLayer(
+    layer.id
+  );
 
   // Group terms by domain for better organization
   const termsByDomain = React.useMemo(() => {
@@ -92,7 +97,7 @@ export const LayerDetails: React.FC<LayerDetailsProps> = ({ layer }) => {
             <div className="flex justify-between">
               <span className="text-sm">Domains:</span>
               <span className="pl-2 font-semibold">
-                {Object.keys(termsByDomain).length}
+                {domains?.length || 0}
               </span>
             </div>
           </div>
@@ -178,31 +183,37 @@ export const LayerDetails: React.FC<LayerDetailsProps> = ({ layer }) => {
           <Card>
             <div className="mb-4 flex items-center justify-between">
               <h2 className="text-xl font-semibold">Domains in this Layer</h2>
-              <Badge color="info" size="sm">
-                {terms?.length || 0} terms
-              </Badge>
+              <div className="flex items-center gap-2">
+                <Badge color="info" size="sm">
+                  {domains?.length || 0} domain{domains && domains.length !== 1 ? 's' : ''}
+                </Badge>
+                <CreateChildButton
+                  parentType="layer"
+                  parentId={layer.id}
+                  parentObject={layer}
+                  childType="domain"
+                />
+              </div>
             </div>
 
-            {termsLoading ? (
+            {domainsLoading ? (
               <div className="flex items-center justify-center py-4">
                 <Spinner size="md" />
-                <span className="ml-2">Loading terms...</span>
+                <span className="ml-2">Loading domains...</span>
               </div>
-            ) : !terms || terms.length === 0 ? (
+            ) : !domains || domains.length === 0 ? (
               <p className="text-gray-500 italic dark:text-gray-400">
-                No terms found in this layer.
+                No domains found in this layer.
               </p>
             ) : (
               <div className="space-y-4">
-                {Object.entries(termsByDomain).map(
-                  ([domainId, domainTerms]) => (
-                    <DomainTermsSection
-                      key={domainId}
-                      domainId={domainId}
-                      terms={domainTerms}
-                    />
-                  ),
-                )}
+                {domains.map((domain) => (
+                  <DomainTermsSection
+                    key={domain.id}
+                    domainId={domain.id}
+                    terms={termsByDomain[domain.id] || []}
+                  />
+                ))}
               </div>
             )}
           </Card>
@@ -233,13 +244,7 @@ const DomainTermsSection: React.FC<DomainTermsSectionProps> = ({
             <Spinner size="sm" />
           ) : domain ? (
             <div className="flex items-center gap-2">
-              <Link
-                to="/app/nodes/domain/$domainId"
-                params={{ domainId: domain.id }}
-                className="transition-colors hover:text-blue-600 dark:hover:text-blue-400"
-              >
-                {domain.title}
-              </Link>
+              <span>{domain.title}</span>
               <Link
                 to="/app/nodes/domain/$domainId"
                 params={{ domainId: domain.id }}
@@ -252,9 +257,17 @@ const DomainTermsSection: React.FC<DomainTermsSectionProps> = ({
             <span className="text-gray-500 italic">Unknown Domain</span>
           )}
         </h3>
-        <Badge color="gray" size="sm">
-          {terms.length} terms
-        </Badge>
+        <div className="flex items-center gap-2">
+          <Badge color="gray" size="sm">
+            {terms.length} term{terms.length !== 1 ? "s" : ""}
+          </Badge>
+          <CreateChildButton
+            parentType="domain"
+            parentId={domainId}
+            parentObject={domain}
+            childType="term"
+          />
+        </div>
       </div>
 
       {domain?.definition && (
