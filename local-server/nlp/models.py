@@ -1,7 +1,6 @@
 """
 Pydantic models for NLP analysis requests and responses.
 """
-
 from typing import List, Optional, Any, Dict
 from pydantic import BaseModel, Field
 
@@ -11,12 +10,30 @@ class NLPAnalysisRequest(BaseModel):
     """
     text: str = Field(..., description="Text to analyze.")
 
+class ConcepcyNode(BaseModel):
+    """
+    Represents a node in the Concepcy graph.
+    """
+    id: str = Field(..., description="Unique identifier for the node.")
+    label: str = Field(..., description="Label for the node.")
+    language: str = Field(..., description="Language of the node.")
+    term: str = Field(..., description="Term associated with the node.")
+
+class ConcepcyRelation(BaseModel):
+    """
+    Represents a single relation in Concepcy.
+    """
+    subject: ConcepcyNode = Field(None, description="The 'start' of the concepcy relation.")
+    object: ConcepcyNode = Field(None, description="The 'end' of the concepcy relation.")
+    relation: str = Field(..., description="The type of the concepcy relation.")
+    text: Optional[str] = Field(None, description="Text representation of the relation.")
+    weight: Optional[float] = Field(None, description="Weight of the relation.")
+
 class ConcepcyData(BaseModel):
     """
     ConceptNet/Concepcy data for a token.
     """
-    related_terms: Optional[List[str]] = Field(default_factory=list, description="Related terms from ConceptNet.")
-    score: Optional[float] = Field(None, description="ConceptNet similarity score.")
+    related_terms: Optional[List[dict]] = Field(default_factory=list, description="Related terms from ConceptNet.")
 
 class Sense2VecData(BaseModel):
     """
@@ -50,6 +67,16 @@ class DBpediaData(BaseModel):
     similarity: Optional[float] = Field(None, description="DBpedia similarity score.")
     raw_result: Optional[Any] = Field(None, description="Raw DBpedia result.")
 
+class TokenReference(BaseModel):
+    """
+    Reference to a token by its index in the token list.
+    """
+    index: int = Field(None, description="Index of the token in the token list.")
+    text: str = Field(None, description="Token text.")
+    pos: str = Field(None, description="Part of speech tag.")
+    start_idx: int = Field(None, description="Start character position.")
+    end_idx: int = Field(None, description="End character position.")
+
 class TokenData(BaseModel):
     """
     Data for a single token in the analyzed text.
@@ -57,9 +84,24 @@ class TokenData(BaseModel):
     text: str = Field(None, description="Token text.")
     lemma: Optional[str] = Field(None, description="Token lemma.")
     pos: Optional[str] = Field(None, description="Part of speech tag.")
+    dep: Optional[str] = Field(None, description="Syntactic Dependency Relation.")
     tag: Optional[str] = Field(None, description="Detailed POS tag.")
-    start: int = Field(None, description="Start character position.")
-    end: int = Field(None, description="End character position.")
+    start_idx: int = Field(None, description="Start character position.")
+    end_idx: int = Field(None, description="End character position.")
+    head: Optional[TokenReference] = Field(None, description="Head token reference.")
+    children: List[TokenReference] = Field(default_factory=list, description="List of child token references.")
+    ancestors: List[TokenReference] = Field(default_factory=list, description="List of ancestor token references.")
+    subtree: List[TokenReference] = Field(default_factory=list, description="List of tokens in the subtree.")
+    is_alpha: Optional[bool] = Field(None, description="Is alphabetic.")
+    is_stop: Optional[bool] = Field(None, description="Is stop word.")
+    is_oov: Optional[bool] = Field(None, description="Is out-of-vocabulary.")
+    like_url: Optional[bool] = Field(None, description="Is like a URL.")
+    is_digit: Optional[bool] = Field(None, description="Is a digit.")
+    ent_iob: Optional[str] = Field(None, description="Inside-Outside-Beginning tag for named entities.")
+    ent_type: Optional[str] = Field(None, description="Named entity type.")
+    ent_kb_id: Optional[str] = Field(None, description="Knowledge base ID for the entity.")
+    ent_id: Optional[int] = Field(None, description="Entity ID.")
+    sentiment: Optional[float] = Field(None, description="Sentiment score.")
     concepcy: Optional[ConcepcyData] = Field(default_factory=ConcepcyData, description="Concepcy data.")
     wordnet: Optional[WordNetData] = Field(default_factory=WordNetData, description="WordNet data.")
     sense2vec: Optional[Sense2VecData] = Field(default_factory=Sense2VecData, description="Sense2vec data.")

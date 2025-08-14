@@ -14,13 +14,14 @@ export const NlpAnalysisPanel: React.FC<NlpAnalysisPanelProps> = ({ text }) => {
   const [hasAnalyzed, setHasAnalyzed] = useState(false);
 
   // Custom hook for API call
-  const queryKey = ["nlp", "analysis", JSON.stringify({ text: debouncedText })];
+  const lowercasedText = debouncedText.toLowerCase();
+  const queryKey = ["nlp", "analysis", JSON.stringify({ text: lowercasedText })];
   const {
     data: analysisResult,
     isLoading: loading,
     error,
     refetch,
-  } = useNLPAnalysis(debouncedText, { enabled: false, queryKey });
+  } = useNLPAnalysis(lowercasedText, { enabled: false, queryKey });
 
   // Sync prop text changes
   useEffect(() => {
@@ -35,7 +36,7 @@ export const NlpAnalysisPanel: React.FC<NlpAnalysisPanelProps> = ({ text }) => {
     if (!hasAnalyzed) return;
     const handler = setTimeout(() => {
       setDebouncedText(pendingText);
-      refetch();
+      refetch(); // refetch will use lowercasedText due to hook dependency
       apiLogger.info('NLP analysis re-triggered due to text change');
     }, 1000);
     return () => clearTimeout(handler);
@@ -52,7 +53,7 @@ export const NlpAnalysisPanel: React.FC<NlpAnalysisPanelProps> = ({ text }) => {
   const handleAnalyze = useCallback(() => {
     setDebouncedText(pendingText);
     setHasAnalyzed(true);
-    refetch();
+    refetch(); // refetch will use lowercasedText due to hook dependency
     apiLogger.info('NLP analysis triggered by user');
   }, [pendingText, refetch]);
 

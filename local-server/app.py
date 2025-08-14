@@ -1,20 +1,24 @@
 import uvicorn
 import argparse
-import logging
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
-from database.utils import init_db, get_db, get_dataset_manager, get_current_engine
-from api import layers, domains, terms, term_relationships, graph, datasets, schema
-from utils.logger import get_logger, ColorFormatter
-from utils.event_processor import EventProcessor
+
+from api import layers, domains, terms, term_relationships, graph, datasets, nlp_analysis, schema
+from api.graph import get_cached_graph_service, invalidate_graph_cache
 from database.migrations.migration_manager import MigrationManager
+from database.utils import init_db, get_db, get_dataset_manager, get_current_engine, cleanup_database_resources
+from nlp.pipeline import get_pipeline
+from utils.access_log_middleware import AccessLogMiddleware
+from utils.event_processor import EventProcessor
+from utils.logger import get_logger
 
 logger = get_logger(__name__)
 
 # Dependency injection for testability
 def create_app(dataset_id=None, engine=None, session_local=None):
     logger.info("Creating FastAPI application...")
+    
     @asynccontextmanager
     async def lifespan(app):
         try:
@@ -65,10 +69,38 @@ def create_app(dataset_id=None, engine=None, session_local=None):
                 app.state.event_processor.start()
                 logger.info(f"Event processor started for dataset: {active_dataset.title}")
             
+            # Preload NLP pipeline to reduce API response times
+            logger.info("Preloading NLP pipeline...")
+            try:
+                pipeline = get_pipeline()
+                if pipeline.get_nlp() is not None:
+                    pipeline.process("Welcome")
+                    logger.info("NLP pipeline successfully preloaded")
+                else:
+                    error_msg = pipeline.get_error()
+                    logger.warning(f"NLP pipeline preload failed: {error_msg}")
+            except Exception as e:
+                logger.error(f"Error preloading NLP pipeline: {e}")
+            
+            # Preload GraphService to eliminate first-request delay
+            logger.info("Preloading GraphService...")
+            try:
+                graph_service = get_cached_graph_service()
+                logger.info("GraphService successfully preloaded")
+            except Exception as e:
+                logger.error(f"Error preloading GraphService: {e}")
+            
             yield
         finally:
             if hasattr(app.state, 'event_processor') and app.state.event_processor:
                 app.state.event_processor.stop()
+            # Clean up graph service cache
+            try:
+                invalidate_graph_cache()
+            except Exception as e:
+                logger.warning(f"Error invalidating graph cache: {e}")
+            # Clean up database resources and event listeners
+            cleanup_database_resources()
             logger.info("Shutting down application.")
 
     app = FastAPI(lifespan=lifespan)
@@ -91,13 +123,15 @@ def create_app(dataset_id=None, engine=None, session_local=None):
     app.include_router(datasets.router, prefix="/api", tags=["datasets"])
     app.include_router(schema.router, prefix="/api", tags=["schema"])
     # Integrate NLP router
-    from api import nlp_analysis
     app.include_router(nlp_analysis.router, prefix="/api", tags=["nlp"])
     return app
 
 # Default app for production
 dataset_manager = get_dataset_manager()
 app = create_app()
+
+# Add access logging middleware
+app.add_middleware(AccessLogMiddleware)
 
 app.add_middleware(
     CORSMiddleware,
@@ -108,40 +142,21 @@ app.add_middleware(
 )
 
 if __name__ == "__main__":
-    # Set up consistent logging using the custom ColorFormatter
-    root_logger = logging.getLogger()
-
-    # Remove all existing handlers
-    for handler in root_logger.handlers[:]:
-        root_logger.removeHandler(handler)
-
-    # Add our custom handler
-    handler = logging.StreamHandler()
-    formatter = ColorFormatter('[%(asctime)s] %(levelname)s in %(name)s: %(message)s', "%Y-%m-%d %H:%M:%S")
-    handler.setFormatter(formatter)
-    root_logger.addHandler(handler)
-    root_logger.setLevel(logging.INFO)
-
-    # Also set Uvicorn loggers to use the same formatter
-    for name in ["uvicorn", "uvicorn.error", "uvicorn.access"]:
-        uv_logger = logging.getLogger(name)
-        for h in uv_logger.handlers[:]:
-            uv_logger.removeHandler(h)
-        uv_logger.addHandler(handler)
-        uv_logger.setLevel(logging.INFO)
-
     parser = argparse.ArgumentParser(description="Run the Context Studio FastAPI server.")
     parser.add_argument('--host', type=str, default="127.0.0.1", help='Host IP to run the server on (default: 127.0.0.1)')
     parser.add_argument('--port', type=int, default=8000, help='Port to run the server on (default: 8000)')
     args = parser.parse_args()
+    
     try:
         logger.info(f"Starting server on http://{args.host}:{args.port} ...")
+        
         uvicorn.run(
             "app:app",
             host=args.host,
             port=args.port,
             reload=True,
-            #log_config=None  # Use root logger config
+            access_log=False,  # Disable uvicorn's default access logs (we use custom middleware)
+            log_level="info"   # Keep uvicorn's other logs (startup, errors, etc.) at info level
         )
     except KeyboardInterrupt:
         logger.info("Keyboard interrupt received. Exiting.")

@@ -3,41 +3,64 @@ NLP data processors for token and entity extraction.
 """
 
 from typing import List, Any
-from nlp.models import TokenData, EntityData, ConcepcyData, WordNetData, DBpediaData, Sense2VecData, NLPAnalysisResponse
+from nlp.models import TokenData, EntityData, ConcepcyData, WordNetData, DBpediaData, Sense2VecData, NLPAnalysisResponse, TokenReference
 from utils.logger import get_logger
 
 logger = get_logger("nlp_processors")
 
 
-def extract_token_data(doc) -> List[TokenData]:
+def extract_token_data(doc, filter: bool = False) -> List[TokenData]:
     """
     Extract token-level data from spaCy doc.
+    By default, filters out punctuation and stopword tokens. Set filter=False to disable filtering.
     """
     tokens = []
+    doc_tokens = list(doc)
+    def make_token_ref(tok):
+        return TokenReference(
+            index=tok.i if hasattr(tok, 'i') else None,
+            text=str(tok.text) if hasattr(tok, 'text') else None,
+            pos=str(tok.pos_) if hasattr(tok, 'pos_') else None,
+            start_idx=tok.idx if hasattr(tok, 'idx') else None,
+            end_idx=(tok.idx + len(tok.text)) if hasattr(tok, 'idx') and hasattr(tok, 'text') else None
+        )
 
-    for token in doc:
+    for token in doc_tokens:
+        # Filtering: skip punctuation and stopwords if filter is True
+        is_punct = (hasattr(token, 'is_punct') and token.is_punct)
+        is_stop = (hasattr(token, 'is_stop') and token.is_stop)
+        if filter and (is_punct or is_stop):
+            continue
+
         concepcy = None
         wordnet = None
         try:
             # Concepcy extraction
+            # Iterate through the relationship types
+            terms_list = []
             try:
                 if hasattr(token._, "relatedto") and token._.relatedto:
                     related_terms = token._.relatedto
-                    # Ensure related_terms is iterable and convert to list of strings
                     if related_terms is not None:
+                        # Expecting related_terms to be iterable of dicts or convertible to dicts
                         if hasattr(related_terms, '__iter__') and not isinstance(related_terms, (str, bytes)):
-                            terms_list = [str(t) for t in related_terms]
+                            for t in related_terms:
+                                if isinstance(t, dict):
+                                    terms_list.append(t)
+                                else:
+                                    # If not dict, wrap as dict with 'term' key
+                                    terms_list.append({"term": str(t)})
                         else:
-                            terms_list = [str(related_terms)]
-                        
-                        score_val = None
-                        if hasattr(token._, "concepcy_score") and token._.concepcy_score is not None:
-                            score_val = float(token._.concepcy_score)
-                        
-                        concepcy = ConcepcyData(
-                            related_terms=terms_list,
-                            score=score_val
-                        )
+                            # Single value, wrap as dict
+                            if isinstance(related_terms, dict):
+                                terms_list = [related_terms]
+                            else:
+                                terms_list = [{"term": str(related_terms)}]
+                                
+                if len(terms_list):
+                    concepcy = ConcepcyData(
+                        related_terms=terms_list,
+                    )
             except Exception as ce:
                 logger.warning(f"Concepcy extraction failed for '{token.text}': {ce}")
 
@@ -48,8 +71,6 @@ def extract_token_data(doc) -> List[TokenData]:
                     synsets = []
                     lemmas = []
                     definitions = []
-                    
-                    # Safely extract synsets
                     try:
                         synset_iter = wn.synsets()
                         if hasattr(synset_iter, '__iter__'):
@@ -69,8 +90,6 @@ def extract_token_data(doc) -> List[TokenData]:
                                     logger.debug(f"Failed to process synset for '{token.text}': {synset_e}")
                     except Exception as synsets_e:
                         logger.debug(f"Failed to get synsets for '{token.text}': {synsets_e}")
-                    
-                    # Safely extract lemmas
                     try:
                         lemma_iter = wn.lemmas()
                         if hasattr(lemma_iter, '__iter__'):
@@ -86,8 +105,6 @@ def extract_token_data(doc) -> List[TokenData]:
                                     logger.debug(f"Failed to process lemma for '{token.text}': {lemma_e}")
                     except Exception as lemmas_e:
                         logger.debug(f"Failed to get lemmas for '{token.text}': {lemmas_e}")
-                    
-                    # Always create WordNetData object if WordNet extension is available
                     wordnet = WordNetData(
                         synsets=synsets,
                         lemmas=lemmas,
@@ -95,8 +112,8 @@ def extract_token_data(doc) -> List[TokenData]:
                     )
             except Exception as we:
                 logger.warning(f"WordNet extraction failed for '{token.text}': {we}")
-            
-            # Extract Sense2Vec data
+
+            # Sense2Vec extraction
             sense2vec_data = Sense2VecData()
             if hasattr(token._, 'in_s2v'):
                 try:
@@ -105,22 +122,19 @@ def extract_token_data(doc) -> List[TokenData]:
                     sense2vec_data.freq = int(token._.s2v_freq) if hasattr(token._, 's2v_freq') and token._.s2v_freq is not None else None
                     sense2vec_data.other_senses = list(token._.s2v_other_senses) if hasattr(token._, 's2v_other_senses') and token._.s2v_other_senses else []
                     sense2vec_data.most_similar = []
-                    
                     if hasattr(token._, 's2v_most_similar'):
                         most_similar = token._.s2v_most_similar(5)
                         if isinstance(most_similar, list) and len(most_similar) > 0:
                             for similar in most_similar:
                                 try:
-                                    # Handle the tuple structure: ((word, sense), score)
                                     if isinstance(similar, tuple) and len(similar) == 2:
                                         word_sense_tuple, score = similar
                                         if isinstance(word_sense_tuple, tuple) and len(word_sense_tuple) == 2:
                                             word, sense = word_sense_tuple
-                                            # Convert numpy.float32 to regular float
                                             score_val = float(score) if score is not None else 0.0
                                             sense2vec_data.most_similar.append({
-                                                "word": str(word), 
-                                                "sense": str(sense), 
+                                                "word": str(word),
+                                                "sense": str(sense),
                                                 "score": score_val
                                             })
                                 except Exception as sim_e:
@@ -129,26 +143,82 @@ def extract_token_data(doc) -> List[TokenData]:
                             logger.debug(f"s2v found nothing similar for: {sense2vec_data.key}")
                 except Exception as s2v_e:
                     logger.debug(f"Sense2Vec extraction failed for '{token.text}': {s2v_e}")
-                    # Reset to default values on error
                     sense2vec_data = Sense2VecData()
+
             # TokenData construction
             try:
-                # Safely extract token attributes
                 text_val = str(token.text) if hasattr(token, 'text') else ""
                 lemma_val = str(token.lemma_) if hasattr(token, 'lemma_') and token.lemma_ else None
                 pos_val = str(token.pos_) if hasattr(token, 'pos_') and token.pos_ else None
-                
+                dep_val = str(token.dep_) if hasattr(token, 'dep_') and token.dep_ else None
+                tag_val = str(token.tag_) if hasattr(token, 'tag_') and token.tag_ else None
+                start_idx_val = token.idx if hasattr(token, 'idx') else None
+                end_idx_val = (token.idx + len(token.text)) if hasattr(token, 'idx') and hasattr(token, 'text') else None
+
+                head_ref = None
+                if hasattr(token, 'head') and token.head is not token:
+                    head_ref = make_token_ref(token.head)
+
+                children_refs = []
+                if hasattr(token, 'children'):
+                    try:
+                        children_refs = [make_token_ref(child) for child in token.children]
+                    except Exception as e:
+                        logger.debug(f"Failed to extract children for '{token.text}': {e}")
+
+                ancestors_refs = []
+                if hasattr(token, 'ancestors'):
+                    try:
+                        ancestors_refs = [make_token_ref(ancestor) for ancestor in token.ancestors]
+                    except Exception as e:
+                        logger.debug(f"Failed to extract ancestors for '{token.text}': {e}")
+
+                subtree_refs = []
+                if hasattr(token, 'subtree'):
+                    try:
+                        subtree_refs = [make_token_ref(subtok) for subtok in token.subtree]
+                    except Exception as e:
+                        logger.debug(f"Failed to extract subtree for '{token.text}': {e}")
+
+                is_alpha_val = bool(token.is_alpha) if hasattr(token, 'is_alpha') else None
+                is_stop_val = bool(token.is_stop) if hasattr(token, 'is_stop') else None
+                is_oov_val = bool(token.is_oov) if hasattr(token, 'is_oov') else None
+                like_url_val = bool(token.like_url) if hasattr(token, 'like_url') else None
+                is_digit_val = bool(token.is_digit) if hasattr(token, 'is_digit') else None
+                ent_iob_val = str(token.ent_iob_) if hasattr(token, 'ent_iob_') and token.ent_iob_ else None
+                ent_type_val = str(token.ent_type_) if hasattr(token, 'ent_type_') and token.ent_type_ else None
+                ent_kb_id_val = str(token.ent_kb_id_) if hasattr(token, 'ent_kb_id_') and token.ent_kb_id_ else None
+                ent_id_val = int(token.ent_id) if hasattr(token, 'ent_id') and token.ent_id is not None else None
+                sentiment_val = float(token.sentiment) if hasattr(token, 'sentiment') and token.sentiment is not None else None
+
                 tokens.append(TokenData(
                     text=text_val,
                     lemma=lemma_val,
                     pos=pos_val,
+                    dep=dep_val,
+                    tag=tag_val,
+                    start_idx=start_idx_val,
+                    end_idx=end_idx_val,
+                    head=head_ref,
+                    children=children_refs,
+                    ancestors=ancestors_refs,
+                    subtree=subtree_refs,
+                    is_alpha=is_alpha_val,
+                    is_stop=is_stop_val,
+                    is_oov=is_oov_val,
+                    like_url=like_url_val,
+                    is_digit=is_digit_val,
+                    ent_iob=ent_iob_val,
+                    ent_type=ent_type_val,
+                    ent_kb_id=ent_kb_id_val,
+                    ent_id=ent_id_val,
+                    sentiment=sentiment_val,
                     concepcy=concepcy,
                     wordnet=wordnet,
                     sense2vec=sense2vec_data,
                 ))
             except Exception as te:
                 logger.warning(f"TokenData construction failed for '{token.text}': {te}")
-                # Create minimal token data on error
                 try:
                     tokens.append(TokenData(text=str(token.text) if hasattr(token, 'text') else ""))
                 except Exception as backup_e:

@@ -38,7 +38,7 @@ export const LayerDetails: React.FC<LayerDetailsProps> = ({ layer }) => {
   });
 
   const { data: domains, isLoading: domainsLoading } = useDomainsByLayer(
-    layer.id
+    layer.id,
   );
 
   // Group terms by domain for better organization
@@ -96,9 +96,7 @@ export const LayerDetails: React.FC<LayerDetailsProps> = ({ layer }) => {
             </div>
             <div className="flex justify-between">
               <span className="text-sm">Domains:</span>
-              <span className="pl-2 font-semibold">
-                {domains?.length || 0}
-              </span>
+              <span className="pl-2 font-semibold">{domains?.length || 0}</span>
             </div>
           </div>
         </CsSidebarSection>
@@ -118,22 +116,6 @@ export const LayerDetails: React.FC<LayerDetailsProps> = ({ layer }) => {
                 {layer.version || 1}
               </div>
             </div>
-            {layer.title_embedding && (
-              <div>
-                <span className="font-semibold">Title Embedding:</span>
-                <div className="text-gray-600 dark:text-gray-400">
-                  {layer.title_embedding.length} dimensions
-                </div>
-              </div>
-            )}
-            {layer.definition_embedding && (
-              <div>
-                <span className="font-semibold">Definition Embedding:</span>
-                <div className="text-gray-600 dark:text-gray-400">
-                  {layer.definition_embedding.length} dimensions
-                </div>
-              </div>
-            )}
           </div>
         </CsSidebarSection>
       </CsSidebar>
@@ -141,9 +123,7 @@ export const LayerDetails: React.FC<LayerDetailsProps> = ({ layer }) => {
       <CsMain>
         <div className="mb-6 flex items-center justify-between">
           <div>
-            <CsMainTitle icon={Layers}>
-              {layer.title}
-            </CsMainTitle>
+            <CsMainTitle icon={Layers}>{layer.title}</CsMainTitle>
             <div className="flex items-center gap-4 text-sm text-gray-600 dark:text-gray-400">
               <div className="flex items-center gap-1">
                 <span className="font-mono">{layer.id}</span>
@@ -185,7 +165,8 @@ export const LayerDetails: React.FC<LayerDetailsProps> = ({ layer }) => {
               <h2 className="text-xl font-semibold">Domains in this Layer</h2>
               <div className="flex items-center gap-2">
                 <Badge color="info" size="sm">
-                  {domains?.length || 0} domain{domains && domains.length !== 1 ? 's' : ''}
+                  {domains?.length || 0} domain
+                  {domains && domains.length !== 1 ? "s" : ""}
                 </Badge>
                 <CreateChildButton
                   parentType="layer"
@@ -261,12 +242,14 @@ const DomainTermsSection: React.FC<DomainTermsSectionProps> = ({
           <Badge color="gray" size="sm">
             {terms.length} term{terms.length !== 1 ? "s" : ""}
           </Badge>
-          <CreateChildButton
-            parentType="domain"
-            parentId={domainId}
-            parentObject={domain}
-            childType="term"
-          />
+          {domain && (
+            <CreateChildButton
+              parentType="domain"
+              parentId={domainId}
+              parentObject={domain}
+              childType="term"
+            />
+          )}
         </div>
       </div>
 
@@ -286,7 +269,7 @@ const DomainTermsSection: React.FC<DomainTermsSectionProps> = ({
             <Link
               to="/app/nodes/term/$termId"
               params={{ termId: term.id }}
-              className="text-gray-400 ml-2 transition-colors hover:text-blue-600 dark:hover:text-blue-400"
+              className="ml-2 text-gray-400 transition-colors hover:text-blue-600 dark:hover:text-blue-400"
             >
               <CircleArrowRight className="h-4 w-4" />
             </Link>

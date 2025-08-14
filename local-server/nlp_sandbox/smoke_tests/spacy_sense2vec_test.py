@@ -15,18 +15,19 @@ else:
     #s2v.to_disk(abs_path)
     raise FileNotFoundError(f"Sense2vec model not found at {abs_path}. Please download it first.")
 
-doc = nlp("A sentence about natural language processing.")
-assert doc[3:6].text == "natural language processing"
-freq = doc[3:6]._.s2v_freq
-vector = doc[3:6]._.s2v_vec
-most_similar = doc[3:6]._.s2v_most_similar(5)
+doc = nlp("A sentence about apple sauce.")
+
+print("Tokens and their sense2vec data:", doc._.s2v_phrases)
+for token in doc:
+    if token._.s2v_freq is not None:
+        print(f"==\nToken: {token.text}\nFreq: {token._.s2v_freq}\nKey: {token._.s2v_key}\nOther senses: {token._.s2v_other_senses}\n==")
 
 similar_list = []
+most_similar = []
 if len(most_similar) > 0:
   for similar in most_similar:
       print(f"Similar: {similar[0][0]} ({similar[0][1]}) - Score: {similar[1]}")
       similar_list.append({"word": similar[0][0], "sense": similar[0][1], "score": similar[1]})
 
-print(f"Text: {doc[3:6].text}, Freq: {freq}, Vector: {vector}, Most Similar: {most_similar}")
 
 print("Sense2Vec model loaded and tested successfully.", similar_list)

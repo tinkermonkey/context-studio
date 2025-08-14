@@ -1,15 +1,14 @@
-import os
 import threading
-from typing import Optional
 import spacy
 import concepcy
 import spacy_dbpedia_spotlight
+from typing import Optional
 from spacy_wordnet.wordnet_annotator import WordnetAnnotator
+from config import get_settings
+from utils.logger import get_logger
 
-s2v_config = {
-    "local_path": "./downloads/s2v_reddit_2015_md"
-}
-s2v_config["abs_path"] = os.path.abspath(s2v_config["local_path"]) 
+logger = get_logger(__name__)
+settings = get_settings()
 
 class NLPPipeline:
     """
@@ -29,10 +28,12 @@ class NLPPipeline:
         """
         Initialize spaCy pipeline and add components in correct order.
         """
-        import logging
-        logger = logging.getLogger("nlp_pipeline")
+        logger.info(f"Initializing NLP pipeline with model: {self.model_name}")
+        
         try:
+            logger.info("Loading spaCy model...")
             self.nlp = spacy.load(self.model_name)
+            logger.info("spaCy model loaded successfully")
         except Exception as e:
             self._error = f"spaCy model loading failed: {e}"
             logger.error(self._error)
@@ -40,37 +41,46 @@ class NLPPipeline:
 
         # Add custom components
         try:
-            self.nlp.add_pipe("concepcy")
+            logger.info("Adding concepcy component...")
+            self.nlp.add_pipe("concepcy", config=settings.concepcy_config)
+            logger.info("concepcy component added successfully")
         except Exception as e:
             self._error = f"Failed to add concepcy: {e}"
             logger.error(self._error)
             return
         
         try:
+            logger.info("Adding dbpedia_spotlight component...")
             self.nlp.add_pipe("dbpedia_spotlight")
+            logger.info("dbpedia_spotlight component added successfully")
         except Exception as e:
             self._error = f"Failed to add dbpedia_spotlight: {e}"
             logger.error(self._error)
             return
         
         try:
+            logger.info("Adding spacy_wordnet component...")
             self.nlp.add_pipe("spacy_wordnet", after="tagger")
+            logger.info("spacy_wordnet component added successfully")
         except Exception as e:
             self._error = f"Failed to add spacy_wordnet: {e}"
             logger.error(self._error)
             return
         
         try:
+            logger.info("Adding sense2vec component...")
             self.s2v = self.nlp.add_pipe("sense2vec")
             # Load the S2V dataset
-            print(f"Loading sense2vec model from {s2v_config['abs_path']}...")
-            self.s2v.from_disk(s2v_config["abs_path"])
+            logger.info(f"Loading sense2vec model from {settings.s2v_config['abs_path']}...")
+            self.s2v.from_disk(settings.s2v_config["abs_path"])
+            logger.info("sense2vec component loaded successfully")
         except Exception as e:
             self._error = f"Failed to add sense2vec: {e}"
             logger.error(self._error)
             return
         
         self._initialized = True
+        logger.info("NLP pipeline initialization completed successfully")
 
     def process(self, text: str):
         """Process text through the spaCy pipeline"""
@@ -90,6 +100,24 @@ class NLPPipeline:
         Return error message if initialization failed.
         """
         return self._error
+
+    def is_initialized(self) -> bool:
+        """
+        Check if the pipeline is fully initialized and ready to use.
+        """
+        return self._initialized and self.nlp is not None
+
+    def get_status(self) -> dict:
+        """
+        Get the current status of the pipeline for debugging/monitoring.
+        """
+        return {
+            "initialized": self._initialized,
+            "model_name": self.model_name,
+            "has_nlp": self.nlp is not None,
+            "has_s2v": self.s2v is not None,
+            "error": self._error
+        }
 
 _pipeline_instance: Optional[NLPPipeline] = None
 _pipeline_lock = threading.Lock()

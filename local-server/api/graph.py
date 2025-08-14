@@ -4,34 +4,96 @@ Graph API endpoints for Context Studio
 This module provides FastAPI endpoints for graph operations using both
 SPARQL and NetworkX capabilities.
 """
+import threading
 
 from fastapi import APIRouter, Depends, HTTPException, Query
-from sqlalchemy.orm import Session
 from pydantic import BaseModel
 from typing import List, Dict, Any, Optional
 
-from database.utils import get_session_local, get_engine
+from database.utils import get_current_session_local, get_dataset_manager
 from graph.graph_service import GraphService
 from utils.logger import get_logger
 
 logger = get_logger(__name__)
 
+# Global cached graph service with session management
+_cached_graph_service = None
+_cached_session = None
+_graph_service_lock = None
+_graph_cache_dataset_id = None
+
+def get_cached_graph_service() -> GraphService:
+    """Get a cached GraphService instance, creating it if necessary."""
+    global _cached_graph_service, _cached_session, _graph_service_lock, _graph_cache_dataset_id
+    
+    if _graph_service_lock is None:
+        _graph_service_lock = threading.Lock()
+    
+    # Get current dataset info
+    dataset_manager = get_dataset_manager()
+    active_dataset = dataset_manager.get_active_dataset()
+    
+    if not active_dataset:
+        raise RuntimeError("No active dataset available for graph service")
+    
+    current_dataset_id = active_dataset.id
+    
+    # Check if we need to create/recreate the graph service
+    if (_cached_graph_service is None or 
+        _graph_cache_dataset_id != current_dataset_id):
+        
+        with _graph_service_lock:
+            # Double-check pattern
+            if (_cached_graph_service is None or 
+                _graph_cache_dataset_id != current_dataset_id):
+                
+                logger.info(f"Creating cached GraphService for dataset: {active_dataset.title}")
+                
+                # Clean up old session if exists
+                if _cached_session:
+                    try:
+                        _cached_session.close()
+                    except:
+                        pass
+                
+                # Create new session for the current dataset
+                session_local = get_current_session_local()
+                if not session_local:
+                    raise RuntimeError("No session available for current dataset")
+                
+                _cached_session = session_local()
+                _cached_graph_service = GraphService(_cached_session)
+                _graph_cache_dataset_id = current_dataset_id
+                logger.info("GraphService cached successfully")
+    
+    return _cached_graph_service
+
+def invalidate_graph_cache():
+    """Invalidate the cached graph service (call when data changes)."""
+    global _cached_graph_service, _cached_session, _graph_cache_dataset_id
+    
+    if _graph_service_lock is None:
+        _graph_service_lock = threading.Lock()
+    
+    with _graph_service_lock:
+        if _cached_graph_service:
+            logger.info("Invalidating GraphService cache")
+            _cached_graph_service = None
+            _graph_cache_dataset_id = None
+            
+            if _cached_session:
+                try:
+                    _cached_session.close()
+                except:
+                    pass
+                _cached_session = None
+
 # Create router
 router = APIRouter(prefix="/graph", tags=["Graph"])
 
-# Dependency to get database session
-def get_db_session():
-    engine = get_engine()
-    SessionLocal = get_session_local(engine)
-    session = SessionLocal()
-    try:
-        yield session
-    finally:
-        session.close()
-
-# Dependency to get graph service
-def get_graph_service(db_session: Session = Depends(get_db_session)) -> GraphService:
-    return GraphService(db_session)
+# Dependency to get graph service (cached)
+def get_graph_service() -> GraphService:
+    return get_cached_graph_service()
 
 # Pydantic models for request/response
 class SPARQLQuery(BaseModel):

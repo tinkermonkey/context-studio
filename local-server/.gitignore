@@ -1,5 +1,5 @@
 # Local logs
-logs/
+**/logs/**
 
 # Local downloads
 downloads/
