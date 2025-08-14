@@ -25,6 +25,11 @@ def extract_token_data(doc, filter: bool = False) -> List[TokenData]:
             end_idx=(tok.idx + len(tok.text)) if hasattr(tok, 'idx') and hasattr(tok, 'text') else None
         )
 
+    from config import get_settings
+    from nlp.models import ConcepcyRelation, ConcepcyNode
+    settings = get_settings()
+    relations_of_interest = [r.lower() for r in settings.concepcy_config.get("relations_of_interest", [])]
+
     for token in doc_tokens:
         # Filtering: skip punctuation and stopwords if filter is True
         is_punct = (hasattr(token, 'is_punct') and token.is_punct)
@@ -36,27 +41,41 @@ def extract_token_data(doc, filter: bool = False) -> List[TokenData]:
         wordnet = None
         try:
             # Concepcy extraction
-            # Iterate through the relationship types
             terms_list = []
             try:
-                if hasattr(token._, "relatedto") and token._.relatedto:
-                    related_terms = token._.relatedto
-                    if related_terms is not None:
-                        # Expecting related_terms to be iterable of dicts or convertible to dicts
-                        if hasattr(related_terms, '__iter__') and not isinstance(related_terms, (str, bytes)):
-                            for t in related_terms:
-                                if isinstance(t, dict):
-                                    terms_list.append(t)
-                                else:
-                                    # If not dict, wrap as dict with 'term' key
-                                    terms_list.append({"term": str(t)})
-                        else:
-                            # Single value, wrap as dict
-                            if isinstance(related_terms, dict):
-                                terms_list = [related_terms]
-                            else:
-                                terms_list = [{"term": str(related_terms)}]
-                                
+                for rel in relations_of_interest:
+                    if hasattr(token._, rel):
+                        rel_val = getattr(token._, rel)
+                        if rel_val:
+                            # rel_val can be a list or a single item
+                            rel_items = rel_val if (hasattr(rel_val, '__iter__') and not isinstance(rel_val, (str, bytes, dict))) else [rel_val]
+                            for item in rel_items:
+                                # Try to extract subject/object/text/weight if present, else fallback
+                                try:
+                                    # If item is already a dict with keys, try to extract fields
+                                    if isinstance(item, dict):
+                                        subject = item.get('start')
+                                        object_ = item.get('end')
+                                        relation = item.get('relation', rel)
+                                        text = item.get('text')
+                                        weight = item.get('weight')
+
+                                        # If subject/object are dicts, convert to ConcepcyNode
+                                        if isinstance(subject, dict):
+                                            subject = ConcepcyNode(**subject)
+                                        if isinstance(object_, dict):
+                                            object_ = ConcepcyNode(**object_)
+                                        terms_list.append(ConcepcyRelation(
+                                            subject=subject,
+                                            object=object_,
+                                            relation=relation,
+                                            text=text,
+                                            weight=weight
+                                        ))
+                                    else:
+                                        logger.warning(f"Unexpected item type for Concepcy relation '{rel}' on token '{token.text}': {type(item)}")
+                                except Exception as rel_e:
+                                    logger.debug(f"Failed to build ConcepcyRelation for '{token.text}' relation '{rel}': {rel_e}")
                 if len(terms_list):
                     concepcy = ConcepcyData(
                         related_terms=terms_list,
