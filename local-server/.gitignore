@@ -1,6 +1,9 @@
 # Local logs
 **/logs/**
 
+# Local database files
+datasets.json
+
 # Local downloads
 downloads/
 

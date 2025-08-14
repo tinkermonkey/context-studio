@@ -5,7 +5,6 @@ from sqlalchemy import create_engine, event
 from sqlalchemy.orm import sessionmaker
 from fastapi import HTTPException
 
-from dataset.manager import DatasetManager
 from utils.logger import get_logger
 from sqlalchemy.pool import StaticPool
 
@@ -28,6 +27,7 @@ def get_dataset_manager():
     """Get the global dataset manager instance."""
     global _dataset_manager
     if _dataset_manager is None:
+        from dataset.manager import DatasetManager
         _dataset_manager = DatasetManager()
     return _dataset_manager
 
