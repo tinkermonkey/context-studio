@@ -8,7 +8,9 @@ from pydantic import ValidationError
 from nlp.models import NLPAnalysisRequest, NLPAnalysisResponse, NLPErrorResponse, NLPSuccessResponse
 from nlp.pipeline import get_pipeline
 from nlp.processors import process_nlp_result
+from nlp.proxy_manager import get_proxy_manager
 from utils.logger import get_logger
+from config import get_settings
 
 logger = get_logger("nlp_analysis")
 
@@ -73,3 +75,122 @@ async def nlp_analysis(request: Request):
             "error": "Internal server error during NLP analysis.",
             "details": str(e)
         })
+
+@router.post("/nlp_analysis/proxy/configure")
+async def configure_proxy(request: Request):
+    """
+    Update reference API proxy configuration and reload pipeline.
+    """
+    try:
+        body = await request.json()
+        
+        # Validate configuration
+        valid_apis = ["concepcy", "spacy_dbpedia_spotlight"]
+        for api, enabled in body.items():
+            if api not in valid_apis:
+                return JSONResponse(
+                    status_code=400,
+                    content={"success": False, "error": f"Invalid API: {api}"}
+                )
+            if not isinstance(enabled, bool):
+                return JSONResponse(
+                    status_code=400,
+                    content={"success": False, "error": f"Value for {api} must be boolean"}
+                )
+        
+        # Update settings
+        settings = get_settings()
+        settings.ENABLE_CACHING_PROXY.update(body)
+        
+        # Reload pipeline with new configuration
+        pipeline = get_pipeline()
+        if not pipeline.reload_pipeline():
+            return JSONResponse(
+                status_code=500,
+                content={
+                    "success": False, 
+                    "error": "Failed to reload pipeline with new configuration"
+                }
+            )
+        
+        return JSONResponse(content={
+            "success": True,
+            "message": "Proxy configuration updated",
+            "configuration": settings.ENABLE_CACHING_PROXY
+        })
+        
+    except Exception as e:
+        logger.error(f"Error updating proxy configuration: {e}")
+        return JSONResponse(
+            status_code=500,
+            content={"success": False, "error": str(e)}
+        )
+
+@router.get("/nlp_analysis/proxy/status")
+async def get_proxy_status():
+    """
+    Get current proxy configuration and status.
+    """
+    try:
+        settings = get_settings()
+        proxy_manager = get_proxy_manager()
+        
+        return JSONResponse(content={
+            "success": True,
+            "proxy_enabled": proxy_manager.is_proxy_enabled(),
+            "proxy_running": proxy_manager.is_running,
+            "configuration": settings.ENABLE_CACHING_PROXY,
+            "proxy_config": {
+                "host": settings.REFERENCE_API_BUDDY_CONFIG["server"]["host"],
+                "port": settings.REFERENCE_API_BUDDY_CONFIG["server"]["port"]
+            }
+        })
+        
+    except Exception as e:
+        logger.error(f"Error getting proxy status: {e}")
+        return JSONResponse(
+            status_code=500,
+            content={"success": False, "error": str(e)}
+        )
+
+@router.get("/nlp_analysis/proxy/monitor")
+async def get_proxy_monitoring():
+    """
+    Get comprehensive monitoring statistics from the reference API buddy proxy.
+    
+    Returns cache stats, upstream performance, database health, proxy health,
+    and throttling information when the proxy is running.
+    """
+    try:
+        proxy_manager = get_proxy_manager()
+        
+        if not proxy_manager.is_running:
+            return JSONResponse(content={
+                "success": True,
+                "proxy_running": False,
+                "message": "Proxy is not currently running",
+                "stats": None
+            })
+        
+        stats = proxy_manager.get_monitoring_stats()
+        
+        if stats is None:
+            return JSONResponse(content={
+                "success": True,
+                "proxy_running": True,
+                "message": "Monitoring data not available",
+                "stats": None
+            })
+        
+        return JSONResponse(content={
+            "success": True,
+            "proxy_running": True,
+            "stats": stats
+        })
+        
+    except Exception as e:
+        logger.error(f"Error getting proxy monitoring data: {e}")
+        return JSONResponse(
+            status_code=500,
+            content={"success": False, "error": str(e)}
+        )

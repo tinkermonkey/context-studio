@@ -83,8 +83,10 @@ def test_concepcy_specific_data(nlp):
     assert related_terms, "No concepcy related terms for 'company'."
     # Check for expected related terms in ConceptNet output
     expected_terms = ["business", "corporation", "organization", "group", "firm", "work", "people"]
-    found = any(any(term_part in term for term_part in expected_terms) for term in related_terms)
-    assert found, f"No expected concepcy related term for 'company': {related_terms}"
+    # Extract the labels from the object nodes in the related terms
+    related_labels = [term['object'].label.lower() for term in related_terms if 'object' in term]
+    found = any(expected_term in related_labels for expected_term in expected_terms)
+    assert found, f"No expected concepcy related term for 'company'. Expected: {expected_terms}, Found labels: {related_labels}"
 
 def test_wordnet_specific_data(nlp):
     doc = nlp("Apple is a company based in Cupertino.")

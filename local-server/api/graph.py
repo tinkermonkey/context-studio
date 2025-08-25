@@ -70,7 +70,7 @@ def get_cached_graph_service() -> GraphService:
 
 def invalidate_graph_cache():
     """Invalidate the cached graph service (call when data changes)."""
-    global _cached_graph_service, _cached_session, _graph_cache_dataset_id
+    global _cached_graph_service, _cached_session, _graph_cache_dataset_id, _graph_service_lock
     
     if _graph_service_lock is None:
         _graph_service_lock = threading.Lock()

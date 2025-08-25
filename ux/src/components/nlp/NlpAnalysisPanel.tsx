@@ -12,6 +12,7 @@ export const NlpAnalysisPanel: React.FC<NlpAnalysisPanelProps> = ({ text }) => {
   const [pendingText, setPendingText] = useState(text);
   const [debouncedText, setDebouncedText] = useState(text);
   const [hasAnalyzed, setHasAnalyzed] = useState(false);
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
 
   // Custom hook for API call
   const lowercasedText = debouncedText.toLowerCase();
@@ -53,14 +54,22 @@ export const NlpAnalysisPanel: React.FC<NlpAnalysisPanelProps> = ({ text }) => {
   const handleAnalyze = useCallback(() => {
     setDebouncedText(pendingText);
     setHasAnalyzed(true);
+    setIsAnalyzing(true);
     refetch(); // refetch will use lowercasedText due to hook dependency
     apiLogger.info('NLP analysis triggered by user');
   }, [pendingText, refetch]);
 
+  // Reset isAnalyzing when loading finishes
+  useEffect(() => {
+    if (!loading && isAnalyzing) {
+      setIsAnalyzing(false);
+    }
+  }, [loading, isAnalyzing]);
+
   return (
     <>
-      <Button onClick={handleAnalyze} disabled={loading || !pendingText} color="dark">
-        {loading ? <Spinner size="sm" /> : hasAnalyzed ? 'Analyze Again' : 'Analyze'}
+      <Button onClick={handleAnalyze} disabled={loading || isAnalyzing || !pendingText} color="dark">
+        {(loading || isAnalyzing) ? <Spinner size="sm" /> : hasAnalyzed ? 'Analyze Again' : 'Analyze'}
       </Button>
       <div className="mt-2">
         {analysisResult && (

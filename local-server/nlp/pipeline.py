@@ -6,9 +6,9 @@ from typing import Optional
 from spacy_wordnet.wordnet_annotator import WordnetAnnotator
 from config import get_settings
 from utils.logger import get_logger
+from nlp.proxy_manager import get_proxy_manager
 
 logger = get_logger(__name__)
-settings = get_settings()
 
 class NLPPipeline:
     """
@@ -22,6 +22,7 @@ class NLPPipeline:
         self._initialized = False
         self._error = None
         self._lock = threading.Lock()
+        self.proxy_manager = get_proxy_manager()
         self._init_pipeline()
 
     def _init_pipeline(self):
@@ -29,6 +30,13 @@ class NLPPipeline:
         Initialize spaCy pipeline and add components in correct order.
         """
         logger.info(f"Initializing NLP pipeline with model: {self.model_name}")
+        
+        # Start proxy if any reference APIs are enabled
+        if self.proxy_manager.is_proxy_enabled():
+            if not self.proxy_manager.start_proxy():
+                self._error = "Failed to start reference API caching proxy"
+                logger.error(self._error)
+                return
         
         try:
             logger.info("Loading spaCy model...")
@@ -39,25 +47,58 @@ class NLPPipeline:
             logger.error(self._error)
             return
 
-        # Add custom components
+        # Add custom components with proxy support
+        self._add_concepcy_component()
+        self._add_dbpedia_spotlight_component()
+        self._add_spacy_wordnet_component()
+        self._add_sense2vec_component()
+        
+        self._initialized = True
+        logger.info("NLP pipeline initialization completed successfully")
+
+    def _add_concepcy_component(self):
+        """Add concepcy component with optional proxy configuration"""
         try:
+            settings = get_settings()
             logger.info("Adding concepcy component...")
-            self.nlp.add_pipe("concepcy", config=settings.concepcy_config)
-            logger.info("concepcy component added successfully")
+            use_proxy = settings.ENABLE_CACHING_PROXY.get("concepcy", False)
+            config = settings.get_concepcy_config(use_proxy=use_proxy)
+            
+            self.nlp.add_pipe("concepcy", config=config)
+            logger.info(f"concepcy component added successfully (proxy: {use_proxy})")
         except Exception as e:
             self._error = f"Failed to add concepcy: {e}"
             logger.error(self._error)
-            return
-        
+            raise
+
+    def _add_dbpedia_spotlight_component(self):
+        """Add DBpedia Spotlight component with optional proxy configuration"""
         try:
+            settings = get_settings()
             logger.info("Adding dbpedia_spotlight component...")
-            self.nlp.add_pipe("dbpedia_spotlight")
-            logger.info("dbpedia_spotlight component added successfully")
+            use_proxy = settings.ENABLE_CACHING_PROXY.get("spacy_dbpedia_spotlight", False)
+            
+            if use_proxy:
+                proxy_config = settings.REFERENCE_API_BUDDY_CONFIG
+                host = proxy_config["server"]["host"]
+                port = proxy_config["server"]["port"]
+                endpoint = f"http://{host}:{port}/dbpedia_spotlight"
+                
+                self.nlp.add_pipe("dbpedia_spotlight", config={
+                    "dbpedia_rest_endpoint": endpoint
+                })
+                logger.info(f"dbpedia_spotlight component added with proxy: {endpoint}")
+            else:
+                self.nlp.add_pipe("dbpedia_spotlight")
+                logger.info("dbpedia_spotlight component added (direct)")
+                
         except Exception as e:
             self._error = f"Failed to add dbpedia_spotlight: {e}"
             logger.error(self._error)
-            return
-        
+            raise
+
+    def _add_spacy_wordnet_component(self):
+        """Add spacy_wordnet component"""
         try:
             logger.info("Adding spacy_wordnet component...")
             self.nlp.add_pipe("spacy_wordnet", after="tagger")
@@ -65,9 +106,12 @@ class NLPPipeline:
         except Exception as e:
             self._error = f"Failed to add spacy_wordnet: {e}"
             logger.error(self._error)
-            return
-        
+            raise
+
+    def _add_sense2vec_component(self):
+        """Add sense2vec component"""
         try:
+            settings = get_settings()
             logger.info("Adding sense2vec component...")
             self.s2v = self.nlp.add_pipe("sense2vec")
             # Load the S2V dataset
@@ -77,10 +121,7 @@ class NLPPipeline:
         except Exception as e:
             self._error = f"Failed to add sense2vec: {e}"
             logger.error(self._error)
-            return
-        
-        self._initialized = True
-        logger.info("NLP pipeline initialization completed successfully")
+            raise
 
     def process(self, text: str):
         """Process text through the spaCy pipeline"""
@@ -118,6 +159,39 @@ class NLPPipeline:
             "has_s2v": self.s2v is not None,
             "error": self._error
         }
+
+    def reload_pipeline(self):
+        """Reload the pipeline with updated configuration"""
+        logger.info("Reloading NLP pipeline...")
+        
+        # Stop current pipeline
+        self._initialized = False
+        self.nlp = None
+        self.s2v = None
+        self._error = None
+        
+        # Restart proxy with new configuration
+        if self.proxy_manager.is_proxy_enabled():
+            if not self.proxy_manager.restart_proxy():
+                self._error = "Failed to restart reference API caching proxy"
+                logger.error(self._error)
+                return False
+        else:
+            self.proxy_manager.stop_proxy()
+        
+        # Reinitialize pipeline
+        self._init_pipeline()
+        return self._initialized
+
+    def shutdown(self):
+        """Shutdown the pipeline and clean up resources"""
+        logger.info("Shutting down NLP pipeline...")
+        self._initialized = False
+        self.nlp = None
+        self.s2v = None
+        
+        # Stop the proxy
+        self.proxy_manager.stop_proxy()
 
 _pipeline_instance: Optional[NLPPipeline] = None
 _pipeline_lock = threading.Lock()

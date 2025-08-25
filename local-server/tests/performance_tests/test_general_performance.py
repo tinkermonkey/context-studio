@@ -13,6 +13,7 @@ import psutil
 from fastapi.testclient import TestClient
 from database import models
 from database.utils import init_db, get_session_local
+from database.migrations.migration_manager import MigrationManager
 from app import create_app
 
 import logging
@@ -39,8 +40,11 @@ app = create_app(engine=engine, session_local=TestingSessionLocal)
 
 @pytest.fixture(scope="session", autouse=True)
 def setup_database():
-    models.Base.metadata.drop_all(bind=engine)
-    models.Base.metadata.create_all(bind=engine)
+    # Initialize with migrations instead of direct table creation
+    migration_manager = MigrationManager(test_db_path)
+    success = migration_manager.migrate_to_latest()
+    if not success:
+        raise RuntimeError("Failed to apply migrations to test database")
     yield
     os.close(test_db_fd)
     os.unlink(test_db_path)

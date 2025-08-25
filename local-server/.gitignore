@@ -115,7 +115,7 @@ poetry.lock
 .vscode/
 
 # SQLite database
-*.db
+**/*.db**
 *.sqlite3
 
 # Mac

@@ -4,31 +4,7 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 import pytest
 from fastapi.testclient import TestClient
-from app import create_app
-from database.utils import get_engine, get_session_local, init_db
 import uuid
-import tempfile
-
-
-@pytest.fixture(scope="function")
-def test_app():
-    # Use a temporary file-based SQLite DB for reliable cross-thread access
-    with tempfile.NamedTemporaryFile(suffix=".db", delete=False) as tf:
-        db_url = f"sqlite:///{tf.name}"
-    try:
-        engine = get_engine(db_url)
-        session_local = get_session_local(engine)
-        init_db(engine=engine)
-        app = create_app(engine=engine, session_local=session_local)
-        yield app
-    finally:
-        os.unlink(tf.name)
-
-
-@pytest.fixture(scope="function")
-def client(test_app):
-    with TestClient(test_app) as c:
-        yield c
 
 
 def create_layer(client, title=None):
@@ -288,5 +264,8 @@ def test_batch_operations_with_warnings(client):
     assert len(move_data["warnings"]) > 0
     assert any("already exists" in warning for warning in move_data["warnings"])
     
-    # But operations should still succeed
-    assert len(move_data["moved_terms"]) == 2
+    # Should move only the non-conflicting term (Unique Term), skip the conflicting one
+    assert len(move_data["moved_terms"]) == 1
+    moved_term = move_data["moved_terms"][0]
+    assert moved_term["title"] == "Unique Term"
+    assert moved_term["domain_id"] == target_domain["id"]
