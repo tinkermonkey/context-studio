@@ -1,5 +1,6 @@
 import threading
 import datetime
+import json
 from fastapi import APIRouter, HTTPException, Query, Depends
 from pydantic import BaseModel, Field
 from typing import List, Optional
@@ -9,6 +10,7 @@ from sqlalchemy import text, func
 from sqlalchemy.exc import IntegrityError
 from database import models
 from database.utils import get_db
+from database.predicate_utils import validate_predicate_set
 from embeddings.generate_embeddings import generate_embedding
 from utils.logger import get_logger
 from utils.watchdog import start_watchdog
@@ -24,6 +26,8 @@ class DomainBase(BaseModel):
     title: str = Field(..., min_length=2)
     definition: str = Field(..., min_length=1)
     layer_id: UUID
+    primary_predicate_id: Optional[str] = None  # UUID as string to match database storage
+    predicate_set: Optional[List[str]] = None  # Array of predicate identifiers
 
 
 class DomainCreate(DomainBase):
@@ -34,10 +38,13 @@ class DomainUpdate(BaseModel):
     title: Optional[str] = None
     definition: Optional[str] = None
     layer_id: Optional[UUID] = None
+    primary_predicate_id: Optional[str] = None  # UUID as string to match database storage
+    predicate_set: Optional[List[str]] = None
 
 
 class DomainOut(DomainBase):
     id: UUID
+    primary_predicate: Optional[str] = None  # Populated from predicate relationship
     title_embedding: Optional[List[float]] = None
     definition_embedding: Optional[List[float]] = None
     created_at: str
@@ -166,11 +173,23 @@ def find_domain(req: FindDomainRequest, db: Session = Depends(get_db)):
 
 
 def to_domain_out(domain):
+    # Parse predicate_set from JSON if present
+    predicate_set_list = None
+    if domain.predicate_set:
+        try:
+            predicate_set_list = json.loads(domain.predicate_set)
+        except json.JSONDecodeError:
+            logger.warning(f"Invalid JSON in domain {domain.id} predicate_set: {domain.predicate_set}")
+            predicate_set_list = None
+    
     return DomainOut(
         id=domain.id,
         title=domain.title,
         definition=domain.definition,
         layer_id=domain.layer_id,
+        primary_predicate_id=domain.primary_predicate_id,
+        primary_predicate=domain.primary_predicate,  # This will be populated from the predicate relationship
+        predicate_set=predicate_set_list,
         title_embedding=decode_emb(domain.title_embedding) if domain.title_embedding else None,
         definition_embedding=decode_emb(domain.definition_embedding) if domain.definition_embedding else None,
         created_at=domain.created_at.isoformat(),
@@ -188,14 +207,39 @@ def create_domain(domain: DomainCreate, db: Session = Depends(get_db)):
         return conflict_error_response("Domain title must be unique.")
     if not db.query(models.Layer).filter_by(id=str(domain.layer_id)).first():
         return bad_request_error_response("Layer does not exist.")
+    
+    # Validate primary_predicate_id if provided
+    primary_predicate = None
+    if domain.primary_predicate_id:
+        primary_predicate = db.query(models.Predicate).filter_by(id=str(domain.primary_predicate_id)).first()
+        if not primary_predicate:
+            return bad_request_error_response("Primary predicate does not exist.")
+    
+    # Validate predicate_set if provided
+    if domain.predicate_set:
+        if not validate_predicate_set(domain.predicate_set, db):
+            return bad_request_error_response("One or more predicates in predicate_set do not exist.")
+    
     title_emb = generate_embedding(domain.title)
     # Always generate a valid embedding for definition (empty string if None)
     def_emb = generate_embedding(domain.definition if domain.definition is not None else "")
+    
+    # Serialize predicate_set to JSON if provided
+    predicate_set_json = None
+    if domain.predicate_set:
+        try:
+            predicate_set_json = json.dumps(domain.predicate_set)
+        except (TypeError, ValueError) as e:
+            return validation_error_response(f"Invalid predicate_set format: {str(e)}", loc=["body", "predicate_set"])
+    
     db_domain = models.Domain(
         id=str(uuid4()),
         title=domain.title,
         definition=domain.definition,
         layer_id=str(domain.layer_id),
+        primary_predicate_id=str(domain.primary_predicate_id) if domain.primary_predicate_id else None,
+        primary_predicate=primary_predicate.title if primary_predicate else None,
+        predicate_set=predicate_set_json,
         title_embedding=title_emb,
         definition_embedding=def_emb,
         created_at=datetime.datetime.now(datetime.UTC),
@@ -273,6 +317,9 @@ def update_domain(id: str, domain: DomainUpdate, db: Session = Depends(get_db)):
     db_domain = db.query(models.Domain).filter_by(id=id).first()
     if not db_domain:
         raise HTTPException(status_code=404, detail="Domain not found.")
+    
+    embeddings_updated = False
+    
     if domain.title is not None:
         if not domain.title.strip():
             return validation_error_response("Domain title must not be empty.", loc=["body", "title"])
@@ -281,34 +328,61 @@ def update_domain(id: str, domain: DomainUpdate, db: Session = Depends(get_db)):
                 return conflict_error_response("Domain title must be unique.")
             db_domain.title = domain.title
             db_domain.title_embedding = generate_embedding(domain.title)
+            embeddings_updated = True
+    
     if domain.definition is not None:
         db_domain.definition = domain.definition
         db_domain.definition_embedding = generate_embedding(domain.definition if domain.definition is not None else "")
+        embeddings_updated = True
+    
     if domain.layer_id is not None and str(domain.layer_id) != str(db_domain.layer_id):
         if not db.query(models.Layer).filter_by(id=str(domain.layer_id)).first():
             return bad_request_error_response("Layer does not exist.")
         db_domain.layer_id = str(domain.layer_id)
+    
+    # Handle primary_predicate_id update
+    if domain.primary_predicate_id is not None:
+        if str(domain.primary_predicate_id) != str(db_domain.primary_predicate_id or ''):
+            primary_predicate = db.query(models.Predicate).filter_by(id=str(domain.primary_predicate_id)).first()
+            if not primary_predicate:
+                return bad_request_error_response("Primary predicate does not exist.")
+            db_domain.primary_predicate_id = str(domain.primary_predicate_id)
+            db_domain.primary_predicate = primary_predicate.title
+    
+    # Handle predicate_set update
+    if domain.predicate_set is not None:
+        if domain.predicate_set:
+            if not validate_predicate_set(domain.predicate_set, db):
+                return bad_request_error_response("One or more predicates in predicate_set do not exist.")
+            try:
+                db_domain.predicate_set = json.dumps(domain.predicate_set)
+            except (TypeError, ValueError) as e:
+                return validation_error_response(f"Invalid predicate_set format: {str(e)}", loc=["body", "predicate_set"])
+        else:
+            db_domain.predicate_set = None
+    
     db.commit()
     db.refresh(db_domain)
 
-    # Update the sqlite vector index with the new embeddings
-    sql = text(
+    # Update the sqlite vector index with the new embeddings if they were updated
+    if embeddings_updated:
+        sql = text(
+            """
+            UPDATE domains_vec
+            SET title_embedding = :title_embedding,
+                definition_embedding = :definition_embedding
+            WHERE id = :id
         """
-        UPDATE domains_vec
-        SET title_embedding = :title_embedding,
-            definition_embedding = :definition_embedding
-        WHERE id = :id
-    """
-    )
-    db.execute(
-        sql,
-        {
-            "id": str(db_domain.id),
-            "title_embedding": db_domain.title_embedding,
-            "definition_embedding": db_domain.definition_embedding,
-        },
-    )
-    db.commit()
+        )
+        db.execute(
+            sql,
+            {
+                "id": str(db_domain.id),
+                "title_embedding": db_domain.title_embedding,
+                "definition_embedding": db_domain.definition_embedding,
+            },
+        )
+        db.commit()
 
     db.close()  # Ensure connection is closed after commit for SQLite visibility
     return to_domain_out(db_domain)

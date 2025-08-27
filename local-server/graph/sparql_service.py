@@ -81,9 +81,6 @@ class SPARQLService:
             if layer.definition:
                 self.graph.add((layer_uri, RDFS.comment, Literal(layer.definition)))
             
-            if layer.primary_predicate:
-                self.graph.add((layer_uri, self.CS.primaryPredicate, Literal(layer.primary_predicate)))
-            
             # Metadata
             if layer.created_at:
                 self.graph.add((layer_uri, DCTERMS.created, Literal(layer.created_at)))
@@ -185,10 +182,9 @@ class SPARQLService:
         Returns:
             URIRef for the predicate to use
         """
-        if layer and layer.primary_predicate:
-            return self.CS[layer.primary_predicate]
-        else:
-            return self.CS["is_a"]  # Default predicate
+        # Note: Primary predicates are now associated with domains, not layers
+        # For now, use the default predicate
+        return self.CS["is_a"]  # Default predicate
     
     def query(self, sparql_query: str, initNs: Optional[Dict[str, Namespace]] = None) -> List[Dict[str, Any]]:
         """

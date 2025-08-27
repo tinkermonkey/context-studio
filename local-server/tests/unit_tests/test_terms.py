@@ -133,7 +133,7 @@ def test_term_relationship_invalid_cases(client):
     assert resp1.status_code == 201
     resp2 = client.post("/api/term-relationships/", json={"source_term_id": t1["id"], "target_term_id": t2["id"], "predicate": "rel"})
     assert resp2.status_code == 409
-    assert "duplicate" in resp2.json()["detail"][0]["msg"].lower()
+    assert "duplicate" in resp2.json()["detail"].lower()
     # Update non-existent
     resp = client.put(f"/api/term-relationships/{bad_uuid}", json={"predicate": "x"})
     assert resp.status_code == 404

@@ -24,7 +24,6 @@ router = APIRouter()
 class LayerBase(BaseModel):
     title: str = Field(..., min_length=2)
     definition: Optional[str] = None
-    primary_predicate: Optional[str] = None
 
 
 class LayerCreate(LayerBase):
@@ -34,7 +33,6 @@ class LayerCreate(LayerBase):
 class LayerUpdate(BaseModel):
     title: Optional[str] = None
     definition: Optional[str] = None
-    primary_predicate: Optional[str] = None
 
 
 class LayerOut(LayerBase):
@@ -72,7 +70,6 @@ def to_layer_out(layer):
         id=layer.id,
         title=layer.title,
         definition=layer.definition,
-        primary_predicate=layer.primary_predicate,
         title_embedding=decode_emb(layer.title_embedding) if layer.title_embedding else None,
         definition_embedding=decode_emb(layer.definition_embedding) if layer.definition_embedding else None,
         created_at=layer.created_at.isoformat(),
@@ -136,7 +133,7 @@ def find_layer(req: FindLayerRequest, db: Session = Depends(get_db)):
     if emb_type:
         sql = text(
             f"""
-            SELECT l.id, l.title, l.definition, l.primary_predicate, l.title_embedding, l.definition_embedding, l.created_at, l.version, l.last_modified, v.distance
+            SELECT l.id, l.title, l.definition, l.title_embedding, l.definition_embedding, l.created_at, l.version, l.last_modified, v.distance
             FROM (
                 SELECT id, distance
                 FROM layers_vec
@@ -160,14 +157,13 @@ def find_layer(req: FindLayerRequest, db: Session = Depends(get_db)):
                 id=row[0],
                 title=row[1],
                 definition=row[2],
-                primary_predicate=row[3],
-                title_embedding=decode_emb(row[4]),
-                definition_embedding=decode_emb(row[5]),
-                created_at=(row[6].isoformat() if hasattr(row[6], "isoformat") else str(row[6])),
-                version=row[7],
-                last_modified=(row[8].isoformat() if hasattr(row[8], "isoformat") else str(row[8])),
-                score=cosine_similarity(title_emb or def_emb, decode_emb(row[4] if title_emb else row[5]) or []),
-                distance=row[9],
+                title_embedding=decode_emb(row[3]),
+                definition_embedding=decode_emb(row[4]),
+                created_at=(row[5].isoformat() if hasattr(row[5], "isoformat") else str(row[5])),
+                version=row[6],
+                last_modified=(row[7].isoformat() if hasattr(row[7], "isoformat") else str(row[7])),
+                score=cosine_similarity(title_emb or def_emb, decode_emb(row[3] if title_emb else row[4]) or []),
+                distance=row[8],
             )
 
             if out.score >= req.minimum_score:
@@ -206,7 +202,6 @@ def create_layer(layer: LayerCreate, db: Session = Depends(get_db)):
         id=str(uuid4()),
         title=layer.title,
         definition=layer.definition,
-        primary_predicate=layer.primary_predicate,
         title_embedding=title_emb,
         definition_embedding=def_emb,
         created_at=datetime.datetime.now(datetime.UTC),
@@ -294,8 +289,6 @@ def update_layer(id: str, layer: LayerUpdate, db: Session = Depends(get_db)):
         db_layer.definition = layer.definition
         # Always generate a definition embedding - use empty string if no definition
         db_layer.definition_embedding = generate_embedding(layer.definition if layer.definition and layer.definition.strip() else "")
-    if layer.primary_predicate is not None:
-        db_layer.primary_predicate = layer.primary_predicate
     db.commit()
     db.refresh(db_layer)
     sql = text(

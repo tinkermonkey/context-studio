@@ -1,0 +1,343 @@
+"""Unit tests for validation logic in predicate utilities."""
+
+import sys
+import os
+import json
+import datetime
+from uuid import uuid4
+
+# Add the project root to the path
+sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
+
+import pytest
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker
+from database.models import Base, Domain, Term, Predicate, TermRelationship
+from database.predicate_utils import (
+    validate_term_relationship_predicate,
+    validate_predicate_identifier,
+    validate_predicate_set
+)
+
+
+# Create in-memory SQLite database for testing
+@pytest.fixture
+def db_session():
+    engine = create_engine("sqlite:///:memory:")
+    Base.metadata.create_all(engine)
+    SessionLocal = sessionmaker(bind=engine)
+    session = SessionLocal()
+    yield session
+    session.close()
+
+
+@pytest.fixture
+def sample_domain(db_session):
+    """Create a sample domain with predicate set."""
+    predicate_set = {
+        "predicates": ["synonym", "hypernym", "hyponym"]
+    }
+    
+    domain = Domain(
+        id=str(uuid4()),
+        layer_id=str(uuid4()),  # Need a layer_id for Domain
+        title="Sample Domain",
+        definition="Test domain",
+        predicate_set=json.dumps(predicate_set),
+        created_at=datetime.datetime.now(datetime.UTC),
+        last_modified=datetime.datetime.now(datetime.UTC)
+    )
+    db_session.add(domain)
+    db_session.commit()
+    return domain
+
+
+@pytest.fixture
+def sample_domain_no_predicate_set(db_session):
+    """Create a sample domain without predicate set."""
+    domain = Domain(
+        id=str(uuid4()),
+        layer_id=str(uuid4()),  # Need a layer_id for Domain
+        title="Domain No Predicates",
+        definition="Test domain without predicate set",
+        predicate_set=None,
+        created_at=datetime.datetime.now(datetime.UTC),
+        last_modified=datetime.datetime.now(datetime.UTC)
+    )
+    db_session.add(domain)
+    db_session.commit()
+    return domain
+
+
+@pytest.fixture
+def sample_predicates(db_session):
+    """Create sample predicates."""
+    predicates = []
+    
+    # Create allowed predicates
+    for identifier in ["synonym", "hypernym", "hyponym"]:
+        predicate = Predicate(
+            id=str(uuid4()),
+            identifier=identifier,
+            title=identifier.title(),
+            definition=f"Test {identifier} predicate",
+            date_created=datetime.datetime.now(datetime.UTC),
+            date_modified=datetime.datetime.now(datetime.UTC)
+        )
+        db_session.add(predicate)
+        predicates.append(predicate)
+    
+    # Create a disallowed predicate
+    disallowed_predicate = Predicate(
+        id=str(uuid4()),
+        identifier="antonym",
+        title="Antonym",
+        definition="Test antonym predicate",
+        date_created=datetime.datetime.now(datetime.UTC),
+        date_modified=datetime.datetime.now(datetime.UTC)
+    )
+    db_session.add(disallowed_predicate)
+    predicates.append(disallowed_predicate)
+    
+    db_session.commit()
+    return predicates
+
+
+@pytest.fixture
+def sample_terms(db_session, sample_domain, sample_domain_no_predicate_set):
+    """Create sample terms in different domains."""
+    terms = []
+    
+    # Terms in the same domain (with predicate set)
+    for i in range(2):
+        term = Term(
+            id=str(uuid4()),
+            title=f"Term {i}",
+            definition=f"Test term {i}",
+            domain_id=sample_domain.id,
+            layer_id=sample_domain.layer_id,  # Terms need layer_id too
+            created_at=datetime.datetime.now(datetime.UTC),
+            last_modified=datetime.datetime.now(datetime.UTC)
+        )
+        db_session.add(term)
+        terms.append(term)
+    
+    # Term in different domain (no predicate set)
+    term = Term(
+        id=str(uuid4()),
+        title="Term Different Domain",
+        definition="Test term in different domain",
+        domain_id=sample_domain_no_predicate_set.id,
+        layer_id=sample_domain_no_predicate_set.layer_id,  # Terms need layer_id too
+        created_at=datetime.datetime.now(datetime.UTC),
+        last_modified=datetime.datetime.now(datetime.UTC)
+    )
+    db_session.add(term)
+    terms.append(term)
+    
+    db_session.commit()
+    return terms
+
+
+class TestValidateTermRelationshipPredicate:
+    """Tests for validate_term_relationship_predicate function."""
+    
+    def test_different_domains_allows_any_predicate(self, db_session, sample_terms, sample_predicates):
+        """Test that different domains allow any predicate."""
+        same_domain_term = sample_terms[0]
+        different_domain_term = sample_terms[2]
+        disallowed_predicate = sample_predicates[3]  # antonym
+        
+        result = validate_term_relationship_predicate(
+            same_domain_term.domain_id,
+            different_domain_term.domain_id,
+            disallowed_predicate.id,
+            db_session
+        )
+        
+        assert result is True
+    
+    def test_same_domain_with_allowed_predicate(self, db_session, sample_terms, sample_predicates):
+        """Test that same domain allows predicates in predicate set."""
+        term1 = sample_terms[0]
+        term2 = sample_terms[1]
+        allowed_predicate = sample_predicates[0]  # synonym
+        
+        result = validate_term_relationship_predicate(
+            term1.domain_id,
+            term2.domain_id,
+            allowed_predicate.id,
+            db_session
+        )
+        
+        assert result is True
+    
+    def test_same_domain_with_disallowed_predicate(self, db_session, sample_terms, sample_predicates):
+        """Test that same domain rejects predicates not in predicate set."""
+        term1 = sample_terms[0]
+        term2 = sample_terms[1]
+        disallowed_predicate = sample_predicates[3]  # antonym
+        
+        result = validate_term_relationship_predicate(
+            term1.domain_id,
+            term2.domain_id,
+            disallowed_predicate.id,
+            db_session
+        )
+        
+        assert result is False
+    
+    def test_same_domain_no_predicate_set_allows_any(self, db_session, sample_domain_no_predicate_set, sample_predicates):
+        """Test that domain with no predicate set allows any predicate."""
+        disallowed_predicate = sample_predicates[3]  # antonym
+        
+        result = validate_term_relationship_predicate(
+            sample_domain_no_predicate_set.id,
+            sample_domain_no_predicate_set.id,
+            disallowed_predicate.id,
+            db_session
+        )
+        
+        assert result is True
+    
+    def test_nonexistent_domain(self, db_session, sample_predicates):
+        """Test validation with nonexistent domain."""
+        fake_domain_id = str(uuid4())
+        predicate = sample_predicates[0]
+        
+        result = validate_term_relationship_predicate(
+            fake_domain_id,
+            fake_domain_id,
+            predicate.id,
+            db_session
+        )
+        
+        assert result is False
+    
+    def test_nonexistent_predicate(self, db_session, sample_domain):
+        """Test validation with nonexistent predicate."""
+        fake_predicate_id = str(uuid4())
+        
+        result = validate_term_relationship_predicate(
+            sample_domain.id,
+            sample_domain.id,
+            fake_predicate_id,
+            db_session
+        )
+        
+        assert result is False
+    
+    def test_invalid_predicate_set_json(self, db_session, sample_predicates):
+        """Test validation with invalid JSON in predicate set."""
+        # Create domain with invalid JSON
+        domain = Domain(
+            id=str(uuid4()),
+            layer_id=str(uuid4()),
+            title="Invalid JSON Domain",
+            definition="Test domain with invalid JSON",
+            predicate_set="invalid json",
+            created_at=datetime.datetime.now(datetime.UTC),
+            last_modified=datetime.datetime.now(datetime.UTC)
+        )
+        db_session.add(domain)
+        db_session.commit()
+        
+        predicate = sample_predicates[0]
+        
+        result = validate_term_relationship_predicate(
+            domain.id,
+            domain.id,
+            predicate.id,
+            db_session
+        )
+        
+        assert result is False
+
+
+class TestValidatePredicateIdentifier:
+    """Tests for validate_predicate_identifier function."""
+    
+    def test_new_predicate_unique_identifier(self, db_session):
+        """Test that new predicate with unique identifier passes validation."""
+        result = validate_predicate_identifier("unique_identifier", None, db_session)
+        assert result is True
+    
+    def test_new_predicate_duplicate_identifier(self, db_session, sample_predicates):
+        """Test that new predicate with duplicate identifier fails validation."""
+        existing_predicate = sample_predicates[0]
+        
+        result = validate_predicate_identifier(existing_predicate.identifier, None, db_session)
+        assert result is False
+    
+    def test_update_predicate_same_identifier(self, db_session, sample_predicates):
+        """Test that updating predicate with same identifier passes validation."""
+        existing_predicate = sample_predicates[0]
+        
+        result = validate_predicate_identifier(
+            existing_predicate.identifier, 
+            existing_predicate.id, 
+            db_session
+        )
+        assert result is True
+    
+    def test_update_predicate_different_unique_identifier(self, db_session, sample_predicates):
+        """Test that updating predicate with unique identifier passes validation."""
+        existing_predicate = sample_predicates[0]
+        
+        result = validate_predicate_identifier(
+            "new_unique_identifier", 
+            existing_predicate.id, 
+            db_session
+        )
+        assert result is True
+    
+    def test_update_predicate_different_duplicate_identifier(self, db_session, sample_predicates):
+        """Test that updating predicate with another's identifier fails validation."""
+        predicate1 = sample_predicates[0]
+        predicate2 = sample_predicates[1]
+        
+        result = validate_predicate_identifier(
+            predicate2.identifier, 
+            predicate1.id, 
+            db_session
+        )
+        assert result is False
+
+
+class TestValidatePredicateSet:
+    """Tests for validate_predicate_set function."""
+    
+    def test_empty_predicate_set(self, db_session):
+        """Test that empty predicate set is valid."""
+        result = validate_predicate_set([], db_session)
+        assert result is True
+    
+    def test_none_predicate_set(self, db_session):
+        """Test that None predicate set is valid."""
+        result = validate_predicate_set(None, db_session)
+        assert result is True
+    
+    def test_valid_predicate_set(self, db_session, sample_predicates):
+        """Test that predicate set with all existing identifiers is valid."""
+        identifiers = [p.identifier for p in sample_predicates[:3]]
+        
+        result = validate_predicate_set(identifiers, db_session)
+        assert result is True
+    
+    def test_invalid_predicate_set_with_nonexistent(self, db_session, sample_predicates):
+        """Test that predicate set with nonexistent identifier is invalid."""
+        identifiers = [sample_predicates[0].identifier, "nonexistent_identifier"]
+        
+        result = validate_predicate_set(identifiers, db_session)
+        assert result is False
+    
+    def test_all_nonexistent_predicate_set(self, db_session):
+        """Test that predicate set with all nonexistent identifiers is invalid."""
+        identifiers = ["nonexistent1", "nonexistent2"]
+        
+        result = validate_predicate_set(identifiers, db_session)
+        assert result is False
+
+
+if __name__ == "__main__":
+    pytest.main([__file__])

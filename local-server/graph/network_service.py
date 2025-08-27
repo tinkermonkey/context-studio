@@ -61,7 +61,6 @@ class NetworkService:
                 type="layer",
                 title=layer.title,
                 definition=layer.definition,
-                primary_predicate=layer.primary_predicate,
                 created_at=layer.created_at,
                 version=layer.version,
                 entity_id=layer.id
@@ -111,8 +110,8 @@ class NetworkService:
             domain_node = f"domain:{domain.id}"
             layer_node = f"layer:{domain.layer_id}"
             
-            layer = self.db_session.query(Layer).filter(Layer.id == domain.layer_id).first()
-            predicate = layer.primary_predicate if layer and layer.primary_predicate else "is_a"
+            # Use domain's primary predicate, or default to "is_a"
+            predicate = domain.primary_predicate if domain.primary_predicate else "is_a"
             
             self.graph.add_edge(
                 domain_node, layer_node,
@@ -127,8 +126,9 @@ class NetworkService:
             term_node = f"term:{term.id}"
             domain_node = f"domain:{term.domain_id}"
             
-            layer = self.db_session.query(Layer).filter(Layer.id == term.layer_id).first()
-            predicate = layer.primary_predicate if layer and layer.primary_predicate else "is_a"
+            # Get domain to use its primary predicate
+            domain = self.db_session.query(Domain).filter(Domain.id == term.domain_id).first()
+            predicate = domain.primary_predicate if domain and domain.primary_predicate else "is_a"
             
             self.graph.add_edge(
                 term_node, domain_node,
