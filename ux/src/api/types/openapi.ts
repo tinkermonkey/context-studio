@@ -243,6 +243,158 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/predicates/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Predicates
+         * @description List predicates with pagination and sorting.
+         */
+        get: operations["list_predicates_api_predicates__get"];
+        put?: never;
+        /**
+         * Create Predicate
+         * @description Create a new predicate.
+         */
+        post: operations["create_predicate_api_predicates__post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/predicates/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Predicate
+         * @description Get a predicate by ID.
+         */
+        get: operations["get_predicate_api_predicates__id__get"];
+        /**
+         * Update Predicate
+         * @description Update an existing predicate.
+         */
+        put: operations["update_predicate_api_predicates__id__put"];
+        post?: never;
+        /**
+         * Delete Predicate
+         * @description Delete a predicate.
+         */
+        delete: operations["delete_predicate_api_predicates__id__delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/predicates/by-identifier/{identifier}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Predicate By Identifier
+         * @description Get a predicate by its identifier.
+         */
+        get: operations["get_predicate_by_identifier_api_predicates_by_identifier__identifier__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/predicates/conceptnet-relations": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Conceptnet Relations
+         * @description Get the list of ConceptNet relations configured in the system.
+         */
+        get: operations["get_conceptnet_relations_api_predicates_conceptnet_relations_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/predicates/import-from-conceptnet": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Import Predicates From Conceptnet
+         * @description Import predicates from ConceptNet relations.
+         */
+        post: operations["import_predicates_from_conceptnet_api_predicates_import_from_conceptnet_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/predicates/{id}/conceptnet-relation": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Predicate Conceptnet Relation
+         * @description Get the ConceptNet relation for a specific predicate.
+         */
+        get: operations["get_predicate_conceptnet_relation_api_predicates__id__conceptnet_relation_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/predicates/conceptnet-mapping": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Conceptnet Mapping
+         * @description Get a mapping of all predicate identifiers to their ConceptNet relations.
+         */
+        get: operations["get_conceptnet_mapping_api_predicates_conceptnet_mapping_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/graph/stats": {
         parameters: {
             query?: never;
@@ -935,6 +1087,89 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/nlp_analysis": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Nlp Analysis
+         * @description Analyze text using NLP pipeline and return structured response.
+         */
+        post: operations["nlp_analysis_api_nlp_analysis_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/nlp_analysis/proxy/configure": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Configure Proxy
+         * @description Update reference API proxy configuration and reload pipeline.
+         */
+        post: operations["configure_proxy_api_nlp_analysis_proxy_configure_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/nlp_analysis/proxy/status": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Proxy Status
+         * @description Get current proxy configuration and status.
+         */
+        get: operations["get_proxy_status_api_nlp_analysis_proxy_status_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/nlp_analysis/proxy/monitor": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Proxy Monitoring
+         * @description Get comprehensive monitoring statistics from the reference API buddy proxy.
+         *
+         *     Returns cache stats, upstream performance, database health, proxy health,
+         *     and throttling information when the proxy is running.
+         */
+        get: operations["get_proxy_monitoring_api_nlp_analysis_proxy_monitor_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -954,11 +1189,9 @@ export interface components {
             /** Dataset Id */
             dataset_id: string;
             /** Dataset Title */
-            dataset_title: string | null;
+            dataset_title?: string;
             /** Details */
-            details: {
-                [key: string]: unknown;
-            };
+            details: Record<string, never>;
         };
         /**
          * ActionLogResponse
@@ -986,7 +1219,18 @@ export interface components {
              * Method
              * @default pagerank
              */
-            method: string | null;
+            method: string;
+        };
+        /**
+         * ConcepcyData
+         * @description ConceptNet/Concepcy data for a token.
+         */
+        ConcepcyData: {
+            /**
+             * Related Terms
+             * @description Related terms from ConceptNet.
+             */
+            related_terms?: Record<string, never>[];
         };
         /**
          * CreateDatasetRequest
@@ -997,6 +1241,32 @@ export interface components {
             title: string;
             /** Filename */
             filename: string;
+        };
+        /**
+         * DBpediaData
+         * @description DBpedia data for an entity.
+         */
+        DBpediaData: {
+            /**
+             * Uri
+             * @description DBpedia URI.
+             */
+            uri?: string;
+            /**
+             * Label
+             * @description DBpedia label.
+             */
+            label?: string;
+            /**
+             * Similarity
+             * @description DBpedia similarity score.
+             */
+            similarity?: number;
+            /**
+             * Raw Result
+             * @description Raw DBpedia result.
+             */
+            raw_result?: unknown;
         };
         /**
          * DatasetMetrics
@@ -1050,6 +1320,10 @@ export interface components {
              * Format: uuid
              */
             layer_id: string;
+            /** Primary Predicate Id */
+            primary_predicate_id?: string;
+            /** Predicate Set */
+            predicate_set?: string[];
         };
         /** DomainOut */
         DomainOut: {
@@ -1062,51 +1336,90 @@ export interface components {
              * Format: uuid
              */
             layer_id: string;
+            /** Primary Predicate Id */
+            primary_predicate_id?: string;
+            /** Predicate Set */
+            predicate_set?: string[];
             /**
              * Id
              * Format: uuid
              */
             id: string;
+            /** Primary Predicate */
+            primary_predicate?: string;
             /** Title Embedding */
-            title_embedding?: number[] | null;
+            title_embedding?: number[];
             /** Definition Embedding */
-            definition_embedding?: number[] | null;
+            definition_embedding?: number[];
             /** Created At */
             created_at: string;
             /** Version */
-            version?: number | null;
+            version?: number;
             /** Last Modified */
-            last_modified?: string | null;
+            last_modified?: string;
         };
         /** DomainUpdate */
         DomainUpdate: {
             /** Title */
-            title?: string | null;
+            title?: string;
             /** Definition */
-            definition?: string | null;
-            /** Layer Id */
-            layer_id?: string | null;
+            definition?: string;
+            /**
+             * Layer Id
+             * Format: uuid
+             */
+            layer_id?: string;
+            /** Primary Predicate Id */
+            primary_predicate_id?: string;
+            /** Predicate Set */
+            predicate_set?: string[];
+        };
+        /**
+         * EntityData
+         * @description Data for a named entity in the analyzed text.
+         */
+        EntityData: {
+            /**
+             * Text
+             * @description Entity text.
+             */
+            text: string;
+            /**
+             * Label
+             * @description Entity label.
+             */
+            label?: string;
+            /**
+             * Kb Id
+             * @description Knowledge base ID.
+             */
+            kb_id?: string;
+            /**
+             * Dbpedia
+             * @description DBpedia data.
+             */
+            dbpedia?: components["schemas"]["DBpediaData"];
         };
         /** FindDomainRequest */
         FindDomainRequest: {
             /** Title */
-            title?: string | null;
+            title?: string;
             /** Definition */
-            definition?: string | null;
+            definition?: string;
             /** Layer Id */
-            layer_id?: string | null;
+            layer_id?: string;
             /** Created At */
-            created_at?: string | null;
+            created_at?: string;
             /**
              * Minimum Score
              * @default 0.1
              */
-            minimum_score: number | null;
+            minimum_score: number;
             /**
              * Limit
              * @default 1
              */
-            limit: number | null;
+            limit: number;
         };
         /** FindDomainResult */
         FindDomainResult: {
@@ -1119,21 +1432,27 @@ export interface components {
              * Format: uuid
              */
             layer_id: string;
+            /** Primary Predicate Id */
+            primary_predicate_id?: string;
+            /** Predicate Set */
+            predicate_set?: string[];
             /**
              * Id
              * Format: uuid
              */
             id: string;
+            /** Primary Predicate */
+            primary_predicate?: string;
             /** Title Embedding */
-            title_embedding?: number[] | null;
+            title_embedding?: number[];
             /** Definition Embedding */
-            definition_embedding?: number[] | null;
+            definition_embedding?: number[];
             /** Created At */
             created_at: string;
             /** Version */
-            version?: number | null;
+            version?: number;
             /** Last Modified */
-            last_modified?: string | null;
+            last_modified?: string;
             /** Score */
             score: number;
             /** Distance */
@@ -1142,45 +1461,43 @@ export interface components {
         /** FindLayerRequest */
         FindLayerRequest: {
             /** Title */
-            title?: string | null;
+            title?: string;
             /** Definition */
-            definition?: string | null;
+            definition?: string;
             /** Created At */
-            created_at?: string | null;
+            created_at?: string;
             /**
              * Minimum Score
              * @default 0.1
              */
-            minimum_score: number | null;
+            minimum_score: number;
             /**
              * Limit
              * @default 1
              */
-            limit: number | null;
+            limit: number;
         };
         /** FindLayerResult */
         FindLayerResult: {
             /** Title */
             title: string;
             /** Definition */
-            definition?: string | null;
-            /** Primary Predicate */
-            primary_predicate?: string | null;
+            definition?: string;
             /**
              * Id
              * Format: uuid
              */
             id: string;
             /** Title Embedding */
-            title_embedding?: number[] | null;
+            title_embedding?: number[];
             /** Definition Embedding */
-            definition_embedding?: number[] | null;
+            definition_embedding?: number[];
             /** Created At */
             created_at: string;
             /** Version */
-            version?: number | null;
+            version?: number;
             /** Last Modified */
-            last_modified?: string | null;
+            last_modified?: string;
             /** Score */
             score: number;
             /** Distance */
@@ -1189,25 +1506,25 @@ export interface components {
         /** FindTermRequest */
         FindTermRequest: {
             /** Title */
-            title?: string | null;
+            title?: string;
             /** Definition */
-            definition?: string | null;
+            definition?: string;
             /** Layer Id */
-            layer_id?: string | null;
+            layer_id?: string;
             /** Domain Id */
-            domain_id?: string | null;
+            domain_id?: string;
             /** Created At */
-            created_at?: string | null;
+            created_at?: string;
             /**
              * Minimum Score
              * @default 0.1
              */
-            minimum_score: number | null;
+            minimum_score: number;
             /**
              * Limit
              * @default 1
              */
-            limit: number | null;
+            limit: number;
         };
         /** FindTermResult */
         FindTermResult: {
@@ -1230,12 +1547,15 @@ export interface components {
              * Format: uuid
              */
             layer_id: string;
-            /** Parent Term Id */
-            parent_term_id?: string | null;
+            /**
+             * Parent Term Id
+             * Format: uuid
+             */
+            parent_term_id?: string;
             /** Title Embedding */
-            title_embedding?: number[] | null;
+            title_embedding?: number[];
             /** Definition Embedding */
-            definition_embedding?: number[] | null;
+            definition_embedding?: number[];
             /** Created At */
             created_at: string;
             /** Version */
@@ -1257,42 +1577,36 @@ export interface components {
             /** Title */
             title: string;
             /** Definition */
-            definition?: string | null;
-            /** Primary Predicate */
-            primary_predicate?: string | null;
+            definition?: string;
         };
         /** LayerOut */
         LayerOut: {
             /** Title */
             title: string;
             /** Definition */
-            definition?: string | null;
-            /** Primary Predicate */
-            primary_predicate?: string | null;
+            definition?: string;
             /**
              * Id
              * Format: uuid
              */
             id: string;
             /** Title Embedding */
-            title_embedding?: number[] | null;
+            title_embedding?: number[];
             /** Definition Embedding */
-            definition_embedding?: number[] | null;
+            definition_embedding?: number[];
             /** Created At */
             created_at: string;
             /** Version */
-            version?: number | null;
+            version?: number;
             /** Last Modified */
-            last_modified?: string | null;
+            last_modified?: string;
         };
         /** LayerUpdate */
         LayerUpdate: {
             /** Title */
-            title?: string | null;
+            title?: string;
             /** Definition */
-            definition?: string | null;
-            /** Primary Predicate */
-            primary_predicate?: string | null;
+            definition?: string;
         };
         /**
          * MigrationStatus
@@ -1354,6 +1668,57 @@ export interface components {
             /** Warnings */
             warnings: string[];
         };
+        /**
+         * NLPAnalysisResponse
+         * @description Response model for NLP analysis API.
+         */
+        NLPAnalysisResponse: {
+            /**
+             * Tokens
+             * @description List of token data.
+             */
+            tokens?: components["schemas"]["TokenData"][];
+            /**
+             * Entities
+             * @description List of entity data.
+             */
+            entities?: components["schemas"]["EntityData"][];
+            /**
+             * Text
+             * @description Original analyzed text.
+             */
+            text: string;
+        };
+        /**
+         * NLPErrorResponse
+         * @description Error response wrapper for NLP API.
+         */
+        NLPErrorResponse: {
+            /**
+             * Success
+             * @description Indicates failure.
+             * @default false
+             */
+            success: boolean;
+            /**
+             * Error
+             * @description Error message.
+             */
+            error: string;
+        };
+        /**
+         * NLPSuccessResponse
+         * @description Success response wrapper for NLP API.
+         */
+        NLPSuccessResponse: {
+            /**
+             * Success
+             * @description Indicates success.
+             * @default true
+             */
+            success: boolean;
+            data: components["schemas"]["NLPAnalysisResponse"];
+        };
         /** NeighborsRequest */
         NeighborsRequest: {
             /** Entity Id */
@@ -1362,17 +1727,17 @@ export interface components {
              * Entity Type
              * @default term
              */
-            entity_type: string | null;
+            entity_type: string;
             /**
              * Depth
              * @default 1
              */
-            depth: number | null;
+            depth: number;
             /**
              * Direction
              * @default both
              */
-            direction: string | null;
+            direction: string;
         };
         /** PaginatedDomainsResponse */
         PaginatedDomainsResponse: {
@@ -1389,6 +1754,17 @@ export interface components {
         PaginatedLayersResponse: {
             /** Data */
             data: components["schemas"]["LayerOut"][];
+            /** Total */
+            total: number;
+            /** Skip */
+            skip: number;
+            /** Limit */
+            limit: number;
+        };
+        /** PaginatedPredicatesResponse */
+        PaginatedPredicatesResponse: {
+            /** Data */
+            data: components["schemas"]["PredicateOut"][];
             /** Total */
             total: number;
             /** Skip */
@@ -1417,12 +1793,51 @@ export interface components {
              * Source Type
              * @default term
              */
-            source_type: string | null;
+            source_type: string;
             /**
              * Target Type
              * @default term
              */
-            target_type: string | null;
+            target_type: string;
+        };
+        /** PredicateCreate */
+        PredicateCreate: {
+            /** Title */
+            title: string;
+            /** Definition */
+            definition?: string;
+            /** Mapping */
+            mapping?: Record<string, never>;
+            /** Identifier */
+            identifier?: string;
+        };
+        /** PredicateOut */
+        PredicateOut: {
+            /** Title */
+            title: string;
+            /** Definition */
+            definition?: string;
+            /** Mapping */
+            mapping?: Record<string, never>;
+            /** Id */
+            id: string;
+            /** Identifier */
+            identifier: string;
+            /** Date Created */
+            date_created: string;
+            /** Date Modified */
+            date_modified: string;
+        };
+        /** PredicateUpdate */
+        PredicateUpdate: {
+            /** Title */
+            title?: string;
+            /** Definition */
+            definition?: string;
+            /** Mapping */
+            mapping?: Record<string, never>;
+            /** Identifier */
+            identifier?: string;
         };
         /** SPARQLQuery */
         SPARQLQuery: {
@@ -1432,7 +1847,7 @@ export interface components {
              * Format
              * @default json
              */
-            format: string | null;
+            format: string;
         };
         /** SearchRequest */
         SearchRequest: {
@@ -1442,12 +1857,44 @@ export interface components {
              * Exact
              * @default false
              */
-            exact: boolean | null;
+            exact: boolean;
             /**
              * Analysis Depth
              * @default 1
              */
-            analysis_depth: number | null;
+            analysis_depth: number;
+        };
+        /**
+         * Sense2VecData
+         * @description Sense2Vec data for a token.
+         */
+        Sense2VecData: {
+            /**
+             * In S2V
+             * @description Whether token is in sense2vec model
+             * @default false
+             */
+            in_s2v: boolean;
+            /**
+             * Key
+             * @description Sense2vec key (e.g., 'duck NOUN')
+             */
+            key?: string;
+            /**
+             * Freq
+             * @description Frequency in sense2vec corpus
+             */
+            freq?: number;
+            /**
+             * Other Senses
+             * @description Other senses for this word
+             */
+            other_senses?: string[];
+            /**
+             * Most Similar
+             * @description Most similar words with scores
+             */
+            most_similar?: Record<string, never>[];
         };
         /** TermCreate */
         TermCreate: {
@@ -1465,8 +1912,11 @@ export interface components {
              * Format: uuid
              */
             layer_id: string;
-            /** Parent Term Id */
-            parent_term_id?: string | null;
+            /**
+             * Parent Term Id
+             * Format: uuid
+             */
+            parent_term_id?: string;
         };
         /** TermOut */
         TermOut: {
@@ -1489,12 +1939,15 @@ export interface components {
              * Format: uuid
              */
             layer_id: string;
-            /** Parent Term Id */
-            parent_term_id?: string | null;
+            /**
+             * Parent Term Id
+             * Format: uuid
+             */
+            parent_term_id?: string;
             /** Title Embedding */
-            title_embedding?: number[] | null;
+            title_embedding?: number[];
             /** Definition Embedding */
-            definition_embedding?: number[] | null;
+            definition_embedding?: number[];
             /** Created At */
             created_at: string;
             /** Version */
@@ -1516,6 +1969,8 @@ export interface components {
             target_term_id: string;
             /** Predicate */
             predicate: string;
+            /** Predicate Id */
+            predicate_id?: string;
         };
         /** TermRelationshipOut */
         TermRelationshipOut: {
@@ -1531,6 +1986,8 @@ export interface components {
             target_term_id: string;
             /** Predicate */
             predicate: string;
+            /** Predicate Id */
+            predicate_id?: string;
             /**
              * Id
              * Format: uuid
@@ -1539,27 +1996,185 @@ export interface components {
             /** Created At */
             created_at: string;
             /** Source Term */
-            source_term?: {
-                [key: string]: unknown;
-            } | null;
+            source_term?: Record<string, never>;
             /** Target Term */
-            target_term?: {
-                [key: string]: unknown;
-            } | null;
+            target_term?: Record<string, never>;
         };
         /** TermRelationshipUpdate */
         TermRelationshipUpdate: {
             /** Predicate */
-            predicate: string;
+            predicate?: string;
+            /** Predicate Id */
+            predicate_id?: string;
         };
         /** TermUpdate */
         TermUpdate: {
             /** Title */
-            title?: string | null;
+            title?: string;
             /** Definition */
-            definition?: string | null;
-            /** Parent Term Id */
-            parent_term_id?: string | null;
+            definition?: string;
+            /**
+             * Parent Term Id
+             * Format: uuid
+             */
+            parent_term_id?: string;
+        };
+        /**
+         * TokenData
+         * @description Data for a single token in the analyzed text.
+         */
+        TokenData: {
+            /**
+             * Text
+             * @description Token text.
+             */
+            text?: string;
+            /**
+             * Lemma
+             * @description Token lemma.
+             */
+            lemma?: string;
+            /**
+             * Pos
+             * @description Part of speech tag.
+             */
+            pos?: string;
+            /**
+             * Dep
+             * @description Syntactic Dependency Relation.
+             */
+            dep?: string;
+            /**
+             * Tag
+             * @description Detailed POS tag.
+             */
+            tag?: string;
+            /**
+             * Start Idx
+             * @description Start character position.
+             */
+            start_idx?: number;
+            /**
+             * End Idx
+             * @description End character position.
+             */
+            end_idx?: number;
+            /**
+             * Head
+             * @description Head token reference.
+             */
+            head?: components["schemas"]["TokenReference"];
+            /**
+             * Children
+             * @description List of child token references.
+             */
+            children?: components["schemas"]["TokenReference"][];
+            /**
+             * Ancestors
+             * @description List of ancestor token references.
+             */
+            ancestors?: components["schemas"]["TokenReference"][];
+            /**
+             * Subtree
+             * @description List of tokens in the subtree.
+             */
+            subtree?: components["schemas"]["TokenReference"][];
+            /**
+             * Is Alpha
+             * @description Is alphabetic.
+             */
+            is_alpha?: boolean;
+            /**
+             * Is Stop
+             * @description Is stop word.
+             */
+            is_stop?: boolean;
+            /**
+             * Is Oov
+             * @description Is out-of-vocabulary.
+             */
+            is_oov?: boolean;
+            /**
+             * Like Url
+             * @description Is like a URL.
+             */
+            like_url?: boolean;
+            /**
+             * Is Digit
+             * @description Is a digit.
+             */
+            is_digit?: boolean;
+            /**
+             * Ent Iob
+             * @description Inside-Outside-Beginning tag for named entities.
+             */
+            ent_iob?: string;
+            /**
+             * Ent Type
+             * @description Named entity type.
+             */
+            ent_type?: string;
+            /**
+             * Ent Kb Id
+             * @description Knowledge base ID for the entity.
+             */
+            ent_kb_id?: string;
+            /**
+             * Ent Id
+             * @description Entity ID.
+             */
+            ent_id?: number;
+            /**
+             * Sentiment
+             * @description Sentiment score.
+             */
+            sentiment?: number;
+            /**
+             * Concepcy
+             * @description Concepcy data.
+             */
+            concepcy?: components["schemas"]["ConcepcyData"];
+            /**
+             * Wordnet
+             * @description WordNet data.
+             */
+            wordnet?: components["schemas"]["WordNetData"];
+            /**
+             * Sense2Vec
+             * @description Sense2vec data.
+             */
+            sense2vec?: components["schemas"]["Sense2VecData"];
+        };
+        /**
+         * TokenReference
+         * @description Reference to a token by its index in the token list.
+         */
+        TokenReference: {
+            /**
+             * Index
+             * @description Index of the token in the token list.
+             */
+            index?: number;
+            /**
+             * Text
+             * @description Token text.
+             */
+            text?: string;
+            /**
+             * Pos
+             * @description Part of speech tag.
+             */
+            pos?: string;
+            /**
+             * Start Idx
+             * @description Start character position.
+             */
+            start_idx?: number;
+            /**
+             * End Idx
+             * @description End character position.
+             */
+            end_idx?: number;
         };
         /**
          * UpdateDatasetDirectoryRequest
@@ -1577,6 +2192,27 @@ export interface components {
             msg: string;
             /** Error Type */
             type: string;
+        };
+        /**
+         * WordNetData
+         * @description WordNet data for a token.
+         */
+        WordNetData: {
+            /**
+             * Synsets
+             * @description WordNet synsets with attributes, including domain context. Each synset dict includes: name, definition, lemmas, pos, offset, domain.
+             */
+            synsets?: Record<string, never>[];
+            /**
+             * Lemmas
+             * @description WordNet lemmas with attributes.
+             */
+            lemmas?: Record<string, never>[];
+            /**
+             * Definitions
+             * @description WordNet definitions.
+             */
+            definitions?: string[];
         };
     };
     responses: never;
@@ -2433,6 +3069,7 @@ export interface operations {
                 source_term_id?: string;
                 target_term_id?: string;
                 predicate?: string;
+                predicate_id?: string;
                 skip?: number;
                 limit?: number;
                 SessionLocal?: unknown;
@@ -2601,6 +3238,360 @@ export interface operations {
             };
         };
     };
+    list_predicates_api_predicates__get: {
+        parameters: {
+            query?: {
+                skip?: number;
+                limit?: number;
+                sortBy?: string;
+                SessionLocal?: unknown;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PaginatedPredicatesResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_predicate_api_predicates__post: {
+        parameters: {
+            query?: {
+                SessionLocal?: unknown;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PredicateCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PredicateOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_predicate_api_predicates__id__get: {
+        parameters: {
+            query?: {
+                SessionLocal?: unknown;
+            };
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PredicateOut"];
+                };
+            };
+            /** @description Predicate not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_predicate_api_predicates__id__put: {
+        parameters: {
+            query?: {
+                SessionLocal?: unknown;
+            };
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PredicateUpdate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PredicateOut"];
+                };
+            };
+            /** @description Predicate not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    delete_predicate_api_predicates__id__delete: {
+        parameters: {
+            query?: {
+                SessionLocal?: unknown;
+            };
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Predicate not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_predicate_by_identifier_api_predicates_by_identifier__identifier__get: {
+        parameters: {
+            query?: {
+                SessionLocal?: unknown;
+            };
+            header?: never;
+            path: {
+                identifier: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PredicateOut"];
+                };
+            };
+            /** @description Predicate not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_conceptnet_relations_api_predicates_conceptnet_relations_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": string[];
+                };
+            };
+        };
+    };
+    import_predicates_from_conceptnet_api_predicates_import_from_conceptnet_post: {
+        parameters: {
+            query?: {
+                SessionLocal?: unknown;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": string[];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PredicateOut"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_predicate_conceptnet_relation_api_predicates__id__conceptnet_relation_get: {
+        parameters: {
+            query?: {
+                SessionLocal?: unknown;
+            };
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": string;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_conceptnet_mapping_api_predicates_conceptnet_mapping_get: {
+        parameters: {
+            query?: {
+                SessionLocal?: unknown;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: string;
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     get_graph_stats_api_graph_stats_get: {
         parameters: {
             query?: never;
@@ -2616,9 +3607,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": {
-                        [key: string]: unknown;
-                    };
+                    "application/json": Record<string, never>;
                 };
             };
         };
@@ -2664,9 +3653,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": {
-                        [key: string]: unknown;
-                    }[];
+                    "application/json": Record<string, never>[];
                 };
             };
             /** @description Validation Error */
@@ -2732,9 +3719,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": {
-                        [key: string]: unknown;
-                    }[];
+                    "application/json": Record<string, never>[];
                 };
             };
             /** @description Validation Error */
@@ -2767,9 +3752,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": {
-                        [key: string]: unknown;
-                    };
+                    "application/json": Record<string, never>;
                 };
             };
             /** @description Validation Error */
@@ -2869,7 +3852,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": string[] | null;
+                    "application/json": string[];
                 };
             };
             /** @description Validation Error */
@@ -2938,9 +3921,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": {
-                        [key: string]: unknown;
-                    };
+                    "application/json": Record<string, never>;
                 };
             };
             /** @description Validation Error */
@@ -2971,9 +3952,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": {
-                        [key: string]: unknown;
-                    };
+                    "application/json": Record<string, never>;
                 };
             };
             /** @description Validation Error */
@@ -3004,9 +3983,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": {
-                        [key: string]: unknown;
-                    } | null;
+                    "application/json": Record<string, never>;
                 };
             };
             /** @description Validation Error */
@@ -3037,9 +4014,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": {
-                        [key: string]: unknown;
-                    };
+                    "application/json": Record<string, never>;
                 };
             };
             /** @description Validation Error */
@@ -3057,7 +4032,7 @@ export interface operations {
         parameters: {
             query?: {
                 /** @description Optional layer ID to filter by */
-                layer_id?: string | null;
+                layer_id?: string;
             };
             header?: never;
             path?: never;
@@ -3071,9 +4046,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": {
-                        [key: string]: unknown;
-                    }[];
+                    "application/json": Record<string, never>[];
                 };
             };
             /** @description Validation Error */
@@ -3091,7 +4064,7 @@ export interface operations {
         parameters: {
             query?: {
                 /** @description Optional layer ID to analyze */
-                layer_id?: string | null;
+                layer_id?: string;
             };
             header?: never;
             path?: never;
@@ -3105,9 +4078,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": {
-                        [key: string]: unknown;
-                    };
+                    "application/json": Record<string, never>;
                 };
             };
             /** @description Validation Error */
@@ -3138,9 +4109,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": {
-                        [key: string]: unknown;
-                    } | null;
+                    "application/json": Record<string, never>;
                 };
             };
             /** @description Validation Error */
@@ -3171,9 +4140,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": {
-                        [key: string]: unknown;
-                    } | null;
+                    "application/json": Record<string, never>;
                 };
             };
             /** @description Validation Error */
@@ -3704,6 +4671,113 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    nlp_analysis_api_nlp_analysis_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["NLPSuccessResponse"];
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["NLPErrorResponse"];
+                };
+            };
+            /** @description Unprocessable Entity */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["NLPErrorResponse"];
+                };
+            };
+            /** @description Internal Server Error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["NLPErrorResponse"];
+                };
+            };
+        };
+    };
+    configure_proxy_api_nlp_analysis_proxy_configure_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+        };
+    };
+    get_proxy_status_api_nlp_analysis_proxy_status_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+        };
+    };
+    get_proxy_monitoring_api_nlp_analysis_proxy_monitor_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
                 };
             };
         };

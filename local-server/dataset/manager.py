@@ -208,8 +208,9 @@ class DatasetManager:
         datasets = []
         for dataset_id, dataset_data in self.datasets_config.get("datasets", {}).items():
             try:
-                # Get current metrics
+                # Get current metrics and schema version from database
                 metrics = self.get_dataset_metrics(dataset_id)
+                schema_version = self.get_dataset_schema_version(dataset_id)
                 
                 datasets.append(DatasetInfo(
                     id=dataset_id,
@@ -217,7 +218,7 @@ class DatasetManager:
                     filename=dataset_data["filename"],
                     created_at=datetime.fromisoformat(dataset_data["created_at"]),
                     last_accessed=datetime.fromisoformat(dataset_data["last_accessed"]),
-                    schema_version=dataset_data["schema_version"],
+                    schema_version=schema_version,
                     metrics=metrics
                 ))
             except Exception as e:
@@ -288,7 +289,7 @@ class DatasetManager:
             filename=filename,
             created_at=now,
             last_accessed=now,
-            schema_version=1,
+            schema_version=self.get_dataset_schema_version(dataset_id),
             metrics=DatasetMetrics(
                 layers_count=0,
                 domains_count=0,
@@ -400,6 +401,7 @@ class DatasetManager:
         
         dataset_data = self.datasets_config["datasets"][self.active_dataset_id]
         metrics = self.get_dataset_metrics(self.active_dataset_id)
+        schema_version = self.get_dataset_schema_version(self.active_dataset_id)
         
         return DatasetInfo(
             id=self.active_dataset_id,
@@ -407,7 +409,7 @@ class DatasetManager:
             filename=dataset_data["filename"],
             created_at=datetime.fromisoformat(dataset_data["created_at"]),
             last_accessed=datetime.fromisoformat(dataset_data["last_accessed"]),
-            schema_version=dataset_data["schema_version"],
+            schema_version=schema_version,
             metrics=metrics
         )
     
@@ -477,26 +479,18 @@ class DatasetManager:
             logger.info(f"Copied dataset file from {file_path} to {expected_path}")
             file_path = expected_path
         
-        # Validate it's a valid SQLite database and get schema version
+        # Validate it's a valid SQLite database
         try:
             database_url = f"sqlite:///{file_path}"
             engine = create_engine(database_url, connect_args={"check_same_thread": False})
             
-            # Test connection and get schema version
+            # Test connection and basic validation
             with engine.connect() as conn:
                 try:
                     # Check if this looks like our schema
                     result = conn.execute(text("SELECT name FROM sqlite_master WHERE type='table' AND name='layers'"))
                     if not result.fetchone():
                         raise ValueError("File does not appear to be a valid Context Studio dataset")
-                    
-                    # Get schema version
-                    try:
-                        result = conn.execute(text("SELECT version FROM schema_history ORDER BY version DESC LIMIT 1"))
-                        row = result.fetchone()
-                        schema_version = row[0] if row else 1
-                    except:
-                        schema_version = 1  # Assume version 1 if no schema_history table
                         
                 except Exception as e:
                     raise ValueError(f"Invalid dataset file: {e}")
@@ -521,7 +515,7 @@ class DatasetManager:
             "filename": filename,
             "created_at": now.isoformat(),
             "last_accessed": now.isoformat(),
-            "schema_version": schema_version
+            "schema_version": 1  # Will be read from database when needed
         }
         
         self.datasets_config["datasets"][dataset_id] = dataset_info
@@ -543,7 +537,7 @@ class DatasetManager:
             filename=filename,
             created_at=now,
             last_accessed=now,
-            schema_version=schema_version,
+            schema_version=self.get_dataset_schema_version(dataset_id),
             metrics=self.get_dataset_metrics(dataset_id)
         )
     
@@ -598,6 +592,46 @@ class DatasetManager:
                 "description": f"Will load most recent dataset: {most_recent.title}",
                 "dataset": most_recent
             }
+    
+    def get_dataset_schema_version(self, dataset_id: str) -> int:
+        """Get the current schema version for a dataset from the database."""
+        if dataset_id not in self.datasets_config.get("datasets", {}):
+            raise ValueError(f"Dataset {dataset_id} not found")
+        
+        dataset_data = self.datasets_config["datasets"][dataset_id]
+        dataset_path = self.get_dataset_file_path(dataset_data["filename"])
+        
+        if not os.path.exists(dataset_path):
+            logger.warning(f"Dataset file not found: {dataset_path}")
+            return 1  # Default schema version
+        
+        try:
+            # Create temporary connection to get schema version from database
+            database_url = f"sqlite:///{dataset_path}"
+            temp_engine = create_engine(database_url, connect_args={"check_same_thread": False})
+            
+            with temp_engine.connect() as conn:
+                # Check if schema_history table exists
+                result = conn.execute(text(
+                    "SELECT name FROM sqlite_master WHERE type='table' AND name='schema_history'"
+                )).fetchone()
+                
+                if result:
+                    # Get the latest version from schema_history
+                    version_result = conn.execute(text(
+                        "SELECT MAX(version) FROM schema_history"
+                    )).scalar()
+                    schema_version = version_result or 1
+                else:
+                    # No schema_history table, assume version 1
+                    schema_version = 1
+            
+            temp_engine.dispose()
+            return schema_version
+            
+        except Exception as e:
+            logger.error(f"Failed to get schema version for dataset {dataset_id}: {e}")
+            return 1  # Default schema version
     
     def get_dataset_metrics(self, dataset_id: str) -> DatasetMetrics:
         if dataset_id not in self.datasets_config.get("datasets", {}):

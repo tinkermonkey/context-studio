@@ -23,7 +23,6 @@ const LayerForm: React.FC<LayerFormProps> = ({ onSuccess, layer }) => {
     defaultValues: {
       title: layer?.title ?? "",
       definition: layer?.definition ?? "",
-      primary_predicate: layer?.primary_predicate ?? "",
     },
     onSubmit: async ({ value }) => {
       setSubmitError(null);
@@ -120,29 +119,6 @@ const LayerForm: React.FC<LayerFormProps> = ({ onSuccess, layer }) => {
               <Textarea
                 id="layer-definition"
                 placeholder="Definition (optional)"
-                value={field.state.value}
-                onChange={(e) => field.handleChange(e.target.value)}
-              />
-              {field.state.meta.errors.length > 0 && (
-                <div className="mt-1 text-sm text-red-600">
-                  {field.state.meta.errors[0]}
-                </div>
-              )}
-            </div>
-          )}
-        </form.Field>
-        <form.Field name="primary_predicate">
-          {(field) => (
-            <div>
-              <Label
-                htmlFor="layer-primary-predicate"
-                className="mb-1 block font-medium"
-              >
-                Primary Predicate (optional)
-              </Label>
-              <TextInput
-                id="layer-primary-predicate"
-                placeholder="Primary Predicate (optional)"
                 value={field.state.value}
                 onChange={(e) => field.handleChange(e.target.value)}
               />

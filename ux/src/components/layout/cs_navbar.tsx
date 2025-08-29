@@ -55,6 +55,7 @@ export function CsNavbar() {
               <DropdownItem href="/app/layers">Layers</DropdownItem>
               <DropdownItem href="/app/domains">Domains</DropdownItem>
               <DropdownItem href="/app/terms">Terms</DropdownItem>
+              <DropdownItem href="/app/predicates">Predicates</DropdownItem>
             </Dropdown>
             <Dropdown label="Data" className="hidden lg:block" inline={true}>
               <DropdownItem href="/app/data/sources">Sources</DropdownItem>

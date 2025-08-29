@@ -6,3 +6,4 @@
 
 export * from './useNLPAnalysis';
 export * from './useNLPMutations';
+export * from './useNLPProxy';

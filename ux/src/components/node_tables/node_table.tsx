@@ -402,8 +402,9 @@ function BaseNodeTable<T>({
     
     setPendingDeleteRows(selectedRows);
     
-    // Check for children if onGetChildren is provided (safe deletion workflow)
-    if (onGetChildren) {
+    // Check for children only for terms (safe deletion workflow)
+    // For layers and domains, deletion cascades automatically in the database
+    if (onGetChildren && typeName.toLowerCase() === 'term') {
       (async () => {
         try {
           let allChildren: T[] = [];
@@ -430,7 +431,7 @@ function BaseNodeTable<T>({
         }
       })();
     } else {
-      // No safe deletion workflow, show normal delete modal
+      // For layers/domains or no safe deletion workflow, show normal delete modal
       setShowDeleteModal(true);
     }
   };
@@ -440,8 +441,8 @@ function BaseNodeTable<T>({
     if (pendingDeleteRows.length === 0) return;
     
     try {
-      // Handle children first if needed
-      if (childrenToHandle.length > 0 && onMoveChildren) {
+      // Handle children first if needed (only for terms)
+      if (childrenToHandle.length > 0 && onMoveChildren && typeName.toLowerCase() === 'term') {
         if (deleteOption === 'orphan') {
           // Move children to orphan state (null parent)
           const childIds = childrenToHandle.map(child => getId(child));
@@ -700,7 +701,6 @@ function BaseNodeTable<T>({
           </div>
         )}
       </div>
-      {/* Delete Confirmation Modal */}
       <Modal show={showDeleteModal} onClose={() => setShowDeleteModal(false)}>
         <ModalHeader className="border-b-0">
           <div className="flex items-center gap-2">
@@ -715,7 +715,23 @@ function BaseNodeTable<T>({
             {pendingDeleteRows.length > 1 ? "s" : ""}?
           </div>
           
-          {childrenToHandle.length > 0 && (
+          {/* Show cascade warning for layers and domains */}
+          {(typeName.toLowerCase() === 'layer' || typeName.toLowerCase() === 'domain') && (
+            <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
+              <div className="flex items-center gap-2 mb-3">
+                <AlertTriangle className="h-4 w-4 text-red-600" />
+                <span className="text-red-800 font-medium">
+                  Warning: Cascade Delete
+                </span>
+              </div>
+              <p className="text-red-700 text-sm">
+                Deleting {typeName.toLowerCase()}{pendingDeleteRows.length > 1 ? "s" : ""} will also permanently delete all child records (terms, domains, and relationships).
+              </p>
+            </div>
+          )}
+          
+          {/* Show child handling options only for terms */}
+          {childrenToHandle.length > 0 && typeName.toLowerCase() === 'term' && (
             <div className="mb-6 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
               <div className="flex items-center gap-2 mb-3">
                 <AlertTriangle className="h-4 w-4 text-yellow-600" />

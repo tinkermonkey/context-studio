@@ -5,7 +5,7 @@ Test script to verify the reference_api_buddy integration works correctly.
 
 import sys
 import os
-sys.path.append(os.path.dirname(os.path.abspath(__file__)))
+sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
 from nlp.proxy_manager import get_proxy_manager
 from config import get_settings

@@ -13,6 +13,7 @@ import { Route as AppRouteImport } from './routes/app'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AppIndexRouteImport } from './routes/app/index'
 import { Route as AppTermsRouteImport } from './routes/app/terms'
+import { Route as AppPredicatesRouteImport } from './routes/app/predicates'
 import { Route as AppLayersRouteImport } from './routes/app/layers'
 import { Route as AppDomainsRouteImport } from './routes/app/domains'
 import { Route as AppDatasetsRouteImport } from './routes/app/datasets'
@@ -38,6 +39,11 @@ const AppIndexRoute = AppIndexRouteImport.update({
 const AppTermsRoute = AppTermsRouteImport.update({
   id: '/terms',
   path: '/terms',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppPredicatesRoute = AppPredicatesRouteImport.update({
+  id: '/predicates',
+  path: '/predicates',
   getParentRoute: () => AppRoute,
 } as any)
 const AppLayersRoute = AppLayersRouteImport.update({
@@ -77,6 +83,7 @@ export interface FileRoutesByFullPath {
   '/app/datasets': typeof AppDatasetsRoute
   '/app/domains': typeof AppDomainsRoute
   '/app/layers': typeof AppLayersRoute
+  '/app/predicates': typeof AppPredicatesRoute
   '/app/terms': typeof AppTermsRoute
   '/app/': typeof AppIndexRoute
   '/app/nodes/domain/$domainId': typeof AppNodesDomainDomainIdRoute
@@ -88,6 +95,7 @@ export interface FileRoutesByTo {
   '/app/datasets': typeof AppDatasetsRoute
   '/app/domains': typeof AppDomainsRoute
   '/app/layers': typeof AppLayersRoute
+  '/app/predicates': typeof AppPredicatesRoute
   '/app/terms': typeof AppTermsRoute
   '/app': typeof AppIndexRoute
   '/app/nodes/domain/$domainId': typeof AppNodesDomainDomainIdRoute
@@ -101,6 +109,7 @@ export interface FileRoutesById {
   '/app/datasets': typeof AppDatasetsRoute
   '/app/domains': typeof AppDomainsRoute
   '/app/layers': typeof AppLayersRoute
+  '/app/predicates': typeof AppPredicatesRoute
   '/app/terms': typeof AppTermsRoute
   '/app/': typeof AppIndexRoute
   '/app/nodes/domain/$domainId': typeof AppNodesDomainDomainIdRoute
@@ -115,6 +124,7 @@ export interface FileRouteTypes {
     | '/app/datasets'
     | '/app/domains'
     | '/app/layers'
+    | '/app/predicates'
     | '/app/terms'
     | '/app/'
     | '/app/nodes/domain/$domainId'
@@ -126,6 +136,7 @@ export interface FileRouteTypes {
     | '/app/datasets'
     | '/app/domains'
     | '/app/layers'
+    | '/app/predicates'
     | '/app/terms'
     | '/app'
     | '/app/nodes/domain/$domainId'
@@ -138,6 +149,7 @@ export interface FileRouteTypes {
     | '/app/datasets'
     | '/app/domains'
     | '/app/layers'
+    | '/app/predicates'
     | '/app/terms'
     | '/app/'
     | '/app/nodes/domain/$domainId'
@@ -178,6 +190,13 @@ declare module '@tanstack/react-router' {
       path: '/terms'
       fullPath: '/app/terms'
       preLoaderRoute: typeof AppTermsRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/app/predicates': {
+      id: '/app/predicates'
+      path: '/predicates'
+      fullPath: '/app/predicates'
+      preLoaderRoute: typeof AppPredicatesRouteImport
       parentRoute: typeof AppRoute
     }
     '/app/layers': {
@@ -229,6 +248,7 @@ interface AppRouteChildren {
   AppDatasetsRoute: typeof AppDatasetsRoute
   AppDomainsRoute: typeof AppDomainsRoute
   AppLayersRoute: typeof AppLayersRoute
+  AppPredicatesRoute: typeof AppPredicatesRoute
   AppTermsRoute: typeof AppTermsRoute
   AppIndexRoute: typeof AppIndexRoute
   AppNodesDomainDomainIdRoute: typeof AppNodesDomainDomainIdRoute
@@ -240,6 +260,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppDatasetsRoute: AppDatasetsRoute,
   AppDomainsRoute: AppDomainsRoute,
   AppLayersRoute: AppLayersRoute,
+  AppPredicatesRoute: AppPredicatesRoute,
   AppTermsRoute: AppTermsRoute,
   AppIndexRoute: AppIndexRoute,
   AppNodesDomainDomainIdRoute: AppNodesDomainDomainIdRoute,

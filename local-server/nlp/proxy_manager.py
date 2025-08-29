@@ -169,6 +169,11 @@ class ReferenceAPIProxyManager:
     
     def is_proxy_enabled(self) -> bool:
         """Check if any reference APIs have proxy enabled"""
+        # Check if proxy is explicitly disabled via environment variable
+        import os
+        if os.environ.get('DISABLE_REFERENCE_API_PROXY', '').lower() in ('true', '1', 'yes'):
+            return False
+            
         settings = get_settings()
         enabled_apis = settings.ENABLE_CACHING_PROXY
         return any(enabled_apis.values())

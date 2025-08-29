@@ -23,19 +23,28 @@ const columnHelper = createColumnHelper<DatasetResponse>();
 const columns = [
   columnHelper.display({
     id: 'select',
-    header: ({ table }) => (
-      <Checkbox
-        checked={table.getIsAllRowsSelected()}
-        indeterminate={table.getIsSomeRowsSelected()}
-        onChange={() => {
-          if (table.getIsAllRowsSelected() || table.getIsSomeRowsSelected()) {
-            table.toggleAllRowsSelected(false);
-          } else {
-            table.toggleAllRowsSelected(true);
-          }
-        }}
-      />
-    ),
+    header: ({ table }) => {
+      const { rows } = table.getRowModel();
+      const selectedCount = rows.filter(row => row.getIsSelected()).length;
+      const isAllSelected = rows.length > 0 && selectedCount === rows.length;
+      const isSomeSelected = selectedCount > 0 && selectedCount < rows.length;
+      
+      return (
+        <Checkbox
+          checked={isAllSelected}
+          indeterminate={isSomeSelected}
+          onChange={() => {
+            if (isAllSelected || isSomeSelected) {
+              // Deselect all visible rows
+              rows.forEach(row => row.toggleSelected(false));
+            } else {
+              // Select all visible rows
+              rows.forEach(row => row.toggleSelected(true));
+            }
+          }}
+        />
+      );
+    },
     cell: ({ row }) => (
       <Checkbox
         checked={row.getIsSelected()}

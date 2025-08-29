@@ -177,9 +177,19 @@ def to_domain_out(domain):
     predicate_set_list = None
     if domain.predicate_set:
         try:
-            predicate_set_list = json.loads(domain.predicate_set)
-        except json.JSONDecodeError:
-            logger.warning(f"Invalid JSON in domain {domain.id} predicate_set: {domain.predicate_set}")
+            parsed_set = json.loads(domain.predicate_set)
+            # Handle two formats:
+            # 1. List format: ["predicate1", "predicate2"] (newer format from API)
+            # 2. Object format: {"predicates": ["predicate1", "predicate2"]} (older format)
+            if isinstance(parsed_set, list):
+                predicate_set_list = parsed_set
+            elif isinstance(parsed_set, dict):
+                predicate_set_list = parsed_set.get("predicates", [])
+            else:
+                logger.warning(f"Domain {domain.id} predicate_set has unexpected format after JSON parsing: {type(parsed_set)}")
+                predicate_set_list = None
+        except (json.JSONDecodeError, TypeError) as e:
+            logger.warning(f"Invalid JSON in domain {domain.id} predicate_set: {domain.predicate_set}, error: {e}")
             predicate_set_list = None
     
     return DomainOut(

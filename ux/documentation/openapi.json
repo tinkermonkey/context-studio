@@ -1234,6 +1234,15 @@
           {
             "required": false,
             "schema": {
+              "type": "string",
+              "title": "Predicate Id"
+            },
+            "name": "predicate_id",
+            "in": "query"
+          },
+          {
+            "required": false,
+            "schema": {
               "type": "integer",
               "title": "Skip",
               "default": 0
@@ -1475,6 +1484,535 @@
             "content": {
               "application/json": {
                 "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/predicates/": {
+      "get": {
+        "tags": [
+          "predicates"
+        ],
+        "summary": "List Predicates",
+        "description": "List predicates with pagination and sorting.",
+        "operationId": "list_predicates_api_predicates__get",
+        "parameters": [
+          {
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 0.0,
+              "title": "Skip",
+              "default": 0
+            },
+            "name": "skip",
+            "in": "query"
+          },
+          {
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 100.0,
+              "minimum": 1.0,
+              "title": "Limit",
+              "default": 50
+            },
+            "name": "limit",
+            "in": "query"
+          },
+          {
+            "required": false,
+            "schema": {
+              "type": "string",
+              "pattern": "^(title|identifier|date_created)$",
+              "title": "Sortby",
+              "default": "title"
+            },
+            "name": "sortBy",
+            "in": "query"
+          },
+          {
+            "required": false,
+            "schema": {
+              "title": "Sessionlocal"
+            },
+            "name": "SessionLocal",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PaginatedPredicatesResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "predicates"
+        ],
+        "summary": "Create Predicate",
+        "description": "Create a new predicate.",
+        "operationId": "create_predicate_api_predicates__post",
+        "parameters": [
+          {
+            "required": false,
+            "schema": {
+              "title": "Sessionlocal"
+            },
+            "name": "SessionLocal",
+            "in": "query"
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PredicateCreate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PredicateOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/predicates/{id}": {
+      "get": {
+        "tags": [
+          "predicates"
+        ],
+        "summary": "Get Predicate",
+        "description": "Get a predicate by ID.",
+        "operationId": "get_predicate_api_predicates__id__get",
+        "parameters": [
+          {
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Id"
+            },
+            "name": "id",
+            "in": "path"
+          },
+          {
+            "required": false,
+            "schema": {
+              "title": "Sessionlocal"
+            },
+            "name": "SessionLocal",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PredicateOut"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Predicate not found"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "predicates"
+        ],
+        "summary": "Update Predicate",
+        "description": "Update an existing predicate.",
+        "operationId": "update_predicate_api_predicates__id__put",
+        "parameters": [
+          {
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Id"
+            },
+            "name": "id",
+            "in": "path"
+          },
+          {
+            "required": false,
+            "schema": {
+              "title": "Sessionlocal"
+            },
+            "name": "SessionLocal",
+            "in": "query"
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PredicateUpdate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PredicateOut"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Predicate not found"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "predicates"
+        ],
+        "summary": "Delete Predicate",
+        "description": "Delete a predicate.",
+        "operationId": "delete_predicate_api_predicates__id__delete",
+        "parameters": [
+          {
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Id"
+            },
+            "name": "id",
+            "in": "path"
+          },
+          {
+            "required": false,
+            "schema": {
+              "title": "Sessionlocal"
+            },
+            "name": "SessionLocal",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "404": {
+            "description": "Predicate not found"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/predicates/by-identifier/{identifier}": {
+      "get": {
+        "tags": [
+          "predicates"
+        ],
+        "summary": "Get Predicate By Identifier",
+        "description": "Get a predicate by its identifier.",
+        "operationId": "get_predicate_by_identifier_api_predicates_by_identifier__identifier__get",
+        "parameters": [
+          {
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Identifier"
+            },
+            "name": "identifier",
+            "in": "path"
+          },
+          {
+            "required": false,
+            "schema": {
+              "title": "Sessionlocal"
+            },
+            "name": "SessionLocal",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PredicateOut"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Predicate not found"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/predicates/conceptnet-relations": {
+      "get": {
+        "tags": [
+          "predicates"
+        ],
+        "summary": "Get Conceptnet Relations",
+        "description": "Get the list of ConceptNet relations configured in the system.",
+        "operationId": "get_conceptnet_relations_api_predicates_conceptnet_relations_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "type": "string"
+                  },
+                  "type": "array",
+                  "title": "Response Get Conceptnet Relations Api Predicates Conceptnet Relations Get"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/predicates/import-from-conceptnet": {
+      "post": {
+        "tags": [
+          "predicates"
+        ],
+        "summary": "Import Predicates From Conceptnet",
+        "description": "Import predicates from ConceptNet relations.",
+        "operationId": "import_predicates_from_conceptnet_api_predicates_import_from_conceptnet_post",
+        "parameters": [
+          {
+            "required": false,
+            "schema": {
+              "title": "Sessionlocal"
+            },
+            "name": "SessionLocal",
+            "in": "query"
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array",
+                "title": "Relations"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/PredicateOut"
+                  },
+                  "type": "array",
+                  "title": "Response Import Predicates From Conceptnet Api Predicates Import From Conceptnet Post"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/predicates/{id}/conceptnet-relation": {
+      "get": {
+        "tags": [
+          "predicates"
+        ],
+        "summary": "Get Predicate Conceptnet Relation",
+        "description": "Get the ConceptNet relation for a specific predicate.",
+        "operationId": "get_predicate_conceptnet_relation_api_predicates__id__conceptnet_relation_get",
+        "parameters": [
+          {
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Id"
+            },
+            "name": "id",
+            "in": "path"
+          },
+          {
+            "required": false,
+            "schema": {
+              "title": "Sessionlocal"
+            },
+            "name": "SessionLocal",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string",
+                  "title": "Response Get Predicate Conceptnet Relation Api Predicates  Id  Conceptnet Relation Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/predicates/conceptnet-mapping": {
+      "get": {
+        "tags": [
+          "predicates"
+        ],
+        "summary": "Get Conceptnet Mapping",
+        "description": "Get a mapping of all predicate identifiers to their ConceptNet relations.",
+        "operationId": "get_conceptnet_mapping_api_predicates_conceptnet_mapping_get",
+        "parameters": [
+          {
+            "required": false,
+            "schema": {
+              "title": "Sessionlocal"
+            },
+            "name": "SessionLocal",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": {
+                    "type": "string"
+                  },
+                  "type": "object",
+                  "title": "Response Get Conceptnet Mapping Api Predicates Conceptnet Mapping Get"
+                }
               }
             }
           },
@@ -3027,6 +3565,66 @@
           }
         }
       }
+    },
+    "/api/nlp_analysis/proxy/configure": {
+      "post": {
+        "tags": [
+          "nlp"
+        ],
+        "summary": "Configure Proxy",
+        "description": "Update reference API proxy configuration and reload pipeline.",
+        "operationId": "configure_proxy_api_nlp_analysis_proxy_configure_post",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/nlp_analysis/proxy/status": {
+      "get": {
+        "tags": [
+          "nlp"
+        ],
+        "summary": "Get Proxy Status",
+        "description": "Get current proxy configuration and status.",
+        "operationId": "get_proxy_status_api_nlp_analysis_proxy_status_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/nlp_analysis/proxy/monitor": {
+      "get": {
+        "tags": [
+          "nlp"
+        ],
+        "summary": "Get Proxy Monitoring",
+        "description": "Get comprehensive monitoring statistics from the reference API buddy proxy.\n\nReturns cache stats, upstream performance, database health, proxy health,\nand throttling information when the proxy is running.",
+        "operationId": "get_proxy_monitoring_api_nlp_analysis_proxy_monitor_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
@@ -3121,16 +3719,11 @@
         "properties": {
           "related_terms": {
             "items": {
-              "type": "string"
+              "type": "object"
             },
             "type": "array",
             "title": "Related Terms",
             "description": "Related terms from ConceptNet."
-          },
-          "score": {
-            "type": "number",
-            "title": "Score",
-            "description": "ConceptNet similarity score."
           }
         },
         "type": "object",
@@ -3277,6 +3870,17 @@
             "type": "string",
             "format": "uuid",
             "title": "Layer Id"
+          },
+          "primary_predicate_id": {
+            "type": "string",
+            "title": "Primary predicate Id"
+          },
+          "predicate_set": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Predicate Set"
           }
         },
         "type": "object",
@@ -3304,10 +3908,25 @@
             "format": "uuid",
             "title": "Layer Id"
           },
+          "primary_predicate_id": {
+            "type": "string",
+            "title": "Primary predicate Id"
+          },
+          "predicate_set": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Predicate Set"
+          },
           "id": {
             "type": "string",
             "format": "uuid",
             "title": "Id"
+          },
+          "primary_predicate": {
+            "type": "string",
+            "title": "Primary predicate"
           },
           "title_embedding": {
             "items": {
@@ -3360,6 +3979,17 @@
             "type": "string",
             "format": "uuid",
             "title": "Layer Id"
+          },
+          "primary_predicate_id": {
+            "type": "string",
+            "title": "Primary predicate Id"
+          },
+          "predicate_set": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Predicate Set"
           }
         },
         "type": "object",
@@ -3448,10 +4078,25 @@
             "format": "uuid",
             "title": "Layer Id"
           },
+          "primary_predicate_id": {
+            "type": "string",
+            "title": "Primary predicate Id"
+          },
+          "predicate_set": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Predicate Set"
+          },
           "id": {
             "type": "string",
             "format": "uuid",
             "title": "Id"
+          },
+          "primary_predicate": {
+            "type": "string",
+            "title": "Primary predicate"
           },
           "title_embedding": {
             "items": {
@@ -3537,12 +4182,7 @@
           },
           "definition": {
             "type": "string",
-            "minLength": 1,
             "title": "Definition"
-          },
-          "primary_predicate": {
-            "type": "string",
-            "title": "Primary Predicate"
           },
           "id": {
             "type": "string",
@@ -3732,12 +4372,7 @@
           },
           "definition": {
             "type": "string",
-            "minLength": 1,
             "title": "Definition"
-          },
-          "primary_predicate": {
-            "type": "string",
-            "title": "Primary Predicate"
           }
         },
         "type": "object",
@@ -3755,12 +4390,7 @@
           },
           "definition": {
             "type": "string",
-            "minLength": 1,
             "title": "Definition"
-          },
-          "primary_predicate": {
-            "type": "string",
-            "title": "Primary Predicate"
           },
           "id": {
             "type": "string",
@@ -3811,10 +4441,6 @@
           "definition": {
             "type": "string",
             "title": "Definition"
-          },
-          "primary_predicate": {
-            "type": "string",
-            "title": "Primary Predicate"
           }
         },
         "type": "object",
@@ -4125,6 +4751,37 @@
         ],
         "title": "PaginatedLayersResponse"
       },
+      "PaginatedPredicatesResponse": {
+        "properties": {
+          "data": {
+            "items": {
+              "$ref": "#/components/schemas/PredicateOut"
+            },
+            "type": "array",
+            "title": "Data"
+          },
+          "total": {
+            "type": "integer",
+            "title": "Total"
+          },
+          "skip": {
+            "type": "integer",
+            "title": "Skip"
+          },
+          "limit": {
+            "type": "integer",
+            "title": "Limit"
+          }
+        },
+        "type": "object",
+        "required": [
+          "data",
+          "total",
+          "skip",
+          "limit"
+        ],
+        "title": "PaginatedPredicatesResponse"
+      },
       "PaginatedTermsResponse": {
         "properties": {
           "data": {
@@ -4183,6 +4840,98 @@
           "target_id"
         ],
         "title": "PathRequest"
+      },
+      "PredicateCreate": {
+        "properties": {
+          "title": {
+            "type": "string",
+            "maxLength": 255,
+            "minLength": 1,
+            "title": "Title"
+          },
+          "definition": {
+            "type": "string",
+            "title": "Definition"
+          },
+          "mapping": {
+            "type": "object",
+            "title": "Mapping"
+          },
+          "identifier": {
+            "type": "string",
+            "title": "Identifier"
+          }
+        },
+        "type": "object",
+        "required": [
+          "title"
+        ],
+        "title": "PredicateCreate"
+      },
+      "PredicateOut": {
+        "properties": {
+          "title": {
+            "type": "string",
+            "maxLength": 255,
+            "minLength": 1,
+            "title": "Title"
+          },
+          "definition": {
+            "type": "string",
+            "title": "Definition"
+          },
+          "mapping": {
+            "type": "object",
+            "title": "Mapping"
+          },
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "identifier": {
+            "type": "string",
+            "title": "Identifier"
+          },
+          "date_created": {
+            "type": "string",
+            "title": "Date Created"
+          },
+          "date_modified": {
+            "type": "string",
+            "title": "Date Modified"
+          }
+        },
+        "type": "object",
+        "required": [
+          "title",
+          "id",
+          "identifier",
+          "date_created",
+          "date_modified"
+        ],
+        "title": "PredicateOut"
+      },
+      "PredicateUpdate": {
+        "properties": {
+          "title": {
+            "type": "string",
+            "title": "Title"
+          },
+          "definition": {
+            "type": "string",
+            "title": "Definition"
+          },
+          "mapping": {
+            "type": "object",
+            "title": "Mapping"
+          },
+          "identifier": {
+            "type": "string",
+            "title": "Identifier"
+          }
+        },
+        "type": "object",
+        "title": "PredicateUpdate"
       },
       "SPARQLQuery": {
         "properties": {
@@ -4386,6 +5135,10 @@
           "predicate": {
             "type": "string",
             "title": "Predicate"
+          },
+          "predicate_id": {
+            "type": "string",
+            "title": "Predicate Id"
           }
         },
         "type": "object",
@@ -4411,6 +5164,10 @@
           "predicate": {
             "type": "string",
             "title": "Predicate"
+          },
+          "predicate_id": {
+            "type": "string",
+            "title": "Predicate Id"
           },
           "id": {
             "type": "string",
@@ -4445,12 +5202,13 @@
           "predicate": {
             "type": "string",
             "title": "Predicate"
+          },
+          "predicate_id": {
+            "type": "string",
+            "title": "Predicate Id"
           }
         },
         "type": "object",
-        "required": [
-          "predicate"
-        ],
         "title": "TermRelationshipUpdate"
       },
       "TermUpdate": {
@@ -4489,20 +5247,108 @@
             "title": "Pos",
             "description": "Part of speech tag."
           },
+          "dep": {
+            "type": "string",
+            "title": "Dep",
+            "description": "Syntactic Dependency Relation."
+          },
           "tag": {
             "type": "string",
             "title": "Tag",
             "description": "Detailed POS tag."
           },
-          "start": {
+          "start_idx": {
             "type": "integer",
-            "title": "Start",
+            "title": "Start Idx",
             "description": "Start character position."
           },
-          "end": {
+          "end_idx": {
             "type": "integer",
-            "title": "End",
+            "title": "End Idx",
             "description": "End character position."
+          },
+          "head": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/TokenReference"
+              }
+            ],
+            "title": "Head",
+            "description": "Head token reference."
+          },
+          "children": {
+            "items": {
+              "$ref": "#/components/schemas/TokenReference"
+            },
+            "type": "array",
+            "title": "Children",
+            "description": "List of child token references."
+          },
+          "ancestors": {
+            "items": {
+              "$ref": "#/components/schemas/TokenReference"
+            },
+            "type": "array",
+            "title": "Ancestors",
+            "description": "List of ancestor token references."
+          },
+          "subtree": {
+            "items": {
+              "$ref": "#/components/schemas/TokenReference"
+            },
+            "type": "array",
+            "title": "Subtree",
+            "description": "List of tokens in the subtree."
+          },
+          "is_alpha": {
+            "type": "boolean",
+            "title": "Is Alpha",
+            "description": "Is alphabetic."
+          },
+          "is_stop": {
+            "type": "boolean",
+            "title": "Is Stop",
+            "description": "Is stop word."
+          },
+          "is_oov": {
+            "type": "boolean",
+            "title": "Is Oov",
+            "description": "Is out-of-vocabulary."
+          },
+          "like_url": {
+            "type": "boolean",
+            "title": "Like Url",
+            "description": "Is like a URL."
+          },
+          "is_digit": {
+            "type": "boolean",
+            "title": "Is Digit",
+            "description": "Is a digit."
+          },
+          "ent_iob": {
+            "type": "string",
+            "title": "Ent Iob",
+            "description": "Inside-Outside-Beginning tag for named entities."
+          },
+          "ent_type": {
+            "type": "string",
+            "title": "Ent Type",
+            "description": "Named entity type."
+          },
+          "ent_kb_id": {
+            "type": "string",
+            "title": "Ent Kb Id",
+            "description": "Knowledge base ID for the entity."
+          },
+          "ent_id": {
+            "type": "integer",
+            "title": "Ent Id",
+            "description": "Entity ID."
+          },
+          "sentiment": {
+            "type": "number",
+            "title": "Sentiment",
+            "description": "Sentiment score."
           },
           "concepcy": {
             "allOf": [
@@ -4535,6 +5381,38 @@
         "type": "object",
         "title": "TokenData",
         "description": "Data for a single token in the analyzed text."
+      },
+      "TokenReference": {
+        "properties": {
+          "index": {
+            "type": "integer",
+            "title": "Index",
+            "description": "Index of the token in the token list."
+          },
+          "text": {
+            "type": "string",
+            "title": "Text",
+            "description": "Token text."
+          },
+          "pos": {
+            "type": "string",
+            "title": "Pos",
+            "description": "Part of speech tag."
+          },
+          "start_idx": {
+            "type": "integer",
+            "title": "Start Idx",
+            "description": "Start character position."
+          },
+          "end_idx": {
+            "type": "integer",
+            "title": "End Idx",
+            "description": "End character position."
+          }
+        },
+        "type": "object",
+        "title": "TokenReference",
+        "description": "Reference to a token by its index in the token list."
       },
       "UpdateDatasetDirectoryRequest": {
         "properties": {

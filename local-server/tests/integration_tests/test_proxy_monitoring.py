@@ -10,7 +10,7 @@ import sys
 import os
 
 # Add the project root to the path to import utils
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
 try:
     from utils.monitoring_analysis import analyze_proxy_health, get_performance_summary

@@ -1,5 +1,6 @@
 import threading
 import spacy
+import spacy.tokens
 import concepcy
 import spacy_dbpedia_spotlight
 from typing import Optional
@@ -61,7 +62,8 @@ class NLPPipeline:
         try:
             settings = get_settings()
             logger.info("Adding concepcy component...")
-            use_proxy = settings.ENABLE_CACHING_PROXY.get("concepcy", False)
+            # Check both settings and proxy manager to determine if proxy should be used
+            use_proxy = settings.ENABLE_CACHING_PROXY.get("concepcy", False) and self.proxy_manager.is_proxy_enabled()
             config = settings.get_concepcy_config(use_proxy=use_proxy)
             
             self.nlp.add_pipe("concepcy", config=config)
@@ -76,7 +78,8 @@ class NLPPipeline:
         try:
             settings = get_settings()
             logger.info("Adding dbpedia_spotlight component...")
-            use_proxy = settings.ENABLE_CACHING_PROXY.get("spacy_dbpedia_spotlight", False)
+            # Check both settings and proxy manager to determine if proxy should be used
+            use_proxy = settings.ENABLE_CACHING_PROXY.get("spacy_dbpedia_spotlight", False) and self.proxy_manager.is_proxy_enabled()
             
             if use_proxy:
                 proxy_config = settings.REFERENCE_API_BUDDY_CONFIG
@@ -113,6 +116,13 @@ class NLPPipeline:
         try:
             settings = get_settings()
             logger.info("Adding sense2vec component...")
+            
+            # Check if the _s2v extension already exists
+            if spacy.tokens.Doc.has_extension("_s2v"):
+                logger.debug("_s2v extension already exists, removing it before adding sense2vec component")
+                # Remove the existing extension
+                spacy.tokens.Doc.remove_extension("_s2v")
+            
             self.s2v = self.nlp.add_pipe("sense2vec")
             # Load the S2V dataset
             logger.info(f"Loading sense2vec model from {settings.s2v_config['abs_path']}...")

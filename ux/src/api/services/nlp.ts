@@ -73,6 +73,50 @@ export interface NLPAnalysisRequest {
   text: string;
 }
 
+// Proxy configuration and monitoring types
+export interface ProxyConfiguration {
+  [key: string]: boolean;
+}
+
+export interface ProxyConfigureResponse {
+  success: boolean;
+  message: string;
+  configuration: ProxyConfiguration;
+}
+
+export interface ProxyStatusResponse {
+  proxy_running: boolean;
+  configuration: ProxyConfiguration;
+  uptime?: number;
+}
+
+export interface ProxyMonitoringResponse {
+  cache?: {
+    total_entries: number;
+    total_size_bytes: number;
+    hit_rate: number;
+    domains: Record<string, any>;
+  };
+  upstream?: {
+    overall: any;
+    domains: Record<string, any>;
+  };
+  database?: {
+    db_file_path: string;
+    db_file_size_bytes: number;
+    db_health: string;
+  };
+  proxy?: {
+    uptime_seconds: number;
+    active_threads: number;
+    recent_errors: string[];
+  };
+  throttling?: {
+    overall: any;
+    domains: Record<string, any>;
+  };
+}
+
 export class NLPService extends BaseService {
   /**
    * Analyze text using NLP pipeline
@@ -121,6 +165,37 @@ export class NLPService extends BaseService {
    */
   async getComprehensiveAnalysis(text: string): Promise<NLPAnalysisResponse> {
     return this.analyzeText(text);
+  }
+
+  /**
+   * Configure proxy settings
+   * @param config Proxy configuration object
+   * @returns Configuration response
+   */
+  async configureProxy(config: ProxyConfiguration): Promise<ProxyConfigureResponse> {
+    return this.withErrorContext(
+      () => {
+        this.validateRequired(config, 'Proxy configuration');
+        return this.postResource<ProxyConfigureResponse>(`${ENDPOINTS.NLP}/proxy/configure`, config);
+      },
+      'configure NLP proxy'
+    );
+  }
+
+  /**
+   * Get proxy status
+   * @returns Current proxy status
+   */
+  async getProxyStatus(): Promise<ProxyStatusResponse> {
+    return this.getResource<ProxyStatusResponse>(`${ENDPOINTS.NLP}/proxy/status`);
+  }
+
+  /**
+   * Get proxy monitoring stats
+   * @returns Monitoring statistics or null if proxy is not running
+   */
+  async getProxyMonitoring(): Promise<ProxyMonitoringResponse | null> {
+    return this.getResource<ProxyMonitoringResponse | null>(`${ENDPOINTS.NLP}/proxy/monitor`);
   }
 }
 

@@ -30,16 +30,44 @@ def generate_identifier_from_title(title: str) -> str:
 
 def validate_predicate_set(predicate_identifiers: List[str], db: Session) -> bool:
     """
-    Validate that all predicate identifiers in a set exist in the database.
+    Validate that all predicate identifiers or IDs in a set exist in the database.
+    Supports both predicate identifiers (strings) and predicate IDs (UUIDs).
     """
     if not predicate_identifiers:
         return True
     
-    existing_count = db.query(Predicate).filter(
-        Predicate.identifier.in_(predicate_identifiers)
-    ).count()
+    # Check if the values are UUIDs (predicate IDs) or identifiers
+    # UUIDs have a specific format, identifiers are typically lowercase with underscores
+    import re
+    uuid_pattern = re.compile(r'^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$', re.IGNORECASE)
     
-    return existing_count == len(predicate_identifiers)
+    # Separate UUIDs from identifiers
+    predicate_ids = []
+    predicate_idents = []
+    
+    for value in predicate_identifiers:
+        if uuid_pattern.match(value):
+            predicate_ids.append(value)
+        else:
+            predicate_idents.append(value)
+    
+    # Count existing predicates by ID
+    id_count = 0
+    if predicate_ids:
+        id_count = db.query(Predicate).filter(
+            Predicate.id.in_(predicate_ids)
+        ).count()
+    
+    # Count existing predicates by identifier
+    identifier_count = 0
+    if predicate_idents:
+        identifier_count = db.query(Predicate).filter(
+            Predicate.identifier.in_(predicate_idents)
+        ).count()
+    
+    # Total should match the input count
+    total_found = id_count + identifier_count
+    return total_found == len(predicate_identifiers)
 
 
 def import_conceptnet_predicates(db: Session) -> List[Predicate]:

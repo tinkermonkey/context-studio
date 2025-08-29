@@ -1,14 +1,20 @@
+/**
+ * Predicates Table Component
+ * 
+ * Table for displaying and managing predicates
+ */
+
 import React from "react";
 import { createColumnHelper } from "@tanstack/react-table";
 import { Checkbox } from "flowbite-react";
-import { LayerOut } from "@/api/services/layers";
+import { PredicateOut } from "@/api/services/predicates";
 import { renderShortDateTime, renderShortUuid } from "@/utils/renderers";
-import { useLayers } from '@/api/hooks/layers';
-import { useDeleteLayer } from '@/api/hooks/layers';
-import { LayerForm } from '@/components/forms/layer_form';
+import { usePredicates } from '@/api/hooks/predicates';
+import { useDeletePredicate } from '@/api/hooks/predicates';
+import { PredicateForm } from '@/components/forms/predicate_form';
 import { BaseNodeTable } from './node_table';
 
-const columnHelper = createColumnHelper<LayerOut>();
+const columnHelper = createColumnHelper<PredicateOut>();
 
 const columns = [
   columnHelper.display({
@@ -52,21 +58,35 @@ const columns = [
     header: () => "Title",
   }),
   columnHelper.accessor("definition", {
-    cell: (info) => info.getValue() ?? "",
+    cell: (info) => {
+      const value = info.getValue();
+      if (!value) return <span className="text-gray-400">No definition</span>;
+      // Truncate long definitions with ellipsis
+      const truncated = value.length > 100 ? value.substring(0, 100) + "..." : value;
+      return (
+        <span title={value} className="cursor-help">
+          {truncated}
+        </span>
+      );
+    },
     header: () => "Definition",
   }),
-  columnHelper.accessor("version", {
-    cell: (info) => info.getValue() ?? "",
-    header: () => "Version",
+  columnHelper.accessor("identifier", {
+    cell: (info) => (
+      <code className="bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded text-sm">
+        {info.getValue() ?? ""}
+      </code>
+    ),
+    header: () => "Identifier",
   }),
-  columnHelper.accessor("created_at", {
+  columnHelper.accessor("date_created", {
     cell: (info) => {
       const value = info.getValue();
       return value !== null && value !== undefined ? renderShortDateTime(value) : "";
     },
     header: () => "Created",
   }),
-  columnHelper.accessor("last_modified", {
+  columnHelper.accessor("date_modified", {
     cell: (info) => {
       const value = info.getValue();
       return value !== null && value !== undefined ? renderShortDateTime(value) : "";
@@ -75,25 +95,23 @@ const columns = [
   }),
 ];
 
-
-export interface LayersTableProps {
-  data?: LayerOut[];
+export interface PredicatesTableProps {
+  data?: PredicateOut[];
   onSelectionChange?: (count: number) => void;
   onEdit?: (id: string) => void;
   columnVisibility?: Record<string, boolean>;
 }
 
-
-const LayersTable = React.forwardRef<any, LayersTableProps>((props, ref) => {
-  const { data: layers, isLoading, error, refetch } = useLayers();
-  const deleteLayer = useDeleteLayer();
+const PredicatesTable = React.forwardRef<any, PredicatesTableProps>((props, ref) => {
+  const { data: predicates, isLoading, error, refetch } = usePredicates();
+  const deletePredicate = useDeletePredicate();
   
-  // Default hidden columns: id, version, created_at, last_modified
+  // Default hidden columns: id, mapping, date_created, date_modified
   const defaultColumnVisibility: Record<string, boolean> = {
     id: false,
-    version: false,
-    created_at: false,
-    last_modified: false,
+    mapping: false,
+    date_created: false,
+    date_modified: false,
   };
   const columnVisibility = {
     ...defaultColumnVisibility,
@@ -103,21 +121,21 @@ const LayersTable = React.forwardRef<any, LayersTableProps>((props, ref) => {
   return (
     <BaseNodeTable
       columns={columns}
-      data={layers ?? []}
+      data={predicates?.data ?? []}
       isLoading={isLoading}
       error={error}
       onRefetch={refetch}
       onDelete={async (ids: string[]) => {
-        await Promise.all(ids.map((id) => deleteLayer.mutateAsync(id)));
+        await Promise.all(ids.map((id) => deletePredicate.mutateAsync(id)));
       }}
-      createForm={({ onSuccess }) => <LayerForm onSuccess={onSuccess} />}
-      editForm={({ node, onSuccess }) => <LayerForm layer={node} onSuccess={onSuccess} />}
-      typeName="Layer"
+      createForm={({ onSuccess }) => <PredicateForm onSuccess={onSuccess} />}
+      editForm={({ node, onSuccess }) => <PredicateForm predicate={node} onSuccess={onSuccess} />}
+      typeName="Predicate"
       getId={(item) => item.id}
       columnVisibility={columnVisibility}
-      linkGenerator={(layer: LayerOut) => `/app/nodes/layer/${layer.id}`}
+      linkGenerator={(predicate: PredicateOut) => `/app/nodes/predicate/${predicate.id}`}
     />
   );
 });
 
-export { LayersTable };
+export { PredicatesTable };

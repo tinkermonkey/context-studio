@@ -9,6 +9,8 @@ import {
   useUpdateDomain,
 } from "@/api/hooks/domains/useDomainMutations";
 import { LayerSelector } from "@/components/node_selectors/layer_selector";
+import { PredicateSelector } from "@/components/node_selectors/predicate_selector";
+import { PredicateSetSelector } from "@/components/node_selectors/predicate_set_selector";
 
 interface DomainFormProps {
   onSuccess?: (domain: DomainOut) => void;
@@ -36,6 +38,8 @@ const DomainForm: React.FC<DomainFormProps> = ({
     title: domain?.title ?? "",
     definition: domain?.definition ?? "",
     layer_id: domain?.layer_id ?? parentLayerId ?? "",
+    primary_predicate_id: domain?.primary_predicate_id ?? "",
+    predicate_set: domain?.predicate_set ?? [],
   });
   
   const form = useForm({
@@ -191,6 +195,63 @@ const DomainForm: React.FC<DomainFormProps> = ({
             )}
           </form.Field>
         )}
+
+        {/* Predicate Fields */}
+        <form.Field name="primary_predicate_id">
+          {(field) => (
+            <div>
+              <Label htmlFor="domain-primary-predicate" className="mb-1 block font-medium">
+                Structural Predicate (optional)
+              </Label>
+              <PredicateSelector
+                value={field.state.value}
+                onSelect={(predicate) => {
+                  const predicateId = predicate?.id || "";
+                  field.handleChange(predicateId);
+                  
+                  // Auto-add to predicate set if not already there
+                  const currentSet = form.getFieldValue('predicate_set') || [];
+                  if (predicateId && !currentSet.includes(predicateId)) {
+                    form.setFieldValue('predicate_set', [...currentSet, predicateId]);
+                  }
+                }}
+              />
+              <p className="mt-1 text-sm text-gray-500">
+                The predicate that defines this domain's core hierarchical relationships
+              </p>
+              {field.state.meta.errors.length > 0 && (
+                <div className="mt-1 text-sm text-red-600">
+                  {field.state.meta.errors[0]}
+                </div>
+              )}
+            </div>
+          )}
+        </form.Field>
+
+        <form.Field name="predicate_set">
+          {(field) => (
+            <div>
+              <Label htmlFor="domain-predicate-set" className="mb-1 block font-medium">
+                Additional Predicates (optional)
+              </Label>
+              <PredicateSetSelector
+                value={field.state.value || []}
+                onSelectionChange={(predicateIds) => {
+                  field.handleChange(predicateIds);
+                }}
+              />
+                            
+              <p className="mt-1 text-sm text-gray-500">
+                Predicates that can be used with this domain
+              </p>
+              {field.state.meta.errors.length > 0 && (
+                <div className="mt-1 text-sm text-red-600">
+                  {field.state.meta.errors[0]}
+                </div>
+              )}
+            </div>
+          )}
+        </form.Field>
 
         {submitError && (
           <Alert color="failure" className="mb-2" icon={Info}>

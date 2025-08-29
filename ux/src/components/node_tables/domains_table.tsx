@@ -1,7 +1,8 @@
 
 import React from "react";
 import { createColumnHelper } from "@tanstack/react-table";
-import { Checkbox } from "flowbite-react";
+import { Checkbox, Badge, Tooltip } from "flowbite-react";
+import { Info } from "lucide-react";
 import { DomainOut } from "@/api/services/domains";
 import { renderShortDateTime, renderShortUuid } from "@/utils/renderers";
 import { BaseNodeTable } from './node_table';
@@ -11,6 +12,7 @@ import { DomainForm } from '@/components/forms/domain_form';
 import { DomainMoveForm } from '@/components/forms/domain_move_form';
 import { useTerms } from '@/api/hooks/terms';
 import { useMoveTerms } from '@/api/hooks/terms';
+import { usePredicates } from '@/api/hooks/predicates';
 import type { FieldDefinition } from "@/components/misc/query_filters";
 
 const columnHelper = createColumnHelper<DomainOut>();
@@ -18,19 +20,28 @@ const columnHelper = createColumnHelper<DomainOut>();
 const columns = [
   columnHelper.display({
     id: 'select',
-    header: ({ table }) => (
-      <Checkbox
-        checked={table.getIsAllRowsSelected()}
-        indeterminate={table.getIsSomeRowsSelected()}
-        onChange={() => {
-          if (table.getIsAllRowsSelected() || table.getIsSomeRowsSelected()) {
-            table.toggleAllRowsSelected(false);
-          } else {
-            table.toggleAllRowsSelected(true);
-          }
-        }}
-      />
-    ),
+    header: ({ table }) => {
+      const { rows } = table.getRowModel();
+      const selectedCount = rows.filter(row => row.getIsSelected()).length;
+      const isAllSelected = rows.length > 0 && selectedCount === rows.length;
+      const isSomeSelected = selectedCount > 0 && selectedCount < rows.length;
+      
+      return (
+        <Checkbox
+          checked={isAllSelected}
+          indeterminate={isSomeSelected}
+          onChange={() => {
+            if (isAllSelected || isSomeSelected) {
+              // Deselect all visible rows
+              rows.forEach(row => row.toggleSelected(false));
+            } else {
+              // Select all visible rows
+              rows.forEach(row => row.toggleSelected(true));
+            }
+          }}
+        />
+      );
+    },
     cell: ({ row }) => (
       <Checkbox
         checked={row.getIsSelected()}
@@ -54,6 +65,64 @@ const columns = [
   columnHelper.accessor("layer_id", {
     cell: (info) => info.getValue() ? renderShortUuid(info.getValue()) : "",
     header: () => "Layer",
+  }),
+  columnHelper.accessor("primary_predicate", {
+    cell: (info) => {
+      const value = info.getValue();
+      return value ? (
+        <Badge color="blue" size="sm">
+          {value}
+        </Badge>
+      ) : (
+        <span className="text-gray-400">None</span>
+      );
+    },
+    header: () => "Structural Predicate",
+  }),
+  columnHelper.accessor("predicate_set", {
+    cell: (info) => {
+      const predicateSet = info.getValue();
+      const primaryPredicate = info.row.original.primary_predicate;
+      
+      if (!predicateSet || predicateSet.length === 0) {
+        return <span className="text-gray-400">None</span>;
+      }
+      
+      return (
+        <div className="flex flex-wrap gap-1">
+          {/* Show primary predicate first with special styling if it exists */}
+          {primaryPredicate && (
+            <Badge color="blue" size="sm">
+              {primaryPredicate}
+            </Badge>
+          )}
+          
+          {/* Show count of additional predicates */}
+          {predicateSet.length > 1 && (
+            <Badge color="gray" size="sm">
+              +{predicateSet.length - 1} more
+            </Badge>
+          )}
+          
+          {/* Tooltip with full list on hover */}
+          {predicateSet.length > 1 && (
+            <Tooltip content={
+              <div>
+                <p className="font-medium">All Predicates:</p>
+                <ul className="mt-1">
+                  {predicateSet.map((id: string) => (
+                    <li key={id}>• {id}</li>
+                  ))}
+                </ul>
+              </div>
+            }>
+              <Info className="h-3 w-3 text-gray-400 ml-1" />
+            </Tooltip>
+          )}
+        </div>
+      );
+    },
+    header: () => "Predicates",
   }),
   columnHelper.accessor("version", {
     cell: (info) => info.getValue() ?? "",

@@ -2,12 +2,9 @@ import React from "react";
 import { Card, Spinner, Button, Badge } from "flowbite-react";
 import {
   Calendar,
-  Hash,
   Edit3,
   Database,
   FileText,
-  Link2,
-  ExternalLink,
   CircleArrowRight,
   Layers,
 } from "lucide-react";
@@ -72,18 +69,6 @@ export const LayerDetails: React.FC<LayerDetailsProps> = ({ layer }) => {
       <CsSidebar>
         <CsSidebarTitle>Context</CsSidebarTitle>
 
-        {/* Primary Predicate */}
-        {layer.primary_predicate && (
-          <CsSidebarSection>
-            <CsSidebarSectionTitle icon={Link2}>
-              Primary Predicate
-            </CsSidebarSectionTitle>
-            <div className="mx-2">
-              <Badge color="blue">{layer.primary_predicate}</Badge>
-            </div>
-          </CsSidebarSection>
-        )}
-
         {/* Statistics */}
         <CsSidebarSection>
           <CsSidebarSectionTitle icon={FileText}>
@@ -132,14 +117,6 @@ export const LayerDetails: React.FC<LayerDetailsProps> = ({ layer }) => {
                 <Calendar className="h-4 w-4" />
                 <span>Version {layer.version || 1}</span>
               </div>
-              {layer.primary_predicate && (
-                <div className="flex items-center gap-1">
-                  <Link2 className="h-4 w-4" />
-                  <Badge color="blue" size="sm">
-                    {layer.primary_predicate}
-                  </Badge>
-                </div>
-              )}
             </div>
           </div>
           <Button color="gray" size="sm">

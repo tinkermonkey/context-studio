@@ -2,7 +2,8 @@ import sys
 import os
 import json
 
-use_proxy = True
+# Disable proxy for debugging to avoid proxy conflicts
+use_proxy = False
 
 if use_proxy:
     import urllib3
@@ -27,6 +28,9 @@ if use_proxy:
 parent_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 print(f"Adding {parent_dir} to sys.path")
 sys.path.insert(0, parent_dir)
+
+# Disable reference API caching proxy for debug script
+os.environ['DISABLE_REFERENCE_API_PROXY'] = 'true'
 from nlp.pipeline import get_pipeline
 from nlp.processors import process_nlp_result
 
