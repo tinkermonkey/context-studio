@@ -1,5 +1,5 @@
 import { LayerOut } from "@/api/services/layers";
-import { RecordSelector } from "@/components/node_selectors/record_selector";
+import { PortalRecordSelector } from "@/components/node_selectors/portal_record_selector";
 import { useLayers } from "@/api/hooks/layers";
 
 export interface LayerSelectorProps {
@@ -10,12 +10,12 @@ export interface LayerSelectorProps {
 export const LayerSelector: React.FC<LayerSelectorProps> = ({ onSelect, value }) => {
   const { data: layers, isLoading, error } = useLayers();
   return (
-    <RecordSelector
+    <PortalRecordSelector
       records={layers ?? []}
       loading={isLoading}
       error={error ? "Failed to load records" : null}
       fieldMap={{ value: "id", title: "title", definition: "definition" }}
-      onSelect={onSelect}
+      onSelect={(r) => onSelect && onSelect(r as LayerOut | undefined)}
       value={value}
     />
   );

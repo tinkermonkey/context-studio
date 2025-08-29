@@ -1,5 +1,5 @@
 import React from "react";
-import { Card, Spinner, Button, Badge } from "flowbite-react";
+import { Card, Spinner, Button, Badge, Modal, ModalHeader, ModalBody } from "flowbite-react";
 import {
   Calendar,
   Edit3,
@@ -13,6 +13,9 @@ import { useDomain, useDomainsByLayer } from "@/api/hooks/domains/useDomains";
 import { useTerms } from "@/api/hooks/terms/useTerms";
 import { TermRenderer } from "@/components/node_renderers/term_renderer";
 import { CreateChildButton } from "@/components/misc/create_child_button";
+import { LayerForm } from "@/components/forms/layer_form";
+import { useQueryClient } from "@tanstack/react-query";
+import { QUERY_KEYS } from "@/api/config";
 import {
   CsSidebar,
   CsSidebarTitle,
@@ -30,6 +33,8 @@ interface LayerDetailsProps {
 }
 
 export const LayerDetails: React.FC<LayerDetailsProps> = ({ layer }) => {
+  const queryClient = useQueryClient();
+  const [isEditOpen, setIsEditOpen] = React.useState(false);
   const { data: terms, isLoading: termsLoading } = useTerms({
     layer_id: layer.id,
   });
@@ -119,7 +124,7 @@ export const LayerDetails: React.FC<LayerDetailsProps> = ({ layer }) => {
               </div>
             </div>
           </div>
-          <Button color="gray" size="sm">
+          <Button color="gray" size="sm" onClick={() => setIsEditOpen(true)}>
             <Edit3 className="mr-2 h-4 w-4" />
             Edit
           </Button>
@@ -177,7 +182,44 @@ export const LayerDetails: React.FC<LayerDetailsProps> = ({ layer }) => {
           </Card>
         </div>
       </CsMain>
+      <LayerEditModal
+        layer={layer}
+        isOpen={isEditOpen}
+        onClose={() => setIsEditOpen(false)}
+      />
     </>
+  );
+};
+
+// Edit Modal for Layer
+const LayerEditModal: React.FC<{
+  layer: LayerOut;
+  isOpen: boolean;
+  onClose: () => void;
+}> = ({ layer, isOpen, onClose }) => {
+  const queryClient = useQueryClient();
+
+  const handleSuccess = (updated: any) => {
+    // Close modal
+    onClose();
+
+    // Invalidate layer queries so details refresh
+    try {
+      queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.LAYERS, layer.id] });
+      queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.LAYERS] });
+    } catch (e) {
+      // best-effort
+      console.warn('Failed to invalidate layer queries', e);
+    }
+  };
+
+  return (
+    <Modal show={isOpen} onClose={onClose} size="lg">
+      <ModalHeader className="border-b-0">Edit Layer</ModalHeader>
+      <ModalBody>
+        <LayerForm layer={layer} onSuccess={handleSuccess} />
+      </ModalBody>
+    </Modal>
   );
 };
 

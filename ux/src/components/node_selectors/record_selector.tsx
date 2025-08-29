@@ -1,14 +1,6 @@
-import React, { useEffect, useState } from "react";
-import {
-  Dropdown,
-  DropdownItem,
-  DropdownDivider,
-  DropdownHeader,
-  Checkbox,
-  Label,
-  TextInput,
-  Spinner,
-} from "flowbite-react";
+import React, { useEffect, useRef, useState } from "react";
+import { Checkbox, Label, TextInput, Spinner } from "flowbite-react";
+import ReactDOM from "react-dom";
 import { CircleX, Search } from "lucide-react";
 import SearchHighlight from "@/components/misc/search_highlight";
 
@@ -45,118 +37,158 @@ export const RecordSelector: React.FC<RecordSelectorProps> = ({
 }) => {
   const [showDefinitions, setShowDefinitions] = useState(false);
   const [search, setSearch] = useState("");
+  const [open, setOpen] = useState(false);
+  const triggerRef = useRef<HTMLButtonElement | null>(null);
+  const menuRef = useRef<HTMLDivElement | null>(null);
+  const [menuStyle, setMenuStyle] = useState<React.CSSProperties>({});
 
   const selectedRecord = value
     ? records.find((r) => r[fieldMap.value] === value)
     : undefined;
+  // Portal-based dropdown to avoid being clipped by parent stacking contexts (modals)
+  useEffect(() => {
+    const onScrollOrResize = () => {
+      if (!open || !triggerRef.current) return;
+      const rect = triggerRef.current.getBoundingClientRect();
+      setMenuStyle({
+        position: "absolute",
+        top: rect.bottom + window.scrollY,
+        left: rect.left + window.scrollX,
+        minWidth: rect.width,
+      });
+    };
+
+    if (open) {
+      onScrollOrResize();
+      window.addEventListener("scroll", onScrollOrResize, true);
+      window.addEventListener("resize", onScrollOrResize);
+    }
+
+    return () => {
+      window.removeEventListener("scroll", onScrollOrResize, true);
+      window.removeEventListener("resize", onScrollOrResize);
+    };
+  }, [open]);
+
+  useEffect(() => {
+    const onDocClick = (e: MouseEvent) => {
+      const target = e.target as Node;
+      if (
+        open &&
+        menuRef.current &&
+        triggerRef.current &&
+        !menuRef.current.contains(target) &&
+        !triggerRef.current.contains(target)
+      ) {
+        setOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", onDocClick);
+    return () => document.removeEventListener("mousedown", onDocClick);
+  }, [open]);
+
+  const toggleOpen = () => {
+    setOpen((s) => !s);
+  };
+
+  const menu = (
+    <div
+      ref={menuRef}
+      style={{ zIndex: 99999 }}
+      className="rounded border bg-white shadow-lg"
+      role="menu"
+    >
+      <div className="p-3">
+        {error && <div className="text-red-500">{error}</div>}
+        {loading && (
+          <div>
+            <Spinner /> Loading records...
+          </div>
+        )}
+        {!loading && (
+          <div className="pb-2">
+            <TextInput
+              id="record-selector-search"
+              className="flex min-w-48 lg:flex"
+              sizing="sm"
+              placeholder="Search..."
+              type="search"
+              aria-label="Search"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              onClick={(e) => e.stopPropagation()}
+            />
+            <div className="flex items-center pt-2">
+              <Checkbox
+                id="record-selector-show-definitions"
+                checked={showDefinitions}
+                onChange={() => setShowDefinitions(!showDefinitions)}
+              />
+              <Label htmlFor="record-selector-show-definitions" className="flex pl-2">
+                Show Definitions
+              </Label>
+            </div>
+          </div>
+        )}
+      </div>
+      <div className="max-h-64 overflow-auto">
+        {records
+          .filter((record) => {
+            const title = record[fieldMap.title]?.toLowerCase() || "";
+            const def = fieldMap.definition
+              ? record[fieldMap.definition]?.toLowerCase() || ""
+              : "";
+            return (
+              title.includes(search.toLowerCase()) ||
+              (showDefinitions && def.includes(search.toLowerCase()))
+            );
+          })
+          .map((record) => (
+            <div
+              key={record[fieldMap.value]}
+              onClick={() => {
+                onSelect?.(record);
+                setOpen(false);
+              }}
+              className={"px-3 py-2 hover:bg-gray-100 cursor-pointer " +
+                (showDefinitions ? "flex flex-row items-start gap-4" : "")}
+            >
+              {showDefinitions && fieldMap.definition ? (
+                <>
+                  <span className="w-1/3 text-left font-medium whitespace-normal">
+                    <SearchHighlight content={record[fieldMap.title]} searchText={search} />
+                  </span>
+                  <span className="w-2/3 text-left whitespace-normal text-gray-500">
+                    <SearchHighlight content={record[fieldMap.definition]} searchText={search} />
+                  </span>
+                </>
+              ) : (
+                <span className="font-medium whitespace-normal">
+                  <SearchHighlight content={record[fieldMap.title]} searchText={search} />
+                </span>
+              )}
+            </div>
+          ))}
+      </div>
+    </div>
+  );
 
   return (
     <div className={`relative w-full ${className}`}>
       <div className="flex items-center gap-0">
-        <Dropdown
-          color={"light"}
-          label={
-            loading
-              ? "Loading..."
-              : selectedRecord
-                ? selectedRecord[fieldMap.title]
-                : "Select Record"
-          }
-          enableTypeAhead={false}
-          dismissOnClick={true}
+        <button
+          ref={triggerRef}
+          type="button"
+          onClick={toggleOpen}
+          className="inline-flex items-center justify-between rounded border px-3 py-2 w-full text-left bg-white"
         >
-          {error && (
-            <DropdownHeader>
-              <span className="text-red-500">{error}</span>
-            </DropdownHeader>
-          )}
-          {loading && (
-            <DropdownHeader>
-              <span>
-                <Spinner />
-                Loading records...
-              </span>
-            </DropdownHeader>
-          )}
-          {!loading && !error && (
-            <DropdownHeader>
-              <span className="flex pb-4">
-                <TextInput
-                  id="record-selector-search"
-                  className="flex min-w-48 lg:flex"
-                  sizing="sm"
-                  placeholder="Search..."
-                  type="search"
-                  icon={Search}
-                  aria-label="Search"
-                  value={search}
-                  onChange={(e) => setSearch(e.target.value)}
-                  onClick={(e) => e.stopPropagation()}
-                />
-              </span>
-              <span className="flex pl-1">
-                <Checkbox
-                  id="record-selector-show-definitions"
-                  checked={showDefinitions}
-                  onChange={() => setShowDefinitions(!showDefinitions)}
-                />
-                <Label
-                  htmlFor="record-selector-show-definitions"
-                  className="flex pl-2"
-                >
-                  Show Definitions
-                </Label>
-              </span>
-            </DropdownHeader>
-          )}
-          <DropdownDivider />
-          {records
-            .filter((record) => {
-              const title = record[fieldMap.title]?.toLowerCase() || "";
-              const def = fieldMap.definition
-                ? record[fieldMap.definition]?.toLowerCase() || ""
-                : "";
-              return (
-                title.includes(search.toLowerCase()) ||
-                showDefinitions && def.includes(search.toLowerCase())
-              );
-            })
-            .map((record) => (
-              <DropdownItem
-                key={record[fieldMap.value]}
-                onClick={() => {
-                  onSelect?.(record);
-                }}
-                className={
-                  showDefinitions ? "flex flex-row items-start gap-4" : ""
-                }
-              >
-                {showDefinitions && fieldMap.definition ? (
-                  <>
-                    <span className="w-1/3 text-left font-medium whitespace-normal">
-                      <SearchHighlight
-                        content={record[fieldMap.title]}
-                        searchText={search}
-                      />
-                    </span>
-                    <span className="w-2/3 text-left whitespace-normal text-gray-500">
-                      <SearchHighlight
-                        content={record[fieldMap.definition]}
-                        searchText={search}
-                      />
-                    </span>
-                  </>
-                ) : (
-                  <span className="font-medium whitespace-normal">
-                    <SearchHighlight
-                      content={record[fieldMap.title]}
-                      searchText={search}
-                    />
-                  </span>
-                )}
-              </DropdownItem>
-            ))}
-        </Dropdown>
+          <span className="truncate">
+            {loading ? "Loading..." : selectedRecord ? selectedRecord[fieldMap.title] : "Select Record"}
+          </span>
+          <svg className="ml-2 h-4 w-4" viewBox="0 0 20 20" fill="currentColor" aria-hidden>
+            <path fillRule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 10.94l3.71-3.71a.75.75 0 111.06 1.06l-4.24 4.24a.75.75 0 01-1.06 0L5.21 8.29a.75.75 0 01.02-1.08z" clipRule="evenodd" />
+          </svg>
+        </button>
         {value && (
           <button
             type="button"
@@ -168,6 +200,14 @@ export const RecordSelector: React.FC<RecordSelectorProps> = ({
           </button>
         )}
       </div>
+      {open && triggerRef.current
+        ? ReactDOM.createPortal(
+            <div style={menuStyle}>
+              {menu}
+            </div>,
+            document.body,
+          )
+        : null}
     </div>
   );
 };

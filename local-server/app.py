@@ -5,6 +5,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
 
 from api import layers, domains, terms, term_relationships, graph, datasets, nlp_analysis, schema, predicates
+from schema_org import api as schema_org_api
 from api.graph import get_cached_graph_service, invalidate_graph_cache
 from database.migrations.migration_manager import MigrationManager
 from database.utils import init_db, get_db, get_dataset_manager, get_current_engine, cleanup_database_resources
@@ -123,6 +124,8 @@ def create_app(dataset_id=None, engine=None, session_local=None):
     app.include_router(graph.router, prefix="/api", tags=["graph"])
     app.include_router(datasets.router, prefix="/api", tags=["datasets"])
     app.include_router(schema.router, prefix="/api", tags=["schema"])
+    # Schema.org API (separate router with its own prefix)
+    app.include_router(schema_org_api.router)
     # Integrate NLP router
     app.include_router(nlp_analysis.router, prefix="/api", tags=["nlp"])
     return app

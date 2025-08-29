@@ -1,5 +1,5 @@
 import { DomainOut } from "@/api/services/domains";
-import { RecordSelector } from "@/components/node_selectors/record_selector";
+import { PortalRecordSelector } from "@/components/node_selectors/portal_record_selector";
 import { useDomains } from "@/api/hooks/domains";
 
 export interface DomainSelectorProps {
@@ -11,14 +11,14 @@ export interface DomainSelectorProps {
 export const DomainSelector: React.FC<DomainSelectorProps> = ({ onSelect, value, className }) => {
   const { data: domains, isLoading, error } = useDomains();
   return (
-    <RecordSelector
+    <PortalRecordSelector
       records={domains ?? []}
       loading={isLoading}
       error={error ? "Failed to load records" : null}
       fieldMap={{ value: "id", title: "title", definition: "definition" }}
-      onSelect={onSelect}
+      onSelect={(r) => onSelect && onSelect(r as DomainOut | undefined)}
       value={value}
-      className={className}
+      placeholder={"Select Record"}
     />
   );
 };

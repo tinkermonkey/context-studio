@@ -62,7 +62,7 @@ export function buildHierarchicalTree(input: TreeBuilderInput): HierarchyNode {
         const layerDomains = domainsByLayer.get(layerIdStr) || [];
         
         if (layerDomains.length === 0) {
-          console.debug('Layer has no domains:', layer, 'Available keys:', Array.from(domainsByLayer.keys()));
+          apiLogger.debug('Layer has no domains', { layer, availableKeys: Array.from(domainsByLayer.keys()) });
         }
         
         const layerNode: HierarchyNode = {
@@ -99,7 +99,7 @@ export function buildHierarchicalTree(input: TreeBuilderInput): HierarchyNode {
         return layerNode;
       });
 
-    console.log('Final tree structure:', rootNode);
+  apiLogger.info('Final tree structure generated', { rootNode });
     return rootNode;
     
   } catch (err) {

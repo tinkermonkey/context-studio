@@ -1,5 +1,5 @@
 import React from "react";
-import { Card, Spinner, Button, Badge } from "flowbite-react";
+import { Card, Spinner, Button, Badge, Modal, ModalHeader, ModalBody } from "flowbite-react";
 import {
   Calendar,
   Hash,
@@ -13,6 +13,9 @@ import {
 import { Link } from "@tanstack/react-router";
 import { useLayer } from "@/api/hooks/layers/useLayers";
 import { useTerms } from "@/api/hooks/terms/useTerms";
+import { DomainForm } from "@/components/forms/domain_form";
+import { useQueryClient } from "@tanstack/react-query";
+import { QUERY_KEYS } from "@/api/config";
 import { TermRenderer } from "@/components/node_renderers/term_renderer";
 import { CreateChildButton } from "@/components/misc/create_child_button";
 import {
@@ -32,6 +35,8 @@ interface DomainDetailsProps {
 }
 
 export const DomainDetails: React.FC<DomainDetailsProps> = ({ domain }) => {
+  const queryClient = useQueryClient();
+  const [isEditOpen, setIsEditOpen] = React.useState(false);
   const { data: layer, isLoading: layerLoading } = useLayer(domain.layer_id);
   const { data: terms, isLoading: termsLoading } = useTerms({
     domain_id: domain.id,
@@ -192,7 +197,7 @@ export const DomainDetails: React.FC<DomainDetailsProps> = ({ domain }) => {
               </div>
             </div>
           </div>
-          <Button color="gray" size="sm">
+          <Button color="gray" size="sm" onClick={() => setIsEditOpen(true)}>
             <Edit3 className="mr-2 h-4 w-4" />
             Edit
           </Button>
@@ -389,6 +394,40 @@ export const DomainDetails: React.FC<DomainDetailsProps> = ({ domain }) => {
           </Card>
         </div>
       </CsMain>
+      <DomainEditModal
+        domain={domain}
+        isOpen={isEditOpen}
+        onClose={() => setIsEditOpen(false)}
+      />
     </>
+  );
+};
+
+// Edit Modal for Domain
+const DomainEditModal: React.FC<{
+  domain: DomainOut;
+  isOpen: boolean;
+  onClose: () => void;
+}> = ({ domain, isOpen, onClose }) => {
+  const queryClient = useQueryClient();
+
+  const handleSuccess = (updated: any) => {
+    onClose();
+
+    try {
+      queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.DOMAINS, domain.id] });
+      queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.DOMAINS] });
+    } catch (e) {
+      console.warn('Failed to invalidate domain queries', e);
+    }
+  };
+
+  return (
+    <Modal show={isOpen} onClose={onClose} size="lg">
+      <ModalHeader className="border-b-0">Edit Domain</ModalHeader>
+      <ModalBody>
+        <DomainForm domain={domain} onSuccess={handleSuccess} />
+      </ModalBody>
+    </Modal>
   );
 };

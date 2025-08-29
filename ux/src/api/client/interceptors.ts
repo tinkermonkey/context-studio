@@ -26,6 +26,8 @@ type HTTPValidationError = components['schemas']['HTTPValidationError'];
 export const requestInterceptor = (config: InternalAxiosRequestConfig) => {
   // Log outgoing requests
   apiLogger.request(config.method || 'GET', config.url || '', config.data);
+  // In test environment, print a compact debug line to help MSW handler matching
+  // NOTE: removed test-only console output to keep test logs clean.
 
   // Add any auth headers here if needed
   // config.headers.Authorization = `Bearer ${getAuthToken()}`;

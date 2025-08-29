@@ -6,6 +6,8 @@ import flowbiteReact from "flowbite-react/plugin/vite";
 import path from "path"
 
 // https://vitejs.dev/config/
+const isTest = !!process.env.VITEST;
+
 export default defineConfig({
   resolve: {
     alias: {
@@ -13,10 +15,13 @@ export default defineConfig({
     },
   },
   plugins: [
-    tanstackRouter({
-      target: "react",
-      autoCodeSplitting: true,
-    }),
+    // don't enable the router plugin during unit tests; it installs a code-splitting
+    // transform that conflicts with Vitest's virtual module handling
+    !isTest &&
+      tanstackRouter({
+        target: "react",
+        autoCodeSplitting: true,
+      }),
     react(),
     tailwindcss(),
     flowbiteReact(),

@@ -110,6 +110,15 @@ class Settings(BaseSettings):
             config["url"] = f"http://{host}:{port}/conceptnet/query?node=/c/{{lang}}/{{word}}&other=/c/{{lang}}"
         return config
 
+    # Schema.org Configuration
+    SCHEMA_ORG_DB_PATH: str = Field(default="./schemaorg.db", description="Path to schema.org database")
+    SCHEMA_ORG_SOURCE_URL: str = Field(
+        default="https://schema.org/version/latest/schemaorg-current-https.jsonld",
+        description="URL to download schema.org data"
+    )
+    SCHEMA_ORG_AUTO_INITIALIZE: bool = Field(default=True, description="Auto-initialize schema.org database")
+    SCHEMA_ORG_SIMILARITY_THRESHOLD: float = Field(default=0.7, description="Default similarity threshold for searches")
+
     class Config:
         env_file = ".env"
         case_sensitive = True

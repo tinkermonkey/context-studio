@@ -1,5 +1,5 @@
 import { TermOut } from "@/api/services/terms";
-import { RecordSelector } from "@/components/node_selectors/record_selector";
+import { PortalRecordSelector } from "@/components/node_selectors/portal_record_selector";
 import { useTerms } from "@/api/hooks/terms";
 
 export interface TermSelectorProps {
@@ -10,12 +10,12 @@ export interface TermSelectorProps {
 export const TermSelector: React.FC<TermSelectorProps> = ({ onSelect, value }) => {
   const { data: terms, isLoading, error } = useTerms();
   return (
-    <RecordSelector
+    <PortalRecordSelector
       records={terms ?? []}
       loading={isLoading}
       error={error ? "Failed to load records" : null}
       fieldMap={{ value: "id", title: "title", definition: "definition" }}
-      onSelect={onSelect}
+      onSelect={(r) => onSelect && onSelect(r as TermOut | undefined)}
       value={value}
     />
   );

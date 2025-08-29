@@ -8,29 +8,57 @@ import axios, { AxiosInstance } from 'axios';
 import { API_CONFIG } from '../config';
 import { requestInterceptor, responseInterceptor, errorInterceptor } from './interceptors';
 
-// Create the main API client instance
-export const apiClient: AxiosInstance = axios.create({
-  baseURL: API_CONFIG.baseURL,
-  timeout: API_CONFIG.timeout,
-  headers: {
-    'Content-Type': 'application/json',
-  },
-});
+// Lazily initialize the axios instance so test setup can modify global environment
+// (delete fetch/XMLHttpRequest) before adapter selection occurs.
+let _internalClient: AxiosInstance | null = null;
+function createClient() {
+  const client = axios.create({
+    baseURL: API_CONFIG.baseURL,
+  });
 
-// Apply interceptors
-apiClient.interceptors.request.use(requestInterceptor);
-apiClient.interceptors.response.use(responseInterceptor, errorInterceptor);
+  // Apply interceptors
+  client.interceptors.request.use(requestInterceptor);
+  client.interceptors.response.use(responseInterceptor, errorInterceptor);
 
-// Export a function to update the base URL if needed
-export const updateBaseURL = (newBaseURL: string) => {
-  apiClient.defaults.baseURL = newBaseURL;
+  return client;
+}
+
+const ensureClient = () => {
+  if (!_internalClient) _internalClient = createClient();
+  return _internalClient;
 };
 
-// Export a function to set auth token
+// Export a Proxy that forwards all property accesses to the lazily-created axios instance.
+// This preserves the existing `apiClient` import API while delaying adapter selection.
+export const apiClient: AxiosInstance = new Proxy({} as AxiosInstance, {
+  get(_, prop: string | symbol) {
+    const client = ensureClient();
+    // @ts-ignore
+    return (client as any)[prop];
+  },
+  set(_, prop: string | symbol, value) {
+    const client = ensureClient();
+    // @ts-ignore
+    (client as any)[prop] = value;
+    return true;
+  },
+  apply(_, __, args: any[]) {
+    const client = ensureClient();
+    // @ts-ignore
+    return (client as any).apply(_, args);
+  },
+}) as unknown as AxiosInstance;
+
+// Export helper functions that operate on the underlying client
+export const updateBaseURL = (newBaseURL: string) => {
+  ensureClient().defaults.baseURL = newBaseURL;
+};
+
 export const setAuthToken = (token: string | null) => {
+  const client = ensureClient();
   if (token) {
-    apiClient.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+    client.defaults.headers.common['Authorization'] = `Bearer ${token}`;
   } else {
-    delete apiClient.defaults.headers.common['Authorization'];
+    delete client.defaults.headers.common['Authorization'];
   }
 };
