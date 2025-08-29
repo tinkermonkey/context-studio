@@ -1,8 +1,15 @@
-import React, { useState, useEffect, useCallback } from 'react';
-import { Button, Spinner } from 'flowbite-react';
-import { InlineApiError } from '@/components/misc/error_boundary';
-import { useNLPAnalysis } from '@/api/hooks/nlp/useNLPAnalysis';
-import { apiLogger } from '@/api/utils/logger';
+import * as React from "react";
+import { useState, useEffect, useCallback } from "react";
+import { Button, Spinner } from "flowbite-react";
+import { useNLPAnalysis } from "@/api/hooks/nlp/useNLPAnalysis";
+import { apiLogger } from "@/api/utils/logger";
+import TokenSelectionList from "@/components/nlp/TokenSelectionList";
+import NlpEntityAnalysis from "@/components/nlp/NlpEntityAnalysis";
+import {
+  ApiErrorBoundary,
+  InlineApiError,
+} from "@/components/misc/error_boundary";
+import { TokenNlpAnalysis } from "@/components/nlp/TokenNlpAnalysis";
 
 interface NlpAnalysisPanelProps {
   text: string;
@@ -13,10 +20,15 @@ export const NlpAnalysisPanel: React.FC<NlpAnalysisPanelProps> = ({ text }) => {
   const [debouncedText, setDebouncedText] = useState(text);
   const [hasAnalyzed, setHasAnalyzed] = useState(false);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [selectedToken, setSelectedToken] = useState<any | null>(null);
 
   // Custom hook for API call
   const lowercasedText = debouncedText.toLowerCase();
-  const queryKey = ["nlp", "analysis", JSON.stringify({ text: lowercasedText })];
+  const queryKey = [
+    "nlp",
+    "analysis",
+    JSON.stringify({ text: lowercasedText }),
+  ];
   const {
     data: analysisResult,
     isLoading: loading,
@@ -38,7 +50,7 @@ export const NlpAnalysisPanel: React.FC<NlpAnalysisPanelProps> = ({ text }) => {
     const handler = setTimeout(() => {
       setDebouncedText(pendingText);
       refetch(); // refetch will use lowercasedText due to hook dependency
-      apiLogger.info('NLP analysis re-triggered due to text change');
+      apiLogger.info("NLP analysis re-triggered due to text change");
     }, 1000);
     return () => clearTimeout(handler);
   }, [pendingText, hasAnalyzed, refetch]);
@@ -46,7 +58,7 @@ export const NlpAnalysisPanel: React.FC<NlpAnalysisPanelProps> = ({ text }) => {
   // Error handling
   useEffect(() => {
     if (error) {
-      apiLogger.error('NLP analysis error', { error });
+      apiLogger.error("NLP analysis error", { error });
     }
   }, [error]);
 
@@ -56,7 +68,7 @@ export const NlpAnalysisPanel: React.FC<NlpAnalysisPanelProps> = ({ text }) => {
     setHasAnalyzed(true);
     setIsAnalyzing(true);
     refetch(); // refetch will use lowercasedText due to hook dependency
-    apiLogger.info('NLP analysis triggered by user');
+    apiLogger.info("NLP analysis triggered by user");
   }, [pendingText, refetch]);
 
   // Reset isAnalyzing when loading finishes
@@ -68,17 +80,80 @@ export const NlpAnalysisPanel: React.FC<NlpAnalysisPanelProps> = ({ text }) => {
 
   return (
     <>
-      <Button onClick={handleAnalyze} disabled={loading || isAnalyzing || !pendingText} color="dark">
-        {(loading || isAnalyzing) ? <Spinner size="sm" /> : hasAnalyzed ? 'Analyze Again' : 'Analyze'}
-      </Button>
-      <div className="mt-2">
+      <div className="flex items-center gap-3">
+        <Button
+          onClick={handleAnalyze}
+          disabled={loading || isAnalyzing || !pendingText}
+          color="dark"
+        >
+          {loading || isAnalyzing ? (
+            <Spinner size="sm" />
+          ) : hasAnalyzed ? (
+            "Analyze Again"
+          ) : (
+            "Analyze"
+          )}
+        </Button>
+      </div>
+
+      <div className="mt-3 space-y-3">
+        {error && <InlineApiError error={error} className="mt-2" showDetails />}
+
         {analysisResult && (
-          <pre className="bg-gray-100 p-2 rounded text-xs overflow-x-auto">
-            {JSON.stringify(analysisResult, null, 2)}
-          </pre>
-        )}
-        {error && (
-          <InlineApiError error={error} className="mt-2" showDetails />
+          <>
+            <div className="space-y-3">
+              <div>
+                <h4 className="text-sm font-medium">Token Analysis</h4>
+                <ApiErrorBoundary
+                  showDetails={process.env.NODE_ENV === "development"}
+                >
+                  <TokenSelectionList
+                    tokens={analysisResult.tokens || []}
+                    selectedToken={selectedToken}
+                    onTokenSelect={(t) => setSelectedToken(t)}
+                  />
+                </ApiErrorBoundary>
+              </div>
+
+              <div>
+                <h4 className="text-sm font-medium">Entities</h4>
+                <ApiErrorBoundary
+                  showDetails={process.env.NODE_ENV === "development"}
+                >
+                  <NlpEntityAnalysis
+                    entities={analysisResult.entities || []}
+                    onEntitySelect={(e) => {}}
+                  />
+                </ApiErrorBoundary>
+              </div>
+
+              <div>
+                <h4 className="text-sm font-medium">Selected Token</h4>
+                <ApiErrorBoundary
+                  showDetails={process.env.NODE_ENV === "development"}
+                >
+                  {selectedToken ? (
+                    <React.Suspense
+                      fallback={
+                        <div className="flex items-center gap-2">
+                          <Spinner size="sm" />{" "}
+                          <span className="text-sm text-gray-500">
+                            Loading details...
+                          </span>
+                        </div>
+                      }
+                    >
+                      <TokenNlpAnalysis token={selectedToken} />
+                    </React.Suspense>
+                  ) : (
+                    <div className="text-sm text-gray-500">
+                      Select a token to view details
+                    </div>
+                  )}
+                </ApiErrorBoundary>
+              </div>
+            </div>
+          </>
         )}
       </div>
     </>

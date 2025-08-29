@@ -20,7 +20,7 @@ import { Link as RouterLink } from "@tanstack/react-router";
 import { useLayer } from "@/api/hooks/layers/useLayers";
 import { useDomain } from "@/api/hooks/domains/useDomains";
 import { useTerms } from "@/api/hooks/terms/useTerms";
-import { useTermRelationships } from "@/api/hooks/relationships/useRelationships";
+import { useTermRelationships } from "@/api/hooks/relationships";
 import { useTermHierarchy } from "@/api/hooks/graph/useGraph";
 import { TermRenderer } from "@/components/node_renderers/term_renderer";
 import { RelationshipTermsDisplay } from "@/components/node_renderers/relationship_terms_renderer";
@@ -395,6 +395,9 @@ export const TermDetails: React.FC<TermPageProps> = ({ term }) => {
             <p className="leading-relaxed text-gray-700 dark:text-gray-300">
               {term.definition}
             </p>
+            <div className="mt-4">
+              <NlpAnalysisPanel text={term.definition} />
+            </div>
           </Card>
 
           {/* Child Terms */}

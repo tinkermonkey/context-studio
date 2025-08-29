@@ -1,9 +1,9 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { relationshipService } from '../../services/relationships';
-import { apiLogger } from '../../utils/logger';
+import { relationshipService } from '@/api/services/relationships';
+import { apiLogger } from '@/api/utils/logger';
 import { relationshipsQueryKeys } from './useRelationships';
-import { termsQueryKeys } from '../terms/useTerms';
-import type { components } from '../../client/types';
+import { termsQueryKeys } from '@/api/hooks/terms/useTerms';
+import type { components } from '@/api/client/types';
 
 // Type definitions
 type TermRelationshipOut = components['schemas']['TermRelationshipOut'];

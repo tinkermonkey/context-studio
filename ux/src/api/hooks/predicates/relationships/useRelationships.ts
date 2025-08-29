@@ -1,7 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
-import { relationshipService } from '../../services/relationships';
-import { apiLogger } from '../../utils/logger';
-import type { components } from '../../client/types';
+import { relationshipService } from '@/api/services/relationships';
+import { apiLogger } from '@/api/utils/logger';
+import type { components } from '@/api/client/types';
 
 // Type definitions for relationships
 type TermRelationshipOut = components['schemas']['TermRelationshipOut'];

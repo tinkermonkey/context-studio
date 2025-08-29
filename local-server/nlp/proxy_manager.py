@@ -26,37 +26,35 @@ class ReferenceAPIProxyManager:
         """Generate reference_api_buddy configuration based on enabled APIs"""
         settings = get_settings()
         enabled_apis = settings.ENABLE_CACHING_PROXY
-        base_config = settings.REFERENCE_API_BUDDY_CONFIG.copy()
+        base_config = settings.get_reference_api_buddy_config()
         
-        # Build domain mappings for enabled APIs only
-        domain_mappings = {}
+        # Get configured domain mappings and filter by enabled APIs
+        configured_mappings = base_config.get("domain_mappings", {})
+        active_mappings = {}
         throttle_limits = {}
         
-        if enabled_apis.get("concepcy", False):
-            domain_mappings["conceptnet"] = {
-                "upstream": "https://api.conceptnet.io"
-            }
-            # Safely get throttle limit with fallback
-            conceptnet_limit = base_config.get("throttling", {}).get("domain_limits", {}).get("conceptnet", 3600)
-            throttle_limits["conceptnet"] = conceptnet_limit
-        
-        if enabled_apis.get("spacy_dbpedia_spotlight", False):
-            domain_mappings["dbpedia_spotlight"] = {
-                "upstream": "https://api.dbpedia-spotlight.org/en/"
-            }
-            # Safely get throttle limit with fallback
-            dbpedia_limit = base_config.get("throttling", {}).get("domain_limits", {}).get("dbpedia_spotlight", 3600)
-            throttle_limits["dbpedia_spotlight"] = dbpedia_limit
+        for domain_key, domain_config in configured_mappings.items():
+            # Check if any of the enabled_keys for this domain are enabled
+            enabled_keys = domain_config.get("enabled_keys", [domain_key])
+            if any(enabled_apis.get(key, False) for key in enabled_keys):
+                # This domain should be active
+                active_mappings[domain_key] = {
+                    "upstream": domain_config["upstream"]
+                }
+                
+                # Get throttle limit for this domain
+                domain_limits = base_config.get("throttling", {}).get("domain_limits", {})
+                throttle_limits[domain_key] = domain_limits.get(domain_key, 3600)
         
         # Return None if no APIs are enabled
-        if not domain_mappings:
+        if not active_mappings:
             return None
         
         # Build final configuration
         config = base_config.copy()
-        config["domain_mappings"] = domain_mappings
+        config["domain_mappings"] = active_mappings
         
-        # Ensure throttling section exists
+        # Ensure throttling section exists and update limits
         if "throttling" not in config:
             config["throttling"] = {}
         config["throttling"]["domain_limits"] = throttle_limits
@@ -149,7 +147,7 @@ class ReferenceAPIProxyManager:
             return
         
         settings = get_settings()
-        config = settings.REFERENCE_API_BUDDY_CONFIG
+        config = settings.get_reference_api_buddy_config()
         host = config["server"]["host"]
         port = config["server"]["port"]
         health_url = f"http://{host}:{port}/admin/health"
@@ -178,6 +176,12 @@ class ReferenceAPIProxyManager:
         enabled_apis = settings.ENABLE_CACHING_PROXY
         return any(enabled_apis.values())
     
+    def get_proxy_config(self) -> Optional[Dict[str, Any]]:
+        """Get the current proxy configuration"""
+        if not self.is_running:
+            return None
+        return self._get_proxy_config()
+
     def get_monitoring_stats(self) -> Optional[Dict[str, Any]]:
         """Get comprehensive monitoring statistics from the proxy"""
         if not self.is_running or not self.proxy:

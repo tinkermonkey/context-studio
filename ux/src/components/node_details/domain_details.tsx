@@ -11,6 +11,7 @@ import {
   CircleArrowRight,
 } from "lucide-react";
 import { Link } from "@tanstack/react-router";
+import { NlpAnalysisPanel } from '@/components/nlp/NlpAnalysisPanel';
 import { useLayer } from "@/api/hooks/layers/useLayers";
 import { useTerms } from "@/api/hooks/terms/useTerms";
 import { DomainForm } from "@/components/forms/domain_form";
@@ -186,6 +187,10 @@ export const DomainDetails: React.FC<DomainDetailsProps> = ({ domain }) => {
             <CsMainTitle icon={Database}>
               {domain.title}
             </CsMainTitle>
+            {/* NLP title analysis for the domain */}
+            <div className="mt-2">
+              <NlpAnalysisPanel text={domain.title} />
+            </div>
             <div className="flex items-center gap-4 text-sm text-gray-600 dark:text-gray-400">
               <div className="flex items-center gap-1">
                 <Hash className="h-4 w-4" />
@@ -210,6 +215,9 @@ export const DomainDetails: React.FC<DomainDetailsProps> = ({ domain }) => {
             <p className="leading-relaxed text-gray-700 dark:text-gray-300">
               {domain.definition}
             </p>
+            <div className="mt-4">
+              <NlpAnalysisPanel text={domain.definition} />
+            </div>
           </Card>
 
           {/* Terms in this Domain */}

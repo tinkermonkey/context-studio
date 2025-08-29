@@ -1,0 +1,587 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg
+   viewBox="0 0 1056 816"
+   preserveAspectRatio="xMinYMin"
+   version="1.1"
+   id="svg6"
+   sodipodi:docname="concept_net_vision.svg"
+   inkscape:version="1.4.2 (ebf0e940, 2025-05-08)"
+   width="11in"
+   height="8.5in"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg">
+  <sodipodi:namedview
+     id="namedview6"
+     pagecolor="#ffffff"
+     bordercolor="#000000"
+     borderopacity="0.25"
+     inkscape:showpageshadow="2"
+     inkscape:pageopacity="0.0"
+     inkscape:pagecheckerboard="0"
+     inkscape:deskcolor="#d1d1d1"
+     inkscape:zoom="0.64829129"
+     inkscape:cx="764.31692"
+     inkscape:cy="608.52275"
+     inkscape:current-layer="svg6"
+     inkscape:document-units="in" />
+  <defs
+     id="defs4">
+    <marker
+       inkscape:stockid="Arrow1Mstart"
+       orient="auto"
+       refY="0"
+       refX="0"
+       id="Arrow1Mstart"
+       style="overflow:visible">
+      <path
+         id="path3791"
+         d="M 0,0 5,-5 -12.5,0 5,5 Z"
+         style="fill-rule:evenodd;stroke:#000000;stroke-width:1pt"
+         transform="matrix(0.4,0,0,0.4,4,0)"
+         inkscape:connector-curvature="0" />
+    </marker>
+    <marker
+       inkscape:stockid="Arrow1Mend"
+       orient="auto"
+       refY="0"
+       refX="0"
+       id="Arrow1Mend"
+       style="overflow:visible">
+      <path
+         id="path3794"
+         d="M 0,0 5,-5 -12.5,0 5,5 Z"
+         style="fill-rule:evenodd;stroke:#000000;stroke-width:1pt"
+         transform="matrix(-0.4,0,0,-0.4,-4,0)"
+         inkscape:connector-curvature="0" />
+    </marker>
+    <marker
+       inkscape:stockid="Arrow1Send"
+       orient="auto"
+       refY="0"
+       refX="0"
+       id="Arrow1Send"
+       style="overflow:visible">
+      <path
+         id="path3800"
+         d="M 0,0 5,-5 -12.5,0 5,5 Z"
+         style="fill-rule:evenodd;stroke:#000000;stroke-width:1pt"
+         transform="matrix(-0.2,0,0,-0.2,-1.2,0)"
+         inkscape:connector-curvature="0" />
+    </marker>
+    <marker
+       inkscape:stockid="Arrow1Mend"
+       orient="auto"
+       refY="0"
+       refX="0"
+       id="Arrow1Mend-5"
+       style="overflow:visible">
+      <path
+         id="path3794-5"
+         d="M 0,0 5,-5 -12.5,0 5,5 Z"
+         style="fill-rule:evenodd;stroke:#000000;stroke-width:1pt"
+         transform="matrix(-0.4,0,0,-0.4,-4,0)"
+         inkscape:connector-curvature="0" />
+    </marker>
+    <marker
+       inkscape:stockid="Arrow1Mend"
+       orient="auto"
+       refY="0"
+       refX="0"
+       id="marker1"
+       style="overflow:visible">
+      <path
+         id="path1"
+         d="M 0,0 5,-5 -12.5,0 5,5 Z"
+         style="fill-rule:evenodd;stroke:#000000;stroke-width:1pt"
+         transform="matrix(-0.4,0,0,-0.4,-4,0)"
+         inkscape:connector-curvature="0" />
+    </marker>
+    <marker
+       inkscape:stockid="Arrow1Mend"
+       orient="auto"
+       refY="0"
+       refX="0"
+       id="Arrow1Mend-4"
+       style="overflow:visible">
+      <path
+         id="path3794-7"
+         d="M 0,0 5,-5 -12.5,0 5,5 Z"
+         style="fill-rule:evenodd;stroke:#000000;stroke-width:1pt"
+         transform="matrix(-0.4,0,0,-0.4,-4,0)"
+         inkscape:connector-curvature="0" />
+    </marker>
+    <marker
+       inkscape:stockid="Arrow1Mend"
+       orient="auto"
+       refY="0"
+       refX="0"
+       id="marker1-8"
+       style="overflow:visible">
+      <path
+         id="path1-4"
+         d="M 0,0 5,-5 -12.5,0 5,5 Z"
+         style="fill-rule:evenodd;stroke:#000000;stroke-width:1pt"
+         transform="matrix(-0.4,0,0,-0.4,-4,0)"
+         inkscape:connector-curvature="0" />
+    </marker>
+    <marker
+       inkscape:stockid="Arrow1Mend"
+       orient="auto"
+       refY="0"
+       refX="0"
+       id="marker2"
+       style="overflow:visible">
+      <path
+         id="path2"
+         d="M 0,0 5,-5 -12.5,0 5,5 Z"
+         style="fill-rule:evenodd;stroke:#000000;stroke-width:1pt"
+         transform="matrix(-0.4,0,0,-0.4,-4,0)"
+         inkscape:connector-curvature="0" />
+    </marker>
+    <marker
+       inkscape:stockid="Arrow1Mend"
+       orient="auto"
+       refY="0"
+       refX="0"
+       id="Arrow1Mend-40"
+       style="overflow:visible">
+      <path
+         id="path3794-57"
+         d="M 0,0 5,-5 -12.5,0 5,5 Z"
+         style="fill-rule:evenodd;stroke:#000000;stroke-width:1pt"
+         transform="matrix(-0.4,0,0,-0.4,-4,0)"
+         inkscape:connector-curvature="0" />
+    </marker>
+    <marker
+       inkscape:stockid="Arrow1Mend"
+       orient="auto"
+       refY="0"
+       refX="0"
+       id="marker1-0"
+       style="overflow:visible">
+      <path
+         id="path1-0"
+         d="M 0,0 5,-5 -12.5,0 5,5 Z"
+         style="fill-rule:evenodd;stroke:#000000;stroke-width:1pt"
+         transform="matrix(-0.4,0,0,-0.4,-4,0)"
+         inkscape:connector-curvature="0" />
+    </marker>
+    <marker
+       inkscape:stockid="Arrow1Mend"
+       orient="auto"
+       refY="0"
+       refX="0"
+       id="marker2-5"
+       style="overflow:visible">
+      <path
+         id="path2-6"
+         d="M 0,0 5,-5 -12.5,0 5,5 Z"
+         style="fill-rule:evenodd;stroke:#000000;stroke-width:1pt"
+         transform="matrix(-0.4,0,0,-0.4,-4,0)"
+         inkscape:connector-curvature="0" />
+    </marker>
+    <marker
+       inkscape:stockid="Arrow1Mend"
+       orient="auto"
+       refY="0"
+       refX="0"
+       id="marker3"
+       style="overflow:visible">
+      <path
+         id="path3"
+         d="M 0,0 5,-5 -12.5,0 5,5 Z"
+         style="fill-rule:evenodd;stroke:#000000;stroke-width:1pt"
+         transform="matrix(-0.4,0,0,-0.4,-4,0)"
+         inkscape:connector-curvature="0" />
+    </marker>
+    <marker
+       inkscape:stockid="Arrow1Mend"
+       orient="auto"
+       refY="0"
+       refX="0"
+       id="Arrow1Mend-4-5"
+       style="overflow:visible">
+      <path
+         id="path3794-7-0"
+         d="M 0,0 5,-5 -12.5,0 5,5 Z"
+         style="fill-rule:evenodd;stroke:#000000;stroke-width:1pt"
+         transform="matrix(-0.4,0,0,-0.4,-4,0)"
+         inkscape:connector-curvature="0" />
+    </marker>
+    <marker
+       inkscape:stockid="Arrow1Mend"
+       orient="auto"
+       refY="0"
+       refX="0"
+       id="marker1-2"
+       style="overflow:visible">
+      <path
+         id="path1-3"
+         d="M 0,0 5,-5 -12.5,0 5,5 Z"
+         style="fill-rule:evenodd;stroke:#000000;stroke-width:1pt"
+         transform="matrix(-0.4,0,0,-0.4,-4,0)"
+         inkscape:connector-curvature="0" />
+    </marker>
+    <marker
+       inkscape:stockid="Arrow1Mend"
+       orient="auto"
+       refY="0"
+       refX="0"
+       id="Arrow1Mend-2"
+       style="overflow:visible">
+      <path
+         id="path3794-54"
+         d="M 0,0 5,-5 -12.5,0 5,5 Z"
+         style="fill-rule:evenodd;stroke:#000000;stroke-width:1pt"
+         transform="matrix(-0.4,0,0,-0.4,-4,0)"
+         inkscape:connector-curvature="0" />
+    </marker>
+  </defs>
+  <rect
+     style="fill:#e5e5e5;fill-opacity:1;stroke:none;stroke-width:2.05158"
+     id="rect3773-2"
+     width="563.20502"
+     height="44.603302"
+     x="326.53003"
+     y="96.020279"
+     ry="14.14251" />
+  <rect
+     style="fill:#afe9af;fill-opacity:1;stroke:#000000"
+     id="rect2985-7"
+     width="133.80991"
+     height="44.603302"
+     x="43.458908"
+     y="47.786636"
+     ry="14.14251" />
+  <text
+     xml:space="preserve"
+     class="graph-node-label"
+     x="93.781815"
+     y="73.439896"
+     id="text2987-3"
+     style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:12px;line-height:125%;font-family:sans-serif;-inkscape-font-specification:'sans-serif, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal"><tspan
+       sodipodi:role="line"
+       id="tspan6"
+       x="93.781815"
+       y="73.439896">Apple</tspan></text>
+  <rect
+     ry="14.14251"
+     y="44.020279"
+     x="326.53003"
+     height="44.603302"
+     width="563.20502"
+     id="rect3759-2"
+     style="fill:#aaeeff;fill-opacity:1;stroke:none;stroke-width:2.05159" />
+  <text
+     id="text3761-9"
+     y="63.425247"
+     x="343.87579"
+     class="graph-node-label"
+     xml:space="preserve"
+     style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:12px;line-height:125%;font-family:sans-serif;-inkscape-font-specification:'sans-serif, Bold';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal"><tspan
+       sodipodi:role="line"
+       id="tspan11"
+       x="343.87579"
+       y="63.425247">apple.n.01 (n) - noun.food</tspan></text>
+  <text
+     id="text3761-9-7"
+     y="113.09578"
+     x="343.87579"
+     class="graph-node-label"
+     xml:space="preserve"
+     style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:12px;line-height:125%;font-family:sans-serif;-inkscape-font-specification:'sans-serif, Bold';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal"><tspan
+       sodipodi:role="line"
+       id="tspan12"
+       x="343.87579"
+       y="113.09578">apple.n.02 (n) - noun.plant</tspan></text>
+  <a
+     href="https://github.com/commonsense/conceptnet5/wiki/Graph-structure"
+     id="a1-0"
+     transform="translate(-57.54574,-279.22262)">
+    <text
+       xml:space="preserve"
+       x="399.55133"
+       y="411.26331"
+       id="text3775-7"
+       class="graph-node-label"
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:12px;line-height:125%;font-family:sans-serif;-inkscape-font-specification:'sans-serif, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal"><tspan
+         sodipodi:role="line"
+         id="tspan10"
+         x="399.55133"
+         y="411.26331">native Eurasian tree widely cultivated in many varieties for its firm rounded edible fruits</tspan></text>
+  </a>
+  <a
+     href="https://github.com/commonsense/conceptnet5/wiki/Graph-structure"
+     id="a1-0-4"
+     transform="translate(-57.77551,-323.32524)">
+    <text
+       xml:space="preserve"
+       x="399.55133"
+       y="403.26331"
+       id="text3775-7-0"
+       class="graph-node-label"
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:12px;line-height:125%;font-family:sans-serif;-inkscape-font-specification:'sans-serif, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal"><tspan
+         sodipodi:role="line"
+         id="tspan9"
+         x="399.55133"
+         y="403.26331">fruit with red or yellow or green skin and sweet to tart crisp whitish flesh</tspan></text>
+  </a>
+  <path
+     style="fill:none;stroke:#000000;stroke-width:1.25;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;marker-mid:none;marker-end:url(#Arrow1Mend-5)"
+     d="M 177.22075,69.13956 H 322.93503"
+     id="path4411-8"
+     inkscape:connector-curvature="0"
+     sodipodi:nodetypes="cc" />
+  <path
+     style="fill:none;stroke:#000000;stroke-width:1.25;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;marker-end:url(#Arrow1Mend-5)"
+     d="m 272.93503,69.13956 c 53.19657,0 0,50 50,50"
+     id="path4975-5"
+     inkscape:connector-curvature="0"
+     sodipodi:nodetypes="cc" />
+  <text
+     xml:space="preserve"
+     x="220.55005"
+     y="63.425247"
+     id="text5161-8"
+     class="graph-edge-label"
+     style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:12px;line-height:125%;font-family:sans-serif;-inkscape-font-specification:'sans-serif, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal"><tspan
+       sodipodi:role="line"
+       id="tspan7"
+       x="220.55005"
+       y="63.425247">has sense</tspan></text>
+  <rect
+     style="fill:#e6e6e6;fill-opacity:1;stroke:none"
+     id="rect5184-0"
+     width="133.80991"
+     height="44.603302"
+     x="326.53003"
+     y="169.62563"
+     ry="14.14251" />
+  <text
+     xml:space="preserve"
+     x="383.82687"
+     y="196.42433"
+     id="text5186-6"
+     class="graph-node-label"
+     style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:12px;line-height:125%;font-family:sans-serif;-inkscape-font-specification:'sans-serif, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal"><tspan
+       sodipodi:role="line"
+       id="tspan14"
+       x="383.82687"
+       y="196.42433">fruit</tspan></text>
+  <rect
+     ry="14.14251"
+     y="223.70528"
+     x="325.72794"
+     height="44.603302"
+     width="133.80991"
+     id="rect5204-7"
+     style="fill:#e6e6e6;fill-opacity:1;stroke:none" />
+  <text
+     id="text5206-1"
+     y="250.14366"
+     x="385.70541"
+     class="graph-node-label"
+     xml:space="preserve"
+     style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:12px;line-height:125%;font-family:sans-serif;-inkscape-font-specification:'sans-serif, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal"><tspan
+       sodipodi:role="line"
+       id="tspan15"
+       x="385.70541"
+       y="250.14366">red</tspan></text>
+  <path
+     style="fill:none;stroke:#000000;stroke-width:1.25;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;marker-end:url(#Arrow1Mend-4)"
+     d="m 153.88059,92.74495 c 0,56.84084 10,102.14286 40,102.14286 h 130"
+     id="path5218-5"
+     inkscape:connector-curvature="0"
+     sodipodi:nodetypes="csc" />
+  <path
+     sodipodi:nodetypes="cc"
+     inkscape:connector-curvature="0"
+     id="path5220-8"
+     d="m 263.70415,194.91154 c 53.28953,0 2.99829,55.5788 61.67466,55.5788"
+     style="fill:none;stroke:#000000;stroke-width:1.11272;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;marker-end:url(#Arrow1Mend-4)" />
+  <text
+     id="text5406-9"
+     y="189.17348"
+     x="200.64127"
+     class="graph-edge-label"
+     xml:space="preserve"
+     style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:12px;line-height:125%;font-family:sans-serif;-inkscape-font-specification:'sans-serif, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal"><tspan
+       sodipodi:role="line"
+       id="tspan13"
+       x="200.64127"
+       y="189.17348">is related to</tspan></text>
+  <rect
+     style="fill:#e6e6e6;fill-opacity:1;stroke:none"
+     id="rect5184-0-7"
+     width="133.80991"
+     height="44.603302"
+     x="326.71613"
+     y="542.00586"
+     ry="14.14251" />
+  <text
+     xml:space="preserve"
+     x="374.99417"
+     y="568.80457"
+     id="text5186-6-1"
+     class="graph-node-label"
+     style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:12px;line-height:125%;font-family:sans-serif;-inkscape-font-specification:'sans-serif, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal"><tspan
+       sodipodi:role="line"
+       id="tspan22"
+       x="374.99417"
+       y="568.80457">a core</tspan></text>
+  <rect
+     ry="14.14251"
+     y="596.08557"
+     x="325.91403"
+     height="44.603302"
+     width="133.80991"
+     id="rect5204-7-0"
+     style="fill:#e6e6e6;fill-opacity:1;stroke:none" />
+  <text
+     id="text5206-1-7"
+     y="622.60907"
+     x="337.57065"
+     class="graph-node-label"
+     xml:space="preserve"
+     style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:12px;line-height:125%;font-family:sans-serif;-inkscape-font-specification:'sans-serif, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal"><tspan
+       sodipodi:role="line"
+       id="tspan23"
+       x="337.57065"
+       y="622.60907">many cooking uses</tspan></text>
+  <path
+     sodipodi:nodetypes="cc"
+     inkscape:connector-curvature="0"
+     id="path5220-8-4"
+     d="m 263.89025,567.29182 c 53.28953,0 2.99829,55.5788 61.67466,55.5788"
+     style="fill:none;stroke:#000000;stroke-width:1.11272;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;marker-end:url(#Arrow1Mend-4-5)" />
+  <text
+     id="text5406-9-5"
+     y="561.55371"
+     x="200.82736"
+     class="graph-edge-label"
+     xml:space="preserve"
+     style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:12px;line-height:125%;font-family:sans-serif;-inkscape-font-specification:'sans-serif, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal"><tspan
+       sodipodi:role="line"
+       id="tspan21"
+       x="200.82736"
+       y="561.55371">has</tspan></text>
+  <path
+     sodipodi:nodetypes="czc"
+     inkscape:connector-curvature="0"
+     id="path5794-8"
+     d="m 132.93501,91.44429 c 0,234.83795 12.3388,306.78252 56.4358,306.78252 44.097,0 133.5642,0.5451 133.5642,0.5451"
+     style="fill:none;stroke:#000000;stroke-width:1.25;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;marker-end:url(#Arrow1Mend-40)" />
+  <rect
+     style="fill:#e6e6e6;fill-opacity:1;stroke:none"
+     id="rect5796-0"
+     width="133.80991"
+     height="44.603302"
+     x="326.53003"
+     y="475.65265"
+     ry="14.14251" />
+  <text
+     xml:space="preserve"
+     class="graph-node-label"
+     x="360.74261"
+     y="502.45142"
+     id="text5798-6"
+     style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:12px;line-height:125%;font-family:sans-serif;-inkscape-font-specification:'sans-serif, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal"><tspan
+       sodipodi:role="line"
+       id="tspan20"
+       x="360.74261"
+       y="502.45142">edible fruit</tspan></text>
+  <text
+     xml:space="preserve"
+     class="graph-edge-label"
+     x="203.00024"
+     y="395.05756"
+     id="text5802-7"
+     style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:12px;line-height:125%;font-family:sans-serif;-inkscape-font-specification:'sans-serif, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal"><tspan
+       sodipodi:role="line"
+       id="tspan16"
+       x="203.00024"
+       y="395.05756">is a</tspan></text>
+  <rect
+     ry="14.14251"
+     y="425.65265"
+     x="326.53003"
+     height="44.603302"
+     width="133.80991"
+     id="rect4142-4"
+     style="fill:#e6e6e6;fill-opacity:1;stroke:none" />
+  <text
+     id="text4144-3"
+     y="450.11053"
+     x="376.39597"
+     class="graph-node-label"
+     xml:space="preserve"
+     style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:12px;line-height:125%;font-family:sans-serif;-inkscape-font-specification:'sans-serif, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal"><tspan
+       sodipodi:role="line"
+       id="tspan19"
+       x="376.39597"
+       y="450.11053">pome</tspan></text>
+  <rect
+     style="fill:#e6e6e6;fill-opacity:1;stroke:none"
+     id="rect4154-8"
+     width="133.80991"
+     height="44.603302"
+     x="326.53003"
+     y="375.65259"
+     ry="14.14251" />
+  <text
+     xml:space="preserve"
+     class="graph-node-label"
+     x="345.59027"
+     y="401.30579"
+     id="text4156-7"
+     style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:12px;line-height:125%;font-family:sans-serif;-inkscape-font-specification:'sans-serif, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal"><tspan
+       sodipodi:role="line"
+       id="tspan18"
+       x="345.59027"
+       y="401.30579">computer brand</tspan></text>
+  <rect
+     ry="14.14251"
+     y="325.65259"
+     x="326.53003"
+     height="44.603302"
+     width="133.80991"
+     id="rect4166-9"
+     style="fill:#e6e6e6;fill-opacity:1;stroke:none" />
+  <text
+     id="text4168-5"
+     y="351.30579"
+     x="362.93988"
+     class="graph-node-label"
+     xml:space="preserve"
+     style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:12px;line-height:125%;font-family:sans-serif;-inkscape-font-specification:'sans-serif, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal"><tspan
+       sodipodi:role="line"
+       id="tspan17"
+       x="362.93988"
+       y="351.30579">apple tree</tspan></text>
+  <path
+     sodipodi:nodetypes="cc"
+     inkscape:connector-curvature="0"
+     id="path4178-7"
+     d="m 262.98884,398.77181 c 52.8385,0 1.8202,100.71441 60,100.71441"
+     style="fill:none;stroke:#000000;stroke-width:1.25;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;marker-end:url(#Arrow1Mend-40)" />
+  <path
+     style="fill:none;stroke:#000000;stroke-width:1.25;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;marker-end:url(#Arrow1Mend-40)"
+     d="m 290.07791,430.20041 c 0,8.6028 4.7789,18.5715 32.8571,18.5715"
+     id="path4180-3"
+     inkscape:connector-curvature="0"
+     sodipodi:nodetypes="cc" />
+  <path
+     style="fill:none;stroke:#000000;stroke-width:1.25;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;marker-end:url(#Arrow1Mend-40)"
+     d="m 262.73151,398.53291 c 53.1907,0 1.8323,-50.92192 60.4,-50.92192"
+     id="path4182-9"
+     inkscape:connector-curvature="0"
+     sodipodi:nodetypes="cc" />
+  <path
+     style="fill:none;stroke:#000000;stroke-width:1.25;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;marker-end:url(#Arrow1Mend-2)"
+     d="m 112.98884,92.08268 c 0,245.41228 3.7602,475.18534 50,475.18534 46.2399,0 160,0 160,0"
+     id="path6062-3"
+     inkscape:connector-curvature="0"
+     sodipodi:nodetypes="czc" />
+</svg>

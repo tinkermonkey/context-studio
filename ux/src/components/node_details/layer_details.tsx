@@ -1,5 +1,13 @@
 import React from "react";
-import { Card, Spinner, Button, Badge, Modal, ModalHeader, ModalBody } from "flowbite-react";
+import {
+  Card,
+  Spinner,
+  Button,
+  Badge,
+  Modal,
+  ModalHeader,
+  ModalBody,
+} from "flowbite-react";
 import {
   Calendar,
   Edit3,
@@ -9,6 +17,7 @@ import {
   Layers,
 } from "lucide-react";
 import { Link } from "@tanstack/react-router";
+import { NlpAnalysisPanel } from "@/components/nlp/NlpAnalysisPanel";
 import { useDomain, useDomainsByLayer } from "@/api/hooks/domains/useDomains";
 import { useTerms } from "@/api/hooks/terms/useTerms";
 import { TermRenderer } from "@/components/node_renderers/term_renderer";
@@ -131,6 +140,8 @@ export const LayerDetails: React.FC<LayerDetailsProps> = ({ layer }) => {
         </div>
 
         <div className="space-y-6">
+          {/* NLP title analysis for the layer */}
+          <NlpAnalysisPanel text={layer.title} />
           {/* Definition */}
           {layer.definition && (
             <Card>
@@ -138,6 +149,9 @@ export const LayerDetails: React.FC<LayerDetailsProps> = ({ layer }) => {
               <p className="leading-relaxed text-gray-700 dark:text-gray-300">
                 {layer.definition}
               </p>
+              <div className="mt-4">
+                <NlpAnalysisPanel text={layer.definition} />
+              </div>
             </Card>
           )}
 
@@ -205,11 +219,13 @@ const LayerEditModal: React.FC<{
 
     // Invalidate layer queries so details refresh
     try {
-      queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.LAYERS, layer.id] });
+      queryClient.invalidateQueries({
+        queryKey: [QUERY_KEYS.LAYERS, layer.id],
+      });
       queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.LAYERS] });
     } catch (e) {
       // best-effort
-      console.warn('Failed to invalidate layer queries', e);
+      console.warn("Failed to invalidate layer queries", e);
     }
   };
 
