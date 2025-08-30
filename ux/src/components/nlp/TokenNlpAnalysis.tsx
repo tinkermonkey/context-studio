@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { Card, Badge } from 'flowbite-react';
 import TokenSenseList from './TokenSenseList';
-import TokenConceptChart from './TokenConceptChart';
+import NlpConceptChart from './NlpConceptChart';
 import type { TokenData as BaseTokenData } from '@/api/services/nlp';
 
 type TokenData = BaseTokenData & { is_stop?: boolean };
@@ -18,9 +18,9 @@ export const TokenNlpAnalysis: React.FC<Props> = ({ token }) => {
   const sense2vec = token.sense2vec as any;
 
   const senses = (wordnet?.synsets || []).map((s: any) => ({
+    root: s.lemmas ? s.lemmas[0] : undefined,
     name: s.name || s.synset || s.id || s[0],
     definition: s.definition || s.gloss || s.def || '',
-    examples: s.examples || [],
     partOfSpeech: s.pos || s.partOfSpeech || '',
   }));
 
@@ -67,11 +67,34 @@ export const TokenNlpAnalysis: React.FC<Props> = ({ token }) => {
 
           {activeTab === 'concepts' && (
             <div>
-              {relations && relations.length > 0 ? (
-                <TokenConceptChart
-                  centralTerm={token.text}
-                  relations={relations.map((r: any) => ({ relation: r.relation ?? r.type ?? 'rel', terms: r.terms || r.related || [], scores: r.scores }))}
-                  maxRelationsPerType={2}
+              {(wordnet?.synsets || concepcy?.related_terms) ? (
+                <NlpConceptChart
+                  data={{
+                    text: token.text,
+                    lemma: token.lemma || token.text,
+                    pos: token.pos || token.tag || '',
+                    concepcy: {
+                      related_terms: relations
+                    },
+                    wordnet: {
+                      synsets: (wordnet?.synsets || []).map((s: any) => ({
+                        name: s.name || s.synset || s.id || s[0] || 'unknown',
+                        definition: s.definition || s.gloss || s.def || '',
+                        lemmas: s.lemmas || [],
+                        pos: s.pos || s.partOfSpeech || token.pos || token.tag || '',
+                        offset: s.offset || 0,
+                        domain: s.domain || 'general'
+                      })),
+                      definitions: (wordnet?.synsets || []).map((s: any) => s.definition || s.gloss || s.def || '')
+                    }
+                  }}
+                  config={{
+                    "RelatedTo": 3,
+                    "IsA": 3,
+                    "HasA": 2,
+                    "PartOf": 2,
+                    "UsedFor": 2
+                  }}
                 />
               ) : (
                 <div className="text-sm text-gray-500">No concept relationships available</div>

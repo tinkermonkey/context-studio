@@ -260,12 +260,12 @@ const NlpConceptChart: React.FC<NlpConceptChartProps> = ({
       const padding = 20;
       const senseHeight = Math.max(
         measureHtmlTextHeight(sense.definition, senseWidth - 20, textOptions) + lineHeight + padding,
-        STYLES.nodeHeight * 1.5 // Minimum height for two lines
+        STYLES.nodeHeight
       );
       
       const senseNode = {
         id: `sense-${index}`,
-        type: "sense-combined",
+        type: "sense",
         x: middleColumnX,
         y: senseY,
         width: senseWidth,
@@ -314,7 +314,14 @@ const NlpConceptChart: React.FC<NlpConceptChartProps> = ({
       const endPoints: Array<{ x: number; y: number }> = [];
       
       relations.forEach((relation, index) => {
-        const relationText = relation.object.label;
+        // Sometimes the directionality is not clear, so we want to pick the subject or the object, whichever is different from the input term
+        let relationText;
+        const inputTermRegex = new RegExp(`^${processedData.inputTerm}$`, "i");
+        if (!inputTermRegex.test(relation.subject.label)) {
+          relationText = relation.subject.label;
+        } else {
+          relationText = relation.object.label;
+        }
         const relationWidth = Math.max(
           measureSvgTextWidth(relationText, textOptions) + 50, // Extra padding for left alignment
           130
@@ -463,13 +470,11 @@ const NlpConceptChart: React.FC<NlpConceptChartProps> = ({
         {/* Render nodes */}
         {layout.nodes.map((node) => {
           const nodeStyle = node.type === "input" ? STYLES.inputNode :
-                           node.type === "sense-combined" ? STYLES.senseNode :
                            node.type === "sense" ? STYLES.senseNode :
                            node.type === "definition" ? STYLES.definitionNode :
                            STYLES.relationNode;
           
           const textStyle = node.type === "input" ? STYLES.inputText :
-                           node.type === "sense-combined" ? STYLES.senseText :
                            node.type === "sense" ? STYLES.senseText :
                            node.type === "definition" ? STYLES.definitionText :
                            STYLES.relationText;
@@ -485,8 +490,7 @@ const NlpConceptChart: React.FC<NlpConceptChartProps> = ({
                 stroke={nodeStyle.stroke}
                 rx={nodeStyle.rx}
               />
-              {node.type === "sense-combined" ? (
-                // Special handling for combined sense + definition boxes
+              {node.type === "sense" ? (
                 <foreignObject
                   x={node.x + 10}
                   y={node.y + 8}

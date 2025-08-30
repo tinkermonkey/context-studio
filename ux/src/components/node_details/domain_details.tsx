@@ -1,5 +1,13 @@
 import React from "react";
-import { Card, Spinner, Button, Badge, Modal, ModalHeader, ModalBody } from "flowbite-react";
+import {
+  Card,
+  Spinner,
+  Button,
+  Badge,
+  Modal,
+  ModalHeader,
+  ModalBody,
+} from "flowbite-react";
 import {
   Calendar,
   Hash,
@@ -11,7 +19,7 @@ import {
   CircleArrowRight,
 } from "lucide-react";
 import { Link } from "@tanstack/react-router";
-import { NlpAnalysisPanel } from '@/components/nlp/NlpAnalysisPanel';
+import { NlpAnalysisPanel } from "@/components/nlp/NlpAnalysisPanel";
 import { useLayer } from "@/api/hooks/layers/useLayers";
 import { useTerms } from "@/api/hooks/terms/useTerms";
 import { DomainForm } from "@/components/forms/domain_form";
@@ -103,7 +111,7 @@ export const DomainDetails: React.FC<DomainDetailsProps> = ({ domain }) => {
                 </Link>
               </div>
               {layer.definition && (
-                <div className="text-sm mt-2 text-gray-600 dark:text-gray-400">
+                <div className="mt-2 text-sm text-gray-600 dark:text-gray-400">
                   {layer.definition}
                 </div>
               )}
@@ -118,22 +126,22 @@ export const DomainDetails: React.FC<DomainDetailsProps> = ({ domain }) => {
           <CsSidebarSectionTitle icon={FileText}>
             Statistics
           </CsSidebarSectionTitle>
-          <div className="mx-2 space-y-2 inline-block">
+          <div className="mx-2 inline-block space-y-2">
             <div className="flex justify-between">
               <span className="text-sm">Total Terms:</span>
-              <span className="font-semibold pl-2">{terms?.length || 0}</span>
+              <span className="pl-2 font-semibold">{terms?.length || 0}</span>
             </div>
             <div className="flex justify-between">
               <span className="text-sm">Root Terms:</span>
-              <span className="font-semibold pl-2">{rootTerms.length}</span>
+              <span className="pl-2 font-semibold">{rootTerms.length}</span>
             </div>
             <div className="flex justify-between">
               <span className="text-sm">Parent Terms:</span>
-              <span className="font-semibold pl-2">{parentTerms.length}</span>
+              <span className="pl-2 font-semibold">{parentTerms.length}</span>
             </div>
             <div className="flex justify-between">
               <span className="text-sm">Child Terms:</span>
-              <span className="font-semibold pl-2">{childTerms.length}</span>
+              <span className="pl-2 font-semibold">{childTerms.length}</span>
             </div>
           </div>
         </CsSidebarSection>
@@ -184,13 +192,7 @@ export const DomainDetails: React.FC<DomainDetailsProps> = ({ domain }) => {
       <CsMain>
         <div className="mb-6 flex items-center justify-between">
           <div>
-            <CsMainTitle icon={Database}>
-              {domain.title}
-            </CsMainTitle>
-            {/* NLP title analysis for the domain */}
-            <div className="mt-2">
-              <NlpAnalysisPanel text={domain.title} />
-            </div>
+            <CsMainTitle icon={Database}>{domain.title}</CsMainTitle>
             <div className="flex items-center gap-4 text-sm text-gray-600 dark:text-gray-400">
               <div className="flex items-center gap-1">
                 <Hash className="h-4 w-4" />
@@ -206,6 +208,10 @@ export const DomainDetails: React.FC<DomainDetailsProps> = ({ domain }) => {
             <Edit3 className="mr-2 h-4 w-4" />
             Edit
           </Button>
+        </div>
+        {/* NLP title analysis for the domain */}
+        <div className="mt-2">
+          <NlpAnalysisPanel text={domain.title} />
         </div>
 
         <div className="space-y-6">
@@ -423,10 +429,12 @@ const DomainEditModal: React.FC<{
     onClose();
 
     try {
-      queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.DOMAINS, domain.id] });
+      queryClient.invalidateQueries({
+        queryKey: [QUERY_KEYS.DOMAINS, domain.id],
+      });
       queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.DOMAINS] });
     } catch (e) {
-      console.warn('Failed to invalidate domain queries', e);
+      console.warn("Failed to invalidate domain queries", e);
     }
   };
 
