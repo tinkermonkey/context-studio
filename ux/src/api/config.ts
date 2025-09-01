@@ -29,6 +29,7 @@ export const QUERY_KEYS = {
   DATASETS: 'datasets',
   SCHEMA: 'schema',
   NLP: 'nlp',
+  LLM: 'llm',
 } as const;
 
 export const ENDPOINTS = {
@@ -41,4 +42,5 @@ export const ENDPOINTS = {
   DATASETS: '/api/datasets',
   SCHEMA: '/api/schema',
   NLP: '/api/nlp_analysis',
+  LLM: '/api/llm',
 } as const;

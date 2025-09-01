@@ -4,7 +4,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
 
-from api import layers, domains, terms, term_relationships, graph, datasets, nlp_analysis, schema, predicates
+from api import layers, domains, terms, term_relationships, graph, datasets, nlp_analysis, schema, predicates, llm
 from api import enrichment
 from schema_org import api as schema_org_api
 from api.graph import get_cached_graph_service, invalidate_graph_cache
@@ -129,6 +129,8 @@ def create_app(dataset_id=None, engine=None, session_local=None):
     app.include_router(schema_org_api.router)
     # Integrate NLP router
     app.include_router(nlp_analysis.router, prefix="/api", tags=["nlp"])
+    # LLM router
+    app.include_router(llm.router, prefix="/api", tags=["llm"])
     # NLP enrichment reference API
     app.include_router(enrichment.router, prefix="", tags=["nlp-reference"])
     return app

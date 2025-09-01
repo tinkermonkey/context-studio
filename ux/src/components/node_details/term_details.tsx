@@ -387,7 +387,20 @@ export const TermDetails: React.FC<TermPageProps> = ({ term }) => {
 
         <div className="space-y-6">
           {/* NLP */}
-          <NlpAnalysisPanel text={term.title} />
+          <NlpAnalysisPanel 
+            text={term.title} 
+            textTitle={"Title"} 
+            domainContext={domain ? {
+              title: domain.title,
+              definition: domain.definition
+            } : null}
+            parentTermContext={parentTerm ? {
+              title: parentTerm.title,
+              definition: parentTerm.definition,
+              relationshipPredicate: "child_of" // You may want to determine this from actual relationship data
+            } : null}
+            currentDefinition={term.definition}
+          />
 
           {/* Definition */}
           <Card>
@@ -395,9 +408,6 @@ export const TermDetails: React.FC<TermPageProps> = ({ term }) => {
             <p className="leading-relaxed text-gray-700 dark:text-gray-300">
               {term.definition}
             </p>
-            <div className="mt-4">
-              <NlpAnalysisPanel text={term.definition} />
-            </div>
           </Card>
 
           {/* Child Terms */}

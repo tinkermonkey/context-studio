@@ -4,8 +4,9 @@ Configuration settings for the Context Studio Local Server.
 
 import os
 from typing import Dict, Any, Optional
-from pydantic import BaseSettings, Field, BaseModel
+from pydantic import Field, BaseModel
 from enum import Enum
+from dotenv import load_dotenv
 
 
 class SourceType(str, Enum):
@@ -41,7 +42,7 @@ class EnrichmentConfig(BaseModel):
 
 
 
-class Settings(BaseSettings):
+class Settings(BaseModel):
     """
     Application settings with environment variable support.
     """
@@ -232,9 +233,18 @@ class Settings(BaseSettings):
         "cache_ttl": 3600
     }, description="Enrichment API configuration")
 
-    class Config:
-        env_file = ".env"
-        case_sensitive = True
+    # LLM Configuration
+    LLM_MODEL_NAME: str = Field(default="gpt-3.5-turbo", description="OpenAI model name")
+    LLM_TEMPERATURE: float = Field(default=0.0, ge=0.0, le=2.0, description="Model temperature")
+    LLM_MAX_TOKENS: Optional[int] = Field(default=None, description="Maximum tokens for response")
+    LLM_TIMEOUT: int = Field(default=30, ge=1, le=300, description="Request timeout in seconds")
+
+    # Note: Settings now inherits from pydantic.BaseModel instead of BaseSettings.
+    # Environment variables from a .env file (if present) are loaded when
+    # `get_settings()` is called. Field-level environment parsing and nested
+    # env parsing provided by `BaseSettings` is not available here; if you rely
+    # on extensive env-based overrides consider adding explicit parsing in
+    # `get_settings()` or using a small wrapper to apply env values.
 
 
 
@@ -242,4 +252,12 @@ def get_settings() -> Settings:
     """
     Get the global settings instance.
     """
+    # Load .env into the environment so callers can override settings using
+    # standard environment variables. This does not perform automatic mapping
+    # of environment variables to nested fields like BaseSettings would.
+    load_dotenv()
+
+    # Construct Settings using defaults. If you need to override via env vars
+    # implement mapping logic here to read os.environ and pass values to
+    # Settings(**overrides)
     return Settings()

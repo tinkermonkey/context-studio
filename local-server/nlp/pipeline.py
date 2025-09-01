@@ -16,7 +16,7 @@ class NLPPipeline:
     NLP pipeline manager for spaCy and custom components.
     Handles initialization, error handling, and component loading.
     """
-    def __init__(self, model_name: str = "en_core_web_sm"):
+    def __init__(self, model_name: str = "en_core_web_lg"):
         self.model_name = model_name
         self.nlp = None
         self.s2v = None

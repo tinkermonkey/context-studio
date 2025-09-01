@@ -12,7 +12,6 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as AppRouteImport } from './routes/app'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AppIndexRouteImport } from './routes/app/index'
-import { Route as AppTestNlpRouteImport } from './routes/app/test-nlp'
 import { Route as AppTermsRouteImport } from './routes/app/terms'
 import { Route as AppPredicatesRouteImport } from './routes/app/predicates'
 import { Route as AppLayersRouteImport } from './routes/app/layers'
@@ -35,11 +34,6 @@ const IndexRoute = IndexRouteImport.update({
 const AppIndexRoute = AppIndexRouteImport.update({
   id: '/',
   path: '/',
-  getParentRoute: () => AppRoute,
-} as any)
-const AppTestNlpRoute = AppTestNlpRouteImport.update({
-  id: '/test-nlp',
-  path: '/test-nlp',
   getParentRoute: () => AppRoute,
 } as any)
 const AppTermsRoute = AppTermsRouteImport.update({
@@ -91,7 +85,6 @@ export interface FileRoutesByFullPath {
   '/app/layers': typeof AppLayersRoute
   '/app/predicates': typeof AppPredicatesRoute
   '/app/terms': typeof AppTermsRoute
-  '/app/test-nlp': typeof AppTestNlpRoute
   '/app/': typeof AppIndexRoute
   '/app/nodes/domain/$domainId': typeof AppNodesDomainDomainIdRoute
   '/app/nodes/layer/$layerId': typeof AppNodesLayerLayerIdRoute
@@ -104,7 +97,6 @@ export interface FileRoutesByTo {
   '/app/layers': typeof AppLayersRoute
   '/app/predicates': typeof AppPredicatesRoute
   '/app/terms': typeof AppTermsRoute
-  '/app/test-nlp': typeof AppTestNlpRoute
   '/app': typeof AppIndexRoute
   '/app/nodes/domain/$domainId': typeof AppNodesDomainDomainIdRoute
   '/app/nodes/layer/$layerId': typeof AppNodesLayerLayerIdRoute
@@ -119,7 +111,6 @@ export interface FileRoutesById {
   '/app/layers': typeof AppLayersRoute
   '/app/predicates': typeof AppPredicatesRoute
   '/app/terms': typeof AppTermsRoute
-  '/app/test-nlp': typeof AppTestNlpRoute
   '/app/': typeof AppIndexRoute
   '/app/nodes/domain/$domainId': typeof AppNodesDomainDomainIdRoute
   '/app/nodes/layer/$layerId': typeof AppNodesLayerLayerIdRoute
@@ -135,7 +126,6 @@ export interface FileRouteTypes {
     | '/app/layers'
     | '/app/predicates'
     | '/app/terms'
-    | '/app/test-nlp'
     | '/app/'
     | '/app/nodes/domain/$domainId'
     | '/app/nodes/layer/$layerId'
@@ -148,7 +138,6 @@ export interface FileRouteTypes {
     | '/app/layers'
     | '/app/predicates'
     | '/app/terms'
-    | '/app/test-nlp'
     | '/app'
     | '/app/nodes/domain/$domainId'
     | '/app/nodes/layer/$layerId'
@@ -162,7 +151,6 @@ export interface FileRouteTypes {
     | '/app/layers'
     | '/app/predicates'
     | '/app/terms'
-    | '/app/test-nlp'
     | '/app/'
     | '/app/nodes/domain/$domainId'
     | '/app/nodes/layer/$layerId'
@@ -195,13 +183,6 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/app/'
       preLoaderRoute: typeof AppIndexRouteImport
-      parentRoute: typeof AppRoute
-    }
-    '/app/test-nlp': {
-      id: '/app/test-nlp'
-      path: '/test-nlp'
-      fullPath: '/app/test-nlp'
-      preLoaderRoute: typeof AppTestNlpRouteImport
       parentRoute: typeof AppRoute
     }
     '/app/terms': {
@@ -269,7 +250,6 @@ interface AppRouteChildren {
   AppLayersRoute: typeof AppLayersRoute
   AppPredicatesRoute: typeof AppPredicatesRoute
   AppTermsRoute: typeof AppTermsRoute
-  AppTestNlpRoute: typeof AppTestNlpRoute
   AppIndexRoute: typeof AppIndexRoute
   AppNodesDomainDomainIdRoute: typeof AppNodesDomainDomainIdRoute
   AppNodesLayerLayerIdRoute: typeof AppNodesLayerLayerIdRoute
@@ -282,7 +262,6 @@ const AppRouteChildren: AppRouteChildren = {
   AppLayersRoute: AppLayersRoute,
   AppPredicatesRoute: AppPredicatesRoute,
   AppTermsRoute: AppTermsRoute,
-  AppTestNlpRoute: AppTestNlpRoute,
   AppIndexRoute: AppIndexRoute,
   AppNodesDomainDomainIdRoute: AppNodesDomainDomainIdRoute,
   AppNodesLayerLayerIdRoute: AppNodesLayerLayerIdRoute,

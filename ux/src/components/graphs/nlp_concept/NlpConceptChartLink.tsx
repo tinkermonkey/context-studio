@@ -5,20 +5,23 @@ interface Coordinate {
   y: number;
 }
 
-interface NlpLinkWithPredicateProps {
+interface NlpConceptChartLinkProps {
   startPoint: Coordinate;
   label: string;
   endPoints: Coordinate[];
+  /** If true, the initial segment from startPoint to the branch point will prefer a vertical orientation */
+  startVertical?: boolean;
   strokeWidth?: number;
   strokeColor?: string;
   fontSize?: string;
   fontFamily?: string;
 }
 
-const NlpLinkWithPredicate: React.FC<NlpLinkWithPredicateProps> = ({
+export const NlpConceptChartLink: React.FC<NlpConceptChartLinkProps> = ({
   startPoint,
   label,
   endPoints,
+  startVertical = false,
   strokeWidth = 1.25,
   strokeColor = "#000",
   fontSize = "12px",
@@ -48,12 +51,19 @@ const NlpLinkWithPredicate: React.FC<NlpLinkWithPredicateProps> = ({
   };
 
   // Create smooth S-curve from start to branch point
-  const createSmoothCurve = (from: Coordinate, to: Coordinate, forceHorizontal: boolean = false): string => {
+  const createSmoothCurve = (
+    from: Coordinate,
+    to: Coordinate,
+    forceHorizontal: boolean = false,
+    preferVertical: boolean = false,
+  ): string => {
     const deltaX = to.x - from.x;
     const deltaY = to.y - from.y;
 
-    // If deltaX > deltaY, the the curve is considered 'horizontal', otherwise 'vertical'
-    const isHorizontal = Math.abs(deltaX) > Math.abs(deltaY) || forceHorizontal;
+    // Determine whether the curve should be treated as 'horizontal' or 'vertical'.
+    // preferVertical forces a vertical-style control point layout unless forceHorizontal is true.
+    const isHorizontal =
+      forceHorizontal || (!preferVertical && Math.abs(deltaX) > Math.abs(deltaY));
 
     // Create control points for smooth curve
     let controlPoint1X, controlPoint1Y, controlPoint2X, controlPoint2Y;
@@ -91,7 +101,7 @@ const NlpLinkWithPredicate: React.FC<NlpLinkWithPredicateProps> = ({
     <g>
       {/* Main smooth curve from start to branch point */}
       <path
-        d={createSmoothCurve(startPoint, branchPoint)}
+    d={createSmoothCurve(startPoint, branchPoint, false, startVertical)}
         stroke={strokeColor}
         strokeWidth={strokeWidth}
         fill="none"
@@ -101,7 +111,7 @@ const NlpLinkWithPredicate: React.FC<NlpLinkWithPredicateProps> = ({
       {endPoints.map((endPoint, index) => {
         // Create a smooth curve to a point just before the endpoint, then a horizontal line
         const preEndPoint = { x: endPoint.x - 10, y: endPoint.y };
-        const branchToPreEnd = createSmoothCurve(branchPoint, preEndPoint, true);
+  const branchToPreEnd = createSmoothCurve(branchPoint, preEndPoint, true, false);
         const horizontalSegment = `M ${preEndPoint.x} ${preEndPoint.y} L ${endPoint.x} ${endPoint.y}`;
 
         return (
@@ -139,5 +149,3 @@ const NlpLinkWithPredicate: React.FC<NlpLinkWithPredicateProps> = ({
     </g>
   );
 };
-
-export default NlpLinkWithPredicate;

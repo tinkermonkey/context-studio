@@ -33,7 +33,7 @@ class ConcepcyData(BaseModel):
     """
     ConceptNet/Concepcy data for a token.
     """
-    related_terms: Optional[List[dict]] = Field(default_factory=list, description="Related terms from ConceptNet.")
+    related_terms: Optional[List[ConcepcyRelation]] = Field(default_factory=list, description="Related terms from ConceptNet.")
 
 class Sense2VecData(BaseModel):
     """
@@ -71,23 +71,23 @@ class TokenReference(BaseModel):
     """
     Reference to a token by its index in the token list.
     """
-    index: int = Field(None, description="Index of the token in the token list.")
-    text: str = Field(None, description="Token text.")
-    pos: str = Field(None, description="Part of speech tag.")
-    start_idx: int = Field(None, description="Start character position.")
-    end_idx: int = Field(None, description="End character position.")
+    index: Optional[int] = Field(None, description="Index of the token in the token list.")
+    text: Optional[str] = Field(None, description="Token text.")
+    pos: Optional[str] = Field(None, description="Part of speech tag.")
+    start_idx: Optional[int] = Field(None, description="Start character position.")
+    end_idx: Optional[int] = Field(None, description="End character position.")
 
 class TokenData(BaseModel):
     """
     Data for a single token in the analyzed text.
     """
-    text: str = Field(None, description="Token text.")
+    text: Optional[str] = Field(None, description="Token text.")
     lemma: Optional[str] = Field(None, description="Token lemma.")
     pos: Optional[str] = Field(None, description="Part of speech tag.")
     dep: Optional[str] = Field(None, description="Syntactic Dependency Relation.")
     tag: Optional[str] = Field(None, description="Detailed POS tag.")
-    start_idx: int = Field(None, description="Start character position.")
-    end_idx: int = Field(None, description="End character position.")
+    start_idx: Optional[int] = Field(None, description="Start character position.")
+    end_idx: Optional[int] = Field(None, description="End character position.")
     head: Optional[TokenReference] = Field(None, description="Head token reference.")
     children: List[TokenReference] = Field(default_factory=list, description="List of child token references.")
     ancestors: List[TokenReference] = Field(default_factory=list, description="List of ancestor token references.")

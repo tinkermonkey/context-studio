@@ -15,6 +15,7 @@ export * from './services/graph';
 export * from './services/datasets';
 export * from './services/schema';
 export * from './services/nlp';
+export * from './services/llm';
 
 // Hooks
 export * from './hooks/layers';
@@ -26,6 +27,7 @@ export * from './hooks/graph';
 export * from './hooks/datasets';
 export * from './hooks/schema';
 export * from './hooks/nlp';
+export * from './hooks/llm';
 
 // Client configuration
 export * from './config';

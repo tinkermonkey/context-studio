@@ -45,8 +45,13 @@ def main():
         sys.exit(2)
     doc = pipeline(text)
     result = process_nlp_result(text, doc)
-    # Convert Pydantic model to dict
-    result_dict = result.dict() if hasattr(result, 'dict') else result
+    # Convert Pydantic model to dict (use model_dump for Pydantic v2)
+    if hasattr(result, 'model_dump'):
+        result_dict = result.model_dump()
+    elif hasattr(result, 'dict'):
+        result_dict = result.dict()
+    else:
+        result_dict = result
     logs_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "logs")
     os.makedirs(logs_dir, exist_ok=True)
     output_path = os.path.join(logs_dir, "debug.json")
