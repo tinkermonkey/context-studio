@@ -6,7 +6,7 @@
 
 import { BaseService, ListParams, FindParams, PaginatedResponse } from './base';
 import { ENDPOINTS } from '../config';
-import type { components } from '@/api/types/openapi';
+import type { components } from '@/api/client/types';
 
 // Type aliases for better readability
 export type DomainOut = components['schemas']['DomainOut'];

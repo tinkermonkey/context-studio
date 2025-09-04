@@ -15,12 +15,12 @@ import {
 export const defaultLayoutConfig: LayoutConfig = {
   spacing: {
     vertical: 40,
-    horizontal: 40,
+    horizontal: 30,
     nodeHeight: 20,
   },
   margins: {
     top: 30,
-    left: 50,
+    left: 10,
   },
 };
 

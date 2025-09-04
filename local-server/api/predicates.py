@@ -3,7 +3,7 @@
 import datetime
 import json
 from fastapi import APIRouter, HTTPException, Query, Depends
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, ConfigDict
 from typing import List, Optional, Dict
 from uuid import UUID, uuid4
 from sqlalchemy.orm import Session
@@ -53,8 +53,7 @@ class PredicateOut(PredicateBase):
     date_created: str  # ISO8601
     date_modified: str  # ISO8601
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class PaginatedPredicatesResponse(BaseModel):

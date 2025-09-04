@@ -2,26 +2,24 @@
 
 from typing import Dict, Any, Optional, List
 import asyncio
+import aiohttp
 import logging
 from datetime import datetime, UTC
 
-from config import EnrichmentConfig, SourceType
-from .sources.dbpedia import DBpediaSource
-from .sources.conceptnet import ConceptNetSource
-from .sources.wikidata import WikidataSource
-from .sources.schema_org import SchemaOrgSource
+from config import get_config_manager, ConfigurationManager
 from .exceptions import EnrichmentError
 from .models import *
+from utils.logger import get_logger
 
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__)
 
 
 class EnrichmentService:
     """Core enrichment service coordinating all reference API sources"""
 
-    def __init__(self, config: EnrichmentConfig):
-        self.config = config
-        self._sources: Dict[SourceType, Any] = {}
+    def __init__(self, config_manager: ConfigurationManager = None):
+        self.config_manager = config_manager or get_config_manager()
+        self.settings = self.config_manager.settings
 
     def _get_source(self, source_type: SourceType):
         """Get or create source instance"""
@@ -160,3 +158,96 @@ class EnrichmentService:
                 health_status["sources"][source_type.value] = "disabled"
 
         return health_status
+
+    async def enrich_with_source(self, source_name: str, query: str) -> Dict[str, Any]:
+        """Enrich using a specific reference source with centralized configuration"""
+        try:
+            # Get source configuration
+            source_config = None
+            if source_name == "conceptnet":
+                source_config = self.settings.reference_sources.conceptnet
+            elif source_name == "dbpedia":
+                source_config = self.settings.reference_sources.dbpedia
+            elif source_name == "dbpedia_spotlight":
+                source_config = self.settings.reference_sources.dbpedia_spotlight
+            elif source_name == "wikidata":
+                source_config = self.settings.reference_sources.wikidata
+            elif source_name == "schema_org":
+                source_config = self.settings.reference_sources.schema_org
+            else:
+                raise ValueError(f"Unknown source name: {source_name}")
+            
+            if not source_config.enabled:
+                raise ValueError(f"Reference source {source_name} is disabled")
+            
+            # Determine the endpoint URL
+            if source_config.use_proxy and self.settings.proxy_server.enabled:
+                proxy_host = self.settings.proxy_server.host
+                proxy_port = self.settings.proxy_server.port
+                base_url = f"http://{proxy_host}:{proxy_port}/{source_name}"
+            else:
+                base_url = source_config.upstream_url
+            
+            # Create request configuration
+            request_config = {
+                "timeout": source_config.timeout,
+                "max_retries": source_config.max_retries,
+                "headers": source_config.custom_headers,
+                "params": source_config.custom_params.copy()
+            }
+            
+            # Add query to params
+            request_config["params"]["q"] = query
+            
+            # Make the request with retry logic
+            for attempt in range(source_config.max_retries + 1):
+                try:
+                    async with aiohttp.ClientSession(
+                        timeout=aiohttp.ClientTimeout(total=source_config.timeout)
+                    ) as session:
+                        async with session.get(
+                            base_url,
+                            headers=request_config["headers"],
+                            params=request_config["params"]
+                        ) as response:
+                            if response.status == 200:
+                                result = await response.json()
+                                return result
+                            else:
+                                response.raise_for_status()
+                                
+                except Exception as e:
+                    if attempt == source_config.max_retries:
+                        raise
+                    logger.warning(f"Attempt {attempt + 1} failed for {source_name}: {e}")
+                    await asyncio.sleep(2 ** attempt)  # Exponential backoff
+                    
+        except Exception as e:
+            logger.error(f"Error enriching with {source_name}: {e}")
+            raise
+
+    def get_enabled_sources(self) -> List[str]:
+        """Get list of enabled enrichment sources"""
+        enabled_sources = []
+        sources = ["conceptnet", "dbpedia", "dbpedia_spotlight", "wikidata", "schema_org"]
+        
+        for source_name in sources:
+            config = getattr(self.settings.reference_sources, source_name)
+            if config.enabled:
+                enabled_sources.append(source_name)
+                
+        return enabled_sources
+        
+    async def get_source_status(self) -> Dict[str, Dict[str, Any]]:
+        """Get status of all reference sources"""
+        status = {}
+        for source_name in ["conceptnet", "dbpedia", "dbpedia_spotlight", "wikidata", "schema_org"]:
+            config = getattr(self.settings.reference_sources, source_name)
+            status[source_name] = {
+                "enabled": config.enabled,
+                "use_proxy": config.use_proxy,
+                "upstream_url": config.upstream_url,
+                "timeout": config.timeout,
+                "rate_limit": config.rate_limit.requests_per_hour
+            }
+        return status

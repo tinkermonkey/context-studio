@@ -5,7 +5,7 @@ import concepcy
 import spacy_dbpedia_spotlight
 from typing import Optional
 from spacy_wordnet.wordnet_annotator import WordnetAnnotator
-from config import get_settings
+from config import get_settings, get_config_manager
 from utils.logger import get_logger
 from nlp.proxy_manager import get_proxy_manager
 
@@ -24,6 +24,8 @@ class NLPPipeline:
         self._error = None
         self._lock = threading.Lock()
         self.proxy_manager = get_proxy_manager()
+        self.config_manager = get_config_manager()
+        self.settings = self.config_manager.settings
         self._init_pipeline()
 
     def _init_pipeline(self):
@@ -58,46 +60,62 @@ class NLPPipeline:
         logger.info("NLP pipeline initialization completed successfully")
 
     def _add_concepcy_component(self):
-        """Add concepcy component with optional proxy configuration"""
-        try:
-            settings = get_settings()
-            logger.info("Adding concepcy component...")
-            # Check both settings and proxy manager to determine if proxy should be used
-            use_proxy = settings.ENABLE_CACHING_PROXY.get("concepcy", False) and self.proxy_manager.is_proxy_enabled()
-            config = settings.get_concepcy_config(use_proxy=use_proxy)
+        """Add concepcy component using centralized reference source config"""
+        conceptnet_config = self.settings.reference_sources.conceptnet
+        
+        if not conceptnet_config.enabled:
+            logger.info("ConceptNet disabled, skipping concepcy component")
+            return
             
-            self.nlp.add_pipe("concepcy", config=config)
-            logger.info(f"concepcy component added successfully (proxy: {use_proxy})")
+        try:
+            logger.info("Adding concepcy component...")
+            
+            # Build concepcy config from reference source settings
+            concepcy_config = {
+                "relations_of_interest": self.settings.nlp.concepcy_relations,
+                "filter_missing_text": self.settings.nlp.filter_missing_text,
+                "filter_edge_weight": self.settings.nlp.edge_weight_filter
+            }
+            
+            # Add proxy URL if proxy is enabled for this source
+            if conceptnet_config.use_proxy and self.settings.proxy_server.enabled:
+                proxy_host = self.settings.proxy_server.host
+                proxy_port = self.settings.proxy_server.port
+                concepcy_config["url"] = f"http://{proxy_host}:{proxy_port}/conceptnet/query?node=/c/{{lang}}/{{word}}&other=/c/{{lang}}"
+            
+            self.nlp.add_pipe("concepcy", config=concepcy_config)
+            logger.info(f"concepcy component added (proxy: {conceptnet_config.use_proxy})")
+            
         except Exception as e:
-            self._error = f"Failed to add concepcy: {e}"
-            logger.error(self._error)
+            logger.error(f"Failed to add concepcy: {e}")
             raise
 
     def _add_dbpedia_spotlight_component(self):
-        """Add DBpedia Spotlight component with optional proxy configuration"""
-        try:
-            settings = get_settings()
-            logger.info("Adding dbpedia_spotlight component...")
-            # Check both settings and proxy manager to determine if proxy should be used
-            use_proxy = settings.ENABLE_CACHING_PROXY.get("spacy_dbpedia_spotlight", False) and self.proxy_manager.is_proxy_enabled()
+        """Add DBpedia Spotlight component using centralized reference source config"""
+        dbpedia_spotlight_config = self.settings.reference_sources.dbpedia_spotlight
+        
+        if not dbpedia_spotlight_config.enabled:
+            logger.info("DBpedia Spotlight disabled, skipping component")
+            return
             
-            if use_proxy:
-                proxy_config = settings.REFERENCE_API_BUDDY_CONFIG
-                host = proxy_config["server"]["host"]
-                port = proxy_config["server"]["port"]
-                endpoint = f"http://{host}:{port}/dbpedia_spotlight"
-                
-                self.nlp.add_pipe("dbpedia_spotlight", config={
-                    "dbpedia_rest_endpoint": endpoint
-                })
-                logger.info(f"dbpedia_spotlight component added with proxy: {endpoint}")
+        try:
+            logger.info("Adding dbpedia_spotlight component...")
+            
+            component_config = {}
+            
+            # Add proxy endpoint if proxy is enabled for this source
+            if dbpedia_spotlight_config.use_proxy and self.settings.proxy_server.enabled:
+                proxy_host = self.settings.proxy_server.host
+                proxy_port = self.settings.proxy_server.port
+                component_config["dbpedia_rest_endpoint"] = f"http://{proxy_host}:{proxy_port}/dbpedia_spotlight"
             else:
-                self.nlp.add_pipe("dbpedia_spotlight")
-                logger.info("dbpedia_spotlight component added (direct)")
+                component_config["dbpedia_rest_endpoint"] = dbpedia_spotlight_config.upstream_url
                 
+            self.nlp.add_pipe("dbpedia_spotlight", config=component_config)
+            logger.info(f"dbpedia_spotlight component added (proxy: {dbpedia_spotlight_config.use_proxy})")
+            
         except Exception as e:
-            self._error = f"Failed to add dbpedia_spotlight: {e}"
-            logger.error(self._error)
+            logger.error(f"Failed to add dbpedia_spotlight: {e}")
             raise
 
     def _add_spacy_wordnet_component(self):
@@ -125,8 +143,8 @@ class NLPPipeline:
             
             self.s2v = self.nlp.add_pipe("sense2vec")
             # Load the S2V dataset
-            logger.info(f"Loading sense2vec model from {settings.s2v_config['abs_path']}...")
-            self.s2v.from_disk(settings.s2v_config["abs_path"])
+            logger.info(f"Loading sense2vec model from {settings.nlp.sense2vec_path}...")
+            self.s2v.from_disk(settings.nlp.sense2vec_path)
             logger.info("sense2vec component loaded successfully")
         except Exception as e:
             self._error = f"Failed to add sense2vec: {e}"
@@ -206,6 +224,20 @@ class NLPPipeline:
 _pipeline_instance: Optional[NLPPipeline] = None
 _pipeline_lock = threading.Lock()
 
+
+def invalidate_pipeline():
+    """Invalidate the current pipeline instance to force reinitialization"""
+    global _pipeline_instance
+    with _pipeline_lock:
+        if _pipeline_instance:
+            logger.info("Invalidating NLP pipeline due to configuration change")
+            try:
+                _pipeline_instance.cleanup()
+            except Exception as e:
+                logger.warning(f"Error during pipeline cleanup: {e}")
+            _pipeline_instance = None
+
+
 def get_pipeline() -> NLPPipeline:
     """
     Get the global NLPPipeline instance (singleton, thread-safe).
@@ -214,5 +246,6 @@ def get_pipeline() -> NLPPipeline:
     if _pipeline_instance is None:
         with _pipeline_lock:
             if _pipeline_instance is None:
-                _pipeline_instance = NLPPipeline()
+                settings = get_settings()
+                _pipeline_instance = NLPPipeline(model_name=settings.nlp.model_name)
     return _pipeline_instance

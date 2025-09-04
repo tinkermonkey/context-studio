@@ -6,6 +6,9 @@ import {
   Breadcrumb,
   BreadcrumbItem,
   Badge,
+  Modal,
+  ModalHeader,
+  ModalBody,
 } from "flowbite-react";
 import {
   Calendar,
@@ -23,6 +26,9 @@ import { useTerms } from "@/api/hooks/terms/useTerms";
 import { useTermRelationships } from "@/api/hooks/relationships";
 import { useTermHierarchy } from "@/api/hooks/graph/useGraph";
 import { TermRenderer } from "@/components/node_renderers/term_renderer";
+import { useQueryClient } from "@tanstack/react-query";
+import { QUERY_KEYS } from "@/api/config";
+import { TermForm } from "@/components/forms/term_form";
 import { RelationshipTermsDisplay } from "@/components/node_renderers/relationship_terms_renderer";
 import { CreateChildButton } from "@/components/misc/create_child_button";
 import {
@@ -44,6 +50,8 @@ interface TermPageProps {
 }
 
 export const TermDetails: React.FC<TermPageProps> = ({ term }) => {
+  const queryClient = useQueryClient();
+  const [isEditOpen, setIsEditOpen] = React.useState(false);
   const { data: layer, isLoading: layerLoading } = useLayer(term.layer_id);
   const { data: domain, isLoading: domainLoading } = useDomain(term.domain_id);
   const { data: parentTerm, isLoading: parentTermLoading } = useTerm(
@@ -290,7 +298,7 @@ export const TermDetails: React.FC<TermPageProps> = ({ term }) => {
               </div>
             </div>
           </div>
-          <Button color="gray" size="sm">
+          <Button color="gray" size="sm" onClick={() => setIsEditOpen(true)}>
             <Edit3 className="mr-2 h-4 w-4" />
             Edit
           </Button>
@@ -400,6 +408,9 @@ export const TermDetails: React.FC<TermPageProps> = ({ term }) => {
               relationshipPredicate: "child_of" // You may want to determine this from actual relationship data
             } : null}
             currentDefinition={term.definition}
+            termId={term.id}
+            domainId={term.domain_id}
+            layerId={term.layer_id}
           />
 
           {/* Definition */}
@@ -526,6 +537,40 @@ export const TermDetails: React.FC<TermPageProps> = ({ term }) => {
           </Card>
         </div>
       </CsMain>
+      <TermEditModal
+        term={term}
+        isOpen={isEditOpen}
+        onClose={() => setIsEditOpen(false)}
+      />
     </>
   );
 };
+
+  // Edit Modal for Term
+  const TermEditModal: React.FC<{
+    term: TermOut;
+    isOpen: boolean;
+    onClose: () => void;
+  }> = ({ term, isOpen, onClose }) => {
+    const queryClient = useQueryClient();
+
+    const handleSuccess = (updated: any) => {
+      onClose();
+
+      try {
+        queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.TERMS, term.id] });
+        queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.TERMS] });
+      } catch (e) {
+        console.warn("Failed to invalidate term queries", e);
+      }
+    };
+
+    return (
+      <Modal show={isOpen} onClose={onClose} size="lg">
+        <ModalHeader className="border-b-0">Edit Term</ModalHeader>
+        <ModalBody>
+          <TermForm term={term} onSuccess={handleSuccess} />
+        </ModalBody>
+      </Modal>
+    );
+  };

@@ -49,7 +49,7 @@ def main():
     if hasattr(result, 'model_dump'):
         result_dict = result.model_dump()
     elif hasattr(result, 'dict'):
-        result_dict = result.dict()
+        result_dict = result.model_dump()
     else:
         result_dict = result
     logs_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "logs")

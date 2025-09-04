@@ -5,12 +5,9 @@
  */
 
 import { useQuery, UseQueryOptions } from '@tanstack/react-query';
-import { schemaService, type MigrationHistoryEntry } from '../../services/schema';
+import { schemaService, type MigrationStatus } from '../../services/schema';
 import { QUERY_KEYS } from '../../config';
 import { createQueryKey } from '../../utils/queryClient';
-import type { components } from '../../client/types';
-
-type MigrationStatus = components['schemas']['MigrationStatus'];
 
 /**
  * Hook to fetch current schema status and migration information
@@ -29,7 +26,7 @@ export const useSchemaStatus = (
  * Hook to fetch migration history
  */
 export const useMigrationHistory = (
-  options?: UseQueryOptions<MigrationHistoryEntry[], Error>
+  options?: UseQueryOptions<unknown, Error>
 ) => {
   return useQuery({
     queryKey: createQueryKey(QUERY_KEYS.SCHEMA, 'history'),

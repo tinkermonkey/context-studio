@@ -9,7 +9,7 @@ import { domainService } from '../../services/domains';
 import { QUERY_KEYS } from '../../config';
 import { createQueryKey } from '../../utils/queryClient';
 import { handleApiError, isValidationError, formatFormError } from '../../errors/errorHandlers';
-import type { components } from '@/api/types/openapi';
+import type { components } from '@/api/client/types';
 /**
  * Hook to move domains between layers (with lineage)
  */

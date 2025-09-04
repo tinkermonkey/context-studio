@@ -5,7 +5,11 @@
  */
 
 import { useMutation, useQueryClient, UseMutationOptions } from '@tanstack/react-query';
-import { schemaService } from '../../services/schema';
+import { 
+  schemaService,
+  type MigrateParams,
+  type GenerateMigrationParams
+} from '../../services/schema';
 import { QUERY_KEYS } from '../../config';
 import { createQueryKey } from '../../utils/queryClient';
 
@@ -13,13 +17,12 @@ import { createQueryKey } from '../../utils/queryClient';
  * Hook to apply pending migrations
  */
 export const useMigrateSchema = (
-  options?: UseMutationOptions<{ success: boolean; message: string }, Error, { skipOnError?: boolean }>
+  options?: UseMutationOptions<unknown, Error, MigrateParams | undefined>
 ) => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ skipOnError = false }: { skipOnError?: boolean } = {}) => 
-      schemaService.migrate(skipOnError),
+    mutationFn: (params?: MigrateParams) => schemaService.migrate(params),
     onSuccess: () => {
       // Invalidate schema status and history after migration
       queryClient.invalidateQueries({ queryKey: createQueryKey(QUERY_KEYS.SCHEMA, 'status') });
@@ -36,7 +39,7 @@ export const useMigrateSchema = (
  * Hook to rollback schema to a specific version
  */
 export const useRollbackSchema = (
-  options?: UseMutationOptions<{ success: boolean; message: string }, Error, number>
+  options?: UseMutationOptions<unknown, Error, number>
 ) => {
   const queryClient = useQueryClient();
 
@@ -58,10 +61,10 @@ export const useRollbackSchema = (
  * Hook to generate a new migration file
  */
 export const useGenerateMigration = (
-  options?: UseMutationOptions<{ filepath: string; content: string }, Error, string>
+  options?: UseMutationOptions<unknown, Error, GenerateMigrationParams>
 ) => {
   return useMutation({
-    mutationFn: (description: string) => schemaService.generateMigration(description),
+    mutationFn: (params: GenerateMigrationParams) => schemaService.generateMigration(params),
     ...options,
   });
 };

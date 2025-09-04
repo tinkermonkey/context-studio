@@ -28,8 +28,11 @@ export const QUERY_KEYS = {
   FIND: 'find',
   DATASETS: 'datasets',
   SCHEMA: 'schema',
+  SCHEMA_ORG: 'schema-org',
   NLP: 'nlp',
   LLM: 'llm',
+  PIPELINE_FLAVORS: 'pipeline-flavors',
+  NLP_REFERENCE: 'nlp-reference',
 } as const;
 
 export const ENDPOINTS = {
@@ -41,6 +44,9 @@ export const ENDPOINTS = {
   GRAPH: '/api/graph',
   DATASETS: '/api/datasets',
   SCHEMA: '/api/schema',
+  SCHEMA_ORG: '/api/schema-org',
   NLP: '/api/nlp_analysis',
   LLM: '/api/llm',
+  PIPELINE_FLAVORS: '/api/pipeline-flavors',
+  NLP_REFERENCE: '/api/nlp_analysis/reference',
 } as const;

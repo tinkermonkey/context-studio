@@ -15,8 +15,20 @@ export {
   useComprehensiveDefinition,
 } from './useLLMAnalysis';
 
-// Mutation hooks
+// Mutation hooks - New specific endpoints
 export {
+  useSuggestTermDefinitionMutation,
+  useSuggestDomainDefinitionMutation,
+  useSuggestLayerDefinitionMutation,
+  useGenerateSimpleTermDefinitionMutation,
+  useGenerateSimpleDomainDefinitionMutation,
+  useGenerateSimpleLayerDefinitionMutation,
+  useGenerateTermDefinitionWithDomainMutation,
+  useGenerateTermDefinitionWithParentMutation,
+  useGenerateTermDefinitionWithComponentsMutation,
+  useGenerateTermDefinitionWithReferencesMutation,
+  useGenerateComprehensiveTermDefinitionMutation,
+  // Deprecated hooks for backward compatibility
   useSuggestDefinitionMutation,
   useGenerateSimpleDefinitionMutation,
   useGenerateDefinitionWithDomainMutation,
@@ -30,6 +42,10 @@ export {
 export type {
   DefinitionSuggestionRequest,
   DefinitionSuggestionResponse,
+  DomainDefinitionRequest,
+  DomainDefinitionResponse,
+  LayerDefinitionRequest,
+  LayerDefinitionResponse,
   ComponentTerm,
   SelectedRelation,
   LLMHealthResponse,

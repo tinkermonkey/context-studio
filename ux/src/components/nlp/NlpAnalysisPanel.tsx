@@ -12,7 +12,11 @@ import { useNLPAnalysis } from "@/api/hooks/nlp/useNLPAnalysis";
 import { apiLogger } from "@/api/utils/logger";
 import { NlpTokenAnalysisPanel } from "@/components/nlp/NlpTokenAnalysisPanel";
 import { NlpRefinementPanel } from "@/components/nlp/NlpRefinementPanel";
-import type { NodeContext, SelectedNodeContextEntry } from "@/components/nlp/types";
+import { NlpGenerationResult } from "@/components/nlp/NlpGenerationResult";
+import type {
+  NodeContext,
+  SelectedNodeContextEntry,
+} from "@/components/nlp/types";
 
 interface NlpAnalysisPanelProps {
   text: string;
@@ -27,6 +31,10 @@ interface NlpAnalysisPanelProps {
     relationshipPredicate?: string;
   } | null;
   currentDefinition?: string | null;
+  // Context IDs for saving definitions
+  termId?: string | null;
+  domainId?: string | null;
+  layerId?: string | null;
 }
 
 export const NlpAnalysisPanel: React.FC<NlpAnalysisPanelProps> = ({
@@ -35,6 +43,9 @@ export const NlpAnalysisPanel: React.FC<NlpAnalysisPanelProps> = ({
   domainContext = null,
   parentTermContext = null,
   currentDefinition = null,
+  termId = null,
+  domainId = null,
+  layerId = null,
 }) => {
   const [pendingText, setPendingText] = useState(text);
   const [debouncedText, setDebouncedText] = useState(text);
@@ -101,162 +112,188 @@ export const NlpAnalysisPanel: React.FC<NlpAnalysisPanelProps> = ({
   const [selectedNodeIds, setSelectedNodeIds] = useState<Set<string>>(
     new Set(),
   );
-  const [selectedNodeContext, setSelectedNodeContext] = useState<Map<string, NodeContext>>(
-    new Map(),
-  );
+  const [selectedNodeContext, setSelectedNodeContext] = useState<
+    Map<string, NodeContext>
+  >(new Map());
 
   /**
    * Translates a prefixed node ID back to its original JSON context from the token data.
-   * 
+   *
    * @param fullNodeId - The full node ID in format: token-{text}-{start}-{localNodeId}
    * @returns The context object containing the original data structure, or null if not found
    */
-  const getNodeContext = useCallback((fullNodeId: string): NodeContext | null => {
-    // Parse the full node ID: token-{text}-{start}-{localNodeId}
-    const parts = fullNodeId.split('-');
-    if (parts.length < 4 || parts[0] !== 'token') {
-      console.warn('Invalid node ID format:', fullNodeId);
-      return null;
-    }
+  const getNodeContext = useCallback(
+    (fullNodeId: string): NodeContext | null => {
+      // Parse the full node ID: token-{text}-{start}-{localNodeId}
+      const parts = fullNodeId.split("-");
+      if (parts.length < 4 || parts[0] !== "token") {
+        console.warn("Invalid node ID format:", fullNodeId);
+        return null;
+      }
 
-    // Extract token info and local node ID
-    const text = parts[1];
-    const start = parseInt(parts[2], 10);
-    const localNodeId = parts.slice(3).join('-'); // Rejoin in case the local ID has dashes
+      // Extract token info and local node ID
+      const text = parts[1];
+      const start = parseInt(parts[2], 10);
+      const localNodeId = parts.slice(3).join("-"); // Rejoin in case the local ID has dashes
 
-    // Find the corresponding token in the analysis result
-    if (!analysisResult?.tokens) {
-      console.warn('No tokens available in analysis result');
-      return null;
-    }
+      // Find the corresponding token in the analysis result
+      if (!analysisResult?.tokens) {
+        console.warn("No tokens available in analysis result");
+        return null;
+      }
 
-    const token = analysisResult.tokens.find(
-      (t: any) => t.text === text && (t.start ?? 0) === start
-    );
+      const token = analysisResult.tokens.find(
+        (t: any) => t.text === text && (t.start ?? 0) === start,
+      );
 
-    if (!token) {
-      console.warn('Token not found for node ID:', fullNodeId, { text, start });
-      return null;
-    }
+      if (!token) {
+        console.warn("Token not found for node ID:", fullNodeId, {
+          text,
+          start,
+        });
+        return null;
+      }
 
-    // Parse the local node ID to extract context
-    if (localNodeId === 'input') {
-      return {
-        type: 'input' as const,
-        text: token.text,
-        lemma: token.lemma || token.text,
-        pos: token.pos || token.tag || '',
-        token: token
-      };
-    }
-
-    if (localNodeId.startsWith('sense-')) {
-      const senseIndex = parseInt(localNodeId.replace('sense-', ''), 10);
-      const synsets = token.wordnet?.synsets || [];
-      
-      if (senseIndex >= 0 && senseIndex < synsets.length) {
-        const synset = synsets[senseIndex] as any;
+      // Parse the local node ID to extract context
+      if (localNodeId === "input") {
         return {
-          type: 'sense' as const,
-          index: senseIndex,
-          synset: {
-            name: synset.name || synset.synset || synset.id || synset[0] || 'unknown',
-            definition: synset.definition || synset.gloss || synset.def || '',
-            lemmas: synset.lemmas || [],
-            pos: synset.pos || synset.partOfSpeech || token.pos || token.tag || '',
-            offset: synset.offset || 0,
-            domain: synset.domain || 'general',
-          },
-          token: token
+          type: "input" as const,
+          text: token.text,
+          lemma: token.lemma || token.text,
+          pos: token.pos || token.tag || "",
+          token: token,
         };
       }
-    }
 
-    if (localNodeId.startsWith('relation-')) {
-      // Parse relation-{relationType}-{index}
-      const relationParts = localNodeId.split('-');
-      if (relationParts.length >= 3) {
-        const relationType = relationParts[1];
-        const relationIndex = parseInt(relationParts[2], 10);
-        
-        const relatedTerms = token.concepcy?.related_terms || [];
-        // Filter relations by type and find the one at the given index
-        // Note: related_terms is typed as string[] but actually contains relation objects
-        const relationsOfType = (relatedTerms as any[]).filter((rel: any) => 
-          rel.relation === relationType && rel.subject?.label === (token.lemma || token.text)
-        );
+      if (localNodeId.startsWith("sense-")) {
+        const senseIndex = parseInt(localNodeId.replace("sense-", ""), 10);
+        const synsets = token.wordnet?.synsets || [];
 
-        if (relationIndex >= 0 && relationIndex < relationsOfType.length) {
-          const relation = relationsOfType[relationIndex];
-          // Determine which term is the target (not the current token)
-          const currentTokenLemma = token.lemma || token.text;
-          const targetTerm = relation.subject?.label === currentTokenLemma 
-            ? relation.object 
-            : relation.subject;
-            
+        if (senseIndex >= 0 && senseIndex < synsets.length) {
+          const synset = synsets[senseIndex] as any;
           return {
-            type: 'relation' as const,
-            relationType: relationType,
-            index: relationIndex,
-            relation: relation,
-            targetTerm: targetTerm,
-            token: token
+            type: "sense" as const,
+            index: senseIndex,
+            synset: {
+              name:
+                synset.name ||
+                synset.synset ||
+                synset.id ||
+                synset[0] ||
+                "unknown",
+              definition: synset.definition || synset.gloss || synset.def || "",
+              lemmas: synset.lemmas || [],
+              pos:
+                synset.pos ||
+                synset.partOfSpeech ||
+                token.pos ||
+                token.tag ||
+                "",
+              offset: synset.offset || 0,
+              domain: synset.domain || "general",
+            },
+            token: token,
           };
         }
       }
-    }
 
-    console.warn('Could not parse node context for:', fullNodeId, { localNodeId });
-    return null;
-  }, [analysisResult]);
+      if (localNodeId.startsWith("relation-")) {
+        // Parse relation-{relationType}-{index}
+        const relationParts = localNodeId.split("-");
+        if (relationParts.length >= 3) {
+          const relationType = relationParts[1];
+          const relationIndex = parseInt(relationParts[2], 10);
+
+          const relatedTerms = token.concepcy?.related_terms || [];
+          // Filter relations by type and find the one at the given index
+          // Note: related_terms is typed as string[] but actually contains relation objects
+          const relationsOfType = (relatedTerms as any[]).filter(
+            (rel: any) =>
+              rel.relation === relationType &&
+              rel.subject?.label === (token.lemma || token.text),
+          );
+
+          if (relationIndex >= 0 && relationIndex < relationsOfType.length) {
+            const relation = relationsOfType[relationIndex];
+            // Determine which term is the target (not the current token)
+            const currentTokenLemma = token.lemma || token.text;
+            const targetTerm =
+              relation.subject?.label === currentTokenLemma
+                ? relation.object
+                : relation.subject;
+
+            return {
+              type: "relation" as const,
+              relationType: relationType,
+              index: relationIndex,
+              relation: relation,
+              targetTerm: targetTerm,
+              token: token,
+            };
+          }
+        }
+      }
+
+      console.warn("Could not parse node context for:", fullNodeId, {
+        localNodeId,
+      });
+      return null;
+    },
+    [analysisResult],
+  );
 
   /**
    * Gets the current selected node contexts as an array of objects.
    * Useful for parent components that need to access the selected data.
-   * 
+   *
    * @returns Array of {nodeId, context} objects for all currently selected nodes
    */
   const getSelectedContexts = useCallback((): SelectedNodeContextEntry[] => {
-    return Array.from(selectedNodeContext.entries()).map(([nodeId, context]) => ({
-      nodeId,
-      context
-    }));
+    return Array.from(selectedNodeContext.entries()).map(
+      ([nodeId, context]) => ({
+        nodeId,
+        context,
+      }),
+    );
   }, [selectedNodeContext]);
 
   // Handle node click events - toggle selection and update context
-  const handleNodeClick = useCallback((nodeId: string) => {
-    console.log("Node clicked", { nodeId });
+  const handleNodeClick = useCallback(
+    (nodeId: string) => {
+      console.log("Node clicked", { nodeId });
 
-    setSelectedNodeIds((prev) => {
-      const next = new Set(prev);
-      const wasSelected = next.has(nodeId);
-      
-      if (wasSelected) {
-        next.delete(nodeId);
-      } else {
-        next.add(nodeId);
-      }
-      return next;
-    });
+      setSelectedNodeIds((prev) => {
+        const next = new Set(prev);
+        const wasSelected = next.has(nodeId);
 
-    // Update the context map
-    setSelectedNodeContext((prev) => {
-      const next = new Map(prev);
-      const context = getNodeContext(nodeId);
-      
-      if (context) {
-        if (prev.has(nodeId)) {
-          // Node was deselected, remove from context
+        if (wasSelected) {
           next.delete(nodeId);
         } else {
-          // Node was selected, add to context
-          next.set(nodeId, context);
+          next.add(nodeId);
         }
-      }
-      
-      return next;
-    });
-  }, [getNodeContext]);
+        return next;
+      });
+
+      // Update the context map
+      setSelectedNodeContext((prev) => {
+        const next = new Map(prev);
+        const context = getNodeContext(nodeId);
+
+        if (context) {
+          if (prev.has(nodeId)) {
+            // Node was deselected, remove from context
+            next.delete(nodeId);
+          } else {
+            // Node was selected, add to context
+            next.set(nodeId, context);
+          }
+        }
+
+        return next;
+      });
+    },
+    [getNodeContext],
+  );
 
   return (
     <>
@@ -264,7 +301,9 @@ export const NlpAnalysisPanel: React.FC<NlpAnalysisPanelProps> = ({
         <>
           <div className="space-y-3">
             <div>
-              <h4 className="mb-2 text-lg font-bold">{textTitle} Token Analysis</h4>
+              <h4 className="mb-2 text-lg font-bold">
+                {textTitle} Token Analysis
+              </h4>
               {!analysisResult.tokens || analysisResult.tokens.length === 0 ? (
                 <div className="py-2 text-sm text-gray-500">
                   No tokens available
@@ -317,18 +356,28 @@ export const NlpAnalysisPanel: React.FC<NlpAnalysisPanelProps> = ({
                     </Accordion>
                   </div>
                   <div className="flex w-full min-w-0 md:w-1/3">
-                    <NlpRefinementPanel 
+                    <NlpRefinementPanel
                       selectedNodeContext={selectedNodeContext}
-                      term={text}
-                      textTitle={textTitle}
-                      domainContext={domainContext}
-                      parentTermContext={parentTermContext}
-                      currentDefinition={currentDefinition}
+                      className="flex w-full rounded-lg border border-gray-200"
                     />
                   </div>
                 </div>
               )}
             </div>
+
+            {/* Definition Generation Panel */}
+            <NlpGenerationResult
+              selectedNodeContext={selectedNodeContext}
+              term={text}
+              textTitle={textTitle}
+              domainContext={domainContext}
+              parentTermContext={parentTermContext}
+              currentDefinition={currentDefinition}
+              termId={termId}
+              domainId={domainId}
+              layerId={layerId}
+              className="w-full rounded-lg border border-gray-200 bg-white"
+            />
           </div>
         </>
       ) : (

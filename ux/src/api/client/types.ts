@@ -1295,7 +1295,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/llm/suggest_definition": {
+    "/api/llm/suggest_term_definition/stream": {
         parameters: {
             query?: never;
             header?: never;
@@ -1305,14 +1305,125 @@ export interface paths {
         get?: never;
         put?: never;
         /**
-         * Suggest Definition
-         * @description Generate a definition suggestion based on provided context using LLM.
+         * Suggest Term Definition Stream
+         * @description Stream term definition suggestion using specified flavor with Server-Side Events
+         */
+        post: operations["suggest_term_definition_stream_api_llm_suggest_term_definition_stream_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/llm/suggest_layer_definition/stream": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Suggest Layer Definition Stream
+         * @description Stream layer definition suggestion using specified flavor with Server-Side Events
+         */
+        post: operations["suggest_layer_definition_stream_api_llm_suggest_layer_definition_stream_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/llm/suggest_domain_definition/stream": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Suggest Domain Definition Stream
+         * @description Stream domain definition suggestion using specified flavor with Server-Side Events
+         */
+        post: operations["suggest_domain_definition_stream_api_llm_suggest_domain_definition_stream_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/llm/suggest_term_definition": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Suggest Term Definition
+         * @description Generate a term definition suggestion based on provided context using LLM.
          *
          *     This endpoint uses a Langchain pipeline with OpenAI GPT models to generate
          *     contextually-aware term definitions based on domain context, hierarchical
          *     relationships, component terms, and reference source information.
+         *     Supports optional flavor parameter to use different LLM configurations.
          */
-        post: operations["suggest_definition_api_llm_suggest_definition_post"];
+        post: operations["suggest_term_definition_api_llm_suggest_term_definition_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/llm/suggest_layer_definition": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Suggest Layer Definition
+         * @description Generate a layer definition suggestion based on provided context using LLM.
+         *
+         *     This endpoint uses a Langchain pipeline with OpenAI GPT models to generate
+         *     contextually-aware layer definitions based on organizational context, hierarchical
+         *     relationships, contained domains, and layer purpose information.
+         *     Supports optional flavor parameter to use different LLM configurations.
+         */
+        post: operations["suggest_layer_definition_api_llm_suggest_layer_definition_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/llm/suggest_domain_definition": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Suggest Domain Definition
+         * @description Generate a domain definition suggestion based on provided context using LLM.
+         *
+         *     This endpoint uses a Langchain pipeline with OpenAI GPT models to generate
+         *     contextually-aware domain definitions based on thematic scope, hierarchical
+         *     relationships, contained terms, and domain boundaries information.
+         *     Supports optional flavor parameter to use different LLM configurations.
+         */
+        post: operations["suggest_domain_definition_api_llm_suggest_domain_definition_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1334,6 +1445,58 @@ export interface paths {
         put?: never;
         post?: never;
         delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/pipeline-flavors": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Flavors
+         * @description List all flavors, optionally filtered by pipeline
+         */
+        get: operations["list_flavors_api_pipeline_flavors_get"];
+        put?: never;
+        /**
+         * Create Flavor
+         * @description Create a new pipeline flavor
+         */
+        post: operations["create_flavor_api_pipeline_flavors_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/pipeline-flavors/{flavor_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Flavor
+         * @description Get a specific flavor by ID
+         */
+        get: operations["get_flavor_api_pipeline_flavors__flavor_id__get"];
+        /**
+         * Update Flavor
+         * @description Update an existing flavor
+         */
+        put: operations["update_flavor_api_pipeline_flavors__flavor_id__put"];
+        post?: never;
+        /**
+         * Delete Flavor
+         * @description Delete a flavor
+         */
+        delete: operations["delete_flavor_api_pipeline_flavors__flavor_id__delete"];
         options?: never;
         head?: never;
         patch?: never;
@@ -1854,6 +2017,47 @@ export interface components {
             filename: string;
         };
         /**
+         * CreatePipelineFlavorRequest
+         * @description Request model for creating a new pipeline flavor
+         */
+        CreatePipelineFlavorRequest: {
+            /** @description Pipeline type */
+            pipeline: components["schemas"]["PipelineType"];
+            /**
+             * Title
+             * @description Flavor title
+             */
+            title: string;
+            /**
+             * Llm Provider
+             * @description LLM provider identifier
+             */
+            llm_provider: string;
+            /**
+             * Llm Model
+             * @description LLM model name
+             */
+            llm_model: string;
+            /** @description LLM configuration */
+            llm_config?: components["schemas"]["LLMConfig"];
+            /**
+             * System Prompt
+             * @description System prompt template
+             */
+            system_prompt: string;
+            /**
+             * User Prompt
+             * @description User prompt template
+             */
+            user_prompt: string;
+            /**
+             * Enabled
+             * @description Whether flavor is enabled
+             * @default true
+             */
+            enabled: boolean;
+        };
+        /**
          * DBpediaData
          * @description DBpedia data for an entity.
          */
@@ -2049,7 +2253,7 @@ export interface components {
         };
         /**
          * DefinitionSuggestionRequest
-         * @description Request model for definition suggestion endpoint
+         * @description Request model for term definition suggestion endpoint
          */
         DefinitionSuggestionRequest: {
             /**
@@ -2106,6 +2310,11 @@ export interface components {
             wikidata_context?: {
                 [key: string]: unknown;
             };
+            /**
+             * Flavor
+             * @description Flavor ID or title to use for this request
+             */
+            flavor?: string | null;
         };
         /**
          * DefinitionSuggestionResponse
@@ -2143,6 +2352,99 @@ export interface components {
             primary_predicate_id?: string | null;
             /** Predicate Set */
             predicate_set?: string[] | null;
+        };
+        /**
+         * DomainDefinitionRequest
+         * @description Request model for domain definition suggestion endpoint
+         */
+        DomainDefinitionRequest: {
+            /**
+             * Domain Title
+             * @description Title of the domain to be analyzed
+             */
+            domain_title: string;
+            /**
+             * Domain Description
+             * @description Current description of the domain
+             */
+            domain_description?: string | null;
+            /**
+             * Layer Title
+             * @description Title of the containing layer
+             */
+            layer_title?: string | null;
+            /**
+             * Layer Definition
+             * @description Definition of the containing layer
+             */
+            layer_definition?: string | null;
+            /**
+             * Contained Terms
+             * @description List of term titles contained in this domain
+             */
+            contained_terms?: string[];
+            /**
+             * Domain Scope
+             * @description Scope or boundaries of this domain
+             */
+            domain_scope?: string | null;
+            /**
+             * Related Domains
+             * @description List of related domain titles
+             */
+            related_domains?: string[];
+            /**
+             * Current Definition
+             * @description Current definition if any
+             */
+            current_definition?: string | null;
+            /**
+             * Reference Context
+             * @description Additional reference context
+             */
+            reference_context?: {
+                [key: string]: unknown;
+            };
+            /**
+             * Flavor
+             * @description Flavor ID or title to use for this request
+             */
+            flavor?: string | null;
+        };
+        /**
+         * DomainDefinitionResponse
+         * @description Response model for domain definition suggestion
+         */
+        DomainDefinitionResponse: {
+            /**
+             * Definition
+             * @description The suggested 2-3 sentence domain definition
+             */
+            definition: string;
+            /**
+             * Reasoning
+             * @description Brief reasoning for the definitional choices
+             */
+            reasoning: string;
+            /**
+             * Discrepancies
+             * @description Notable discrepancies between sources
+             */
+            discrepancies?: string | null;
+        };
+        /**
+         * DomainLLMSuccessResponse
+         * @description Success response wrapper for domain LLM endpoints
+         */
+        DomainLLMSuccessResponse: {
+            /**
+             * Success
+             * @description Always true for success responses
+             * @default true
+             */
+            success: boolean;
+            /** @description The response data */
+            data: components["schemas"]["DomainDefinitionResponse"];
         };
         /** DomainOut */
         DomainOut: {
@@ -2383,6 +2685,43 @@ export interface components {
             detail?: components["schemas"]["ValidationError"][];
         };
         /**
+         * LLMConfig
+         * @description LLM configuration parameters
+         */
+        LLMConfig: {
+            /**
+             * Temperature
+             * @description Sampling temperature
+             * @default 0
+             */
+            temperature: number;
+            /**
+             * Top P
+             * @description Top-p sampling
+             */
+            top_p?: number | null;
+            /**
+             * Top K
+             * @description Top-k sampling
+             */
+            top_k?: number | null;
+            /**
+             * Max Tokens
+             * @description Maximum output tokens
+             */
+            max_tokens?: number | null;
+            /**
+             * Frequency Penalty
+             * @description Frequency penalty
+             */
+            frequency_penalty?: number | null;
+            /**
+             * Presence Penalty
+             * @description Presence penalty
+             */
+            presence_penalty?: number | null;
+        };
+        /**
          * LLMErrorResponse
          * @description Error response for LLM endpoints
          */
@@ -2452,6 +2791,94 @@ export interface components {
             title: string;
             /** Definition */
             definition?: string | null;
+        };
+        /**
+         * LayerDefinitionRequest
+         * @description Request model for layer definition suggestion endpoint
+         */
+        LayerDefinitionRequest: {
+            /**
+             * Layer Title
+             * @description Title of the layer to be analyzed
+             */
+            layer_title: string;
+            /**
+             * Layer Description
+             * @description Current description of the layer
+             */
+            layer_description?: string | null;
+            /**
+             * Parent Layer Title
+             * @description Title of the parent layer
+             */
+            parent_layer_title?: string | null;
+            /**
+             * Parent Layer Definition
+             * @description Definition of the parent layer
+             */
+            parent_layer_definition?: string | null;
+            /**
+             * Contained Domains
+             * @description List of domain titles contained in this layer
+             */
+            contained_domains?: string[];
+            /**
+             * Layer Purpose
+             * @description Purpose or role of this layer
+             */
+            layer_purpose?: string | null;
+            /**
+             * Current Definition
+             * @description Current definition if any
+             */
+            current_definition?: string | null;
+            /**
+             * Reference Context
+             * @description Additional reference context
+             */
+            reference_context?: {
+                [key: string]: unknown;
+            };
+            /**
+             * Flavor
+             * @description Flavor ID or title to use for this request
+             */
+            flavor?: string | null;
+        };
+        /**
+         * LayerDefinitionResponse
+         * @description Response model for layer definition suggestion
+         */
+        LayerDefinitionResponse: {
+            /**
+             * Definition
+             * @description The suggested 2-3 sentence layer definition
+             */
+            definition: string;
+            /**
+             * Reasoning
+             * @description Brief reasoning for the definitional choices
+             */
+            reasoning: string;
+            /**
+             * Discrepancies
+             * @description Notable discrepancies between sources
+             */
+            discrepancies?: string | null;
+        };
+        /**
+         * LayerLLMSuccessResponse
+         * @description Success response wrapper for layer LLM endpoints
+         */
+        LayerLLMSuccessResponse: {
+            /**
+             * Success
+             * @description Always true for success responses
+             * @default true
+             */
+            success: boolean;
+            /** @description The response data */
+            data: components["schemas"]["LayerDefinitionResponse"];
         };
         /** LayerOut */
         LayerOut: {
@@ -2674,6 +3101,91 @@ export interface components {
              */
             target_type: string | null;
         };
+        /**
+         * PipelineFlavor
+         * @description Database model for pipeline flavors
+         */
+        PipelineFlavor: {
+            /**
+             * Id
+             * @description Unique identifier
+             */
+            id: string;
+            /** @description Pipeline type */
+            pipeline: components["schemas"]["PipelineType"];
+            /**
+             * Title
+             * @description Flavor title
+             */
+            title: string;
+            /**
+             * Llm Provider
+             * @description LLM provider identifier
+             */
+            llm_provider: string;
+            /**
+             * Llm Model
+             * @description LLM model name
+             */
+            llm_model: string;
+            /** @description LLM configuration */
+            llm_config: components["schemas"]["LLMConfig"];
+            /**
+             * System Prompt
+             * @description System prompt template
+             */
+            system_prompt: string;
+            /**
+             * User Prompt
+             * @description User prompt template
+             */
+            user_prompt: string;
+            /**
+             * Version
+             * @description Version number
+             */
+            version: number;
+            /**
+             * Enabled
+             * @description Whether flavor is enabled
+             * @default true
+             */
+            enabled: boolean;
+            /**
+             * Last Updated
+             * Format: date-time
+             * @description Last update timestamp
+             */
+            last_updated: string;
+            /**
+             * Date Created
+             * Format: date-time
+             * @description Creation timestamp
+             */
+            date_created: string;
+        };
+        /**
+         * PipelineFlavorListResponse
+         * @description Response model for listing pipeline flavors
+         */
+        PipelineFlavorListResponse: {
+            /**
+             * Flavors
+             * @description List of pipeline flavors
+             */
+            flavors: components["schemas"]["PipelineFlavor"][];
+            /**
+             * Total Count
+             * @description Total number of flavors
+             */
+            total_count: number;
+        };
+        /**
+         * PipelineType
+         * @description Enumeration of supported pipeline types
+         * @enum {string}
+         */
+        PipelineType: "suggest_term_definition" | "suggest_layer_definition" | "suggest_domain_definition";
         /** PredicateCreate */
         PredicateCreate: {
             /** Title */
@@ -3338,6 +3850,44 @@ export interface components {
         UpdateDatasetDirectoryRequest: {
             /** Datasets Directory */
             datasets_directory: string;
+        };
+        /**
+         * UpdatePipelineFlavorRequest
+         * @description Request model for updating a pipeline flavor
+         */
+        UpdatePipelineFlavorRequest: {
+            /**
+             * Title
+             * @description Flavor title
+             */
+            title?: string | null;
+            /**
+             * Llm Provider
+             * @description LLM provider identifier
+             */
+            llm_provider?: string | null;
+            /**
+             * Llm Model
+             * @description LLM model name
+             */
+            llm_model?: string | null;
+            /** @description LLM configuration */
+            llm_config?: components["schemas"]["LLMConfig"] | null;
+            /**
+             * System Prompt
+             * @description System prompt template
+             */
+            system_prompt?: string | null;
+            /**
+             * User Prompt
+             * @description User prompt template
+             */
+            user_prompt?: string | null;
+            /**
+             * Enabled
+             * @description Whether flavor is enabled
+             */
+            enabled?: boolean | null;
         };
         /** ValidationError */
         ValidationError: {
@@ -6264,7 +6814,106 @@ export interface operations {
             };
         };
     };
-    suggest_definition_api_llm_suggest_definition_post: {
+    suggest_term_definition_stream_api_llm_suggest_term_definition_stream_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DefinitionSuggestionRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    suggest_layer_definition_stream_api_llm_suggest_layer_definition_stream_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["LayerDefinitionRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    suggest_domain_definition_stream_api_llm_suggest_domain_definition_stream_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DomainDefinitionRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    suggest_term_definition_api_llm_suggest_term_definition_post: {
         parameters: {
             query?: never;
             header?: never;
@@ -6333,6 +6982,144 @@ export interface operations {
             };
         };
     };
+    suggest_layer_definition_api_llm_suggest_layer_definition_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["LayerDefinitionRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LayerLLMSuccessResponse"];
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LLMErrorResponse"];
+                };
+            };
+            /** @description Request validation failure */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LLMErrorResponse"];
+                };
+            };
+            /** @description Too Many Requests */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LLMErrorResponse"];
+                };
+            };
+            /** @description Internal Server Error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LLMErrorResponse"];
+                };
+            };
+            /** @description Gateway Timeout */
+            504: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LLMErrorResponse"];
+                };
+            };
+        };
+    };
+    suggest_domain_definition_api_llm_suggest_domain_definition_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DomainDefinitionRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DomainLLMSuccessResponse"];
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LLMErrorResponse"];
+                };
+            };
+            /** @description Request validation failure */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LLMErrorResponse"];
+                };
+            };
+            /** @description Too Many Requests */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LLMErrorResponse"];
+                };
+            };
+            /** @description Internal Server Error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LLMErrorResponse"];
+                };
+            };
+            /** @description Gateway Timeout */
+            504: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LLMErrorResponse"];
+                };
+            };
+        };
+    };
     health_check_api_llm_health_get: {
         parameters: {
             query?: never;
@@ -6349,6 +7136,166 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["LLMHealthResponse"];
+                };
+            };
+        };
+    };
+    list_flavors_api_pipeline_flavors_get: {
+        parameters: {
+            query?: {
+                /** @description Filter by pipeline type */
+                pipeline?: components["schemas"]["PipelineType"] | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PipelineFlavorListResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_flavor_api_pipeline_flavors_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreatePipelineFlavorRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PipelineFlavor"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_flavor_api_pipeline_flavors__flavor_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                flavor_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PipelineFlavor"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_flavor_api_pipeline_flavors__flavor_id__put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                flavor_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdatePipelineFlavorRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PipelineFlavor"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    delete_flavor_api_pipeline_flavors__flavor_id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                flavor_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
                 };
             };
         };

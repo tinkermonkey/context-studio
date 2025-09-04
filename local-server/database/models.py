@@ -8,6 +8,27 @@ import datetime
 from sqlalchemy import JSON, Boolean
 Base = declarative_base()
 
+class PipelineFlavor(Base):
+    __tablename__ = 'pipeline_flavors'
+    
+    id = Column(String, primary_key=True, default=lambda: str(uuid.uuid4()))
+    pipeline = Column(String, nullable=False)
+    title = Column(String, nullable=False)
+    llm_provider = Column(String, nullable=False)
+    llm_model = Column(String, nullable=False)
+    llm_config = Column(JSON, nullable=False)
+    system_prompt = Column(Text, nullable=False)
+    user_prompt = Column(Text, nullable=False)
+    version = Column(Integer, nullable=False, default=1)
+    enabled = Column(Boolean, nullable=False, default=True)
+    last_updated = Column(DateTime, default=lambda: datetime.datetime.now(datetime.UTC),
+                         onupdate=lambda: datetime.datetime.now(datetime.UTC))
+    date_created = Column(DateTime, default=lambda: datetime.datetime.now(datetime.UTC))
+    
+    __table_args__ = (
+        UniqueConstraint('pipeline', 'title', name='_pipeline_title_uc'),
+    )
+
 class Predicate(Base):
     __tablename__ = 'predicates'
     

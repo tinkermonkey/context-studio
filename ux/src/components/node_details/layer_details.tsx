@@ -141,7 +141,13 @@ export const LayerDetails: React.FC<LayerDetailsProps> = ({ layer }) => {
 
         <div className="space-y-6">
           {/* NLP title analysis for the layer */}
-          <NlpAnalysisPanel text={layer.title} />
+          <NlpAnalysisPanel 
+            text={layer.title} 
+            textTitle={"Title"}
+            currentDefinition={layer.definition}
+            layerId={layer.id}
+          />
+
           {/* Definition */}
           {layer.definition && (
             <Card>
@@ -149,9 +155,6 @@ export const LayerDetails: React.FC<LayerDetailsProps> = ({ layer }) => {
               <p className="leading-relaxed text-gray-700 dark:text-gray-300">
                 {layer.definition}
               </p>
-              <div className="mt-4">
-                <NlpAnalysisPanel text={layer.definition} />
-              </div>
             </Card>
           )}
 

@@ -14,6 +14,9 @@ export * from './services/predicates';
 export * from './services/graph';
 export * from './services/datasets';
 export * from './services/schema';
+export * from './services/schemaOrg';
+export * from './services/pipelineFlavors';
+export * from './services/nlpReference';
 export * from './services/nlp';
 export * from './services/llm';
 
@@ -26,6 +29,9 @@ export * from './hooks/predicates';
 export * from './hooks/graph';
 export * from './hooks/datasets';
 export * from './hooks/schema';
+export * from './hooks/schemaOrg';
+export * from './hooks/pipelineFlavors';
+export * from './hooks/nlpReference';
 export * from './hooks/nlp';
 export * from './hooks/llm';
 

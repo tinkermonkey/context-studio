@@ -1,6 +1,6 @@
 import { BaseService } from './base';
 import { ENDPOINTS } from '../config';
-import type { components } from '@/api/types/openapi';
+import type { components } from '@/api/client/types';
 
 // Type aliases for better readability
 export type PredicateOut = components['schemas']['PredicateOut'];

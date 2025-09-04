@@ -11,11 +11,12 @@ import type { components } from '../client/types';
 // Type aliases for better readability
 export type MigrationStatus = components['schemas']['MigrationStatus'];
 
-export interface MigrationHistoryEntry {
-  version: number;
+export interface MigrateParams extends Record<string, unknown> {
+  skip_on_error?: boolean;
+}
+
+export interface GenerateMigrationParams extends Record<string, unknown> {
   description: string;
-  applied_at: string;
-  filename: string;
 }
 
 export class SchemaService extends BaseService {
@@ -23,45 +24,61 @@ export class SchemaService extends BaseService {
    * Get current schema status and migration information
    */
   async getStatus(): Promise<MigrationStatus> {
-    return this.getResource<MigrationStatus>(`${ENDPOINTS.SCHEMA}/status`);
+    return this.withErrorContext(
+      () => this.getResource<MigrationStatus>(`${ENDPOINTS.SCHEMA}/status`),
+      'get schema status'
+    );
   }
 
   /**
    * Apply pending migrations to the current dataset
    */
-  async migrate(skipOnError: boolean = false): Promise<{ success: boolean; message: string }> {
-    return this.postResource<{ success: boolean; message: string }>(
-      `${ENDPOINTS.SCHEMA}/migrate`,
-      {},
-      { params: { skip_on_error: skipOnError } }
+  async migrate(params?: MigrateParams): Promise<unknown> {
+    return this.withErrorContext(
+      () => this.postResource<unknown>(`${ENDPOINTS.SCHEMA}/migrate`, undefined, { params }),
+      'migrate schema'
     );
   }
 
   /**
    * Get migration history for the current dataset
    */
-  async getHistory(): Promise<MigrationHistoryEntry[]> {
-    return this.getResource<MigrationHistoryEntry[]>(`${ENDPOINTS.SCHEMA}/history`);
+  async getHistory(): Promise<unknown> {
+    return this.withErrorContext(
+      () => this.getResource<unknown>(`${ENDPOINTS.SCHEMA}/history`),
+      'get migration history'
+    );
   }
 
   /**
    * Rollback schema to a specific version
    */
-  async rollback(targetVersion: number): Promise<{ success: boolean; message: string }> {
-    return this.postResource<{ success: boolean; message: string }>(
-      `${ENDPOINTS.SCHEMA}/rollback/${targetVersion}`,
-      {}
+  async rollback(targetVersion: number): Promise<unknown> {
+    return this.withErrorContext(
+      () => {
+        this.validateRequired(targetVersion, 'Target version');
+        if (typeof targetVersion !== 'number' || targetVersion < 0) {
+          throw new Error('Target version must be a non-negative number');
+        }
+        return this.postResource<unknown>(`${ENDPOINTS.SCHEMA}/rollback/${targetVersion}`);
+      },
+      'rollback schema'
     );
   }
 
   /**
    * Generate a new migration file template
    */
-  async generateMigration(description: string): Promise<{ filepath: string; content: string }> {
-    return this.postResource<{ filepath: string; content: string }>(
-      `${ENDPOINTS.SCHEMA}/generate-migration`,
-      {},
-      { params: { description } }
+  async generateMigration(params: GenerateMigrationParams): Promise<unknown> {
+    return this.withErrorContext(
+      () => {
+        this.validateRequired(params, 'Migration parameters');
+        this.validateRequired(params.description, 'Migration description');
+        this.sanitizeString(params.description, 'Migration description', 255);
+        
+        return this.postResource<unknown>(`${ENDPOINTS.SCHEMA}/generate-migration`, undefined, { params });
+      },
+      'generate migration'
     );
   }
 }

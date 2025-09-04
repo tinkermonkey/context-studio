@@ -4104,14 +4104,134 @@
         }
       }
     },
-    "/api/llm/suggest_definition": {
+    "/api/llm/suggest_term_definition/stream": {
       "post": {
         "tags": [
           "llm"
         ],
-        "summary": "Suggest Definition",
-        "description": "Generate a definition suggestion based on provided context using LLM.\n\nThis endpoint uses a Langchain pipeline with OpenAI GPT models to generate\ncontextually-aware term definitions based on domain context, hierarchical\nrelationships, component terms, and reference source information.",
-        "operationId": "suggest_definition_api_llm_suggest_definition_post",
+        "summary": "Suggest Term Definition Stream",
+        "description": "Stream term definition suggestion using specified flavor with Server-Side Events",
+        "operationId": "suggest_term_definition_stream_api_llm_suggest_term_definition_stream_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DefinitionSuggestionRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/llm/suggest_layer_definition/stream": {
+      "post": {
+        "tags": [
+          "llm"
+        ],
+        "summary": "Suggest Layer Definition Stream",
+        "description": "Stream layer definition suggestion using specified flavor with Server-Side Events",
+        "operationId": "suggest_layer_definition_stream_api_llm_suggest_layer_definition_stream_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LayerDefinitionRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/llm/suggest_domain_definition/stream": {
+      "post": {
+        "tags": [
+          "llm"
+        ],
+        "summary": "Suggest Domain Definition Stream",
+        "description": "Stream domain definition suggestion using specified flavor with Server-Side Events",
+        "operationId": "suggest_domain_definition_stream_api_llm_suggest_domain_definition_stream_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DomainDefinitionRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/llm/suggest_term_definition": {
+      "post": {
+        "tags": [
+          "llm"
+        ],
+        "summary": "Suggest Term Definition",
+        "description": "Generate a term definition suggestion based on provided context using LLM.\n\nThis endpoint uses a Langchain pipeline with OpenAI GPT models to generate\ncontextually-aware term definitions based on domain context, hierarchical\nrelationships, component terms, and reference source information.\nSupports optional flavor parameter to use different LLM configurations.",
+        "operationId": "suggest_term_definition_api_llm_suggest_term_definition_post",
         "requestBody": {
           "content": {
             "application/json": {
@@ -4186,6 +4306,170 @@
         }
       }
     },
+    "/api/llm/suggest_layer_definition": {
+      "post": {
+        "tags": [
+          "llm"
+        ],
+        "summary": "Suggest Layer Definition",
+        "description": "Generate a layer definition suggestion based on provided context using LLM.\n\nThis endpoint uses a Langchain pipeline with OpenAI GPT models to generate\ncontextually-aware layer definitions based on organizational context, hierarchical\nrelationships, contained domains, and layer purpose information.\nSupports optional flavor parameter to use different LLM configurations.",
+        "operationId": "suggest_layer_definition_api_llm_suggest_layer_definition_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LayerDefinitionRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LayerLLMSuccessResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LLMErrorResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Request validation failure",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LLMErrorResponse"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too Many Requests",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LLMErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LLMErrorResponse"
+                }
+              }
+            }
+          },
+          "504": {
+            "description": "Gateway Timeout",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LLMErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/llm/suggest_domain_definition": {
+      "post": {
+        "tags": [
+          "llm"
+        ],
+        "summary": "Suggest Domain Definition",
+        "description": "Generate a domain definition suggestion based on provided context using LLM.\n\nThis endpoint uses a Langchain pipeline with OpenAI GPT models to generate\ncontextually-aware domain definitions based on thematic scope, hierarchical\nrelationships, contained terms, and domain boundaries information.\nSupports optional flavor parameter to use different LLM configurations.",
+        "operationId": "suggest_domain_definition_api_llm_suggest_domain_definition_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DomainDefinitionRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DomainLLMSuccessResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LLMErrorResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Request validation failure",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LLMErrorResponse"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too Many Requests",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LLMErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LLMErrorResponse"
+                }
+              }
+            }
+          },
+          "504": {
+            "description": "Gateway Timeout",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LLMErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/llm/health": {
       "get": {
         "tags": [
@@ -4201,6 +4485,226 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/LLMHealthResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/pipeline-flavors": {
+      "post": {
+        "tags": [
+          "Pipeline Flavors"
+        ],
+        "summary": "Create Flavor",
+        "description": "Create a new pipeline flavor",
+        "operationId": "create_flavor_api_pipeline_flavors_post",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreatePipelineFlavorRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PipelineFlavor"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "Pipeline Flavors"
+        ],
+        "summary": "List Flavors",
+        "description": "List all flavors, optionally filtered by pipeline",
+        "operationId": "list_flavors_api_pipeline_flavors_get",
+        "parameters": [
+          {
+            "name": "pipeline",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/PipelineType"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by pipeline type",
+              "title": "Pipeline"
+            },
+            "description": "Filter by pipeline type"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PipelineFlavorListResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/pipeline-flavors/{flavor_id}": {
+      "get": {
+        "tags": [
+          "Pipeline Flavors"
+        ],
+        "summary": "Get Flavor",
+        "description": "Get a specific flavor by ID",
+        "operationId": "get_flavor_api_pipeline_flavors__flavor_id__get",
+        "parameters": [
+          {
+            "name": "flavor_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Flavor Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PipelineFlavor"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "Pipeline Flavors"
+        ],
+        "summary": "Update Flavor",
+        "description": "Update an existing flavor",
+        "operationId": "update_flavor_api_pipeline_flavors__flavor_id__put",
+        "parameters": [
+          {
+            "name": "flavor_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Flavor Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdatePipelineFlavorRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PipelineFlavor"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Pipeline Flavors"
+        ],
+        "summary": "Delete Flavor",
+        "description": "Delete a flavor",
+        "operationId": "delete_flavor_api_pipeline_flavors__flavor_id__delete",
+        "parameters": [
+          {
+            "name": "flavor_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Flavor Id"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
                 }
               }
             }
@@ -5552,6 +6056,64 @@
         "title": "CreateDatasetRequest",
         "description": "Request to create a new dataset."
       },
+      "CreatePipelineFlavorRequest": {
+        "properties": {
+          "pipeline": {
+            "$ref": "#/components/schemas/PipelineType",
+            "description": "Pipeline type"
+          },
+          "title": {
+            "type": "string",
+            "maxLength": 200,
+            "minLength": 1,
+            "title": "Title",
+            "description": "Flavor title"
+          },
+          "llm_provider": {
+            "type": "string",
+            "title": "Llm Provider",
+            "description": "LLM provider identifier"
+          },
+          "llm_model": {
+            "type": "string",
+            "title": "Llm Model",
+            "description": "LLM model name"
+          },
+          "llm_config": {
+            "$ref": "#/components/schemas/LLMConfig",
+            "description": "LLM configuration"
+          },
+          "system_prompt": {
+            "type": "string",
+            "minLength": 1,
+            "title": "System Prompt",
+            "description": "System prompt template"
+          },
+          "user_prompt": {
+            "type": "string",
+            "minLength": 1,
+            "title": "User Prompt",
+            "description": "User prompt template"
+          },
+          "enabled": {
+            "type": "boolean",
+            "title": "Enabled",
+            "description": "Whether flavor is enabled",
+            "default": true
+          }
+        },
+        "type": "object",
+        "required": [
+          "pipeline",
+          "title",
+          "llm_provider",
+          "llm_model",
+          "system_prompt",
+          "user_prompt"
+        ],
+        "title": "CreatePipelineFlavorRequest",
+        "description": "Request model for creating a new pipeline flavor"
+      },
       "DBpediaData": {
         "properties": {
           "uri": {
@@ -6044,6 +6606,18 @@
             "type": "object",
             "title": "Wikidata Context",
             "description": "Wikidata context information"
+          },
+          "flavor": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Flavor",
+            "description": "Flavor ID or title to use for this request"
           }
         },
         "type": "object",
@@ -6051,7 +6625,7 @@
           "term"
         ],
         "title": "DefinitionSuggestionRequest",
-        "description": "Request model for definition suggestion endpoint"
+        "description": "Request model for term definition suggestion endpoint"
       },
       "DefinitionSuggestionResponse": {
         "properties": {
@@ -6136,6 +6710,168 @@
           "layer_id"
         ],
         "title": "DomainCreate"
+      },
+      "DomainDefinitionRequest": {
+        "properties": {
+          "domain_title": {
+            "type": "string",
+            "title": "Domain Title",
+            "description": "Title of the domain to be analyzed"
+          },
+          "domain_description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Domain Description",
+            "description": "Current description of the domain"
+          },
+          "layer_title": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Layer Title",
+            "description": "Title of the containing layer"
+          },
+          "layer_definition": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Layer Definition",
+            "description": "Definition of the containing layer"
+          },
+          "contained_terms": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Contained Terms",
+            "description": "List of term titles contained in this domain"
+          },
+          "domain_scope": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Domain Scope",
+            "description": "Scope or boundaries of this domain"
+          },
+          "related_domains": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Related Domains",
+            "description": "List of related domain titles"
+          },
+          "current_definition": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Current Definition",
+            "description": "Current definition if any"
+          },
+          "reference_context": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Reference Context",
+            "description": "Additional reference context"
+          },
+          "flavor": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Flavor",
+            "description": "Flavor ID or title to use for this request"
+          }
+        },
+        "type": "object",
+        "required": [
+          "domain_title"
+        ],
+        "title": "DomainDefinitionRequest",
+        "description": "Request model for domain definition suggestion endpoint"
+      },
+      "DomainDefinitionResponse": {
+        "properties": {
+          "definition": {
+            "type": "string",
+            "title": "Definition",
+            "description": "The suggested 2-3 sentence domain definition"
+          },
+          "reasoning": {
+            "type": "string",
+            "title": "Reasoning",
+            "description": "Brief reasoning for the definitional choices"
+          },
+          "discrepancies": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Discrepancies",
+            "description": "Notable discrepancies between sources"
+          }
+        },
+        "type": "object",
+        "required": [
+          "definition",
+          "reasoning"
+        ],
+        "title": "DomainDefinitionResponse",
+        "description": "Response model for domain definition suggestion"
+      },
+      "DomainLLMSuccessResponse": {
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "title": "Success",
+            "description": "Always true for success responses",
+            "default": true
+          },
+          "data": {
+            "$ref": "#/components/schemas/DomainDefinitionResponse",
+            "description": "The response data"
+          }
+        },
+        "type": "object",
+        "required": [
+          "data"
+        ],
+        "title": "DomainLLMSuccessResponse",
+        "description": "Success response wrapper for domain LLM endpoints"
       },
       "DomainOut": {
         "properties": {
@@ -6940,6 +7676,89 @@
         "type": "object",
         "title": "HTTPValidationError"
       },
+      "LLMConfig": {
+        "properties": {
+          "temperature": {
+            "type": "number",
+            "maximum": 2.0,
+            "minimum": 0.0,
+            "title": "Temperature",
+            "description": "Sampling temperature",
+            "default": 0.0
+          },
+          "top_p": {
+            "anyOf": [
+              {
+                "type": "number",
+                "maximum": 1.0,
+                "minimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Top P",
+            "description": "Top-p sampling"
+          },
+          "top_k": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "exclusiveMinimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Top K",
+            "description": "Top-k sampling"
+          },
+          "max_tokens": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "exclusiveMinimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Max Tokens",
+            "description": "Maximum output tokens"
+          },
+          "frequency_penalty": {
+            "anyOf": [
+              {
+                "type": "number",
+                "maximum": 2.0,
+                "minimum": -2.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Frequency Penalty",
+            "description": "Frequency penalty"
+          },
+          "presence_penalty": {
+            "anyOf": [
+              {
+                "type": "number",
+                "maximum": 2.0,
+                "minimum": -2.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Presence Penalty",
+            "description": "Presence penalty"
+          }
+        },
+        "type": "object",
+        "title": "LLMConfig",
+        "description": "LLM configuration parameters"
+      },
       "LLMErrorResponse": {
         "properties": {
           "success": {
@@ -7051,6 +7870,160 @@
           "title"
         ],
         "title": "LayerCreate"
+      },
+      "LayerDefinitionRequest": {
+        "properties": {
+          "layer_title": {
+            "type": "string",
+            "title": "Layer Title",
+            "description": "Title of the layer to be analyzed"
+          },
+          "layer_description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Layer Description",
+            "description": "Current description of the layer"
+          },
+          "parent_layer_title": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Parent Layer Title",
+            "description": "Title of the parent layer"
+          },
+          "parent_layer_definition": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Parent Layer Definition",
+            "description": "Definition of the parent layer"
+          },
+          "contained_domains": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Contained Domains",
+            "description": "List of domain titles contained in this layer"
+          },
+          "layer_purpose": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Layer Purpose",
+            "description": "Purpose or role of this layer"
+          },
+          "current_definition": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Current Definition",
+            "description": "Current definition if any"
+          },
+          "reference_context": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Reference Context",
+            "description": "Additional reference context"
+          },
+          "flavor": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Flavor",
+            "description": "Flavor ID or title to use for this request"
+          }
+        },
+        "type": "object",
+        "required": [
+          "layer_title"
+        ],
+        "title": "LayerDefinitionRequest",
+        "description": "Request model for layer definition suggestion endpoint"
+      },
+      "LayerDefinitionResponse": {
+        "properties": {
+          "definition": {
+            "type": "string",
+            "title": "Definition",
+            "description": "The suggested 2-3 sentence layer definition"
+          },
+          "reasoning": {
+            "type": "string",
+            "title": "Reasoning",
+            "description": "Brief reasoning for the definitional choices"
+          },
+          "discrepancies": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Discrepancies",
+            "description": "Notable discrepancies between sources"
+          }
+        },
+        "type": "object",
+        "required": [
+          "definition",
+          "reasoning"
+        ],
+        "title": "LayerDefinitionResponse",
+        "description": "Response model for layer definition suggestion"
+      },
+      "LayerLLMSuccessResponse": {
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "title": "Success",
+            "description": "Always true for success responses",
+            "default": true
+          },
+          "data": {
+            "$ref": "#/components/schemas/LayerDefinitionResponse",
+            "description": "The response data"
+          }
+        },
+        "type": "object",
+        "required": [
+          "data"
+        ],
+        "title": "LayerLLMSuccessResponse",
+        "description": "Success response wrapper for layer LLM endpoints"
       },
       "LayerOut": {
         "properties": {
@@ -7595,6 +8568,126 @@
           "target_id"
         ],
         "title": "PathRequest"
+      },
+      "PipelineFlavor": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id",
+            "description": "Unique identifier"
+          },
+          "pipeline": {
+            "$ref": "#/components/schemas/PipelineType",
+            "description": "Pipeline type"
+          },
+          "title": {
+            "type": "string",
+            "maxLength": 200,
+            "minLength": 1,
+            "title": "Title",
+            "description": "Flavor title"
+          },
+          "llm_provider": {
+            "type": "string",
+            "title": "Llm Provider",
+            "description": "LLM provider identifier"
+          },
+          "llm_model": {
+            "type": "string",
+            "title": "Llm Model",
+            "description": "LLM model name"
+          },
+          "llm_config": {
+            "$ref": "#/components/schemas/LLMConfig",
+            "description": "LLM configuration"
+          },
+          "system_prompt": {
+            "type": "string",
+            "minLength": 1,
+            "title": "System Prompt",
+            "description": "System prompt template"
+          },
+          "user_prompt": {
+            "type": "string",
+            "minLength": 1,
+            "title": "User Prompt",
+            "description": "User prompt template"
+          },
+          "version": {
+            "type": "integer",
+            "minimum": 1.0,
+            "title": "Version",
+            "description": "Version number"
+          },
+          "enabled": {
+            "type": "boolean",
+            "title": "Enabled",
+            "description": "Whether flavor is enabled",
+            "default": true
+          },
+          "last_updated": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Last Updated",
+            "description": "Last update timestamp"
+          },
+          "date_created": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Date Created",
+            "description": "Creation timestamp"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "pipeline",
+          "title",
+          "llm_provider",
+          "llm_model",
+          "llm_config",
+          "system_prompt",
+          "user_prompt",
+          "version",
+          "last_updated",
+          "date_created"
+        ],
+        "title": "PipelineFlavor",
+        "description": "Database model for pipeline flavors"
+      },
+      "PipelineFlavorListResponse": {
+        "properties": {
+          "flavors": {
+            "items": {
+              "$ref": "#/components/schemas/PipelineFlavor"
+            },
+            "type": "array",
+            "title": "Flavors",
+            "description": "List of pipeline flavors"
+          },
+          "total_count": {
+            "type": "integer",
+            "title": "Total Count",
+            "description": "Total number of flavors"
+          }
+        },
+        "type": "object",
+        "required": [
+          "flavors",
+          "total_count"
+        ],
+        "title": "PipelineFlavorListResponse",
+        "description": "Response model for listing pipeline flavors"
+      },
+      "PipelineType": {
+        "type": "string",
+        "enum": [
+          "suggest_term_definition",
+          "suggest_layer_definition",
+          "suggest_domain_definition"
+        ],
+        "title": "PipelineType",
+        "description": "Enumeration of supported pipeline types"
       },
       "PredicateCreate": {
         "properties": {
@@ -9350,6 +10443,100 @@
         ],
         "title": "UpdateDatasetDirectoryRequest",
         "description": "Request to update the datasets directory."
+      },
+      "UpdatePipelineFlavorRequest": {
+        "properties": {
+          "title": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 200,
+                "minLength": 1
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Title",
+            "description": "Flavor title"
+          },
+          "llm_provider": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Llm Provider",
+            "description": "LLM provider identifier"
+          },
+          "llm_model": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Llm Model",
+            "description": "LLM model name"
+          },
+          "llm_config": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/LLMConfig"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "LLM configuration"
+          },
+          "system_prompt": {
+            "anyOf": [
+              {
+                "type": "string",
+                "minLength": 1
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "System Prompt",
+            "description": "System prompt template"
+          },
+          "user_prompt": {
+            "anyOf": [
+              {
+                "type": "string",
+                "minLength": 1
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "User Prompt",
+            "description": "User prompt template"
+          },
+          "enabled": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Enabled",
+            "description": "Whether flavor is enabled"
+          }
+        },
+        "type": "object",
+        "title": "UpdatePipelineFlavorRequest",
+        "description": "Request model for updating a pipeline flavor"
       },
       "ValidationError": {
         "properties": {

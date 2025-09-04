@@ -1,0 +1,172 @@
+{
+  "server": {
+    "host": "0.0.0.0",
+    "port": 8000,
+    "reload": true,
+    "cors_origins": [
+      "*"
+    ],
+    "access_log": false,
+    "log_level": "INFO"
+  },
+  "database": {
+    "default_url": "sqlite:///./local.db",
+    "default_dataset_filename": "default.db",
+    "schema_org_path": "./schemaorg.db",
+    "reference_cache_path": "./reference_api_cache.db",
+    "pipeline_path": "./pipeline.db",
+    "check_same_thread": false,
+    "pool_timeout": 30
+  },
+  "llm": {
+    "model_name": "gpt-3.5-turbo",
+    "temperature": 0.0,
+    "max_tokens": null,
+    "timeout": 30,
+    "max_text_length": 1000,
+    "retry_attempts": 3
+  },
+  "nlp": {
+    "model_name": "en_core_web_lg",
+    "max_text_length": 512,
+    "sense2vec_path": "./downloads/s2v_reddit_2015_md",
+    "concepcy_relations": [
+      "RelatedTo",
+      "FormOf",
+      "IsA",
+      "PartOf",
+      "HasA",
+      "UsedFor",
+      "CapableOf",
+      "AtLocation",
+      "Causes",
+      "HasSubevent",
+      "HasFirstSubevent",
+      "HasLastSubevent",
+      "HasPrerequisite",
+      "HasProperty",
+      "MotivatedByGoal",
+      "ObstructedBy",
+      "Desires",
+      "CreatedBy",
+      "Synonym",
+      "Antonym",
+      "DistinctFrom",
+      "DerivedFrom",
+      "SymbolOf",
+      "DefinedAs",
+      "MannerOf",
+      "LocatedNear",
+      "HasContext",
+      "SimilarTo",
+      "EtymologicallyRelatedTo",
+      "EtymologicallyDerivedFrom",
+      "CausesDesire",
+      "MadeOf",
+      "ReceivesAction",
+      "ExternalURL"
+    ],
+    "filter_missing_text": true,
+    "edge_weight_filter": 1.5,
+    "request_timeout": 30
+  },
+  "reference_sources": {
+    "conceptnet": {
+      "enabled": true,
+      "upstream_url": "https://api.conceptnet.io",
+      "use_proxy": true,
+      "timeout": 30,
+      "max_retries": 5,
+      "rate_limit": {
+        "requests_per_hour": 3600,
+        "progressive_delay": true,
+        "max_delay": 300
+      },
+      "custom_headers": {},
+      "custom_params": {}
+    },
+    "dbpedia": {
+      "enabled": true,
+      "upstream_url": "https://dbpedia.org",
+      "use_proxy": true,
+      "timeout": 30,
+      "max_retries": 3,
+      "rate_limit": {
+        "requests_per_hour": 3600,
+        "progressive_delay": true,
+        "max_delay": 300
+      },
+      "custom_headers": {},
+      "custom_params": {}
+    },
+    "dbpedia_spotlight": {
+      "enabled": true,
+      "upstream_url": "https://api.dbpedia-spotlight.org/en/",
+      "use_proxy": true,
+      "timeout": 25,
+      "max_retries": 3,
+      "rate_limit": {
+        "requests_per_hour": 3600,
+        "progressive_delay": true,
+        "max_delay": 300
+      },
+      "custom_headers": {},
+      "custom_params": {}
+    },
+    "wikidata": {
+      "enabled": true,
+      "upstream_url": "https://query.wikidata.org",
+      "use_proxy": true,
+      "timeout": 30,
+      "max_retries": 3,
+      "rate_limit": {
+        "requests_per_hour": 1000,
+        "progressive_delay": true,
+        "max_delay": 300
+      },
+      "custom_headers": {},
+      "custom_params": {}
+    },
+    "schema_org": {
+      "enabled": true,
+      "upstream_url": "https://schema.org",
+      "use_proxy": false,
+      "timeout": 10,
+      "max_retries": 1,
+      "rate_limit": {
+        "requests_per_hour": 10000,
+        "progressive_delay": true,
+        "max_delay": 300
+      },
+      "custom_headers": {},
+      "custom_params": {}
+    }
+  },
+  "proxy_server": {
+    "host": "127.0.0.1",
+    "port": 18080,
+    "enabled": true,
+    "database_path": "./reference_api_cache.db",
+    "max_cache_entries": 10000,
+    "default_cache_ttl": 3600,
+    "default_max_response_size": 10485760,
+    "default_requests_per_hour": 1000,
+    "progressive_max_delay": 300
+  },
+  "logging": {
+    "level": "INFO",
+    "enable_console": false,
+    "enable_file": true,
+    "file_path": "./logs/context_studio.log",
+    "format": "%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+    "date_format": "%Y-%m-%d %H:%M:%S",
+    "max_file_size": 10485760,
+    "backup_count": 5
+  },
+  "security": {
+    "require_secure_key": false,
+    "secure_key": null,
+    "log_security_events": false,
+    "api_key_header": "X-API-Key"
+  }
+}

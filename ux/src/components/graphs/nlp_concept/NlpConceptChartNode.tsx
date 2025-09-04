@@ -84,8 +84,8 @@ export const NlpConceptChartNode: React.FC<Props> = ({
           ref={foreignObjectRef}
           x={node.x + 10}
           y={node.y + 8}
-          width={node.width}
-          height={node.height}
+          width={node.width - 2*10}
+          height={node.height - 2*8}
         >
           <div
             style={{
@@ -98,6 +98,7 @@ export const NlpConceptChartNode: React.FC<Props> = ({
               height: `${node.height}px`,
               overflow: "hidden",
               wordWrap: "break-word",
+              wordBreak: "break-word",
             }}
           >
             <div style={{ fontWeight: "bold", marginBottom: "4px" }}>

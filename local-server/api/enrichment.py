@@ -17,9 +17,9 @@ router = APIRouter(prefix="/api/nlp_analysis/reference", tags=["enrichment"])
 
 def get_enrichment_service() -> EnrichmentService:
     """Dependency to get enrichment service instance"""
-    settings = get_settings()
-    cfg = EnrichmentConfig(**getattr(settings, 'ENRICHMENT_CONFIG', {}))
-    return EnrichmentService(cfg)
+    from config import get_config_manager
+    config_manager = get_config_manager()
+    return EnrichmentService(config_manager)
 
 
 def handle_service_error(e: Exception) -> HTTPException:

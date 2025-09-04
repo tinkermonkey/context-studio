@@ -64,16 +64,20 @@ def get_current_session_local():
     return _current_session_local
 
 
-def get_engine(database_url=None, use_static_pool=False, connect_args={"check_same_thread": False}):
+def get_engine(database_url=None, use_static_pool=False, connect_args=None):
     logger.info("SQLite Version: %s", sqlite3.sqlite_version)
     logger.info("SQLite File: %s", sqlite3.__file__)
 
+    # Import configuration
+    from config import get_settings
+    settings = get_settings()
+
     if connect_args is None:
-        connect_args = {"check_same_thread": False}
+        connect_args = {"check_same_thread": settings.database.check_same_thread}
     else:
         logger.info("Using custom connect_args: %s", connect_args)
 
-    url = database_url or os.getenv("DATABASE_URL", "sqlite:///./local.db")
+    url = database_url or os.getenv("DATABASE_URL", settings.database.default_url)
     if use_static_pool and url.startswith("sqlite:///:memory:"):
         return create_engine(url, connect_args=connect_args, poolclass=StaticPool)
     return create_engine(url, connect_args=connect_args)

@@ -80,7 +80,7 @@ describe('LLM Service Integration', () => {
       parent_term_definition: 'Intelligence demonstrated by machines',
       parent_relationship_predicate: 'is_a_type_of',
       component_terms: componentTerms,
-      current_definition: 'An existing definition',
+      "current definition": 'An existing definition',
       dbpedia_context: { uri: 'http://dbpedia.org/resource/Machine_learning' },
       wikidata_context: { id: 'Q2539' }
     };

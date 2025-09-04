@@ -4,7 +4,7 @@ This module implements the full set of request/response models described in
 the enrichment design (DBpedia, ConceptNet, Wikidata, Schema.org).
 """
 
-from pydantic import BaseModel, Field, validator
+from pydantic import BaseModel, Field, field_validator
 from typing import List, Dict, Optional, Any, Union, Literal
 from datetime import datetime
 from enum import Enum
@@ -38,7 +38,8 @@ class DBpediaResourceRequest(BaseModel):
     resource_url: str = Field(..., description="DBpedia resource URL")
     format: ResponseFormat = Field(ResponseFormat.JSON, description="Response format")
 
-    @validator('resource_url')
+    @field_validator('resource_url')
+    @classmethod
     def validate_resource_url(cls, v):
         # More flexible validation - accept any URL that contains dbpedia.org/resource/
         if not ('dbpedia.org/resource/' in v):
@@ -82,7 +83,8 @@ class DBpediaSparqlRequest(BaseModel):
     query: str = Field(..., min_length=1, description="SPARQL query")
     format: ResponseFormat = Field(ResponseFormat.JSON, description="Response format")
 
-    @validator('query')
+    @field_validator('query')
+    @classmethod
     def validate_sparql_query(cls, v):
         # Basic SPARQL validation
         v = v.strip()
@@ -107,13 +109,15 @@ class ConceptNetQueryRequest(BaseModel):
     limit: int = Field(20, ge=1, le=100, description="Result limit")
     offset: int = Field(0, ge=0, description="Result offset")
 
-    @validator('start', 'end', 'node')
+    @field_validator('start', 'end', 'node')
+    @classmethod
     def validate_concept_format(cls, v):
         if v and not v.startswith('/c/'):
             raise ValueError('Concept must start with /c/')
         return v
 
-    @validator('rel')
+    @field_validator('rel')
+    @classmethod
     def validate_relation_format(cls, v):
         if v and not v.startswith('/r/'):
             raise ValueError('Relation must start with /r/')
@@ -175,7 +179,8 @@ class WikidataEntityRequest(BaseModel):
     properties: Optional[List[str]] = Field(None, description="Specific properties to retrieve")
     format: ResponseFormat = Field(ResponseFormat.JSON, description="Response format")
 
-    @validator('entity_url')
+    @field_validator('entity_url')
+    @classmethod
     def validate_entity_url(cls, v):
         # More flexible validation - accept any URL that contains wikidata.org and entity/Q pattern
         if not ('wikidata.org' in v and ('/wiki/Q' in v or '/entity/Q' in v)):

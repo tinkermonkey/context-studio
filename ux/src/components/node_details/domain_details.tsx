@@ -34,9 +34,9 @@ import {
   CsSidebarSectionTitle,
 } from "@/components/layout/cs_sidebar";
 import { CsMain, CsMainTitle } from "@/components/layout/cs_main";
+import type { DomainOut } from "@/api/services/domains";
 import type { components } from "@/api/client/types";
 
-type DomainOut = components["schemas"]["DomainOut"];
 type TermOut = components["schemas"]["TermOut"];
 
 interface DomainDetailsProps {
@@ -209,21 +209,25 @@ export const DomainDetails: React.FC<DomainDetailsProps> = ({ domain }) => {
             Edit
           </Button>
         </div>
-        {/* NLP title analysis for the domain */}
-        <div className="mt-2">
-          <NlpAnalysisPanel text={domain.title} />
-        </div>
 
         <div className="space-y-6">
+          {/* NLP title analysis for the domain */}
+          <div className="mt-2">
+            <NlpAnalysisPanel
+              text={domain.title}
+              textTitle={"Title"}
+              currentDefinition={domain.definition}
+              domainId={domain.id}
+              layerId={domain.layer_id}
+            />
+          </div>
+          
           {/* Definition */}
           <Card>
             <h2 className="mb-3 text-xl font-semibold">Definition</h2>
             <p className="leading-relaxed text-gray-700 dark:text-gray-300">
               {domain.definition}
             </p>
-            <div className="mt-4">
-              <NlpAnalysisPanel text={domain.definition} />
-            </div>
           </Card>
 
           {/* Terms in this Domain */}

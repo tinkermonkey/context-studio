@@ -26,3 +26,13 @@ class LLMTimeoutError(LLMError):
 class LLMQuotaExceededError(LLMError):
     """Raised when API quota is exceeded"""
     pass
+
+
+class FlavorNotFoundError(LLMError):
+    """Raised when a requested flavor is not found"""
+    pass
+
+
+class FlavorValidationError(LLMError):
+    """Raised when flavor validation fails"""
+    pass

@@ -59,33 +59,33 @@ export interface LayerAnalyticsResult {
   [key: string]: unknown;
 }
 
-export interface GraphExportParams {
+export interface GraphExportParams extends Record<string, unknown> {
   format?: 'json' | 'turtle' | 'graphml';
 }
 
-export interface TermSearchParams {
+export interface TermSearchParams extends Record<string, unknown> {
   title: string;
   exact?: boolean;
 }
 
-export interface RelatedTermsParams {
+export interface RelatedTermsParams extends Record<string, unknown> {
   term_id: string;
   max_depth?: number;
 }
 
-export interface DomainHierarchyParams {
+export interface DomainHierarchyParams extends Record<string, unknown> {
   layer_id?: string;
 }
 
-export interface LayerAnalyticsParams {
+export interface LayerAnalyticsParams extends Record<string, unknown> {
   layer_id?: string;
 }
 
-export interface CommunityDetectionParams {
+export interface CommunityDetectionParams extends Record<string, unknown> {
   method?: string;
 }
 
-export interface RDFExportParams {
+export interface RDFExportParams extends Record<string, unknown> {
   format?: string;
 }
 
@@ -97,20 +97,20 @@ export class GraphService extends BaseService {
    * Get comprehensive graph statistics
    */
   async getStats(): Promise<GraphStats> {
-    return this.request({
-      method: 'GET',
-      url: `${ENDPOINTS.GRAPH}/stats`,
-    });
+    return this.withErrorContext(
+      () => this.getResource<GraphStats>(`${ENDPOINTS.GRAPH}/stats`),
+      'get graph stats'
+    );
   }
 
   /**
    * Refresh both SPARQL and NetworkX graphs from the database
    */
   async refresh(): Promise<GraphRefreshResponse> {
-    return this.request({
-      method: 'POST',
-      url: `${ENDPOINTS.GRAPH}/refresh`,
-    });
+    return this.withErrorContext(
+      () => this.postResource<GraphRefreshResponse>(`${ENDPOINTS.GRAPH}/refresh`),
+      'refresh graphs'
+    );
   }
 
   // ================== SPARQL Operations ==================
@@ -119,32 +119,36 @@ export class GraphService extends BaseService {
    * Execute a SPARQL query against the RDF graph
    */
   async executeSparqlQuery(data: SPARQLQuery): Promise<SPARQLResult[]> {
-    return this.request({
-      method: 'POST',
-      url: `${ENDPOINTS.GRAPH}/sparql/query`,
-      data,
-    });
+    return this.withErrorContext(
+      () => {
+        this.validateRequired(data, 'SPARQL query data');
+        this.validateRequired(data.query, 'SPARQL query');
+        this.sanitizeString(data.query, 'SPARQL query', 10000);
+        
+        return this.postResource<SPARQLResult[]>(`${ENDPOINTS.GRAPH}/sparql/query`, data);
+      },
+      'execute SPARQL query'
+    );
   }
 
   /**
    * Export the RDF graph in various formats
    */
   async exportRdf(params?: RDFExportParams): Promise<string> {
-    return this.request({
-      method: 'GET',
-      url: `${ENDPOINTS.GRAPH}/sparql/export`,
-      params,
-    });
+    return this.withErrorContext(
+      () => this.getResource<string>(`${ENDPOINTS.GRAPH}/sparql/export`, params),
+      'export RDF'
+    );
   }
 
   /**
    * Get example SPARQL queries
    */
   async getSparqlExamples(): Promise<{ [key: string]: string }> {
-    return this.request({
-      method: 'GET',
-      url: `${ENDPOINTS.GRAPH}/examples/sparql`,
-    });
+    return this.withErrorContext(
+      () => this.getResource<{ [key: string]: string }>(`${ENDPOINTS.GRAPH}/examples/sparql`),
+      'get SPARQL examples'
+    );
   }
 
   // ================== Search Operations ==================
@@ -153,22 +157,32 @@ export class GraphService extends BaseService {
    * Search for terms by title using SPARQL
    */
   async searchTerms(params: TermSearchParams): Promise<Array<{ [key: string]: unknown }>> {
-    return this.request({
-      method: 'GET',
-      url: `${ENDPOINTS.GRAPH}/search/terms`,
-      params,
-    });
+    return this.withErrorContext(
+      () => {
+        this.validateRequired(params, 'Search parameters');
+        this.validateRequired(params.title, 'Search title');
+        this.sanitizeString(params.title, 'Search title', 1000);
+        
+        return this.getResource<Array<{ [key: string]: unknown }>>(`${ENDPOINTS.GRAPH}/search/terms`, params);
+      },
+      'search terms'
+    );
   }
 
   /**
    * Search for terms and provide comprehensive analysis
    */
   async searchAndAnalyze(data: SearchRequest): Promise<SearchAnalysisResult> {
-    return this.request({
-      method: 'POST',
-      url: `${ENDPOINTS.GRAPH}/search/analyze`,
-      data,
-    });
+    return this.withErrorContext(
+      () => {
+        this.validateRequired(data, 'Search request data');
+        this.validateRequired(data.term, 'Search term');
+        this.sanitizeString(data.term, 'Search term', 1000);
+        
+        return this.postResource<SearchAnalysisResult>(`${ENDPOINTS.GRAPH}/search/analyze`, data);
+      },
+      'search and analyze'
+    );
   }
 
   // ================== Analytics Operations ==================
@@ -177,22 +191,20 @@ export class GraphService extends BaseService {
    * Calculate node centrality using NetworkX algorithms
    */
   async calculateCentrality(data: CentralityRequest): Promise<CentralityResult> {
-    return this.request({
-      method: 'POST',
-      url: `${ENDPOINTS.GRAPH}/analytics/centrality`,
-      data,
-    });
+    return this.withErrorContext(
+      () => this.postResource<CentralityResult>(`${ENDPOINTS.GRAPH}/analytics/centrality`, data),
+      'calculate centrality'
+    );
   }
 
   /**
    * Detect communities in the graph using NetworkX algorithms
    */
-  async detectCommunities(params?: CommunityDetectionParams): Promise<CommunityResult[]> {
-    return this.request({
-      method: 'GET',
-      url: `${ENDPOINTS.GRAPH}/analytics/communities`,
-      params,
-    });
+  async detectCommunities(params?: CommunityDetectionParams): Promise<string[][]> {
+    return this.withErrorContext(
+      () => this.getResource<string[][]>(`${ENDPOINTS.GRAPH}/analytics/communities`, params),
+      'detect communities'
+    );
   }
 
   // ================== Path & Neighbor Operations ==================
@@ -201,23 +213,31 @@ export class GraphService extends BaseService {
    * Find the shortest path between two nodes
    */
   async findShortestPath(data: PathRequest): Promise<string[] | null> {
-    const result = await this.request<string[] | null>({
-      method: 'POST',
-      url: `${ENDPOINTS.GRAPH}/path/shortest`,
-      data,
-    });
-    return result;
+    return this.withErrorContext(
+      () => {
+        this.validateRequired(data, 'Path request data');
+        this.validateRequired(data.source_id, 'Source ID');
+        this.validateRequired(data.target_id, 'Target ID');
+        
+        return this.postResource<string[] | null>(`${ENDPOINTS.GRAPH}/path/shortest`, data);
+      },
+      'find shortest path'
+    );
   }
 
   /**
    * Get neighbors of a node at specified depth
    */
   async getNeighbors(data: NeighborsRequest): Promise<NeighborsResult> {
-    return this.request({
-      method: 'POST',
-      url: `${ENDPOINTS.GRAPH}/neighbors`,
-      data,
-    });
+    return this.withErrorContext(
+      () => {
+        this.validateRequired(data, 'Neighbors request data');
+        this.validateRequired(data.entity_id, 'Entity ID');
+        
+        return this.postResource<NeighborsResult>(`${ENDPOINTS.GRAPH}/neighbors`, data);
+      },
+      'get neighbors'
+    );
   }
 
   // ================== Term-specific Operations ==================
@@ -226,31 +246,39 @@ export class GraphService extends BaseService {
    * Find related terms using both SPARQL and NetworkX
    */
   async findRelatedTerms(termId: string, params?: { max_depth?: number }): Promise<{ [key: string]: unknown }> {
-    return this.request({
-      method: 'GET',
-      url: `${ENDPOINTS.GRAPH}/terms/${termId}/related`,
-      params,
-    });
+    return this.withErrorContext(
+      () => {
+        this.validateRequired(termId, 'Term ID');
+        return this.getResource<{ [key: string]: unknown }>(`${ENDPOINTS.GRAPH}/terms/${termId}/related`, params);
+      },
+      'find related terms'
+    );
   }
 
   /**
    * Get the full hierarchy for a term (ancestors and descendants)
    */
   async getTermHierarchy(termId: string): Promise<{ [key: string]: unknown }> {
-    return this.request({
-      method: 'GET',
-      url: `${ENDPOINTS.GRAPH}/terms/${termId}/hierarchy`,
-    });
+    return this.withErrorContext(
+      () => {
+        this.validateRequired(termId, 'Term ID');
+        return this.getResource<{ [key: string]: unknown }>(`${ENDPOINTS.GRAPH}/terms/${termId}/hierarchy`);
+      },
+      'get term hierarchy'
+    );
   }
 
   /**
    * Get detailed information about a specific term
    */
   async getTermInfo(termId: string): Promise<TermInfoResult | null> {
-    return this.request({
-      method: 'GET',
-      url: `${ENDPOINTS.GRAPH}/terms/${termId}/info`,
-    });
+    return this.withErrorContext(
+      () => {
+        this.validateRequired(termId, 'Term ID');
+        return this.getResource<TermInfoResult | null>(`${ENDPOINTS.GRAPH}/terms/${termId}/info`);
+      },
+      'get term info'
+    );
   }
 
   // ================== Domain-specific Operations ==================
@@ -259,31 +287,36 @@ export class GraphService extends BaseService {
    * Comprehensive analysis of a domain's structure
    */
   async analyzeDomain(domainId: string): Promise<DomainAnalysisResult> {
-    return this.request({
-      method: 'GET',
-      url: `${ENDPOINTS.GRAPH}/domains/${domainId}/analyze`,
-    });
+    return this.withErrorContext(
+      () => {
+        this.validateRequired(domainId, 'Domain ID');
+        return this.getResource<DomainAnalysisResult>(`${ENDPOINTS.GRAPH}/domains/${domainId}/analyze`);
+      },
+      'analyze domain'
+    );
   }
 
   /**
    * Get detailed information about a specific domain
    */
   async getDomainInfo(domainId: string): Promise<{ [key: string]: unknown } | null> {
-    return this.request({
-      method: 'GET',
-      url: `${ENDPOINTS.GRAPH}/domains/${domainId}/info`,
-    });
+    return this.withErrorContext(
+      () => {
+        this.validateRequired(domainId, 'Domain ID');
+        return this.getResource<{ [key: string]: unknown } | null>(`${ENDPOINTS.GRAPH}/domains/${domainId}/info`);
+      },
+      'get domain info'
+    );
   }
 
   /**
    * Get the domain hierarchy for a layer or all layers
    */
   async getDomainHierarchy(params?: DomainHierarchyParams): Promise<Array<{ [key: string]: unknown }>> {
-    return this.request({
-      method: 'GET',
-      url: `${ENDPOINTS.GRAPH}/domains/hierarchy`,
-      params,
-    });
+    return this.withErrorContext(
+      () => this.getResource<Array<{ [key: string]: unknown }>>(`${ENDPOINTS.GRAPH}/domains/hierarchy`, params),
+      'get domain hierarchy'
+    );
   }
 
   // ================== Layer-specific Operations ==================
@@ -292,21 +325,23 @@ export class GraphService extends BaseService {
    * Get comprehensive analytics for a layer or all layers
    */
   async getLayerAnalytics(params?: LayerAnalyticsParams): Promise<LayerAnalyticsResult> {
-    return this.request({
-      method: 'GET',
-      url: `${ENDPOINTS.GRAPH}/layers/analytics`,
-      params,
-    });
+    return this.withErrorContext(
+      () => this.getResource<LayerAnalyticsResult>(`${ENDPOINTS.GRAPH}/layers/analytics`, params),
+      'get layer analytics'
+    );
   }
 
   /**
    * Get detailed information about a specific layer
    */
   async getLayerInfo(layerId: string): Promise<{ [key: string]: unknown } | null> {
-    return this.request({
-      method: 'GET',
-      url: `${ENDPOINTS.GRAPH}/layers/${layerId}/info`,
-    });
+    return this.withErrorContext(
+      () => {
+        this.validateRequired(layerId, 'Layer ID');
+        return this.getResource<{ [key: string]: unknown } | null>(`${ENDPOINTS.GRAPH}/layers/${layerId}/info`);
+      },
+      'get layer info'
+    );
   }
 
   // ================== Export Operations ==================
@@ -315,11 +350,10 @@ export class GraphService extends BaseService {
    * Export comprehensive graph data in various formats
    */
   async exportGraph(params?: GraphExportParams): Promise<unknown> {
-    return this.request({
-      method: 'GET',
-      url: `${ENDPOINTS.GRAPH}/export`,
-      params,
-    });
+    return this.withErrorContext(
+      () => this.getResource<unknown>(`${ENDPOINTS.GRAPH}/export`, params),
+      'export graph'
+    );
   }
 }
 

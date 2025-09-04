@@ -17,6 +17,8 @@ import { Route as AppPredicatesRouteImport } from './routes/app/predicates'
 import { Route as AppLayersRouteImport } from './routes/app/layers'
 import { Route as AppDomainsRouteImport } from './routes/app/domains'
 import { Route as AppDatasetsRouteImport } from './routes/app/datasets'
+import { Route as AppConfigRouteImport } from './routes/app/config'
+import { Route as AppConfigPipelinesRouteImport } from './routes/app/config/pipelines'
 import { Route as AppNodesTermTermIdRouteImport } from './routes/app/nodes/term/$termId'
 import { Route as AppNodesLayerLayerIdRouteImport } from './routes/app/nodes/layer/$layerId'
 import { Route as AppNodesDomainDomainIdRouteImport } from './routes/app/nodes/domain/$domainId'
@@ -61,6 +63,16 @@ const AppDatasetsRoute = AppDatasetsRouteImport.update({
   path: '/datasets',
   getParentRoute: () => AppRoute,
 } as any)
+const AppConfigRoute = AppConfigRouteImport.update({
+  id: '/config',
+  path: '/config',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppConfigPipelinesRoute = AppConfigPipelinesRouteImport.update({
+  id: '/pipelines',
+  path: '/pipelines',
+  getParentRoute: () => AppConfigRoute,
+} as any)
 const AppNodesTermTermIdRoute = AppNodesTermTermIdRouteImport.update({
   id: '/nodes/term/$termId',
   path: '/nodes/term/$termId',
@@ -80,24 +92,28 @@ const AppNodesDomainDomainIdRoute = AppNodesDomainDomainIdRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/app': typeof AppRouteWithChildren
+  '/app/config': typeof AppConfigRouteWithChildren
   '/app/datasets': typeof AppDatasetsRoute
   '/app/domains': typeof AppDomainsRoute
   '/app/layers': typeof AppLayersRoute
   '/app/predicates': typeof AppPredicatesRoute
   '/app/terms': typeof AppTermsRoute
   '/app/': typeof AppIndexRoute
+  '/app/config/pipelines': typeof AppConfigPipelinesRoute
   '/app/nodes/domain/$domainId': typeof AppNodesDomainDomainIdRoute
   '/app/nodes/layer/$layerId': typeof AppNodesLayerLayerIdRoute
   '/app/nodes/term/$termId': typeof AppNodesTermTermIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/app/config': typeof AppConfigRouteWithChildren
   '/app/datasets': typeof AppDatasetsRoute
   '/app/domains': typeof AppDomainsRoute
   '/app/layers': typeof AppLayersRoute
   '/app/predicates': typeof AppPredicatesRoute
   '/app/terms': typeof AppTermsRoute
   '/app': typeof AppIndexRoute
+  '/app/config/pipelines': typeof AppConfigPipelinesRoute
   '/app/nodes/domain/$domainId': typeof AppNodesDomainDomainIdRoute
   '/app/nodes/layer/$layerId': typeof AppNodesLayerLayerIdRoute
   '/app/nodes/term/$termId': typeof AppNodesTermTermIdRoute
@@ -106,12 +122,14 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/app': typeof AppRouteWithChildren
+  '/app/config': typeof AppConfigRouteWithChildren
   '/app/datasets': typeof AppDatasetsRoute
   '/app/domains': typeof AppDomainsRoute
   '/app/layers': typeof AppLayersRoute
   '/app/predicates': typeof AppPredicatesRoute
   '/app/terms': typeof AppTermsRoute
   '/app/': typeof AppIndexRoute
+  '/app/config/pipelines': typeof AppConfigPipelinesRoute
   '/app/nodes/domain/$domainId': typeof AppNodesDomainDomainIdRoute
   '/app/nodes/layer/$layerId': typeof AppNodesLayerLayerIdRoute
   '/app/nodes/term/$termId': typeof AppNodesTermTermIdRoute
@@ -121,24 +139,28 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/app'
+    | '/app/config'
     | '/app/datasets'
     | '/app/domains'
     | '/app/layers'
     | '/app/predicates'
     | '/app/terms'
     | '/app/'
+    | '/app/config/pipelines'
     | '/app/nodes/domain/$domainId'
     | '/app/nodes/layer/$layerId'
     | '/app/nodes/term/$termId'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/app/config'
     | '/app/datasets'
     | '/app/domains'
     | '/app/layers'
     | '/app/predicates'
     | '/app/terms'
     | '/app'
+    | '/app/config/pipelines'
     | '/app/nodes/domain/$domainId'
     | '/app/nodes/layer/$layerId'
     | '/app/nodes/term/$termId'
@@ -146,12 +168,14 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/app'
+    | '/app/config'
     | '/app/datasets'
     | '/app/domains'
     | '/app/layers'
     | '/app/predicates'
     | '/app/terms'
     | '/app/'
+    | '/app/config/pipelines'
     | '/app/nodes/domain/$domainId'
     | '/app/nodes/layer/$layerId'
     | '/app/nodes/term/$termId'
@@ -220,6 +244,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppDatasetsRouteImport
       parentRoute: typeof AppRoute
     }
+    '/app/config': {
+      id: '/app/config'
+      path: '/config'
+      fullPath: '/app/config'
+      preLoaderRoute: typeof AppConfigRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/app/config/pipelines': {
+      id: '/app/config/pipelines'
+      path: '/pipelines'
+      fullPath: '/app/config/pipelines'
+      preLoaderRoute: typeof AppConfigPipelinesRouteImport
+      parentRoute: typeof AppConfigRoute
+    }
     '/app/nodes/term/$termId': {
       id: '/app/nodes/term/$termId'
       path: '/nodes/term/$termId'
@@ -244,7 +282,20 @@ declare module '@tanstack/react-router' {
   }
 }
 
+interface AppConfigRouteChildren {
+  AppConfigPipelinesRoute: typeof AppConfigPipelinesRoute
+}
+
+const AppConfigRouteChildren: AppConfigRouteChildren = {
+  AppConfigPipelinesRoute: AppConfigPipelinesRoute,
+}
+
+const AppConfigRouteWithChildren = AppConfigRoute._addFileChildren(
+  AppConfigRouteChildren,
+)
+
 interface AppRouteChildren {
+  AppConfigRoute: typeof AppConfigRouteWithChildren
   AppDatasetsRoute: typeof AppDatasetsRoute
   AppDomainsRoute: typeof AppDomainsRoute
   AppLayersRoute: typeof AppLayersRoute
@@ -257,6 +308,7 @@ interface AppRouteChildren {
 }
 
 const AppRouteChildren: AppRouteChildren = {
+  AppConfigRoute: AppConfigRouteWithChildren,
   AppDatasetsRoute: AppDatasetsRoute,
   AppDomainsRoute: AppDomainsRoute,
   AppLayersRoute: AppLayersRoute,

@@ -2,7 +2,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { termService } from '../../services/terms';
 import { apiLogger } from '../../utils/logger';
 import { termsQueryKeys } from './useTerms';
-import type { components } from '@/api/types/openapi';
+import type { components } from '@/api/client/types';
 // Move terms mutation
 export function useMoveTerms() {
   const queryClient = useQueryClient();

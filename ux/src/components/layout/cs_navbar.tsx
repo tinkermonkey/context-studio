@@ -66,6 +66,11 @@ export function CsNavbar() {
                 Visualizations
               </DropdownItem>
             </Dropdown>
+            <Dropdown label="Config" className="hidden lg:block" inline={true}>
+              <DropdownItem href="/app/config/pipelines">Pipeline Flavors</DropdownItem>
+              <DropdownItem href="/app/config/schema">Schema.org</DropdownItem>
+              <DropdownItem href="/app/config/datasets">Dataset Settings</DropdownItem>
+            </Dropdown>
           </NavbarCollapse>
         </div>
         <Badge className="hidden lg:block" color="info">

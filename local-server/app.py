@@ -3,13 +3,15 @@ import argparse
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
+from sqlalchemy import text
 
-from api import layers, domains, terms, term_relationships, graph, datasets, nlp_analysis, schema, predicates, llm
-from api import enrichment
+from api import layers, domains, terms, term_relationships, graph, datasets, nlp_analysis, schema, predicates, llm, pipeline_flavors
+from api import enrichment, config
 from schema_org import api as schema_org_api
 from api.graph import get_cached_graph_service, invalidate_graph_cache
 from database.migrations.migration_manager import MigrationManager
 from database.utils import init_db, get_db, get_dataset_manager, get_current_engine, cleanup_database_resources
+from pipeline.manager import get_pipeline_database_manager
 from nlp.pipeline import get_pipeline
 from utils.access_log_middleware import AccessLogMiddleware
 from utils.event_processor import EventProcessor
@@ -53,6 +55,36 @@ def create_app(dataset_id=None, engine=None, session_local=None):
             logger.info("Initializing database...")
             init_db(engine=engine or get_current_engine())
             logger.info("Database initialized.")
+            
+            # Initialize pipeline database (independent of datasets)
+            logger.info("Initializing pipeline database...")
+            pipeline_db_manager = get_pipeline_database_manager()
+            logger.info("Pipeline database initialized.")
+            
+            # Migrate existing pipeline flavors from current dataset to pipeline database
+            # This is a one-time migration for existing installations
+            active_dataset = dataset_manager.get_active_dataset()
+            if active_dataset:
+                try:
+                    # Get current dataset session for migration
+                    from database.utils import get_current_session_local
+                    current_session_local = get_current_session_local()
+                    if current_session_local:
+                        # Check if there are flavors in the dataset database to migrate
+                        with current_session_local() as db:
+                            try:
+                                existing_flavors = db.execute(text("""
+                                    SELECT COUNT(*) FROM pipeline_flavors
+                                """)).fetchone()
+                                if existing_flavors and existing_flavors[0] > 0:
+                                    logger.info(f"Found {existing_flavors[0]} pipeline flavors to migrate")
+                                    migrated = pipeline_db_manager.migrate_from_dataset_database(current_session_local)
+                                    logger.info(f"Successfully migrated {migrated} pipeline flavors to pipeline database")
+                            except Exception as e:
+                                # Table might not exist or already migrated - this is fine
+                                logger.debug(f"No pipeline flavors to migrate (pipeline flavors managed separately): {e}")
+                except Exception as e:
+                    logger.warning(f"Pipeline flavor migration check failed: {e}")
             
             # Run migrations to ensure schema is up to date
             active_dataset = dataset_manager.get_active_dataset()
@@ -125,12 +157,16 @@ def create_app(dataset_id=None, engine=None, session_local=None):
     app.include_router(graph.router, prefix="/api", tags=["graph"])
     app.include_router(datasets.router, prefix="/api", tags=["datasets"])
     app.include_router(schema.router, prefix="/api", tags=["schema"])
+    # Configuration management API
+    app.include_router(config.router)
     # Schema.org API (separate router with its own prefix)
     app.include_router(schema_org_api.router)
     # Integrate NLP router
     app.include_router(nlp_analysis.router, prefix="/api", tags=["nlp"])
     # LLM router
     app.include_router(llm.router, prefix="/api", tags=["llm"])
+    # Pipeline flavors router
+    app.include_router(pipeline_flavors.router, tags=["pipeline-flavors"])
     # NLP enrichment reference API
     app.include_router(enrichment.router, prefix="", tags=["nlp-reference"])
     return app
@@ -142,18 +178,28 @@ app = create_app()
 # Add access logging middleware
 app.add_middleware(AccessLogMiddleware)
 
+# Get configuration for CORS
+from config import get_settings
+cors_settings = get_settings()
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # In production, be more specific
+    allow_origins=cors_settings.server.cors_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
 if __name__ == "__main__":
+    # Import configuration
+    from config import get_settings
+    
+    # Get settings
+    settings = get_settings()
+    
     parser = argparse.ArgumentParser(description="Run the Context Studio FastAPI server.")
-    parser.add_argument('--host', type=str, default="127.0.0.1", help='Host IP to run the server on (default: 127.0.0.1)')
-    parser.add_argument('--port', type=int, default=8000, help='Port to run the server on (default: 8000)')
+    parser.add_argument('--host', type=str, default=settings.server.host, help=f'Host IP to run the server on (default: {settings.server.host})')
+    parser.add_argument('--port', type=int, default=settings.server.port, help=f'Port to run the server on (default: {settings.server.port})')
     args = parser.parse_args()
     
     try:
@@ -163,9 +209,9 @@ if __name__ == "__main__":
             "app:app",
             host=args.host,
             port=args.port,
-            reload=True,
-            access_log=False,  # Disable uvicorn's default access logs (we use custom middleware)
-            log_level="info"   # Keep uvicorn's other logs (startup, errors, etc.) at info level
+            reload=settings.server.reload,
+            access_log=settings.server.access_log,
+            log_level=settings.server.log_level.value.lower()
         )
     except KeyboardInterrupt:
         logger.info("Keyboard interrupt received. Exiting.")
