@@ -14,13 +14,14 @@ import {
 // Default layout configuration
 export const defaultLayoutConfig: LayoutConfig = {
   spacing: {
-    vertical: 40,
+    vertical: 20,
     horizontal: 30,
-    nodeHeight: 20,
   },
   margins: {
     top: 30,
-    left: 10,
+    left: 20,
+    right: 10,
+    bottom: 30
   },
 };
 
@@ -173,6 +174,7 @@ export function calculateLayout(
     depth: number,
     parentX?: number,
     startY?: number,
+    siblingMaxTextWidth?: number,
   ): { node: HierarchyNode; bottomY: number } {
     const x =
       depth === 0
@@ -190,9 +192,12 @@ export function calculateLayout(
     node.x = x;
     node.y = y;
     node.depth = depth;
-    node.textWidth = textWidthCache.getTextWidth(node.title);
+    
+    // Use sibling max text width if provided, otherwise calculate individual width
+    node.textWidth = siblingMaxTextWidth ?? textWidthCache.getTextWidth(node.title);
+    
     node.definitionWidth = maxWidth
-      ? maxWidth - 10 - node.x - (node.textWidth || 0)
+      ? maxWidth - (config.margins.right || 0) - node.x - (node.textWidth || 0)
       : 0;
     node.definitionHeight = measureHtmlTextHeight(
       node.definition || '',
@@ -202,12 +207,24 @@ export function calculateLayout(
     node.hasChildren = node.children && node.children.length > 0;
 
     maxY = Math.max(maxY, y);
-    let currentBottomY = y + Math.max(config.spacing.vertical, node.definitionHeight || 0);
+    // Calculate the bottom Y position considering the definition height
+    // Definition starts at nodeY - nodeLabel.height and extends downward by definitionHeight
+    const definitionBottom = y - ChartStyles.nodeLabel.height + (node.definitionHeight || ChartStyles.nodeLabel.height);
+    let currentBottomY = Math.max(y + config.spacing.vertical, definitionBottom + config.spacing.vertical);
 
     // Only process children if node is expanded
     if (node.children && node.children.length > 0 && isExpanded) {
+      // First pass: calculate text widths for all children
+      const childrenTextWidths = node.children.map((child) => 
+        textWidthCache.getTextWidth(child.title)
+      );
+
+      // Calculate maximum text width among siblings
+      const maxSiblingTextWidth = Math.max(...childrenTextWidths);
+
+      // Second pass: process children with consistent text width
       node.children = node.children.map((child) => {
-        const result = processNode(child, depth + 1, x, currentBottomY);
+        const result = processNode(child, depth + 1, x, currentBottomY, maxSiblingTextWidth);
         currentBottomY = result.bottomY;
         return result.node;
       });
@@ -221,14 +238,15 @@ export function calculateLayout(
 
   const result = processNode(chartData.root, 0);
   const root = result.node;
+  const totalHeight = result.bottomY;
 
   // Calculate dimensions
   const maxDepth = calculateMaxDepth(chartData.root);
   const maxX = config.margins.left + maxDepth * config.spacing.horizontal;
   const textPadding = 20;
 
-  // Calculate natural width based on content
-  const naturalWidth = maxX + maxTextWidth + textPadding;
+  // Calculate natural width based on content including right margin
+  const naturalWidth = maxX + maxTextWidth + textPadding + (config.margins.right || 0);
 
   // Define minimum width to ensure chart remains usable
   const minimumWidth = 300;
@@ -237,25 +255,13 @@ export function calculateLayout(
   let finalWidth = naturalWidth;
 
   if (maxWidth && maxWidth > 0) {
-    // Ensure we don't go below minimum width
-    //const constrainedWidth = Math.max(maxWidth, minimumWidth);
-    //finalWidth = Math.min(naturalWidth, constrainedWidth);
+    // When constrained by maxWidth, just use maxWidth but ensure content fits within margins
     finalWidth = maxWidth;
-
-    /*
-    console.log("Layout calculation:", {
-      naturalWidth,
-      maxWidth,
-      constrainedWidth,
-      finalWidth,
-      willBeTruncated: finalWidth < naturalWidth
-    });
-    */
   }
 
   const dimensions: Dimensions = {
     width: finalWidth,
-    height: maxY + config.spacing.vertical,
+    height: totalHeight + config.margins.bottom,
   };
 
   return {

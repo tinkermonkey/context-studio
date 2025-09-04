@@ -9,6 +9,7 @@ interface TreeNodeProps {
   parentNode?: HierarchyNode;
   onToggle?: (nodeId: string) => void;
   onNodeClick?: (node: HierarchyNode) => void;
+  highlightedTermId?: string;
 }
 
 const TreeNode: React.FC<TreeNodeProps> = ({
@@ -16,6 +17,7 @@ const TreeNode: React.FC<TreeNodeProps> = ({
   parentNode,
   onToggle,
   onNodeClick,
+  highlightedTermId,
 }) => {
   const nodeX = node.x ?? 0;
   const nodeY = node.y ?? 0;
@@ -24,6 +26,11 @@ const TreeNode: React.FC<TreeNodeProps> = ({
 
   // Use the measured text width from the node, with fallback
   const labelWidth = node.textWidth ?? node.title.length * 6;
+
+  // Definition dimensions
+  const definitionWidth = node.definitionWidth ?? 0;
+  const definitionHeight =
+    node.definitionHeight ?? ChartStyles.nodeLabel.height;
 
   // Check if node has children based on original data (not current children array)
   const hasChildren =
@@ -36,6 +43,9 @@ const TreeNode: React.FC<TreeNodeProps> = ({
   const nodeDepth = node.depth ?? 0;
   const colorIndex = Math.max(0, nodeDepth - 1) % EdgeColors.length;
   const nodeColor = EdgeColors[colorIndex];
+
+  // Check if this node should be highlighted
+  const isHighlighted = highlightedTermId && node.id === highlightedTermId;
 
   const handleClick = () => {
     if (hasChildren && onToggle) {
@@ -62,11 +72,12 @@ const TreeNode: React.FC<TreeNodeProps> = ({
             parentNode={node}
             onToggle={onToggle}
             onNodeClick={onNodeClick}
+            highlightedTermId={highlightedTermId}
           />
         ))}
 
       {/* Node label */}
-      <g 
+      <g
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
       >
@@ -76,8 +87,11 @@ const TreeNode: React.FC<TreeNodeProps> = ({
           y={nodeY - ChartStyles.nodeLabel.height}
           width={labelWidth + 18}
           height={ChartStyles.nodeLabel.height}
-          fill={ChartStyles.chartContainer.backgroundColor}
-          stroke="none"
+          fill={
+            isHighlighted
+              ? ChartStyles.nodeLabel.highlightColor
+              : ChartStyles.nodeLabel.backgroundColor
+          }
           rx={2}
         />
         <text
@@ -85,19 +99,49 @@ const TreeNode: React.FC<TreeNodeProps> = ({
           y={nodeY - ChartStyles.nodeLabel.height / 2}
           style={{
             ...ChartStyles.nodeLabel,
+            //fontWeight: isHighlighted ? "bold" : "normal",
           }}
         >
           {node.title}
         </text>
-        
+
+        {/* Definition using foreignObject */}
+        {node.definition && (
+          <foreignObject
+            x={nodeX + labelWidth + 15}
+            y={nodeY - ChartStyles.nodeLabel.height}
+            width={definitionWidth}
+            height={definitionHeight}
+          >
+            <div
+              style={{
+                width: definitionWidth,
+                height: definitionHeight,
+                borderRadius: "4px",
+                ...ChartStyles.nodeDefinition,
+                backgroundColor: isHighlighted
+                  ? ChartStyles.nodeDefinition.highlightColor
+                  : ChartStyles.nodeDefinition.backgroundColor,
+                //fontWeight: isHighlighted ? "bold" : "normal",
+              }}
+            >
+              {node.definition}
+            </div>
+          </foreignObject>
+        )}
+
         {/* CircleArrowRight icon - shown on hover when click handler is provided */}
         {onNodeClick && isHovered && (
-          <g 
+          <g
             onClick={handleNodeTextClick}
             style={{ cursor: "pointer" }}
-            transform={`translate(${nodeX + labelWidth }, ${nodeY - 18})`}
+            transform={`translate(${nodeX + labelWidth}, ${nodeY - 18})`}
           >
-            <CircleArrowRight size={16} className="text-blue-500 hover:text-blue-700" fill={ChartStyles.chartContainer.backgroundColor} />
+            <CircleArrowRight
+              size={16}
+              className="text-blue-500 hover:text-blue-700"
+              fill={ChartStyles.controls.backgroundColor}
+            />
           </g>
         )}
       </g>
@@ -124,7 +168,7 @@ const TreeNode: React.FC<TreeNodeProps> = ({
             cx={0}
             cy={0}
             r={7}
-            fill={ChartStyles.chartContainer.backgroundColor}
+            fill={ChartStyles.controls.backgroundColor}
             stroke={nodeColor}
             strokeWidth={2}
           />

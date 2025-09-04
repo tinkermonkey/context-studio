@@ -3,27 +3,48 @@ import { type ChartData } from "./tree_data";
 import { ChartStyles } from "./tree_styles";
 import TreeTrunk from "./tree_trunk";
 import { TreeNode } from "./tree_node";
-import { TreeNodeDefinition } from "@/components/graphs/hierarchy/tree_node_definition";
 import { useMeasurementSvg, useMeasurementHtml } from "./useMeasurementElement";
-import { calculateLayout } from "./tree_chart_layout";
+import { calculateLayout, ExpandState } from "./tree_chart_layout";
 import { usePersistedExpandState } from "./usePersistedExpandState";
 import { Alert } from "flowbite-react";
 import { useNavigate } from "@tanstack/react-router";
 
 interface TreeChartProps {
   chartData: ChartData;
+  /**
+   * Optional initial expand state - if provided, these node IDs will be expanded by default
+   * This takes precedence over persisted expand state from session storage
+   */
+  initialExpandState?: string[];
+  /**
+   * Optional term ID to highlight in the tree
+   */
+  highlightedTermId?: string;
 }
-const TreeChart: React.FC<TreeChartProps> = ({ chartData }) => {
+const TreeChart: React.FC<TreeChartProps> = ({ chartData, initialExpandState, highlightedTermId }) => {
   // Container ref to measure width
   const containerRef = useRef<HTMLDivElement>(null);
   const [containerWidth, setContainerWidth] = useState<number>(0);
+  const [containerHeight, setContainerHeight] = useState<number>(0);
 
   // Use persisted expand state and scroll management hook
   const { 
     expandState, 
     handleNodeToggle, 
-    restoreScrollPosition 
+    restoreScrollPosition,
+    setInitialExpandState
   } = usePersistedExpandState();
+
+  // Set initial expand state when initialExpandState prop changes
+  useEffect(() => {
+    if (initialExpandState && initialExpandState.length > 0) {
+      const initialState = new Map<string, boolean>();
+      initialExpandState.forEach(nodeId => {
+        initialState.set(nodeId, true);
+      });
+      setInitialExpandState(initialState);
+    }
+  }, [initialExpandState, setInitialExpandState]);
 
   // Initialize and manage the measurement SVG lifecycle
   useMeasurementSvg();
@@ -36,19 +57,21 @@ const TreeChart: React.FC<TreeChartProps> = ({ chartData }) => {
 
   // Measure container width on mount and resize
   useEffect(() => {
-    const measureWidth = () => {
+    const measureDimensions = () => {
       if (containerRef.current) {
         const width = containerRef.current.clientWidth;
-        console.log("Container width measured:", width);
+        const height = containerRef.current.clientHeight;
+        console.log("Container dimensions measured:", { width, height });
         setContainerWidth(width);
+        setContainerHeight(height);
       }
     };
 
     // Initial measurement
-    measureWidth();
+    measureDimensions();
 
     // Add resize listener
-    const resizeObserver = new ResizeObserver(measureWidth);
+    const resizeObserver = new ResizeObserver(measureDimensions);
     if (containerRef.current) {
       resizeObserver.observe(containerRef.current);
     }
@@ -68,12 +91,19 @@ const TreeChart: React.FC<TreeChartProps> = ({ chartData }) => {
     );
   }
 
-  // Calculate the layout with current expanded state and container width
+  // Calculate the layout with current expanded state and container dimensions
   const { root, dimensions } = useMemo(() => {
-    // Only pass containerWidth if it's been measured (> 0)
+    // Only pass container width if it's been measured (> 0)
     const maxWidth = containerWidth > 0 ? containerWidth : undefined;
     return calculateLayout(chartData, expandState, undefined, undefined, maxWidth);
   }, [chartData, expandState, containerWidth]);
+
+  // Calculate the actual height needed for the chart content
+  const chartHeight = useMemo(() => {
+    // Use the calculated dimensions height from layout calculation
+    // The layout algorithm now correctly accounts for expanded/collapsed states
+    return dimensions.height;
+  }, [dimensions.height]);
 
   // Restore scroll position when component mounts or layout changes
   useEffect(() => {
@@ -101,12 +131,13 @@ const TreeChart: React.FC<TreeChartProps> = ({ chartData }) => {
   return (
     <div ref={containerRef} style={{
       ...ChartStyles.chartContainer,
-      position: 'relative' // Enable relative positioning for the container
+      position: 'relative', // Enable relative positioning for the container
+      minHeight: chartHeight // Ensure container has minimum height for the chart
     }}>
-      {/* SVG Layer */}
+      {/* SVG Layer with embedded definitions via foreignObject */}
       <svg 
         width={dimensions.width} 
-        height={dimensions.height}
+        height={chartHeight}
         style={{ display: 'block' }} // Remove default inline spacing
       >
         {/* Render all children of the root node */}
@@ -117,34 +148,11 @@ const TreeChart: React.FC<TreeChartProps> = ({ chartData }) => {
             parentNode={root}
             onToggle={handleNodeToggle}
             onNodeClick={handleNodeClick}
+            highlightedTermId={highlightedTermId}
           />
         ))}
-        <TreeTrunk />
+        <TreeTrunk rootNode={root} />
       </svg>
-      
-      {/* HTML Overlay Layer - positioned exactly over the SVG */}
-      <div 
-        style={{
-          position: 'absolute',
-          top: 0,
-          left: 0,
-          width: dimensions.width,
-          height: dimensions.height,
-          pointerEvents: 'none', // Allow clicks to pass through to SVG by default
-          zIndex: 10 // Ensure overlay is above SVG
-        }}
-      >
-        {root.children.map((child: any, index: number) => (
-          <TreeNodeDefinition
-            key={child.id || index}
-            node={child}
-            parentNode={root}
-            onToggle={handleNodeToggle}
-            onNodeClick={handleNodeClick}
-            maxWidth={dimensions.width}
-          />
-        ))}
-      </div>
     </div>
   );
 };

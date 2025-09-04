@@ -30,6 +30,11 @@ export const usePersistedExpandState = () => {
     return new Map();
   });
 
+  // Function to set initial expand state - useful for overriding persisted state
+  const setInitialExpandState = useCallback((initialState: ExpandState) => {
+    setExpandState(initialState);
+  }, []);
+
   // Save expand state to session storage whenever it changes
   useEffect(() => {
     try {
@@ -113,5 +118,6 @@ export const usePersistedExpandState = () => {
     clearPersistedState,
     saveScrollPosition,
     restoreScrollPosition,
+    setInitialExpandState,
   };
 };

@@ -3,11 +3,12 @@ interface LayoutConfig {
   spacing: {
     vertical: number;
     horizontal: number;
-    nodeHeight: number;
   };
   margins: {
     top: number;
     left: number;
+    right: number;
+    bottom: number;
   };
 }
 

@@ -1,15 +1,20 @@
 import React from 'react';
 import { ChartStyles } from './tree_styles';
+import { HierarchyNode } from './tree_data';
 
-const TreeTrunk: React.FC = () => {
-  // Since layout function ensures coordinates are set, we can safely assert they exist
-  const x = 20;
-  const y = 30;
+interface TreeTrunkProps {
+  rootNode?: HierarchyNode;
+}
+
+const TreeTrunk: React.FC<TreeTrunkProps> = ({ rootNode }) => {
+  // Use the root node's actual calculated position, or fall back to default margins
+  const x = rootNode?.x ?? 10;
+  const y = rootNode?.y ?? 30;
   
   return (
     <g>
       <circle
-        cx={x - 10}
+        cx={x}
         cy={y}
         r={10}
         style={ChartStyles.mainNode}

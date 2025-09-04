@@ -40,7 +40,8 @@ import {
 import { CsMain, CsMainTitle } from "@/components/layout/cs_main";
 import type { components } from "@/api/client/types";
 import { useTerm } from "@/api";
-import { NlpAnalysisPanel } from "@/components/nlp/NlpAnalysisPanel"
+import { NlpAnalysisPanel } from "@/components/nlp/NlpAnalysisPanel";
+import { TreeChartPanel } from "@/components/panels/TreeChartPanel";
 
 type TermOut = components["schemas"]["TermOut"];
 type TermRelationshipOut = components["schemas"]["TermRelationshipOut"];
@@ -419,6 +420,18 @@ export const TermDetails: React.FC<TermPageProps> = ({ term }) => {
             <p className="leading-relaxed text-gray-700 dark:text-gray-300">
               {term.definition}
             </p>
+          </Card>
+
+          {/* Hierarchy Context */}
+          <Card>
+            <h2 className="mb-3 text-xl font-semibold">Hierarchy Context</h2>
+            <p className="mb-4 text-sm text-gray-600 dark:text-gray-400">
+              This diagram shows where "{term.title}" fits within the overall hierarchy, 
+              displaying its direct parents and children for context.
+            </p>
+            <TreeChartPanel 
+              termId={term.id}
+            />
           </Card>
 
           {/* Child Terms */}

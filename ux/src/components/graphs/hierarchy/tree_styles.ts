@@ -3,6 +3,9 @@ export const ChartStyles = {
   chartContainer: {
     fontFamily: 'Arial, sans-serif',
     margin: '0',
+    backgroundColor: 'transparent',
+  },
+  controls: {
     backgroundColor: '#fff',
   },
   branchLine: {
@@ -14,12 +17,16 @@ export const ChartStyles = {
   nodeLabel: {
     height: 20,
     font: '14px sans-serif',
-    fill: '#333',
+    color: '#333',
+    backgroundColor: 'transparent',
+    highlightColor: '#FEF3C7',
     dominantBaseline: 'middle' as const,
   },
   nodeDefinition: {
     font: '14px sans-serif',
     color: '#333',
+    backgroundColor: 'transparent',
+    highlightColor: '#FEF3C7',
     padding: '5px 5px',
   },
   mainNode: {
