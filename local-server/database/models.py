@@ -3,10 +3,14 @@ from sqlalchemy.dialects.sqlite import BLOB
 from sqlalchemy.orm import declarative_base, relationship
 import uuid
 import datetime
+from enum import Enum
 
-
-from sqlalchemy import JSON, Boolean
+from sqlalchemy import JSON, Boolean, Enum as SQLEnum
+from database.custom_types import NodeTypeColumn
+from database.enums import NodeType
 Base = declarative_base()
+
+# Enums for the new normalized schema (moved to database.enums to avoid circular imports)
 
 class PipelineFlavor(Base):
     __tablename__ = 'pipeline_flavors'
@@ -44,16 +48,6 @@ class Predicate(Base):
     # Relationships
     domains = relationship('Domain', back_populates='primary_predicate_ref')
     term_relationships = relationship('TermRelationship', back_populates='predicate_ref')
-
-class GraphEvent(Base):
-    __tablename__ = 'graph_events'
-    id = Column(Integer, primary_key=True, autoincrement=True)
-    event_type = Column(String, nullable=False)  # create, update, delete
-    entity_type = Column(String, nullable=False)  # layer, domain, term, term_relationship
-    old_data = Column(JSON, nullable=True)
-    new_data = Column(JSON, nullable=True)
-    timestamp = Column(DateTime, default=lambda: datetime.datetime.now(datetime.UTC), nullable=False)
-    processed = Column(Boolean, default=False, nullable=False)
 
 class Layer(Base):
     __tablename__ = 'layers'
@@ -119,3 +113,64 @@ class TermRelationship(Base):
     # New relationship
     predicate_ref = relationship('Predicate', back_populates='term_relationships')
     __table_args__ = (UniqueConstraint('source_term_id', 'target_term_id', 'predicate', name='_relationship_uc'),)
+
+
+# New Normalized Schema Models
+
+class Node(Base):
+    """Unified node table for layers, domains, and terms."""
+    __tablename__ = 'nodes'
+    
+    id = Column(String, primary_key=True, default=lambda: str(uuid.uuid4()))
+    node_type = Column(NodeTypeColumn(), nullable=False)
+    parent_node_id = Column(String, ForeignKey('nodes.id', ondelete='CASCADE'), nullable=True)
+    title = Column(String, nullable=False)
+    definition = Column(Text, nullable=True)
+    structural_predicate_id = Column(String, ForeignKey('predicates.id'), nullable=True)
+    title_embedding = Column(BLOB, nullable=True)
+    definition_embedding = Column(BLOB, nullable=True)
+    created_at = Column(DateTime, default=lambda: datetime.datetime.now(datetime.UTC))
+    version = Column(Integer, default=1)
+    last_modified = Column(DateTime, 
+                          default=lambda: datetime.datetime.now(datetime.UTC),
+                          onupdate=lambda: datetime.datetime.now(datetime.UTC))
+    
+    # Self-referential relationship for hierarchy
+    parent = relationship('Node', remote_side=[id], backref='children')
+    
+    # Relationship to predicates
+    structural_predicate_ref = relationship('Predicate')
+
+
+class NodeLink(Base):
+    """Unified links table for all node relationships."""
+    __tablename__ = 'node_links'
+    
+    id = Column(String, primary_key=True, default=lambda: str(uuid.uuid4()))
+    source_node_id = Column(String, ForeignKey('nodes.id', ondelete='CASCADE'), nullable=False)
+    target_node_id = Column(String, ForeignKey('nodes.id', ondelete='CASCADE'), nullable=False)
+    predicate = Column(String, nullable=False)
+    predicate_id = Column(String, ForeignKey('predicates.id'), nullable=True)
+    created_at = Column(DateTime, default=lambda: datetime.datetime.now(datetime.UTC))
+    
+    # Relationships
+    source_node = relationship('Node', foreign_keys=[source_node_id])
+    target_node = relationship('Node', foreign_keys=[target_node_id])
+    predicate_ref = relationship('Predicate')
+    
+    __table_args__ = (
+        UniqueConstraint('source_node_id', 'target_node_id', 'predicate', name='_node_link_uc'),
+    )
+
+
+class NodeEvent(Base):
+    """Unified events table for all node-related events."""
+    __tablename__ = 'node_events'
+    
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    event_type = Column(String, nullable=False)  # create, update, delete
+    node_type = Column(String, nullable=False)   # layer, domain, term, node_link
+    old_data = Column(JSON, nullable=True)
+    new_data = Column(JSON, nullable=True)
+    timestamp = Column(DateTime, default=lambda: datetime.datetime.now(datetime.UTC), nullable=False)
+    processed = Column(Boolean, default=False, nullable=False)

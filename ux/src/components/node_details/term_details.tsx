@@ -133,10 +133,6 @@ export const TermDetails: React.FC<TermPageProps> = ({ term }) => {
       last_modified: "",
     }));
 
-    //console.log(`Term hierarchy ${term.id} ancestors:`, ancestors);
-    //console.log(`Term hierarchy ${term.id} termAncestors:`, termAncestors);
-    //console.log(`Term hierarchy ${term.id} ancestorTerms:`, ancestorTerms);
-
     // Return the complete lineage: ancestors + current term
     return [...ancestorTerms, term];
   }, [termHierarchy, hierarchyLoading, parentTerm, term]);
@@ -422,13 +418,9 @@ export const TermDetails: React.FC<TermPageProps> = ({ term }) => {
             </p>
           </Card>
 
-          {/* Hierarchy Context */}
+          {/* Term Hierarchy */}
           <Card>
-            <h2 className="mb-3 text-xl font-semibold">Hierarchy Context</h2>
-            <p className="mb-4 text-sm text-gray-600 dark:text-gray-400">
-              This diagram shows where "{term.title}" fits within the overall hierarchy, 
-              displaying its direct parents and children for context.
-            </p>
+            <h2 className="text-xl font-semibold">Term Hierarchy</h2>
             <TreeChartPanel 
               termId={term.id}
             />

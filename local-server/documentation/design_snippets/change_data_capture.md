@@ -1,3 +1,115 @@
+> Is operational transformation a type of change data capture, or is change data capture a different pattern?
+
+Great question! **Change Data Capture (CDC) and Operational Transformation (OT) are different patterns that serve different purposes**, though they can be used together in some architectures.
+
+## Change Data Capture (CDC)
+
+CDC is about **detecting and capturing changes** as they happen:
+
+**Purpose**: Identify what changed, when, and how
+**Focus**: Data synchronization and replication
+**Typical Use Cases**: 
+- Database replication
+- Data warehousing/ETL
+- Event-driven architectures
+- Audit logging
+
+**Example**: Your SQLite triggers capturing changes to the `graph_events` table - that's classic CDC.
+
+```sql
+-- This is CDC - capturing the change
+CREATE TRIGGER node_update_trigger
+AFTER UPDATE ON nodes
+BEGIN
+    INSERT INTO graph_events (event_type, entity_id, old_data, new_data)
+    VALUES ('node_updated', NEW.id, OLD.properties, NEW.properties);
+END;
+```
+
+## Operational Transformation (OT)
+
+OT is about **resolving conflicts** when multiple changes happen concurrently:
+
+**Purpose**: Merge concurrent edits while preserving intent
+**Focus**: Conflict resolution and consistency
+**Typical Use Cases**:
+- Collaborative editing (Google Docs)
+- Real-time multi-user applications  
+- Distributed systems with concurrent modifications
+
+**Example**: When two users edit the same node simultaneously, OT determines how to merge those changes.
+
+```python
+# This is OT - transforming operations to resolve conflicts
+def transform_operations(op1, op2):
+    """Transform op1 given that op2 happened first"""
+    if op1.entity_id == op2.entity_id:
+        # Both operations affect same entity - need transformation
+        if op1.operation_type == 'update' and op2.operation_type == 'update':
+            # Merge the property updates
+            merged_properties = {**op2.new_value, **op1.new_value}
+            return op1._replace(new_value=merged_properties)
+    return op1  # No transformation needed
+```
+
+## How They Work Together
+
+In your collaborative graph system, you're using **both patterns**:
+
+### 1. **CDC for Local Change Tracking**
+```python
+# Capturing what changed locally
+def record_operation(self, operation_type: str, entity_type: str, 
+                    entity_id: str, old_value: Dict = None, 
+                    new_value: Dict = None):
+    operation = ChangeOperation(  # This is CDC
+        operation_type=operation_type,
+        entity_id=entity_id,
+        old_value=old_value,
+        new_value=new_value
+    )
+```
+
+### 2. **OT for Conflict Resolution**
+```python
+# Resolving conflicts when merging changes
+def resolve_concurrent_modifications(self, local_op, server_op):
+    """This is OT - transforming operations to resolve conflicts"""
+    if local_op.entity_id == server_op.entity_id:
+        # Transform local operation based on what happened on server
+        return self.transform_operation(local_op, server_op)
+```
+
+## Relationship Diagram
+
+```
+User Makes Edit → CDC Captures Change → Store in Changeset
+                                              ↓
+Multiple Users' Changes → Conflict Detection → OT Resolves Conflicts → Apply to Primary Copy
+```
+
+## Other Related Patterns
+
+**Conflict-Free Replicated Data Types (CRDTs)**: Another approach to handle concurrent changes without explicit conflict resolution - the data structure itself handles merges automatically.
+
+**Event Sourcing**: Stores the sequence of changes (events) as the primary source of truth, rather than just the current state.
+
+**Three-Way Merge**: Git-style conflict resolution using a common ancestor.
+
+## In Your System
+
+Your architecture elegantly combines both:
+
+1. **CDC Phase**: SQLite triggers and your `ChangeTracker` capture all modifications
+2. **OT Phase**: Your `ConflictResolver` and merge logic handle concurrent changes
+
+This is a robust pattern used by systems like:
+- **Git**: CDC (tracking file changes) + OT (three-way merge)
+- **Google Docs**: CDC (keystroke capture) + OT (operational transformation)
+- **CouchDB**: CDC (document changes) + OT (revision trees for conflicts)
+
+So your instinct to use both patterns together is spot-on - they complement each other perfectly for collaborative editing scenarios!
+
 > that's great, thank you. the local first database approach seems very feasible. Now, I want to explore how users will synchronize their suggested edits with each other via a primary copy which lives in a shared location. My thought is to capture edits directly, record each change operation that a user makes locally, and then allow the user to condense their changes before pushing them to the primary copy where other users can vote on whether the changes should be accepted. In that model the primary copy is the source of truth, and a user's local changes are considered provisional until accepted. Does that approach make sense and are there norms for doing this that I should consider?
 
 Your approach is excellent and aligns well with established patterns in distributed systems! This is essentially a **operational transformation** model combined with **optimistic replication** - very similar to how collaborative editing systems like Google Docs, Git, and modern databases handle distributed changes.

@@ -487,8 +487,8 @@ class DatasetManager:
             # Test connection and basic validation
             with engine.connect() as conn:
                 try:
-                    # Check if this looks like our schema
-                    result = conn.execute(text("SELECT name FROM sqlite_master WHERE type='table' AND name='layers'"))
+                    # Check if this looks like our schema (either old or new format)
+                    result = conn.execute(text("SELECT name FROM sqlite_master WHERE type='table' AND (name='layers' OR name='nodes')"))
                     if not result.fetchone():
                         raise ValueError("File does not appear to be a valid Context Studio dataset")
                         
@@ -655,10 +655,22 @@ class DatasetManager:
             temp_engine = create_engine(database_url, connect_args={"check_same_thread": False})
             
             with temp_engine.connect() as conn:
-                layers_count = conn.execute(text("SELECT COUNT(*) FROM layers")).scalar() or 0
-                domains_count = conn.execute(text("SELECT COUNT(*) FROM domains")).scalar() or 0
-                terms_count = conn.execute(text("SELECT COUNT(*) FROM terms")).scalar() or 0
-                relationships_count = conn.execute(text("SELECT COUNT(*) FROM term_relationships")).scalar() or 0
+                # Check if we're using the new unified nodes table (post-migration)
+                result = conn.execute(text("SELECT name FROM sqlite_master WHERE type='table' AND name='nodes'"))
+                has_nodes_table = result.fetchone() is not None
+                
+                if has_nodes_table:
+                    # Use unified nodes table (post-Great Normalization)
+                    layers_count = conn.execute(text("SELECT COUNT(*) FROM nodes WHERE node_type = 'layer'")).scalar() or 0
+                    domains_count = conn.execute(text("SELECT COUNT(*) FROM nodes WHERE node_type = 'domain'")).scalar() or 0
+                    terms_count = conn.execute(text("SELECT COUNT(*) FROM nodes WHERE node_type = 'term'")).scalar() or 0
+                    relationships_count = conn.execute(text("SELECT COUNT(*) FROM node_links")).scalar() or 0
+                else:
+                    # Fall back to old tables (pre-migration)
+                    layers_count = conn.execute(text("SELECT COUNT(*) FROM layers")).scalar() or 0
+                    domains_count = conn.execute(text("SELECT COUNT(*) FROM domains")).scalar() or 0
+                    terms_count = conn.execute(text("SELECT COUNT(*) FROM terms")).scalar() or 0
+                    relationships_count = conn.execute(text("SELECT COUNT(*) FROM term_relationships")).scalar() or 0
             
             temp_engine.dispose()
             

@@ -16,10 +16,11 @@ def temp_db():
     conn = sqlite3.connect(path)
     cur = conn.cursor()
     cur.execute("""
-        CREATE TABLE graph_events (
+        CREATE TABLE node_events (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             event_type TEXT NOT NULL,
-            entity_type TEXT NOT NULL,
+            node_type TEXT NOT NULL,
+            node_id TEXT NOT NULL,
             old_data TEXT,
             new_data TEXT,
             timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
@@ -31,23 +32,25 @@ def temp_db():
     os.remove(path)
 
 
-def insert_event(conn, event_type, entity_type, processed=0, ts=None):
+def insert_event(conn, event_type, node_type, processed=0, ts=None, node_id=None):
     cur = conn.cursor()
     # Use timezone-aware UTC datetime
     if ts is None:
         ts = datetime.now(timezone.utc).isoformat()
+    if node_id is None:
+        node_id = f"test-{node_type}-id"
     cur.execute(
-        "INSERT INTO graph_events (event_type, entity_type, old_data, new_data, timestamp, processed) VALUES (?, ?, ?, ?, ?, ?)",
-        (event_type, entity_type, '{}', '{}', ts, processed)
+        "INSERT INTO node_events (event_type, node_type, node_id, old_data, new_data, timestamp, processed) VALUES (?, ?, ?, ?, ?, ?, ?)",
+        (event_type, node_type, node_id, '{}', '{}', ts, processed)
     )
     conn.commit()
 
 
 def test_event_processor_processes_events(temp_db):
     conn = sqlite3.connect(temp_db)
-    # Insert unprocessed events for each entity type
-    for entity in ["layer", "domain", "term", "term_relationship"]:
-        insert_event(conn, "create", entity)
+    # Insert unprocessed events for each node type
+    for node_type in ["layer", "domain", "term", "node_link"]:
+        insert_event(conn, "create", node_type)
     conn.close()
 
     print("[TEST] Starting test_event_processor_processes_events")
@@ -64,14 +67,14 @@ def test_event_processor_processes_events(temp_db):
     # All events should be marked processed
     conn = sqlite3.connect(temp_db)
     cur = conn.cursor()
-    cur.execute("SELECT COUNT(*) FROM graph_events WHERE processed=0")
+    cur.execute("SELECT COUNT(*) FROM node_events WHERE processed=0")
     assert cur.fetchone()[0] == 0
     conn.close()
 
 
 def test_event_processor_handles_unknown_entity_type(temp_db, capsys):
     conn = sqlite3.connect(temp_db)
-    insert_event(conn, "create", "unknown_entity")
+    insert_event(conn, "create", "unknown_node_type")
     conn.close()
 
     print("[TEST] Starting test_event_processor_handles_unknown_entity_type")
@@ -93,9 +96,9 @@ def test_event_processor_handles_unknown_entity_type(temp_db, capsys):
         print("[TEST] EventProcessor stopped")
         logger.removeHandler(handler)
 
-    # Should log a warning about unknown entity_type
+    # Should log a warning about unknown node_type
     log_contents = log_stream.getvalue()
-    assert "No handler for entity_type: unknown_entity" in log_contents
+    assert "No handler for node_type: unknown_node_type" in log_contents
 
 
 def test_event_processor_cleanup_old_events(temp_db, capsys):
@@ -119,7 +122,7 @@ def test_event_processor_cleanup_old_events(temp_db, capsys):
     # Only the recent event should remain
     conn = sqlite3.connect(temp_db)
     cur = conn.cursor()
-    cur.execute("SELECT COUNT(*) FROM graph_events WHERE processed=1")
+    cur.execute("SELECT COUNT(*) FROM node_events WHERE processed=1")
     count = cur.fetchone()[0]
     assert count == 1
     conn.close()

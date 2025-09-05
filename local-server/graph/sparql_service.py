@@ -12,7 +12,8 @@ from typing import Dict, List, Any, Optional, Union
 import json
 from datetime import datetime
 
-from database.models import Layer, Domain, Term, TermRelationship
+from database.models import Node, NodeLink
+from database.enums import NodeType
 from utils.logger import get_logger
 
 logger = get_logger(__name__)
@@ -52,139 +53,136 @@ class SPARQLService:
         self.graph.bind("foaf", FOAF)
     
     def _build_graph(self):
-        """Build the RDF graph from SQLite database data."""
-        logger.info("Building RDF graph from database...")
+        """Build the RDF graph from unified nodes table."""
+        logger.info("Building RDF graph from unified nodes table...")
         
         # Clear existing graph
         self.graph = Graph()
         self._setup_namespaces()
         
-        # Add layers, domains, and terms
-        self._add_layers()
-        self._add_domains()
-        self._add_terms()
-        self._add_term_relationships()
+        # Add all nodes from unified table
+        self._add_unified_nodes()
+        self._add_node_links()
         
         logger.info(f"RDF graph built with {len(self.graph)} triples")
     
-    def _add_layers(self):
-        """Add layer entities to the RDF graph."""
-        layers = self.db_session.query(Layer).all()
+    def _add_unified_nodes(self):
+        """Add all nodes from the unified nodes table to the RDF graph."""
+        nodes = self.db_session.query(Node).all()
         
-        for layer in layers:
-            layer_uri = self.ENTITY[f"layer/{layer.id}"]
+        for node in nodes:
+            node_uri = self.ENTITY[f"{node.node_type.value}/{node.id}"]
             
-            # Basic layer properties
-            self.graph.add((layer_uri, RDF.type, self.CS.Layer))
-            self.graph.add((layer_uri, RDFS.label, Literal(layer.title)))
+            # Add RDF type based on node type
+            if node.node_type == NodeType.LAYER:
+                self.graph.add((node_uri, RDF.type, self.CS.Layer))
+            elif node.node_type == NodeType.DOMAIN:
+                self.graph.add((node_uri, RDF.type, self.CS.Domain))
+            elif node.node_type == NodeType.TERM:
+                self.graph.add((node_uri, RDF.type, self.CS.Term))
             
-            if layer.definition:
-                self.graph.add((layer_uri, RDFS.comment, Literal(layer.definition)))
+            # Basic properties
+            self.graph.add((node_uri, RDFS.label, Literal(node.title)))
+            
+            if node.definition:
+                self.graph.add((node_uri, RDFS.comment, Literal(node.definition)))
+            
+            # Hierarchical relationships using parent_node_id
+            if node.parent_node_id:
+                parent_node = self.db_session.query(Node).filter(Node.id == node.parent_node_id).first()
+                if parent_node:
+                    parent_uri = self.ENTITY[f"{parent_node.node_type.value}/{parent_node.id}"]
+                    predicate = self._get_hierarchy_predicate(node)
+                    self.graph.add((node_uri, predicate, parent_uri))
+                    
+                    # Add SKOS relationships for terms
+                    if node.node_type == NodeType.TERM and parent_node.node_type == NodeType.TERM:
+                        self.graph.add((node_uri, SKOS.broader, parent_uri))
+                        self.graph.add((parent_uri, SKOS.narrower, node_uri))
+                    
+                    # Add layer relationship for terms and domains
+                    layer_node = self._get_layer_ancestor(node)
+                    if layer_node:
+                        layer_uri = self.ENTITY[f"layer/{layer_node.id}"]
+                        self.graph.add((node_uri, self.CS.belongsToLayer, layer_uri))
             
             # Metadata
-            if layer.created_at:
-                self.graph.add((layer_uri, DCTERMS.created, Literal(layer.created_at)))
+            if node.created_at:
+                self.graph.add((node_uri, DCTERMS.created, Literal(node.created_at)))
             
-            if layer.last_modified:
-                self.graph.add((layer_uri, DCTERMS.modified, Literal(layer.last_modified)))
+            if node.last_modified:
+                self.graph.add((node_uri, DCTERMS.modified, Literal(node.last_modified)))
             
-            self.graph.add((layer_uri, self.CS.version, Literal(layer.version)))
+            self.graph.add((node_uri, self.CS.version, Literal(node.version)))
+            
+            # Structural predicate reference
+            if node.structural_predicate_id:
+                self.graph.add((node_uri, self.CS.structuralPredicate, 
+                              self.ENTITY[f"predicate/{node.structural_predicate_id}"]))
     
-    def _add_domains(self):
-        """Add domain entities to the RDF graph."""
-        domains = self.db_session.query(Domain).all()
+    def _add_node_links(self):
+        """Add node link relationships to the RDF graph."""
+        links = self.db_session.query(NodeLink).all()
         
-        for domain in domains:
-            domain_uri = self.ENTITY[f"domain/{domain.id}"]
-            layer_uri = self.ENTITY[f"layer/{domain.layer_id}"]
+        for link in links:
+            # Get source and target nodes to determine their types
+            source_node = self.db_session.query(Node).filter(Node.id == link.source_node_id).first()
+            target_node = self.db_session.query(Node).filter(Node.id == link.target_node_id).first()
             
-            # Basic domain properties
-            self.graph.add((domain_uri, RDF.type, self.CS.Domain))
-            self.graph.add((domain_uri, RDFS.label, Literal(domain.title)))
-            self.graph.add((domain_uri, RDFS.comment, Literal(domain.definition)))
-            
-            # Relationship to layer
-            layer = self.db_session.query(Layer).filter(Layer.id == domain.layer_id).first()
-            predicate = self._get_hierarchy_predicate(layer)
-            self.graph.add((domain_uri, predicate, layer_uri))
-            
-            # Metadata
-            if domain.created_at:
-                self.graph.add((domain_uri, DCTERMS.created, Literal(domain.created_at)))
-            
-            if domain.last_modified:
-                self.graph.add((domain_uri, DCTERMS.modified, Literal(domain.last_modified)))
-            
-            self.graph.add((domain_uri, self.CS.version, Literal(domain.version)))
+            if source_node and target_node:
+                source_uri = self.ENTITY[f"{source_node.node_type.value}/{source_node.id}"]
+                target_uri = self.ENTITY[f"{target_node.node_type.value}/{target_node.id}"]
+                
+                # Create predicate URI from the relationship predicate
+                predicate_uri = self.CS[link.predicate]
+                
+                # Add the relationship triple
+                self.graph.add((source_uri, predicate_uri, target_uri))
+                
+                # Add metadata about the link
+                if link.created_at:
+                    # We could create reified statements here for more complex metadata if needed
+                    pass
     
-    def _add_terms(self):
-        """Add term entities to the RDF graph."""
-        terms = self.db_session.query(Term).all()
-        
-        for term in terms:
-            term_uri = self.ENTITY[f"term/{term.id}"]
-            domain_uri = self.ENTITY[f"domain/{term.domain_id}"]
-            layer_uri = self.ENTITY[f"layer/{term.layer_id}"]
-            
-            # Basic term properties
-            self.graph.add((term_uri, RDF.type, self.CS.Term))
-            self.graph.add((term_uri, RDFS.label, Literal(term.title)))
-            self.graph.add((term_uri, RDFS.comment, Literal(term.definition)))
-            
-            # Relationships to domain and layer
-            layer = self.db_session.query(Layer).filter(Layer.id == term.layer_id).first()
-            predicate = self._get_hierarchy_predicate(layer)
-            
-            self.graph.add((term_uri, predicate, domain_uri))
-            self.graph.add((term_uri, self.CS.belongsToLayer, layer_uri))
-            
-            # Parent-child relationships
-            if term.parent_term_id:
-                parent_uri = self.ENTITY[f"term/{term.parent_term_id}"]
-                self.graph.add((term_uri, predicate, parent_uri))
-                # Also add SKOS broader/narrower for semantic compatibility
-                self.graph.add((term_uri, SKOS.broader, parent_uri))
-                self.graph.add((parent_uri, SKOS.narrower, term_uri))
-            
-            # Metadata
-            if term.created_at:
-                self.graph.add((term_uri, DCTERMS.created, Literal(term.created_at)))
-            
-            if term.last_modified:
-                self.graph.add((term_uri, DCTERMS.modified, Literal(term.last_modified)))
-            
-            self.graph.add((term_uri, self.CS.version, Literal(term.version)))
-    
-    def _add_term_relationships(self):
-        """Add term relationship edges to the RDF graph."""
-        relationships = self.db_session.query(TermRelationship).all()
-        
-        for rel in relationships:
-            source_uri = self.ENTITY[f"term/{rel.source_term_id}"]
-            target_uri = self.ENTITY[f"term/{rel.target_term_id}"]
-            
-            # Create predicate URI from the relationship predicate
-            predicate_uri = self.CS[rel.predicate]
-            
-            # Add the relationship triple
-            self.graph.add((source_uri, predicate_uri, target_uri))
-            
-            # Add metadata about the relationship if needed
-            # We could create a reified statement here for more complex metadata
-    
-    def _get_hierarchy_predicate(self, layer: Optional[Layer]) -> URIRef:
+    def _get_hierarchy_predicate(self, node: Node) -> URIRef:
         """
         Get the appropriate predicate for hierarchical relationships.
         
         Args:
-            layer: The layer object to get the primary predicate from
+            node: The node to get the predicate for
             
         Returns:
             URIRef for the predicate to use
         """
-        # Note: Primary predicates are now associated with domains, not layers
-        # For now, use the default predicate
+        # Use structural predicate if available, otherwise default to "is_a"
+        if node.structural_predicate_id:
+            # Get the actual predicate title if available
+            # For now, use a structured predicate URI
+            return self.CS[f"predicate_{node.structural_predicate_id}"]
+        
         return self.CS["is_a"]  # Default predicate
+    
+    def _get_layer_ancestor(self, node: Node) -> Optional[Node]:
+        """
+        Get the layer ancestor of a node by walking up the hierarchy.
+        
+        Args:
+            node: The node to find the layer ancestor for
+            
+        Returns:
+            The layer ancestor node, or None if not found
+        """
+        current = node
+        while current:
+            if current.node_type == NodeType.LAYER:
+                return current
+            
+            if current.parent_node_id:
+                current = self.db_session.query(Node).filter(Node.id == current.parent_node_id).first()
+            else:
+                break
+        
+        return None
     
     def query(self, sparql_query: str, initNs: Optional[Dict[str, Namespace]] = None) -> List[Dict[str, Any]]:
         """
@@ -288,12 +286,17 @@ class SPARQLService:
         PREFIX entity: <http://context-studio.local/entity/>
         PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
         
-        SELECT ?term ?title ?definition ?domain ?layer WHERE {{
+        SELECT ?term ?title ?definition ?parent ?layer WHERE {{
             ?term a cs:Term ;
                   rdfs:label ?title ;
-                  rdfs:comment ?definition ;
-                  cs:is_a ?domain .
-            ?domain cs:is_a ?layer .
+                  rdfs:comment ?definition .
+            OPTIONAL {{
+                ?term cs:is_a ?parent .
+                FILTER(?parent != ?term)
+            }}
+            OPTIONAL {{
+                ?term cs:belongsToLayer ?layer .
+            }}
             {filter_clause}
         }}
         """
@@ -325,15 +328,15 @@ class SPARQLService:
             
             {{
                 ?startTerm ?relation ?relatedTerm .
-                FILTER(?relation != rdf:type)
+                FILTER(?relation != rdf:type && ?relation != rdfs:label && ?relation != rdfs:comment)
             }} UNION {{
                 ?relatedTerm ?relation ?startTerm .
-                FILTER(?relation != rdf:type)
+                FILTER(?relation != rdf:type && ?relation != rdfs:label && ?relation != rdfs:comment)
             }}
             
             ?relatedTerm a cs:Term ;
-                        rdfs:label ?title ;
-                        rdfs:comment ?definition .
+                        rdfs:label ?title .
+            OPTIONAL {{ ?relatedTerm rdfs:comment ?definition }}
         }}
         """
         
@@ -368,6 +371,66 @@ class SPARQLService:
             {layer_filter}
         }}
         ORDER BY ?layerTitle ?domainTitle
+        """
+        
+        return self.query(query)
+    
+    def get_nodes_with_embeddings(self) -> List[Dict[str, Any]]:
+        """
+        Get all nodes that have embeddings using SPARQL.
+        
+        Returns:
+            List of nodes with embedding information
+        """
+        query = """
+        PREFIX cs: <http://context-studio.local/vocab/>
+        PREFIX entity: <http://context-studio.local/entity/>
+        PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+        
+        SELECT ?node ?title ?type ?embedding WHERE {
+            ?node rdfs:label ?title ;
+                  a ?type ;
+                  cs:hasEmbedding ?embedding .
+            FILTER(?type = cs:Layer || ?type = cs:Domain || ?type = cs:Term)
+        }
+        ORDER BY ?type ?title
+        """
+        
+        return self.query(query)
+    
+    def get_node_relationships(self, node_id: str) -> List[Dict[str, Any]]:
+        """
+        Get all relationships for a specific node using SPARQL.
+        
+        Args:
+            node_id: The ID of the node to get relationships for
+            
+        Returns:
+            List of relationships for the node
+        """
+        # We need to check all possible node types
+        queries = []
+        for node_type in ['layer', 'domain', 'term']:
+            node_uri = f"http://context-studio.local/entity/{node_type}/{node_id}"
+            queries.append(f"<{node_uri}>")
+        
+        node_values = " ".join(queries)
+        
+        query = f"""
+        PREFIX cs: <http://context-studio.local/vocab/>
+        PREFIX entity: <http://context-studio.local/entity/>
+        PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+        
+        SELECT ?relation ?target ?targetTitle ?targetType WHERE {{
+            VALUES ?node {{ {node_values} }}
+            
+            ?node ?relation ?target .
+            ?target rdfs:label ?targetTitle ;
+                   a ?targetType .
+            
+            FILTER(?relation != rdf:type && ?relation != rdfs:label && ?relation != rdfs:comment)
+            FILTER(?targetType = cs:Layer || ?targetType = cs:Domain || ?targetType = cs:Term)
+        }}
         """
         
         return self.query(query)

@@ -214,8 +214,8 @@ def test_cross_layer_term_move_integration(client):
 
 
 def test_event_logging_for_moves(client):
-    """Test that move operations are properly logged to GraphEvent table"""
-    # This test would need access to the database to check GraphEvent table
+    """Test that move operations are properly logged to NodeEvent table"""
+    # This test would need access to the database to check NodeEvent table
     # For now, we'll just verify the operations work and assume logging is correct
     # based on the implementation
     

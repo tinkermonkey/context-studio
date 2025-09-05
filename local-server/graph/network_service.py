@@ -11,7 +11,8 @@ from typing import Dict, List, Any, Tuple, Optional, Set
 import json
 from datetime import datetime
 
-from database.models import Layer, Domain, Term, TermRelationship
+from database.models import Node, NodeLink
+from database.enums import NodeType
 from utils.logger import get_logger
 
 logger = get_logger(__name__)
@@ -35,133 +36,79 @@ class NetworkService:
         self._build_graph()
     
     def _build_graph(self):
-        """Build the NetworkX graph from SQLite database data."""
-        logger.info("Building NetworkX graph from database...")
+        """Build the NetworkX graph from unified nodes table."""
+        logger.info("Building NetworkX graph from unified nodes table...")
         
         # Clear existing graph
         self.graph.clear()
         
-        # Add nodes and edges
-        self._add_layer_nodes()
-        self._add_domain_nodes()
-        self._add_term_nodes()
+        # Add all nodes from the unified nodes table
+        self._add_unified_nodes()
         self._add_hierarchical_edges()
-        self._add_relationship_edges()
+        self._add_node_link_edges()
         
         logger.info(f"NetworkX graph built with {self.graph.number_of_nodes()} nodes and {self.graph.number_of_edges()} edges")
     
-    def _add_layer_nodes(self):
-        """Add layer nodes to the graph."""
-        layers = self.db_session.query(Layer).all()
+    def _add_unified_nodes(self):
+        """Add all nodes from the unified nodes table."""
+        nodes = self.db_session.query(Node).all()
         
-        for layer in layers:
-            node_id = f"layer:{layer.id}"
+        for node in nodes:
+            node_id = f"{node.node_type.value}:{node.id}"
             self.graph.add_node(
                 node_id,
-                type="layer",
-                title=layer.title,
-                definition=layer.definition,
-                created_at=layer.created_at,
-                version=layer.version,
-                entity_id=layer.id
-            )
-    
-    def _add_domain_nodes(self):
-        """Add domain nodes to the graph."""
-        domains = self.db_session.query(Domain).all()
-        
-        for domain in domains:
-            node_id = f"domain:{domain.id}"
-            self.graph.add_node(
-                node_id,
-                type="domain",
-                title=domain.title,
-                definition=domain.definition,
-                layer_id=domain.layer_id,
-                created_at=domain.created_at,
-                version=domain.version,
-                entity_id=domain.id
-            )
-    
-    def _add_term_nodes(self):
-        """Add term nodes to the graph."""
-        terms = self.db_session.query(Term).all()
-        
-        for term in terms:
-            node_id = f"term:{term.id}"
-            self.graph.add_node(
-                node_id,
-                type="term",
-                title=term.title,
-                definition=term.definition,
-                domain_id=term.domain_id,
-                layer_id=term.layer_id,
-                parent_term_id=term.parent_term_id,
-                created_at=term.created_at,
-                version=term.version,
-                entity_id=term.id
+                type=node.node_type.value,
+                title=node.title,
+                definition=node.definition,
+                parent_node_id=node.parent_node_id,
+                structural_predicate_id=node.structural_predicate_id,
+                created_at=node.created_at,
+                version=node.version,
+                entity_id=node.id,
+                last_modified=node.last_modified
             )
     
     def _add_hierarchical_edges(self):
-        """Add hierarchical edges between layers, domains, and terms."""
-        # Domain -> Layer edges
-        domains = self.db_session.query(Domain).all()
-        for domain in domains:
-            domain_node = f"domain:{domain.id}"
-            layer_node = f"layer:{domain.layer_id}"
-            
-            # Use domain's primary predicate, or default to "is_a"
-            predicate = domain.primary_predicate if domain.primary_predicate else "is_a"
-            
-            self.graph.add_edge(
-                domain_node, layer_node,
-                type="hierarchical",
-                predicate=predicate,
-                relationship="belongs_to"
-            )
+        """Add parent-child hierarchical edges."""
+        nodes = self.db_session.query(Node).all()
         
-        # Term -> Domain edges
-        terms = self.db_session.query(Term).all()
-        for term in terms:
-            term_node = f"term:{term.id}"
-            domain_node = f"domain:{term.domain_id}"
+        for node in nodes:
+            if node.parent_node_id:
+                parent_node_id = self._get_node_graph_id(node.parent_node_id)
+                child_node_id = f"{node.node_type.value}:{node.id}"
+                
+                if parent_node_id and self.graph.has_node(parent_node_id):
+                    self.graph.add_edge(
+                        parent_node_id,
+                        child_node_id,
+                        type="hierarchy",
+                        relationship="parent_child"
+                    )
+    
+    def _add_node_link_edges(self):
+        """Add edges from the node_links table."""
+        links = self.db_session.query(NodeLink).all()
+        
+        for link in links:
+            source_node_id = self._get_node_graph_id(link.source_node_id)
+            target_node_id = self._get_node_graph_id(link.target_node_id)
             
-            # Get domain to use its primary predicate
-            domain = self.db_session.query(Domain).filter(Domain.id == term.domain_id).first()
-            predicate = domain.primary_predicate if domain and domain.primary_predicate else "is_a"
-            
-            self.graph.add_edge(
-                term_node, domain_node,
-                type="hierarchical",
-                predicate=predicate,
-                relationship="belongs_to"
-            )
-            
-            # Term -> Parent Term edges
-            if term.parent_term_id:
-                parent_node = f"term:{term.parent_term_id}"
+            if source_node_id and target_node_id:
                 self.graph.add_edge(
-                    term_node, parent_node,
-                    type="hierarchical",
-                    predicate=predicate,
-                    relationship="child_of"
+                    source_node_id,
+                    target_node_id,
+                    type="node_link",
+                    predicate=link.predicate,
+                    predicate_id=link.predicate_id,
+                    created_at=link.created_at
                 )
     
-    def _add_relationship_edges(self):
-        """Add term relationship edges to the graph."""
-        relationships = self.db_session.query(TermRelationship).all()
-        
-        for rel in relationships:
-            source_node = f"term:{rel.source_term_id}"
-            target_node = f"term:{rel.target_term_id}"
-            
-            self.graph.add_edge(
-                source_node, target_node,
-                type="relationship",
-                predicate=rel.predicate,
-                relationship="related_to",
-                created_at=rel.created_at
-            )
+    def _get_node_graph_id(self, node_db_id: str) -> Optional[str]:
+        """Get the graph node ID from database node ID."""
+        node = self.db_session.query(Node).filter(Node.id == node_db_id).first()
+        if node:
+            return f"{node.node_type.value}:{node.id}"
+        return None
     
     def refresh(self):
         """Refresh the NetworkX graph from the database."""

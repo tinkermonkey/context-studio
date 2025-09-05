@@ -497,11 +497,11 @@ def move_domains_with_lineage(
                         term.last_modified = datetime.datetime.now(datetime.UTC)
                         term.version += 1
 
-        # 6. Log changes to GraphEvent
+        # 6. Log changes to NodeEvent
         for domain in domains_to_move:
-            event = models.GraphEvent(
+            event = models.NodeEvent(
                 event_type="update",
-                entity_type="domain",
+                node_type="domain",
                 old_data=old_data.get(domain.id),
                 new_data={
                     "id": domain.id,

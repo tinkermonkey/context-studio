@@ -6,7 +6,7 @@ from contextlib import asynccontextmanager
 from sqlalchemy import text
 
 from api import layers, domains, terms, term_relationships, graph, datasets, nlp_analysis, schema, predicates, llm, pipeline_flavors
-from api import enrichment, config
+from api import enrichment, config, nodes
 from schema_org import api as schema_org_api
 from api.graph import get_cached_graph_service, invalidate_graph_cache
 from database.migrations.migration_manager import MigrationManager
@@ -152,6 +152,8 @@ def create_app(dataset_id=None, engine=None, session_local=None):
     app.include_router(layers.router, prefix="/api/layers", tags=["layers"])
     app.include_router(domains.router, prefix="/api/domains", tags=["domains"])
     app.include_router(terms.router, prefix="/api/terms", tags=["terms"])
+    # Unified nodes API (Great Normalization)
+    app.include_router(nodes.router, tags=["nodes"])
     app.include_router(term_relationships.router, prefix="/api/term-relationships", tags=["term-relationships"])
     app.include_router(predicates.router, prefix="/api/predicates", tags=["predicates"])
     app.include_router(graph.router, prefix="/api", tags=["graph"])

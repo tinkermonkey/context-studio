@@ -4,14 +4,19 @@ Combined Graph Service for Context Studio
 This module provides a unified interface that combines both SPARQL querying
 capabilities (via RDFLib) and graph analytics (via NetworkX) for comprehensive
 graph operations on the Context Studio data.
+
+Updated for Great Normalization - works with unified nodes table.
 """
 
 from sqlalchemy.orm import Session
 from typing import Dict, List, Any, Optional, Union
 from datetime import datetime
 
+from .network_service import NetworkService
 from .sparql_service import SPARQLService
 from .network_service import NetworkService
+from database.models import Node, NodeLink
+from database.enums import NodeType
 from utils.logger import get_logger
 
 logger = get_logger(__name__)
@@ -21,6 +26,8 @@ class GraphService:
     """
     Combined graph service that provides both SPARQL querying and NetworkX analytics.
     This is the main interface for graph operations in the Context Studio.
+    
+    Updated to work with the unified nodes table from the Great Normalization.
     """
     
     def __init__(self, db_session: Session):
@@ -31,15 +38,134 @@ class GraphService:
             db_session: SQLAlchemy database session
         """
         self.db_session = db_session
+        # Initialize network service for graph analytics
+        self.network_service = NetworkService(db_session)
+        
+        # Initialize SPARQL service for semantic queries
         self.sparql_service = SPARQLService(db_session)
         self.network_service = NetworkService(db_session)
-        logger.info("GraphService initialized with SPARQL and NetworkX capabilities")
+        self.nodes = {}
+        self.edges = {}
+        self._build_graph()
+        logger.info("GraphService initialized with both NetworkX and SPARQL capabilities")
+    
+    
+    def _build_graph(self):
+        """Build graph structure from unified nodes table."""
+        self.nodes = {}
+        self.edges = {}
+        
+        # Load all nodes
+        nodes = self.db_session.query(Node).all()
+        for node in nodes:
+            self.nodes[node.id] = {
+                'id': node.id,
+                'type': node.node_type.value,
+                'title': node.title,
+                'parent_id': node.parent_node_id,
+                'children': []
+            }
+        
+        # Build parent-child relationships
+        for node_id, node_data in self.nodes.items():
+            if node_data['parent_id']:
+                parent = self.nodes.get(node_data['parent_id'])
+                if parent:
+                    parent['children'].append(node_id)
+        
+        # Load node links
+        links = self.db_session.query(NodeLink).all()
+        for link in links:
+            source_id = link.source_node_id
+            if source_id not in self.edges:
+                self.edges[source_id] = []
+            self.edges[source_id].append({
+                'target_id': link.target_node_id,
+                'predicate': link.predicate
+            })
+    
+    def would_create_cycle(self, node_id: str, new_parent_id: str) -> bool:
+        """
+        Check if setting new_parent_id as parent of node_id would create a cycle.
+        
+        Args:
+            node_id: The node that would get a new parent
+            new_parent_id: The proposed parent node
+            
+        Returns:
+            True if setting the parent would create a cycle
+        """
+        if not node_id or not new_parent_id:
+            return False
+        
+        # Walk up the ancestor chain from new_parent_id
+        current = new_parent_id
+        visited = set()
+        
+        while current and current not in visited:
+            if current == node_id:
+                return True
+            visited.add(current)
+            node_data = self.nodes.get(current)
+            current = node_data['parent_id'] if node_data else None
+        
+        return False
+    
+    def check_title_uniqueness_in_domain(self, domain_id: str, title: str, exclude_id: str = None) -> bool:
+        """
+        Check if title is unique within domain using graph traversal.
+        
+        Args:
+            domain_id: The domain to check within
+            title: The title to check for uniqueness
+            exclude_id: Optional node ID to exclude from the check (for updates)
+            
+        Returns:
+            True if a conflicting title is found
+        """
+        # Get all nodes in the domain subtree
+        domain_nodes = self._get_domain_subtree(domain_id)
+        
+        for node_id in domain_nodes:
+            node_data = self.nodes.get(node_id)
+            if (node_data and 
+                node_data['title'] == title and 
+                node_id != exclude_id and
+                node_data['type'] == 'term'):
+                return True
+        
+        return False
+    
+    def _get_domain_subtree(self, domain_id: str) -> List[str]:
+        """
+        Get all nodes in a domain's subtree.
+        
+        Args:
+            domain_id: The domain ID to get subtree for
+            
+        Returns:
+            List of all node IDs in the domain subtree
+        """
+        result = []
+        stack = [domain_id]
+        
+        while stack:
+            current_id = stack.pop()
+            result.append(current_id)
+            
+            node_data = self.nodes.get(current_id)
+            if node_data:
+                stack.extend(node_data['children'])
+        
+        return result
     
     def refresh(self):
         """Refresh both SPARQL and NetworkX graphs from the database."""
-        logger.info("Refreshing both SPARQL and NetworkX graphs...")
+        logger.info("Refreshing NetworkX and SPARQL graphs...")
         self.sparql_service.refresh()
         self.network_service.refresh()
+        # Rebuild our internal graph structure for cycle detection and uniqueness checking
+        self._build_graph()
     
     def get_comprehensive_stats(self) -> Dict[str, Any]:
         """
@@ -48,20 +174,30 @@ class GraphService:
         Returns:
             Combined statistics from SPARQL and NetworkX services
         """
-        return {
-            "sparql_stats": self.sparql_service.get_graph_stats(),
+        stats = {
             "network_stats": self.network_service.get_graph_stats(),
             "service_info": {
-                "sparql_triples": len(self.sparql_service.graph),
                 "network_nodes": self.network_service.graph.number_of_nodes(),
                 "network_edges": self.network_service.graph.number_of_edges(),
                 "last_updated": datetime.now().isoformat()
             }
         }
+        
+        # Add SPARQL stats when service is available
+        if self.sparql_service:
+            stats["sparql_stats"] = self.sparql_service.get_graph_stats()
+            stats["service_info"]["sparql_triples"] = len(self.sparql_service.graph)
+        else:
+            stats["sparql_stats"] = {"note": "SPARQL service disabled - pending update for unified nodes table"}
+            stats["service_info"]["sparql_triples"] = 0
+        
+        return stats
     
-    # SPARQL-based operations
+    # SPARQL-based operations (temporarily disabled)
     def sparql_query(self, query: str, **kwargs) -> List[Dict[str, Any]]:
         """Execute a SPARQL query."""
+        if not self.sparql_service:
+            return [{"error": "SPARQL service disabled - pending update for unified nodes table"}]
         return self.sparql_service.query(query, **kwargs)
     
     def find_terms_by_title(self, title: str, exact: bool = False) -> List[Dict[str, Any]]:

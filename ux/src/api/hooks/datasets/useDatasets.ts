@@ -62,7 +62,7 @@ export const useDatasetsDirectory = (
 ) => {
   return useQuery({
     queryKey: createQueryKey(QUERY_KEYS.DATASETS, 'directory'),
-    queryFn: () => datasetService.getDirectory(),
+    queryFn: () => datasetService.getDirectory() as Promise<{ datasets_directory: string }>,
     ...options,
   });
 };
@@ -75,7 +75,7 @@ export const useStartupInfo = (
 ) => {
   return useQuery({
     queryKey: createQueryKey(QUERY_KEYS.DATASETS, 'startup-info'),
-    queryFn: () => datasetService.getStartupInfo(),
+    queryFn: () => datasetService.getStartupInfo() as Promise<{ dataset_id?: string; dataset_title?: string }>,
     ...options,
   });
 };
@@ -89,7 +89,7 @@ export const useDatasetActionLog = (
 ) => {
   return useQuery({
     queryKey: createQueryKey(QUERY_KEYS.DATASETS, 'action-log', days ? { days } : undefined),
-    queryFn: () => datasetService.getActionLog(days),
+  queryFn: () => datasetService.getActionLog(days ? { days } : undefined),
     ...options,
   });
 };

@@ -525,12 +525,12 @@ def move_terms_with_lineage(
                     term.version += 1
                     moved_terms.append(to_term_out(term))
 
-        # 6. Log changes to GraphEvent
+        # 6. Log changes to NodeEvent
         for term in all_terms:
             if term.id in old_data:  # Only log originally requested terms
-                event = models.GraphEvent(
+                event = models.NodeEvent(
                     event_type="update",
-                    entity_type="term",
+                    node_type="term",
                     old_data=old_data.get(term.id),
                     new_data={
                         "id": term.id,

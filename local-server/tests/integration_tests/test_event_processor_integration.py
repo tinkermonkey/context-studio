@@ -15,10 +15,11 @@ def temp_db():
     conn = sqlite3.connect(path)
     cur = conn.cursor()
     cur.execute("""
-        CREATE TABLE graph_events (
+        CREATE TABLE node_events (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             event_type TEXT NOT NULL,
-            entity_type TEXT NOT NULL,
+            node_type TEXT NOT NULL,
+            node_id TEXT NOT NULL,
             old_data TEXT,
             new_data TEXT,
             timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
@@ -31,14 +32,16 @@ def temp_db():
     os.remove(path)
 
 
-def insert_event(conn, event_type, entity_type, processed=0, ts=None):
+def insert_event(conn, event_type, node_type, processed=0, ts=None, node_id=None):
     from datetime import datetime, timezone
     cur = conn.cursor()
     if ts is None:
         ts = datetime.now(timezone.utc).isoformat()
+    if node_id is None:
+        node_id = f"test-{node_type}-id"
     cur.execute(
-        "INSERT INTO graph_events (event_type, entity_type, old_data, new_data, timestamp, processed) VALUES (?, ?, ?, ?, ?, ?)",
-        (event_type, entity_type, '{}', '{}', ts, processed)
+        "INSERT INTO node_events (event_type, node_type, node_id, old_data, new_data, timestamp, processed) VALUES (?, ?, ?, ?, ?, ?, ?)",
+        (event_type, node_type, node_id, '{}', '{}', ts, processed)
     )
     conn.commit()
 
@@ -49,8 +52,8 @@ def test_integration_event_processor_end_to_end(temp_db, capsys):
     insert_event(conn, "create", "layer")
     insert_event(conn, "update", "domain")
     insert_event(conn, "delete", "term")
-    insert_event(conn, "create", "term_relationship")
-    insert_event(conn, "create", "unknown_entity")  # negative case
+    insert_event(conn, "create", "node_link")
+    insert_event(conn, "create", "unknown_node_type")  # negative case
     conn.close()
 
     import logging
@@ -71,7 +74,7 @@ def test_integration_event_processor_end_to_end(temp_db, capsys):
     # All events should be marked processed
     conn = sqlite3.connect(temp_db)
     cur = conn.cursor()
-    cur.execute("SELECT COUNT(*) FROM graph_events WHERE processed=0")
+    cur.execute("SELECT COUNT(*) FROM node_events WHERE processed=0")
     assert cur.fetchone()[0] == 0
     conn.close()
 
@@ -80,8 +83,8 @@ def test_integration_event_processor_end_to_end(temp_db, capsys):
     assert "Processing layer event: create" in log_contents
     assert "Processing domain event: update" in log_contents
     assert "Processing term event: delete" in log_contents
-    assert "Processing term_relationship event: create" in log_contents
-    assert "No handler for entity_type: unknown_entity" in log_contents
+    assert "Processing node_link event: create" in log_contents
+    assert "No handler for node_type: unknown_node_type" in log_contents
 
 
 def test_integration_event_processor_cleanup(temp_db, capsys):
@@ -90,7 +93,7 @@ def test_integration_event_processor_cleanup(temp_db, capsys):
     from datetime import datetime, timezone
     old_ts = (datetime.now(timezone.utc) - timedelta(hours=49)).isoformat()
     insert_event(conn, "delete", "layer", processed=1, ts=old_ts)
-    insert_event(conn, "delete", "layer", processed=1)
+    insert_event(conn, "update", "domain", processed=1)
     conn.close()
 
     processor = EventProcessor(temp_db, poll_interval=0.05, max_events=10)
@@ -98,21 +101,36 @@ def test_integration_event_processor_cleanup(temp_db, capsys):
         processor.cleanup_old_events()
     finally:
         processor.stop()
+
     # Only the recent event should remain
     conn = sqlite3.connect(temp_db)
     cur = conn.cursor()
-    cur.execute("SELECT COUNT(*) FROM graph_events WHERE processed=1")
-    count = cur.fetchone()[0]
-    assert count == 1
+    cur.execute("SELECT COUNT(*) FROM node_events WHERE processed=1")
+    assert cur.fetchone()[0] == 1
     conn.close()
 
 
-def test_integration_event_processor_thread_safety(temp_db):
+def test_integration_event_processor_large_batch(temp_db, capsys):
+    conn = sqlite3.connect(temp_db)
+    # Insert many events
+    node_types = ["layer", "domain", "term", "node_link"]
+    for i in range(50):
+        node_type = node_types[i % len(node_types)]
+        insert_event(conn, "create", node_type, node_id=f"test-{node_type}-{i}")
+    conn.close()
+
     processor = EventProcessor(temp_db, poll_interval=0.05, max_events=10)
     try:
         processor.start()
-        processor.start()  # Should not start a second thread
-        time.sleep(0.1)
+        time.sleep(0.5)  # Let it process multiple batches
     finally:
         processor.stop()
-        processor.stop()  # Should not error
+
+    # All events should be processed
+    conn = sqlite3.connect(temp_db)
+    cur = conn.cursor()
+    cur.execute("SELECT COUNT(*) FROM node_events WHERE processed=0")
+    assert cur.fetchone()[0] == 0
+    cur.execute("SELECT COUNT(*) FROM node_events WHERE processed=1")
+    assert cur.fetchone()[0] == 50
+    conn.close()
