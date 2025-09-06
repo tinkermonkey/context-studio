@@ -9,6 +9,7 @@ from datetime import datetime, UTC
 from config import get_config_manager, ConfigurationManager
 from .exceptions import EnrichmentError
 from .models import *
+from .sources import DBpediaSource, ConceptNetSource, WikidataSource, SchemaOrgSource
 from utils.logger import get_logger
 
 logger = get_logger(__name__)
@@ -20,11 +21,12 @@ class EnrichmentService:
     def __init__(self, config_manager: ConfigurationManager = None):
         self.config_manager = config_manager or get_config_manager()
         self.settings = self.config_manager.settings
+        self._sources = {}  # Cache for source instances
 
     def _get_source(self, source_type: SourceType):
         """Get or create source instance"""
         if source_type not in self._sources:
-            source_config = self.config.get_source_config(source_type)
+            source_config = self.settings.get_source_config(source_type.value)
 
             if source_type == SourceType.DBPEDIA:
                 self._sources[source_type] = DBpediaSource(source_type, source_config)
@@ -127,7 +129,7 @@ class EnrichmentService:
         health_status = {"overall": "healthy", "sources": {}, "timestamp": datetime.now(UTC)}
 
         for source_type in SourceType:
-            source_config = self.config.get_source_config(source_type)
+            source_config = self.settings.get_source_config(source_type.value)
             if source_config.enabled:
                 try:
                     source = self._get_source(source_type)

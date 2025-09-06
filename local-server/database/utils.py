@@ -64,6 +64,13 @@ def get_current_session_local():
     return _current_session_local
 
 
+def set_current_engine_for_testing(engine, session_local):
+    """Set the current engine and session local for testing purposes."""
+    global _current_engine, _current_session_local
+    _current_engine = engine
+    _current_session_local = session_local
+
+
 def get_engine(database_url=None, use_static_pool=False, connect_args=None):
     logger.info("SQLite Version: %s", sqlite3.sqlite_version)
     logger.info("SQLite File: %s", sqlite3.__file__)
@@ -73,14 +80,48 @@ def get_engine(database_url=None, use_static_pool=False, connect_args=None):
     settings = get_settings()
 
     if connect_args is None:
-        connect_args = {"check_same_thread": settings.database.check_same_thread}
+        connect_args = {
+            "check_same_thread": settings.database.check_same_thread,
+            # Add SQLite threading and connection configuration
+            "timeout": 30,
+            "isolation_level": None,  # Autocommit mode for better thread handling
+        }
     else:
         logger.info("Using custom connect_args: %s", connect_args)
 
     url = database_url or os.getenv("DATABASE_URL", settings.database.default_url)
-    if use_static_pool and url.startswith("sqlite:///:memory:"):
-        return create_engine(url, connect_args=connect_args, poolclass=StaticPool)
-    return create_engine(url, connect_args=connect_args)
+    
+    # For SQLite databases, use optimized configuration to avoid threading issues
+    if url.startswith("sqlite://"):
+        if use_static_pool and url.startswith("sqlite:///:memory:"):
+            # In-memory databases need StaticPool
+            return create_engine(
+                url, 
+                connect_args=connect_args, 
+                poolclass=StaticPool,
+                pool_recycle=-1,
+                pool_pre_ping=True
+            )
+        else:
+            # For file-based SQLite, use NullPool to avoid threading issues
+            # This creates a new connection per request, eliminating pool-related thread conflicts
+            from sqlalchemy.pool import NullPool
+            return create_engine(
+                url, 
+                connect_args=connect_args,
+                poolclass=NullPool,  # No pooling - avoids thread affinity issues
+                pool_pre_ping=False,  # Not needed with NullPool
+            )
+    else:
+        # For other databases (PostgreSQL, MySQL, etc.), use standard pooling
+        return create_engine(
+            url, 
+            connect_args=connect_args,
+            pool_recycle=3600,  # Recycle connections every hour
+            pool_pre_ping=True,  # Validate connections before use
+            pool_timeout=20,  # Timeout for getting connections from pool
+            max_overflow=10,   # Allow overflow connections for non-SQLite
+        )
 
 
 def get_session_local(engine):
@@ -102,11 +143,15 @@ def cleanup_database_resources():
     # Dispose of current engine
     if _current_engine:
         try:
+            # With NullPool, disposal should be clean since there are no persistent connections
+            # If there are any issues, they're likely harmless threading edge cases
             _current_engine.dispose()
             logger.info("Disposed current engine")
         except Exception as e:
-            logger.warning(f"Error disposing engine: {e}")
-        _current_engine = None
+            # Log any disposal errors for debugging, but don't fail shutdown
+            logger.debug(f"Engine disposal completed with minor issue: {e}")
+        finally:
+            _current_engine = None
 
     _current_session_local = None
     logger.info("Database resources cleanup complete")

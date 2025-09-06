@@ -9,16 +9,10 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import pytest
 from fastapi.testclient import TestClient
 from unittest.mock import patch, AsyncMock
-from app import app
 
 
 class TestEnrichmentAPIIntegration:
     """Integration tests for enrichment API endpoints"""
-
-    @pytest.fixture
-    def client(self):
-        """Create test client"""
-        return TestClient(app)
 
     def test_health_endpoint(self, client):
         """Test the enrichment health endpoint"""

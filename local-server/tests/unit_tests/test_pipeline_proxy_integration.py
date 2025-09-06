@@ -116,7 +116,7 @@ class TestPipelineProxyIntegration:
         }
         mock_settings.s2v_config = {"abs_path": "/test/path"}
         mock_settings.get_concepcy_config.return_value = {
-            "url": "http://127.0.0.1:18080/conceptnet/query?node=/c/{lang}/{word}&other=/c/{lang}",
+            "url": "http://127.0.0.1:18080/conceptnet/query?structure_node=/c/{lang}/{word}&other=/c/{lang}",
             "test": "config"
         }
         mock_get_settings.return_value = mock_settings
@@ -136,7 +136,7 @@ class TestPipelineProxyIntegration:
         # Verify concepcy was added with proxy config
         mock_settings.get_concepcy_config.assert_called_with(use_proxy=True)
         mock_nlp.add_pipe.assert_any_call("concepcy", config={
-            "url": "http://127.0.0.1:18080/conceptnet/query?node=/c/{lang}/{word}&other=/c/{lang}",
+            "url": "http://127.0.0.1:18080/conceptnet/query?structure_node=/c/{lang}/{word}&other=/c/{lang}",
             "test": "config"
         })
 

@@ -8,6 +8,7 @@ using dot notation for nested values.
 from typing import Any, Dict, List
 from datetime import datetime
 from fastapi import APIRouter, HTTPException, status
+from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field
 
 from config import get_config_manager, notify_global_configuration_reload
@@ -22,15 +23,25 @@ router = APIRouter(prefix="/api/config", tags=["configuration"])
 
 class ConfigUpdateRequest(BaseModel):
     """Request model for updating configuration values"""
+
     path: str = Field(..., description="Configuration path in dot notation")
     value: Any = Field(..., description="New configuration value")
 
 
 class ConfigResponse(BaseModel):
     """Response model for configuration operations"""
+
     success: bool
     data: Any = None
     errors: List[str] = []
+
+
+def create_error_response(status_code: int, message: str) -> JSONResponse:
+    """Create a consistent error response in ConfigResponse format"""
+    return JSONResponse(
+        status_code=status_code,
+        content=ConfigResponse(success=False, errors=[message]).model_dump()
+    )
 
 
 @router.get("/", response_model=ConfigResponse)
@@ -38,16 +49,43 @@ async def get_full_configuration():
     """Get complete configuration"""
     try:
         config_manager = get_config_manager()
-        return ConfigResponse(
-            success=True, 
-            data=config_manager.settings.model_dump()
-        )
+        return ConfigResponse(success=True, data=config_manager.settings.model_dump())
     except Exception as e:
         logger.error(f"Error getting full configuration: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@router.get("/reference-sources/status", response_model=dict)  
+@router.get("/validate", response_model=ConfigResponse)
+async def validate_configuration():
+    """Validate current configuration"""
+    try:
+        config_manager = get_config_manager()
+        errors = config_manager.validate()
+
+        return ConfigResponse(
+            success=len(errors) == 0, 
+            data={"errors": errors, "valid": len(errors) == 0, "error_count": len(errors)}
+        )
+    except Exception as e:
+        logger.error(f"Error validating configuration: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.get("/schema/", response_model=ConfigResponse)
+async def get_configuration_schema():
+    """Get configuration schema with field descriptions"""
+    try:
+        from config import Settings
+
+        schema = Settings.model_json_schema()
+
+        return ConfigResponse(success=True, data=schema)
+    except Exception as e:
+        logger.error(f"Error getting configuration schema: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.get("/reference-sources/status", response_model=dict)
 async def get_reference_sources_status():
     """Get status of all reference sources"""
     try:
@@ -101,21 +139,18 @@ async def get_configuration_value(path: str):
     try:
         config_manager = get_config_manager()
         value = config_manager.get(path)
-        
+
         # Convert pydantic models to dict for JSON serialization
-        if hasattr(value, 'model_dump'):
+        if hasattr(value, "model_dump"):
             value = value.model_dump()
-        elif hasattr(value, 'dict'):  # Fallback for older Pydantic models
+        elif hasattr(value, "dict"):  # Fallback for older Pydantic models
             value = value.dict()
-            
-        return ConfigResponse(
-            path=path,
-            value=value,
-            timestamp=datetime.now().isoformat()
-        )
+
+        return ConfigResponse(success=True, data=value)
     except KeyError:
         raise HTTPException(status_code=404, detail="Configuration path not found")
     except Exception as e:
+        logger.error(f"Error getting configuration value for {path}: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
 
@@ -123,53 +158,47 @@ async def get_configuration_value(path: str):
 async def update_configuration(request: ConfigUpdateRequest):
     """Update specific configuration value"""
     try:
+        # Validate request
+        if not request.path or request.path.strip() == "":
+            return create_error_response(400, "Configuration path cannot be empty")
+
         config_manager = get_config_manager()
-        
-        # Validate the path exists
+
+        # Validate the path exists and get current value for type checking
         try:
-            config_manager.get(request.path)
+            current_value = config_manager.get(request.path)
         except KeyError:
-            raise HTTPException(
-                status_code=404, 
-                detail=f"Configuration path not found: {request.path}"
-            )
-        
-        # Update the value
-        success = config_manager.set(request.path, request.value)
-        
+            return create_error_response(400, f"Configuration path not found: {request.path}")
+
+        # Type validation - ensure new value is compatible with existing type
+        if current_value is not None:
+            current_type = type(current_value)
+            # Skip validation for Pydantic models and complex types
+            if current_type in (int, float, str, bool, list, dict):
+                if not isinstance(request.value, current_type):
+                    # Special case: allow int for float fields
+                    if current_type == float and isinstance(request.value, int):
+                        pass  # Allow int -> float conversion
+                    else:
+                        return create_error_response(
+                            400, 
+                            f"Invalid value type for {request.path}. Expected {current_type.__name__}, got {type(request.value).__name__}"
+                        )
+
+        # Try to update the value
+        try:
+            success = config_manager.set(request.path, request.value)
+        except (ValueError, TypeError) as e:
+            return create_error_response(400, f"Invalid value for {request.path}: {str(e)}")
+
         if success:
-            return ConfigResponse(
-                success=True, 
-                data={"path": request.path, "value": request.value}
-            )
+            return ConfigResponse(success=True, data={"path": request.path, "value": request.value})
         else:
-            raise HTTPException(
-                status_code=500, 
-                detail="Failed to save configuration"
-            )
-            
-    except HTTPException:
-        raise
+            return create_error_response(500, "Failed to save configuration")
+
     except Exception as e:
         logger.error(f"Error updating config {request.path}: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
-
-
-@router.post("/validate", response_model=ConfigResponse)
-async def validate_configuration():
-    """Validate current configuration"""
-    try:
-        config_manager = get_config_manager()
-        errors = config_manager.validate()
-        
-        return ConfigResponse(
-            success=len(errors) == 0,
-            data={"valid": len(errors) == 0, "error_count": len(errors)},
-            errors=errors
-        )
-    except Exception as e:
-        logger.error(f"Error validating configuration: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+        return create_error_response(500, str(e))
 
 
 @router.post("/reload")
@@ -178,32 +207,13 @@ async def reload_configuration():
     try:
         config_manager = get_config_manager()
         config_manager.load()
-        
+
         # Notify all services of the configuration reload
         await notify_global_configuration_reload()
-        
-        return ConfigResponse(
-            success=True,
-            data={"message": "Configuration reloaded successfully"}
-        )
+
+        return ConfigResponse(success=True, data={"message": "Configuration reloaded successfully"})
     except Exception as e:
         logger.error(f"Error reloading configuration: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
-
-
-@router.get("/schema/", response_model=ConfigResponse)
-async def get_configuration_schema():
-    """Get configuration schema with field descriptions"""
-    try:
-        from config import Settings
-        schema = Settings.schema()
-        
-        return ConfigResponse(
-            success=True,
-            data=schema
-        )
-    except Exception as e:
-        logger.error(f"Error getting configuration schema: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
 
@@ -212,28 +222,23 @@ async def reset_configuration():
     """Reset configuration to defaults"""
     try:
         config_manager = get_config_manager()
-        
+
         # Create new default settings
         from config import Settings
+
         config_manager.settings = Settings()
-        
+
         # Save the defaults
         success = config_manager.save()
-        
+
         if success:
             # Notify all services of the configuration reset
             await notify_global_configuration_reload()
-            
-            return ConfigResponse(
-                success=True,
-                data={"message": "Configuration reset to defaults"}
-            )
+
+            return ConfigResponse(success=True, data={"message": "Configuration reset to defaults"})
         else:
-            raise HTTPException(
-                status_code=500,
-                detail="Failed to save default configuration"
-            )
-            
+            raise HTTPException(status_code=500, detail="Failed to save default configuration")
+
     except Exception as e:
         logger.error(f"Error resetting configuration: {e}")
         raise HTTPException(status_code=500, detail=str(e))
@@ -241,15 +246,13 @@ async def reset_configuration():
 
 # Reference Sources Configuration Endpoints
 
+
 @router.get("/reference-sources", response_model=ConfigResponse)
 async def get_reference_sources_config():
     """Get reference sources configuration"""
     try:
         config_manager = get_config_manager()
-        return ConfigResponse(
-            success=True,
-            data=config_manager.settings.reference_sources.model_dump()
-        )
+        return ConfigResponse(success=True, data=config_manager.settings.reference_sources.model_dump())
     except Exception as e:
         logger.error(f"Error getting reference sources config: {e}")
         raise HTTPException(status_code=500, detail=str(e))
@@ -260,15 +263,15 @@ async def get_reference_source_config(source_name: str):
     """Get configuration for a specific reference source"""
     try:
         config_manager = get_config_manager()
-        
+
         # Validate source name and get configuration
         valid_sources = ["conceptnet", "dbpedia", "dbpedia_spotlight", "wikidata", "schema_org"]
         if source_name not in valid_sources:
             raise HTTPException(status_code=404, detail=f"Unknown reference source: {source_name}")
-        
+
         source_config = getattr(config_manager.settings.reference_sources, source_name)
         return ConfigResponse(success=True, data=source_config.model_dump())
-        
+
     except HTTPException:
         raise
     except Exception as e:
@@ -281,24 +284,24 @@ async def update_reference_source_config(source_name: str, request: ConfigUpdate
     """Update configuration for a specific reference source"""
     try:
         config_manager = get_config_manager()
-        
+
         # Validate source name
         valid_sources = ["conceptnet", "dbpedia", "dbpedia_spotlight", "wikidata", "schema_org"]
         if source_name not in valid_sources:
             raise HTTPException(status_code=404, detail=f"Unknown reference source: {source_name}")
-        
+
         # Update the configuration
         path = f"reference_sources.{source_name}.{request.path}"
         success = config_manager.set(path, request.value)
-        
+
         if not success:
             raise HTTPException(status_code=500, detail="Failed to save configuration")
-        
+
         # Notify relevant services of the change
         await notify_reference_source_change(source_name, request.path, request.value)
-        
+
         return ConfigResponse(success=True, data=request.value)
-        
+
     except HTTPException:
         raise
     except Exception as e:
@@ -313,15 +316,15 @@ async def get_reference_sources_status():
         config_manager = get_config_manager()
         enrichment_service = EnrichmentService(config_manager)
         status = enrichment_service.get_source_status()
-        
+
         # Add proxy server status
         status["proxy_server"] = {
             "enabled": config_manager.settings.proxy_server.enabled,
             "host": config_manager.settings.proxy_server.host,
             "port": config_manager.settings.proxy_server.port,
-            "running": await check_proxy_running()  # Implementation dependent
+            "running": await check_proxy_running(),  # Implementation dependent
         }
-        
+
         return ConfigResponse(success=True, data=status)
     except Exception as e:
         logger.error(f"Error getting reference sources status: {e}")
@@ -332,21 +335,23 @@ async def get_reference_sources_status():
 async def handle_reference_source_config_change(source_name: str, field: str, value):
     """Handle reference source configuration changes"""
     logger.info(f"Reference source configuration changed: {source_name}.{field} = {value}")
-    
+
     # Invalidate NLP pipeline if NLP-related sources change
     if source_name in ["conceptnet", "dbpedia_spotlight"] and field in ["enabled", "use_proxy", "upstream_url"]:
         try:
             from nlp.pipeline import invalidate_pipeline
+
             invalidate_pipeline()
         except ImportError:
             logger.warning("NLP pipeline invalidation not available")
-    
+
     # Restart proxy if proxy-related settings change
     if field in ["use_proxy", "upstream_url"] and value:
         try:
             from nlp.proxy_manager import get_proxy_manager
+
             proxy_manager = get_proxy_manager()
-            if hasattr(proxy_manager, 'is_running') and proxy_manager.is_running:
+            if hasattr(proxy_manager, "is_running") and proxy_manager.is_running:
                 await proxy_manager.restart()
         except ImportError:
             logger.warning("Proxy manager not available")
@@ -361,7 +366,8 @@ async def check_proxy_running() -> bool:
     """Check if proxy server is running (implementation dependent)"""
     try:
         from nlp.proxy_manager import get_proxy_manager
+
         proxy_manager = get_proxy_manager()
-        return hasattr(proxy_manager, 'is_running') and proxy_manager.is_running
+        return hasattr(proxy_manager, "is_running") and proxy_manager.is_running
     except ImportError:
         return False

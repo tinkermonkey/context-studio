@@ -211,7 +211,7 @@ async def find_shortest_path(
     path_request: PathRequest,
     graph_service: GraphService = Depends(get_graph_service)
 ) -> Optional[List[str]]:
-    """Find the shortest path between two nodes."""
+    """Find the shortest path between two structure_nodes."""
     return graph_service.find_shortest_path(
         path_request.source_id,
         path_request.target_id,

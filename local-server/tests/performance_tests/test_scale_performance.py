@@ -21,7 +21,7 @@ from utils.logger import get_logger
 from database.utils import init_db, get_engine, get_session_local, init_db
 from database.migrations.migration_manager import MigrationManager
 from sqlalchemy.orm import sessionmaker
-from database.models import Domain, Layer, Term, TermRelationship
+from database.models import StructureNode, StructureNodeLink
 import psutil
 
 
@@ -63,79 +63,70 @@ def get_persistent_client():
 def create_layer(client, title=None):
     logger.debug(f"Creating layer with title: {title}")
     payload = {
+        "node_type": "layer",
         "title": title or f"Layer {uuid.uuid4()}",
         "definition": "Scale test layer."
     }
-    response = client.post("/api/layers/", json=payload)
+    response = client.post("/api/structure_nodes/", json=payload)
     assert response.status_code == 201, response.text
     return response.json()
 
-def create_domain(client, layer_id, title=None):
-    logger.debug(f"Creating domain in layer {layer_id}")
+def create_domain(client, parent_node_id, title=None):
+    logger.debug(f"Creating domain in layer {parent_node_id}")
     payload = {
+        "node_type": "domain",
         "title": title or f"Domain {uuid.uuid4()}",
         "definition": "Scale test domain.",
-        "layer_id": layer_id
+        "parent_node_id": parent_node_id
     }
-    response = client.post("/api/domains/", json=payload)
+    response = client.post("/api/structure_nodes/", json=payload)
     assert response.status_code == 201, response.text
     return response.json()
 
 def create_term(client, domain, name=None):
-    logger.debug(f"Creating term in domain {domain['id']} and layer {domain['layer_id']}")
+    logger.debug(f"Creating term in domain {domain['id']}")
     payload = {
-        "name": name or f"Term {uuid.uuid4()}",
+        "node_type": "term",
         "title": name or f"Term {uuid.uuid4()}",
         "definition": "Scale test term.",
-        "domain_id": domain["id"],
-        "layer_id": domain["layer_id"]
+        "parent_node_id": domain["id"]
     }
-    response = client.post("/api/terms/", json=payload)
+    response = client.post("/api/structure_nodes/", json=payload)
     assert response.status_code == 201, response.text
     return response.json()
 
-def create_relationship(client, source_term_id, target_term_id):
-    logger.debug(f"Creating relationship from term {source_term_id} to term {target_term_id}")
+def create_relationship(client, source_node_id, target_node_id):
+    logger.debug(f"Creating relationship from node {source_node_id} to node {target_node_id}")
     payload = {
-        "source_term_id": source_term_id,
-        "target_term_id": target_term_id,
-        "type": "related",
-        "predicate": "related"
+        "source_node_id": source_node_id,
+        "target_node_id": target_node_id,
+        "relationship_type": "related"
     }
-    response = client.post("/api/term-relationships/", json=payload)
+    response = client.post("/api/structure_nodes/links", json=payload)
     assert response.status_code == 201, response.text
     return response.json()
 
-def update_node(client, node_type, node_id, update_payload):
-    url_map = {
-        "layer": f"/api/layers/{node_id}",
-        "domain": f"/api/domains/{node_id}",
-        "term": f"/api/terms/{node_id}"
-    }
-    response = client.put(url_map[node_type], json=update_payload)
+def update_node(client, node_id, update_payload):
+    response = client.put(f"/api/structure_nodes/{node_id}", json=update_payload)
     assert response.status_code == 200, response.text
     return response.json()
 
-def move_node(client, node_type, node_id, move_payload):
-    # For this example, move is just an update to parent id
-    return update_node(client, node_type, node_id, move_payload)
+def move_node(client, node_id, move_payload):
+    # Move is just an update to parent_node_id
+    return update_node(client, node_id, move_payload)
 
-def delete_node(client, node_type, node_id):
-    url_map = {
-        "layer": f"/api/layers/{node_id}",
-        "domain": f"/api/domains/{node_id}",
-        "term": f"/api/terms/{node_id}"
-    }
-    response = client.delete(url_map[node_type])
+def delete_node(client, node_id):
+    response = client.delete(f"/api/structure_nodes/{node_id}")
     assert response.status_code in (200, 204), response.text
 
 def search_node(client, node_type, search_payload):
-    url_map = {
-        "layer": "/api/layers/find",
-        "domain": "/api/domains/find",
-        "term": "/api/terms/find"
-    }
-    response = client.post(url_map[node_type], json=search_payload)
+    # Use the unified structure_nodes endpoint with filtering
+    params = {"node_type": node_type}
+    if "title" in search_payload:
+        params["title"] = search_payload["title"]
+    if "limit" in search_payload:
+        params["limit"] = search_payload["limit"]
+    response = client.get("/api/structure_nodes/", params=params)
     assert response.status_code == 200, response.text
     return response.json()
 
@@ -143,9 +134,11 @@ def populate_scale_test(client, num_layers, num_domains_per_layer, num_terms_per
     logger.info("Starting scale test data population:")
     logger.info(f"  - Layers: {num_layers}, Domains per layer: {num_domains_per_layer}, Terms per domain: {num_terms_per_domain}, Relationships per term: {num_relationships_per_term}")
 
+    from database.enums import NodeType
+    
     # Layers
     total_layers = num_layers
-    current_layer_count = DB_SESSION.query(Layer).count()
+    current_layer_count = DB_SESSION.query(StructureNode).filter(StructureNode.node_type == NodeType.LAYER).count()
     layer_progress = current_layer_count
     logger.info(f"Total layers to exist: {total_layers}, {current_layer_count} found")
     if current_layer_count < num_layers:
@@ -159,41 +152,47 @@ def populate_scale_test(client, num_layers, num_domains_per_layer, num_terms_per
 
     # Domains
     total_domains = num_layers * num_domains_per_layer
-    layers = DB_SESSION.query(Layer).limit(num_layers).all()
-    layers = [layer.__dict__ for layer in layers]
-    domains = DB_SESSION.query(Domain).all()
-    domains = [domain.__dict__ for domain in domains]
+    layers = DB_SESSION.query(StructureNode).filter(StructureNode.node_type == NodeType.LAYER).limit(num_layers).all()
+    layers = [{"id": layer.id, "title": layer.title} for layer in layers]
+    domains = DB_SESSION.query(StructureNode).filter(StructureNode.node_type == NodeType.DOMAIN).all()
+    domains = [{"id": domain.id, "title": domain.title, "parent_node_id": domain.parent_node_id} for domain in domains]
     domain_progress = len(domains)
     logger.info(f"Total domains to exist: {total_domains}, {domain_progress} found")
     for li, layer in enumerate(layers):
-        current_domains = DB_SESSION.query(Domain).filter(Domain.layer_id == layer["id"]).count()
+        current_domains = DB_SESSION.query(StructureNode).filter(
+            StructureNode.node_type == NodeType.DOMAIN, 
+            StructureNode.parent_node_id == layer["id"]
+        ).count()
         if current_domains < num_domains_per_layer:
             logger.debug(f"Creating {num_domains_per_layer - current_domains} domains for layer {layer['id']}, {current_domains} currently exist")
             for j in range(current_domains, num_domains_per_layer):
-                domain = create_domain(client, layer_id=layer["id"], title=f"ScaleDomain_{layer['id']}_{j}")
+                domain = create_domain(client, parent_node_id=layer["id"], title=f"ScaleDomain_{layer['id']}_{j}")
                 if j == 0:
                     logger.debug(f"Created first domain for layer {layer['id']}: {domain['title']}")
-                domains.append(domain)
+                domains.append({"id": domain["id"], "title": domain["title"], "parent_node_id": domain["parent_node_id"]})
                 domain_progress += 1
                 if domain_progress % 100 == 0 or domain_progress == total_domains:
                     logger.info(f"Domain progress: {domain_progress}/{total_domains}")
 
     # Terms
     total_terms = total_domains * num_terms_per_domain
-    terms = DB_SESSION.query(Term).all()
-    terms = [term.__dict__ for term in terms]
+    terms = DB_SESSION.query(StructureNode).filter(StructureNode.node_type == NodeType.TERM).all()
+    terms = [{"id": term.id, "title": term.title, "parent_node_id": term.parent_node_id} for term in terms]
     term_progress = len(terms)
     term_progress_check = math.floor((total_terms / 20) if total_terms > 5000 else (total_terms / 10))
     logger.info(f"Total terms to exist: {total_terms}, {term_progress} found")
     for di, domain in enumerate(domains):
-        current_terms_in_domain = DB_SESSION.query(Term).filter(Term.domain_id == domain["id"]).count()
+        current_terms_in_domain = DB_SESSION.query(StructureNode).filter(
+            StructureNode.node_type == NodeType.TERM, 
+            StructureNode.parent_node_id == domain["id"]
+        ).count()
         if current_terms_in_domain < num_terms_per_domain:
             logger.debug(f"Creating {num_terms_per_domain - current_terms_in_domain} terms for domain {domain['id']}, {current_terms_in_domain} currently exist")
             for k in range(current_terms_in_domain, num_terms_per_domain):
                 term = create_term(client, domain=domain, name=f"ScaleTerm_{domain['id']}_{k}")
                 if k == 0:
                     logger.debug(f"Created first term for domain {domain['id']}: {term['title']}")
-                terms.append(term)
+                terms.append({"id": term["id"], "title": term["title"], "parent_node_id": term["parent_node_id"]})
                 term_progress += 1
                 if term_progress % term_progress_check == 0 or term_progress == total_terms:
                     logger.info(f"Term progress: {term_progress}/{total_terms} ({round(term_progress / total_terms * 100):.0f}%)")
@@ -201,17 +200,17 @@ def populate_scale_test(client, num_layers, num_domains_per_layer, num_terms_per
     # Relationships
     total_relationships = total_terms * num_relationships_per_term
     logger.info(f"Total relationships to exist: {total_relationships}")
-    relationship_progress = DB_SESSION.query(TermRelationship).count()
+    relationship_progress = DB_SESSION.query(StructureNodeLink).count()
     relationship_progress_check = math.floor((total_relationships / 20) if total_relationships > 5000 else (total_relationships / 10))
     for idx, term in enumerate(terms):
-        current_relationships = DB_SESSION.query(TermRelationship).filter(TermRelationship.source_term_id == term["id"]).all()
+        current_relationships = DB_SESSION.query(StructureNodeLink).filter(StructureNodeLink.source_node_id == term["id"]).all()
         current_layer_count = len(current_relationships)
         if current_layer_count < num_relationships_per_term:
             logger.debug(f"Creating {num_relationships_per_term - current_layer_count} relationships for term {term['id']}...")
             for r in range(num_relationships_per_term - current_layer_count):
                 target_idx = (idx + r + 1) % len(terms)
-                if not any(rel for rel in current_relationships if rel.target_term_id == terms[target_idx]["id"]):
-                    create_relationship(client, source_term_id=term["id"], target_term_id=terms[target_idx]["id"])
+                if not any(rel for rel in current_relationships if str(rel.target_node_id) == str(terms[target_idx]["id"])):
+                    create_relationship(client, source_node_id=term["id"], target_node_id=terms[target_idx]["id"])
                     relationship_progress += 1
                     if relationship_progress % relationship_progress_check == 0 or relationship_progress == total_relationships:
                         logger.info(f"Relationship progress: {relationship_progress}/{total_relationships} ({round(relationship_progress / total_relationships * 100):.0f}%)")
@@ -293,8 +292,8 @@ def main():
             if node_type == "layer":
                 created_nodes["layer"].append(create_layer(client, title=f"PerfLayer_{node_id}"))
             elif node_type == "domain":
-                layer_id = layers[i % len(layers)]["id"]
-                created_nodes["domain"].append(create_domain(client, layer_id=layer_id, title=f"PerfDomain_{node_id}"))
+                parent_node_id = layers[i % len(layers)]["id"]
+                created_nodes["domain"].append(create_domain(client, parent_node_id=parent_node_id, title=f"PerfDomain_{node_id}"))
             elif node_type == "term":
                 domain = domains[i % len(domains)]
                 created_nodes["term"].append(create_term(client, domain=domain, name=f"PerfTerm_{node_id}"))
@@ -306,7 +305,7 @@ def main():
         for i in range(repetitions):
             node = node_list[i % len(node_list)]
             update_payload = {"title": f"Updated_{node_type}_{i}"}
-            update_node(client, node_type, node["id"], update_payload)
+            update_node(client, node["id"], update_payload)
         timings[f"{node_type}_update"] = time.time() - start
         #print_mem_usage(f"After {node_type} update")
 
@@ -316,14 +315,14 @@ def main():
             node = node_list[i % len(node_list)]
             if node_type == "domain":
                 # Move domain to another layer
-                new_layer_id = layers[(i + 1) % len(layers)]["id"]
-                move_payload = {"layer_id": new_layer_id}
-                move_node(client, node_type, node["id"], move_payload)
+                new_parent_id = layers[(i + 1) % len(layers)]["id"]
+                move_payload = {"parent_node_id": new_parent_id}
+                move_node(client, node["id"], move_payload)
             elif node_type == "term":
                 # Move term to another domain
-                new_domain_id = domains[(i + 1) % len(domains)]["id"]
-                move_payload = {"domain_id": new_domain_id}
-                move_node(client, node_type, node["id"], move_payload)
+                new_parent_id = domains[(i + 1) % len(domains)]["id"]
+                move_payload = {"parent_node_id": new_parent_id}
+                move_node(client, node["id"], move_payload)
         timings[f"{node_type}_move"] = time.time() - start
         #print_mem_usage(f"After {node_type} move")
 
@@ -343,7 +342,7 @@ def main():
         start = time.time()
         for i, node in enumerate(node_list):
             try:
-                delete_node(client, node_type, node["id"])
+                delete_node(client, node["id"])
             except Exception as e:
                 logger.error(f"Failed to delete {node_type} {node['id']}: {e}")
 

@@ -1,24 +1,10 @@
 import pytest
 from uuid import uuid4
-from fastapi.testclient import TestClient
-from app import create_app
 
- # The following fixtures are now provided by conftest.py:
- # - engine
- # - TestingSessionLocal
- # - app
- # - client
-
-import pytest
-from uuid import uuid4
-from fastapi.testclient import TestClient
-from app import create_app
-
-# The following fixtures are now provided by conftest.py:
-# - engine
-# - TestingSessionLocal
-# - app
-# - client
+# Integration tests use shared session-scoped fixtures for performance:
+# - shared_client (session-scoped test client, reused across all tests)
+# - client (function-scoped, delegates to shared_client for backwards compatibility)
+# - db_session (function-scoped, provides clean database state per test)
 
 def create_layer(client):
     unique_title = f"Test Layer {uuid4()}"

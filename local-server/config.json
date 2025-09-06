@@ -1,7 +1,7 @@
 {
   "server": {
     "host": "0.0.0.0",
-    "port": 8000,
+    "port": 9003,
     "reload": true,
     "cors_origins": [
       "*"
@@ -10,12 +10,12 @@
     "log_level": "INFO"
   },
   "database": {
-    "default_url": "sqlite:///./local.db",
+    "default_url": "test://db",
     "default_dataset_filename": "default.db",
     "schema_org_path": "./schemaorg.db",
     "reference_cache_path": "./reference_api_cache.db",
     "pipeline_path": "./pipeline.db",
-    "check_same_thread": false,
+    "check_same_thread": true,
     "pool_timeout": 30
   },
   "llm": {
@@ -31,40 +31,9 @@
     "max_text_length": 512,
     "sense2vec_path": "./downloads/s2v_reddit_2015_md",
     "concepcy_relations": [
-      "RelatedTo",
-      "FormOf",
-      "IsA",
-      "PartOf",
-      "HasA",
-      "UsedFor",
-      "CapableOf",
-      "AtLocation",
-      "Causes",
-      "HasSubevent",
-      "HasFirstSubevent",
-      "HasLastSubevent",
-      "HasPrerequisite",
-      "HasProperty",
-      "MotivatedByGoal",
-      "ObstructedBy",
-      "Desires",
-      "CreatedBy",
-      "Synonym",
-      "Antonym",
-      "DistinctFrom",
-      "DerivedFrom",
-      "SymbolOf",
-      "DefinedAs",
-      "MannerOf",
-      "LocatedNear",
-      "HasContext",
-      "SimilarTo",
-      "EtymologicallyRelatedTo",
-      "EtymologicallyDerivedFrom",
-      "CausesDesire",
-      "MadeOf",
-      "ReceivesAction",
-      "ExternalURL"
+      "RELATED_TO",
+      "IS_A",
+      "PART_OF"
     ],
     "filter_missing_text": true,
     "edge_weight_filter": 1.5,
@@ -76,7 +45,7 @@
       "upstream_url": "https://api.conceptnet.io",
       "use_proxy": true,
       "timeout": 30,
-      "max_retries": 5,
+      "max_retries": 3,
       "rate_limit": {
         "requests_per_hour": 3600,
         "progressive_delay": true,
@@ -103,7 +72,7 @@
       "enabled": true,
       "upstream_url": "https://api.dbpedia-spotlight.org/en/",
       "use_proxy": true,
-      "timeout": 25,
+      "timeout": 30,
       "max_retries": 3,
       "rate_limit": {
         "requests_per_hour": 3600,

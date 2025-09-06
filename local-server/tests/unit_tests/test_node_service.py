@@ -14,7 +14,7 @@ from unittest.mock import Mock
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
 from services.node_service import NodeService
-from database.models import Node
+from database.models import StructureNode
 from database.enums import NodeType
 from graph.graph_service import GraphService
 
@@ -83,12 +83,12 @@ class TestNodeServiceValidation:
         # Test creation
         result = node_service.create_node(sample_layer_data)
         
-        # Verify database interactions (Node + NodeEvent = 2 add calls)
-        assert mock_db.add.call_count == 2  # Node and NodeEvent
-        assert mock_db.commit.call_count == 2  # Node and NodeEvent
+        # Verify database interactions (StructureNode + NodeEvent = 2 add calls)
+        assert mock_db.add.call_count == 2  # StructureNode and NodeEvent
+        assert mock_db.commit.call_count == 2  # StructureNode and NodeEvent
     
     def test_layer_validation_no_parent_allowed(self, node_service, mock_db):
-        """Test layer validation rule: Layers cannot have parent nodes."""
+        """Test layer validation rule: Layers cannot have parent structure_nodes."""
         # Setup mock for unique title check first (pass this check)
         mock_db.query.return_value.filter.return_value.first.return_value = None
         
@@ -98,13 +98,13 @@ class TestNodeServiceValidation:
             'parent_node_id': str(uuid.uuid4())
         }
         
-        with pytest.raises(ValueError, match="Layers cannot have parent nodes"):
+        with pytest.raises(ValueError, match="Layers cannot have parent structure_nodes"):
             node_service.create_node(layer_data)
     
     def test_layer_validation_unique_title(self, node_service, sample_layer_data, mock_db):
         """Test layer validation rule: Layer titles must be unique."""
         # Setup mock to return existing layer with same title
-        existing_layer = Mock(spec=Node)
+        existing_layer = Mock(spec=StructureNode)
         existing_layer.title = sample_layer_data['title']
         mock_db.query.return_value.filter.return_value.first.return_value = existing_layer
         
@@ -121,7 +121,7 @@ class TestNodeServiceValidation:
     def test_domain_validation_parent_must_be_layer(self, node_service, sample_domain_data, mock_db):
         """Test domain validation rule: Domain parent must be a layer."""
         # Setup mock to return non-layer parent
-        parent_domain = Mock(spec=Node)
+        parent_domain = Mock(spec=StructureNode)
         parent_domain.node_type = NodeType.DOMAIN
         mock_db.query.return_value.filter.return_value.first.return_value = parent_domain
         
@@ -131,10 +131,10 @@ class TestNodeServiceValidation:
     def test_domain_validation_unique_title_within_layer(self, node_service, sample_domain_data, mock_db):
         """Test domain validation rule: Domain titles must be unique within layer."""
         # Setup mocks
-        parent_layer = Mock(spec=Node)
+        parent_layer = Mock(spec=StructureNode)
         parent_layer.node_type = NodeType.LAYER
         
-        existing_domain = Mock(spec=Node)
+        existing_domain = Mock(spec=StructureNode)
         existing_domain.title = sample_domain_data['title']
         existing_domain.parent_node_id = sample_domain_data['parent_node_id']
         
@@ -167,7 +167,7 @@ class TestNodeServiceValidation:
     def test_term_validation_parent_must_be_domain_or_term(self, node_service, sample_term_data, mock_db):
         """Test term validation rule: Term parent must be a domain or term."""
         # Setup mock to return layer parent (invalid for term)
-        parent_layer = Mock(spec=Node)
+        parent_layer = Mock(spec=StructureNode)
         parent_layer.node_type = NodeType.LAYER
         mock_db.query.return_value.filter.return_value.first.return_value = parent_layer
         
@@ -179,10 +179,10 @@ class TestCircularReferenceValidation:
     """Test circular reference prevention as specified in the design."""
     
     def test_circular_reference_prevention_direct(self, node_service):
-        """Test preventing direct circular reference: node cannot be its own parent."""
+        """Test preventing direct circular reference: structure_node cannot be its own parent."""
         node_id = str(uuid.uuid4())
         
-        with pytest.raises(ValueError, match="Node cannot be its own parent"):
+        with pytest.raises(ValueError, match="StructureNode cannot be its own parent"):
             node_service._validate_no_circular_reference(node_id, node_id)
     
     def test_circular_reference_prevention_indirect(self, node_service, mock_db):
@@ -194,19 +194,19 @@ class TestCircularReferenceValidation:
         term2_id = str(uuid.uuid4())
         
         # Setup mock ancestors - term2 is descendant of term1
-        layer = Mock(spec=Node)
+        layer = Mock(spec=StructureNode)
         layer.id = layer_id
         layer.parent_node_id = None
         
-        domain = Mock(spec=Node)
+        domain = Mock(spec=StructureNode)
         domain.id = domain_id
         domain.parent_node_id = layer_id
         
-        term1 = Mock(spec=Node)
+        term1 = Mock(spec=StructureNode)
         term1.id = term1_id
         term1.parent_node_id = domain_id
         
-        term2 = Mock(spec=Node)
+        term2 = Mock(spec=StructureNode)
         term2.id = term2_id
         term2.parent_node_id = term1_id  # term2 is child of term1
         
@@ -234,7 +234,7 @@ class TestNodeServiceCRUD:
     """Test basic CRUD operations of NodeService."""
     
     def test_create_node_success(self, node_service, sample_layer_data, mock_db):
-        """Test successful node creation."""
+        """Test successful structure_node creation."""
         # Setup mocks for unique title check
         mock_db.query.return_value.filter.return_value.first.return_value = None
         mock_db.add = Mock()
@@ -244,13 +244,13 @@ class TestNodeServiceCRUD:
         # Test creation
         result = node_service.create_node(sample_layer_data)
         
-        # Verify database operations (Node + NodeEvent = 2 add calls)
+        # Verify database operations (StructureNode + NodeEvent = 2 add calls)
         assert mock_db.add.call_count == 2
         assert mock_db.commit.call_count == 2
         mock_db.refresh.assert_called_once()
     
     def test_create_node_missing_required_fields(self, node_service):
-        """Test node creation with missing required fields."""
+        """Test structure_node creation with missing required fields."""
         # Missing node_type
         with pytest.raises(ValueError, match="node_type is required"):
             node_service.create_node({'title': 'Test'})
@@ -260,23 +260,23 @@ class TestNodeServiceCRUD:
             node_service.create_node({'node_type': 'layer'})
     
     def test_update_node_success(self, node_service, mock_db):
-        """Test successful node update."""
+        """Test successful structure_node update."""
         node_id = str(uuid.uuid4())
         
-        # Setup existing node
-        existing_node = Mock(spec=Node)
+        # Setup existing structure_node
+        existing_node = Mock(spec=StructureNode)
         existing_node.id = node_id
         existing_node.node_type = NodeType.LAYER
         existing_node.title = "Old Title"
         existing_node.version = 1
         
-        # Mock database queries - first call gets the node, second checks uniqueness
+        # Mock database queries - first call gets the structure_node, second checks uniqueness
         def mock_query_side_effect(*args):
             query_mock = Mock()
             filter_mock = Mock()
             query_mock.filter.return_value = filter_mock
             
-            # First call: get existing node for update
+            # First call: get existing structure_node for update
             if mock_db.query.call_count == 1:
                 filter_mock.first.return_value = existing_node
             # Second call: check title uniqueness (should return None = unique)
@@ -296,22 +296,22 @@ class TestNodeServiceCRUD:
         # Verify updates
         assert existing_node.title == 'New Title'
         assert existing_node.version == 2
-        assert mock_db.commit.call_count == 2  # Node update + NodeEvent
+        assert mock_db.commit.call_count == 2  # StructureNode update + NodeEvent
         mock_db.refresh.assert_called_once()
     
     def test_update_node_not_found(self, node_service, mock_db):
-        """Test updating non-existent node."""
+        """Test updating non-existent structure_node."""
         mock_db.query.return_value.filter.return_value.first.return_value = None
         
-        with pytest.raises(ValueError, match="Node not found"):
+        with pytest.raises(ValueError, match="StructureNode not found"):
             node_service.update_node(str(uuid.uuid4()), {'title': 'New Title'})
     
     def test_delete_node_success(self, node_service, mock_db):
-        """Test successful node deletion."""
+        """Test successful structure_node deletion."""
         node_id = str(uuid.uuid4())
         
-        # Setup existing node
-        existing_node = Mock(spec=Node)
+        # Setup existing structure_node
+        existing_node = Mock(spec=StructureNode)
         existing_node.id = node_id
         existing_node.node_type = NodeType.LAYER
         
@@ -321,7 +321,7 @@ class TestNodeServiceCRUD:
             filter_mock = Mock()
             query_mock.filter.return_value = filter_mock
             
-            # First call: get node for deletion
+            # First call: get structure_node for deletion
             if mock_db.query.call_count == 1:
                 filter_mock.first.return_value = existing_node
             # Second call: get descendants (should return empty list - no children)
@@ -339,19 +339,19 @@ class TestNodeServiceCRUD:
         
         assert result is True
         mock_db.delete.assert_called_once_with(existing_node)
-        assert mock_db.commit.call_count == 2  # Node deletion + NodeEvent
+        assert mock_db.commit.call_count == 2  # StructureNode deletion + NodeEvent
     
     def test_delete_node_not_found(self, node_service, mock_db):
-        """Test deleting non-existent node."""
+        """Test deleting non-existent structure_node."""
         mock_db.query.return_value.filter.return_value.first.return_value = None
         
-        with pytest.raises(ValueError, match="Node not found"):
+        with pytest.raises(ValueError, match="StructureNode not found"):
             node_service.delete_node(str(uuid.uuid4()))
     
     def test_get_node(self, node_service, mock_db):
-        """Test getting a node by ID."""
+        """Test getting a structure_node by ID."""
         node_id = str(uuid.uuid4())
-        expected_node = Mock(spec=Node)
+        expected_node = Mock(spec=StructureNode)
         mock_db.query.return_value.filter.return_value.first.return_value = expected_node
         
         result = node_service.get_node(node_id)
@@ -359,8 +359,8 @@ class TestNodeServiceCRUD:
         assert result == expected_node
     
     def test_list_nodes_with_filters(self, node_service, mock_db):
-        """Test listing nodes with filtering."""
-        expected_nodes = [Mock(spec=Node), Mock(spec=Node)]
+        """Test listing structure_nodes with filtering."""
+        expected_nodes = [Mock(spec=StructureNode), Mock(spec=StructureNode)]
         query_mock = Mock()
         query_mock.filter.return_value = query_mock
         query_mock.order_by.return_value = query_mock
@@ -380,7 +380,7 @@ class TestNodeServiceCRUD:
         assert query_mock.filter.call_count >= 1
     
     def test_count_nodes_with_filters(self, node_service, mock_db):
-        """Test counting nodes with filtering."""
+        """Test counting structure_nodes with filtering."""
         expected_count = 42
         query_mock = Mock()
         query_mock.filter.return_value = query_mock
@@ -393,12 +393,12 @@ class TestNodeServiceCRUD:
 
 
 class TestNodeHierarchy:
-    """Test node hierarchy operations."""
+    """Test structure_node hierarchy operations."""
     
     def test_get_node_children_direct(self, node_service, mock_db):
-        """Test getting direct children of a node."""
+        """Test getting direct children of a structure_node."""
         parent_id = str(uuid.uuid4())
-        expected_children = [Mock(spec=Node), Mock(spec=Node)]
+        expected_children = [Mock(spec=StructureNode), Mock(spec=StructureNode)]
         
         query_mock = Mock()
         query_mock.filter.return_value = query_mock
@@ -410,21 +410,21 @@ class TestNodeHierarchy:
         assert result == expected_children
     
     def test_get_node_ancestors(self, node_service):
-        """Test getting ancestors of a node."""
+        """Test getting ancestors of a structure_node."""
         # Create hierarchy: Layer -> Domain -> Term
         layer_id = str(uuid.uuid4())
         domain_id = str(uuid.uuid4())
         term_id = str(uuid.uuid4())
         
-        layer = Mock(spec=Node)
+        layer = Mock(spec=StructureNode)
         layer.id = layer_id
         layer.parent_node_id = None
         
-        domain = Mock(spec=Node)
+        domain = Mock(spec=StructureNode)
         domain.id = domain_id
         domain.parent_node_id = layer_id
         
-        term = Mock(spec=Node)
+        term = Mock(spec=StructureNode)
         term.id = term_id
         term.parent_node_id = domain_id
         
@@ -455,7 +455,7 @@ class TestTitleUniquenessValidation:
         title = "Test Title"
         
         # Mock term exists with same title
-        existing_term = Mock(spec=Node)
+        existing_term = Mock(spec=StructureNode)
         existing_term.title = title
         
         # Setup query mocks
@@ -496,5 +496,5 @@ class TestTitleUniquenessValidation:
             domain_id, title, exclude_id=exclude_id
         )
         
-        # Should be False because no other nodes (excluding the specified one) have the title
+        # Should be False because no other structure_nodes (excluding the specified one) have the title
         assert result is False

@@ -1,9 +1,9 @@
 """
 NodeEvent Handler Service
 
-This service provides centralized event handling for the unified node system.
-It creates NodeEvent records for all node-related operations (create, update, delete)
-and provides utilities for managing node events.
+This service provides centralized event handling for the unified structure_node system.
+It creates NodeEvent records for all structure_node-related operations (create, update, delete)
+and provides utilities for managing structure_node events.
 """
 
 import json
@@ -19,7 +19,7 @@ logger = get_logger(__name__)
 
 
 class NodeEventHandler:
-    """Handler for creating and managing node events."""
+    """Handler for creating and managing structure_node events."""
     
     def __init__(self, db: Session):
         """
@@ -30,13 +30,14 @@ class NodeEventHandler:
         """
         self.db = db
         
-    def create_event(self, event_type: str, node_type: str, old_data: Optional[Dict[str, Any]] = None, new_data: Optional[Dict[str, Any]] = None) -> NodeEvent:
+    def create_event(self, event_type: str, node_type: str, node_id: Optional[str] = None, old_data: Optional[Dict[str, Any]] = None, new_data: Optional[Dict[str, Any]] = None) -> NodeEvent:
         """
         Create a new NodeEvent.
         
         Args:
             event_type: Type of event (create, update, delete)
-            node_type: Type of node (layer, domain, term, node_link)
+            node_type: Type of structure_node (layer, domain, term, structure_node_link)
+            node_id: ID of the affected structure_node or structure_node_link
             old_data: Old data dictionary (for update/delete events)
             new_data: New data dictionary (for create/update events)
             
@@ -48,6 +49,7 @@ class NodeEventHandler:
             event = NodeEvent(
                 event_type=event_type,
                 node_type=node_type,
+                node_id=node_id,
                 old_data=old_data,
                 new_data=new_data,
                 timestamp=datetime.now(timezone.utc),
@@ -57,7 +59,7 @@ class NodeEventHandler:
             self.db.add(event)
             self.db.commit()
             
-            logger.debug(f"Created NodeEvent: {event_type} {node_type} (id: {event.id})")
+            logger.debug(f"Created NodeEvent: {event_type} {node_type} (id: {event.id}, node_id: {node_id})")
             return event
             
         except Exception as e:
@@ -65,64 +67,68 @@ class NodeEventHandler:
             self.db.rollback()
             raise
     
-    def fire_node_event(self, event_type: str, node_type: str, old_data: Optional[Dict[str, Any]] = None, new_data: Optional[Dict[str, Any]] = None) -> NodeEvent:
+    def fire_node_event(self, event_type: str, node_type: str, node_id: Optional[str] = None, old_data: Optional[Dict[str, Any]] = None, new_data: Optional[Dict[str, Any]] = None) -> NodeEvent:
         """
-        Fire unified node event.
+        Fire unified structure_node event.
         
         Args:
             event_type: Type of event (create, update, delete)
-            node_type: Type of node (layer, domain, term, node_link)
+            node_type: Type of structure_node (layer, domain, term, structure_node_link)
+            node_id: ID of the affected structure_node or structure_node_link
             old_data: Old data dictionary (for update/delete events)
             new_data: New data dictionary (for create/update events)
             
         Returns:
             The created NodeEvent
         """
-        return self.create_event(event_type, node_type, old_data, new_data)
+        return self.create_event(event_type, node_type, node_id, old_data, new_data)
     
-    def fire_node_created_event(self, node_type: str, node_data: Dict[str, Any]) -> NodeEvent:
+    def fire_node_created_event(self, node_type: str, node_id: str, node_data: Dict[str, Any]) -> NodeEvent:
         """
-        Fire a node created event.
+        Fire a structure_node created event.
         
         Args:
-            node_type: Type of node (layer, domain, term, node_link)
-            node_data: The created node data
+            node_type: Type of structure_node (layer, domain, term, structure_node_link)
+            node_id: ID of the created structure_node or structure_node_link
+            node_data: The created structure_node data
             
         Returns:
             The created NodeEvent
         """
-        return self.fire_node_event('create', node_type, old_data=None, new_data=node_data)
+        return self.fire_node_event('create', node_type, node_id=node_id, old_data=None, new_data=node_data)
     
-    def fire_node_updated_event(self, node_type: str, old_data: Dict[str, Any], new_data: Dict[str, Any]) -> NodeEvent:
+    def fire_node_updated_event(self, node_type: str, node_id: str, old_data: Dict[str, Any], new_data: Dict[str, Any]) -> NodeEvent:
         """
-        Fire a node updated event.
+        Fire a structure_node updated event.
         
         Args:
-            node_type: Type of node (layer, domain, term, node_link)
-            old_data: The original node data
-            new_data: The updated node data
+            node_type: Type of structure_node (layer, domain, term, structure_node_link)
+            node_id: ID of the updated structure_node or structure_node_link
+            old_data: The original structure_node data
+            new_data: The updated structure_node data
             
         Returns:
             The created NodeEvent
         """
-        return self.fire_node_event('update', node_type, old_data=old_data, new_data=new_data)
+        return self.fire_node_event('update', node_type, node_id=node_id, old_data=old_data, new_data=new_data)
     
-    def fire_node_deleted_event(self, node_type: str, node_data: Dict[str, Any]) -> NodeEvent:
+    def fire_node_deleted_event(self, node_type: str, node_id: str, node_data: Dict[str, Any]) -> NodeEvent:
         """
-        Fire a node deleted event.
+        Fire a structure_node deleted event.
         
         Args:
-            node_type: Type of node (layer, domain, term, node_link)
-            node_data: The deleted node data
+            node_type: Type of structure_node (layer, domain, term, structure_node_link)
+            node_id: ID of the deleted structure_node or structure_node_link
+            node_data: The deleted structure_node data
             
         Returns:
             The created NodeEvent
         """
-        return self.fire_node_event('delete', node_type, old_data=node_data, new_data=None)
+        return self.fire_node_event('delete', node_type, node_id=node_id, old_data=node_data, new_data=None)
     
     def get_unprocessed_events(self, limit: int = 100) -> list[NodeEvent]:
         """
-        Get unprocessed node events.
+        Get unprocessed structure_node events.
         
         Args:
             limit: Maximum number of events to retrieve
@@ -134,6 +140,25 @@ class NodeEventHandler:
             self.db.query(NodeEvent)
             .filter(NodeEvent.processed == False)
             .order_by(NodeEvent.timestamp.asc())
+            .limit(limit)
+            .all()
+        )
+    
+    def get_events_for_node(self, node_id: str, limit: int = 100) -> list[NodeEvent]:
+        """
+        Get events for a specific structure_node.
+        
+        Args:
+            node_id: ID of the structure_node to get events for
+            limit: Maximum number of events to retrieve
+            
+        Returns:
+            List of NodeEvent objects for the specified structure_node
+        """
+        return (
+            self.db.query(NodeEvent)
+            .filter(NodeEvent.node_id == node_id)
+            .order_by(NodeEvent.timestamp.desc())
             .limit(limit)
             .all()
         )
@@ -165,7 +190,7 @@ class NodeEventHandler:
     
     def get_event_stats(self) -> Dict[str, Any]:
         """
-        Get statistics about node events.
+        Get statistics about structure_node events.
         
         Returns:
             Dictionary with event statistics
@@ -179,7 +204,7 @@ class NodeEventHandler:
         for event_type, count in self.db.query(NodeEvent.event_type, func.count(NodeEvent.id)).group_by(NodeEvent.event_type).all():
             event_types[event_type] = count
         
-        # Events by node type
+        # Events by structure_node type
         node_types = {}
         for node_type, count in self.db.query(NodeEvent.node_type, func.count(NodeEvent.id)).group_by(NodeEvent.node_type).all():
             node_types[node_type] = count

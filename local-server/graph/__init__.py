@@ -10,11 +10,8 @@ Components:
 - graph_service: Combined service interface
 """
 
-# TODO: Re-enable SPARQLService after updating it for unified nodes table
-# from .sparql_service import SPARQLService
+from .sparql_service import SPARQLService
 from .network_service import NetworkService
 from .graph_service import GraphService
 
-# TODO: Add SPARQLService back when updated
-# __all__ = ["SPARQLService", "NetworkService", "GraphService"]
-__all__ = ["NetworkService", "GraphService"]
+__all__ = ["SPARQLService", "NetworkService", "GraphService"]

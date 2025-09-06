@@ -1,7 +1,7 @@
 """
 Unit tests for Migration 006 - The Great Normalization.
 
-Tests the migration from layers/domains/terms to the unified nodes table,
+Tests the migration from layers/domains/terms to the unified structure_nodes table,
 including data integrity, parent-child relationships, and rollback functionality.
 """
 
@@ -166,23 +166,23 @@ class MigrationTestHarness:
         
         try:
             counts = {}
-            cursor.execute("SELECT COUNT(*) FROM nodes")
-            counts['nodes'] = cursor.fetchone()[0]
+            cursor.execute("SELECT COUNT(*) FROM structure_nodes")
+            counts['structure_nodes'] = cursor.fetchone()[0]
             
-            cursor.execute("SELECT COUNT(*) FROM node_links")
-            counts['node_links'] = cursor.fetchone()[0]
+            cursor.execute("SELECT COUNT(*) FROM structure_node_links")
+            counts['structure_node_links'] = cursor.fetchone()[0]
             
-            cursor.execute("SELECT COUNT(*) FROM node_events")
-            counts['node_events'] = cursor.fetchone()[0]
+            cursor.execute("SELECT COUNT(*) FROM structure_node_events")
+            counts['structure_node_events'] = cursor.fetchone()[0]
             
-            # Count by node type
-            cursor.execute("SELECT COUNT(*) FROM nodes WHERE node_type = 'layer'")
+            # Count by structure_node type
+            cursor.execute("SELECT COUNT(*) FROM structure_nodes WHERE node_type = 'layer'")
             counts['layer_nodes'] = cursor.fetchone()[0]
             
-            cursor.execute("SELECT COUNT(*) FROM nodes WHERE node_type = 'domain'")
+            cursor.execute("SELECT COUNT(*) FROM structure_nodes WHERE node_type = 'domain'")
             counts['domain_nodes'] = cursor.fetchone()[0]
             
-            cursor.execute("SELECT COUNT(*) FROM nodes WHERE node_type = 'term'")
+            cursor.execute("SELECT COUNT(*) FROM structure_nodes WHERE node_type = 'term'")
             counts['term_nodes'] = cursor.fetchone()[0]
             
             return counts
@@ -244,9 +244,9 @@ class MigrationTestHarness:
         
         try:
             cursor.execute("""
-                SELECT COUNT(*) FROM nodes n1
+                SELECT COUNT(*) FROM structure_nodes n1
                 WHERE n1.parent_node_id IS NOT NULL 
-                AND NOT EXISTS (SELECT 1 FROM nodes n2 WHERE n2.id = n1.parent_node_id)
+                AND NOT EXISTS (SELECT 1 FROM structure_nodes n2 WHERE n2.id = n1.parent_node_id)
             """)
             invalid_count = cursor.fetchone()[0]
             return invalid_count == 0
@@ -260,9 +260,9 @@ class MigrationTestHarness:
         cursor = conn.cursor()
         
         try:
-            # Check if any nodes have embeddings
+            # Check if any structure_nodes have embeddings
             cursor.execute("""
-                SELECT COUNT(*) FROM nodes 
+                SELECT COUNT(*) FROM structure_nodes 
                 WHERE title_embedding IS NOT NULL OR definition_embedding IS NOT NULL
             """)
             nodes_with_embeddings = cursor.fetchone()[0]
@@ -282,16 +282,16 @@ class MigrationTestHarness:
         try:
             # Check that domains have layers as parents
             cursor.execute("""
-                SELECT COUNT(*) FROM nodes d
-                JOIN nodes p ON d.parent_node_id = p.id
+                SELECT COUNT(*) FROM structure_nodes d
+                JOIN structure_nodes p ON d.parent_node_id = p.id
                 WHERE d.node_type = 'domain' AND p.node_type != 'layer'
             """)
             invalid_domain_parents = cursor.fetchone()[0]
             
             # Check that terms with parent_term_id have term parents
             cursor.execute("""
-                SELECT COUNT(*) FROM nodes t
-                JOIN nodes p ON t.parent_node_id = p.id
+                SELECT COUNT(*) FROM structure_nodes t
+                JOIN structure_nodes p ON t.parent_node_id = p.id
                 WHERE t.node_type = 'term' AND p.node_type NOT IN ('domain', 'term')
             """)
             invalid_term_parents = cursor.fetchone()[0]
@@ -414,7 +414,7 @@ class TestMigration006DataIntegrity:
         
         # Validate total record counts
         expected_nodes = pre_counts['layers'] + pre_counts['domains'] + pre_counts['terms']
-        assert post_counts['nodes'] == expected_nodes, f"Expected {expected_nodes} nodes, got {post_counts['nodes']}"
+        assert post_counts['structure_nodes'] == expected_nodes, f"Expected {expected_nodes} structure_nodes, got {post_counts['structure_nodes']}"
         
         # Validate individual type counts
         assert post_counts['layer_nodes'] == pre_counts['layers']
@@ -422,10 +422,10 @@ class TestMigration006DataIntegrity:
         assert post_counts['term_nodes'] == pre_counts['terms']
         
         # Validate links
-        assert post_counts['node_links'] == pre_counts['term_relationships']
+        assert post_counts['structure_node_links'] == pre_counts['term_relationships']
         
         # Validate events
-        assert post_counts['node_events'] == pre_counts['graph_events']
+        assert post_counts['structure_node_events'] == pre_counts['graph_events']
         
         # Validate parent references
         assert migration_harness.validate_parent_references(), "Invalid parent references found"
@@ -447,14 +447,14 @@ class TestMigration006DataIntegrity:
         
         try:
             # Check layer migration
-            cursor.execute("SELECT id, title, node_type FROM nodes WHERE id = 'layer-1'")
+            cursor.execute("SELECT id, title, node_type FROM structure_nodes WHERE id = 'layer-1'")
             layer_row = cursor.fetchone()
             assert layer_row is not None
             assert layer_row[1] == 'Science Layer'
             assert layer_row[2] == 'layer'
             
             # Check domain migration with parent reference
-            cursor.execute("SELECT id, title, node_type, parent_node_id, structural_predicate_id FROM nodes WHERE id = 'domain-1'")
+            cursor.execute("SELECT id, title, node_type, parent_node_id, structural_predicate_id FROM structure_nodes WHERE id = 'domain-1'")
             domain_row = cursor.fetchone()
             assert domain_row is not None
             assert domain_row[1] == 'Biology'
@@ -463,7 +463,7 @@ class TestMigration006DataIntegrity:
             assert domain_row[4] == 'pred-1'   # structural_predicate_id from primary_predicate_id
             
             # Check term migration with correct parent assignment
-            cursor.execute("SELECT id, title, node_type, parent_node_id FROM nodes WHERE id = 'term-2'")
+            cursor.execute("SELECT id, title, node_type, parent_node_id FROM structure_nodes WHERE id = 'term-2'")
             term_row = cursor.fetchone()
             assert term_row is not None
             assert term_row[1] == 'Animal Cell'
@@ -471,7 +471,7 @@ class TestMigration006DataIntegrity:
             assert term_row[3] == 'term-1'  # parent_node_id should be term-1 (parent term)
             
             # Check term with domain parent
-            cursor.execute("SELECT id, title, node_type, parent_node_id FROM nodes WHERE id = 'term-1'")
+            cursor.execute("SELECT id, title, node_type, parent_node_id FROM structure_nodes WHERE id = 'term-1'")
             term_root_row = cursor.fetchone()
             assert term_root_row is not None
             assert term_root_row[1] == 'Cell'
@@ -502,15 +502,15 @@ class TestMigration006ParentChildRelationships:
         
         try:
             # Test layer has no parent
-            cursor.execute("SELECT parent_node_id FROM nodes WHERE node_type = 'layer' AND id = 'layer-1'")
+            cursor.execute("SELECT parent_node_id FROM structure_nodes WHERE node_type = 'layer' AND id = 'layer-1'")
             layer_parent = cursor.fetchone()[0]
             assert layer_parent is None, "Layers should not have parents"
             
             # Test domain has layer parent
             cursor.execute("""
                 SELECT n.id, n.title, p.node_type, p.title
-                FROM nodes n
-                JOIN nodes p ON n.parent_node_id = p.id
+                FROM structure_nodes n
+                JOIN structure_nodes p ON n.parent_node_id = p.id
                 WHERE n.node_type = 'domain' AND n.id = 'domain-1'
             """)
             domain_relationship = cursor.fetchone()
@@ -521,8 +521,8 @@ class TestMigration006ParentChildRelationships:
             # Test term has correct parent (could be domain or term)
             cursor.execute("""
                 SELECT n.id, n.title, p.node_type, p.title
-                FROM nodes n
-                JOIN nodes p ON n.parent_node_id = p.id
+                FROM structure_nodes n
+                JOIN structure_nodes p ON n.parent_node_id = p.id
                 WHERE n.node_type = 'term' AND n.id = 'term-2'
             """)
             term_relationship = cursor.fetchone()
@@ -566,16 +566,16 @@ class TestMigration006ParentChildRelationships:
         cursor = conn.cursor()
         try:
             # Check each level of hierarchy
-            cursor.execute("SELECT parent_node_id FROM nodes WHERE id = 'term-root'")
+            cursor.execute("SELECT parent_node_id FROM structure_nodes WHERE id = 'term-root'")
             assert cursor.fetchone()[0] == 'domain-deep'
             
-            cursor.execute("SELECT parent_node_id FROM nodes WHERE id = 'term-l1'")
+            cursor.execute("SELECT parent_node_id FROM structure_nodes WHERE id = 'term-l1'")
             assert cursor.fetchone()[0] == 'term-root'
             
-            cursor.execute("SELECT parent_node_id FROM nodes WHERE id = 'term-l2'")
+            cursor.execute("SELECT parent_node_id FROM structure_nodes WHERE id = 'term-l2'")
             assert cursor.fetchone()[0] == 'term-l1'
             
-            cursor.execute("SELECT parent_node_id FROM nodes WHERE id = 'term-l3'")
+            cursor.execute("SELECT parent_node_id FROM structure_nodes WHERE id = 'term-l3'")
             assert cursor.fetchone()[0] == 'term-l2'
             
         finally:
@@ -598,7 +598,7 @@ class TestMigration006Rollback:
         
         # Verify migration worked
         post_counts = migration_harness.get_post_migration_counts()
-        assert post_counts['nodes'] > 0
+        assert post_counts['structure_nodes'] > 0
         
         # Rollback migration
         migration_harness.rollback_migration_006()
@@ -680,7 +680,7 @@ class TestMigration006EdgeCases:
         # Verify data migrated correctly
         cursor = conn.cursor()
         try:
-            cursor.execute("SELECT structural_predicate_id FROM nodes WHERE id = 'domain-test'")
+            cursor.execute("SELECT structural_predicate_id FROM structure_nodes WHERE id = 'domain-test'")
             result = cursor.fetchone()
             assert result[0] == 'nonexistent-predicate'  # Should preserve the reference even if invalid
             
@@ -700,9 +700,9 @@ class TestMigration006EdgeCases:
         
         # Verify post-migration counts are also 0
         post_counts = migration_harness.get_post_migration_counts()
-        assert post_counts['nodes'] == 0
-        assert post_counts['node_links'] == 0
-        assert post_counts['node_events'] == 0
+        assert post_counts['structure_nodes'] == 0
+        assert post_counts['structure_node_links'] == 0
+        assert post_counts['structure_node_events'] == 0
     
     def test_migration_with_orphaned_terms(self, migration_harness):
         """Test migration handling of terms with invalid domain/layer references."""
@@ -729,7 +729,7 @@ class TestMigration006EdgeCases:
             cursor.close()
 
         # Migration should fail due to data integrity validation
-        with pytest.raises(Exception, match="Found 1 nodes with invalid parent references"):
+        with pytest.raises(Exception, match="Found 1 structure_nodes with invalid parent references"):
             migration_harness.run_migration_006()
 
 

@@ -10,8 +10,8 @@ from datetime import datetime
 from unittest.mock import Mock, patch
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
-from database.models import Base, Predicate, Domain, Term, TermRelationship
-from database.predicate_utils import generate_identifier_from_title, validate_predicate_set
+from database.models import Base, Predicate, StructureNode, StructureNodeLink
+from database.predicate_utils import generate_identifier_from_title
 
 
 class TestPredicateCRUDOperations:
@@ -381,34 +381,6 @@ class TestConceptNetMapping:
         assert mapping["conceptnet"]["relation"] == f"TestRelation1_{unique_suffix}"
         assert mapping["conceptnet"]["url"] == f"https://conceptnet.io/r/TestRelation1_{unique_suffix}"
 
-    def test_validate_predicate_set_functionality(self, db_session):
-        """Test predicate set validation functionality."""
-        # Create some predicates with unique titles using timestamp suffix
-        import time
-        suffix = str(int(time.time() * 1000000))[-6:]  # Last 6 digits of microsecond timestamp
-        
-        predicates_data = [
-            (f"test_synonym_{suffix}", f"TestSynonym{suffix}"),
-            (f"test_antonym_{suffix}", f"TestAntonym{suffix}"),
-            (f"test_related_{suffix}", f"TestRelated{suffix}")
-        ]
-        
-        for identifier, title in predicates_data:
-            predicate = Predicate(identifier=identifier, title=title)
-            db_session.add(predicate)
-        db_session.commit()
-        
-        # Test valid predicate set
-        valid_set = [f"test_synonym_{suffix}", f"test_antonym_{suffix}"]
-        assert validate_predicate_set(valid_set, db_session) is True
-        
-        # Test predicate set with non-existent predicate
-        invalid_set = [f"test_synonym_{suffix}", "nonexistent"]
-        assert validate_predicate_set(invalid_set, db_session) is False
-        
-        # Test empty predicate set
-        assert validate_predicate_set([], db_session) is True
-
 
 class TestPredicateRelationships:
     """Test predicate relationships with other entities."""
@@ -423,51 +395,49 @@ class TestPredicateRelationships:
         yield session
         session.close()
 
-    def test_predicate_domain_relationship(self, db_session):
-        """Test relationship between predicates and domains."""
+    def test_predicate_structure_node_relationship(self, db_session):
+        """Test relationship between predicates and structure nodes."""
         # Create predicate
         predicate = Predicate(identifier="synonym", title="Synonym")
         db_session.add(predicate)
         db_session.commit()
         
-        # Create domain that references the predicate
-        domain = Domain(
+        # Create structure node that references the predicate
+        structure_node = StructureNode(
             id=str(uuid.uuid4()),
-            layer_id=str(uuid.uuid4()),
+            node_type="domain",
             title="Test Domain",
             definition="Test definition",
-            primary_predicate="synonym",
-            primary_predicate_id=predicate.id,
-            predicate_set=json.dumps(["synonym", "antonym"])
+            structural_predicate_id=predicate.id
         )
-        db_session.add(domain)
+        db_session.add(structure_node)
         db_session.commit()
         
         # Test relationship
-        assert domain.primary_predicate_ref == predicate
-        assert predicate.domains == [domain]
+        assert structure_node.structural_predicate_ref == predicate
+        assert predicate.structure_nodes == [structure_node]
 
-    def test_predicate_term_relationship_relationship(self, db_session):
-        """Test relationship between predicates and term relationships."""
+    def test_predicate_structure_node_link_relationship(self, db_session):
+        """Test relationship between predicates and structure node links."""
         # Create predicate
         predicate = Predicate(identifier="synonym", title="Synonym")
         db_session.add(predicate)
         db_session.commit()
         
-        # Create term relationship that references the predicate
-        term_rel = TermRelationship(
+        # Create structure node link that references the predicate
+        node_link = StructureNodeLink(
             id=str(uuid.uuid4()),
-            source_term_id=str(uuid.uuid4()),
-            target_term_id=str(uuid.uuid4()),
+            source_node_id=str(uuid.uuid4()),
+            target_node_id=str(uuid.uuid4()),
             predicate="synonym",
             predicate_id=predicate.id
         )
-        db_session.add(term_rel)
+        db_session.add(node_link)
         db_session.commit()
         
         # Test relationship
-        assert term_rel.predicate_ref == predicate
-        assert predicate.term_relationships == [term_rel]
+        assert node_link.predicate_ref == predicate
+        assert predicate.structure_node_links == [node_link]
 
     def test_predicate_cascade_behavior(self, db_session):
         """Test what happens when predicates are deleted."""
@@ -476,22 +446,22 @@ class TestPredicateRelationships:
         db_session.add(predicate)
         db_session.commit()
         
-        # Create domain that references the predicate
-        domain = Domain(
+        # Create structure node that references the predicate
+        structure_node = StructureNode(
             id=str(uuid.uuid4()),
-            layer_id=str(uuid.uuid4()),
+            node_type="domain",
             title="Test Domain",
             definition="Test definition",
-            primary_predicate_id=predicate.id
+            structural_predicate_id=predicate.id
         )
-        db_session.add(domain)
+        db_session.add(structure_node)
         db_session.commit()
         
         # Delete predicate
         db_session.delete(predicate)
         db_session.commit()
         
-        # Check domain still exists but reference is null
-        remaining_domain = db_session.query(Domain).filter_by(id=domain.id).first()
-        assert remaining_domain is not None
+        # Check structure node still exists but reference is null
+        remaining_node = db_session.query(StructureNode).filter_by(id=structure_node.id).first()
+        assert remaining_node is not None
         # Note: Actual behavior depends on foreign key constraints setup

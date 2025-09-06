@@ -2,12 +2,13 @@ import sys
 import os
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import pytest
-from fastapi.testclient import TestClient
-from app import app
 
-client = TestClient(app)
+# Integration tests use shared session-scoped fixtures for performance:
+# - shared_client (session-scoped test client, reused across all tests)
+# - client (function-scoped, delegates to shared_client for backwards compatibility) 
+# - db_session (function-scoped, provides clean database state per test)
 
-def test_nlp_analysis_integration():
+def test_nlp_analysis_integration(client):
     payload = {"text": "Barack Obama was the 44th President of the United States."}
     response = client.post("/api/nlp_analysis", json=payload)
     assert response.status_code == 200

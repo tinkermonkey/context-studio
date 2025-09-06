@@ -11,18 +11,11 @@ from fastapi.testclient import TestClient
 # Add project root to path for imports
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from app import create_app
 from llm.models import PipelineType, LLMConfig
 
 
 class TestPipelineFlavorAPI:
     """Integration tests for pipeline flavor API endpoints"""
-    
-    @pytest.fixture
-    def client(self):
-        """Create a test client for the FastAPI app"""
-        app = create_app()
-        return TestClient(app)
     
     @pytest.fixture
     def sample_flavor_data(self):
@@ -234,12 +227,6 @@ class TestLLMStreamingEndpoints:
     """Integration tests for streaming LLM endpoints"""
     
     @pytest.fixture
-    def client(self):
-        """Create a test client for the FastAPI app"""
-        app = create_app()
-        return TestClient(app)
-    
-    @pytest.fixture
     def sample_term_request(self):
         """Sample term definition request"""
         return {
@@ -383,12 +370,6 @@ class TestLLMStreamingEndpoints:
 class TestDefaultFlavorPopulation:
     """Integration tests for default flavor population"""
     
-    @pytest.fixture
-    def client(self):
-        """Create a test client for the FastAPI app"""
-        app = create_app()
-        return TestClient(app)
-    
     def test_default_flavors_exist(self, client):
         """Test that default flavors are populated on startup"""
         response = client.get("/api/pipeline-flavors")
@@ -427,12 +408,6 @@ class TestDefaultFlavorPopulation:
 
 class TestAPIErrorHandling:
     """Integration tests for API error handling"""
-    
-    @pytest.fixture
-    def client(self):
-        """Create a test client for the FastAPI app"""
-        app = create_app()
-        return TestClient(app)
     
     def test_invalid_json_request(self, client):
         """Test API handling of invalid JSON"""

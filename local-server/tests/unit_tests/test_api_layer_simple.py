@@ -27,7 +27,7 @@ def test_api_layer_requirements():
     # Check routes
     routes = [(route.path, list(route.methods) if hasattr(route, 'methods') else []) for route in router.routes]
     expected_routes = [
-        ("/llm/suggest_definition", ["POST"]),
+        ("/llm/suggest_term_definition", ["POST"]),
         ("/llm/health", ["GET"])
     ]
     
@@ -86,12 +86,12 @@ def test_api_layer_requirements():
         assert health_response.status_code == 200
         print("  ✓ Health endpoint accessible")
         
-        # Test suggest_definition endpoint structure
+        # Test suggest_term_definition endpoint structure
         test_request = {"term": "test"}
-        suggest_response = client.post("/api/llm/suggest_definition", json=test_request)
+        suggest_response = client.post("/api/llm/suggest_term_definition", json=test_request)
         # Should respond (may be error due to no API key, but should not be 404)
         assert suggest_response.status_code != 404
-        print("  ✓ Suggest definition endpoint accessible")
+        print("  ✓ Suggest term definition endpoint accessible")
         
     except Exception as e:
         print(f"  ⚠️  Endpoint test issue: {e}")
@@ -171,12 +171,12 @@ def test_10_1_4_compliance():
     
     suggest_route = None
     for route in router.routes:
-        if hasattr(route, 'path') and route.path == "/llm/suggest_definition":
+        if hasattr(route, 'path') and route.path == "/llm/suggest_term_definition":
             suggest_route = route
             break
     
     assert suggest_route is not None
-    print("  ✓ /api/llm/suggest_definition endpoint exists")
+    print("  ✓ /api/llm/suggest_term_definition endpoint exists")
     
     # Requirement: Accept context as JSON object with Pydantic validation
     print("✓ Testing JSON Schema Acceptance:")
@@ -202,10 +202,10 @@ def test_10_1_4_compliance():
     
     # Requirement: Pass context to LLM service for processing
     print("✓ Testing Service Integration:")
-    from api.llm import suggest_definition
+    from api.llm import suggest_term_definition
     import inspect
     
-    sig = inspect.signature(suggest_definition)
+    sig = inspect.signature(suggest_term_definition)
     params = sig.parameters
     
     assert "request" in params
@@ -216,7 +216,7 @@ def test_10_1_4_compliance():
     # Requirement: Return response synchronously
     print("✓ Testing Synchronous Response:")
     # The endpoint is async but returns immediately (not a background task)
-    assert inspect.iscoroutinefunction(suggest_definition)
+    assert inspect.iscoroutinefunction(suggest_term_definition)
     print("  ✓ Endpoint returns synchronous response")
     
     return True

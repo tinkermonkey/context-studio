@@ -1,23 +1,23 @@
 """
-Model conversion utilities for Nodes API
+Model conversion utilities for StructureNodes API
 
 This module contains functions for converting between database models
-and API models for the nodes endpoints.
+and API models for the structure_nodes endpoints.
 """
 
 from typing import List, Optional
-from database.models import Node, NodeLink
+from database.models import StructureNode, StructureNodeLink
 from database.enums import NodeType
-from api.models.nodes import NodeOut, NodeLinkOut
+from api.models.structure_nodes import NodeOut, NodeLinkOut
 from uuid import UUID
 
 
-def to_node_out(node: Node) -> NodeOut:
+def to_node_out(structure_node: StructureNode) -> NodeOut:
     """
-    Convert a database Node model to API NodeOut model.
+    Convert a database StructureNode model to API NodeOut model.
     
     Args:
-        node: Database Node instance
+        structure_node: Database StructureNode instance
         
     Returns:
         NodeOut model for API response
@@ -26,10 +26,10 @@ def to_node_out(node: Node) -> NodeOut:
     title_embedding = None
     definition_embedding = None
     
-    if node.title_embedding:
+    if structure_node.title_embedding:
         try:
             import pickle
-            title_embedding = pickle.loads(node.title_embedding)
+            title_embedding = pickle.loads(structure_node.title_embedding)
             # Ensure it's a list of floats
             if isinstance(title_embedding, (list, tuple)):
                 title_embedding = [float(x) for x in title_embedding]
@@ -37,10 +37,10 @@ def to_node_out(node: Node) -> NodeOut:
             # If unpickling fails, leave as None
             title_embedding = None
     
-    if node.definition_embedding:
+    if structure_node.definition_embedding:
         try:
             import pickle
-            definition_embedding = pickle.loads(node.definition_embedding)
+            definition_embedding = pickle.loads(structure_node.definition_embedding)
             # Ensure it's a list of floats
             if isinstance(definition_embedding, (list, tuple)):
                 definition_embedding = [float(x) for x in definition_embedding]
@@ -49,26 +49,26 @@ def to_node_out(node: Node) -> NodeOut:
             definition_embedding = None
     
     return NodeOut(
-        id=UUID(node.id),
-        node_type=node.node_type.value,  # Convert enum to string
-        parent_node_id=UUID(node.parent_node_id) if node.parent_node_id else None,
-        title=node.title,
-        definition=node.definition,
-        structural_predicate_id=UUID(node.structural_predicate_id) if node.structural_predicate_id else None,
+        id=UUID(structure_node.id),
+        node_type=structure_node.node_type.value,  # Convert enum to string
+        parent_node_id=UUID(structure_node.parent_node_id) if structure_node.parent_node_id else None,
+        title=structure_node.title,
+        definition=structure_node.definition,
+        structural_predicate_id=UUID(structure_node.structural_predicate_id) if structure_node.structural_predicate_id else None,
         title_embedding=title_embedding,
         definition_embedding=definition_embedding,
-        created_at=node.created_at.isoformat() if node.created_at else None,
-        version=node.version,
-        last_modified=node.last_modified.isoformat() if node.last_modified else None
+        created_at=structure_node.created_at.isoformat() if structure_node.created_at else None,
+        version=structure_node.version,
+        last_modified=structure_node.last_modified.isoformat() if structure_node.last_modified else None
     )
 
 
-def to_node_link_out(link: NodeLink) -> NodeLinkOut:
+def to_node_link_out(link: StructureNodeLink) -> NodeLinkOut:
     """
-    Convert a database NodeLink model to API NodeLinkOut model.
+    Convert a database StructureNodeLink model to API NodeLinkOut model.
     
     Args:
-        link: Database NodeLink instance
+        link: Database StructureNodeLink instance
         
     Returns:
         NodeLinkOut model for API response
@@ -83,21 +83,21 @@ def to_node_link_out(link: NodeLink) -> NodeLinkOut:
     )
 
 
-def nodes_to_paginated_response(nodes: List[Node], total: int, skip: int, limit: int) -> dict:
+def nodes_to_paginated_response(structure_nodes: List[StructureNode], total: int, skip: int, limit: int) -> dict:
     """
-    Convert a list of nodes and pagination info to a paginated response.
+    Convert a list of structure_nodes and pagination info to a paginated response.
     
     Args:
-        nodes: List of database Node instances
-        total: Total number of nodes matching the query
-        skip: Number of nodes skipped
-        limit: Maximum number of nodes returned
+        structure_nodes: List of database StructureNode instances
+        total: Total number of structure_nodes matching the query
+        skip: Number of structure_nodes skipped
+        limit: Maximum number of structure_nodes returned
         
     Returns:
         Dictionary for PaginatedNodesResponse
     """
     return {
-        "data": [to_node_out(node) for node in nodes],
+        "data": [to_node_out(structure_node) for structure_node in structure_nodes],
         "total": total,
         "skip": skip,
         "limit": limit

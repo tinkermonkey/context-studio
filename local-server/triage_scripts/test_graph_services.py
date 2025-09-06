@@ -85,8 +85,8 @@ def test_graph_services():
             centrality = graph_service.calculate_centrality("pagerank")
             print("\n=== TOP 5 NODES BY PAGERANK CENTRALITY ===")
             sorted_centrality = sorted(centrality.items(), key=lambda x: x[1], reverse=True)
-            for node, score in sorted_centrality[:5]:
-                print(f"{node}: {score:.6f}")
+            for structure_node, score in sorted_centrality[:5]:
+                print(f"{structure_node}: {score:.6f}")
         except Exception as e:
             print(f"Centrality calculation failed: {e}")
         
@@ -96,8 +96,8 @@ def test_graph_services():
             print(f"\n=== COMMUNITY DETECTION ===")
             print(f"Found {len(communities)} communities")
             for i, community in enumerate(communities[:3]):  # Show first 3 communities
-                print(f"Community {i+1}: {len(community)} nodes")
-                print(f"Sample nodes: {community[:5]}")
+                print(f"Community {i+1}: {len(community)} structure_nodes")
+                print(f"Sample structure_nodes: {community[:5]}")
         except Exception as e:
             print(f"Community detection failed: {e}")
         
@@ -174,9 +174,9 @@ def test_individual_services():
         network_service = NetworkService(session)
         network_stats = network_service.get_graph_stats()
         print(f"\n=== NETWORKX SERVICE STATS ===")
-        print(f"Total nodes: {network_stats['total_nodes']}")
+        print(f"Total structure_nodes: {network_stats['total_nodes']}")
         print(f"Total edges: {network_stats['total_edges']}")
-        print(f"Node types: {network_stats.get('node_types', {})}")
+        print(f"StructureNode types: {network_stats.get('node_types', {})}")
         print(f"Edge types: {network_stats.get('edge_types', {})}")
         
         # Test term hierarchy algorithm
@@ -196,11 +196,11 @@ def test_term_hierarchy(network_service):
         logger.info("Testing get_term_hierarchy method...")
         
         # First, get some sample terms to test with
-        sample_nodes = list(network_service.graph.nodes())
-        term_nodes = [node for node in sample_nodes if node.startswith("term:")]
+        sample_nodes = list(network_service.graph.structure_nodes())
+        term_nodes = [structure_node for structure_node in sample_nodes if structure_node.startswith("term:")]
         
         if not term_nodes:
-            logger.warning("No term nodes found in graph")
+            logger.warning("No term structure_nodes found in graph")
             return
         
         # Test with the first available term
@@ -230,7 +230,7 @@ def test_term_hierarchy(network_service):
                 print(f"  - {descendant['type']}: {descendant['title']} (distance: {descendant['distance']})")
         
         # Also test find_terms_in_domain_tree if there are domains
-        domain_nodes = [node for node in sample_nodes if node.startswith("domain:")]
+        domain_nodes = [structure_node for structure_node in sample_nodes if structure_node.startswith("domain:")]
         if domain_nodes:
             test_domain_node = domain_nodes[0]
             domain_id = test_domain_node.split(":", 1)[1]

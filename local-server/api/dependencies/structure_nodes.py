@@ -1,7 +1,7 @@
 """
-Dependency injection for Nodes API
+Dependency injection for StructureNodes API
 
-This module provides dependency injection functions for the nodes endpoints,
+This module provides dependency injection functions for the structure_nodes endpoints,
 ensuring proper service initialization and database session management.
 """
 

@@ -12,11 +12,10 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(
 import pytest
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
-from database.models import Base, Domain, Term, Predicate, TermRelationship
+from database.models import Base, StructureNode, StructureNodeLink, Predicate
 from database.predicate_utils import (
     validate_term_relationship_predicate,
-    validate_predicate_identifier,
-    validate_predicate_set
+    validate_predicate_identifier
 )
 
 
@@ -33,17 +32,16 @@ def db_session():
 
 @pytest.fixture
 def sample_domain(db_session):
-    """Create a sample domain with predicate set."""
+    """Create a sample domain structure node with predicate set."""
     predicate_set = {
         "predicates": ["synonym", "hypernym", "hyponym"]
     }
     
-    domain = Domain(
+    domain = StructureNode(
         id=str(uuid4()),
-        layer_id=str(uuid4()),  # Need a layer_id for Domain
+        node_type="domain",
         title="Sample Domain",
         definition="Test domain",
-        predicate_set=json.dumps(predicate_set),
         created_at=datetime.datetime.now(datetime.UTC),
         last_modified=datetime.datetime.now(datetime.UTC)
     )
@@ -54,13 +52,12 @@ def sample_domain(db_session):
 
 @pytest.fixture
 def sample_domain_no_predicate_set(db_session):
-    """Create a sample domain without predicate set."""
-    domain = Domain(
+    """Create a sample domain structure node without predicate set."""
+    domain = StructureNode(
         id=str(uuid4()),
-        layer_id=str(uuid4()),  # Need a layer_id for Domain
+        node_type="domain", 
         title="Domain No Predicates",
         definition="Test domain without predicate set",
-        predicate_set=None,
         created_at=datetime.datetime.now(datetime.UTC),
         last_modified=datetime.datetime.now(datetime.UTC)
     )
@@ -108,27 +105,27 @@ def sample_terms(db_session, sample_domain, sample_domain_no_predicate_set):
     """Create sample terms in different domains."""
     terms = []
     
-    # Terms in the same domain (with predicate set)
+    # Terms as children of the domain structure node
     for i in range(2):
-        term = Term(
+        term = StructureNode(
             id=str(uuid4()),
+            node_type="term",
             title=f"Term {i}",
             definition=f"Test term {i}",
-            domain_id=sample_domain.id,
-            layer_id=sample_domain.layer_id,  # Terms need layer_id too
+            parent_node_id=sample_domain.id,
             created_at=datetime.datetime.now(datetime.UTC),
             last_modified=datetime.datetime.now(datetime.UTC)
         )
         db_session.add(term)
         terms.append(term)
     
-    # Term in different domain (no predicate set)
-    term = Term(
+    # Term as child of different domain (no predicate set)
+    term = StructureNode(
         id=str(uuid4()),
+        node_type="term",
         title="Term Different Domain",
         definition="Test term in different domain",
-        domain_id=sample_domain_no_predicate_set.id,
-        layer_id=sample_domain_no_predicate_set.layer_id,  # Terms need layer_id too
+        parent_node_id=sample_domain_no_predicate_set.id,
         created_at=datetime.datetime.now(datetime.UTC),
         last_modified=datetime.datetime.now(datetime.UTC)
     )
@@ -148,9 +145,13 @@ class TestValidateTermRelationshipPredicate:
         different_domain_term = sample_terms[2]
         disallowed_predicate = sample_predicates[3]  # antonym
         
+        # Get the parent domain ID for each term
+        same_domain_id = same_domain_term.parent_node_id
+        different_domain_id = different_domain_term.parent_node_id
+        
         result = validate_term_relationship_predicate(
-            same_domain_term.domain_id,
-            different_domain_term.domain_id,
+            same_domain_id,
+            different_domain_id,
             disallowed_predicate.id,
             db_session
         )
@@ -163,9 +164,12 @@ class TestValidateTermRelationshipPredicate:
         term2 = sample_terms[1]
         allowed_predicate = sample_predicates[0]  # synonym
         
+        # Both terms are in the same domain (same parent_node_id)
+        domain_id = term1.parent_node_id
+        
         result = validate_term_relationship_predicate(
-            term1.domain_id,
-            term2.domain_id,
+            domain_id,
+            domain_id,
             allowed_predicate.id,
             db_session
         )
@@ -178,9 +182,12 @@ class TestValidateTermRelationshipPredicate:
         term2 = sample_terms[1]
         disallowed_predicate = sample_predicates[3]  # antonym
         
+        # Both terms are in the same domain (same parent_node_id)
+        domain_id = term1.parent_node_id
+        
         result = validate_term_relationship_predicate(
-            term1.domain_id,
-            term2.domain_id,
+            domain_id,
+            domain_id,
             disallowed_predicate.id,
             db_session
         )
@@ -229,13 +236,13 @@ class TestValidateTermRelationshipPredicate:
     
     def test_invalid_predicate_set_json(self, db_session, sample_predicates):
         """Test validation with invalid JSON in predicate set."""
-        # Create domain with invalid JSON
-        domain = Domain(
+        # Create domain structure node - Note: predicate_set is not a field in StructureNode
+        # This test may need to be redesigned for the new schema
+        domain = StructureNode(
             id=str(uuid4()),
-            layer_id=str(uuid4()),
-            title="Invalid JSON Domain",
+            node_type="domain",
+            title="Invalid JSON Domain", 
             definition="Test domain with invalid JSON",
-            predicate_set="invalid json",
             created_at=datetime.datetime.now(datetime.UTC),
             last_modified=datetime.datetime.now(datetime.UTC)
         )

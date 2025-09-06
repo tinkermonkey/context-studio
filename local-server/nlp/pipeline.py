@@ -136,10 +136,9 @@ class NLPPipeline:
             logger.info("Adding sense2vec component...")
             
             # Check if the _s2v extension already exists
-            if spacy.tokens.Doc.has_extension("_s2v"):
-                logger.debug("_s2v extension already exists, removing it before adding sense2vec component")
-                # Remove the existing extension
-                spacy.tokens.Doc.remove_extension("_s2v")
+            if spacy.tokens.Doc.has_extension("_s2v") or "sense2vec" in self.nlp.pipe_names:
+                logger.debug("sense2vec component or _s2v extension already exists, skipping initialization")
+                return  # Skip initialization if already exists
             
             self.s2v = self.nlp.add_pipe("sense2vec")
             # Load the S2V dataset

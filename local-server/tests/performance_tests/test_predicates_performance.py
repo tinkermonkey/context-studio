@@ -11,8 +11,8 @@ from statistics import mean, median
 from unittest.mock import Mock, patch
 from sqlalchemy import create_engine, text
 from sqlalchemy.orm import sessionmaker
-from database.models import Base, Predicate, Domain, Layer, Term, TermRelationship
-from database.predicate_utils import validate_term_relationship_predicate, validate_predicate_set
+from database.models import Base, Predicate, StructureNode, StructureNodeLink
+from database.predicate_utils import validate_term_relationship_predicate
 
 
 class TestPredicatePerformance:

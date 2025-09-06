@@ -11,7 +11,7 @@ from sqlalchemy.exc import IntegrityError
 
 from database import models
 from database.utils import get_db
-from database.predicate_utils import generate_identifier_from_title, validate_predicate_set, import_conceptnet_predicates, get_conceptnet_relation_for_predicate, validate_predicate_identifier
+from database.predicate_utils import generate_identifier_from_title, import_conceptnet_predicates, get_conceptnet_relation_for_predicate, validate_predicate_identifier
 from config import get_settings
 from api.api_errors import validation_error_response, conflict_error_response, bad_request_error_response
 from utils.logger import get_logger
@@ -253,14 +253,14 @@ def delete_predicate(id: str, db: Session = Depends(get_db)):
     if not db_predicate:
         raise HTTPException(status_code=404, detail="Predicate not found.")
     
-    # Check if predicate is being used in domains or term relationships
-    domain_usage = db.query(models.Domain).filter_by(primary_predicate_id=id).count()
-    relationship_usage = db.query(models.TermRelationship).filter_by(predicate_id=id).count()
+    # Check if predicate is being used in structure_nodes or structure_node_links
+    domain_usage = db.query(models.StructureNode).filter_by(structural_predicate_id=id).count()
+    relationship_usage = db.query(models.StructureNodeLink).filter_by(predicate_id=id).count()
     
     if domain_usage > 0 or relationship_usage > 0:
         raise HTTPException(
             status_code=400, 
-            detail=f"Cannot delete predicate: it is used in {domain_usage} domains and {relationship_usage} term relationships."
+            detail=f"Cannot delete predicate: it is used in {domain_usage} structure_nodes and {relationship_usage} structure_node relationships."
         )
     
     db.delete(db_predicate)

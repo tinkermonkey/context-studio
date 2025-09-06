@@ -5,8 +5,8 @@ from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
 from sqlalchemy import text
 
-from api import layers, domains, terms, term_relationships, graph, datasets, nlp_analysis, schema, predicates, llm, pipeline_flavors
-from api import enrichment, config, nodes
+from api import graph, datasets, nlp_analysis, schema, predicates, llm, pipeline_flavors
+from api import enrichment, config, structure_nodes
 from schema_org import api as schema_org_api
 from api.graph import get_cached_graph_service, invalidate_graph_cache
 from database.migrations.migration_manager import MigrationManager
@@ -61,31 +61,6 @@ def create_app(dataset_id=None, engine=None, session_local=None):
             pipeline_db_manager = get_pipeline_database_manager()
             logger.info("Pipeline database initialized.")
             
-            # Migrate existing pipeline flavors from current dataset to pipeline database
-            # This is a one-time migration for existing installations
-            active_dataset = dataset_manager.get_active_dataset()
-            if active_dataset:
-                try:
-                    # Get current dataset session for migration
-                    from database.utils import get_current_session_local
-                    current_session_local = get_current_session_local()
-                    if current_session_local:
-                        # Check if there are flavors in the dataset database to migrate
-                        with current_session_local() as db:
-                            try:
-                                existing_flavors = db.execute(text("""
-                                    SELECT COUNT(*) FROM pipeline_flavors
-                                """)).fetchone()
-                                if existing_flavors and existing_flavors[0] > 0:
-                                    logger.info(f"Found {existing_flavors[0]} pipeline flavors to migrate")
-                                    migrated = pipeline_db_manager.migrate_from_dataset_database(current_session_local)
-                                    logger.info(f"Successfully migrated {migrated} pipeline flavors to pipeline database")
-                            except Exception as e:
-                                # Table might not exist or already migrated - this is fine
-                                logger.debug(f"No pipeline flavors to migrate (pipeline flavors managed separately): {e}")
-                except Exception as e:
-                    logger.warning(f"Pipeline flavor migration check failed: {e}")
-            
             # Run migrations to ensure schema is up to date
             active_dataset = dataset_manager.get_active_dataset()
             if active_dataset:
@@ -96,10 +71,11 @@ def create_app(dataset_id=None, engine=None, session_local=None):
                 logger.warning("No active dataset found after initialization.")
 
             # Initialize event processor with current dataset
-            active_dataset = dataset_manager.get_active_dataset()
             if active_dataset:
-                dataset_path = dataset_manager.get_dataset_file_path(active_dataset.filename)
-                app.state.event_processor = EventProcessor(dataset_path)
+                # Get the database URL instead of passing the engine
+                current_engine = get_current_engine()
+                database_url = str(current_engine.url)
+                app.state.event_processor = EventProcessor(database_url=database_url)
                 app.state.event_processor.start()
                 logger.info(f"Event processor started for dataset: {active_dataset.title}")
             
@@ -117,12 +93,17 @@ def create_app(dataset_id=None, engine=None, session_local=None):
                 logger.error(f"Error preloading NLP pipeline: {e}")
             
             # Preload GraphService to eliminate first-request delay
-            logger.info("Preloading GraphService...")
+            logger.info("Warming up GraphService...")
             try:
                 graph_service = get_cached_graph_service()
-                logger.info("GraphService successfully preloaded")
+                if graph_service:
+                    logger.info("GraphService successfully warmed up and cached")
+                else:
+                    logger.warning("GraphService warmup returned None")
             except Exception as e:
-                logger.error(f"Error preloading GraphService: {e}")
+                logger.error(f"Error warming up GraphService: {e}")
+                # Continue startup even if GraphService fails to warm up
+                logger.info("Continuing startup despite GraphService warmup failure")
             
             yield
         finally:
@@ -149,27 +130,17 @@ def create_app(dataset_id=None, engine=None, session_local=None):
                 db.close()
         app.dependency_overrides[get_db] = _get_db
 
-    app.include_router(layers.router, prefix="/api/layers", tags=["layers"])
-    app.include_router(domains.router, prefix="/api/domains", tags=["domains"])
-    app.include_router(terms.router, prefix="/api/terms", tags=["terms"])
-    # Unified nodes API (Great Normalization)
-    app.include_router(nodes.router, tags=["nodes"])
-    app.include_router(term_relationships.router, prefix="/api/term-relationships", tags=["term-relationships"])
+    # Using unified structure_nodes API instead of separate layers/domains/terms
+    app.include_router(structure_nodes.router, tags=["structure_nodes"])
     app.include_router(predicates.router, prefix="/api/predicates", tags=["predicates"])
     app.include_router(graph.router, prefix="/api", tags=["graph"])
     app.include_router(datasets.router, prefix="/api", tags=["datasets"])
     app.include_router(schema.router, prefix="/api", tags=["schema"])
-    # Configuration management API
     app.include_router(config.router)
-    # Schema.org API (separate router with its own prefix)
     app.include_router(schema_org_api.router)
-    # Integrate NLP router
     app.include_router(nlp_analysis.router, prefix="/api", tags=["nlp"])
-    # LLM router
     app.include_router(llm.router, prefix="/api", tags=["llm"])
-    # Pipeline flavors router
     app.include_router(pipeline_flavors.router, tags=["pipeline-flavors"])
-    # NLP enrichment reference API
     app.include_router(enrichment.router, prefix="", tags=["nlp-reference"])
     return app
 

@@ -44,68 +44,78 @@ def test_cosine_similarity_bytes_input():
     # Should decode bytes to float array and compute similarity
     assert math.isclose(cosine_similarity(arr.tolist(), np.frombuffer(b, dtype=np.float32).tolist()), 1.0, abs_tol=1e-6)
 
-# Layer API tests - using shared fixtures from conftest.py
-def test_create_get_update_delete_layer(client):
-    # Create
-    resp = client.post("/api/layers/", json={"title": "Layer 1", "definition": "Def 1"})
+# Layer API tests - using unified structure_nodes API
+def test_create_get_update_delete_layer(shared_client):
+    # Create layer (using structure_nodes API)
+    layer_data = {
+        "node_type": "layer",
+        "title": "Layer 1", 
+        "definition": "Def 1",
+        "parent_node_id": None
+    }
+    resp = shared_client.post("/api/structure_nodes/", json=layer_data)
     assert resp.status_code == 201, resp.text
     layer = resp.json()
     layer_id = layer["id"]
+    
     # Get
-    resp = client.get(f"/api/layers/{layer_id}")
+    resp = shared_client.get(f"/api/structure_nodes/{layer_id}")
     assert resp.status_code == 200
     assert resp.json()["title"] == "Layer 1"
+    
     # Update
-    resp = client.put(f"/api/layers/{layer_id}", json={"title": "Layer 1 Updated"})
+    resp = shared_client.put(f"/api/structure_nodes/{layer_id}", json={"title": "Layer 1 Updated"})
     assert resp.status_code == 200
     assert resp.json()["title"] == "Layer 1 Updated"
+    
     # Delete
-    resp = client.delete(f"/api/layers/{layer_id}")
+    resp = shared_client.delete(f"/api/structure_nodes/{layer_id}")
     assert resp.status_code == 200
     assert resp.json()["success"] is True
+    
     # Get after delete
-    resp = client.get(f"/api/layers/{layer_id}")
+    resp = shared_client.get(f"/api/structure_nodes/{layer_id}")
     assert resp.status_code == 404
 
-def test_layer_bad_input(client):
+def test_layer_bad_input(shared_client):
     # Missing required title
-    resp = client.post("/api/layers/", json={"definition": "Def"})
+    resp = shared_client.post("/api/structure_nodes/", json={"node_type": "layer", "definition": "Def"})
     assert resp.status_code == 422
     assert "title" in resp.text.lower()
 
     # Title too short
-    resp = client.post("/api/layers/", json={"title": "A", "definition": "Def"})
+    resp = shared_client.post("/api/structure_nodes/", json={"node_type": "layer", "title": "A", "definition": "Def"})
     assert resp.status_code == 422
     assert "title" in resp.text.lower()
 
     # Empty definition should now be allowed (no longer fails)
-    resp = client.post("/api/layers/", json={"title": "Layer", "definition": ""})
+    resp = shared_client.post("/api/structure_nodes/", json={"node_type": "layer", "title": "Layer", "definition": ""})
     assert resp.status_code == 201
 
-def test_layer_duplicate_title(client):
-    resp1 = client.post("/api/layers/", json={"title": "Layer X"})
+def test_layer_duplicate_title(shared_client):
+    resp1 = shared_client.post("/api/structure_nodes/", json={"node_type": "layer", "title": "Layer X"})
     assert resp1.status_code == 201
-    resp2 = client.post("/api/layers/", json={"title": "Layer X"})
+    resp2 = shared_client.post("/api/structure_nodes/", json={"node_type": "layer", "title": "Layer X"})
     assert resp2.status_code == 409
     assert "unique" in resp2.json()["detail"][0]["msg"].lower()
 
-def test_update_layer_to_duplicate_title(client):
-    resp1 = client.post("/api/layers/", json={"title": "Layer A"})
-    resp2 = client.post("/api/layers/", json={"title": "Layer B"})
+def test_update_layer_to_duplicate_title(shared_client):
+    resp1 = shared_client.post("/api/structure_nodes/", json={"node_type": "layer", "title": "Layer A"})
+    resp2 = shared_client.post("/api/structure_nodes/", json={"node_type": "layer", "title": "Layer B"})
     id_a = resp1.json()["id"]
     id_b = resp2.json()["id"]
-    resp = client.put(f"/api/layers/{id_b}", json={"title": "Layer A"})
+    resp = shared_client.put(f"/api/structure_nodes/{id_b}", json={"title": "Layer A"})
     assert resp.status_code == 409
     assert "unique" in resp.json()["detail"][0]["msg"].lower()
 
-def test_get_nonexistent_layer(client):
-    resp = client.get(f"/api/layers/{uuid.uuid4()}")
+def test_get_nonexistent_layer(shared_client):
+    resp = shared_client.get(f"/api/structure_nodes/{uuid.uuid4()}")
     assert resp.status_code == 404
 
-def test_update_nonexistent_layer(client):
-    resp = client.put(f"/api/layers/{uuid.uuid4()}", json={"title": "Doesn't exist"})
+def test_update_nonexistent_layer(shared_client):
+    resp = shared_client.put(f"/api/structure_nodes/{uuid.uuid4()}", json={"title": "Doesn't exist"})
     assert resp.status_code == 404
 
-def test_delete_nonexistent_layer(client):
-    resp = client.delete(f"/api/layers/{uuid.uuid4()}")
+def test_delete_nonexistent_layer(shared_client):
+    resp = shared_client.delete(f"/api/structure_nodes/{uuid.uuid4()}")
     assert resp.status_code == 404

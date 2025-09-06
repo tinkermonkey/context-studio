@@ -2,7 +2,10 @@ import sys
 import os
 import pytest
 
-# Fixtures for test database and client are now provided by conftest.py
+# Integration tests use shared session-scoped fixtures for performance:
+# - shared_client (session-scoped test client, reused across all tests)
+# - client (function-scoped, delegates to shared_client for backwards compatibility) 
+# - db_session (function-scoped, provides clean database state per test)
 
 def create_layer(client, title=None, definition=None, primary_predicate=None):
     import uuid

@@ -12,6 +12,7 @@ from fastapi import FastAPI
 from unittest.mock import Mock, patch
 import json
 import datetime
+import pytest
 
 from api.llm import router, get_llm_service, handle_llm_error
 from llm.models import (
@@ -29,6 +30,21 @@ from llm.exceptions import (
 )
 
 
+@pytest.fixture
+def mock_llm_service():
+    """Mock the LLM service to avoid API key requirements in tests"""
+    with patch.dict('os.environ', {'OPENAI_API_KEY': 'sk-test-key-1234567890abcdef'}):
+        with patch('llm.service.init_chat_model'):
+            # Also mock the actual service method to avoid async issues in tests
+            with patch('llm.service.LLMService.suggest_term_definition') as mock_suggest:
+                from llm.models import DefinitionSuggestionResponse
+                mock_suggest.return_value = DefinitionSuggestionResponse(
+                    definition="Test definition from mock",
+                    reasoning="Test reasoning from mock"
+                )
+                yield
+
+
 def test_router_structure():
     """Test that the FastAPI router is structured correctly"""
     print("🧪 Testing Router Structure")
@@ -43,7 +59,7 @@ def test_router_structure():
     route_info = [(route.path, list(route.methods) if hasattr(route, 'methods') else []) for route in routes]
     
     expected_routes = [
-        ("/llm/suggest_definition", ["POST"]),
+        ("/llm/suggest_term_definition", ["POST"]),
         ("/llm/health", ["GET"])
     ]
     
@@ -81,8 +97,8 @@ def test_service_dependency():
     assert callable(get_llm_service)
     print("  ✓ get_llm_service dependency function available")
     
-    # Test with mocked environment
-    with patch.dict('os.environ', {'OPENAI_API_KEY': 'test-key'}):
+    # Test with mocked environment - need sk- prefix for API key validation
+    with patch.dict('os.environ', {'OPENAI_API_KEY': 'sk-test-key-1234567890abcdef'}):
         with patch('llm.service.init_chat_model'):
             service = get_llm_service()
             from llm.service import LLMService
@@ -90,7 +106,7 @@ def test_service_dependency():
             print("  ✓ Service dependency returns LLMService instance")
 
 
-def test_suggest_definition_endpoint():
+def test_suggest_definition_endpoint(mock_llm_service):
     """Test the suggest_definition endpoint structure and validation"""
     print("🧪 Testing Suggest Definition Endpoint")
     
@@ -129,28 +145,31 @@ def test_suggest_definition_endpoint():
         "wikidata_context": {"another_key": "value"}
     }
     
-    # Test request validation (will fail due to no LLM service, but validates structure)
-    response = client.post("/api/llm/suggest_definition", json=test_request)
+    # Test request validation (should succeed with mocked service)
+    response = client.post("/api/llm/suggest_term_definition", json=test_request)
     
-    # Should fail with 500 (no API key) but structure should be validated
-    assert response.status_code in [500, 422]  # 422 for validation error, 500 for LLM error
+    # Should succeed with 200 (mocked service returns valid response) or fail with validation error
+    assert response.status_code in [200, 422]  # 200 for success with mock, 422 for validation error
     
     if response.status_code == 422:
         # Validation error - check it's not due to our request structure
         error_detail = response.json()
         print(f"  ⚠️  Validation response: {error_detail}")
     else:
-        # LLM configuration error - means our request structure is valid
-        print("  ✓ Request structure validates correctly (LLM service error expected)")
+        # Success - means our request structure is valid and mock service worked
+        print("  ✓ Request structure validates correctly (mock service succeeded)")
+        response_data = response.json()
+        assert "success" in response_data
+        assert response_data["success"] is True
     
     # Test empty term validation
     empty_request = {"term": ""}
-    response = client.post("/api/llm/suggest_definition", json=empty_request)
+    response = client.post("/api/llm/suggest_term_definition", json=empty_request)
     assert response.status_code in [400, 422, 500]
     print("  ✓ Empty term validation works")
 
 
-def test_health_endpoint():
+def test_health_endpoint(mock_llm_service):
     """Test the health check endpoint"""
     print("🧪 Testing Health Check Endpoint")
     
@@ -226,22 +245,22 @@ def test_requirements_compliance():
     suggest_definition_route = None
     
     for route in routes:
-        if hasattr(route, 'path') and route.path == "/llm/suggest_definition":
+        if hasattr(route, 'path') and route.path == "/llm/suggest_term_definition":
             suggest_definition_route = route
             break
     
     assert suggest_definition_route is not None
-    print("  ✓ /api/llm/suggest_definition endpoint exists")
+    print("  ✓ /api/llm/suggest_term_definition endpoint exists")
     
     # Test HTTP method
     assert "POST" in suggest_definition_route.methods
     print("  ✓ Endpoint accepts POST requests")
     
     # Test that endpoint accepts exact JSON schema from requirements
-    from api.llm import suggest_definition
+    from api.llm import suggest_term_definition
     import inspect
     
-    sig = inspect.signature(suggest_definition)
+    sig = inspect.signature(suggest_term_definition)
     params = sig.parameters
     
     # Should have request parameter of type DefinitionSuggestionRequest

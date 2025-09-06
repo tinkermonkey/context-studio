@@ -29,13 +29,15 @@ from services.node_service import NodeService
 from services.node_link_service import NodeLinkService
 from api.models.structure_nodes import (
     NodeCreate, NodeUpdate, NodeOut, NodeLinkCreate, NodeLinkOut,
-    NodeSearchRequest, NodeSearchResult, PaginatedNodesResponse, NodeTypeEnum
+    NodeSearchRequest, NodeSearchResult, PaginatedNodesResponse, NodeTypeEnum,
+    MoveNodesRequest, MoveNodesResponse
 )
 from api.utils.node_conversion import (
     to_node_out, to_node_link_out, nodes_to_paginated_response,
     convert_api_node_type_to_db, uuid_to_str
 )
 from api.dependencies.structure_nodes import get_node_service, get_node_link_service
+from api.api_errors import conflict_error_response
 
 router = APIRouter(prefix="/api/structure_nodes", tags=["structure_nodes"])
 
@@ -68,7 +70,12 @@ def create_node(
         return to_node_out(created_node)
         
     except ValueError as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        error_msg = str(e)
+        # Check if this is a uniqueness constraint violation
+        if "unique" in error_msg.lower():
+            return conflict_error_response(error_msg)
+        else:
+            raise HTTPException(status_code=400, detail=error_msg)
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Internal server error: {str(e)}")
 
@@ -307,7 +314,15 @@ def update_node(
         return to_node_out(updated_node)
         
     except ValueError as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        error_msg = str(e).lower()
+        # Check for not found errors first
+        if "not found" in error_msg:
+            raise HTTPException(status_code=404, detail=str(e))
+        # Check if this is a uniqueness constraint violation
+        elif "unique" in error_msg:
+            return conflict_error_response(str(e))
+        else:
+            raise HTTPException(status_code=400, detail=str(e))
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Internal server error: {str(e)}")
 
@@ -331,12 +346,59 @@ def delete_node(
             raise HTTPException(status_code=404, detail="StructureNode not found")
             
     except ValueError as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        error_message = str(e)
+        if "not found" in error_message.lower():
+            raise HTTPException(status_code=404, detail=error_message)
+        elif "unique" in error_message.lower() or "already exists" in error_message.lower():
+            return conflict_error_response(error_message)
+        else:
+            raise HTTPException(status_code=400, detail=error_message)
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Internal server error: {str(e)}")
 
 
 # Additional utility endpoints
+@router.post("/move", response_model=MoveNodesResponse)
+def move_nodes(
+    move_request: MoveNodesRequest,
+    node_service: NodeService = Depends(get_node_service)
+):
+    """
+    Move structure_nodes to a new parent location.
+    
+    This endpoint supports moving multiple structure_nodes at once, with options for:
+    - Moving all child structure_nodes along with parents
+    - Handling title conflicts through warnings, renaming, or errors
+    - Maintaining referential integrity throughout the move operation
+    
+    The move operation is atomic - either all structure_nodes are moved successfully,
+    or the entire operation is rolled back.
+    """
+    try:
+        # Convert UUID objects to strings for service
+        node_ids = [str(node_id) for node_id in move_request.node_ids]
+        target_parent_id = str(move_request.target_parent_id) if move_request.target_parent_id else None
+        
+        result = node_service.move_nodes(
+            node_ids=node_ids,
+            target_parent_id=target_parent_id,
+            move_children=move_request.move_children,
+            handle_conflicts=move_request.handle_conflicts
+        )
+        
+        return MoveNodesResponse(
+            moved_nodes=[to_node_out(node) for node in result['moved_nodes']],
+            updated_children=[to_node_out(child) for child in result['updated_children']],
+            warnings=result['warnings'],
+            errors=result['errors']
+        )
+        
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Internal server error: {str(e)}")
+
+
 @router.get("/{node_id}/children", response_model=List[NodeOut])
 def get_node_children(
     node_id: UUID = Path(..., description="The ID of the parent structure_node"),

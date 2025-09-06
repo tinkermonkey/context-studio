@@ -5,7 +5,7 @@ This module provides a unified interface that combines both SPARQL querying
 capabilities (via RDFLib) and graph analytics (via NetworkX) for comprehensive
 graph operations on the Context Studio data.
 
-Updated for Great Normalization - works with unified nodes table.
+Updated for Great Normalization - works with unified structure_nodes table.
 """
 
 from sqlalchemy.orm import Session
@@ -15,7 +15,7 @@ from datetime import datetime
 from .network_service import NetworkService
 from .sparql_service import SPARQLService
 from .network_service import NetworkService
-from database.models import Node, NodeLink
+from database.models import StructureNode, StructureNodeLink
 from database.enums import NodeType
 from utils.logger import get_logger
 
@@ -27,7 +27,7 @@ class GraphService:
     Combined graph service that provides both SPARQL querying and NetworkX analytics.
     This is the main interface for graph operations in the Context Studio.
     
-    Updated to work with the unified nodes table from the Great Normalization.
+    Updated to work with the unified structure_nodes table from the Great Normalization.
     """
     
     def __init__(self, db_session: Session):
@@ -44,37 +44,37 @@ class GraphService:
         # Initialize SPARQL service for semantic queries
         self.sparql_service = SPARQLService(db_session)
         self.network_service = NetworkService(db_session)
-        self.nodes = {}
+        self.structure_nodes = {}
         self.edges = {}
         self._build_graph()
         logger.info("GraphService initialized with both NetworkX and SPARQL capabilities")
     
     
     def _build_graph(self):
-        """Build graph structure from unified nodes table."""
-        self.nodes = {}
+        """Build graph structure from unified structure_nodes table."""
+        self.structure_nodes = {}
         self.edges = {}
         
-        # Load all nodes
-        nodes = self.db_session.query(Node).all()
-        for node in nodes:
-            self.nodes[node.id] = {
-                'id': node.id,
-                'type': node.node_type.value,
-                'title': node.title,
-                'parent_id': node.parent_node_id,
+        # Load all structure_nodes
+        structure_nodes = self.db_session.query(StructureNode).all()
+        for structure_node in structure_nodes:
+            self.structure_nodes[structure_node.id] = {
+                'id': structure_node.id,
+                'type': structure_node.node_type.value,
+                'title': structure_node.title,
+                'parent_id': structure_node.parent_node_id,
                 'children': []
             }
         
         # Build parent-child relationships
-        for node_id, node_data in self.nodes.items():
+        for node_id, node_data in self.structure_nodes.items():
             if node_data['parent_id']:
-                parent = self.nodes.get(node_data['parent_id'])
+                parent = self.structure_nodes.get(node_data['parent_id'])
                 if parent:
                     parent['children'].append(node_id)
         
-        # Load node links
-        links = self.db_session.query(NodeLink).all()
+        # Load structure_node links
+        links = self.db_session.query(StructureNodeLink).all()
         for link in links:
             source_id = link.source_node_id
             if source_id not in self.edges:
@@ -89,8 +89,8 @@ class GraphService:
         Check if setting new_parent_id as parent of node_id would create a cycle.
         
         Args:
-            node_id: The node that would get a new parent
-            new_parent_id: The proposed parent node
+            node_id: The structure_node that would get a new parent
+            new_parent_id: The proposed parent structure_node
             
         Returns:
             True if setting the parent would create a cycle
@@ -106,7 +106,7 @@ class GraphService:
             if current == node_id:
                 return True
             visited.add(current)
-            node_data = self.nodes.get(current)
+            node_data = self.structure_nodes.get(current)
             current = node_data['parent_id'] if node_data else None
         
         return False
@@ -118,16 +118,16 @@ class GraphService:
         Args:
             domain_id: The domain to check within
             title: The title to check for uniqueness
-            exclude_id: Optional node ID to exclude from the check (for updates)
+            exclude_id: Optional structure_node ID to exclude from the check (for updates)
             
         Returns:
             True if a conflicting title is found
         """
-        # Get all nodes in the domain subtree
+        # Get all structure_nodes in the domain subtree
         domain_nodes = self._get_domain_subtree(domain_id)
         
         for node_id in domain_nodes:
-            node_data = self.nodes.get(node_id)
+            node_data = self.structure_nodes.get(node_id)
             if (node_data and 
                 node_data['title'] == title and 
                 node_id != exclude_id and
@@ -138,13 +138,13 @@ class GraphService:
     
     def _get_domain_subtree(self, domain_id: str) -> List[str]:
         """
-        Get all nodes in a domain's subtree.
+        Get all structure_nodes in a domain's subtree.
         
         Args:
             domain_id: The domain ID to get subtree for
             
         Returns:
-            List of all node IDs in the domain subtree
+            List of all structure_node IDs in the domain subtree
         """
         result = []
         stack = [domain_id]
@@ -153,7 +153,7 @@ class GraphService:
             current_id = stack.pop()
             result.append(current_id)
             
-            node_data = self.nodes.get(current_id)
+            node_data = self.structure_nodes.get(current_id)
             if node_data:
                 stack.extend(node_data['children'])
         
@@ -188,7 +188,7 @@ class GraphService:
             stats["sparql_stats"] = self.sparql_service.get_graph_stats()
             stats["service_info"]["sparql_triples"] = len(self.sparql_service.graph)
         else:
-            stats["sparql_stats"] = {"note": "SPARQL service disabled - pending update for unified nodes table"}
+            stats["sparql_stats"] = {"note": "SPARQL service disabled - pending update for unified structure_nodes table"}
             stats["service_info"]["sparql_triples"] = 0
         
         return stats
@@ -197,7 +197,7 @@ class GraphService:
     def sparql_query(self, query: str, **kwargs) -> List[Dict[str, Any]]:
         """Execute a SPARQL query."""
         if not self.sparql_service:
-            return [{"error": "SPARQL service disabled - pending update for unified nodes table"}]
+            return [{"error": "SPARQL service disabled - pending update for unified structure_nodes table"}]
         return self.sparql_service.query(query, **kwargs)
     
     def find_terms_by_title(self, title: str, exact: bool = False) -> List[Dict[str, Any]]:
@@ -214,12 +214,12 @@ class GraphService:
     
     # NetworkX-based operations
     def calculate_centrality(self, method: str = "pagerank") -> Dict[str, float]:
-        """Calculate node centrality using NetworkX."""
+        """Calculate structure_node centrality using NetworkX."""
         return self.network_service.calculate_centrality(method)
     
     def find_shortest_path(self, source_id: str, target_id: str, 
                           source_type: str = "term", target_type: str = "term") -> Optional[List[str]]:
-        """Find shortest path between nodes using NetworkX."""
+        """Find shortest path between structure_nodes using NetworkX."""
         return self.network_service.find_shortest_path(source_id, target_id, source_type, target_type)
     
     def get_neighbors(self, entity_id: str, entity_type: str = "term", 
@@ -237,7 +237,7 @@ class GraphService:
         return self.network_service.get_term_hierarchy(term_id)
     
     def get_node_info(self, entity_id: str, entity_type: str = "term") -> Optional[Dict[str, Any]]:
-        """Get detailed node information using NetworkX."""
+        """Get detailed structure_node information using NetworkX."""
         return self.network_service.get_node_info(entity_id, entity_type)
     
     # Combined operations that leverage both services
@@ -309,7 +309,7 @@ class GraphService:
             for term_id in terms_in_domain
         }
         
-        # Get domain node info
+        # Get domain structure_node info
         domain_node_info = self.network_service.get_node_info(domain_id, "domain")
         
         return {
@@ -386,8 +386,8 @@ class GraphService:
             domains_in_layer = []
             terms_in_layer = []
             
-            for node in self.network_service.graph.nodes(data=True):
-                node_id, node_data = node
+            for structure_node in self.network_service.graph.structure_nodes(data=True):
+                node_id, node_data = structure_node
                 if node_data.get("type") == "domain" and node_data.get("layer_id") == layer_id:
                     domains_in_layer.append(node_data.get("entity_id"))
                 elif node_data.get("type") == "term" and node_data.get("layer_id") == layer_id:
@@ -424,7 +424,7 @@ class GraphService:
                 "metadata": self.get_comprehensive_stats(),
                 "rdf_data": self.sparql_service.serialize("json-ld"),
                 "network_data": {
-                    "nodes": list(self.network_service.graph.nodes(data=True)),
+                    "structure_nodes": list(self.network_service.graph.structure_nodes(data=True)),
                     "edges": list(self.network_service.graph.edges(data=True))
                 },
                 "export_timestamp": datetime.now().isoformat()
