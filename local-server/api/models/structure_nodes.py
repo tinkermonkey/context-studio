@@ -23,7 +23,7 @@ class NodeBase(BaseModel):
     """Base model for structure_node data."""
     node_type: NodeTypeEnum
     parent_node_id: Optional[UUID] = None
-    title: str = Field(..., min_length=1, max_length=255)
+    title: str = Field(..., min_length=2, max_length=255)
     definition: Optional[str] = None
     structural_predicate_id: Optional[UUID] = None
 
@@ -45,7 +45,7 @@ class NodeCreate(NodeBase):
 
 class NodeUpdate(BaseModel):
     """Model for updating an existing structure_node."""
-    title: Optional[str] = Field(None, min_length=1, max_length=255)
+    title: Optional[str] = Field(None, min_length=2, max_length=255)
     definition: Optional[str] = None
     parent_node_id: Optional[UUID] = None
     structural_predicate_id: Optional[UUID] = None

@@ -13,8 +13,8 @@ from schema_org.service import SchemaOrgService
 from schema_org.errors import BackupError, DatabaseError
 
 
-def _fake_embedding(text: str, dim: int = 8) -> bytes:
-    # Deterministic lightweight embedding for tests
+def _fake_embedding(text: str, dim: int = 384) -> bytes:
+    # Deterministic lightweight embedding for tests - using 384 dims to match real embeddings
     s = sum(bytearray(text.encode('utf-8') or b'0')) % 100
     arr = np.full((dim,), float(s) / 100.0, dtype=np.float32)
     return arr.tobytes()

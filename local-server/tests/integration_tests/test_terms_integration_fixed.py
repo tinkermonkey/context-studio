@@ -77,12 +77,10 @@ def test_create_term_invalid_domain_or_layer(client):
 def test_create_term_duplicate_title_within_domain(client):
     layer_id = create_layer(client)
     domain_id = create_domain(client, layer_id)
-    unique_suffix = str(uuid.uuid4())[:8]
-    dup_title = f"DupTerm {unique_suffix}"
-    t1 = create_term(client, domain_id, layer_id, title=dup_title)
+    t1 = create_term(client, domain_id, layer_id, title="DupTerm")
     resp = client.post("/api/structure_nodes/", json={
         "node_type": "term",
-        "title": dup_title, 
+        "title": "DupTerm", 
         "definition": "D", 
         "parent_node_id": domain_id
     })
@@ -135,14 +133,11 @@ def test_update_term(client):
 def test_update_term_duplicate_title(client):
     layer_id = create_layer(client)
     domain_id = create_domain(client, layer_id)
-    unique_suffix = str(uuid.uuid4())[:8]
-    original_title = f"Original {unique_suffix}"
-    duplicate_title = f"Duplicate {unique_suffix}"
-    t1 = create_term(client, domain_id, layer_id, title=original_title)
-    t2 = create_term(client, domain_id, layer_id, title=duplicate_title)
+    t1 = create_term(client, domain_id, layer_id, title="Original")
+    t2 = create_term(client, domain_id, layer_id, title="Duplicate")
     
     # Try to update t2 to have the same title as t1
-    resp = client.put(f"/api/structure_nodes/{t2['id']}", json={"title": original_title})
+    resp = client.put(f"/api/structure_nodes/{t2['id']}", json={"title": "Original"})
     assert resp.status_code == 409
     # Handle both string and list formats for detail
     detail = resp.json()["detail"]
@@ -178,10 +173,8 @@ def test_delete_term_not_found(client):
 def test_list_terms(client):
     layer_id = create_layer(client)
     domain_id = create_domain(client, layer_id)
-    # Use unique titles to avoid conflicts across test runs
-    unique_suffix = str(uuid.uuid4())[:8]
-    term1 = create_term(client, domain_id, layer_id, title=f"Term A {unique_suffix}")
-    term2 = create_term(client, domain_id, layer_id, title=f"Term B {unique_suffix}")
+    term1 = create_term(client, domain_id, layer_id, title="Term A")
+    term2 = create_term(client, domain_id, layer_id, title="Term B")
     
     resp = client.get(f"/api/structure_nodes/?parent_node_id={domain_id}&node_type=term")
     assert resp.status_code == 200
@@ -201,11 +194,10 @@ def test_terms_pagination(client):
     layer_id = create_layer(client)
     domain_id = create_domain(client, layer_id)
     
-    # Create multiple terms for pagination testing with unique titles
-    unique_suffix = str(uuid.uuid4())[:8]
+    # Create multiple terms for pagination testing
     terms = []
     for i in range(5):
-        term = create_term(client, domain_id, layer_id, title=f"Term {chr(65+i)} {unique_suffix}")  # Term A, B, C, D, E with unique suffix
+        term = create_term(client, domain_id, layer_id, title=f"Term {chr(65+i)}")  # Term A, B, C, D, E
         terms.append(term)
     
     # Test first page

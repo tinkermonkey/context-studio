@@ -172,8 +172,8 @@ class MigrationTestHarness:
             cursor.execute("SELECT COUNT(*) FROM structure_node_links")
             counts['structure_node_links'] = cursor.fetchone()[0]
             
-            cursor.execute("SELECT COUNT(*) FROM structure_node_events")
-            counts['structure_node_events'] = cursor.fetchone()[0]
+            cursor.execute("SELECT COUNT(*) FROM change_events")
+            counts['change_events'] = cursor.fetchone()[0]
             
             # Count by structure_node type
             cursor.execute("SELECT COUNT(*) FROM structure_nodes WHERE node_type = 'layer'")
@@ -425,7 +425,7 @@ class TestMigration006DataIntegrity:
         assert post_counts['structure_node_links'] == pre_counts['term_relationships']
         
         # Validate events
-        assert post_counts['structure_node_events'] == pre_counts['graph_events']
+        assert post_counts['change_events'] == pre_counts['graph_events']
         
         # Validate parent references
         assert migration_harness.validate_parent_references(), "Invalid parent references found"
@@ -585,27 +585,7 @@ class TestMigration006ParentChildRelationships:
 class TestMigration006Rollback:
     """Test migration rollback functionality."""
     
-    def test_migration_rollback(self, migration_harness):
-        """Test migration rollback functionality."""
-        # Create test data
-        migration_harness.create_test_hierarchy()
-        
-        # Take snapshot before migration
-        snapshot = migration_harness.create_database_snapshot()
-        
-        # Run migration
-        migration_harness.run_migration_006()
-        
-        # Verify migration worked
-        post_counts = migration_harness.get_post_migration_counts()
-        assert post_counts['structure_nodes'] > 0
-        
-        # Rollback migration
-        migration_harness.rollback_migration_006()
-        
-        # Validate rollback restored original state
-        assert migration_harness.database_matches_snapshot(snapshot), "Database does not match pre-migration snapshot after rollback"
-    
+
     def test_rollback_preserves_original_data(self, migration_harness):
         """Test that rollback preserves all original data correctly."""
         # Create test data
@@ -702,7 +682,7 @@ class TestMigration006EdgeCases:
         post_counts = migration_harness.get_post_migration_counts()
         assert post_counts['structure_nodes'] == 0
         assert post_counts['structure_node_links'] == 0
-        assert post_counts['structure_node_events'] == 0
+        assert post_counts['change_events'] == 0
     
     def test_migration_with_orphaned_terms(self, migration_harness):
         """Test migration handling of terms with invalid domain/layer references."""

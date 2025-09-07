@@ -132,7 +132,7 @@ class TestPipelineFlavorAPI:
         assert response.status_code == 200
         result = response.json()
         assert result["id"] == flavor_id
-        assert result["title"] == "Test API Flavor"
+        assert result["title"] == sample_flavor_data["title"]
     
     def test_get_flavor_by_id_not_found(self, client):
         """Test getting non-existent flavor by ID"""
@@ -151,27 +151,27 @@ class TestPipelineFlavorAPI:
         flavor_id = create_response.json()["id"]
         
         # Update the flavor
+        import uuid
+        test_id = str(uuid.uuid4())[:8]
         update_data = {
-            "title": "Updated Test Flavor",
+            "title": f"UpdatedTest-{test_id}",
             "llm_config": {
                 "temperature": 0.5,
                 "max_tokens": 1500
             },
             "enabled": False
         }
-        
+
         response = client.put(f"/api/pipeline-flavors/{flavor_id}", json=update_data)
         
         # Check response
         assert response.status_code == 200
         result = response.json()
-        assert result["title"] == "Updated Test Flavor"
+        assert result["title"] == f"UpdatedTest-{test_id}"
         assert result["llm_config"]["temperature"] == 0.5
         assert result["llm_config"]["max_tokens"] == 1500
         assert result["enabled"] is False
-        assert result["version"] > 1  # Version should increment
-    
-    def test_update_flavor_not_found(self, client):
+        assert result["version"] > 1  # Version should increment    def test_update_flavor_not_found(self, client):
         """Test updating non-existent flavor"""
         update_data = {"title": "New Title"}
         
@@ -220,7 +220,7 @@ class TestPipelineFlavorAPI:
             
             # Should be forbidden
             assert response.status_code == 400
-            assert "Cannot delete the Default flavor" in response.json()["detail"]
+            assert "Cannot delete default flavor" in response.json()["detail"]
 
 
 class TestLLMStreamingEndpoints:

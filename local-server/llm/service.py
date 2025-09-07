@@ -465,36 +465,34 @@ class LLMService:
         
         lines = response_text.strip().split('\n')
         definition = ""
-        reasoning = ""
-        discrepancies = None
+        purpose = ""
+        rationale = ""
         
         try:
             for line in lines:
                 line = line.strip()
                 if line.startswith("Definition:"):
                     definition = line[len("Definition:"):].strip()
-                elif line.startswith("Reasoning:"):
-                    reasoning = line[len("Reasoning:"):].strip()
-                elif line.startswith("Discrepancies:"):
-                    discrepancies_text = line[len("Discrepancies:"):].strip()
-                    if discrepancies_text and discrepancies_text.lower() not in ["", "none", "n/a"]:
-                        discrepancies = discrepancies_text
+                elif line.startswith("Purpose:"):
+                    purpose = line[len("Purpose:"):].strip()
+                elif line.startswith("Rationale:"):
+                    rationale = line[len("Rationale:"):].strip()
             
             if not definition:
                 self.logger.error("Could not extract definition from layer LLM response")
                 self.logger.debug(f"Response text: {response_text[:500]}...")
                 raise LLMProcessingError("Could not extract definition from LLM response")
-            if not reasoning:
-                self.logger.error("Could not extract reasoning from layer LLM response")
+            if not purpose:
+                self.logger.error("Could not extract purpose from layer LLM response")
                 self.logger.debug(f"Response text: {response_text[:500]}...")
-                raise LLMProcessingError("Could not extract reasoning from LLM response")
+                raise LLMProcessingError("Could not extract purpose from LLM response")
             
-            self.logger.debug(f"Successfully parsed layer response - Definition: {len(definition)} chars, Reasoning: {len(reasoning)} chars")
+            self.logger.debug(f"Successfully parsed layer response - Definition: {len(definition)} chars, Purpose: {len(purpose)} chars")
             
             return LayerDefinitionResponse(
                 definition=definition,
-                reasoning=reasoning,
-                discrepancies=discrepancies
+                purpose=purpose,
+                rationale=rationale
             )
             
         except LLMProcessingError:
@@ -514,36 +512,34 @@ class LLMService:
         
         lines = response_text.strip().split('\n')
         definition = ""
-        reasoning = ""
-        discrepancies = None
+        purpose = ""
+        scope = ""
         
         try:
             for line in lines:
                 line = line.strip()
                 if line.startswith("Definition:"):
                     definition = line[len("Definition:"):].strip()
-                elif line.startswith("Reasoning:"):
-                    reasoning = line[len("Reasoning:"):].strip()
-                elif line.startswith("Discrepancies:"):
-                    discrepancies_text = line[len("Discrepancies:"):].strip()
-                    if discrepancies_text and discrepancies_text.lower() not in ["", "none", "n/a"]:
-                        discrepancies = discrepancies_text
+                elif line.startswith("Purpose:"):
+                    purpose = line[len("Purpose:"):].strip()
+                elif line.startswith("Scope:"):
+                    scope = line[len("Scope:"):].strip()
             
             if not definition:
                 self.logger.error("Could not extract definition from domain LLM response")
                 self.logger.debug(f"Response text: {response_text[:500]}...")
                 raise LLMProcessingError("Could not extract definition from LLM response")
-            if not reasoning:
-                self.logger.error("Could not extract reasoning from domain LLM response")
+            if not purpose:
+                self.logger.error("Could not extract purpose from domain LLM response")
                 self.logger.debug(f"Response text: {response_text[:500]}...")
-                raise LLMProcessingError("Could not extract reasoning from LLM response")
+                raise LLMProcessingError("Could not extract purpose from LLM response")
             
-            self.logger.debug(f"Successfully parsed domain response - Definition: {len(definition)} chars, Reasoning: {len(reasoning)} chars")
+            self.logger.debug(f"Successfully parsed domain response - Definition: {len(definition)} chars, Purpose: {len(purpose)} chars")
             
             return DomainDefinitionResponse(
                 definition=definition,
-                reasoning=reasoning,
-                discrepancies=discrepancies
+                purpose=purpose,
+                scope=scope
             )
             
         except LLMProcessingError:
@@ -561,6 +557,11 @@ class LLMService:
             "provider": "openai",
             "initialized": self._llm is not None
         }
+    
+    # Backward compatibility alias for tests
+    async def suggest_definition(self, request: DefinitionSuggestionRequest) -> DefinitionSuggestionResponse:
+        """Alias for suggest_term_definition for backward compatibility"""
+        return await self.suggest_term_definition(request)
     
     async def _get_flavor(self, pipeline: PipelineType, flavor_identifier: Optional[str]) -> PipelineFlavor:
         """Get flavor by ID, title, or default"""

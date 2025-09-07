@@ -46,6 +46,10 @@ class MigrationManager:
         self.target_version = self._get_latest_migration_version()
         logger.info(f"MigrationManager initialized: current_version={self.current_version}, target_version={self.target_version}")
     
+    def get_current_version(self) -> int:
+        """Get the current schema version (alias for current_version property)."""
+        return self.current_version
+    
     def _ensure_schema_history_table(self, connection: Connection) -> None:
         """Ensure the schema_history table exists."""
         connection.execute(text("""
@@ -127,6 +131,83 @@ class MigrationManager:
         """Calculate checksum for a migration."""
         content = f"{migration.version}:{migration.description}"
         return hashlib.md5(content.encode()).hexdigest()
+    
+    def migrate_to_version(self, target_version: int) -> bool:
+        """Apply or rollback migrations to reach specific version."""
+        if isinstance(target_version, str):
+            target_version = int(target_version)
+            
+        logger.info(f"Migrating to version {target_version} from {self.current_version}")
+        
+        if target_version == self.current_version:
+            logger.info(f"Already at version {target_version}")
+            return True
+        elif target_version > self.current_version:
+            # Apply forward migrations
+            migrations = self._discover_migrations()
+            pending_migrations = [
+                m for m in migrations 
+                if self.current_version < m.version <= target_version
+            ]
+            
+            if not pending_migrations:
+                logger.info("No migrations to apply")
+                return True
+            
+            logger.info(f"Applying {len(pending_migrations)} migrations to reach version {target_version}")
+            
+            engine = create_engine(self.database_url, connect_args={"check_same_thread": False})
+            
+            try:
+                with engine.connect() as conn:
+                    # Ensure schema history table exists
+                    with conn.begin():
+                        self._ensure_schema_history_table(conn)
+                    
+                    for migration in pending_migrations:
+                        try:
+                            # Use a separate transaction for each migration
+                            with conn.begin():
+                                start_time = time.time()
+                                
+                                logger.info(f"Applying migration {migration.version}: {migration.description}")
+                                migration.up(conn)
+                                
+                                execution_time = int((time.time() - start_time) * 1000)
+                                checksum = self._calculate_migration_checksum(migration)
+                                
+                                # Record migration in history
+                                conn.execute(text("""
+                                    INSERT INTO schema_history 
+                                    (version, description, migration_file, checksum, execution_time_ms)
+                                    VALUES (:version, :description, :migration_file, :checksum, :execution_time)
+                                """), {
+                                    "version": migration.version,
+                                    "description": migration.description,
+                                    "migration_file": f"{migration.version:03d}_{migration.description.lower().replace(' ', '_')}.py",
+                                    "checksum": checksum,
+                                    "execution_time": execution_time
+                                })
+                                
+                                logger.info(f"Migration {migration.version} completed in {execution_time}ms")
+                            
+                        except Exception as e:
+                            logger.error(f"Migration {migration.version} failed: {e}")
+                            raise
+                
+                # Update current version
+                self.current_version = self._get_current_schema_version()
+                logger.info(f"Forward migration completed. Current version: {self.current_version}")
+                return True
+                
+            except Exception as e:
+                logger.error(f"Migration process failed: {e}")
+                return False
+            finally:
+                engine.dispose()
+        else:
+            # Rollback to earlier version
+            return self.rollback_to_version(target_version)
     
     def migrate_to_latest(self, skip_on_error: bool = False) -> bool:
         """Apply all pending migrations to bring database to latest version."""

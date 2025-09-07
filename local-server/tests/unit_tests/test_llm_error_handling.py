@@ -134,8 +134,8 @@ Discrepancies: None identified"""
         from llm.service import LLMService
         import inspect
         
-        # Check that suggest_definition method has timeout handling
-        source_code = inspect.getsource(LLMService.suggest_definition)
+        # Check that suggest_term_definition method has timeout handling
+        source_code = inspect.getsource(LLMService.suggest_term_definition)
         assert "timeout" in source_code.lower()
         assert "asyncio.wait_for" in source_code
     

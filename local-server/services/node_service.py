@@ -10,7 +10,7 @@ from typing import List, Optional, Dict, Any, Union
 from sqlalchemy.orm import Session
 from sqlalchemy import and_, func
 
-from database.models import StructureNode, ChangeEvent
+from database.models import StructureNode, ChangeEvent, Predicate
 from database.enums import NodeType
 from graph.graph_service import GraphService
 from embeddings.generate_embeddings import generate_embedding
@@ -58,6 +58,9 @@ class NodeService:
             raise ValueError("title is required")
         
         node_type = NodeType(node_data['node_type'])
+        
+        # Validate structural predicate ID if provided
+        self._validate_structural_predicate_id(node_data.get('structural_predicate_id'))
         
         # Validate structure_node type specific rules
         self._validate_node_creation(node_data, node_type)
@@ -135,6 +138,10 @@ class NodeService:
         
         # Store old data for validation and events
         old_node_data = self._node_to_dict(structure_node)
+        
+        # Validate structural predicate ID if being updated
+        if 'structural_predicate_id' in node_data:
+            self._validate_structural_predicate_id(node_data['structural_predicate_id'])
         
         # Validate updates based on structure_node type
         self._validate_node_update(structure_node, node_data)
@@ -442,6 +449,9 @@ class NodeService:
         if not parent or parent.node_type != NodeType.LAYER:
             raise ValueError("Domain parent must be a layer")
         
+        # Validate structural predicate ID if provided
+        self._validate_structural_predicate_id(node_data.get('structural_predicate_id'))
+        
         # Domain titles must be unique within the layer
         existing = self.db.query(StructureNode).filter(
             StructureNode.node_type == NodeType.DOMAIN,
@@ -464,6 +474,10 @@ class NodeService:
             parent = self.db.query(StructureNode).filter(StructureNode.id == parent_id).first()
             if not parent or parent.node_type != NodeType.LAYER:
                 raise ValueError("Domain parent must be a layer")
+        
+        # Validate structural predicate ID if being updated
+        if 'structural_predicate_id' in node_data:
+            self._validate_structural_predicate_id(node_data['structural_predicate_id'])
         
         # Check title uniqueness within layer if title or parent is changing
         check_title_uniqueness = (
@@ -931,3 +945,21 @@ class NodeService:
         # If target_parent_id is in the descendants of node_id, it would create a cycle
         descendants = self._get_all_descendants(node_id)
         return any(descendant.id == target_parent_id for descendant in descendants)
+
+    def _validate_structural_predicate_id(self, structural_predicate_id: str):
+        """
+        Validate that the structural predicate ID references an existing predicate.
+        
+        Args:
+            structural_predicate_id: The predicate ID to validate
+            
+        Raises:
+            ValueError: If predicate ID is invalid or doesn't exist
+        """
+        if structural_predicate_id:
+            predicate = self.db.query(Predicate).filter(
+                Predicate.id == structural_predicate_id
+            ).first()
+            
+            if not predicate:
+                raise ValueError(f"Invalid structural_predicate_id: predicate '{structural_predicate_id}' does not exist")

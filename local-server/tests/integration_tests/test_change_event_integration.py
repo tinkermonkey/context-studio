@@ -12,6 +12,7 @@ from database.models import ChangeEvent
 from database.enums import RecordType
 import time
 import json
+from uuid import uuid4
 
 
 @pytest.fixture
@@ -23,28 +24,35 @@ def change_event_handler(db_session):
 def test_end_to_end_event_processing_all_record_types(db_session, change_event_handler):
     """Test end-to-end event processing for all record types."""
     
+    # Generate unique IDs for this test
+    node_id = f"test-node-{uuid4()}"
+    link_id = f"test-link-{uuid4()}"
+    predicate_id = f"test-predicate-{uuid4()}"
+    parent_id = f"parent-{uuid4()}"
+    child_id = f"child-{uuid4()}"
+    
     # Create events for all record types
     events = []
     
     # Structure node event
     events.append(change_event_handler.fire_created_event(
         RecordType.STRUCTURE_NODE, 
-        "test-node-123", 
-        {"id": "test-node-123", "title": "Test Node", "node_type": "layer"}
+        node_id, 
+        {"id": node_id, "title": "Test Node", "node_type": "layer"}
     ))
     
     # Structure node link event
     events.append(change_event_handler.fire_created_event(
         RecordType.STRUCTURE_NODE_LINK,
-        "test-link-456", 
-        {"id": "test-link-456", "parent_id": "parent-123", "child_id": "child-456"}
+        link_id, 
+        {"id": link_id, "parent_id": parent_id, "child_id": child_id}
     ))
     
     # Predicate event
     events.append(change_event_handler.fire_created_event(
         RecordType.PREDICATE,
-        "test-predicate-789",
-        {"id": "test-predicate-789", "title": "Test Predicate", "definition": "Test definition"}
+        predicate_id,
+        {"id": predicate_id, "title": "Test Predicate", "definition": "Test definition"}
     ))
     
     # Verify events are unprocessed
@@ -73,28 +81,31 @@ def test_end_to_end_event_processing_all_record_types(db_session, change_event_h
 def test_predicate_event_integration(db_session, change_event_handler):
     """Test integration of predicate events through the full system."""
     
+    # Generate unique ID for this test
+    predicate_id = f"pred-integration-test-{uuid4()}"
+    
     # Create predicate events
     predicate_data = {
-        "id": "pred-integration-test",
+        "id": predicate_id,
         "title": "Integration Test Predicate",
         "definition": "A predicate for integration testing"
     }
     
     create_event = change_event_handler.fire_predicate_created_event(
-        "pred-integration-test", 
+        predicate_id, 
         predicate_data
     )
     
     update_event = change_event_handler.fire_updated_event(
         RecordType.PREDICATE,
-        "pred-integration-test",
+        predicate_id,
         predicate_data,
         {**predicate_data, "definition": "Updated definition"}
     )
     
     delete_event = change_event_handler.fire_deleted_event(
         RecordType.PREDICATE,
-        "pred-integration-test",
+        predicate_id,
         {**predicate_data, "definition": "Updated definition"}
     )
     
@@ -196,16 +207,23 @@ def test_mixed_event_processing_with_filtering(db_session, change_event_handler)
 def test_event_statistics_integration(db_session, change_event_handler):
     """Test event statistics functionality with real data."""
     
+    # Generate unique IDs for this test
+    node_id = f"stats-node-{uuid4()}"
+    pred_id = f"stats-pred-{uuid4()}"
+    link_id = f"stats-link-{uuid4()}"
+    parent_id = f"p-{uuid4()}"
+    child_id = f"c-{uuid4()}"
+    
     # Create baseline stats
     initial_stats = change_event_handler.get_event_stats()
     
     # Create events of different types
-    change_event_handler.fire_created_event(RecordType.STRUCTURE_NODE, "stats-node-1", {"title": "Node 1"})
-    change_event_handler.fire_updated_event(RecordType.STRUCTURE_NODE, "stats-node-1", {"title": "Node 1"}, {"title": "Updated Node 1"})
-    change_event_handler.fire_deleted_event(RecordType.STRUCTURE_NODE, "stats-node-1", {"title": "Updated Node 1"})
+    change_event_handler.fire_created_event(RecordType.STRUCTURE_NODE, node_id, {"title": "Node 1"})
+    change_event_handler.fire_updated_event(RecordType.STRUCTURE_NODE, node_id, {"title": "Node 1"}, {"title": "Updated Node 1"})
+    change_event_handler.fire_deleted_event(RecordType.STRUCTURE_NODE, node_id, {"title": "Updated Node 1"})
     
-    change_event_handler.fire_created_event(RecordType.PREDICATE, "stats-pred-1", {"title": "Predicate 1"})
-    change_event_handler.fire_created_event(RecordType.STRUCTURE_NODE_LINK, "stats-link-1", {"parent": "p1", "child": "c1"})
+    change_event_handler.fire_created_event(RecordType.PREDICATE, pred_id, {"title": "Predicate 1"})
+    change_event_handler.fire_created_event(RecordType.STRUCTURE_NODE_LINK, link_id, {"parent": parent_id, "child": child_id})
     
     # Get new stats
     new_stats = change_event_handler.get_event_stats()
@@ -228,16 +246,19 @@ def test_event_statistics_integration(db_session, change_event_handler):
 def test_normalized_change_event_integration(db_session):
     """Test that normalized change event system works in integration scenarios."""
     
+    # Generate unique ID for this test
+    node_id = f"new-node-{uuid4()}"
+    
     # Create handler using new interface
     handler = ChangeEventHandler(db_session)
     
     # Use new normalized methods
-    node_event = handler.fire_created_event(RecordType.STRUCTURE_NODE, "new-node-123", {"title": "Normalized Test"})
+    node_event = handler.fire_created_event(RecordType.STRUCTURE_NODE, node_id, {"title": "Normalized Test"})
     
     # Verify it created a proper ChangeEvent
     assert isinstance(node_event, ChangeEvent)
     assert node_event.record_type == RecordType.STRUCTURE_NODE
-    assert node_event.record_id == "new-node-123"
+    assert node_event.record_id == node_id
     
     # Process with EventProcessor
     engine = get_current_engine()
@@ -259,6 +280,9 @@ def test_normalized_change_event_integration(db_session):
 def test_database_trigger_integration(db_session):
     """Test that database triggers create proper ChangeEvents."""
     
+    # Generate unique ID for this test
+    trigger_node_id = f"trigger-test-node-{uuid4()}"
+    
     # Note: This test would need actual database triggers to be in place
     # and would insert directly into the tables to trigger the events
     # For now, we'll test the handler integration
@@ -278,31 +302,40 @@ def test_database_trigger_integration(db_session):
             # Simulate what a trigger would do
             conn.execute(text("""
                 INSERT INTO change_events (event_type, record_type, record_id, old_data, new_data, processed)
-                VALUES ('create', 'structure_node', 'trigger-test-node', NULL, 
-                        '{"id": "trigger-test-node", "title": "Trigger Test", "node_type": "layer"}', 0)
-            """))
+                VALUES ('create', 'structure_node', :node_id, NULL, 
+                        :node_data, 0)
+            """), {
+                "node_id": trigger_node_id,
+                "node_data": json.dumps({"id": trigger_node_id, "title": "Trigger Test", "node_type": "layer"})
+            })
             conn.commit()
             
             # Verify the event was created
             event_count = conn.execute(text("""
-                SELECT COUNT(*) FROM change_events WHERE record_id = 'trigger-test-node'
-            """)).scalar()
+                SELECT COUNT(*) FROM change_events WHERE record_id = :node_id
+            """), {"node_id": trigger_node_id}).scalar()
             
             assert event_count == 1
             
             # Clean up
             conn.execute(text("""
-                DELETE FROM change_events WHERE record_id = 'trigger-test-node'
-            """))
+                DELETE FROM change_events WHERE record_id = :node_id
+            """), {"node_id": trigger_node_id})
             conn.commit()
 
 
 def test_event_data_integrity_integration(db_session, change_event_handler):
     """Test data integrity throughout the event processing pipeline."""
     
+    # Generate unique ID for this test
+    integrity_node_id = f"integrity-test-node-{uuid4()}"
+    parent_domain_id = f"parent-domain-{uuid4()}"
+    child_term_1_id = f"child-term-1-{uuid4()}"
+    child_term_2_id = f"child-term-2-{uuid4()}"
+    
     # Create complex event with rich data
     complex_data = {
-        "id": "integrity-test-node",
+        "id": integrity_node_id,
         "title": "Complex Integration Test Node", 
         "definition": "A node with complex data for testing integrity",
         "node_type": "domain",
@@ -312,22 +345,22 @@ def test_event_data_integrity_integration(db_session, change_event_handler):
             "settings": {"auto_expand": True, "color": "#FF5733"}
         },
         "relationships": [
-            {"type": "parent", "target_id": "parent-domain"},
-            {"type": "child", "target_id": "child-term-1"},
-            {"type": "child", "target_id": "child-term-2"}
+            {"type": "parent", "target_id": parent_domain_id},
+            {"type": "child", "target_id": child_term_1_id},
+            {"type": "child", "target_id": child_term_2_id}
         ]
     }
     
     # Create event
     event = change_event_handler.fire_created_event(
         RecordType.STRUCTURE_NODE,
-        "integrity-test-node",
+        integrity_node_id,
         complex_data
     )
     
     # Verify data stored correctly
     assert event.new_data == complex_data
-    assert event.record_id == "integrity-test-node"
+    assert event.record_id == integrity_node_id
     
     # Process event
     engine = get_current_engine()
@@ -347,21 +380,25 @@ def test_event_data_integrity_integration(db_session, change_event_handler):
     assert event.new_data == complex_data  # Data should remain unchanged
     
     # Verify we can query and retrieve the event with intact data
-    retrieved_event = change_event_handler.get_events_for_record("integrity-test-node")[0]
+    retrieved_event = change_event_handler.get_events_for_record(integrity_node_id)[0]
     assert retrieved_event.new_data == complex_data
 
 
 def test_high_volume_event_processing(db_session, change_event_handler):
     """Test processing a higher volume of events."""
     
+    # Generate unique base ID for this test run
+    test_run_id = str(uuid4())
+    
     # Create multiple batches of events
     events = []
     for i in range(50):  # Create 50 events of mixed types
         record_type = [RecordType.STRUCTURE_NODE, RecordType.STRUCTURE_NODE_LINK, RecordType.PREDICATE][i % 3]
+        unique_id = f"volume-test-{test_run_id}-{record_type.value}-{i}"
         events.append(change_event_handler.fire_created_event(
             record_type,
-            f"volume-test-{record_type.value}-{i}",
-            {"id": f"volume-test-{record_type.value}-{i}", "title": f"Volume Test {i}"}
+            unique_id,
+            {"id": unique_id, "title": f"Volume Test {i}"}
         ))
     
     # Verify all are unprocessed

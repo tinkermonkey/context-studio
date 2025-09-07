@@ -15,11 +15,11 @@ def temp_db():
     conn = sqlite3.connect(path)
     cur = conn.cursor()
     cur.execute("""
-        CREATE TABLE node_events (
+        CREATE TABLE change_events (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             event_type TEXT NOT NULL,
-            node_type TEXT NOT NULL,
-            node_id TEXT NOT NULL,
+            record_type TEXT NOT NULL,
+            record_id TEXT NOT NULL,
             old_data TEXT,
             new_data TEXT,
             timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
@@ -28,33 +28,37 @@ def temp_db():
     """
     )
     conn.commit()
-    yield path
+    # Return SQLAlchemy URL format instead of file path
+    yield f"sqlite:///{path}"
     os.remove(path)
 
 
-def insert_event(conn, event_type, node_type, processed=0, ts=None, node_id=None):
+def insert_event(db_url, record_type, event_type, processed=0, ts=None, record_id=None):
     from datetime import datetime, timezone
+    import sqlite3
+    # Extract file path from SQLAlchemy URL
+    file_path = db_url.replace("sqlite:///", "")
+    conn = sqlite3.connect(file_path)
     cur = conn.cursor()
     if ts is None:
         ts = datetime.now(timezone.utc).isoformat()
-    if node_id is None:
-        node_id = f"test-{node_type}-id"
+    if record_id is None:
+        record_id = f"test-{record_type}-id"
     cur.execute(
-        "INSERT INTO node_events (event_type, node_type, node_id, old_data, new_data, timestamp, processed) VALUES (?, ?, ?, ?, ?, ?, ?)",
-        (event_type, node_type, node_id, '{}', '{}', ts, processed)
+        "INSERT INTO change_events (event_type, record_type, record_id, old_data, new_data, timestamp, processed) VALUES (?, ?, ?, ?, ?, ?, ?)",
+        (event_type, record_type, record_id, '{}', '{}', ts, processed)
     )
     conn.commit()
+    conn.close()
 
 
 def test_integration_event_processor_end_to_end(temp_db, capsys):
-    conn = sqlite3.connect(temp_db)
     # Insert a mix of events
-    insert_event(conn, "create", "layer")
-    insert_event(conn, "update", "domain")
-    insert_event(conn, "delete", "term")
-    insert_event(conn, "create", "node_link")
-    insert_event(conn, "create", "unknown_node_type")  # negative case
-    conn.close()
+    insert_event(temp_db, "structure_node", "create")
+    insert_event(temp_db, "structure_node", "update")
+    insert_event(temp_db, "structure_node", "delete")
+    insert_event(temp_db, "structure_node_link", "create")
+    insert_event(temp_db, "unknown_record_type", "create")  # negative case
 
     import logging
     import io
@@ -72,29 +76,28 @@ def test_integration_event_processor_end_to_end(temp_db, capsys):
         logger.removeHandler(handler)
 
     # All events should be marked processed
-    conn = sqlite3.connect(temp_db)
+    file_path = temp_db.replace("sqlite:///", "")
+    conn = sqlite3.connect(file_path)
     cur = conn.cursor()
-    cur.execute("SELECT COUNT(*) FROM node_events WHERE processed=0")
+    cur.execute("SELECT COUNT(*) FROM change_events WHERE processed=0")
     assert cur.fetchone()[0] == 0
     conn.close()
 
     # Check logs for correct handler calls and unknown entity warning
     log_contents = log_stream.getvalue()
-    assert "Processing layer event: create" in log_contents
-    assert "Processing domain event: update" in log_contents
-    assert "Processing term event: delete" in log_contents
-    assert "Processing node_link event: create" in log_contents
-    assert "No handler for node_type: unknown_node_type" in log_contents
+    assert "Processing structure_node event: create" in log_contents
+    assert "Processing structure_node event: update" in log_contents
+    assert "Processing structure_node event: delete" in log_contents
+    assert "Processing structure_node_link event: create" in log_contents
+    assert "Unknown record_type: unknown_record_type" in log_contents
 
 
 def test_integration_event_processor_cleanup(temp_db, capsys):
-    conn = sqlite3.connect(temp_db)
     # Insert processed events, one old, one recent
     from datetime import datetime, timezone
     old_ts = (datetime.now(timezone.utc) - timedelta(hours=49)).isoformat()
-    insert_event(conn, "delete", "layer", processed=1, ts=old_ts)
-    insert_event(conn, "update", "domain", processed=1)
-    conn.close()
+    insert_event(temp_db, "structure_nodes", "delete", processed=1, ts=old_ts)
+    insert_event(temp_db, "structure_nodes", "update", processed=1)
 
     processor = EventProcessor(temp_db, poll_interval=0.05, max_events=10)
     try:
@@ -103,21 +106,20 @@ def test_integration_event_processor_cleanup(temp_db, capsys):
         processor.stop()
 
     # Only the recent event should remain
-    conn = sqlite3.connect(temp_db)
+    file_path = temp_db.replace("sqlite:///", "")
+    conn = sqlite3.connect(file_path)
     cur = conn.cursor()
-    cur.execute("SELECT COUNT(*) FROM node_events WHERE processed=1")
+    cur.execute("SELECT COUNT(*) FROM change_events WHERE processed=1")
     assert cur.fetchone()[0] == 1
     conn.close()
 
 
 def test_integration_event_processor_large_batch(temp_db, capsys):
-    conn = sqlite3.connect(temp_db)
     # Insert many events
-    node_types = ["layer", "domain", "term", "node_link"]
+    record_types = ["structure_node", "structure_node_link", "predicate"]
     for i in range(50):
-        node_type = node_types[i % len(node_types)]
-        insert_event(conn, "create", node_type, node_id=f"test-{node_type}-{i}")
-    conn.close()
+        record_type = record_types[i % len(record_types)]
+        insert_event(temp_db, record_type, "create", record_id=f"test-{record_type}-{i}")
 
     processor = EventProcessor(temp_db, poll_interval=0.05, max_events=10)
     try:
@@ -127,10 +129,11 @@ def test_integration_event_processor_large_batch(temp_db, capsys):
         processor.stop()
 
     # All events should be processed
-    conn = sqlite3.connect(temp_db)
+    file_path = temp_db.replace("sqlite:///", "")
+    conn = sqlite3.connect(file_path)
     cur = conn.cursor()
-    cur.execute("SELECT COUNT(*) FROM node_events WHERE processed=0")
+    cur.execute("SELECT COUNT(*) FROM change_events WHERE processed=0")
     assert cur.fetchone()[0] == 0
-    cur.execute("SELECT COUNT(*) FROM node_events WHERE processed=1")
+    cur.execute("SELECT COUNT(*) FROM change_events WHERE processed=1")
     assert cur.fetchone()[0] == 50
     conn.close()

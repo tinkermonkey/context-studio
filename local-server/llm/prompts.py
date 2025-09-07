@@ -16,6 +16,16 @@ from .models import (
 class DefinitionPromptTemplate:
     """Manages prompt templates for term definition suggestion"""
     
+    # Backward compatibility method for tests
+    def get_system_prompt(self) -> str:
+        """Get the system prompt for term definition suggestion (backward compatibility)"""
+        return self.get_term_definition_system_prompt()
+    
+    # Backward compatibility method for tests
+    def create_prompt(self, request: DefinitionSuggestionRequest, format_instructions: str) -> str:
+        """Create the full prompt (backward compatibility)"""
+        return self.create_term_definition_prompt(request, format_instructions)
+    
     @staticmethod
     def get_term_definition_system_prompt() -> str:
         """Get the system prompt for term definition suggestion"""

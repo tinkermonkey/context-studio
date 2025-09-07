@@ -7,7 +7,7 @@ import pytest
 import json
 import uuid
 import datetime
-from database.models import Predicate, Domain, Layer, Term, TermRelationship
+from database.models import Predicate, StructureNode, StructureNodeLink
 
 
 class TestPredicateDomainIntegration:
@@ -34,10 +34,11 @@ class TestPredicateDomainIntegration:
         # Create test layer via API to ensure it exists
         unique_id = str(uuid.uuid4())[:8]
         layer_data = {
+            "node_type": "layer",
             "title": f"Test Layer {unique_id}",
             "definition": "Layer for testing predicate domain integration"
         }
-        response = client.post("/api/layers/", json=layer_data)
+        response = client.post("/api/structure_nodes/", json=layer_data)
         assert response.status_code == 201
         layer = response.json()
         
@@ -52,60 +53,67 @@ class TestPredicateDomainIntegration:
         primary_predicate_id = test_data["predicates"][0]["id"]
         
         domain_data = {
+            "node_type": "domain",
             "title": "Test Domain",
             "definition": "Domain for testing",
-            "layer_id": test_data["layer"]["id"],
-            "primary_predicate_id": primary_predicate_id
+            "parent_node_id": test_data["layer"]["id"],
+            "structural_predicate_id": primary_predicate_id
         }
         
-        response = client.post("/api/domains/", json=domain_data)
+        response = client.post("/api/structure_nodes/", json=domain_data)
         if response.status_code != 201:
             print(f"Response: {response.status_code} - {response.text}")
         assert response.status_code == 201
         
         data = response.json()
-        assert data["primary_predicate_id"] == primary_predicate_id
+        assert data["structural_predicate_id"] == primary_predicate_id
 
     def test_create_domain_with_predicate_set(self, client, test_data):
-        """Test creating domain with predicate set."""
+        """Test creating domain with structural predicate (replaces predicate set concept)."""
         
-        predicate_identifiers = [p["identifier"] for p in test_data["predicates"][:2]]
+        predicate_id = test_data["predicates"][1]["id"]  # Use second predicate
         
         domain_data = {
+            "node_type": "domain",
             "title": "Test Domain 2",
             "definition": "Domain for testing",
-            "layer_id": test_data["layer"]["id"],
-            "predicate_set": predicate_identifiers
+            "parent_node_id": test_data["layer"]["id"],
+            "structural_predicate_id": predicate_id
         }
         
-        response = client.post("/api/domains/", json=domain_data)
+        response = client.post("/api/structure_nodes/", json=domain_data)
         assert response.status_code == 201
         
         data = response.json()
-        assert data["predicate_set"] is not None
+        assert data["structural_predicate_id"] == predicate_id
 
     def test_create_domain_with_invalid_predicate_id(self, client, test_data):
         """Test creating domain with invalid predicate ID fails."""
         
         domain_data = {
+            "node_type": "domain",
             "title": "Test Domain 3", 
             "definition": "Domain for testing",
-            "layer_id": test_data["layer"]["id"],
-            "primary_predicate_id": str(uuid.uuid4())  # Non-existent predicate
+            "parent_node_id": test_data["layer"]["id"],
+            "structural_predicate_id": str(uuid.uuid4())  # Non-existent predicate
         }
         
-        response = client.post("/api/domains/", json=domain_data)
+        response = client.post("/api/structure_nodes/", json=domain_data)
         assert response.status_code == 400
+        response_data = response.json()
+        assert "does not exist" in response_data["detail"]
 
     def test_create_domain_with_invalid_predicate_set(self, client, test_data):
-        """Test creating domain with invalid predicate set fails."""
+        """Test creating domain with invalid structural predicate fails."""
         
+        # Create a predicate first, then try to delete it or use non-existent one
         domain_data = {
+            "node_type": "domain",
             "title": "Test Domain 4",
             "definition": "Domain for testing", 
-            "layer_id": test_data["layer"]["id"],
-            "predicate_set": ["non_existent_predicate_xyz"]
+            "parent_node_id": test_data["layer"]["id"],
+            "structural_predicate_id": str(uuid.uuid4())  # Non-existent predicate ID
         }
         
-        response = client.post("/api/domains/", json=domain_data)
+        response = client.post("/api/structure_nodes/", json=domain_data)
         assert response.status_code == 400

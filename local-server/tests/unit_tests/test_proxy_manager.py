@@ -33,11 +33,21 @@ class TestReferenceAPIProxyManager:
 
     @patch('nlp.proxy_manager.get_settings')
     def test_get_proxy_config_no_apis_enabled(self, mock_get_settings):
-        """Test proxy config generation when no APIs are enabled"""
+        """Test _get_proxy_config when no APIs are enabled."""
+        # Mock settings with no APIs enabled
         mock_settings = Mock()
         mock_settings.ENABLE_CACHING_PROXY = {
-            "concepcy": False,
-            "spacy_dbpedia_spotlight": False
+            "conceptnet": False,
+            "dbpedia": False,
+            "wikidata": False
+        }
+        mock_settings.get_reference_api_buddy_config.return_value = {
+            "domain_mappings": {
+                "conceptnet": {
+                    "enabled_keys": ["conceptnet"],
+                    "upstream": "https://api.conceptnet.io"
+                }
+            }
         }
         mock_get_settings.return_value = mock_settings
         
@@ -54,9 +64,19 @@ class TestReferenceAPIProxyManager:
             "concepcy": True,
             "spacy_dbpedia_spotlight": False
         }
-        mock_settings.REFERENCE_API_BUDDY_CONFIG = {
+        mock_settings.get_reference_api_buddy_config.return_value = {
             "server": {"host": "127.0.0.1", "port": 18080},
             "cache": {"database_path": "./test_cache.db"},
+            "domain_mappings": {
+                "conceptnet": {
+                    "enabled_keys": ["concepcy"],
+                    "upstream": "https://api.conceptnet.io"
+                },
+                "dbpedia_spotlight": {
+                    "enabled_keys": ["spacy_dbpedia_spotlight"],
+                    "upstream": "https://api.dbpedia-spotlight.org/en/"
+                }
+            },
             "throttling": {
                 "domain_limits": {
                     "conceptnet": 3600,
@@ -83,9 +103,19 @@ class TestReferenceAPIProxyManager:
             "concepcy": False,
             "spacy_dbpedia_spotlight": True
         }
-        mock_settings.REFERENCE_API_BUDDY_CONFIG = {
+        mock_settings.get_reference_api_buddy_config.return_value = {
             "server": {"host": "127.0.0.1", "port": 18080},
             "cache": {"database_path": "./test_cache.db"},
+            "domain_mappings": {
+                "conceptnet": {
+                    "enabled_keys": ["concepcy"],
+                    "upstream": "https://api.conceptnet.io"
+                },
+                "dbpedia_spotlight": {
+                    "enabled_keys": ["spacy_dbpedia_spotlight"],
+                    "upstream": "https://api.dbpedia-spotlight.org/en/"
+                }
+            },
             "throttling": {
                 "domain_limits": {
                     "conceptnet": 3600,
@@ -137,6 +167,18 @@ class TestReferenceAPIProxyManager:
             "concepcy": False,
             "spacy_dbpedia_spotlight": False
         }
+        mock_settings.get_reference_api_buddy_config.return_value = {
+            "domain_mappings": {
+                "conceptnet": {
+                    "enabled_keys": ["concepcy"],
+                    "upstream": "https://api.conceptnet.io"
+                },
+                "dbpedia_spotlight": {
+                    "enabled_keys": ["spacy_dbpedia_spotlight"],
+                    "upstream": "https://api.dbpedia-spotlight.org/en/"
+                }
+            }
+        }
         mock_get_settings.return_value = mock_settings
         
         manager = ReferenceAPIProxyManager()
@@ -187,9 +229,19 @@ class TestReferenceAPIProxyManager:
             "concepcy": True,
             "spacy_dbpedia_spotlight": False
         }
-        mock_settings.REFERENCE_API_BUDDY_CONFIG = {
+        mock_settings.get_reference_api_buddy_config.return_value = {
             "server": {"host": "127.0.0.1", "port": 18080},
             "cache": {"database_path": "./test_cache.db"},
+            "domain_mappings": {
+                "conceptnet": {
+                    "enabled_keys": ["concepcy"],
+                    "upstream": "https://api.conceptnet.io"
+                },
+                "dbpedia_spotlight": {
+                    "enabled_keys": ["spacy_dbpedia_spotlight"],
+                    "upstream": "https://api.dbpedia-spotlight.org/en/"
+                }
+            },
             "throttling": {
                 "domain_limits": {
                     "conceptnet": 3600,

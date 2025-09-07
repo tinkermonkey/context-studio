@@ -59,8 +59,9 @@ class Migration006(Migration):
         # Migrate data back from structure_nodes to original tables
         self._migrate_structure_nodes_back_to_original_tables(connection)
         
-        # Drop new tables
-        connection.execute(text("DROP TABLE IF EXISTS structure_nodes_vec;"))
+        # Drop new tables - handle vector table cleanup properly
+        self._drop_structure_nodes_vec_table_if_exists(connection)
+        
         connection.execute(text("DROP TABLE IF EXISTS change_events;"))
         connection.execute(text("DROP TABLE IF EXISTS structure_node_links;"))
         connection.execute(text("DROP TABLE IF EXISTS structure_nodes;"))
@@ -686,8 +687,13 @@ class Migration006(Migration):
             connection.execute(text("""
                 INSERT INTO layers (id, title, definition, title_embedding, definition_embedding, 
                                   created_at, version, last_modified)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-            """), layer)
+                VALUES (:id, :title, :definition, :title_embedding, :definition_embedding, 
+                       :created_at, :version, :last_modified)
+            """), {
+                "id": layer[0], "title": layer[1], "definition": layer[2],
+                "title_embedding": layer[3], "definition_embedding": layer[4],
+                "created_at": layer[5], "version": layer[6], "last_modified": layer[7]
+            })
 
         # Migrate domains back
         domains = connection.execute(text("""
@@ -699,9 +705,15 @@ class Migration006(Migration):
         for domain in domains:
             connection.execute(text("""
                 INSERT INTO domains (id, layer_id, title, definition, title_embedding, definition_embedding, 
-                                   created_at, version, last_modified, primary_predicate_id)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-            """), domain)
+                                   created_at, version, last_modified, primary_predicate, primary_predicate_id, predicate_set)
+                VALUES (:id, :layer_id, :title, :definition, :title_embedding, :definition_embedding, 
+                       :created_at, :version, :last_modified, :primary_predicate, :primary_predicate_id, :predicate_set)
+            """), {
+                "id": domain[0], "layer_id": domain[1], "title": domain[2], "definition": domain[3],
+                "title_embedding": domain[4], "definition_embedding": domain[5],
+                "created_at": domain[6], "version": domain[7], "last_modified": domain[8],
+                "primary_predicate": None, "primary_predicate_id": domain[9], "predicate_set": None
+            })
 
         # Migrate terms back
         terms = connection.execute(text("""
@@ -723,25 +735,31 @@ class Migration006(Migration):
         for term in terms:
             # parent_term_id is set if parent is also a term, otherwise NULL
             parent_term_id = term[8] if term[8] and connection.execute(text("""
-                SELECT node_type FROM structure_nodes WHERE id = ?
-            """), (term[8],)).scalar() == 'term' else None
+                SELECT node_type FROM structure_nodes WHERE id = :id
+            """), {"id": term[8]}).scalar() == 'term' else None
             
             connection.execute(text("""
                 INSERT INTO terms (id, domain_id, layer_id, title, definition, title_embedding, 
                                  definition_embedding, created_at, version, last_modified, parent_term_id)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-            """), (
-                term[0], term[9], term[10], term[1], term[2], term[3],
-                term[4], term[5], term[6], term[7], parent_term_id
-            ))
+                VALUES (:id, :domain_id, :layer_id, :title, :definition, :title_embedding, 
+                       :definition_embedding, :created_at, :version, :last_modified, :parent_term_id)
+            """), {
+                "id": term[0], "domain_id": term[9], "layer_id": term[10], 
+                "title": term[1], "definition": term[2], "title_embedding": term[3],
+                "definition_embedding": term[4], "created_at": term[5], 
+                "version": term[6], "last_modified": term[7], "parent_term_id": parent_term_id
+            })
 
         # Migrate structure_node_links back to term_relationships
         links = connection.execute(text("SELECT * FROM structure_node_links")).fetchall()
         for link in links:
             connection.execute(text("""
                 INSERT INTO term_relationships (id, source_term_id, target_term_id, predicate, predicate_id, created_at)
-                VALUES (?, ?, ?, ?, ?, ?)
-            """), link)
+                VALUES (:id, :source_term_id, :target_term_id, :predicate, :predicate_id, :created_at)
+            """), {
+                "id": link[0], "source_term_id": link[1], "target_term_id": link[2],
+                "predicate": link[3], "predicate_id": link[4], "created_at": link[5]
+            })
 
         # Migrate change_events back to graph_events
         events = connection.execute(text("SELECT * FROM change_events")).fetchall()
@@ -774,5 +792,46 @@ class Migration006(Migration):
             
             connection.execute(text("""
                 INSERT INTO graph_events (event_type, entity_type, old_data, new_data, timestamp, processed)
-                VALUES (?, ?, ?, ?, ?, ?)
-            """), (event[1], entity_type, event[4], event[5], event[6], event[7]))
+                VALUES (:event_type, :entity_type, :old_data, :new_data, :timestamp, :processed)
+            """), {
+                "event_type": event[1], "entity_type": entity_type, "old_data": event[4],
+                "new_data": event[5], "timestamp": event[6], "processed": event[7]
+            })
+
+    def _drop_structure_nodes_vec_table_if_exists(self, connection: Connection) -> None:
+        """Drop the structure_nodes_vec virtual table if it exists, handling sqlite-vec extension properly."""
+        try:
+            # Check if the table exists first
+            result = connection.execute(text("""
+                SELECT name FROM sqlite_master 
+                WHERE type='table' AND name='structure_nodes_vec'
+            """)).fetchone()
+            
+            if not result:
+                # Table doesn't exist, nothing to drop
+                return
+                
+            # Try to load the sqlite-vec extension before dropping
+            try:
+                import sqlite_vec
+                raw_connection = connection.connection
+                raw_connection.enable_load_extension(True)
+                sqlite_vec.load(raw_connection)
+                raw_connection.enable_load_extension(False)
+                
+                # Now drop the table
+                connection.execute(text("DROP TABLE IF EXISTS structure_nodes_vec;"))
+                logger.info("Successfully dropped structure_nodes_vec virtual table")
+                
+            except ImportError:
+                logger.info("sqlite-vec extension not available during rollback, table may not have been created")
+            except Exception as e:
+                logger.warning(f"Could not properly drop structure_nodes_vec table: {e}")
+                # Try to drop anyway in case it's a regular table
+                try:
+                    connection.execute(text("DROP TABLE IF EXISTS structure_nodes_vec;"))
+                except:
+                    logger.info("structure_nodes_vec table cleanup skipped")
+                    
+        except Exception as e:
+            logger.warning(f"Error during structure_nodes_vec table cleanup: {e}")

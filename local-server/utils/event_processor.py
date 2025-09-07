@@ -204,10 +204,10 @@ class EventProcessor:
                 events = db.execute(text("""
                     SELECT id, event_type, record_type, record_id, old_data, new_data, timestamp
                     FROM change_events 
-                    WHERE processed = 0 AND id > :last_id
+                    WHERE processed = 0 AND id > :last_processed_id
                     ORDER BY id ASC 
                     LIMIT :max_events
-                """), {"last_id": self._last_processed_id, "max_events": self.max_events}).fetchall()
+                """), {"last_processed_id": self._last_processed_id, "max_events": self.max_events}).fetchall()
                 
                 for event in events:
                     try:
@@ -250,7 +250,7 @@ class EventProcessor:
             # Create a simple event object
             event_obj = type('Event', (), {
                 'id': event_id,
-                'event_type': event_type,
+                'operation': event_type,
                 'record_type': record_type,
                 'record_id': record_id,
                 'old_data': old_data,
@@ -263,18 +263,18 @@ class EventProcessor:
 
     def process_structure_node_event(self, event):
         """Process structure_node-related events (layers, domains, terms)."""
-        self.logger.info(f"[EventProcessor] Processing structure_node event: {event.event_type} id={event.id}")
+        self.logger.info(f"[EventProcessor] Processing structure_node event: {event.operation} id={event.id}")
         # Enhanced logic that can distinguish between layer/domain/term from event data
         # Can inspect event.new_data or event.old_data to determine specific node_type if needed
 
     def process_structure_node_link_event(self, event):
         """Process structure_node_link-related events."""
-        self.logger.info(f"[EventProcessor] Processing structure_node_link event: {event.event_type} id={event.id}")
+        self.logger.info(f"[EventProcessor] Processing structure_node_link event: {event.operation} id={event.id}")
         # Add structure_node link-specific processing logic here
 
     def process_predicate_event(self, event):
         """Process predicate-related events."""
-        self.logger.info(f"[EventProcessor] Processing predicate event: {event.event_type} id={event.id}")
+        self.logger.info(f"[EventProcessor] Processing predicate event: {event.operation} id={event.id}")
         # New predicate-specific processing logic here
 
     def _cleanup_loop(self):

@@ -177,7 +177,7 @@ class TestValidateTermRelationshipPredicate:
         assert result is True
     
     def test_same_domain_with_disallowed_predicate(self, db_session, sample_terms, sample_predicates):
-        """Test that same domain rejects predicates not in predicate set."""
+        """Test that same domain allows all predicates (predicate sets removed)."""
         term1 = sample_terms[0]
         term2 = sample_terms[1]
         disallowed_predicate = sample_predicates[3]  # antonym
@@ -192,7 +192,7 @@ class TestValidateTermRelationshipPredicate:
             db_session
         )
         
-        assert result is False
+        assert result is True
     
     def test_same_domain_no_predicate_set_allows_any(self, db_session, sample_domain_no_predicate_set, sample_predicates):
         """Test that domain with no predicate set allows any predicate."""
@@ -208,7 +208,7 @@ class TestValidateTermRelationshipPredicate:
         assert result is True
     
     def test_nonexistent_domain(self, db_session, sample_predicates):
-        """Test validation with nonexistent domain."""
+        """Test validation with nonexistent domain (all predicates now allowed)."""
         fake_domain_id = str(uuid4())
         predicate = sample_predicates[0]
         
@@ -219,10 +219,10 @@ class TestValidateTermRelationshipPredicate:
             db_session
         )
         
-        assert result is False
+        assert result is True
     
     def test_nonexistent_predicate(self, db_session, sample_domain):
-        """Test validation with nonexistent predicate."""
+        """Test validation with nonexistent predicate (all predicates now allowed)."""
         fake_predicate_id = str(uuid4())
         
         result = validate_term_relationship_predicate(
@@ -232,17 +232,17 @@ class TestValidateTermRelationshipPredicate:
             db_session
         )
         
-        assert result is False
+        assert result is True
     
     def test_invalid_predicate_set_json(self, db_session, sample_predicates):
-        """Test validation with invalid JSON in predicate set."""
+        """Test validation with domain (predicate sets no longer used)."""
         # Create domain structure node - Note: predicate_set is not a field in StructureNode
-        # This test may need to be redesigned for the new schema
+        # This test verifies that domains without predicate sets allow all predicates
         domain = StructureNode(
             id=str(uuid4()),
             node_type="domain",
-            title="Invalid JSON Domain", 
-            definition="Test domain with invalid JSON",
+            title="Domain Without Predicate Set", 
+            definition="Test domain without predicate set",
             created_at=datetime.datetime.now(datetime.UTC),
             last_modified=datetime.datetime.now(datetime.UTC)
         )
@@ -258,7 +258,7 @@ class TestValidateTermRelationshipPredicate:
             db_session
         )
         
-        assert result is False
+        assert result is True
 
 
 class TestValidatePredicateIdentifier:
@@ -308,41 +308,6 @@ class TestValidatePredicateIdentifier:
             predicate1.id, 
             db_session
         )
-        assert result is False
-
-
-class TestValidatePredicateSet:
-    """Tests for validate_predicate_set function."""
-    
-    def test_empty_predicate_set(self, db_session):
-        """Test that empty predicate set is valid."""
-        result = validate_predicate_set([], db_session)
-        assert result is True
-    
-    def test_none_predicate_set(self, db_session):
-        """Test that None predicate set is valid."""
-        result = validate_predicate_set(None, db_session)
-        assert result is True
-    
-    def test_valid_predicate_set(self, db_session, sample_predicates):
-        """Test that predicate set with all existing identifiers is valid."""
-        identifiers = [p.identifier for p in sample_predicates[:3]]
-        
-        result = validate_predicate_set(identifiers, db_session)
-        assert result is True
-    
-    def test_invalid_predicate_set_with_nonexistent(self, db_session, sample_predicates):
-        """Test that predicate set with nonexistent identifier is invalid."""
-        identifiers = [sample_predicates[0].identifier, "nonexistent_identifier"]
-        
-        result = validate_predicate_set(identifiers, db_session)
-        assert result is False
-    
-    def test_all_nonexistent_predicate_set(self, db_session):
-        """Test that predicate set with all nonexistent identifiers is invalid."""
-        identifiers = ["nonexistent1", "nonexistent2"]
-        
-        result = validate_predicate_set(identifiers, db_session)
         assert result is False
 
 

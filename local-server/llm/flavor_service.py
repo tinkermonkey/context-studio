@@ -125,8 +125,9 @@ class PipelineFlavorService:
                 params["enabled"] = request.enabled
             
             if update_fields:
-                # Always update the timestamp when making changes
+                # Always update the timestamp and increment version when making changes
                 update_fields.append("updated_at = :updated_at")
+                update_fields.append("version = version + 1")
                 params["updated_at"] = datetime.now(timezone.utc)
                 
                 db.execute(text(f"""

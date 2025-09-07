@@ -1,5 +1,17 @@
 """
-Comprehensive validation test for Service Layer Design implementation.
+Comprehensive validation test for Service                # Test configurable model
+                service2 = LLMService(model_name="gpt-4o")
+                assert service2.model_name == "gpt-4o"
+                print("  ✓ Model is configurable")
+                
+                # Test new-style langchain interface
+                mock_init.assert_called_with(
+                    "gpt-4o", 
+                    model_provider="openai", 
+                    temperature=0, 
+                    openai_api_key='sk-1234567890abcdef1234567890abcdef1234567890abcd'
+                )
+                print("  ✓ Uses new-style init_chat_model interface") implementation.
 Validates all requirements from 10.1_langchain_poc_requirements.md
 """
 
@@ -31,39 +43,43 @@ def test_requirements_compliance():
             assert "OPENAI_API_KEY" in str(e)
     
     # Test configurable model with new-style interface
-    with patch.dict('os.environ', {'OPENAI_API_KEY': 'test-key'}):
+    with patch.dict('os.environ', {'OPENAI_API_KEY': 'sk-1234567890abcdef1234567890abcdef1234567890abcd'}):
         with patch('llm.service.init_chat_model') as mock_init:
-            mock_llm = Mock()
-            mock_init.return_value = mock_llm
-            
-            # Test default GPT-3.5-turbo
-            service = LLMService()
-            assert service.model_name == "gpt-3.5-turbo"
-            print("  ✓ Uses GPT-3.5-turbo by default")
-            
-            # Test configurable model
-            service2 = LLMService(model_name="gpt-4o")
-            assert service2.model_name == "gpt-4o"
-            print("  ✓ Model is configurable")
+            with patch('llm.service.PipelineFlavorService') as mock_flavor:
+                mock_llm = Mock()
+                mock_init.return_value = mock_llm
+                mock_flavor.return_value = Mock()
+                
+                # Test default GPT-3.5-turbo
+                service = LLMService()
+                assert service.model_name == "gpt-3.5-turbo"
+                print("  ✓ Uses GPT-3.5-turbo by default")
+                
+                # Test configurable model
+                service2 = LLMService(model_name="gpt-4o")
+                assert service2.model_name == "gpt-4o"
+                print("  ✓ Model is configurable")
             
             # Test new-style langchain interface
             mock_init.assert_called_with(
                 "gpt-4o", 
                 model_provider="openai", 
                 temperature=0, 
-                openai_api_key="test-key"
+                openai_api_key="sk-1234567890abcdef1234567890abcdef1234567890abcd"
             )
             print("  ✓ Uses new-style init_chat_model interface")
     
     # Test 10.1.2: LLM Service
     print("\n✓ 10.1.2 LLM Service:")
     
-    with patch.dict('os.environ', {'OPENAI_API_KEY': 'test-key'}):
+    with patch.dict('os.environ', {'OPENAI_API_KEY': 'sk-1234567890abcdef1234567890abcdef1234567890abcd'}):
         with patch('llm.service.init_chat_model') as mock_init:
-            mock_llm = Mock()
-            mock_init.return_value = mock_llm
-            
-            service = LLMService()
+            with patch('llm.service.PipelineFlavorService') as mock_flavor:
+                mock_llm = Mock()
+                mock_init.return_value = mock_llm
+                mock_flavor.return_value = Mock()
+                
+                service = LLMService()
             
             # Test reusable service
             assert hasattr(service, 'suggest_definition')
@@ -159,16 +175,23 @@ def test_requirements_compliance():
     # Test response parsing
     print("\n✓ Response Parsing:")
     
-    service = LLMService.__new__(LLMService)  # Create without __init__
-    mock_response = '''Definition: A test definition with exactly two sentences. This is the second sentence of the definition.
+    with patch.dict('os.environ', {'OPENAI_API_KEY': 'sk-1234567890abcdef1234567890abcdef1234567890abcd'}):
+        with patch('llm.service.init_chat_model') as mock_init:
+            with patch('llm.service.PipelineFlavorService') as mock_flavor:
+                mock_llm = Mock()
+                mock_init.return_value = mock_llm
+                mock_flavor.return_value = Mock()
+                
+                service = LLMService()
+                mock_response = '''Definition: A test definition with exactly two sentences. This is the second sentence of the definition.
 Reasoning: This reasoning explains the definitional choices made.
 Discrepancies: Some noted discrepancies here.'''
-    
-    parsed = service._parse_definition_response(mock_response)
-    assert "test definition" in parsed.definition
-    assert "reasoning explains" in parsed.reasoning
-    assert "discrepancies" in parsed.discrepancies.lower()
-    print("  ✓ Parses structured response correctly")
+                
+                parsed = service._parse_definition_response(mock_response)
+                assert "test definition" in parsed.definition
+                assert "reasoning explains" in parsed.reasoning
+                assert "discrepancies" in parsed.discrepancies.lower()
+                print("  ✓ Parses structured response correctly")
     
     print("\n🎉 All Service Layer Design requirements validated successfully!")
     

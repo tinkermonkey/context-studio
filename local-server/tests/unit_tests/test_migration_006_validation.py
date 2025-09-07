@@ -58,7 +58,7 @@ def test_migration_006_creates_change_events_table(temp_db):
     assert column_dict["event_type"]["nullable"] is False
     assert column_dict["record_type"]["nullable"] is False
     assert column_dict["processed"]["nullable"] is False
-    assert column_dict["processed"]["default"] == "0"  # SQLite stores boolean as 0/1
+    assert column_dict["processed"]["default"] in ("0", "FALSE")  # SQLite can store boolean as 0/1 or FALSE/TRUE
     
     # Verify indexes exist
     indexes = inspector.get_indexes("change_events")

@@ -120,6 +120,20 @@ class LayerDefinitionRequest(BaseModel):
     reference_context: Dict[str, Any] = Field(default_factory=dict, description="Additional reference context")
     flavor: Optional[str] = Field(None, description="Flavor ID or title to use for this request")
 
+    @field_validator('layer_title')
+    @classmethod
+    def validate_layer_title(cls, v):
+        if not v or v.strip() == "":
+            raise ValueError("Layer title cannot be empty")
+        return v
+
+    @field_validator('contained_domains')
+    @classmethod
+    def validate_contained_domains(cls, v):
+        if not v:  # Empty list
+            raise ValueError("Contained domains cannot be empty")
+        return v
+
 class DomainDefinitionRequest(BaseModel):
     """Request model for domain definition suggestion endpoint"""
     domain_title: str = Field(..., description="Title of the domain to be analyzed")
@@ -133,6 +147,20 @@ class DomainDefinitionRequest(BaseModel):
     reference_context: Dict[str, Any] = Field(default_factory=dict, description="Additional reference context")
     flavor: Optional[str] = Field(None, description="Flavor ID or title to use for this request")
 
+    @field_validator('domain_title')
+    @classmethod
+    def validate_domain_title(cls, v):
+        if not v or v.strip() == "":
+            raise ValueError("Domain title cannot be empty")
+        return v
+
+    @field_validator('contained_terms')
+    @classmethod
+    def validate_contained_terms(cls, v):
+        if not v:  # Empty list
+            raise ValueError("Contained terms cannot be empty")
+        return v
+
 class DefinitionSuggestionResponse(BaseModel):
     """Response model for definition suggestion"""
     definition: str = Field(..., description="The suggested 2-3 sentence definition")
@@ -142,14 +170,14 @@ class DefinitionSuggestionResponse(BaseModel):
 class LayerDefinitionResponse(BaseModel):
     """Response model for layer definition suggestion"""
     definition: str = Field(..., description="The suggested 2-3 sentence layer definition")
-    reasoning: str = Field(..., description="Brief reasoning for the definitional choices")
-    discrepancies: Optional[str] = Field(None, description="Notable discrepancies between sources")
+    purpose: str = Field(..., description="Purpose of the layer in the knowledge structure")
+    rationale: str = Field(..., description="Brief rationale for the definitional choices")
 
 class DomainDefinitionResponse(BaseModel):
     """Response model for domain definition suggestion"""
     definition: str = Field(..., description="The suggested 2-3 sentence domain definition")
-    reasoning: str = Field(..., description="Brief reasoning for the definitional choices")
-    discrepancies: Optional[str] = Field(None, description="Notable discrepancies between sources")
+    purpose: str = Field(..., description="Purpose of the domain in the knowledge structure")
+    scope: str = Field(..., description="Scope and boundaries of the domain")
 
 class LLMHealthResponse(BaseModel):
     """Health check response for LLM service"""
