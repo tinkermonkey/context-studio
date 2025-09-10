@@ -6,15 +6,11 @@ import React from 'react';
 import { render, screen, waitFor } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { TreeChartPanel } from '@/components/panels/TreeChartPanel';
-import { useLayers } from '@/api/hooks/layers/useLayers';
-import { useDomains } from '@/api/hooks/domains/useDomains';
-import { useTerms, useTerm } from '@/api/hooks/terms/useTerms';
+import { useLayerNodes, useDomainNodes, useTermNodes, useStructureNode } from '@/api/hooks/structure_nodes/useStructureNodes';
 import { vi } from 'vitest';
 
 // Mock the hooks
-vi.mock('@/api/hooks/layers/useLayers');
-vi.mock('@/api/hooks/domains/useDomains');
-vi.mock('@/api/hooks/terms/useTerms');
+vi.mock('@/api/hooks/structure_nodes/useStructureNodes');
 vi.mock('@/components/graphs/hierarchy/tree_chart', () => ({
   TreeChart: ({ chartData }: any) => (
     <div data-testid="tree-chart">
@@ -23,10 +19,10 @@ vi.mock('@/components/graphs/hierarchy/tree_chart', () => ({
   ),
 }));
 
-const mockUseLayers = useLayers as ReturnType<typeof vi.fn>;
-const mockUseDomains = useDomains as ReturnType<typeof vi.fn>;
-const mockUseTerms = useTerms as ReturnType<typeof vi.fn>;
-const mockUseTerm = useTerm as ReturnType<typeof vi.fn>;
+const mockUseLayerNodes = useLayerNodes as ReturnType<typeof vi.fn>;
+const mockUseDomainNodes = useDomainNodes as ReturnType<typeof vi.fn>;
+const mockUseStructureNodeNodes = useTermNodes as ReturnType<typeof vi.fn>;
+const mockUseStructureNode = useStructureNode as ReturnType<typeof vi.fn>;
 
 const createTestQueryClient = () => new QueryClient({
   defaultOptions: {
@@ -61,8 +57,8 @@ describe('TreeChartPanel', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     
-    // Default mock return value for useTerm
-    mockUseTerm.mockReturnValue({
+    // Default mock return value for useStructureNode
+    mockUseStructureNode.mockReturnValue({
       data: undefined,
       isLoading: false,
       error: null,
@@ -70,17 +66,17 @@ describe('TreeChartPanel', () => {
   });
 
   it('displays loading state while data is being fetched', () => {
-    mockUseLayers.mockReturnValue({
+    mockUseLayerNodes.mockReturnValue({
       data: undefined,
       isLoading: true,
       error: null,
     } as any);
-    mockUseDomains.mockReturnValue({
+    mockUseDomainNodes.mockReturnValue({
       data: undefined,
       isLoading: true,
       error: null,
     } as any);
-    mockUseTerms.mockReturnValue({
+    mockUseStructureNodeNodes.mockReturnValue({
       data: undefined,
       isLoading: true,
       error: null,
@@ -98,17 +94,17 @@ describe('TreeChartPanel', () => {
   it('displays error state when data loading fails', () => {
     const testError = new Error('Failed to load data');
     
-    mockUseLayers.mockReturnValue({
+    mockUseLayerNodes.mockReturnValue({
       data: undefined,
       isLoading: false,
       error: testError,
     } as any);
-    mockUseDomains.mockReturnValue({
+    mockUseDomainNodes.mockReturnValue({
       data: undefined,
       isLoading: false,
       error: null,
     } as any);
-    mockUseTerms.mockReturnValue({
+    mockUseStructureNodeNodes.mockReturnValue({
       data: undefined,
       isLoading: false,
       error: null,
@@ -125,17 +121,17 @@ describe('TreeChartPanel', () => {
   });
 
   it('renders TreeChart when data is successfully loaded', async () => {
-    mockUseLayers.mockReturnValue({
+    mockUseLayerNodes.mockReturnValue({
       data: mockLayers,
       isLoading: false,
       error: null,
     } as any);
-    mockUseDomains.mockReturnValue({
+    mockUseDomainNodes.mockReturnValue({
       data: mockDomains,
       isLoading: false,
       error: null,
     } as any);
-    mockUseTerms.mockReturnValue({
+    mockUseStructureNodeNodes.mockReturnValue({
       data: mockTerms,
       isLoading: false,
       error: null,
@@ -161,22 +157,22 @@ describe('TreeChartPanel', () => {
       definition: 'Target term definition' 
     };
 
-    mockUseLayers.mockReturnValue({
+    mockUseLayerNodes.mockReturnValue({
       data: mockLayers,
       isLoading: false,
       error: null,
     } as any);
-    mockUseDomains.mockReturnValue({
+    mockUseDomainNodes.mockReturnValue({
       data: mockDomains,
       isLoading: false,
       error: null,
     } as any);
-    mockUseTerms.mockReturnValue({
+    mockUseStructureNodeNodes.mockReturnValue({
       data: mockTerms,
       isLoading: false,
       error: null,
     } as any);
-    mockUseTerm.mockReturnValue({
+    mockUseStructureNode.mockReturnValue({
       data: mockTargetTerm,
       isLoading: false,
       error: null,
@@ -188,8 +184,8 @@ describe('TreeChartPanel', () => {
       </TestWrapper>
     );
 
-    // Verify that useTerm was called with the correct termId
-    expect(mockUseTerm).toHaveBeenCalledWith(testTermId, true);
+    // Verify that useStructureNode was called with the correct termId
+    expect(mockUseStructureNode).toHaveBeenCalledWith(testTermId, { enabled: true });
 
     await waitFor(() => {
       expect(screen.getByTestId('tree-chart')).toBeInTheDocument();
@@ -199,17 +195,17 @@ describe('TreeChartPanel', () => {
   it('displays custom loading component when provided', () => {
     const customLoadingComponent = <div data-testid="custom-loading">Custom loading...</div>;
     
-    mockUseLayers.mockReturnValue({
+    mockUseLayerNodes.mockReturnValue({
       data: undefined,
       isLoading: true,
       error: null,
     } as any);
-    mockUseDomains.mockReturnValue({
+    mockUseDomainNodes.mockReturnValue({
       data: undefined,
       isLoading: true,
       error: null,
     } as any);
-    mockUseTerms.mockReturnValue({
+    mockUseStructureNodeNodes.mockReturnValue({
       data: undefined,
       isLoading: true,
       error: null,
@@ -229,17 +225,17 @@ describe('TreeChartPanel', () => {
     const customErrorComponent = <div data-testid="custom-error">Custom error message</div>;
     const testError = new Error('Failed to load');
     
-    mockUseLayers.mockReturnValue({
+    mockUseLayerNodes.mockReturnValue({
       data: undefined,
       isLoading: false,
       error: testError,
     } as any);
-    mockUseDomains.mockReturnValue({
+    mockUseDomainNodes.mockReturnValue({
       data: undefined,
       isLoading: false,
       error: null,
     } as any);
-    mockUseTerms.mockReturnValue({
+    mockUseStructureNodeNodes.mockReturnValue({
       data: undefined,
       isLoading: false,
       error: null,
@@ -256,17 +252,17 @@ describe('TreeChartPanel', () => {
   });
 
   it('applies custom className when provided', () => {
-    mockUseLayers.mockReturnValue({
+    mockUseLayerNodes.mockReturnValue({
       data: mockLayers,
       isLoading: false,
       error: null,
     } as any);
-    mockUseDomains.mockReturnValue({
+    mockUseDomainNodes.mockReturnValue({
       data: mockDomains,
       isLoading: false,
       error: null,
     } as any);
-    mockUseTerms.mockReturnValue({
+    mockUseStructureNodeNodes.mockReturnValue({
       data: mockTerms,
       isLoading: false,
       error: null,

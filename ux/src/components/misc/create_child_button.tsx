@@ -2,19 +2,15 @@ import React from "react";
 import { Button } from "flowbite-react";
 import { Plus } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
-import type { components } from "@/api/client/types";
+import type { StructureNode } from "@/api/types/structureNodes";
 import { CreateChildModal } from "./create_child_modal";
 import { DomainForm } from "@/components/forms/domain_form";
 import { TermForm } from "@/components/forms/term_form";
 
-type LayerOut = components["schemas"]["LayerOut"];
-type DomainOut = components["schemas"]["DomainOut"];
-type TermOut = components["schemas"]["TermOut"];
-
 interface CreateChildButtonProps {
   parentType: 'layer' | 'domain' | 'term';
   parentId: string;
-  parentObject: LayerOut | DomainOut | TermOut;
+  parentObject: StructureNode;
   childType: 'domain' | 'term';
   onSuccess?: (child: any) => void;
   className?: string;
@@ -85,7 +81,7 @@ export const CreateChildButton: React.FC<CreateChildButtonProps> = ({
         <DomainForm
           onSuccess={handleSuccess}
           parentLayerId={parentId}
-          parentLayer={parentObject as LayerOut}
+          parentLayer={parentObject as StructureNode}
           mode="child"
         />
       );
@@ -95,7 +91,7 @@ export const CreateChildButton: React.FC<CreateChildButtonProps> = ({
           <TermForm
             onSuccess={handleSuccess}
             parentDomainId={parentId}
-            parentDomain={parentObject as DomainOut}
+            parentDomain={parentObject as StructureNode}
             mode="child"
           />
         );
@@ -104,7 +100,7 @@ export const CreateChildButton: React.FC<CreateChildButtonProps> = ({
           <TermForm
             onSuccess={handleSuccess}
             parentTermId={parentId}
-            parentTerm={parentObject as TermOut}
+            parentTerm={parentObject as StructureNode}
             mode="child"
           />
         );

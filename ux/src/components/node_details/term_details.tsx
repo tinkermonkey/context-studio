@@ -20,10 +20,9 @@ import {
   CircleArrowRight,
 } from "lucide-react";
 import { Link as RouterLink } from "@tanstack/react-router";
-import { useLayer } from "@/api/hooks/layers/useLayers";
-import { useDomain } from "@/api/hooks/domains/useDomains";
-import { useTerms } from "@/api/hooks/terms/useTerms";
-import { useTermRelationships } from "@/api/hooks/relationships";
+import { useStructureNode, useTermNodes } from "@/api/hooks/structure_nodes/useStructureNodes";
+import { useNodeLinks } from "@/api/hooks/node_links/useNodeLinks";
+import { NodeType } from "@/api/types/structureNodes";
 import { useTermHierarchy } from "@/api/hooks/graph/useGraph";
 import { TermRenderer } from "@/components/node_renderers/term_renderer";
 import { useQueryClient } from "@tanstack/react-query";
@@ -39,34 +38,44 @@ import {
 } from "@/components/layout/cs_sidebar";
 import { CsMain, CsMainTitle } from "@/components/layout/cs_main";
 import type { components } from "@/api/client/types";
-import { useTerm } from "@/api";
 import { NlpAnalysisPanel } from "@/components/nlp/NlpAnalysisPanel";
 import { TreeChartPanel } from "@/components/panels/TreeChartPanel";
 
-type TermOut = components["schemas"]["TermOut"];
+import type { StructureNode } from "@/api/types/structureNodes";
 type TermRelationshipOut = components["schemas"]["TermRelationshipOut"];
 
 interface TermPageProps {
-  term: TermOut;
+  term: StructureNode;
 }
 
 export const TermDetails: React.FC<TermPageProps> = ({ term }) => {
   const queryClient = useQueryClient();
   const [isEditOpen, setIsEditOpen] = React.useState(false);
-  const { data: layer, isLoading: layerLoading } = useLayer(term.layer_id);
-  const { data: domain, isLoading: domainLoading } = useDomain(term.domain_id);
-  const { data: parentTerm, isLoading: parentTermLoading } = useTerm(
-    term.parent_term_id ?? "",
-    !!term.parent_term_id,
+  // For now, assume direct parent is domain (simplified approach)
+  // TODO: Implement full hierarchy traversal when needed
+  const { data: parentNode } = useStructureNode(term.parent_node_id ?? "");
+  
+  // Try to get domain - either the parent is a domain, or we need to traverse further
+  const isDomainParent = parentNode?.node_type === NodeType.DOMAIN;
+  const { data: domain, isLoading: domainLoading } = useStructureNode(
+    isDomainParent ? (parentNode?.id ?? "") : ""
   );
+  
+  // Get layer from domain if we have it
+  const { data: layer, isLoading: layerLoading } = useStructureNode(
+    domain?.parent_node_id ?? ""
+  );
+  // Use parentNode for both domain and term parents
+  const parentTerm = !isDomainParent ? (parentNode as any) : null;
+  const parentTermLoading = false; // Already loaded via parentNode
   const { data: relationships, isLoading: relationshipsLoading } =
-    useTermRelationships(term.id);
+    useNodeLinks({ source_node_id: term.id });
   const { data: termHierarchy, isLoading: hierarchyLoading } = useTermHierarchy(
     term.id,
   );
-  const { data: childTerms, isLoading: childTermsLoading } = useTerms({
-    parent_term_id: term.id,
-  });
+  const { data: childTerms, isLoading: childTermsLoading } = useTermNodes(
+    term.id
+  );
 
   // Group relationships by predicate and direction
   const relationshipsByPredicate = React.useMemo(() => {
@@ -77,12 +86,12 @@ export const TermDetails: React.FC<TermPageProps> = ({ term }) => {
       { asSource: TermRelationshipOut[]; asTarget: TermRelationshipOut[] }
     > = {};
 
-    relationships.forEach((rel: TermRelationshipOut) => {
+    relationships.forEach((rel: any) => {
       if (!grouped[rel.predicate]) {
         grouped[rel.predicate] = { asSource: [], asTarget: [] };
       }
 
-      if (rel.source_term_id === term.id) {
+      if (rel.source_node_id === term.id) {
         grouped[rel.predicate].asSource.push(rel);
       } else {
         grouped[rel.predicate].asTarget.push(rel);
@@ -122,10 +131,10 @@ export const TermDetails: React.FC<TermPageProps> = ({ term }) => {
     const ancestorTerms: TermOut[] = termAncestors.map((ancestor) => ({
       id: ancestor.id,
       title: ancestor.title,
-      domain_id: term.domain_id, // Same domain
-      layer_id: term.layer_id, // Same layer
+      node_type: NodeType.TERM,
+      parent_node_id: undefined, // Not needed for breadcrumb
       definition: "", // Not available in hierarchy data
-      parent_term_id: undefined, // Not needed for breadcrumb
+      structural_predicate_id: undefined,
       title_embedding: undefined,
       definition_embedding: undefined,
       created_at: "",
@@ -207,7 +216,7 @@ export const TermDetails: React.FC<TermPageProps> = ({ term }) => {
         </CsSidebarSection>
 
         {/* Parent Term */}
-        {term.parent_term_id && (
+        {term.parent_node_id && (
           <CsSidebarSection>
             <CsSidebarSectionTitle icon={Hash}>
               Parent Term
@@ -397,17 +406,15 @@ export const TermDetails: React.FC<TermPageProps> = ({ term }) => {
             textTitle={"Title"} 
             domainContext={domain ? {
               title: domain.title,
-              definition: domain.definition
+              definition: domain.definition || ""
             } : null}
             parentTermContext={parentTerm ? {
               title: parentTerm.title,
-              definition: parentTerm.definition,
+              definition: parentTerm.definition || "",
               relationshipPredicate: "child_of" // You may want to determine this from actual relationship data
             } : null}
             currentDefinition={term.definition}
             termId={term.id}
-            domainId={term.domain_id}
-            layerId={term.layer_id}
           />
 
           {/* Definition */}
@@ -563,8 +570,8 @@ export const TermDetails: React.FC<TermPageProps> = ({ term }) => {
       onClose();
 
       try {
-        queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.TERMS, term.id] });
-        queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.TERMS] });
+        queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.STRUCTURE_NODES, term.id] });
+        queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.STRUCTURE_NODES] });
       } catch (e) {
         console.warn("Failed to invalidate term queries", e);
       }

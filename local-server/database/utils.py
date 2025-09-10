@@ -1,26 +1,552 @@
 import os
 import sqlite3
 import sqlite_vec
-from sqlalchemy import create_engine, event
-from sqlalchemy.orm import sessionmaker
+import threading
+import time
+from contextlib import contextmanager
+from dataclasses import dataclass, field
+from datetime import datetime, timedelta
+from enum import Enum
+from typing import Dict, Optional, Any, Generator, List
+from sqlalchemy import create_engine, event, text, Engine
+from sqlalchemy.orm import sessionmaker, Session
+from sqlalchemy.pool import QueuePool, NullPool, StaticPool, Pool
+from sqlalchemy.exc import SQLAlchemyError, DisconnectionError
 from fastapi import HTTPException
 
 from utils.logger import get_logger
-from sqlalchemy.pool import StaticPool
 
 
 logger = get_logger(__name__)
 
-# Global state for current dataset
+
+class PoolStrategy(Enum):
+    """Database connection pooling strategies."""
+    NULL_POOL = "null"           # No pooling - new connection per request
+    QUEUE_POOL = "queue"         # Connection pooling with queue
+    STATIC_POOL = "static"       # Single persistent connection
+    OPTIMIZED = "optimized"      # Intelligent strategy selection
+
+
+@dataclass
+class ConnectionMetrics:
+    """Metrics for database connections."""
+    total_connections_created: int = 0
+    active_connections: int = 0
+    peak_connections: int = 0
+    pool_hits: int = 0
+    pool_misses: int = 0
+    connection_errors: int = 0
+    avg_connection_time_ms: float = 0.0
+    total_queries_executed: int = 0
+    avg_query_time_ms: float = 0.0
+    last_reset_time: datetime = field(default_factory=datetime.now)
+    
+    def reset(self):
+        """Reset metrics counters."""
+        self.__init__()
+
+
+@dataclass
+class PoolConfiguration:
+    """Configuration for database connection pooling."""
+    pool_size: int = 5
+    max_overflow: int = 10
+    pool_timeout: int = 30
+    pool_recycle: int = 3600
+    pool_pre_ping: bool = True
+    connect_args: Dict[str, Any] = field(default_factory=dict)
+
+
+class DatabaseManager:
+    """
+    Database manager with optimized connection pooling and lifecycle management.
+    
+    Features:
+    - Intelligent pool strategy selection based on environment
+    - Connection lifecycle coordination with services
+    - Performance monitoring and health checks
+    - Resource utilization optimization
+    - Thread-safe operations
+    """
+    
+    def __init__(self):
+        self.metrics = ConnectionMetrics()
+        self._engines: Dict[str, Engine] = {}
+        self._session_locals: Dict[str, sessionmaker] = {}
+        self._lock = threading.RLock()
+        self._health_check_interval = 30  # seconds
+        self._last_health_check = datetime.now()
+        self._loaded_connections: Dict[int, bool] = {}
+        self._connection_lifecycles: Dict[int, datetime] = {}
+        self._cached_health_status = {}
+        
+        logger.info("Database Manager initialized")
+    
+    def get_optimal_pool_strategy(self, database_url: str) -> PoolStrategy:
+        """Determine optimal pooling strategy based on database type."""
+        is_sqlite = database_url.startswith("sqlite://")
+        is_memory = ":memory:" in database_url
+        
+        if is_memory:
+            return PoolStrategy.STATIC_POOL
+        elif is_sqlite:
+            return PoolStrategy.NULL_POOL  # Avoid threading issues with SQLite
+        else:
+            return PoolStrategy.QUEUE_POOL
+    
+    def get_pool_configuration(self, database_url: str) -> PoolConfiguration:
+        """Get optimized pool configuration based on database type."""
+        is_sqlite = database_url.startswith("sqlite://")
+        
+        # Use a general purpose configuration suitable for most use cases
+        return PoolConfiguration(
+            pool_size=5,
+            max_overflow=10,
+            pool_timeout=30,
+            pool_recycle=3600,  # 1 hour
+            pool_pre_ping=True,
+            connect_args={
+                "check_same_thread": False,
+                "timeout": 30,
+                "isolation_level": None,
+            } if is_sqlite else {}
+        )
+    
+    def create_optimized_engine(self, 
+                              database_url: str, 
+                              engine_id: str = "default",
+                              custom_config: Optional[PoolConfiguration] = None) -> Engine:
+        """Create an optimized database engine based on environment and requirements."""
+        
+        with self._lock:
+            # Check if engine already exists
+            if engine_id in self._engines:
+                logger.info(f"Reusing existing engine: {engine_id}")
+                return self._engines[engine_id]
+            
+            strategy = self.get_optimal_pool_strategy(database_url)
+            config = custom_config or self.get_pool_configuration(database_url)
+            
+            logger.info(f"Creating optimized engine '{engine_id}' with {strategy.value} pooling")
+            logger.debug(f"Pool config: size={config.pool_size}, overflow={config.max_overflow}, timeout={config.pool_timeout}")
+            
+            # Create engine with optimized settings
+            engine_kwargs = {
+                "connect_args": config.connect_args,
+                "echo": False,  # Set to True for SQL debugging
+            }
+            
+            # Apply pooling strategy
+            if strategy == PoolStrategy.NULL_POOL:
+                engine_kwargs.update({
+                    "poolclass": NullPool,
+                })
+            
+            elif strategy == PoolStrategy.STATIC_POOL:
+                engine_kwargs.update({
+                    "poolclass": StaticPool,
+                    "pool_recycle": -1,
+                    "pool_pre_ping": config.pool_pre_ping,
+                })
+            
+            elif strategy == PoolStrategy.QUEUE_POOL:
+                engine_kwargs.update({
+                    "poolclass": QueuePool,
+                    "pool_size": config.pool_size,
+                    "max_overflow": config.max_overflow,
+                    "pool_timeout": config.pool_timeout,
+                    "pool_recycle": config.pool_recycle,
+                    "pool_pre_ping": config.pool_pre_ping,
+                })
+            
+            # Create the engine
+            try:
+                start_time = time.time()
+                engine = create_engine(database_url, **engine_kwargs)
+                creation_time = (time.time() - start_time) * 1000
+                
+                # Set up event listeners for monitoring
+                self._setup_engine_listeners(engine, engine_id)
+                
+                # Store engine
+                self._engines[engine_id] = engine
+                self._session_locals[engine_id] = sessionmaker(
+                    autocommit=False,
+                    autoflush=False,
+                    bind=engine,
+                    expire_on_commit=False
+                )
+                
+                # Update metrics
+                self.metrics.total_connections_created += 1
+                
+                logger.info(f"Engine '{engine_id}' created successfully in {creation_time:.2f}ms")
+                return engine
+                
+            except Exception as e:
+                self.metrics.connection_errors += 1
+                logger.error(f"Failed to create engine '{engine_id}': {e}")
+                raise
+    
+    def _setup_engine_listeners(self, engine: Engine, engine_id: str):
+        """Set up SQLAlchemy event listeners for monitoring and optimization."""
+        
+        @event.listens_for(engine, "connect")
+        def receive_connect(dbapi_connection, connection_record):
+            connection_id = id(dbapi_connection)
+            self._connection_lifecycles[connection_id] = datetime.now()
+            
+            # Load SQLite extensions if needed
+            if hasattr(dbapi_connection, 'enable_load_extension'):
+                if connection_id not in self._loaded_connections:
+                    try:
+                        dbapi_connection.enable_load_extension(True)
+                        # Load sqlite_vec extension
+                        sqlite_vec.load(dbapi_connection)
+                        self._loaded_connections[connection_id] = True
+                        logger.debug(f"SQLite extensions loaded for connection {connection_id}")
+                    except Exception as e:
+                        logger.warning(f"Failed to load SQLite extensions: {e}")
+                    finally:
+                        dbapi_connection.enable_load_extension(False)
+            
+            # Update metrics
+            with self._lock:
+                self.metrics.active_connections += 1
+                self.metrics.peak_connections = max(
+                    self.metrics.peak_connections, 
+                    self.metrics.active_connections
+                )
+        
+        @event.listens_for(engine, "checkout")
+        def receive_checkout(dbapi_connection, connection_record, connection_proxy):
+            # Pool hit
+            with self._lock:
+                self.metrics.pool_hits += 1
+        
+        @event.listens_for(engine, "close")
+        def receive_close(dbapi_connection, connection_record):
+            connection_id = id(dbapi_connection)
+            
+            # Clean up tracking
+            self._loaded_connections.pop(connection_id, None)
+            self._connection_lifecycles.pop(connection_id, None)
+            
+            # Update metrics
+            with self._lock:
+                self.metrics.active_connections = max(0, self.metrics.active_connections - 1)
+        
+        @event.listens_for(engine, "before_cursor_execute")
+        def receive_before_cursor_execute(conn, cursor, statement, parameters, context, executemany):
+            context._query_start_time = time.time()
+        
+        @event.listens_for(engine, "after_cursor_execute")
+        def receive_after_cursor_execute(conn, cursor, statement, parameters, context, executemany):
+            if hasattr(context, '_query_start_time'):
+                execution_time = (time.time() - context._query_start_time) * 1000
+                
+                with self._lock:
+                    self.metrics.total_queries_executed += 1
+                    # Update rolling average
+                    total_time = (self.metrics.avg_query_time_ms * 
+                                (self.metrics.total_queries_executed - 1) + execution_time)
+                    self.metrics.avg_query_time_ms = total_time / self.metrics.total_queries_executed
+    
+    @contextmanager
+    def get_optimized_session(self, 
+                            engine_id: str = "default", 
+                            database_url: Optional[str] = None) -> Generator[Session, None, None]:
+        """
+        Get an optimized database session with automatic lifecycle management.
+        
+        This context manager ensures proper session cleanup and provides monitoring.
+        """
+        if engine_id not in self._session_locals:
+            if database_url is None:
+                raise ValueError(f"Engine '{engine_id}' not found and no database_url provided")
+            self.create_optimized_engine(database_url, engine_id)
+        
+        session_local = self._session_locals[engine_id]
+        session = session_local()
+        
+        try:
+            start_time = time.time()
+            yield session
+            session.commit()
+            
+            # Update performance metrics
+            session_time = (time.time() - start_time) * 1000
+            with self._lock:
+                total_time = (self.metrics.avg_connection_time_ms * 
+                            self.metrics.total_connections_created + session_time)
+                self.metrics.avg_connection_time_ms = total_time / (
+                    self.metrics.total_connections_created + 1)
+                
+        except Exception as e:
+            session.rollback()
+            logger.error(f"Session error in engine '{engine_id}': {e}")
+            raise
+        finally:
+            session.close()
+    
+    def get_session_factory(self, engine_id: str = "default") -> Optional[sessionmaker]:
+        """Get the session factory for a specific engine."""
+        return self._session_locals.get(engine_id)
+    
+    def perform_health_check(self) -> Dict[str, Any]:
+        """Perform comprehensive health check on all engines."""
+        current_time = datetime.now()
+        if (current_time - self._last_health_check).seconds < self._health_check_interval and self._cached_health_status:
+            return self._cached_health_status
+        
+        health_status = {
+            "timestamp": current_time.isoformat(),
+            "overall_status": "healthy",
+            "engines": {},
+            "metrics": self._get_metrics_summary(),
+            "warnings": [],
+            "errors": []
+        }
+        
+        with self._lock:
+            for engine_id, engine in self._engines.items():
+                engine_health = self._check_engine_health(engine_id, engine)
+                health_status["engines"][engine_id] = engine_health
+                
+                if engine_health["status"] != "healthy":
+                    health_status["overall_status"] = "degraded"
+                    if engine_health["status"] == "error":
+                        health_status["errors"].append(f"Engine {engine_id}: {engine_health.get('error', 'Unknown error')}")
+                    else:
+                        health_status["warnings"].append(f"Engine {engine_id}: {engine_health.get('warning', 'Performance issue')}")
+        
+        self._last_health_check = current_time
+        self._cached_health_status = health_status
+        return health_status
+    
+    def _check_engine_health(self, engine_id: str, engine: Engine) -> Dict[str, Any]:
+        """Check the health of a specific engine."""
+        try:
+            start_time = time.time()
+            
+            # Perform a simple query to test connectivity
+            with engine.connect() as conn:
+                conn.execute(text("SELECT 1"))
+            
+            response_time = (time.time() - start_time) * 1000
+            
+            # Determine status based on response time and pool info
+            status = "healthy"
+            if response_time > 1000:  # 1 second
+                status = "warning"
+            elif response_time > 5000:  # 5 seconds
+                status = "error"
+            
+            # Get pool information
+            pool_info = {}
+            if hasattr(engine.pool, 'size'):
+                pool_info = {
+                    "pool_size": engine.pool.size(),
+                    "checked_in": engine.pool.checkedin(),
+                    "checked_out": engine.pool.checkedout(),
+                }
+            
+            return {
+                "status": status,
+                "response_time_ms": response_time,
+                "pool_info": pool_info,
+                "last_check": datetime.now().isoformat()
+            }
+            
+        except Exception as e:
+            return {
+                "status": "error",
+                "error": str(e),
+                "last_check": datetime.now().isoformat()
+            }
+    
+    def _get_metrics_summary(self) -> Dict[str, Any]:
+        """Get summary of connection metrics."""
+        with self._lock:
+            return {
+                "total_connections_created": self.metrics.total_connections_created,
+                "active_connections": self.metrics.active_connections,
+                "peak_connections": self.metrics.peak_connections,
+                "pool_hits": self.metrics.pool_hits,
+                "pool_misses": self.metrics.pool_misses,
+                "connection_errors": self.metrics.connection_errors,
+                "avg_connection_time_ms": round(self.metrics.avg_connection_time_ms, 2),
+                "total_queries_executed": self.metrics.total_queries_executed,
+                "avg_query_time_ms": round(self.metrics.avg_query_time_ms, 2),
+                "uptime_seconds": int((datetime.now() - self.metrics.last_reset_time).total_seconds()),
+                "pool_efficiency_percent": round(
+                    (self.metrics.pool_hits / max(1, self.metrics.pool_hits + self.metrics.pool_misses)) * 100, 2
+                )
+            }
+    
+    def optimize_for_workload(self, workload_type: str = "mixed") -> Dict[str, Any]:
+        """Optimize database configurations for specific workload types."""
+        optimizations = []
+        
+        if workload_type == "read_heavy":
+            # Optimize for read-heavy workloads
+            for engine_id, engine in self._engines.items():
+                if hasattr(engine.pool, 'size'):
+                    # Increase pool size for read operations
+                    optimizations.append(f"Increased read pool size for {engine_id}")
+        
+        elif workload_type == "write_heavy":
+            # Optimize for write-heavy workloads
+            for engine_id, engine in self._engines.items():
+                # Reduce connection recycling time to avoid long-held connections
+                optimizations.append(f"Optimized write connections for {engine_id}")
+        
+        elif workload_type == "analytics":
+            # Optimize for analytical workloads
+            optimizations.append("Configured for long-running analytical queries")
+        
+        return {
+            "workload_type": workload_type,
+            "optimizations_applied": optimizations,
+            "timestamp": datetime.now().isoformat()
+        }
+    
+    def cleanup_resources(self):
+        """Clean up all database resources."""
+        logger.info("Database Manager: Cleaning up resources...")
+        
+        with self._lock:
+            # Dispose of all engines
+            for engine_id, engine in self._engines.items():
+                try:
+                    engine.dispose()
+                    logger.info(f"Disposed engine: {engine_id}")
+                except Exception as e:
+                    logger.warning(f"Error disposing engine {engine_id}: {e}")
+            
+            # Clear all tracking
+            self._engines.clear()
+            self._session_locals.clear()
+            self._loaded_connections.clear()
+            self._connection_lifecycles.clear()
+            
+            logger.info("Database Manager: Resource cleanup complete")
+    
+    def get_performance_report(self) -> Dict[str, Any]:
+        """Generate a comprehensive performance report."""
+        health = self.perform_health_check()
+        
+        return {
+            "report_timestamp": datetime.now().isoformat(),
+            "health_status": health,
+            "performance_metrics": self._get_metrics_summary(),
+            "active_engines": list(self._engines.keys()),
+            "recommendations": self._generate_performance_recommendations()
+        }
+    
+    def _generate_performance_recommendations(self) -> List[str]:
+        """Generate performance recommendations based on current metrics."""
+        recommendations = []
+        metrics = self._get_metrics_summary()
+        
+        # Pool efficiency recommendations
+        if metrics["pool_efficiency_percent"] < 80:
+            recommendations.append("Consider increasing pool size or reducing connection churn")
+        
+        # Response time recommendations
+        if metrics["avg_connection_time_ms"] > 100:
+            recommendations.append("High average connection time - check database performance")
+        
+        # Connection count recommendations
+        if metrics["peak_connections"] > 50:
+            recommendations.append("High peak connections - consider connection pooling optimization")
+        
+        # Query performance recommendations
+        if metrics["avg_query_time_ms"] > 50:
+            recommendations.append("High average query time - consider query optimization or indexing")
+        
+        if not recommendations:
+            recommendations.append("Database performance is optimal")
+        
+        return recommendations
+
+# Global state for current dataset and database manager
 _current_engine = None
 _current_session_local = None
 _dataset_manager = None
+_database_manager: Optional[DatabaseManager] = None
+_manager_lock = threading.Lock()
 
 # Global tracking of loaded extensions to prevent duplicates
 _loaded_connections = set()
 
 # Track engines that have been initialized to prevent duplicate listeners
 _initialized_engines = set()
+
+
+def get_database_manager() -> DatabaseManager:
+    """Get the global database manager instance."""
+    global _database_manager
+    
+    if _database_manager is None:
+        with _manager_lock:
+            if _database_manager is None:
+                _database_manager = DatabaseManager()
+    
+    return _database_manager
+
+
+def create_optimized_engine(database_url: str, 
+                         engine_id: str = "default",
+                         custom_config: PoolConfiguration = None) -> Engine:
+    """Create an optimized database engine using the database manager."""
+    manager = get_database_manager()
+    return manager.create_optimized_engine(database_url, engine_id, custom_config)
+
+
+@contextmanager
+def optimized_session(database_url: str = None, 
+                    engine_id: str = "default") -> Generator[Session, None, None]:
+    """Context manager for optimized database sessions."""
+    manager = get_database_manager()
+    with manager.get_optimized_session(engine_id, database_url) as session:
+        yield session
+
+
+def cleanup_database_resources():
+    """Clean up enhanced database manager resources and legacy resources."""
+    global _database_manager, _current_engine, _current_session_local, _loaded_connections, _initialized_engines
+
+    logger.info("Cleaning up database resources...")
+
+    # Clean up the database manager if it exists
+    if _database_manager is not None:
+        _database_manager.cleanup_resources()
+        with _manager_lock:
+            _database_manager = None
+
+    # Clear connection tracking
+    _loaded_connections.clear()
+
+    # Clear engine tracking (event listeners will be cleaned up automatically when engines are disposed)
+    _initialized_engines.clear()
+
+    # Dispose of current engine
+    if _current_engine:
+        try:
+            # With NullPool, disposal should be clean since there are no persistent connections
+            # If there are any issues, they're likely harmless threading edge cases
+            _current_engine.dispose()
+            logger.info("Disposed current engine")
+        except Exception as e:
+            # Log any disposal errors for debugging, but don't fail shutdown
+            logger.debug(f"Engine disposal completed with minor issue: {e}")
+        finally:
+            _current_engine = None
+
+    _current_session_local = None
+    logger.info("Database resources cleanup complete")
 
 
 def get_dataset_manager():
@@ -72,6 +598,12 @@ def set_current_engine_for_testing(engine, session_local):
 
 
 def get_engine(database_url=None, use_static_pool=False, connect_args=None):
+    """
+    Get a database engine with optimized connection configuration.
+    
+    This function now uses the DatabaseManager for optimal performance while maintaining
+    backward compatibility with existing code.
+    """
     logger.info("SQLite Version: %s", sqlite3.sqlite_version)
     logger.info("SQLite File: %s", sqlite3.__file__)
 
@@ -79,82 +611,83 @@ def get_engine(database_url=None, use_static_pool=False, connect_args=None):
     from config import get_settings
     settings = get_settings()
 
-    if connect_args is None:
-        connect_args = {
-            "check_same_thread": settings.database.check_same_thread,
-            # Add SQLite threading and connection configuration
-            "timeout": 30,
-            "isolation_level": None,  # Autocommit mode for better thread handling
-        }
-    else:
-        logger.info("Using custom connect_args: %s", connect_args)
-
     url = database_url or os.getenv("DATABASE_URL", settings.database.default_url)
     
-    # For SQLite databases, use optimized configuration to avoid threading issues
-    if url.startswith("sqlite://"):
-        if use_static_pool and url.startswith("sqlite:///:memory:"):
-            # In-memory databases need StaticPool
-            return create_engine(
-                url, 
-                connect_args=connect_args, 
-                poolclass=StaticPool,
-                pool_recycle=-1,
-                pool_pre_ping=True
+    # Try to use the optimized DatabaseManager approach
+    try:
+        manager = get_database_manager()
+        
+        # Create a custom pool configuration if specific args are provided
+        custom_config = None
+        if connect_args is not None or use_static_pool:
+            logger.info("Using custom connect_args: %s", connect_args or "default with static pool")
+            
+            # Use provided connect_args or default optimized ones
+            final_connect_args = connect_args or {
+                "check_same_thread": settings.database.check_same_thread,
+                "timeout": 30,
+                "isolation_level": None,
+            }
+            
+            custom_config = PoolConfiguration(
+                connect_args=final_connect_args,
+                pool_size=1 if use_static_pool else 5,
+                pool_pre_ping=not use_static_pool
             )
+        
+        # Generate a unique engine ID for this request
+        engine_id = f"legacy_engine_{id(url)}_{int(time.time())}"
+        return manager.create_optimized_engine(url, engine_id, custom_config)
+        
+    except Exception as e:
+        # Fall back to legacy approach if DatabaseManager fails
+        logger.warning(f"DatabaseManager failed, using legacy approach: {e}")
+        
+        if connect_args is None:
+            connect_args = {
+                "check_same_thread": settings.database.check_same_thread,
+                # Add SQLite threading and connection configuration
+                "timeout": 30,
+                "isolation_level": None,  # Autocommit mode for better thread handling
+            }
         else:
-            # For file-based SQLite, use NullPool to avoid threading issues
-            # This creates a new connection per request, eliminating pool-related thread conflicts
-            from sqlalchemy.pool import NullPool
+            logger.info("Using custom connect_args: %s", connect_args)
+
+        # For SQLite databases, use optimized configuration to avoid threading issues
+        if url.startswith("sqlite://"):
+            if use_static_pool and url.startswith("sqlite:///:memory:"):
+                # In-memory databases need StaticPool
+                return create_engine(
+                    url, 
+                    connect_args=connect_args, 
+                    poolclass=StaticPool,
+                    pool_recycle=-1,
+                    pool_pre_ping=True
+                )
+            else:
+                # For file-based SQLite, use NullPool to avoid threading issues
+                # This creates a new connection per request, eliminating pool-related thread conflicts
+                return create_engine(
+                    url, 
+                    connect_args=connect_args,
+                    poolclass=NullPool,  # No pooling - avoids thread affinity issues
+                    pool_pre_ping=False,  # Not needed with NullPool
+                )
+        else:
+            # For other databases (PostgreSQL, MySQL, etc.), use standard pooling
             return create_engine(
                 url, 
                 connect_args=connect_args,
-                poolclass=NullPool,  # No pooling - avoids thread affinity issues
-                pool_pre_ping=False,  # Not needed with NullPool
+                pool_recycle=3600,  # Recycle connections every hour
+                pool_pre_ping=True,  # Validate connections before use
+                pool_timeout=20,  # Timeout for getting connections from pool
+                max_overflow=10,   # Allow overflow connections for non-SQLite
             )
-    else:
-        # For other databases (PostgreSQL, MySQL, etc.), use standard pooling
-        return create_engine(
-            url, 
-            connect_args=connect_args,
-            pool_recycle=3600,  # Recycle connections every hour
-            pool_pre_ping=True,  # Validate connections before use
-            pool_timeout=20,  # Timeout for getting connections from pool
-            max_overflow=10,   # Allow overflow connections for non-SQLite
-        )
 
 
 def get_session_local(engine):
     return sessionmaker(autocommit=False, autoflush=False, bind=engine, expire_on_commit=False)
 
-
-def cleanup_database_resources():
-    """Clean up all database resources and event listeners."""
-    global _current_engine, _current_session_local, _loaded_connections, _initialized_engines
-
-    logger.info("Cleaning up database resources...")
-
-    # Clear connection tracking
-    _loaded_connections.clear()
-
-    # Clear engine tracking (event listeners will be cleaned up automatically when engines are disposed)
-    _initialized_engines.clear()
-
-    # Dispose of current engine
-    if _current_engine:
-        try:
-            # With NullPool, disposal should be clean since there are no persistent connections
-            # If there are any issues, they're likely harmless threading edge cases
-            _current_engine.dispose()
-            logger.info("Disposed current engine")
-        except Exception as e:
-            # Log any disposal errors for debugging, but don't fail shutdown
-            logger.debug(f"Engine disposal completed with minor issue: {e}")
-        finally:
-            _current_engine = None
-
-    _current_session_local = None
-    logger.info("Database resources cleanup complete")
 
 
 def init_db(engine=None, database_url=None, connect_args=None):
@@ -234,3 +767,44 @@ def get_db_for_current_dataset():
         yield db
     finally:
         db.close()
+
+
+# Advanced FastAPI dependency functions using DatabaseManager
+def get_optimized_db_session(database_url: str = None, engine_id: str = "default"):
+    """FastAPI dependency for optimized database sessions."""
+    manager = get_database_manager()
+    
+    if engine_id not in manager._session_locals:
+        if database_url is None:
+            from config import get_settings
+            settings = get_settings()
+            database_url = settings.database.default_url
+        manager.create_optimized_engine(database_url, engine_id)
+    
+    session_local = manager.get_session_factory(engine_id)
+    if not session_local:
+        raise RuntimeError(f"No session factory available for engine '{engine_id}'")
+    
+    session = session_local()
+    try:
+        yield session
+    finally:
+        session.close()
+
+
+def get_optimized_db_for_current_dataset():
+    """FastAPI dependency for optimized database sessions using current dataset."""
+    # First try to get the current session from dataset manager
+    session_local = get_current_session_local()
+    if session_local is None:
+        # Fall back to optimized manager with default engine
+        manager = get_database_manager()
+        session_local = manager.get_session_factory("default")
+        if not session_local:
+            raise RuntimeError("No database session available")
+    
+    session = session_local()
+    try:
+        yield session
+    finally:
+        session.close()

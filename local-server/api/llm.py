@@ -5,6 +5,7 @@ import os
 import json
 from typing import Dict, Any
 
+from api.dependencies.llm_services import get_default_llm_service, get_llm_service as get_optimized_llm_service
 from llm.service import LLMService
 from llm.models import (
     DefinitionSuggestionRequest, 
@@ -32,12 +33,12 @@ from config import get_settings
 logger = get_logger("llm_api")
 router = APIRouter()
 
-# Global service instance
+# Global service instance (kept for backward compatibility)
 _llm_service: LLMService = None
 
 
 def get_llm_service() -> LLMService:
-    """Dependency to get LLM service instance"""
+    """Legacy dependency to get LLM service instance (kept for backward compatibility)"""
     global _llm_service
     if _llm_service is None:
         try:
@@ -46,9 +47,9 @@ def get_llm_service() -> LLMService:
             model_name = settings.llm.model_name
             temperature = settings.llm.temperature
             
-            logger.info(f"Initializing LLM service with model: {model_name}")
+            logger.info(f"Initializing legacy LLM service with model: {model_name}")
             _llm_service = LLMService(model_name=model_name, temperature=temperature)
-            logger.info("LLM service initialized successfully")
+            logger.info("Legacy LLM service initialized successfully")
             
         except Exception as e:
             logger.error(f"Failed to initialize LLM service: {e}")
@@ -96,7 +97,7 @@ def handle_llm_error(e: Exception) -> HTTPException:
 @router.post("/llm/suggest_term_definition/stream")
 async def suggest_term_definition_stream(
     request: DefinitionSuggestionRequest,
-    llm_service: LLMService = Depends(get_llm_service)
+    llm_service: LLMService = Depends(get_default_llm_service)
 ):
     """Stream term definition suggestion using specified flavor with Server-Side Events"""
     
@@ -242,7 +243,7 @@ async def suggest_domain_definition_stream(
             })
 async def suggest_term_definition(
     request: DefinitionSuggestionRequest,
-    llm_service: LLMService = Depends(get_llm_service)
+    llm_service: LLMService = Depends(get_default_llm_service)
 ):
     """
     Generate a term definition suggestion based on provided context using LLM.

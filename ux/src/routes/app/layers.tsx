@@ -1,18 +1,19 @@
 import React from "react";
-import { useLayers } from "@/api/hooks/layers";
+import { useLayerNodes } from "@/api/hooks/structure_nodes/useStructureNodes";
 import { createFileRoute } from "@tanstack/react-router";
 import { LayersTable } from "@/components/node_tables/layers_table";
 import { Spinner } from "flowbite-react";
 import { CsSidebar, CsSidebarTitle } from "@/components/layout/cs_sidebar";
 import { CsMain, CsMainTitle } from "@/components/layout/cs_main";
-import { Layers } from "lucide-react"
+import { Layers } from "lucide-react";
+import type { StructureNode } from "@/api/types/structureNodes";
 
 export const Route = createFileRoute("/app/layers")({
   component: LayersPage,
 });
 
 function LayersPage() {
-  const { data: layers, isLoading, error } = useLayers();
+  const { data: layers, isLoading, error } = useLayerNodes();
   const tableRef = React.useRef<any>(null);
 
   if (isLoading) {
@@ -31,7 +32,7 @@ function LayersPage() {
       <CsMain>
         <CsMainTitle icon={Layers}>Layers</CsMainTitle>
 
-        <LayersTable ref={tableRef} data={layers} />
+        <LayersTable ref={tableRef} data={layers as LayerOut[]} />
       </CsMain>
     </>
   );

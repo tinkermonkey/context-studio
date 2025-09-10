@@ -1,9 +1,7 @@
 import React from "react";
 import { Spinner } from "flowbite-react";
 import { TreeChart } from "@/components/graphs/hierarchy/tree_chart";
-import { useLayers } from "@/api/hooks/layers/useLayers";
-import { useDomains } from "@/api/hooks/domains/useDomains";
-import { useTerms, useTerm } from "@/api/hooks/terms/useTerms";
+import { useLayerNodes, useDomainNodes, useTermNodes, useStructureNode } from "@/api/hooks/structure_nodes/useStructureNodes";
 import { buildHierarchicalTree, filterTreeByTerm, collectAllNodeIds } from "@/utils/treeBuilder";
 import { ChartData } from "@/components/graphs/hierarchy/tree_data";
 import { apiLogger } from "@/api/utils/logger";
@@ -48,14 +46,13 @@ export function TreeChartPanel({
   errorComponent
 }: TreeChartPanelProps) {
   // Load all base data
-  const { data: layers, isLoading: layersLoading, error: layersError } = useLayers();
-  const { data: domains, isLoading: domainsLoading, error: domainsError } = useDomains();
-  const { data: terms, isLoading: termsLoading, error: termsError } = useTerms();
+  const { data: layers, isLoading: layersLoading, error: layersError } = useLayerNodes();
+  const { data: domains, isLoading: domainsLoading, error: domainsError } = useDomainNodes();
+  const { data: terms, isLoading: termsLoading, error: termsError } = useTermNodes();
   
   // Load specific term if termId is provided
-  const { data: targetTerm, isLoading: termLoading, error: termError } = useTerm(
-    termId || "", 
-    !!termId
+  const { data: targetTerm, isLoading: termLoading, error: termError } = useStructureNode(
+    termId || ""
   );
 
   // Determine loading state

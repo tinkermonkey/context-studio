@@ -1,4 +1,4 @@
-> Is operational transformation a type of change data capture, or is change data capture a different pattern?
+>Is operational transformation a type of change data capture, or is change data capture a different pattern?
 
 Great question! **Change Data Capture (CDC) and Operational Transformation (OT) are different patterns that serve different purposes**, though they can be used together in some architectures.
 

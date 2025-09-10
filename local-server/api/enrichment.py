@@ -5,6 +5,7 @@ from fastapi.responses import JSONResponse
 from typing import Optional
 import logging
 
+from api.dependencies.enrichment_services import get_enrichment_service
 from enrichment.service import EnrichmentService
 from config import EnrichmentConfig, get_settings
 from enrichment.models import *
@@ -15,8 +16,8 @@ logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/api/nlp_analysis/reference", tags=["enrichment"])
 
 
-def get_enrichment_service() -> EnrichmentService:
-    """Dependency to get enrichment service instance"""
+def get_enrichment_service_legacy() -> EnrichmentService:
+    """Legacy dependency to get enrichment service instance"""
     from config import get_config_manager
     config_manager = get_config_manager()
     return EnrichmentService(config_manager)

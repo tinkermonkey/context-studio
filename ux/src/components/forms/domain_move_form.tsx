@@ -6,12 +6,12 @@
 
 import React, { useState } from 'react';
 import { Button, Label, Checkbox } from 'flowbite-react';
-import { DomainOut } from '@/api/services/domains';
+import { StructureNode } from '@/api/types/structureNodes';
 import { LayerSelector } from '@/components/node_selectors/layer_selector';
-import { useMoveDomains } from '@/api/hooks/domains';
+import { useUpdateStructureNode } from '@/api/hooks/structure_nodes/useStructureNodeMutations';
 
 interface DomainMoveFormProps {
-  selectedNodes: DomainOut[];
+  selectedNodes: StructureNode[];
   onSuccess: () => void;
   onCancel: () => void;
 }
@@ -19,7 +19,7 @@ interface DomainMoveFormProps {
 export function DomainMoveForm({ selectedNodes, onSuccess, onCancel }: DomainMoveFormProps) {
   const [targetLayerId, setTargetLayerId] = useState<string>('');
   const [moveTerms, setMoveTerms] = useState(true);
-  const moveDomains = useMoveDomains();
+  const updateDomain = useUpdateStructureNode();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -29,11 +29,17 @@ export function DomainMoveForm({ selectedNodes, onSuccess, onCancel }: DomainMov
     }
 
     try {
-      await moveDomains.mutateAsync({
-        domain_ids: selectedNodes.map(domain => domain.id),
-        target_layer_id: targetLayerId,
-        move_terms: moveTerms,
-      });
+      // Move each domain individually using the structure node update API
+      await Promise.all(
+        selectedNodes.map(domain => 
+          updateDomain.mutateAsync({
+            id: domain.id,
+            data: {
+              parent_node_id: targetLayerId,
+            },
+          })
+        )
+      );
       
       onSuccess();
     } catch (error) {

@@ -85,54 +85,6 @@ async def get_configuration_schema():
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@router.get("/reference-sources/status", response_model=dict)
-async def get_reference_sources_status():
-    """Get status of all reference sources"""
-    try:
-        enrichment_service = get_enrichment_service()
-        return await enrichment_service.get_source_status()
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
-
-
-@router.get("/reference-sources/{source_name}", response_model=dict)
-async def get_reference_source(source_name: str):
-    """Get specific reference source configuration"""
-    try:
-        config_manager = get_config_manager()
-        sources = config_manager.get_reference_sources()
-        if source_name not in sources:
-            raise HTTPException(status_code=404, detail=f"Reference source '{source_name}' not found")
-        return sources[source_name]
-    except HTTPException:
-        raise
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
-
-
-@router.get("/reference-sources", response_model=dict)
-async def get_reference_sources():
-    """Get all reference sources configuration"""
-    try:
-        config_manager = get_config_manager()
-        return config_manager.get_reference_sources()
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
-
-
-@router.patch("/reference-sources/{source_name}")
-async def update_reference_source(source_name: str, update_data: dict):
-    """Update specific reference source configuration"""
-    try:
-        config_manager = get_config_manager()
-        await config_manager.update_reference_source(source_name, update_data)
-        return {"message": f"Reference source '{source_name}' updated successfully"}
-    except ValueError as e:
-        raise HTTPException(status_code=400, detail=str(e))
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
-
-
 @router.get("/{path:path}", response_model=ConfigResponse)
 async def get_configuration_value(path: str):
     """Get specific configuration value by path"""

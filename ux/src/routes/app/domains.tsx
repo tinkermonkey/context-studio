@@ -8,7 +8,7 @@ import { DomainsTable } from "@/components/node_tables/domains_table";
 import { CsSidebar, CsSidebarTitle } from "@/components/layout/cs_sidebar";
 import { CsMain, CsMainTitle } from "@/components/layout/cs_main";
 import { CollapsibleLayersList } from "@/components/misc/collapsible_layers_list";
-import { useLayer } from "@/api/hooks/layers";
+import { useStructureNode } from "@/api/hooks/structure_nodes/useStructureNodes";
 import { Database } from "lucide-react"
 
 // Define the search parameters schema
@@ -52,7 +52,7 @@ function DomainsPage() {
     data: layer,
     isLoading: layerLoading,
     error: layerError,
-  } = useLayer(queryParams.layer_id as string);
+  } = useStructureNode(queryParams.layer_id as string);
 
   const handleQueryParamsChange = React.useCallback(
     (newParams: Record<string, unknown>) => {

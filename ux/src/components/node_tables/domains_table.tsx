@@ -1,21 +1,19 @@
 
 import React from "react";
 import { createColumnHelper } from "@tanstack/react-table";
-import { Checkbox, Badge, Tooltip } from "flowbite-react";
-import { Info } from "lucide-react";
-import { DomainOut } from "@/api/services/domains";
+import { Checkbox, Badge } from "flowbite-react";
+import { StructureNode } from "@/api/types/structureNodes";
 import { renderShortDateTime, renderShortUuid } from "@/utils/renderers";
 import { BaseNodeTable } from './node_table';
-import { useDomains } from '@/api/hooks/domains';
-import { useDeleteDomain } from '@/api/hooks/domains';
+import { useDomainNodes, useTermNodes } from '@/api/hooks/structure_nodes/useStructureNodes';
+import { useDeleteStructureNode } from '@/api/hooks/structure_nodes/useStructureNodeMutations';
 import { DomainForm } from '@/components/forms/domain_form';
 import { DomainMoveForm } from '@/components/forms/domain_move_form';
-import { useTerms } from '@/api/hooks/terms';
-import { useMoveTerms } from '@/api/hooks/terms';
 import { usePredicates } from '@/api/hooks/predicates';
 import type { FieldDefinition } from "@/components/misc/query_filters";
+import type { StructureNode } from "@/api/types/structureNodes";
 
-const columnHelper = createColumnHelper<DomainOut>();
+const columnHelper = createColumnHelper<StructureNode>();
 
 const columns = [
   columnHelper.display({
@@ -62,67 +60,16 @@ const columns = [
     cell: (info) => info.getValue() ?? "",
     header: () => "Definition",
   }),
-  columnHelper.accessor("layer_id", {
+  columnHelper.accessor("parent_node_id", {
     cell: (info) => info.getValue() ? renderShortUuid(info.getValue()) : "",
     header: () => "Layer",
   }),
-  columnHelper.accessor("primary_predicate", {
+  columnHelper.accessor("structural_predicate_id", {
     cell: (info) => {
       const value = info.getValue();
-      return value ? (
-        <Badge color="blue" size="sm">
-          {value}
-        </Badge>
-      ) : (
-        <span className="text-gray-400">None</span>
-      );
+      return value ? renderShortUuid(value) : <span className="text-gray-400">None</span>;
     },
     header: () => "Structural Predicate",
-  }),
-  columnHelper.accessor("predicate_set", {
-    cell: (info) => {
-      const predicateSet = info.getValue();
-      const primaryPredicate = info.row.original.primary_predicate;
-      
-      if (!predicateSet || predicateSet.length === 0) {
-        return <span className="text-gray-400">None</span>;
-      }
-      
-      return (
-        <div className="flex flex-wrap gap-1">
-          {/* Show primary predicate first with special styling if it exists */}
-          {primaryPredicate && (
-            <Badge color="blue" size="sm">
-              {primaryPredicate}
-            </Badge>
-          )}
-          
-          {/* Show count of additional predicates */}
-          {predicateSet.length > 1 && (
-            <Badge color="gray" size="sm">
-              +{predicateSet.length - 1} more
-            </Badge>
-          )}
-          
-          {/* Tooltip with full list on hover */}
-          {predicateSet.length > 1 && (
-            <Tooltip content={
-              <div>
-                <p className="font-medium">All Predicates:</p>
-                <ul className="mt-1">
-                  {predicateSet.map((id: string) => (
-                    <li key={id}>• {id}</li>
-                  ))}
-                </ul>
-              </div>
-            }>
-              <Info className="h-3 w-3 text-gray-400 ml-1" />
-            </Tooltip>
-          )}
-        </div>
-      );
-    },
-    header: () => "Predicates",
   }),
   columnHelper.accessor("version", {
     cell: (info) => info.getValue() ?? "",
@@ -160,15 +107,12 @@ const domainFilterFields: FieldDefinition[] = [
     operators: ['contains'],
   },
   {
-    field: 'layer_id',
+    field: 'parent_node_id',
     label: 'Layer',
     type: 'select',
     operators: ['equals'],
-    // TODO: Populate this from the layers API and use the LayerSelector component
-    options: [
-      { value: 'layer1', label: 'Layer 1' },
-      { value: 'layer2', label: 'Layer 2' },
-    ],
+    // TODO: Populate this from the structure nodes API
+    options: [],
   },
   {
     field: 'created_at',
@@ -185,7 +129,7 @@ const domainFilterFields: FieldDefinition[] = [
 ];
 
 export interface DomainsTableProps {
-  data?: DomainOut[];
+  data?: StructureNode[];
   onSelectionChange?: (count: number) => void;
   onEdit?: (id: string) => void;
   columnVisibility?: Record<string, boolean>;
@@ -200,14 +144,13 @@ const DomainsTable = React.forwardRef<any, DomainsTableProps>((props, ref) => {
   } = props;
   
   // Use query params in the domains hook
-  const { data: domains, isLoading, error, refetch } = useDomains(queryParams);
-  const deleteDomain = useDeleteDomain();
-  const { data: allTerms } = useTerms();
-  const moveTerms = useMoveTerms();
+  const { data: domains, isLoading, error, refetch } = useDomainNodes(queryParams?.parent_node_id as string | undefined, queryParams);
+  const deleteDomain = useDeleteStructureNode();
+  const { data: allTerms } = useTermNodes();
   
   const defaultColumnVisibility: Record<string, boolean> = {
     id: false,
-    layer_id: false,
+    parent_node_id: false,
     version: false,
     created_at: false,
     last_modified: false,
@@ -220,7 +163,7 @@ const DomainsTable = React.forwardRef<any, DomainsTableProps>((props, ref) => {
   // Get terms that belong to a domain (for safe deletion)
   const getDomainsChildren = async (domainId: string) => {
     if (!allTerms) return [];
-    return allTerms.filter(term => term.domain_id === domainId);
+    return allTerms.filter(term => term.parent_node_id === domainId);
   };
 
   // Move terms when orphaning them during domain deletion
@@ -236,7 +179,7 @@ const DomainsTable = React.forwardRef<any, DomainsTableProps>((props, ref) => {
   return (
     <BaseNodeTable
       columns={columns}
-      data={domains ?? []}
+      data={(domains ?? []) as StructureNode[]}
       isLoading={isLoading}
       error={error}
       onRefetch={refetch}
@@ -244,7 +187,7 @@ const DomainsTable = React.forwardRef<any, DomainsTableProps>((props, ref) => {
         await Promise.all(ids.map((id) => deleteDomain.mutateAsync(id)));
       }}
       createForm={({ onSuccess }) => <DomainForm onSuccess={onSuccess} />}
-      editForm={({ node, onSuccess }) => <DomainForm domain={node} onSuccess={onSuccess} />}
+      editForm={({ node, onSuccess }) => <DomainForm domain={node as StructureNode} onSuccess={onSuccess} />}
       moveForm={DomainMoveForm}
       typeName="Domain"
       getId={(item) => item.id}
@@ -253,7 +196,7 @@ const DomainsTable = React.forwardRef<any, DomainsTableProps>((props, ref) => {
       onQueryParamsChange={onQueryParamsChange}
       filterFields={domainFilterFields}
       searchPlaceholder="Search..."
-      linkGenerator={(domain: DomainOut) => `/app/nodes/domain/${domain.id}`}
+      linkGenerator={(item: StructureNode) => `/app/nodes/domain/${item.id}`}
       onGetChildren={getDomainsChildren}
       onMoveChildren={moveDomainsChildren}
     />

@@ -4,115 +4,40 @@
  */
 
 export interface paths {
-    "/api/layers/find": {
+    "/api/structure_nodes/": {
         parameters: {
             query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
-        get?: never;
+        /**
+         * List Nodes
+         * @description List structure_nodes with filtering and pagination.
+         *
+         *     Supports filtering by structure_node type and parent, with configurable pagination
+         *     and sorting. This replaces the separate endpoints for layers, domains, and terms.
+         */
+        get: operations["list_nodes_api_structure_nodes__get"];
         put?: never;
-        /** Find Layer */
-        post: operations["find_layer_api_layers_find_post"];
+        /**
+         * Create Node
+         * @description Create a new structure_node.
+         *
+         *     This endpoint handles creation of layers, domains, and terms through
+         *     the unified structure_nodes interface. Type-specific validation is enforced:
+         *     - Layers cannot have parent structure_nodes
+         *     - Domains must have a layer parent
+         *     - Terms must have a domain parent
+         */
+        post: operations["create_node_api_structure_nodes__post"];
         delete?: never;
         options?: never;
         head?: never;
         patch?: never;
         trace?: never;
     };
-    "/api/layers/": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** List Layers */
-        get: operations["list_layers_api_layers__get"];
-        put?: never;
-        /** Create Layer */
-        post: operations["create_layer_api_layers__post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/layers/{id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Get Layer */
-        get: operations["get_layer_api_layers__id__get"];
-        /** Update Layer */
-        put: operations["update_layer_api_layers__id__put"];
-        post?: never;
-        /** Delete Layer */
-        delete: operations["delete_layer_api_layers__id__delete"];
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/domains/find": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Find Domain */
-        post: operations["find_domain_api_domains_find_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/domains/": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** List Domains */
-        get: operations["list_domains_api_domains__get"];
-        put?: never;
-        /** Create Domain */
-        post: operations["create_domain_api_domains__post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/domains/{id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Get Domain */
-        get: operations["get_domain_api_domains__id__get"];
-        /** Update Domain */
-        put: operations["update_domain_api_domains__id__put"];
-        post?: never;
-        /** Delete Domain */
-        delete: operations["delete_domain_api_domains__id__delete"];
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/domains/move": {
+    "/api/structure_nodes/find": {
         parameters: {
             query?: never;
             header?: never;
@@ -122,17 +47,53 @@ export interface paths {
         get?: never;
         put?: never;
         /**
-         * Move Domains
-         * @description Move domains to a new layer with all their terms.
+         * Search Nodes
+         * @description Vector search across structure_nodes.
+         *
+         *     This endpoint replaces the separate find endpoints for layers, domains, and terms.
+         *     Supports semantic search across structure_node titles and definitions with optional
+         *     type filtering and configurable similarity thresholds.
+         *
+         *     Note: Implementation depends on vector search infrastructure being available.
          */
-        post: operations["move_domains_api_domains_move_post"];
+        post: operations["search_nodes_api_structure_nodes_find_post"];
         delete?: never;
         options?: never;
         head?: never;
         patch?: never;
         trace?: never;
     };
-    "/api/terms/find": {
+    "/api/structure_nodes/links": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Node Links
+         * @description List structure_node links with filtering.
+         *
+         *     Supports filtering by source structure_node, target structure_node, and predicate.
+         *     Returns all relationships in the unified structure_node graph.
+         */
+        get: operations["list_node_links_api_structure_nodes_links_get"];
+        put?: never;
+        /**
+         * Create Node Link
+         * @description Create a new structure_node link.
+         *
+         *     Links can only be created between structure_nodes of the same type (layers to layers,
+         *     domains to domains, terms to terms) as per the Great Normalization requirements.
+         */
+        post: operations["create_node_link_api_structure_nodes_links_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/structure_nodes/links/{link_id}": {
         parameters: {
             query?: never;
             header?: never;
@@ -140,53 +101,65 @@ export interface paths {
             cookie?: never;
         };
         get?: never;
-        put?: never;
-        /** Find Term */
-        post: operations["find_term_api_terms_find_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/terms/": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** List Terms */
-        get: operations["list_terms_api_terms__get"];
-        put?: never;
-        /** Create Term */
-        post: operations["create_term_api_terms__post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/terms/{id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Get Term */
-        get: operations["get_term_api_terms__id__get"];
-        /** Update Term */
-        put: operations["update_term_api_terms__id__put"];
+        /**
+         * Update Node Link
+         * @description Update a structure_node link.
+         *
+         *     Allows updating the predicate and predicate_id of an existing link.
+         *     Source and target structure_nodes can also be updated if the new configuration is valid.
+         */
+        put: operations["update_node_link_api_structure_nodes_links__link_id__put"];
         post?: never;
-        /** Delete Term */
-        delete: operations["delete_term_api_terms__id__delete"];
+        /**
+         * Delete Node Link
+         * @description Delete a structure_node link.
+         *
+         *     Removes the relationship between two structure_nodes. This operation cannot be undone.
+         */
+        delete: operations["delete_node_link_api_structure_nodes_links__link_id__delete"];
         options?: never;
         head?: never;
         patch?: never;
         trace?: never;
     };
-    "/api/terms/move": {
+    "/api/structure_nodes/{node_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Node
+         * @description Get a specific structure_node by ID.
+         *
+         *     Returns the complete structure_node information including embeddings,
+         *     hierarchy information, and metadata.
+         */
+        get: operations["get_node_api_structure_nodes__node_id__get"];
+        /**
+         * Update Node
+         * @description Update a structure_node.
+         *
+         *     Supports updating title, definition, parent relationships, and structural predicates.
+         *     Circular reference validation is automatically enforced.
+         */
+        put: operations["update_node_api_structure_nodes__node_id__put"];
+        post?: never;
+        /**
+         * Delete Node
+         * @description Delete a structure_node and its children.
+         *
+         *     This operation cascades to all child structure_nodes and their relationships.
+         *     Use with caution as this operation cannot be undone.
+         */
+        delete: operations["delete_node_api_structure_nodes__node_id__delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/structure_nodes/move": {
         parameters: {
             query?: never;
             header?: never;
@@ -196,48 +169,64 @@ export interface paths {
         get?: never;
         put?: never;
         /**
-         * Move Terms
-         * @description Move terms to a new domain with all their children.
+         * Move Nodes
+         * @description Move structure_nodes to a new parent location.
+         *
+         *     This endpoint supports moving multiple structure_nodes at once, with options for:
+         *     - Moving all child structure_nodes along with parents
+         *     - Handling title conflicts through warnings, renaming, or errors
+         *     - Maintaining referential integrity throughout the move operation
+         *
+         *     The move operation is atomic - either all structure_nodes are moved successfully,
+         *     or the entire operation is rolled back.
          */
-        post: operations["move_terms_api_terms_move_post"];
+        post: operations["move_nodes_api_structure_nodes_move_post"];
         delete?: never;
         options?: never;
         head?: never;
         patch?: never;
         trace?: never;
     };
-    "/api/term-relationships/": {
+    "/api/structure_nodes/{node_id}/children": {
         parameters: {
             query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
-        /** List Relationships */
-        get: operations["list_relationships_api_term_relationships__get"];
+        /**
+         * Get Node Children
+         * @description Get all direct children of a structure_node.
+         *
+         *     Useful for building hierarchical views of the structure_node structure.
+         */
+        get: operations["get_node_children_api_structure_nodes__node_id__children_get"];
         put?: never;
-        /** Create Relationship */
-        post: operations["create_relationship_api_term_relationships__post"];
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
         patch?: never;
         trace?: never;
     };
-    "/api/term-relationships/{id}": {
+    "/api/structure_nodes/{node_id}/ancestors": {
         parameters: {
             query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
-        /** Get Relationship */
-        get: operations["get_relationship_api_term_relationships__id__get"];
-        /** Update Relationship */
-        put: operations["update_relationship_api_term_relationships__id__put"];
+        /**
+         * Get Node Ancestors
+         * @description Get all ancestors of a structure_node up to the root.
+         *
+         *     Returns the path from the root layer down to the specified structure_node's parent.
+         *     Useful for breadcrumb navigation and understanding structure_node context.
+         */
+        get: operations["get_node_ancestors_api_structure_nodes__node_id__ancestors_get"];
+        put?: never;
         post?: never;
-        /** Delete Relationship */
-        delete: operations["delete_relationship_api_term_relationships__id__delete"];
+        delete?: never;
         options?: never;
         head?: never;
         patch?: never;
@@ -387,6 +376,315 @@ export interface paths {
          * @description Get a mapping of all predicate identifiers to their ConceptNet relations.
          */
         get: operations["get_conceptnet_mapping_api_predicates_conceptnet_mapping_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/versions/entities/{entity_type}/{entity_id}/versions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Entity Versions
+         * @description Get version history for an entity.
+         *
+         *     Returns all versions of the specified entity ordered by version number.
+         */
+        get: operations["get_entity_versions_api_versions_entities__entity_type___entity_id__versions_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/versions/entities/{entity_type}/{entity_id}/versions/{version_number}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Entity Version
+         * @description Get specific version of an entity.
+         *
+         *     Returns the full content and metadata for the specified version.
+         */
+        get: operations["get_entity_version_api_versions_entities__entity_type___entity_id__versions__version_number__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/versions/entities/{entity_type}/{entity_id}/rollback": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Rollback Entity
+         * @description Rollback entity to specific version.
+         *
+         *     Creates a new version with the content from the target version.
+         */
+        post: operations["rollback_entity_api_versions_entities__entity_type___entity_id__rollback_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/versions/entities/{entity_type}/{entity_id}/diff": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Working Diff
+         * @description Get diff between working and canonical versions.
+         *
+         *     Shows what changes exist in the working version compared to the last committed version.
+         */
+        get: operations["get_working_diff_api_versions_entities__entity_type___entity_id__diff_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/versions/working-tree/status": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Working Tree Status
+         * @description Get working tree status.
+         *
+         *     Returns summary of all entities in the working tree including staged/unstaged counts.
+         */
+        get: operations["get_working_tree_status_api_versions_working_tree_status_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/versions/working-tree/changes": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Working Changes
+         * @description Get all entities with working changes.
+         *
+         *     Returns entities where the working version differs from the canonical version.
+         */
+        get: operations["get_working_changes_api_versions_working_tree_changes_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/versions/working-tree/stage": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Stage Entity
+         * @description Stage an entity for commit.
+         *
+         *     Marks the entity as staged, meaning its changes will be included in the next commit.
+         */
+        post: operations["stage_entity_api_versions_working_tree_stage_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/versions/working-tree/unstage": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Unstage Entity
+         * @description Unstage an entity.
+         *
+         *     Removes the entity from the staged list, but keeps working changes.
+         */
+        post: operations["unstage_entity_api_versions_working_tree_unstage_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/versions/working-tree/commit": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Commit Staged Changes
+         * @description Commit all staged changes.
+         *
+         *     Updates canonical versions for all staged entities and marks them as merged.
+         */
+        post: operations["commit_staged_changes_api_versions_working_tree_commit_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/versions/working-tree/preview": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Commit Preview
+         * @description Preview what would be committed.
+         *
+         *     Returns diffs for all staged entities showing what changes would be committed.
+         */
+        get: operations["get_commit_preview_api_versions_working_tree_preview_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/versions/diffs/working": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get All Working Diffs
+         * @description Get diffs for all entities with working changes.
+         *
+         *     Returns structured diffs showing what has changed in the working versions.
+         */
+        get: operations["get_all_working_diffs_api_versions_diffs_working_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/versions/diffs/compare": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Compare Versions
+         * @description Compare two specific versions of an entity.
+         *
+         *     Generates a structured diff between the specified before and after versions.
+         */
+        post: operations["compare_versions_api_versions_diffs_compare_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/versions/health": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Version Management Health
+         * @description Get version management system health status.
+         *
+         *     Returns overall health, counts, and any issues detected.
+         */
+        get: operations["get_version_management_health_api_versions_health_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/versions/stats": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Version Management Stats
+         * @description Get version management system statistics.
+         *
+         *     Returns detailed statistics including version counts by type and state,
+         *     working tree summary, recent activity, and performance metrics.
+         */
+        get: operations["get_version_management_stats_api_versions_stats_get"];
         put?: never;
         post?: never;
         delete?: never;
@@ -566,7 +864,7 @@ export interface paths {
         put?: never;
         /**
          * Find Shortest Path
-         * @description Find the shortest path between two nodes.
+         * @description Find the shortest path between two structure_nodes.
          */
         post: operations["find_shortest_path_api_graph_path_shortest_post"];
         delete?: never;
@@ -1081,6 +1379,194 @@ export interface paths {
          * @description Generate a new migration file template.
          */
         post: operations["generate_migration_api_schema_generate_migration_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/config/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Full Configuration
+         * @description Get complete configuration
+         */
+        get: operations["get_full_configuration_api_config__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /**
+         * Update Configuration
+         * @description Update specific configuration value
+         */
+        patch: operations["update_configuration_api_config__patch"];
+        trace?: never;
+    };
+    "/api/config/validate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Validate Configuration
+         * @description Validate current configuration
+         */
+        get: operations["validate_configuration_api_config_validate_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/config/schema/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Configuration Schema
+         * @description Get configuration schema with field descriptions
+         */
+        get: operations["get_configuration_schema_api_config_schema__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/config/reference-sources/{source_name}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Reference Source Config
+         * @description Get configuration for a specific reference source
+         */
+        get: operations["get_reference_source_config_api_config_reference_sources__source_name__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /**
+         * Update Reference Source Config
+         * @description Update configuration for a specific reference source
+         */
+        patch: operations["update_reference_source_config_api_config_reference_sources__source_name__patch"];
+        trace?: never;
+    };
+    "/api/config/{path}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Configuration Value
+         * @description Get specific configuration value by path
+         */
+        get: operations["get_configuration_value_api_config__path__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/config/reload": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Reload Configuration
+         * @description Reload configuration from file
+         */
+        post: operations["reload_configuration_api_config_reload_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/config/reset": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Reset Configuration
+         * @description Reset configuration to defaults
+         */
+        post: operations["reset_configuration_api_config_reset_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/config/reference-sources": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Reference Sources Config
+         * @description Get reference sources configuration
+         */
+        get: operations["get_reference_sources_config_api_config_reference_sources_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/config/reference-sources/status": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Reference Sources Status
+         * @description Get status of all reference sources
+         */
+        get: operations["get_reference_sources_status_api_config_reference_sources_status_get"];
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -1742,6 +2228,528 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/admin/services/stats": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get comprehensive service factory statistics
+         * @description Get comprehensive statistics about the service factory including:
+         *     - Cache hit rates
+         *     - Service creation metrics
+         *     - Performance data
+         *     - Cache entry details
+         */
+        get: operations["get_service_factory_stats_admin_services_stats_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/services/performance": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get performance summary
+         * @description Get a concise performance summary for quick monitoring:
+         *     - Overall cache hit rate
+         *     - Best and worst performing services
+         *     - Total services created
+         */
+        get: operations["get_service_factory_performance_admin_services_performance_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/services/health": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get service factory health status
+         * @description Get health status of the service factory:
+         *     - Overall health status
+         *     - Identified issues
+         *     - System metrics
+         */
+        get: operations["get_service_factory_health_admin_services_health_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/services/cache/clear": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Clear service factory cache
+         * @description Clear all cached service entries and reset metrics.
+         *     Use with caution - this will force recreation of all services.
+         */
+        post: operations["clear_service_factory_cache_admin_services_cache_clear_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/services/cache/cleanup": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Force cleanup of expired cache entries
+         * @description Force cleanup of expired cache entries.
+         *     This is normally done automatically but can be triggered manually.
+         */
+        post: operations["cleanup_service_factory_cache_admin_services_cache_cleanup_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/services/metrics/{service_type}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get metrics for specific service type
+         * @description Get detailed metrics for a specific service type.
+         *
+         *     Args:
+         *         service_type: The service type to get metrics for (e.g., 'node_service', 'llm_service')
+         */
+        get: operations["get_service_type_metrics_admin_services_metrics__service_type__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/services/dashboard": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get monitoring dashboard data
+         * @description Get comprehensive dashboard data combining stats, performance, and health.
+         *     Perfect for monitoring dashboards and operational visibility.
+         */
+        get: operations["get_service_factory_dashboard_admin_services_dashboard_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/database/health": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Enhanced Database Health Check
+         * @description Get comprehensive health status of the enhanced database manager.
+         */
+        get: operations["get_database_health_admin_database_health_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/database/performance": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Database Performance Metrics
+         * @description Get detailed performance metrics from the enhanced database manager.
+         */
+        get: operations["get_database_performance_metrics_admin_database_performance_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/database/engines": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Database Engines Status
+         * @description Get status information for all database engines.
+         */
+        get: operations["get_database_engines_status_admin_database_engines_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/database/metrics": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Connection Metrics Summary
+         * @description Get detailed connection metrics and statistics.
+         */
+        get: operations["get_connection_metrics_admin_database_metrics_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/database/optimize": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Optimize Database for Workload
+         * @description Optimize database configuration for specific workload types.
+         *
+         *     Supported workload types:
+         *     - mixed: General purpose workload
+         *     - read_heavy: Optimized for read operations
+         *     - write_heavy: Optimized for write operations
+         *     - analytics: Optimized for analytical queries
+         */
+        post: operations["optimize_database_for_workload_admin_database_optimize_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/database/recommendations": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Performance Recommendations
+         * @description Get AI-generated performance recommendations based on current metrics.
+         */
+        get: operations["get_performance_recommendations_admin_database_recommendations_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/database/reset-metrics": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Reset Performance Metrics
+         * @description Reset all performance metrics counters.
+         */
+        post: operations["reset_performance_metrics_admin_database_reset_metrics_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/database/environment": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Database Environment Configuration
+         * @description Get current database environment configuration and optimizations.
+         */
+        get: operations["get_environment_configuration_admin_database_environment_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/database/create-engine": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Create Optimized Engine
+         * @description Create a new optimized database engine with specified configuration.
+         */
+        post: operations["create_optimized_database_engine_admin_database_create_engine_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/database/cleanup": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /**
+         * Cleanup Database Resources
+         * @description Clean up all database resources and reset the manager.
+         */
+        delete: operations["cleanup_database_resources_admin_database_cleanup_delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/database/dashboard": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Enhanced Database Dashboard
+         * @description Get comprehensive dashboard data for the enhanced database manager.
+         */
+        get: operations["get_database_dashboard_admin_database_dashboard_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/events/health": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Event Processor Health Check
+         * @description Get comprehensive health status of the event processor.
+         */
+        get: operations["get_event_processor_health_admin_events_health_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/events/stats": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Event Processor Statistics
+         * @description Get detailed statistics from the event processor.
+         */
+        get: operations["get_event_processor_stats_admin_events_stats_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/events/performance": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Event Processing Performance Metrics
+         * @description Get detailed performance metrics for event processing.
+         */
+        get: operations["get_event_processing_performance_admin_events_performance_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/events/database": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Event Processor Database Status
+         * @description Get database connection status for the event processor.
+         */
+        get: operations["get_event_processor_database_status_admin_events_database_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/events/restart": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Restart Event Processor
+         * @description Restart the event processor.
+         */
+        post: operations["restart_event_processor_admin_events_restart_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/events/recommendations": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Event Processor Performance Recommendations
+         * @description Get performance recommendations for the event processor.
+         */
+        get: operations["get_event_processor_recommendations_admin_events_recommendations_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/events/dashboard": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Event Processor Dashboard
+         * @description Get comprehensive dashboard data for event processor monitoring.
+         */
+        get: operations["get_event_processor_dashboard_admin_events_dashboard_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -1794,6 +2802,25 @@ export interface components {
              * @default pagerank
              */
             method: string | null;
+        };
+        /**
+         * ChangeStateEnum
+         * @description API enum for version change states.
+         * @enum {string}
+         */
+        ChangeStateEnum: "WORKING" | "STAGED" | "PROPOSED" | "APPROVED" | "MERGED" | "REJECTED";
+        /**
+         * CommitRequest
+         * @description Model for committing staged changes.
+         */
+        CommitRequest: {
+            /** Author Id */
+            author_id: string;
+            /**
+             * Message
+             * @description Optional commit message
+             */
+            message?: string | null;
         };
         /**
          * ComponentTerm
@@ -2005,6 +3032,37 @@ export interface components {
             filter?: string | null;
             /** Related */
             related?: components["schemas"]["ConceptNetRelatedConcept"][];
+        };
+        /**
+         * ConfigResponse
+         * @description Response model for configuration operations
+         */
+        ConfigResponse: {
+            /** Success */
+            success: boolean;
+            /** Data */
+            data?: unknown;
+            /**
+             * Errors
+             * @default []
+             */
+            errors: string[];
+        };
+        /**
+         * ConfigUpdateRequest
+         * @description Request model for updating configuration values
+         */
+        ConfigUpdateRequest: {
+            /**
+             * Path
+             * @description Configuration path in dot notation
+             */
+            path: string;
+            /**
+             * Value
+             * @description New configuration value
+             */
+            value: unknown;
         };
         /**
          * CreateDatasetRequest
@@ -2337,21 +3395,65 @@ export interface components {
              */
             discrepancies?: string | null;
         };
-        /** DomainCreate */
-        DomainCreate: {
-            /** Title */
-            title: string;
-            /** Definition */
-            definition: string;
+        /**
+         * DiffFormatEnum
+         * @description Enum for diff format options.
+         * @enum {string}
+         */
+        DiffFormatEnum: "summary" | "detailed" | "json";
+        /**
+         * DiffRequest
+         * @description Model for requesting diffs.
+         */
+        DiffRequest: {
+            entity_type: components["schemas"]["EntityTypeEnum"];
             /**
-             * Layer Id
+             * Entity Id
              * Format: uuid
              */
-            layer_id: string;
-            /** Primary Predicate Id */
-            primary_predicate_id?: string | null;
-            /** Predicate Set */
-            predicate_set?: string[] | null;
+            entity_id: string;
+            /** Before Version Number */
+            before_version_number?: number | null;
+            /** After Version Number */
+            after_version_number: number;
+            /** @default summary */
+            format: components["schemas"]["DiffFormatEnum"];
+        };
+        /**
+         * DiffSummaryOut
+         * @description Model for diff summary output/response.
+         */
+        DiffSummaryOut: {
+            /**
+             * Added Items
+             * @default 0
+             */
+            added_items: number;
+            /**
+             * Removed Items
+             * @default 0
+             */
+            removed_items: number;
+            /**
+             * Modified Items
+             * @default 0
+             */
+            modified_items: number;
+            /**
+             * Type Changes
+             * @default 0
+             */
+            type_changes: number;
+            /**
+             * Moved Items
+             * @default 0
+             */
+            moved_items: number;
+            /**
+             * Total Changes
+             * @default 0
+             */
+            total_changes: number;
         };
         /**
          * DomainDefinitionRequest
@@ -2422,15 +3524,15 @@ export interface components {
              */
             definition: string;
             /**
-             * Reasoning
-             * @description Brief reasoning for the definitional choices
+             * Purpose
+             * @description Purpose of the domain in the knowledge structure
              */
-            reasoning: string;
+            purpose: string;
             /**
-             * Discrepancies
-             * @description Notable discrepancies between sources
+             * Scope
+             * @description Scope and boundaries of the domain
              */
-            discrepancies?: string | null;
+            scope: string;
         };
         /**
          * DomainLLMSuccessResponse
@@ -2445,52 +3547,6 @@ export interface components {
             success: boolean;
             /** @description The response data */
             data: components["schemas"]["DomainDefinitionResponse"];
-        };
-        /** DomainOut */
-        DomainOut: {
-            /** Title */
-            title: string;
-            /** Definition */
-            definition: string;
-            /**
-             * Layer Id
-             * Format: uuid
-             */
-            layer_id: string;
-            /** Primary Predicate Id */
-            primary_predicate_id?: string | null;
-            /** Predicate Set */
-            predicate_set?: string[] | null;
-            /**
-             * Id
-             * Format: uuid
-             */
-            id: string;
-            /** Primary Predicate */
-            primary_predicate?: string | null;
-            /** Title Embedding */
-            title_embedding?: number[] | null;
-            /** Definition Embedding */
-            definition_embedding?: number[] | null;
-            /** Created At */
-            created_at: string;
-            /** Version */
-            version?: number | null;
-            /** Last Modified */
-            last_modified?: string | null;
-        };
-        /** DomainUpdate */
-        DomainUpdate: {
-            /** Title */
-            title?: string | null;
-            /** Definition */
-            definition?: string | null;
-            /** Layer Id */
-            layer_id?: string | null;
-            /** Primary Predicate Id */
-            primary_predicate_id?: string | null;
-            /** Predicate Set */
-            predicate_set?: string[] | null;
         };
         /**
          * EntityData
@@ -2515,169 +3571,114 @@ export interface components {
             /** @description DBpedia data. */
             dbpedia?: components["schemas"]["DBpediaData"] | null;
         };
-        /** FindDomainRequest */
-        FindDomainRequest: {
-            /** Title */
-            title?: string | null;
-            /** Definition */
-            definition?: string | null;
-            /** Layer Id */
-            layer_id?: string | null;
-            /** Created At */
-            created_at?: string | null;
+        /**
+         * EntityDiffOut
+         * @description Model for entity diff output/response.
+         */
+        EntityDiffOut: {
+            entity_type: components["schemas"]["EntityTypeEnum"];
             /**
-             * Minimum Score
-             * @default 0.1
-             */
-            minimum_score: number | null;
-            /**
-             * Limit
-             * @default 1
-             */
-            limit: number | null;
-        };
-        /** FindDomainResult */
-        FindDomainResult: {
-            /** Title */
-            title: string;
-            /** Definition */
-            definition: string;
-            /**
-             * Layer Id
+             * Entity Id
              * Format: uuid
              */
-            layer_id: string;
-            /** Primary Predicate Id */
-            primary_predicate_id?: string | null;
-            /** Predicate Set */
-            predicate_set?: string[] | null;
+            entity_id: string;
+            before_version?: components["schemas"]["EntityVersionSummary"] | null;
+            after_version: components["schemas"]["EntityVersionSummary"];
+            /**
+             * Changes
+             * @description Structured diff using DeepDiff format
+             */
+            changes: {
+                [key: string]: unknown;
+            };
+            summary: components["schemas"]["DiffSummaryOut"];
+            /** Has Changes */
+            has_changes: boolean;
+            /**
+             * Generated At
+             * Format: date-time
+             */
+            generated_at: string;
+        };
+        /**
+         * EntityTypeEnum
+         * @description API enum for entity types that support versioning.
+         * @enum {string}
+         */
+        EntityTypeEnum: "structure_node" | "structure_node_link";
+        /**
+         * EntityVersionOut
+         * @description Model for entity version output/response.
+         */
+        EntityVersionOut: {
+            entity_type: components["schemas"]["EntityTypeEnum"];
+            /**
+             * Entity Id
+             * Format: uuid
+             */
+            entity_id: string;
+            /**
+             * Content
+             * @description Full entity snapshot as JSON
+             */
+            content: {
+                [key: string]: unknown;
+            };
+            /** @default WORKING */
+            state: components["schemas"]["ChangeStateEnum"];
+            /** Author Id */
+            author_id: string;
+            /** Metadata */
+            metadata?: {
+                [key: string]: unknown;
+            } | null;
             /**
              * Id
              * Format: uuid
              */
             id: string;
-            /** Primary Predicate */
-            primary_predicate?: string | null;
-            /** Title Embedding */
-            title_embedding?: number[] | null;
-            /** Definition Embedding */
-            definition_embedding?: number[] | null;
-            /** Created At */
+            /** Version Number */
+            version_number: number;
+            /** Parent Version Id */
+            parent_version_id?: string | null;
+            /** Changeset Id */
+            changeset_id?: string | null;
+            /**
+             * Created At
+             * Format: date-time
+             */
             created_at: string;
-            /** Version */
-            version?: number | null;
-            /** Last Modified */
-            last_modified?: string | null;
-            /** Score */
-            score: number;
-            /** Distance */
-            distance: number;
         };
-        /** FindLayerRequest */
-        FindLayerRequest: {
-            /** Title */
-            title?: string | null;
-            /** Definition */
-            definition?: string | null;
-            /** Created At */
-            created_at?: string | null;
-            /**
-             * Minimum Score
-             * @default 0.1
-             */
-            minimum_score: number | null;
-            /**
-             * Limit
-             * @default 1
-             */
-            limit: number | null;
-        };
-        /** FindLayerResult */
-        FindLayerResult: {
-            /** Title */
-            title: string;
-            /** Definition */
-            definition?: string | null;
+        /**
+         * EntityVersionSummary
+         * @description Summary model for entity version (without full content).
+         */
+        EntityVersionSummary: {
             /**
              * Id
              * Format: uuid
              */
             id: string;
-            /** Title Embedding */
-            title_embedding?: number[] | null;
-            /** Definition Embedding */
-            definition_embedding?: number[] | null;
-            /** Created At */
+            entity_type: components["schemas"]["EntityTypeEnum"];
+            /**
+             * Entity Id
+             * Format: uuid
+             */
+            entity_id: string;
+            /** Version Number */
+            version_number: number;
+            state: components["schemas"]["ChangeStateEnum"];
+            /** Author Id */
+            author_id: string;
+            /**
+             * Created At
+             * Format: date-time
+             */
             created_at: string;
-            /** Version */
-            version?: number | null;
-            /** Last Modified */
-            last_modified?: string | null;
-            /** Score */
-            score: number;
-            /** Distance */
-            distance: number;
-        };
-        /** FindTermRequest */
-        FindTermRequest: {
-            /** Title */
-            title?: string | null;
-            /** Definition */
-            definition?: string | null;
-            /** Layer Id */
-            layer_id?: string | null;
-            /** Domain Id */
-            domain_id?: string | null;
-            /** Created At */
-            created_at?: string | null;
-            /**
-             * Minimum Score
-             * @default 0.1
-             */
-            minimum_score: number | null;
-            /**
-             * Limit
-             * @default 1
-             */
-            limit: number | null;
-        };
-        /** FindTermResult */
-        FindTermResult: {
-            /**
-             * Id
-             * Format: uuid
-             */
-            id: string;
-            /** Title */
-            title: string;
-            /** Definition */
-            definition: string;
-            /**
-             * Domain Id
-             * Format: uuid
-             */
-            domain_id: string;
-            /**
-             * Layer Id
-             * Format: uuid
-             */
-            layer_id: string;
-            /** Parent Term Id */
-            parent_term_id?: string | null;
-            /** Title Embedding */
-            title_embedding?: number[] | null;
-            /** Definition Embedding */
-            definition_embedding?: number[] | null;
-            /** Created At */
-            created_at: string;
-            /** Version */
-            version: number;
-            /** Last Modified */
-            last_modified: string;
-            /** Score */
-            score: number;
-            /** Distance */
-            distance: number;
+            /** Parent Version Id */
+            parent_version_id?: string | null;
+            /** Changeset Id */
+            changeset_id?: string | null;
         };
         /** HTTPValidationError */
         HTTPValidationError: {
@@ -2785,13 +3786,6 @@ export interface components {
             /** @description The response data */
             data: components["schemas"]["DefinitionSuggestionResponse"];
         };
-        /** LayerCreate */
-        LayerCreate: {
-            /** Title */
-            title: string;
-            /** Definition */
-            definition?: string | null;
-        };
         /**
          * LayerDefinitionRequest
          * @description Request model for layer definition suggestion endpoint
@@ -2856,15 +3850,15 @@ export interface components {
              */
             definition: string;
             /**
-             * Reasoning
-             * @description Brief reasoning for the definitional choices
+             * Purpose
+             * @description Purpose of the layer in the knowledge structure
              */
-            reasoning: string;
+            purpose: string;
             /**
-             * Discrepancies
-             * @description Notable discrepancies between sources
+             * Rationale
+             * @description Brief rationale for the definitional choices
              */
-            discrepancies?: string | null;
+            rationale: string;
         };
         /**
          * LayerLLMSuccessResponse
@@ -2880,35 +3874,6 @@ export interface components {
             /** @description The response data */
             data: components["schemas"]["LayerDefinitionResponse"];
         };
-        /** LayerOut */
-        LayerOut: {
-            /** Title */
-            title: string;
-            /** Definition */
-            definition?: string | null;
-            /**
-             * Id
-             * Format: uuid
-             */
-            id: string;
-            /** Title Embedding */
-            title_embedding?: number[] | null;
-            /** Definition Embedding */
-            definition_embedding?: number[] | null;
-            /** Created At */
-            created_at: string;
-            /** Version */
-            version?: number | null;
-            /** Last Modified */
-            last_modified?: string | null;
-        };
-        /** LayerUpdate */
-        LayerUpdate: {
-            /** Title */
-            title?: string | null;
-            /** Definition */
-            definition?: string | null;
-        };
         /**
          * MigrationStatus
          * @description Status of database migrations.
@@ -2923,51 +3888,59 @@ export interface components {
             /** Needs Migration */
             needs_migration: boolean;
         };
-        /** MoveDomainRequest */
-        MoveDomainRequest: {
-            /** Domain Ids */
-            domain_ids: string[];
+        /**
+         * MoveNodesRequest
+         * @description Model for moving structure_nodes to a new parent.
+         */
+        MoveNodesRequest: {
             /**
-             * Target Layer Id
-             * Format: uuid
+             * Node Ids
+             * @description List of structure_node IDs to move
              */
-            target_layer_id: string;
+            node_ids: string[];
             /**
-             * Move Terms
-             * @default true
+             * Target Parent Id
+             * @description Target parent structure_node ID (None for root level)
              */
-            move_terms: boolean;
-        };
-        /** MoveDomainResponse */
-        MoveDomainResponse: {
-            /** Moved Domains */
-            moved_domains: components["schemas"]["DomainOut"][];
-            /** Moved Terms */
-            moved_terms: components["schemas"]["DomainOut"][];
-            /** Warnings */
-            warnings: string[];
-        };
-        /** MoveTermRequest */
-        MoveTermRequest: {
-            /** Term Ids */
-            term_ids: string[];
-            /**
-             * Target Domain Id
-             * Format: uuid
-             */
-            target_domain_id: string;
+            target_parent_id?: string | null;
             /**
              * Move Children
+             * @description Whether to move all child structure_nodes
              * @default true
              */
             move_children: boolean;
+            /**
+             * Handle Conflicts
+             * @description How to handle title conflicts
+             * @default warn
+             */
+            handle_conflicts: string;
         };
-        /** MoveTermResponse */
-        MoveTermResponse: {
-            /** Moved Terms */
-            moved_terms: components["schemas"]["TermOut"][];
-            /** Warnings */
+        /**
+         * MoveNodesResponse
+         * @description Model for move operation results.
+         */
+        MoveNodesResponse: {
+            /**
+             * Moved Nodes
+             * @description List of successfully moved structure_nodes
+             */
+            moved_nodes: components["schemas"]["NodeOut"][];
+            /**
+             * Updated Children
+             * @description List of child structure_nodes that were also moved
+             */
+            updated_children: components["schemas"]["NodeOut"][];
+            /**
+             * Warnings
+             * @description List of warnings encountered during the move
+             */
             warnings: string[];
+            /**
+             * Errors
+             * @description List of errors that prevented some moves
+             */
+            errors: string[];
         };
         /**
          * NLPAnalysisResponse
@@ -3040,21 +4013,184 @@ export interface components {
              */
             direction: string | null;
         };
-        /** PaginatedDomainsResponse */
-        PaginatedDomainsResponse: {
-            /** Data */
-            data: components["schemas"]["DomainOut"][];
-            /** Total */
-            total: number;
-            /** Skip */
-            skip: number;
-            /** Limit */
-            limit: number;
+        /**
+         * NodeCreate
+         * @description Model for creating a new structure_node.
+         */
+        NodeCreate: {
+            node_type: components["schemas"]["NodeTypeEnum"];
+            /** Parent Node Id */
+            parent_node_id?: string | null;
+            /** Title */
+            title: string;
+            /** Definition */
+            definition?: string | null;
+            /** Structural Predicate Id */
+            structural_predicate_id?: string | null;
         };
-        /** PaginatedLayersResponse */
-        PaginatedLayersResponse: {
+        /**
+         * NodeLinkCreate
+         * @description Model for creating a new structure_node link.
+         */
+        NodeLinkCreate: {
+            /**
+             * Source Node Id
+             * Format: uuid
+             */
+            source_node_id: string;
+            /**
+             * Target Node Id
+             * Format: uuid
+             */
+            target_node_id: string;
+            /** Predicate */
+            predicate: string;
+            /** Predicate Id */
+            predicate_id?: string | null;
+        };
+        /**
+         * NodeLinkOut
+         * @description Model for structure_node link output/response.
+         */
+        NodeLinkOut: {
+            /**
+             * Source Node Id
+             * Format: uuid
+             */
+            source_node_id: string;
+            /**
+             * Target Node Id
+             * Format: uuid
+             */
+            target_node_id: string;
+            /** Predicate */
+            predicate: string;
+            /** Predicate Id */
+            predicate_id?: string | null;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Created At */
+            created_at: string;
+        };
+        /**
+         * NodeOut
+         * @description Model for structure_node output/response.
+         */
+        NodeOut: {
+            node_type: components["schemas"]["NodeTypeEnum"];
+            /** Parent Node Id */
+            parent_node_id?: string | null;
+            /** Title */
+            title: string;
+            /** Definition */
+            definition?: string | null;
+            /** Structural Predicate Id */
+            structural_predicate_id?: string | null;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Title Embedding */
+            title_embedding?: number[] | null;
+            /** Definition Embedding */
+            definition_embedding?: number[] | null;
+            /** Created At */
+            created_at: string;
+            /** Version */
+            version: number;
+            /** Last Modified */
+            last_modified: string;
+        };
+        /**
+         * NodeSearchRequest
+         * @description Model for structure_node search requests.
+         */
+        NodeSearchRequest: {
+            /** Title */
+            title?: string | null;
+            /** Definition */
+            definition?: string | null;
+            node_type?: components["schemas"]["NodeTypeEnum"] | null;
+            /** Parent Node Id */
+            parent_node_id?: string | null;
+            /** Created At */
+            created_at?: string | null;
+            /**
+             * Minimum Score
+             * @default 0.7
+             */
+            minimum_score: number | null;
+            /**
+             * Limit
+             * @default 10
+             */
+            limit: number | null;
+        };
+        /**
+         * NodeSearchResult
+         * @description Model for structure_node search results.
+         */
+        NodeSearchResult: {
+            node_type: components["schemas"]["NodeTypeEnum"];
+            /** Parent Node Id */
+            parent_node_id?: string | null;
+            /** Title */
+            title: string;
+            /** Definition */
+            definition?: string | null;
+            /** Structural Predicate Id */
+            structural_predicate_id?: string | null;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Title Embedding */
+            title_embedding?: number[] | null;
+            /** Definition Embedding */
+            definition_embedding?: number[] | null;
+            /** Created At */
+            created_at: string;
+            /** Version */
+            version: number;
+            /** Last Modified */
+            last_modified: string;
+            /** Score */
+            score: number;
+            /** Distance */
+            distance: number;
+        };
+        /**
+         * NodeTypeEnum
+         * @description API enum for structure_node types.
+         * @enum {string}
+         */
+        NodeTypeEnum: "layer" | "domain" | "term";
+        /**
+         * NodeUpdate
+         * @description Model for updating an existing structure_node.
+         */
+        NodeUpdate: {
+            /** Title */
+            title?: string | null;
+            /** Definition */
+            definition?: string | null;
+            /** Parent Node Id */
+            parent_node_id?: string | null;
+            /** Structural Predicate Id */
+            structural_predicate_id?: string | null;
+        };
+        /**
+         * PaginatedNodesResponse
+         * @description Model for paginated structure_node responses.
+         */
+        PaginatedNodesResponse: {
             /** Data */
-            data: components["schemas"]["LayerOut"][];
+            data: components["schemas"]["NodeOut"][];
             /** Total */
             total: number;
             /** Skip */
@@ -3066,17 +4202,6 @@ export interface components {
         PaginatedPredicatesResponse: {
             /** Data */
             data: components["schemas"]["PredicateOut"][];
-            /** Total */
-            total: number;
-            /** Skip */
-            skip: number;
-            /** Limit */
-            limit: number;
-        };
-        /** PaginatedTermsResponse */
-        PaginatedTermsResponse: {
-            /** Data */
-            data: components["schemas"]["TermOut"][];
             /** Total */
             total: number;
             /** Skip */
@@ -3236,6 +4361,19 @@ export interface components {
          * @enum {string}
          */
         ResponseFormat: "json" | "xml" | "rdf";
+        /**
+         * RollbackRequest
+         * @description Model for rollback operation request.
+         */
+        RollbackRequest: {
+            /**
+             * Target Version Number
+             * @description Version number to rollback to
+             */
+            target_version_number: number;
+            /** Author Id */
+            author_id: string;
+        };
         /** SPARQLQuery */
         SPARQLQuery: {
             /** Query */
@@ -3580,123 +4718,17 @@ export interface components {
          * @enum {string}
          */
         SourceType: "dbpedia" | "conceptnet" | "wikidata" | "schema_org";
-        /** TermCreate */
-        TermCreate: {
-            /** Title */
-            title: string;
-            /** Definition */
-            definition: string;
+        /**
+         * StageRequest
+         * @description Model for staging/unstaging entities.
+         */
+        StageRequest: {
+            entity_type: components["schemas"]["EntityTypeEnum"];
             /**
-             * Domain Id
+             * Entity Id
              * Format: uuid
              */
-            domain_id: string;
-            /**
-             * Layer Id
-             * Format: uuid
-             */
-            layer_id: string;
-            /** Parent Term Id */
-            parent_term_id?: string | null;
-        };
-        /** TermOut */
-        TermOut: {
-            /**
-             * Id
-             * Format: uuid
-             */
-            id: string;
-            /** Title */
-            title: string;
-            /** Definition */
-            definition: string;
-            /**
-             * Domain Id
-             * Format: uuid
-             */
-            domain_id: string;
-            /**
-             * Layer Id
-             * Format: uuid
-             */
-            layer_id: string;
-            /** Parent Term Id */
-            parent_term_id?: string | null;
-            /** Title Embedding */
-            title_embedding?: number[] | null;
-            /** Definition Embedding */
-            definition_embedding?: number[] | null;
-            /** Created At */
-            created_at: string;
-            /** Version */
-            version: number;
-            /** Last Modified */
-            last_modified: string;
-        };
-        /** TermRelationshipCreate */
-        TermRelationshipCreate: {
-            /**
-             * Source Term Id
-             * Format: uuid
-             */
-            source_term_id: string;
-            /**
-             * Target Term Id
-             * Format: uuid
-             */
-            target_term_id: string;
-            /** Predicate */
-            predicate: string;
-            /** Predicate Id */
-            predicate_id?: string | null;
-        };
-        /** TermRelationshipOut */
-        TermRelationshipOut: {
-            /**
-             * Source Term Id
-             * Format: uuid
-             */
-            source_term_id: string;
-            /**
-             * Target Term Id
-             * Format: uuid
-             */
-            target_term_id: string;
-            /** Predicate */
-            predicate: string;
-            /** Predicate Id */
-            predicate_id?: string | null;
-            /**
-             * Id
-             * Format: uuid
-             */
-            id: string;
-            /** Created At */
-            created_at: string;
-            /** Source Term */
-            source_term?: {
-                [key: string]: unknown;
-            } | null;
-            /** Target Term */
-            target_term?: {
-                [key: string]: unknown;
-            } | null;
-        };
-        /** TermRelationshipUpdate */
-        TermRelationshipUpdate: {
-            /** Predicate */
-            predicate?: string | null;
-            /** Predicate Id */
-            predicate_id?: string | null;
-        };
-        /** TermUpdate */
-        TermUpdate: {
-            /** Title */
-            title?: string | null;
-            /** Definition */
-            definition?: string | null;
-            /** Parent Term Id */
-            parent_term_id?: string | null;
+            entity_id: string;
         };
         /**
          * TokenData
@@ -3899,6 +4931,54 @@ export interface components {
             type: string;
         };
         /**
+         * VersionManagementHealthOut
+         * @description Model for version management system health.
+         */
+        VersionManagementHealthOut: {
+            /**
+             * Status
+             * @description Overall health status: healthy, warning, error
+             */
+            status: string;
+            /** Total Versions */
+            total_versions: number;
+            /** Total Working Tree Entries */
+            total_working_tree_entries: number;
+            /** Total Staged Entities */
+            total_staged_entities: number;
+            /** Total Modified Entities */
+            total_modified_entities: number;
+            /** Issues */
+            issues?: string[];
+            /** Last Event Processed */
+            last_event_processed?: string | null;
+            /** Database Status */
+            database_status: string;
+        };
+        /**
+         * VersionManagementStatsOut
+         * @description Model for version management statistics.
+         */
+        VersionManagementStatsOut: {
+            /** Versions By Entity Type */
+            versions_by_entity_type: {
+                [key: string]: number;
+            };
+            /** Versions By State */
+            versions_by_state: {
+                [key: string]: number;
+            };
+            working_tree_summary: components["schemas"]["WorkingTreeStatusOut"];
+            /** Recent Activity */
+            recent_activity: {
+                [key: string]: unknown;
+            }[];
+            /** Performance Metrics */
+            performance_metrics: {
+                [key: string]: unknown;
+            };
+        };
+        /**
          * WikidataEntityResponse
          * @description Response model for Wikidata entity data
          */
@@ -4004,6 +5084,56 @@ export interface components {
              */
             definitions?: string[] | null;
         };
+        /**
+         * WorkingTreeEntryOut
+         * @description Model for working tree entry output/response.
+         */
+        WorkingTreeEntryOut: {
+            entity_type: components["schemas"]["EntityTypeEnum"];
+            /**
+             * Entity Id
+             * Format: uuid
+             */
+            entity_id: string;
+            /**
+             * Current Version Id
+             * Format: uuid
+             */
+            current_version_id: string;
+            /**
+             * Canonical Version Id
+             * Format: uuid
+             */
+            canonical_version_id: string;
+            /** Staged */
+            staged: boolean;
+            /**
+             * Modified At
+             * Format: date-time
+             */
+            modified_at: string;
+            /**
+             * Has Changes
+             * @description Whether working differs from canonical
+             */
+            has_changes: boolean;
+        };
+        /**
+         * WorkingTreeStatusOut
+         * @description Model for working tree status output/response.
+         */
+        WorkingTreeStatusOut: {
+            /** Total Entities */
+            total_entities: number;
+            /** Modified Entities */
+            modified_entities: number;
+            /** Staged Entities */
+            staged_entities: number;
+            /** Unstaged Entities */
+            unstaged_entities: number;
+            /** Entries */
+            entries: components["schemas"]["WorkingTreeEntryOut"][];
+        };
     };
     responses: never;
     parameters: never;
@@ -4013,75 +5143,19 @@ export interface components {
 }
 export type $defs = Record<string, never>;
 export interface operations {
-    find_layer_api_layers_find_post: {
+    list_nodes_api_structure_nodes__get: {
         parameters: {
             query?: {
-                SessionLocal?: unknown;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["FindLayerRequest"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["FindLayerResult"][];
-                };
-            };
-            /** @description Bad Request */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description Method Not Allowed */
-            405: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description Conflict */
-            409: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-            /** @description Internal Server Error */
-            500: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    list_layers_api_layers__get: {
-        parameters: {
-            query?: {
+                /** @description Filter by structure_node type */
+                node_type?: components["schemas"]["NodeTypeEnum"] | null;
+                /** @description Filter by parent structure_node ID */
+                parent_node_id?: string | null;
+                /** @description Number of structure_nodes to skip */
                 skip?: number;
+                /** @description Maximum number of structure_nodes to return */
                 limit?: number;
-                sortBy?: string;
+                /** @description Sort field */
+                sort_by?: string;
                 SessionLocal?: unknown;
             };
             header?: never;
@@ -4096,7 +5170,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["PaginatedLayersResponse"];
+                    "application/json": components["schemas"]["PaginatedNodesResponse"];
                 };
             };
             /** @description Validation Error */
@@ -4110,7 +5184,7 @@ export interface operations {
             };
         };
     };
-    create_layer_api_layers__post: {
+    create_node_api_structure_nodes__post: {
         parameters: {
             query?: {
                 SessionLocal?: unknown;
@@ -4121,276 +5195,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["LayerCreate"];
-            };
-        };
-        responses: {
-            /** @description Layer created. */
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["LayerOut"];
-                };
-            };
-            /** @description Bad Request */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description Conflict */
-            409: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    get_layer_api_layers__id__get: {
-        parameters: {
-            query?: {
-                SessionLocal?: unknown;
-            };
-            header?: never;
-            path: {
-                id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["LayerOut"];
-                };
-            };
-            /** @description Layer not found */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    update_layer_api_layers__id__put: {
-        parameters: {
-            query?: {
-                SessionLocal?: unknown;
-            };
-            header?: never;
-            path: {
-                id: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["LayerUpdate"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["LayerOut"];
-                };
-            };
-            /** @description Layer not found */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    delete_layer_api_layers__id__delete: {
-        parameters: {
-            query?: {
-                SessionLocal?: unknown;
-            };
-            header?: never;
-            path: {
-                id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": unknown;
-                };
-            };
-            /** @description Layer not found */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    find_domain_api_domains_find_post: {
-        parameters: {
-            query?: {
-                SessionLocal?: unknown;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["FindDomainRequest"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["FindDomainResult"][];
-                };
-            };
-            /** @description Bad Request */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description Method Not Allowed */
-            405: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description Conflict */
-            409: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-            /** @description Internal Server Error */
-            500: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    list_domains_api_domains__get: {
-        parameters: {
-            query?: {
-                layer_id?: string;
-                skip?: number;
-                limit?: number;
-                sortBy?: string;
-                SessionLocal?: unknown;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["PaginatedDomainsResponse"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    create_domain_api_domains__post: {
-        parameters: {
-            query?: {
-                SessionLocal?: unknown;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["DomainCreate"];
+                "application/json": components["schemas"]["NodeCreate"];
             };
         };
         responses: {
@@ -4400,7 +5205,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["DomainOut"];
+                    "application/json": components["schemas"]["NodeOut"];
                 };
             };
             /** @description Validation Error */
@@ -4414,131 +5219,7 @@ export interface operations {
             };
         };
     };
-    get_domain_api_domains__id__get: {
-        parameters: {
-            query?: {
-                SessionLocal?: unknown;
-            };
-            header?: never;
-            path: {
-                id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["DomainOut"];
-                };
-            };
-            /** @description Domain not found */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    update_domain_api_domains__id__put: {
-        parameters: {
-            query?: {
-                SessionLocal?: unknown;
-            };
-            header?: never;
-            path: {
-                id: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["DomainUpdate"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["DomainOut"];
-                };
-            };
-            /** @description Domain not found */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    delete_domain_api_domains__id__delete: {
-        parameters: {
-            query?: {
-                SessionLocal?: unknown;
-            };
-            header?: never;
-            path: {
-                id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": unknown;
-                };
-            };
-            /** @description Domain not found */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    move_domains_api_domains_move_post: {
+    search_nodes_api_structure_nodes_find_post: {
         parameters: {
             query?: {
                 SessionLocal?: unknown;
@@ -4549,7 +5230,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["MoveDomainRequest"];
+                "application/json": components["schemas"]["NodeSearchRequest"];
             };
         };
         responses: {
@@ -4559,7 +5240,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["MoveDomainResponse"];
+                    "application/json": components["schemas"]["NodeSearchResult"][];
                 };
             };
             /** @description Validation Error */
@@ -4573,294 +5254,18 @@ export interface operations {
             };
         };
     };
-    find_term_api_terms_find_post: {
+    list_node_links_api_structure_nodes_links_get: {
         parameters: {
             query?: {
-                SessionLocal?: unknown;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["FindTermRequest"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["FindTermResult"][];
-                };
-            };
-            /** @description Bad Request */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description Method Not Allowed */
-            405: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description Conflict */
-            409: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-            /** @description Internal Server Error */
-            500: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    list_terms_api_terms__get: {
-        parameters: {
-            query?: {
-                domain_id?: string;
-                layer_id?: string;
-                parent_term_id?: string;
+                /** @description Filter by source structure_node ID */
+                source_node_id?: string | null;
+                /** @description Filter by target structure_node ID */
+                target_node_id?: string | null;
+                /** @description Filter by predicate */
+                predicate?: string | null;
+                /** @description Number of links to skip */
                 skip?: number;
-                limit?: number;
-                sortBy?: string;
-                SessionLocal?: unknown;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["PaginatedTermsResponse"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    create_term_api_terms__post: {
-        parameters: {
-            query?: {
-                SessionLocal?: unknown;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["TermCreate"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["TermOut"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    get_term_api_terms__id__get: {
-        parameters: {
-            query?: {
-                SessionLocal?: unknown;
-            };
-            header?: never;
-            path: {
-                id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["TermOut"];
-                };
-            };
-            /** @description Term not found */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    update_term_api_terms__id__put: {
-        parameters: {
-            query?: {
-                SessionLocal?: unknown;
-            };
-            header?: never;
-            path: {
-                id: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["TermUpdate"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["TermOut"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    delete_term_api_terms__id__delete: {
-        parameters: {
-            query?: {
-                SessionLocal?: unknown;
-            };
-            header?: never;
-            path: {
-                id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": unknown;
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    move_terms_api_terms_move_post: {
-        parameters: {
-            query?: {
-                SessionLocal?: unknown;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["MoveTermRequest"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["MoveTermResponse"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    list_relationships_api_term_relationships__get: {
-        parameters: {
-            query?: {
-                source_term_id?: string;
-                target_term_id?: string;
-                predicate?: string;
-                predicate_id?: string;
-                skip?: number;
+                /** @description Maximum number of links to return */
                 limit?: number;
                 SessionLocal?: unknown;
             };
@@ -4876,7 +5281,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["TermRelationshipOut"][];
+                    "application/json": components["schemas"]["NodeLinkOut"][];
                 };
             };
             /** @description Validation Error */
@@ -4890,7 +5295,7 @@ export interface operations {
             };
         };
     };
-    create_relationship_api_term_relationships__post: {
+    create_node_link_api_structure_nodes_links_post: {
         parameters: {
             query?: {
                 SessionLocal?: unknown;
@@ -4901,7 +5306,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["TermRelationshipCreate"];
+                "application/json": components["schemas"]["NodeLinkCreate"];
             };
         };
         responses: {
@@ -4911,7 +5316,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["TermRelationshipOut"];
+                    "application/json": components["schemas"]["NodeLinkOut"];
                 };
             };
             /** @description Validation Error */
@@ -4925,53 +5330,21 @@ export interface operations {
             };
         };
     };
-    get_relationship_api_term_relationships__id__get: {
+    update_node_link_api_structure_nodes_links__link_id__put: {
         parameters: {
             query?: {
                 SessionLocal?: unknown;
             };
             header?: never;
             path: {
-                id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["TermRelationshipOut"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    update_relationship_api_term_relationships__id__put: {
-        parameters: {
-            query?: {
-                SessionLocal?: unknown;
-            };
-            header?: never;
-            path: {
-                id: string;
+                /** @description The ID of the link to update */
+                link_id: string;
             };
             cookie?: never;
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["TermRelationshipUpdate"];
+                "application/json": components["schemas"]["NodeLinkCreate"];
             };
         };
         responses: {
@@ -4981,7 +5354,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["TermRelationshipOut"];
+                    "application/json": components["schemas"]["NodeLinkOut"];
                 };
             };
             /** @description Validation Error */
@@ -4995,14 +5368,47 @@ export interface operations {
             };
         };
     };
-    delete_relationship_api_term_relationships__id__delete: {
+    delete_node_link_api_structure_nodes_links__link_id__delete: {
         parameters: {
             query?: {
                 SessionLocal?: unknown;
             };
             header?: never;
             path: {
-                id: string;
+                /** @description The ID of the link to delete */
+                link_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_node_api_structure_nodes__node_id__get: {
+        parameters: {
+            query?: {
+                SessionLocal?: unknown;
+            };
+            header?: never;
+            path: {
+                /** @description The ID of the structure_node to retrieve */
+                node_id: string;
             };
             cookie?: never;
         };
@@ -5014,7 +5420,180 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": unknown;
+                    "application/json": components["schemas"]["NodeOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_node_api_structure_nodes__node_id__put: {
+        parameters: {
+            query?: {
+                SessionLocal?: unknown;
+            };
+            header?: never;
+            path: {
+                /** @description The ID of the structure_node to update */
+                node_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["NodeUpdate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["NodeOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    delete_node_api_structure_nodes__node_id__delete: {
+        parameters: {
+            query?: {
+                SessionLocal?: unknown;
+            };
+            header?: never;
+            path: {
+                /** @description The ID of the structure_node to delete */
+                node_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    move_nodes_api_structure_nodes_move_post: {
+        parameters: {
+            query?: {
+                SessionLocal?: unknown;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MoveNodesRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MoveNodesResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_node_children_api_structure_nodes__node_id__children_get: {
+        parameters: {
+            query?: {
+                SessionLocal?: unknown;
+            };
+            header?: never;
+            path: {
+                /** @description The ID of the parent structure_node */
+                node_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["NodeOut"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_node_ancestors_api_structure_nodes__node_id__ancestors_get: {
+        parameters: {
+            query?: {
+                SessionLocal?: unknown;
+            };
+            header?: never;
+            path: {
+                /** @description The ID of the structure_node */
+                node_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["NodeOut"][];
                 };
             };
             /** @description Validation Error */
@@ -5382,9 +5961,489 @@ export interface operations {
             };
         };
     };
+    get_entity_versions_api_versions_entities__entity_type___entity_id__versions_get: {
+        parameters: {
+            query?: {
+                SessionLocal?: unknown;
+            };
+            header?: never;
+            path: {
+                /** @description Entity type */
+                entity_type: components["schemas"]["EntityTypeEnum"];
+                /** @description Entity ID */
+                entity_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EntityVersionSummary"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_entity_version_api_versions_entities__entity_type___entity_id__versions__version_number__get: {
+        parameters: {
+            query?: {
+                SessionLocal?: unknown;
+            };
+            header?: never;
+            path: {
+                /** @description Entity type */
+                entity_type: components["schemas"]["EntityTypeEnum"];
+                /** @description Entity ID */
+                entity_id: string;
+                /** @description Version number */
+                version_number: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EntityVersionOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    rollback_entity_api_versions_entities__entity_type___entity_id__rollback_post: {
+        parameters: {
+            query?: {
+                SessionLocal?: unknown;
+            };
+            header?: never;
+            path: {
+                /** @description Entity type */
+                entity_type: components["schemas"]["EntityTypeEnum"];
+                /** @description Entity ID */
+                entity_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RollbackRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EntityVersionOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_working_diff_api_versions_entities__entity_type___entity_id__diff_get: {
+        parameters: {
+            query?: {
+                /** @description Diff format */
+                format?: components["schemas"]["DiffFormatEnum"];
+                SessionLocal?: unknown;
+            };
+            header?: never;
+            path: {
+                /** @description Entity type */
+                entity_type: components["schemas"]["EntityTypeEnum"];
+                /** @description Entity ID */
+                entity_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EntityDiffOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_working_tree_status_api_versions_working_tree_status_get: {
+        parameters: {
+            query?: {
+                SessionLocal?: unknown;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WorkingTreeStatusOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_working_changes_api_versions_working_tree_changes_get: {
+        parameters: {
+            query?: {
+                SessionLocal?: unknown;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WorkingTreeEntryOut"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    stage_entity_api_versions_working_tree_stage_post: {
+        parameters: {
+            query?: {
+                SessionLocal?: unknown;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["StageRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    unstage_entity_api_versions_working_tree_unstage_post: {
+        parameters: {
+            query?: {
+                SessionLocal?: unknown;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["StageRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    commit_staged_changes_api_versions_working_tree_commit_post: {
+        parameters: {
+            query?: {
+                SessionLocal?: unknown;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CommitRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EntityVersionSummary"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_commit_preview_api_versions_working_tree_preview_get: {
+        parameters: {
+            query?: {
+                SessionLocal?: unknown;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EntityDiffOut"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_all_working_diffs_api_versions_diffs_working_get: {
+        parameters: {
+            query?: {
+                SessionLocal?: unknown;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EntityDiffOut"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    compare_versions_api_versions_diffs_compare_post: {
+        parameters: {
+            query?: {
+                SessionLocal?: unknown;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DiffRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EntityDiffOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_version_management_health_api_versions_health_get: {
+        parameters: {
+            query?: {
+                SessionLocal?: unknown;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["VersionManagementHealthOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_version_management_stats_api_versions_stats_get: {
+        parameters: {
+            query?: {
+                SessionLocal?: unknown;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["VersionManagementStatsOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     get_graph_stats_api_graph_stats_get: {
         parameters: {
-            query?: never;
+            query?: {
+                SessionLocal?: unknown;
+            };
             header?: never;
             path?: never;
             cookie?: never;
@@ -5402,11 +6461,22 @@ export interface operations {
                     };
                 };
             };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
         };
     };
     refresh_graphs_api_graph_refresh_post: {
         parameters: {
-            query?: never;
+            query?: {
+                SessionLocal?: unknown;
+            };
             header?: never;
             path?: never;
             cookie?: never;
@@ -5424,11 +6494,22 @@ export interface operations {
                     };
                 };
             };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
         };
     };
     execute_sparql_query_api_graph_sparql_query_post: {
         parameters: {
-            query?: never;
+            query?: {
+                SessionLocal?: unknown;
+            };
             header?: never;
             path?: never;
             cookie?: never;
@@ -5466,6 +6547,7 @@ export interface operations {
             query?: {
                 /** @description RDF serialization format */
                 format?: string;
+                SessionLocal?: unknown;
             };
             header?: never;
             path?: never;
@@ -5500,6 +6582,7 @@ export interface operations {
                 title: string;
                 /** @description Whether to do exact match */
                 exact?: boolean;
+                SessionLocal?: unknown;
             };
             header?: never;
             path?: never;
@@ -5531,7 +6614,9 @@ export interface operations {
     };
     search_and_analyze_api_graph_search_analyze_post: {
         parameters: {
-            query?: never;
+            query?: {
+                SessionLocal?: unknown;
+            };
             header?: never;
             path?: never;
             cookie?: never;
@@ -5566,7 +6651,9 @@ export interface operations {
     };
     calculate_centrality_api_graph_analytics_centrality_post: {
         parameters: {
-            query?: never;
+            query?: {
+                SessionLocal?: unknown;
+            };
             header?: never;
             path?: never;
             cookie?: never;
@@ -5604,6 +6691,7 @@ export interface operations {
             query?: {
                 /** @description Community detection method */
                 method?: string;
+                SessionLocal?: unknown;
             };
             header?: never;
             path?: never;
@@ -5633,7 +6721,9 @@ export interface operations {
     };
     find_shortest_path_api_graph_path_shortest_post: {
         parameters: {
-            query?: never;
+            query?: {
+                SessionLocal?: unknown;
+            };
             header?: never;
             path?: never;
             cookie?: never;
@@ -5666,7 +6756,9 @@ export interface operations {
     };
     get_neighbors_api_graph_neighbors_post: {
         parameters: {
-            query?: never;
+            query?: {
+                SessionLocal?: unknown;
+            };
             header?: never;
             path?: never;
             cookie?: never;
@@ -5704,6 +6796,7 @@ export interface operations {
             query?: {
                 /** @description Maximum depth of relationships to traverse */
                 max_depth?: number;
+                SessionLocal?: unknown;
             };
             header?: never;
             path: {
@@ -5737,7 +6830,9 @@ export interface operations {
     };
     get_term_hierarchy_api_graph_terms__term_id__hierarchy_get: {
         parameters: {
-            query?: never;
+            query?: {
+                SessionLocal?: unknown;
+            };
             header?: never;
             path: {
                 term_id: string;
@@ -5770,7 +6865,9 @@ export interface operations {
     };
     get_term_info_api_graph_terms__term_id__info_get: {
         parameters: {
-            query?: never;
+            query?: {
+                SessionLocal?: unknown;
+            };
             header?: never;
             path: {
                 term_id: string;
@@ -5803,7 +6900,9 @@ export interface operations {
     };
     analyze_domain_api_graph_domains__domain_id__analyze_get: {
         parameters: {
-            query?: never;
+            query?: {
+                SessionLocal?: unknown;
+            };
             header?: never;
             path: {
                 domain_id: string;
@@ -5839,6 +6938,7 @@ export interface operations {
             query?: {
                 /** @description Optional layer ID to filter by */
                 layer_id?: string | null;
+                SessionLocal?: unknown;
             };
             header?: never;
             path?: never;
@@ -5873,6 +6973,7 @@ export interface operations {
             query?: {
                 /** @description Optional layer ID to analyze */
                 layer_id?: string | null;
+                SessionLocal?: unknown;
             };
             header?: never;
             path?: never;
@@ -5904,7 +7005,9 @@ export interface operations {
     };
     get_layer_info_api_graph_layers__layer_id__info_get: {
         parameters: {
-            query?: never;
+            query?: {
+                SessionLocal?: unknown;
+            };
             header?: never;
             path: {
                 layer_id: string;
@@ -5937,7 +7040,9 @@ export interface operations {
     };
     get_domain_info_api_graph_domains__domain_id__info_get: {
         parameters: {
-            query?: never;
+            query?: {
+                SessionLocal?: unknown;
+            };
             header?: never;
             path: {
                 domain_id: string;
@@ -5973,6 +7078,7 @@ export interface operations {
             query?: {
                 /** @description Export format (json, turtle, graphml) */
                 format?: string;
+                SessionLocal?: unknown;
             };
             header?: never;
             path?: never;
@@ -6485,6 +7591,276 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_full_configuration_api_config__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ConfigResponse"];
+                };
+            };
+        };
+    };
+    update_configuration_api_config__patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ConfigUpdateRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ConfigResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    validate_configuration_api_config_validate_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ConfigResponse"];
+                };
+            };
+        };
+    };
+    get_configuration_schema_api_config_schema__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ConfigResponse"];
+                };
+            };
+        };
+    };
+    get_reference_source_config_api_config_reference_sources__source_name__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                source_name: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ConfigResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_reference_source_config_api_config_reference_sources__source_name__patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                source_name: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ConfigUpdateRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ConfigResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_configuration_value_api_config__path__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                path: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ConfigResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    reload_configuration_api_config_reload_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+        };
+    };
+    reset_configuration_api_config_reset_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+        };
+    };
+    get_reference_sources_config_api_config_reference_sources_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ConfigResponse"];
+                };
+            };
+        };
+    };
+    get_reference_sources_status_api_config_reference_sources_status_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ConfigResponse"];
                 };
             };
         };
@@ -7207,7 +8583,10 @@ export interface operations {
     };
     get_flavor_api_pipeline_flavors__flavor_id__get: {
         parameters: {
-            query?: never;
+            query?: {
+                /** @description Pipeline type (required for default flavor) */
+                pipeline?: components["schemas"]["PipelineType"] | null;
+            };
             header?: never;
             path: {
                 flavor_id: string;
@@ -7713,6 +9092,590 @@ export interface operations {
                 };
                 content: {
                     "application/json": unknown;
+                };
+            };
+        };
+    };
+    get_service_factory_stats_admin_services_stats_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+        };
+    };
+    get_service_factory_performance_admin_services_performance_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+        };
+    };
+    get_service_factory_health_admin_services_health_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+        };
+    };
+    clear_service_factory_cache_admin_services_cache_clear_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+        };
+    };
+    cleanup_service_factory_cache_admin_services_cache_cleanup_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+        };
+    };
+    get_service_type_metrics_admin_services_metrics__service_type__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                service_type: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_service_factory_dashboard_admin_services_dashboard_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+        };
+    };
+    get_database_health_admin_database_health_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+        };
+    };
+    get_database_performance_metrics_admin_database_performance_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+        };
+    };
+    get_database_engines_status_admin_database_engines_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+        };
+    };
+    get_connection_metrics_admin_database_metrics_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+        };
+    };
+    optimize_database_for_workload_admin_database_optimize_post: {
+        parameters: {
+            query?: {
+                workload_type?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_performance_recommendations_admin_database_recommendations_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+        };
+    };
+    reset_performance_metrics_admin_database_reset_metrics_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+        };
+    };
+    get_environment_configuration_admin_database_environment_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+        };
+    };
+    create_optimized_database_engine_admin_database_create_engine_post: {
+        parameters: {
+            query: {
+                engine_id: string;
+                database_url?: string | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    cleanup_database_resources_admin_database_cleanup_delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+        };
+    };
+    get_database_dashboard_admin_database_dashboard_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+        };
+    };
+    get_event_processor_health_admin_events_health_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+        };
+    };
+    get_event_processor_stats_admin_events_stats_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+        };
+    };
+    get_event_processing_performance_admin_events_performance_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+        };
+    };
+    get_event_processor_database_status_admin_events_database_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+        };
+    };
+    restart_event_processor_admin_events_restart_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+        };
+    };
+    get_event_processor_recommendations_admin_events_recommendations_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+        };
+    };
+    get_event_processor_dashboard_admin_events_dashboard_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: unknown;
+                    };
                 };
             };
         };

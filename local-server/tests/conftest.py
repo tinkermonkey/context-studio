@@ -7,8 +7,9 @@ import pytest
 import tempfile
 from fastapi.testclient import TestClient
 from app import create_app
-from database.utils import get_engine, get_session_local, init_db
+from database.utils import get_engine, get_session_local, init_db, get_database_manager, cleanup_database_resources
 from database.migrations.migration_manager import MigrationManager
+from services.service_factory import ServiceFactory, set_service_factory, get_service_factory
 from sqlalchemy import text
 
 
@@ -39,7 +40,41 @@ def create_test_database_with_migrations():
 
 
 @pytest.fixture(scope="session")
-def shared_app():
+def test_service_factory():
+    """Create test service factory with optimized settings for testing."""
+    # Create factory with shorter TTL and more frequent cleanup for tests
+    factory = ServiceFactory(
+        cache_ttl_seconds=30,   # Shorter TTL for tests
+        cleanup_interval=5      # More frequent cleanup
+    )
+    set_service_factory(factory)
+    yield factory
+    # Cleanup at end of session
+    factory.clear_cache()
+
+
+@pytest.fixture(scope="session")
+def test_database_manager():
+    """Create and manage test database manager."""
+    # Get the global database manager (will be created if needed)
+    manager = get_database_manager()
+    yield manager
+    # Cleanup at end of session
+    cleanup_database_resources()
+
+
+@pytest.fixture(autouse=True, scope="function")
+def reset_service_factory_cache(test_service_factory):
+    """Auto-reset service factory cache between each test for isolation."""
+    # Clear cache before test
+    test_service_factory.clear_cache()
+    yield
+    # Clear cache after test
+    test_service_factory.clear_cache()
+
+
+@pytest.fixture(scope="session")
+def shared_app(test_service_factory):
     """Create shared app instance for the entire test session - reused across all tests."""
     engine, session_local, db_path = create_test_database_with_migrations()
     try:
@@ -47,7 +82,7 @@ def shared_app():
         from database.utils import set_current_engine_for_testing
         set_current_engine_for_testing(engine, session_local)
         
-        app = create_app(engine=engine, session_local=session_local)
+        app = create_app(engine=engine, session_local=session_local, service_factory=test_service_factory)
         yield app, engine, session_local
     finally:
         # Always cleanup the temporary database
@@ -140,6 +175,33 @@ def clean_db_session(shared_app):
             cleanup_session.commit()
         finally:
             cleanup_session.close()
+
+
+# Legacy fixtures for backwards compatibility - these now use the shared app
+@pytest.fixture(scope="function")
+def optimized_db_session(shared_app, test_database_manager):
+    """Provide optimized database session using DatabaseManager for enhanced testing."""
+    app, engine, session_local = shared_app
+    
+    # Use database manager for optimized session handling
+    try:
+        # Use the shared app's engine through database manager
+        engine_id = f"test_engine_{id(engine)}"
+        if engine_id not in test_database_manager._session_locals:
+            # Register the test engine with the manager
+            test_database_manager._engines[engine_id] = engine
+            test_database_manager._session_locals[engine_id] = session_local
+        
+        with test_database_manager.get_optimized_session(engine_id) as session:
+            yield session
+            
+    except Exception as e:
+        # Fallback to regular session if optimized fails
+        session = session_local()
+        try:
+            yield session
+        finally:
+            session.close()
 
 
 # Legacy fixtures for backwards compatibility - these now use the shared app

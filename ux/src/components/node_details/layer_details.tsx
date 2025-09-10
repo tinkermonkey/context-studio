@@ -18,8 +18,7 @@ import {
 } from "lucide-react";
 import { Link } from "@tanstack/react-router";
 import { NlpAnalysisPanel } from "@/components/nlp/NlpAnalysisPanel";
-import { useDomain, useDomainsByLayer } from "@/api/hooks/domains/useDomains";
-import { useTerms } from "@/api/hooks/terms/useTerms";
+import { useDomainNodes, useTermNodes } from "@/api/hooks/structure_nodes/useStructureNodes";
 import { TermRenderer } from "@/components/node_renderers/term_renderer";
 import { CreateChildButton } from "@/components/misc/create_child_button";
 import { LayerForm } from "@/components/forms/layer_form";
@@ -32,37 +31,39 @@ import {
   CsSidebarSectionTitle,
 } from "@/components/layout/cs_sidebar";
 import { CsMain, CsMainTitle } from "@/components/layout/cs_main";
-import type { components } from "@/api/client/types";
-
-type LayerOut = components["schemas"]["LayerOut"];
-type TermOut = components["schemas"]["TermOut"];
+import type { StructureNode } from "@/api/types/structureNodes";
 
 interface LayerDetailsProps {
-  layer: LayerOut;
+  layer: StructureNode;
 }
 
 export const LayerDetails: React.FC<LayerDetailsProps> = ({ layer }) => {
   const queryClient = useQueryClient();
   const [isEditOpen, setIsEditOpen] = React.useState(false);
-  const { data: terms, isLoading: termsLoading } = useTerms({
-    layer_id: layer.id,
-  });
+  const { data: terms, isLoading: termsLoading } = useTermNodes();
 
-  const { data: domains, isLoading: domainsLoading } = useDomainsByLayer(
-    layer.id,
+  const { data: domains, isLoading: domainsLoading } = useDomainNodes(
+    layer.id
   );
 
   // Group terms by domain for better organization
   const termsByDomain = React.useMemo(() => {
     if (!terms) return {};
 
-    const grouped: Record<string, TermOut[]> = {};
+    const grouped: Record<string, StructureNode[]> = {};
 
-    terms.forEach((term: TermOut) => {
-      if (!grouped[term.domain_id]) {
-        grouped[term.domain_id] = [];
+    terms.forEach((term: StructureNode) => {
+      // Find the term's domain by checking its parent hierarchy
+      const domainParent = domains?.find(d => d.id === term.parent_node_id) || 
+                          domains?.find(d => 
+                            terms.some(t => t.parent_node_id === d.id && t.id === term.parent_node_id)
+                          );
+      const domainId = domainParent?.id || 'unknown';
+      
+      if (!grouped[domainId]) {
+        grouped[domainId] = [];
       }
-      grouped[term.domain_id].push(term);
+      grouped[domainId].push(term);
     });
 
     return grouped;
@@ -245,7 +246,7 @@ const LayerEditModal: React.FC<{
 // Helper component to display terms grouped by domain
 interface DomainTermsSectionProps {
   domainId: string;
-  terms: TermOut[];
+  terms: StructureNode[];
 }
 
 const DomainTermsSection: React.FC<DomainTermsSectionProps> = ({

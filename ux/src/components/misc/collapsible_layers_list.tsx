@@ -1,11 +1,9 @@
 import React, { useState } from "react";
-import { useLayers } from "@/api/hooks/layers";
+import { useLayerNodes } from "@/api/hooks/structure_nodes/useStructureNodes";
 import { Spinner, Button } from "flowbite-react";
 import { ChevronDown, ChevronUp } from "lucide-react";
 import { Link } from "@tanstack/react-router";
-import type { components } from "@/api/client/types";
-
-type LayerOut = components['schemas']['LayerOut'];
+import type { StructureNode } from "@/api/types/structureNodes";
 
 interface CollapsibleLayersListProps {
   showCount?: number;
@@ -20,7 +18,7 @@ const CollapsibleLayersList: React.FC<CollapsibleLayersListProps> = ({
   selectedLayerId,
   useLinks = true,
 }) => {
-  const { data: layers, isLoading, error } = useLayers();
+  const { data: layers, isLoading, error } = useLayerNodes();
   const [isExpanded, setIsExpanded] = useState(false);
 
   if (isLoading) {
@@ -68,7 +66,7 @@ const CollapsibleLayersList: React.FC<CollapsibleLayersListProps> = ({
 
   return (
     <div className="space-y-1 mx-1">
-      {displayedLayers.map((layer: LayerOut) => {
+      {displayedLayers.map((layer: StructureNode) => {
         const isSelected = selectedLayerId === layer.id;
         const className = `text-sm cursor-pointer px-2 py-1 rounded transition-colors block ${
           isSelected

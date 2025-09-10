@@ -6,29 +6,50 @@ from contextlib import asynccontextmanager
 from sqlalchemy import text
 
 from api import graph, datasets, nlp_analysis, schema, predicates, llm, pipeline_flavors
-from api import enrichment, config, structure_nodes
+from api import enrichment, config, structure_nodes, version_management
+from api.admin import service_monitoring
 from schema_org import api as schema_org_api
 from api.graph import get_cached_graph_service, invalidate_graph_cache
 from database.migrations.migration_manager import MigrationManager
-from database.utils import init_db, get_db, get_dataset_manager, get_current_engine, cleanup_database_resources
+from database.utils import (
+    init_db, get_db, get_dataset_manager, get_current_engine, cleanup_database_resources,
+    get_database_manager
+)
+from services.service_factory import ServiceFactory, set_service_factory
 from pipeline.manager import get_pipeline_database_manager
 from nlp.pipeline import get_pipeline
 from utils.access_log_middleware import AccessLogMiddleware
-from utils.event_processor import EventProcessor
+from utils.event_processor import create_event_processor
 from utils.logger import get_logger
 
 logger = get_logger(__name__)
 
+
+
+
+
 # Dependency injection for testability
-def create_app(dataset_id=None, engine=None, session_local=None):
+def create_app(dataset_id=None, engine=None, session_local=None, service_factory=None):
     logger.info("Creating FastAPI application...")
     
     @asynccontextmanager
     async def lifespan(app):
         try:
-            logger.info("Initializing dataset management...")
+            logger.info(" Initializing application-level Database Manager...")
+            app.state.database_manager = get_database_manager()
+            
+            logger.info("Initializing application-level Service Factory...")
+            if service_factory is not None:
+                # Use provided service factory (for testing)
+                app.state.service_factory = service_factory
+            else:
+                # Create new service factory for production
+                app.state.service_factory = ServiceFactory(cache_ttl_seconds=3600)
+            set_service_factory(app.state.service_factory)  # Set module-level reference
+                        
             
             # Initialize dataset manager
+            logger.info("Initializing dataset management...")
             dataset_manager = get_dataset_manager()
             
             # Set active dataset
@@ -75,7 +96,10 @@ def create_app(dataset_id=None, engine=None, session_local=None):
                 # Get the database URL instead of passing the engine
                 current_engine = get_current_engine()
                 database_url = str(current_engine.url)
-                app.state.event_processor = EventProcessor(database_url=database_url)
+                # Initialize Event Processor with Phase 3 optimizations
+                app.state.event_processor = create_event_processor(
+                    database_url=database_url
+                )
                 app.state.event_processor.start()
                 logger.info(f"Event processor started for dataset: {active_dataset.title}")
             
@@ -133,6 +157,7 @@ def create_app(dataset_id=None, engine=None, session_local=None):
     # Using unified structure_nodes API instead of separate layers/domains/terms
     app.include_router(structure_nodes.router, tags=["structure_nodes"])
     app.include_router(predicates.router, prefix="/api/predicates", tags=["predicates"])
+    app.include_router(version_management.router, tags=["version_management"])
     app.include_router(graph.router, prefix="/api", tags=["graph"])
     app.include_router(datasets.router, prefix="/api", tags=["datasets"])
     app.include_router(schema.router, prefix="/api", tags=["schema"])
@@ -142,6 +167,17 @@ def create_app(dataset_id=None, engine=None, session_local=None):
     app.include_router(llm.router, prefix="/api", tags=["llm"])
     app.include_router(pipeline_flavors.router, tags=["pipeline-flavors"])
     app.include_router(enrichment.router, prefix="", tags=["nlp-reference"])
+    
+    # Phase 2: Administrative monitoring endpoints for service factory
+    app.include_router(service_monitoring.router, tags=["service-monitoring"])
+    
+    # Phase 3: Enhanced database management monitoring endpoints
+    from api.admin import database_monitoring
+    app.include_router(database_monitoring.router, tags=["database-monitoring"])
+    
+    # Enhanced Event Processor monitoring endpoints
+    from api.admin import event_processor_monitoring
+    app.include_router(event_processor_monitoring.router, tags=["event-processor-monitoring"])
     return app
 
 # Default app for production

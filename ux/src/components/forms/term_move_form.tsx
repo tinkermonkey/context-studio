@@ -6,12 +6,12 @@
 
 import React, { useState } from 'react';
 import { Button, Label, Checkbox } from 'flowbite-react';
-import { TermOut } from '@/api/services/terms';
+import { StructureNode } from '@/api/types/structureNodes';
 import { DomainSelector } from '@/components/node_selectors/domain_selector';
-import { useMoveTerms } from '@/api/hooks/terms';
+import { useUpdateStructureNode } from '@/api/hooks/structure_nodes/useStructureNodeMutations';
 
 interface TermMoveFormProps {
-  selectedNodes: TermOut[];
+  selectedNodes: StructureNode[];
   onSuccess: () => void;
   onCancel: () => void;
 }
@@ -19,7 +19,7 @@ interface TermMoveFormProps {
 export function TermMoveForm({ selectedNodes, onSuccess, onCancel }: TermMoveFormProps) {
   const [targetDomainId, setTargetDomainId] = useState<string>('');
   const [moveChildren, setMoveChildren] = useState(true);
-  const moveTerms = useMoveTerms();
+  const updateTerm = useUpdateStructureNode();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -29,11 +29,17 @@ export function TermMoveForm({ selectedNodes, onSuccess, onCancel }: TermMoveFor
     }
 
     try {
-      await moveTerms.mutateAsync({
-        term_ids: selectedNodes.map(term => term.id),
-        target_domain_id: targetDomainId,
-        move_children: moveChildren,
-      });
+      // Move each term individually using the structure node update API
+      await Promise.all(
+        selectedNodes.map(term => 
+          updateTerm.mutateAsync({
+            id: term.id,
+            data: {
+              parent_node_id: targetDomainId,
+            },
+          })
+        )
+      );
       
       onSuccess();
     } catch (error) {

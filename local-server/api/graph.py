@@ -2,7 +2,7 @@
 Graph API endpoints for Context Studio
 
 This module provides FastAPI endpoints for graph operations using both
-SPARQL and NetworkX capabilities.
+SPARQL and NetworkX capabilities with optimized service management.
 """
 import threading
 
@@ -10,13 +10,16 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from pydantic import BaseModel
 from typing import List, Dict, Any, Optional
 
-from database.utils import get_current_session_local, get_dataset_manager
+from database.utils import get_current_session_local, get_dataset_manager, get_db
+from api.dependencies.graph_services import get_graph_service, get_all_graph_services
 from graph.graph_service import GraphService
+from graph.network_service import NetworkService
+from graph.sparql_service import SPARQLService
 from utils.logger import get_logger
 
 logger = get_logger(__name__)
 
-# Global cached graph service with session management
+# Global cached graph service with session management (for backward compatibility)
 _cached_graph_service = None
 _cached_session = None
 _graph_service_lock = None
@@ -91,8 +94,8 @@ def invalidate_graph_cache():
 # Create router
 router = APIRouter(prefix="/graph", tags=["Graph"])
 
-# Dependency to get graph service (cached)
-def get_graph_service() -> GraphService:
+# Legacy dependency to get graph service (cached) - kept for backward compatibility
+def get_cached_graph_service_legacy() -> GraphService:
     return get_cached_graph_service()
 
 # Pydantic models for request/response

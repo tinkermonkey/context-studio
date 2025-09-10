@@ -87,7 +87,7 @@ def list_nodes(
     skip: int = Query(0, ge=0, description="Number of structure_nodes to skip"),
     limit: int = Query(50, ge=1, le=100, description="Maximum number of structure_nodes to return"),
     sort_by: str = Query("title", pattern="^(title|created_at)$", description="Sort field"),
-    db: Session = Depends(get_db)
+    node_service: NodeService = Depends(get_node_service)
 ):
     """
     List structure_nodes with filtering and pagination.
@@ -96,27 +96,27 @@ def list_nodes(
     and sorting. This replaces the separate endpoints for layers, domains, and terms.
     """
     try:
-        query = db.query(StructureNode)
-        
-        # Apply filters
+        # Convert API node type to database node type
+        db_node_type = None
         if node_type:
             db_node_type = convert_api_node_type_to_db(node_type.value)
-            query = query.filter(StructureNode.node_type == db_node_type)
-            
-        if parent_node_id:
-            query = query.filter(StructureNode.parent_node_id == str(parent_node_id))
         
-        # Get total count before pagination
-        total = query.count()
+        # Convert UUID to string for parent_node_id
+        parent_node_id_str = str(parent_node_id) if parent_node_id else None
         
-        # Apply sorting
-        if sort_by == "title":
-            query = query.order_by(StructureNode.title)
-        elif sort_by == "created_at":
-            query = query.order_by(StructureNode.created_at.desc())
+        # Get total count using NodeService
+        total = node_service.count_nodes(
+            node_type=db_node_type,
+            parent_node_id=parent_node_id_str
+        )
         
-        # Apply pagination
-        structure_nodes = query.offset(skip).limit(limit).all()
+        # Get nodes using NodeService with pagination
+        structure_nodes = node_service.list_nodes(
+            node_type=db_node_type,
+            parent_node_id=parent_node_id_str,
+            skip=skip,
+            limit=limit
+        )
         
         return PaginatedNodesResponse(**nodes_to_paginated_response(structure_nodes, total, skip, limit))
         
@@ -127,7 +127,7 @@ def list_nodes(
 @router.post("/find", response_model=List[NodeSearchResult])
 def search_nodes(
     search_request: NodeSearchRequest,
-    db: Session = Depends(get_db)
+    node_service: NodeService = Depends(get_node_service)
 ):
     """
     Vector search across structure_nodes.
@@ -187,7 +187,7 @@ def list_node_links(
     predicate: Optional[str] = Query(None, description="Filter by predicate"),
     skip: int = Query(0, ge=0, description="Number of links to skip"),
     limit: int = Query(100, ge=1, le=500, description="Maximum number of links to return"),
-    db: Session = Depends(get_db)
+    link_service: NodeLinkService = Depends(get_node_link_service)
 ):
     """
     List structure_node links with filtering.
@@ -196,18 +196,17 @@ def list_node_links(
     Returns all relationships in the unified structure_node graph.
     """
     try:
-        query = db.query(StructureNodeLink)
+        # Convert UUID to string for filtering
+        source_node_id_str = str(source_node_id) if source_node_id else None
+        target_node_id_str = str(target_node_id) if target_node_id else None
         
-        # Apply filters
-        if source_node_id:
-            query = query.filter(StructureNodeLink.source_node_id == str(source_node_id))
-        if target_node_id:
-            query = query.filter(StructureNodeLink.target_node_id == str(target_node_id))
-        if predicate:
-            query = query.filter(StructureNodeLink.predicate == predicate)
-        
-        # Apply pagination
-        links = query.offset(skip).limit(limit).all()
+        links = link_service.list_links(
+            source_node_id=source_node_id_str,
+            target_node_id=target_node_id_str,
+            predicate=predicate,
+            skip=skip,
+            limit=limit
+        )
         
         return [to_node_link_out(link) for link in links]
         
@@ -245,7 +244,7 @@ def update_node_link(
         raise HTTPException(status_code=500, detail=f"Internal server error: {str(e)}")
 
 
-@router.delete("/links/{link_id}")
+@router.delete("/links/{link_id}", status_code=204)
 def delete_node_link(
     link_id: UUID = Path(..., description="The ID of the link to delete"),
     link_service: NodeLinkService = Depends(get_node_link_service)
@@ -258,7 +257,7 @@ def delete_node_link(
     try:
         success = link_service.delete_link(str(link_id))
         if success:
-            return {"success": True, "message": "StructureNode link deleted successfully"}
+            return  # Return empty response with 204 status
         else:
             raise HTTPException(status_code=404, detail="StructureNode link not found")
             
@@ -271,7 +270,7 @@ def delete_node_link(
 @router.get("/{node_id}", response_model=NodeOut)
 def get_node(
     node_id: UUID = Path(..., description="The ID of the structure_node to retrieve"),
-    db: Session = Depends(get_db)
+    node_service: NodeService = Depends(get_node_service)
 ):
     """
     Get a specific structure_node by ID.
@@ -279,11 +278,24 @@ def get_node(
     Returns the complete structure_node information including embeddings,
     hierarchy information, and metadata.
     """
-    structure_node = db.query(StructureNode).filter(StructureNode.id == str(node_id)).first()
-    if not structure_node:
-        raise HTTPException(status_code=404, detail="StructureNode not found")
-    
-    return to_node_out(structure_node)
+    try:
+        structure_node = node_service.get_node(str(node_id))
+        if not structure_node:
+            raise HTTPException(status_code=404, detail="StructureNode not found")
+        
+        return to_node_out(structure_node)
+        
+    except ValueError as e:
+        error_msg = str(e).lower()
+        if "not found" in error_msg:
+            raise HTTPException(status_code=404, detail=str(e))
+        else:
+            raise HTTPException(status_code=400, detail=str(e))
+    except HTTPException:
+        # Re-raise HTTPException without catching it
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Internal server error: {str(e)}")
 
 
 @router.put("/{node_id}", response_model=NodeOut)
@@ -323,11 +335,14 @@ def update_node(
             return conflict_error_response(str(e))
         else:
             raise HTTPException(status_code=400, detail=str(e))
+    except HTTPException:
+        # Re-raise HTTPException without catching it
+        raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Internal server error: {str(e)}")
 
 
-@router.delete("/{node_id}")
+@router.delete("/{node_id}", status_code=204)
 def delete_node(
     node_id: UUID = Path(..., description="The ID of the structure_node to delete"),
     node_service: NodeService = Depends(get_node_service)
@@ -341,7 +356,7 @@ def delete_node(
     try:
         success = node_service.delete_node(str(node_id))
         if success:
-            return {"success": True, "message": "StructureNode and children deleted successfully"}
+            return  # Return empty response with 204 status
         else:
             raise HTTPException(status_code=404, detail="StructureNode not found")
             
@@ -353,6 +368,9 @@ def delete_node(
             return conflict_error_response(error_message)
         else:
             raise HTTPException(status_code=400, detail=error_message)
+    except HTTPException:
+        # Re-raise HTTPException without catching it
+        raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Internal server error: {str(e)}")
 

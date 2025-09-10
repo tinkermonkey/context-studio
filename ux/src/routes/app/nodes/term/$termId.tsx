@@ -1,6 +1,6 @@
 import { createFileRoute } from '@tanstack/react-router';
 import { Spinner, Alert } from 'flowbite-react';
-import { useTerm } from '@/api/hooks/terms/useTerms';
+import { useStructureNode } from '@/api/hooks/structure_nodes/useStructureNodes';
 import { TermDetails } from '@/components/node_details/term_details';
 
 export const Route = createFileRoute('/app/nodes/term/$termId')({
@@ -9,7 +9,7 @@ export const Route = createFileRoute('/app/nodes/term/$termId')({
 
 function TermDetailPage() {
   const { termId } = Route.useParams() as { termId: string };
-  const { data: term, isLoading: termLoading, error: termError } = useTerm(termId);
+  const { data: term, isLoading: termLoading, error: termError } = useStructureNode(termId);
 
   if (termLoading) {
     return (

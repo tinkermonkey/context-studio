@@ -1,11 +1,9 @@
 import React, { useState } from "react";
-import { useDomains } from "@/api/hooks/domains";
+import { useDomainNodes } from "@/api/hooks/structure_nodes/useStructureNodes";
 import { Spinner, Button } from "flowbite-react";
 import { ChevronDown, ChevronUp } from "lucide-react";
 import { Link } from "@tanstack/react-router";
-import type { components } from "@/api/client/types";
-
-type DomainOut = components['schemas']['DomainOut'];
+import type { StructureNode } from "@/api/types/structureNodes";
 
 interface CollapsibleDomainsListProps {
   layerId: string;
@@ -22,7 +20,7 @@ const CollapsibleDomainsList: React.FC<CollapsibleDomainsListProps> = ({
   selectedDomainId,
   useLinks = true,
 }) => {
-  const { data: domains, isLoading, error } = useDomains({ layer_id: layerId });
+  const { data: domains, isLoading, error } = useDomainNodes(layerId);
   const [isExpanded, setIsExpanded] = useState(false);
 
   if (isLoading) {
@@ -70,7 +68,7 @@ const CollapsibleDomainsList: React.FC<CollapsibleDomainsListProps> = ({
 
   return (
     <div className="space-y-1 mx-1 mb-8">
-      {displayedDomains.map((domain: DomainOut) => {
+      {displayedDomains.map((domain: StructureNode) => {
         const isSelected = selectedDomainId === domain.id;
         const className = `text-sm cursor-pointer px-2 py-1 rounded transition-colors block ${
           isSelected

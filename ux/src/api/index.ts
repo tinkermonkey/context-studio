@@ -6,10 +6,6 @@
 
 // Services
 export * from './services/base';
-export * from './services/layers';
-export * from './services/domains';
-export * from './services/terms';
-export * from './services/relationships';
 export * from './services/predicates';
 export * from './services/graph';
 export * from './services/datasets';
@@ -21,10 +17,6 @@ export * from './services/nlp';
 export * from './services/llm';
 
 // Hooks
-export * from './hooks/layers';
-export * from './hooks/domains';
-export * from './hooks/terms';
-export * from './hooks/relationships';
 export * from './hooks/predicates';
 export * from './hooks/graph';
 export * from './hooks/datasets';

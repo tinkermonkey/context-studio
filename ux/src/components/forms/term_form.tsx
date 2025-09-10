@@ -2,23 +2,20 @@ import React from "react";
 import { useForm } from "@tanstack/react-form";
 import { TextInput, Textarea, Button, Alert, Label } from "flowbite-react";
 import { Info, Database, Hash } from "lucide-react";
-import type { TermCreate, TermOut } from "@/api/services/terms";
-import type { DomainOut } from "@/api/services/domains";
-import {
-  useCreateTerm,
-  useUpdateTerm,
-} from "@/api/hooks/terms/useTermMutations";
+import type { StructureNode, StructureNodeCreate, StructureNodeUpdate } from "@/api/types/structureNodes";
+import { useCreateTerm } from "@/api/hooks/structure_nodes/useStructureNodeMutations";
+import { useUpdateStructureNode } from "@/api/hooks/structure_nodes/useStructureNodeMutations";
 import { DomainSelector } from "@/components/node_selectors/domain_selector";
 import { TermSelector } from "@/components/node_selectors/term_selector";
 
 interface TermFormProps {
-  onSuccess?: (term: TermOut) => void;
-  term?: TermOut; // For edit mode
+  onSuccess?: (term: StructureNode) => void;
+  term?: StructureNode; // For edit mode
   // Child form props
   parentDomainId?: string;
-  parentDomain?: DomainOut;
+  parentDomain?: StructureNode;
   parentTermId?: string;
-  parentTerm?: TermOut;
+  parentTerm?: StructureNode;
   mode?: 'create' | 'edit' | 'child';
 }
 
@@ -32,7 +29,7 @@ const TermForm: React.FC<TermFormProps> = ({
   mode = 'create'
 }) => {
   const createTermMutation = useCreateTerm();
-  const updateTermMutation = useUpdateTerm();
+  const updateTermMutation = useUpdateStructureNode();
   const isEdit = !!term;
   const isChildMode = mode === 'child' || !!parentDomainId || !!parentTermId;
   const [submitError, setSubmitError] = React.useState<string | null>(null);
@@ -40,9 +37,7 @@ const TermForm: React.FC<TermFormProps> = ({
   const getDefaultValues = () => ({
     title: term?.title ?? "",
     definition: term?.definition ?? "",
-    domain_id: term?.domain_id ?? parentDomainId ?? parentTerm?.domain_id ?? "",
-    layer_id: term?.layer_id ?? parentDomain?.layer_id ?? parentTerm?.layer_id ?? "",
-    parent_term_id: term?.parent_term_id ?? parentTermId ?? "",
+    parent_node_id: term?.parent_node_id ?? parentDomainId ?? parentTermId ?? "",
   });
   
   const form = useForm({
@@ -57,7 +52,13 @@ const TermForm: React.FC<TermFormProps> = ({
             data: value,
           });
         } else {
-          result = await createTermMutation.mutateAsync(value as TermCreate);
+          result = await createTermMutation.mutateAsync({
+            parentId: value.parent_node_id,
+            data: {
+              title: value.title,
+              definition: value.definition,
+            },
+          });
         }
         if (onSuccess) onSuccess(result);
         form.reset();
@@ -175,24 +176,22 @@ const TermForm: React.FC<TermFormProps> = ({
         {/* Hide domain selector in child mode when parent is provided */}
         {!isChildMode && (
           <form.Field
-            name="domain_id"
+            name="parent_node_id"
             validators={{
               onChange: ({ value }) =>
-                !value ? "Domain is required" : undefined,
+                !value ? "Parent is required" : undefined,
             }}
           >
             {(field) => {
               return (
                 <div>
-                  <Label htmlFor="term-domain" className="mb-1 block font-medium">
-                    Domain
+                  <Label htmlFor="term-parent" className="mb-1 block font-medium">
+                    Parent (Domain or Term)
                   </Label>
                   <DomainSelector
                     value={field.state.value}
                     onSelect={(domain) => {
                       field.handleChange(domain?.id || "");
-                      // Set layer_id to the selected domain's layer_id
-                      field.form.setFieldValue("layer_id", domain?.layer_id || "");
                     }}
                   />
                   {field.state.meta.errors.length > 0 && (
@@ -206,32 +205,7 @@ const TermForm: React.FC<TermFormProps> = ({
           </form.Field>
         )}
         
-        {/* layer_id is now hidden and set automatically from the selected domain */}
-        
-        {/* Hide parent term selector in child mode when creating child of specific term */}
-        {!isChildMode && (
-          <form.Field name="parent_term_id">
-            {(field) => (
-              <div>
-                <Label
-                  htmlFor="term-parent-term"
-                  className="mb-1 block font-medium"
-                >
-                  Parent Term (optional)
-                </Label>
-                <TermSelector
-                  value={field.state.value}
-                  onSelect={(term) => field.handleChange(term?.id || "")}
-                />
-                {field.state.meta.errors.length > 0 && (
-                  <div className="mt-1 text-sm text-red-600">
-                    {field.state.meta.errors[0]}
-                  </div>
-                )}
-              </div>
-            )}
-          </form.Field>
-        )}
+        {/* Parent selection is now unified under parent_node_id */}
         
         {submitError && (
           <Alert color="failure" className="mb-2" icon={Info}>

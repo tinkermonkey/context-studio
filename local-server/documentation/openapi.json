@@ -5,13 +5,15 @@
     "version": "0.1.0"
   },
   "paths": {
-    "/api/layers/find": {
+    "/api/structure_nodes/": {
       "post": {
         "tags": [
-          "layers"
+          "structure_nodes",
+          "structure_nodes"
         ],
-        "summary": "Find Layer",
-        "operationId": "find_layer_api_layers_find_post",
+        "summary": "Create Node",
+        "description": "Create a new structure_node.\n\nThis endpoint handles creation of layers, domains, and terms through\nthe unified structure_nodes interface. Type-specific validation is enforced:\n- Layers cannot have parent structure_nodes\n- Domains must have a layer parent\n- Terms must have a domain parent",
+        "operationId": "create_node_api_structure_nodes__post",
         "parameters": [
           {
             "name": "SessionLocal",
@@ -27,37 +29,21 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/FindLayerRequest"
+                "$ref": "#/components/schemas/NodeCreate"
               }
             }
           }
         },
         "responses": {
-          "200": {
+          "201": {
             "description": "Successful Response",
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/FindLayerResult"
-                  },
-                  "title": "Response Find Layer Api Layers Find Post"
+                  "$ref": "#/components/schemas/NodeOut"
                 }
               }
             }
-          },
-          "405": {
-            "description": "Method Not Allowed"
-          },
-          "400": {
-            "description": "Bad Request"
-          },
-          "409": {
-            "description": "Conflict"
-          },
-          "500": {
-            "description": "Internal Server Error"
           },
           "422": {
             "description": "Validation Error",
@@ -70,64 +56,53 @@
             }
           }
         }
-      }
-    },
-    "/api/layers/": {
-      "post": {
-        "tags": [
-          "layers"
-        ],
-        "summary": "Create Layer",
-        "operationId": "create_layer_api_layers__post",
-        "parameters": [
-          {
-            "name": "SessionLocal",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "title": "Sessionlocal"
-            }
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/LayerCreate"
-              }
-            }
-          }
-        },
-        "responses": {
-          "201": {
-            "description": "Layer created.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/LayerOut"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Bad Request"
-          },
-          "409": {
-            "description": "Conflict"
-          },
-          "422": {
-            "description": "Validation Error"
-          }
-        }
       },
       "get": {
         "tags": [
-          "layers"
+          "structure_nodes",
+          "structure_nodes"
         ],
-        "summary": "List Layers",
-        "operationId": "list_layers_api_layers__get",
+        "summary": "List Nodes",
+        "description": "List structure_nodes with filtering and pagination.\n\nSupports filtering by structure_node type and parent, with configurable pagination\nand sorting. This replaces the separate endpoints for layers, domains, and terms.",
+        "operationId": "list_nodes_api_structure_nodes__get",
         "parameters": [
+          {
+            "name": "node_type",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/NodeTypeEnum"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by structure_node type",
+              "title": "Node Type"
+            },
+            "description": "Filter by structure_node type"
+          },
+          {
+            "name": "parent_node_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by parent structure_node ID",
+              "title": "Parent Node Id"
+            },
+            "description": "Filter by parent structure_node ID"
+          },
           {
             "name": "skip",
             "in": "query",
@@ -135,9 +110,11 @@
             "schema": {
               "type": "integer",
               "minimum": 0,
+              "description": "Number of structure_nodes to skip",
               "default": 0,
               "title": "Skip"
-            }
+            },
+            "description": "Number of structure_nodes to skip"
           },
           {
             "name": "limit",
@@ -147,20 +124,24 @@
               "type": "integer",
               "maximum": 100,
               "minimum": 1,
+              "description": "Maximum number of structure_nodes to return",
               "default": 50,
               "title": "Limit"
-            }
+            },
+            "description": "Maximum number of structure_nodes to return"
           },
           {
-            "name": "sortBy",
+            "name": "sort_by",
             "in": "query",
             "required": false,
             "schema": {
               "type": "string",
               "pattern": "^(title|created_at)$",
+              "description": "Sort field",
               "default": "title",
-              "title": "Sortby"
-            }
+              "title": "Sort By"
+            },
+            "description": "Sort field"
           },
           {
             "name": "SessionLocal",
@@ -177,7 +158,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/PaginatedLayersResponse"
+                  "$ref": "#/components/schemas/PaginatedNodesResponse"
                 }
               }
             }
@@ -195,176 +176,15 @@
         }
       }
     },
-    "/api/layers/{id}": {
-      "get": {
-        "tags": [
-          "layers"
-        ],
-        "summary": "Get Layer",
-        "operationId": "get_layer_api_layers__id__get",
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "title": "Id"
-            }
-          },
-          {
-            "name": "SessionLocal",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "title": "Sessionlocal"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/LayerOut"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Layer not found"
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      },
-      "put": {
-        "tags": [
-          "layers"
-        ],
-        "summary": "Update Layer",
-        "operationId": "update_layer_api_layers__id__put",
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "title": "Id"
-            }
-          },
-          {
-            "name": "SessionLocal",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "title": "Sessionlocal"
-            }
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/LayerUpdate"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/LayerOut"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Layer not found"
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      },
-      "delete": {
-        "tags": [
-          "layers"
-        ],
-        "summary": "Delete Layer",
-        "operationId": "delete_layer_api_layers__id__delete",
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "title": "Id"
-            }
-          },
-          {
-            "name": "SessionLocal",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "title": "Sessionlocal"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {}
-              }
-            }
-          },
-          "404": {
-            "description": "Layer not found"
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/domains/find": {
+    "/api/structure_nodes/find": {
       "post": {
         "tags": [
-          "domains"
+          "structure_nodes",
+          "structure_nodes"
         ],
-        "summary": "Find Domain",
-        "operationId": "find_domain_api_domains_find_post",
+        "summary": "Search Nodes",
+        "description": "Vector search across structure_nodes.\n\nThis endpoint replaces the separate find endpoints for layers, domains, and terms.\nSupports semantic search across structure_node titles and definitions with optional\ntype filtering and configurable similarity thresholds.\n\nNote: Implementation depends on vector search infrastructure being available.",
+        "operationId": "search_nodes_api_structure_nodes_find_post",
         "parameters": [
           {
             "name": "SessionLocal",
@@ -380,7 +200,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/FindDomainRequest"
+                "$ref": "#/components/schemas/NodeSearchRequest"
               }
             }
           }
@@ -393,24 +213,12 @@
                 "schema": {
                   "type": "array",
                   "items": {
-                    "$ref": "#/components/schemas/FindDomainResult"
+                    "$ref": "#/components/schemas/NodeSearchResult"
                   },
-                  "title": "Response Find Domain Api Domains Find Post"
+                  "title": "Response Search Nodes Api Structure Nodes Find Post"
                 }
               }
             }
-          },
-          "405": {
-            "description": "Method Not Allowed"
-          },
-          "400": {
-            "description": "Bad Request"
-          },
-          "409": {
-            "description": "Conflict"
-          },
-          "500": {
-            "description": "Internal Server Error"
           },
           "422": {
             "description": "Validation Error",
@@ -425,13 +233,15 @@
         }
       }
     },
-    "/api/domains/": {
+    "/api/structure_nodes/links": {
       "post": {
         "tags": [
-          "domains"
+          "structure_nodes",
+          "structure_nodes"
         ],
-        "summary": "Create Domain",
-        "operationId": "create_domain_api_domains__post",
+        "summary": "Create Node Link",
+        "description": "Create a new structure_node link.\n\nLinks can only be created between structure_nodes of the same type (layers to layers,\ndomains to domains, terms to terms) as per the Great Normalization requirements.",
+        "operationId": "create_node_link_api_structure_nodes_links_post",
         "parameters": [
           {
             "name": "SessionLocal",
@@ -447,7 +257,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/DomainCreate"
+                "$ref": "#/components/schemas/NodeLinkCreate"
               }
             }
           }
@@ -458,7 +268,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/DomainOut"
+                  "$ref": "#/components/schemas/NodeLinkOut"
                 }
               }
             }
@@ -477,817 +287,68 @@
       },
       "get": {
         "tags": [
-          "domains"
+          "structure_nodes",
+          "structure_nodes"
         ],
-        "summary": "List Domains",
-        "operationId": "list_domains_api_domains__get",
+        "summary": "List Node Links",
+        "description": "List structure_node links with filtering.\n\nSupports filtering by source structure_node, target structure_node, and predicate.\nReturns all relationships in the unified structure_node graph.",
+        "operationId": "list_node_links_api_structure_nodes_links_get",
         "parameters": [
           {
-            "name": "layer_id",
+            "name": "source_node_id",
             "in": "query",
             "required": false,
             "schema": {
-              "type": "string",
-              "title": "Layer Id"
-            }
-          },
-          {
-            "name": "skip",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "integer",
-              "default": 0,
-              "title": "Skip"
-            }
-          },
-          {
-            "name": "limit",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "integer",
-              "maximum": 100,
-              "default": 50,
-              "title": "Limit"
-            }
-          },
-          {
-            "name": "sortBy",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "string",
-              "pattern": "^(title|created_at)$",
-              "default": "title",
-              "title": "Sortby"
-            }
-          },
-          {
-            "name": "SessionLocal",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "title": "Sessionlocal"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/PaginatedDomainsResponse"
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                {
+                  "type": "null"
                 }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/domains/{id}": {
-      "get": {
-        "tags": [
-          "domains"
-        ],
-        "summary": "Get Domain",
-        "operationId": "get_domain_api_domains__id__get",
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "title": "Id"
-            }
+              ],
+              "description": "Filter by source structure_node ID",
+              "title": "Source Node Id"
+            },
+            "description": "Filter by source structure_node ID"
           },
           {
-            "name": "SessionLocal",
+            "name": "target_node_id",
             "in": "query",
             "required": false,
             "schema": {
-              "title": "Sessionlocal"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/DomainOut"
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                {
+                  "type": "null"
                 }
-              }
-            }
-          },
-          "404": {
-            "description": "Domain not found"
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      },
-      "put": {
-        "tags": [
-          "domains"
-        ],
-        "summary": "Update Domain",
-        "operationId": "update_domain_api_domains__id__put",
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "title": "Id"
-            }
-          },
-          {
-            "name": "SessionLocal",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "title": "Sessionlocal"
-            }
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/DomainUpdate"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/DomainOut"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Domain not found"
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      },
-      "delete": {
-        "tags": [
-          "domains"
-        ],
-        "summary": "Delete Domain",
-        "operationId": "delete_domain_api_domains__id__delete",
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "title": "Id"
-            }
-          },
-          {
-            "name": "SessionLocal",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "title": "Sessionlocal"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {}
-              }
-            }
-          },
-          "404": {
-            "description": "Domain not found"
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/domains/move": {
-      "post": {
-        "tags": [
-          "domains"
-        ],
-        "summary": "Move Domains",
-        "description": "Move domains to a new layer with all their terms.",
-        "operationId": "move_domains_api_domains_move_post",
-        "parameters": [
-          {
-            "name": "SessionLocal",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "title": "Sessionlocal"
-            }
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/MoveDomainRequest"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/MoveDomainResponse"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/terms/find": {
-      "post": {
-        "tags": [
-          "terms"
-        ],
-        "summary": "Find Term",
-        "operationId": "find_term_api_terms_find_post",
-        "parameters": [
-          {
-            "name": "SessionLocal",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "title": "Sessionlocal"
-            }
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/FindTermRequest"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/FindTermResult"
-                  },
-                  "title": "Response Find Term Api Terms Find Post"
-                }
-              }
-            }
-          },
-          "405": {
-            "description": "Method Not Allowed"
-          },
-          "400": {
-            "description": "Bad Request"
-          },
-          "409": {
-            "description": "Conflict"
-          },
-          "500": {
-            "description": "Internal Server Error"
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/terms/": {
-      "post": {
-        "tags": [
-          "terms"
-        ],
-        "summary": "Create Term",
-        "operationId": "create_term_api_terms__post",
-        "parameters": [
-          {
-            "name": "SessionLocal",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "title": "Sessionlocal"
-            }
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/TermCreate"
-              }
-            }
-          }
-        },
-        "responses": {
-          "201": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/TermOut"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      },
-      "get": {
-        "tags": [
-          "terms"
-        ],
-        "summary": "List Terms",
-        "operationId": "list_terms_api_terms__get",
-        "parameters": [
-          {
-            "name": "domain_id",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "string",
-              "title": "Domain Id"
-            }
-          },
-          {
-            "name": "layer_id",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "string",
-              "title": "Layer Id"
-            }
-          },
-          {
-            "name": "parent_term_id",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "string",
-              "title": "Parent Term Id"
-            }
-          },
-          {
-            "name": "skip",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "integer",
-              "default": 0,
-              "title": "Skip"
-            }
-          },
-          {
-            "name": "limit",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "integer",
-              "maximum": 100,
-              "default": 50,
-              "title": "Limit"
-            }
-          },
-          {
-            "name": "sortBy",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "string",
-              "pattern": "^(title|created_at)$",
-              "default": "title",
-              "title": "Sortby"
-            }
-          },
-          {
-            "name": "SessionLocal",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "title": "Sessionlocal"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/PaginatedTermsResponse"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/terms/{id}": {
-      "get": {
-        "tags": [
-          "terms"
-        ],
-        "summary": "Get Term",
-        "operationId": "get_term_api_terms__id__get",
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "title": "Id"
-            }
-          },
-          {
-            "name": "SessionLocal",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "title": "Sessionlocal"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/TermOut"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Term not found"
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      },
-      "put": {
-        "tags": [
-          "terms"
-        ],
-        "summary": "Update Term",
-        "operationId": "update_term_api_terms__id__put",
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "title": "Id"
-            }
-          },
-          {
-            "name": "SessionLocal",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "title": "Sessionlocal"
-            }
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/TermUpdate"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/TermOut"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      },
-      "delete": {
-        "tags": [
-          "terms"
-        ],
-        "summary": "Delete Term",
-        "operationId": "delete_term_api_terms__id__delete",
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "title": "Id"
-            }
-          },
-          {
-            "name": "SessionLocal",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "title": "Sessionlocal"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {}
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/terms/move": {
-      "post": {
-        "tags": [
-          "terms"
-        ],
-        "summary": "Move Terms",
-        "description": "Move terms to a new domain with all their children.",
-        "operationId": "move_terms_api_terms_move_post",
-        "parameters": [
-          {
-            "name": "SessionLocal",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "title": "Sessionlocal"
-            }
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/MoveTermRequest"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/MoveTermResponse"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/term-relationships/": {
-      "post": {
-        "tags": [
-          "term-relationships"
-        ],
-        "summary": "Create Relationship",
-        "operationId": "create_relationship_api_term_relationships__post",
-        "parameters": [
-          {
-            "name": "SessionLocal",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "title": "Sessionlocal"
-            }
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/TermRelationshipCreate"
-              }
-            }
-          }
-        },
-        "responses": {
-          "201": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/TermRelationshipOut"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      },
-      "get": {
-        "tags": [
-          "term-relationships"
-        ],
-        "summary": "List Relationships",
-        "operationId": "list_relationships_api_term_relationships__get",
-        "parameters": [
-          {
-            "name": "source_term_id",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "string",
-              "title": "Source Term Id"
-            }
-          },
-          {
-            "name": "target_term_id",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "string",
-              "title": "Target Term Id"
-            }
+              ],
+              "description": "Filter by target structure_node ID",
+              "title": "Target Node Id"
+            },
+            "description": "Filter by target structure_node ID"
           },
           {
             "name": "predicate",
             "in": "query",
             "required": false,
             "schema": {
-              "type": "string",
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by predicate",
               "title": "Predicate"
-            }
-          },
-          {
-            "name": "predicate_id",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "string",
-              "title": "Predicate Id"
-            }
+            },
+            "description": "Filter by predicate"
           },
           {
             "name": "skip",
@@ -1295,9 +356,12 @@
             "required": false,
             "schema": {
               "type": "integer",
+              "minimum": 0,
+              "description": "Number of links to skip",
               "default": 0,
               "title": "Skip"
-            }
+            },
+            "description": "Number of links to skip"
           },
           {
             "name": "limit",
@@ -1305,9 +369,13 @@
             "required": false,
             "schema": {
               "type": "integer",
-              "default": 50,
+              "maximum": 500,
+              "minimum": 1,
+              "description": "Maximum number of links to return",
+              "default": 100,
               "title": "Limit"
-            }
+            },
+            "description": "Maximum number of links to return"
           },
           {
             "name": "SessionLocal",
@@ -1326,9 +394,9 @@
                 "schema": {
                   "type": "array",
                   "items": {
-                    "$ref": "#/components/schemas/TermRelationshipOut"
+                    "$ref": "#/components/schemas/NodeLinkOut"
                   },
-                  "title": "Response List Relationships Api Term Relationships  Get"
+                  "title": "Response List Node Links Api Structure Nodes Links Get"
                 }
               }
             }
@@ -1346,70 +414,27 @@
         }
       }
     },
-    "/api/term-relationships/{id}": {
-      "get": {
-        "tags": [
-          "term-relationships"
-        ],
-        "summary": "Get Relationship",
-        "operationId": "get_relationship_api_term_relationships__id__get",
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "title": "Id"
-            }
-          },
-          {
-            "name": "SessionLocal",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "title": "Sessionlocal"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/TermRelationshipOut"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      },
+    "/api/structure_nodes/links/{link_id}": {
       "put": {
         "tags": [
-          "term-relationships"
+          "structure_nodes",
+          "structure_nodes"
         ],
-        "summary": "Update Relationship",
-        "operationId": "update_relationship_api_term_relationships__id__put",
+        "summary": "Update Node Link",
+        "description": "Update a structure_node link.\n\nAllows updating the predicate and predicate_id of an existing link.\nSource and target structure_nodes can also be updated if the new configuration is valid.",
+        "operationId": "update_node_link_api_structure_nodes_links__link_id__put",
         "parameters": [
           {
-            "name": "id",
+            "name": "link_id",
             "in": "path",
             "required": true,
             "schema": {
               "type": "string",
-              "title": "Id"
-            }
+              "format": "uuid",
+              "description": "The ID of the link to update",
+              "title": "Link Id"
+            },
+            "description": "The ID of the link to update"
           },
           {
             "name": "SessionLocal",
@@ -1425,7 +450,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/TermRelationshipUpdate"
+                "$ref": "#/components/schemas/NodeLinkCreate"
               }
             }
           }
@@ -1436,7 +461,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/TermRelationshipOut"
+                  "$ref": "#/components/schemas/NodeLinkOut"
                 }
               }
             }
@@ -1455,19 +480,72 @@
       },
       "delete": {
         "tags": [
-          "term-relationships"
+          "structure_nodes",
+          "structure_nodes"
         ],
-        "summary": "Delete Relationship",
-        "operationId": "delete_relationship_api_term_relationships__id__delete",
+        "summary": "Delete Node Link",
+        "description": "Delete a structure_node link.\n\nRemoves the relationship between two structure_nodes. This operation cannot be undone.",
+        "operationId": "delete_node_link_api_structure_nodes_links__link_id__delete",
         "parameters": [
           {
-            "name": "id",
+            "name": "link_id",
             "in": "path",
             "required": true,
             "schema": {
               "type": "string",
-              "title": "Id"
+              "format": "uuid",
+              "description": "The ID of the link to delete",
+              "title": "Link Id"
+            },
+            "description": "The ID of the link to delete"
+          },
+          {
+            "name": "SessionLocal",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "title": "Sessionlocal"
             }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/structure_nodes/{node_id}": {
+      "get": {
+        "tags": [
+          "structure_nodes",
+          "structure_nodes"
+        ],
+        "summary": "Get Node",
+        "description": "Get a specific structure_node by ID.\n\nReturns the complete structure_node information including embeddings,\nhierarchy information, and metadata.",
+        "operationId": "get_node_api_structure_nodes__node_id__get",
+        "parameters": [
+          {
+            "name": "node_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "description": "The ID of the structure_node to retrieve",
+              "title": "Node Id"
+            },
+            "description": "The ID of the structure_node to retrieve"
           },
           {
             "name": "SessionLocal",
@@ -1483,7 +561,289 @@
             "description": "Successful Response",
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/NodeOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "structure_nodes",
+          "structure_nodes"
+        ],
+        "summary": "Update Node",
+        "description": "Update a structure_node.\n\nSupports updating title, definition, parent relationships, and structural predicates.\nCircular reference validation is automatically enforced.",
+        "operationId": "update_node_api_structure_nodes__node_id__put",
+        "parameters": [
+          {
+            "name": "node_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "description": "The ID of the structure_node to update",
+              "title": "Node Id"
+            },
+            "description": "The ID of the structure_node to update"
+          },
+          {
+            "name": "SessionLocal",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "title": "Sessionlocal"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/NodeUpdate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NodeOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "structure_nodes",
+          "structure_nodes"
+        ],
+        "summary": "Delete Node",
+        "description": "Delete a structure_node and its children.\n\nThis operation cascades to all child structure_nodes and their relationships.\nUse with caution as this operation cannot be undone.",
+        "operationId": "delete_node_api_structure_nodes__node_id__delete",
+        "parameters": [
+          {
+            "name": "node_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "description": "The ID of the structure_node to delete",
+              "title": "Node Id"
+            },
+            "description": "The ID of the structure_node to delete"
+          },
+          {
+            "name": "SessionLocal",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "title": "Sessionlocal"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/structure_nodes/move": {
+      "post": {
+        "tags": [
+          "structure_nodes",
+          "structure_nodes"
+        ],
+        "summary": "Move Nodes",
+        "description": "Move structure_nodes to a new parent location.\n\nThis endpoint supports moving multiple structure_nodes at once, with options for:\n- Moving all child structure_nodes along with parents\n- Handling title conflicts through warnings, renaming, or errors\n- Maintaining referential integrity throughout the move operation\n\nThe move operation is atomic - either all structure_nodes are moved successfully,\nor the entire operation is rolled back.",
+        "operationId": "move_nodes_api_structure_nodes_move_post",
+        "parameters": [
+          {
+            "name": "SessionLocal",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "title": "Sessionlocal"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MoveNodesRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MoveNodesResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/structure_nodes/{node_id}/children": {
+      "get": {
+        "tags": [
+          "structure_nodes",
+          "structure_nodes"
+        ],
+        "summary": "Get Node Children",
+        "description": "Get all direct children of a structure_node.\n\nUseful for building hierarchical views of the structure_node structure.",
+        "operationId": "get_node_children_api_structure_nodes__node_id__children_get",
+        "parameters": [
+          {
+            "name": "node_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "description": "The ID of the parent structure_node",
+              "title": "Node Id"
+            },
+            "description": "The ID of the parent structure_node"
+          },
+          {
+            "name": "SessionLocal",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "title": "Sessionlocal"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/NodeOut"
+                  },
+                  "title": "Response Get Node Children Api Structure Nodes  Node Id  Children Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/structure_nodes/{node_id}/ancestors": {
+      "get": {
+        "tags": [
+          "structure_nodes",
+          "structure_nodes"
+        ],
+        "summary": "Get Node Ancestors",
+        "description": "Get all ancestors of a structure_node up to the root.\n\nReturns the path from the root layer down to the specified structure_node's parent.\nUseful for breadcrumb navigation and understanding structure_node context.",
+        "operationId": "get_node_ancestors_api_structure_nodes__node_id__ancestors_get",
+        "parameters": [
+          {
+            "name": "node_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "description": "The ID of the structure_node",
+              "title": "Node Id"
+            },
+            "description": "The ID of the structure_node"
+          },
+          {
+            "name": "SessionLocal",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "title": "Sessionlocal"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/NodeOut"
+                  },
+                  "title": "Response Get Node Ancestors Api Structure Nodes  Node Id  Ancestors Get"
+                }
               }
             }
           },
@@ -2043,6 +1403,785 @@
         }
       }
     },
+    "/api/versions/entities/{entity_type}/{entity_id}/versions": {
+      "get": {
+        "tags": [
+          "version_management",
+          "version_management"
+        ],
+        "summary": "Get Entity Versions",
+        "description": "Get version history for an entity.\n\nReturns all versions of the specified entity ordered by version number.",
+        "operationId": "get_entity_versions_api_versions_entities__entity_type___entity_id__versions_get",
+        "parameters": [
+          {
+            "name": "entity_type",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/EntityTypeEnum",
+              "description": "Entity type"
+            },
+            "description": "Entity type"
+          },
+          {
+            "name": "entity_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "description": "Entity ID",
+              "title": "Entity Id"
+            },
+            "description": "Entity ID"
+          },
+          {
+            "name": "SessionLocal",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "title": "Sessionlocal"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/EntityVersionSummary"
+                  },
+                  "title": "Response Get Entity Versions Api Versions Entities  Entity Type   Entity Id  Versions Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/versions/entities/{entity_type}/{entity_id}/versions/{version_number}": {
+      "get": {
+        "tags": [
+          "version_management",
+          "version_management"
+        ],
+        "summary": "Get Entity Version",
+        "description": "Get specific version of an entity.\n\nReturns the full content and metadata for the specified version.",
+        "operationId": "get_entity_version_api_versions_entities__entity_type___entity_id__versions__version_number__get",
+        "parameters": [
+          {
+            "name": "entity_type",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/EntityTypeEnum",
+              "description": "Entity type"
+            },
+            "description": "Entity type"
+          },
+          {
+            "name": "entity_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "description": "Entity ID",
+              "title": "Entity Id"
+            },
+            "description": "Entity ID"
+          },
+          {
+            "name": "version_number",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "description": "Version number",
+              "title": "Version Number"
+            },
+            "description": "Version number"
+          },
+          {
+            "name": "SessionLocal",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "title": "Sessionlocal"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EntityVersionOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/versions/entities/{entity_type}/{entity_id}/rollback": {
+      "post": {
+        "tags": [
+          "version_management",
+          "version_management"
+        ],
+        "summary": "Rollback Entity",
+        "description": "Rollback entity to specific version.\n\nCreates a new version with the content from the target version.",
+        "operationId": "rollback_entity_api_versions_entities__entity_type___entity_id__rollback_post",
+        "parameters": [
+          {
+            "name": "entity_type",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/EntityTypeEnum",
+              "description": "Entity type"
+            },
+            "description": "Entity type"
+          },
+          {
+            "name": "entity_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "description": "Entity ID",
+              "title": "Entity Id"
+            },
+            "description": "Entity ID"
+          },
+          {
+            "name": "SessionLocal",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "title": "Sessionlocal"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RollbackRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EntityVersionOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/versions/entities/{entity_type}/{entity_id}/diff": {
+      "get": {
+        "tags": [
+          "version_management",
+          "version_management"
+        ],
+        "summary": "Get Working Diff",
+        "description": "Get diff between working and canonical versions.\n\nShows what changes exist in the working version compared to the last committed version.",
+        "operationId": "get_working_diff_api_versions_entities__entity_type___entity_id__diff_get",
+        "parameters": [
+          {
+            "name": "entity_type",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/EntityTypeEnum",
+              "description": "Entity type"
+            },
+            "description": "Entity type"
+          },
+          {
+            "name": "entity_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "description": "Entity ID",
+              "title": "Entity Id"
+            },
+            "description": "Entity ID"
+          },
+          {
+            "name": "format",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/DiffFormatEnum",
+              "description": "Diff format",
+              "default": "summary"
+            },
+            "description": "Diff format"
+          },
+          {
+            "name": "SessionLocal",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "title": "Sessionlocal"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EntityDiffOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/versions/working-tree/status": {
+      "get": {
+        "tags": [
+          "version_management",
+          "version_management"
+        ],
+        "summary": "Get Working Tree Status",
+        "description": "Get working tree status.\n\nReturns summary of all entities in the working tree including staged/unstaged counts.",
+        "operationId": "get_working_tree_status_api_versions_working_tree_status_get",
+        "parameters": [
+          {
+            "name": "SessionLocal",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "title": "Sessionlocal"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WorkingTreeStatusOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/versions/working-tree/changes": {
+      "get": {
+        "tags": [
+          "version_management",
+          "version_management"
+        ],
+        "summary": "Get Working Changes",
+        "description": "Get all entities with working changes.\n\nReturns entities where the working version differs from the canonical version.",
+        "operationId": "get_working_changes_api_versions_working_tree_changes_get",
+        "parameters": [
+          {
+            "name": "SessionLocal",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "title": "Sessionlocal"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/WorkingTreeEntryOut"
+                  },
+                  "title": "Response Get Working Changes Api Versions Working Tree Changes Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/versions/working-tree/stage": {
+      "post": {
+        "tags": [
+          "version_management",
+          "version_management"
+        ],
+        "summary": "Stage Entity",
+        "description": "Stage an entity for commit.\n\nMarks the entity as staged, meaning its changes will be included in the next commit.",
+        "operationId": "stage_entity_api_versions_working_tree_stage_post",
+        "parameters": [
+          {
+            "name": "SessionLocal",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "title": "Sessionlocal"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/StageRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/versions/working-tree/unstage": {
+      "post": {
+        "tags": [
+          "version_management",
+          "version_management"
+        ],
+        "summary": "Unstage Entity",
+        "description": "Unstage an entity.\n\nRemoves the entity from the staged list, but keeps working changes.",
+        "operationId": "unstage_entity_api_versions_working_tree_unstage_post",
+        "parameters": [
+          {
+            "name": "SessionLocal",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "title": "Sessionlocal"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/StageRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/versions/working-tree/commit": {
+      "post": {
+        "tags": [
+          "version_management",
+          "version_management"
+        ],
+        "summary": "Commit Staged Changes",
+        "description": "Commit all staged changes.\n\nUpdates canonical versions for all staged entities and marks them as merged.",
+        "operationId": "commit_staged_changes_api_versions_working_tree_commit_post",
+        "parameters": [
+          {
+            "name": "SessionLocal",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "title": "Sessionlocal"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CommitRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/EntityVersionSummary"
+                  },
+                  "title": "Response Commit Staged Changes Api Versions Working Tree Commit Post"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/versions/working-tree/preview": {
+      "get": {
+        "tags": [
+          "version_management",
+          "version_management"
+        ],
+        "summary": "Get Commit Preview",
+        "description": "Preview what would be committed.\n\nReturns diffs for all staged entities showing what changes would be committed.",
+        "operationId": "get_commit_preview_api_versions_working_tree_preview_get",
+        "parameters": [
+          {
+            "name": "SessionLocal",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "title": "Sessionlocal"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/EntityDiffOut"
+                  },
+                  "title": "Response Get Commit Preview Api Versions Working Tree Preview Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/versions/diffs/working": {
+      "get": {
+        "tags": [
+          "version_management",
+          "version_management"
+        ],
+        "summary": "Get All Working Diffs",
+        "description": "Get diffs for all entities with working changes.\n\nReturns structured diffs showing what has changed in the working versions.",
+        "operationId": "get_all_working_diffs_api_versions_diffs_working_get",
+        "parameters": [
+          {
+            "name": "SessionLocal",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "title": "Sessionlocal"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/EntityDiffOut"
+                  },
+                  "title": "Response Get All Working Diffs Api Versions Diffs Working Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/versions/diffs/compare": {
+      "post": {
+        "tags": [
+          "version_management",
+          "version_management"
+        ],
+        "summary": "Compare Versions",
+        "description": "Compare two specific versions of an entity.\n\nGenerates a structured diff between the specified before and after versions.",
+        "operationId": "compare_versions_api_versions_diffs_compare_post",
+        "parameters": [
+          {
+            "name": "SessionLocal",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "title": "Sessionlocal"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DiffRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EntityDiffOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/versions/health": {
+      "get": {
+        "tags": [
+          "version_management",
+          "version_management"
+        ],
+        "summary": "Get Version Management Health",
+        "description": "Get version management system health status.\n\nReturns overall health, counts, and any issues detected.",
+        "operationId": "get_version_management_health_api_versions_health_get",
+        "parameters": [
+          {
+            "name": "SessionLocal",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "title": "Sessionlocal"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/VersionManagementHealthOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/versions/stats": {
+      "get": {
+        "tags": [
+          "version_management",
+          "version_management"
+        ],
+        "summary": "Get Version Management Stats",
+        "description": "Get version management system statistics.\n\nReturns detailed statistics including version counts by type and state,\nworking tree summary, recent activity, and performance metrics.",
+        "operationId": "get_version_management_stats_api_versions_stats_get",
+        "parameters": [
+          {
+            "name": "SessionLocal",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "title": "Sessionlocal"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/VersionManagementStatsOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/graph/stats": {
       "get": {
         "tags": [
@@ -2052,15 +2191,35 @@
         "summary": "Get Graph Stats",
         "description": "Get comprehensive graph statistics from both SPARQL and NetworkX services.",
         "operationId": "get_graph_stats_api_graph_stats_get",
+        "parameters": [
+          {
+            "name": "SessionLocal",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "title": "Sessionlocal"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": "Successful Response",
             "content": {
               "application/json": {
                 "schema": {
-                  "additionalProperties": true,
                   "type": "object",
+                  "additionalProperties": true,
                   "title": "Response Get Graph Stats Api Graph Stats Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
                 }
               }
             }
@@ -2077,17 +2236,37 @@
         "summary": "Refresh Graphs",
         "description": "Refresh both SPARQL and NetworkX graphs from the database.",
         "operationId": "refresh_graphs_api_graph_refresh_post",
+        "parameters": [
+          {
+            "name": "SessionLocal",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "title": "Sessionlocal"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": "Successful Response",
             "content": {
               "application/json": {
                 "schema": {
+                  "type": "object",
                   "additionalProperties": {
                     "type": "string"
                   },
-                  "type": "object",
                   "title": "Response Refresh Graphs Api Graph Refresh Post"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
                 }
               }
             }
@@ -2104,15 +2283,25 @@
         "summary": "Execute Sparql Query",
         "description": "Execute a SPARQL query against the RDF graph.",
         "operationId": "execute_sparql_query_api_graph_sparql_query_post",
+        "parameters": [
+          {
+            "name": "SessionLocal",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "title": "Sessionlocal"
+            }
+          }
+        ],
         "requestBody": {
+          "required": true,
           "content": {
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/SPARQLQuery"
               }
             }
-          },
-          "required": true
+          }
         },
         "responses": {
           "200": {
@@ -2120,11 +2309,11 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "items": {
-                    "additionalProperties": true,
-                    "type": "object"
-                  },
                   "type": "array",
+                  "items": {
+                    "type": "object",
+                    "additionalProperties": true
+                  },
                   "title": "Response Execute Sparql Query Api Graph Sparql Query Post"
                 }
               }
@@ -2164,6 +2353,14 @@
               "title": "Format"
             },
             "description": "RDF serialization format"
+          },
+          {
+            "name": "SessionLocal",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "title": "Sessionlocal"
+            }
           }
         ],
         "responses": {
@@ -2223,6 +2420,14 @@
               "title": "Exact"
             },
             "description": "Whether to do exact match"
+          },
+          {
+            "name": "SessionLocal",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "title": "Sessionlocal"
+            }
           }
         ],
         "responses": {
@@ -2263,15 +2468,25 @@
         "summary": "Search And Analyze",
         "description": "Search for terms and provide comprehensive analysis.",
         "operationId": "search_and_analyze_api_graph_search_analyze_post",
+        "parameters": [
+          {
+            "name": "SessionLocal",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "title": "Sessionlocal"
+            }
+          }
+        ],
         "requestBody": {
+          "required": true,
           "content": {
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/SearchRequest"
               }
             }
-          },
-          "required": true
+          }
         },
         "responses": {
           "200": {
@@ -2279,8 +2494,8 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "additionalProperties": true,
                   "type": "object",
+                  "additionalProperties": true,
                   "title": "Response Search And Analyze Api Graph Search Analyze Post"
                 }
               }
@@ -2308,15 +2523,25 @@
         "summary": "Calculate Centrality",
         "description": "Calculate node centrality using NetworkX algorithms.",
         "operationId": "calculate_centrality_api_graph_analytics_centrality_post",
+        "parameters": [
+          {
+            "name": "SessionLocal",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "title": "Sessionlocal"
+            }
+          }
+        ],
         "requestBody": {
+          "required": true,
           "content": {
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/CentralityRequest"
               }
             }
-          },
-          "required": true
+          }
         },
         "responses": {
           "200": {
@@ -2324,10 +2549,10 @@
             "content": {
               "application/json": {
                 "schema": {
+                  "type": "object",
                   "additionalProperties": {
                     "type": "number"
                   },
-                  "type": "object",
                   "title": "Response Calculate Centrality Api Graph Analytics Centrality Post"
                 }
               }
@@ -2367,6 +2592,14 @@
               "title": "Method"
             },
             "description": "Community detection method"
+          },
+          {
+            "name": "SessionLocal",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "title": "Sessionlocal"
+            }
           }
         ],
         "responses": {
@@ -2407,17 +2640,27 @@
           "Graph"
         ],
         "summary": "Find Shortest Path",
-        "description": "Find the shortest path between two nodes.",
+        "description": "Find the shortest path between two structure_nodes.",
         "operationId": "find_shortest_path_api_graph_path_shortest_post",
+        "parameters": [
+          {
+            "name": "SessionLocal",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "title": "Sessionlocal"
+            }
+          }
+        ],
         "requestBody": {
+          "required": true,
           "content": {
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/PathRequest"
               }
             }
-          },
-          "required": true
+          }
         },
         "responses": {
           "200": {
@@ -2427,10 +2670,10 @@
                 "schema": {
                   "anyOf": [
                     {
+                      "type": "array",
                       "items": {
                         "type": "string"
-                      },
-                      "type": "array"
+                      }
                     },
                     {
                       "type": "null"
@@ -2463,15 +2706,25 @@
         "summary": "Get Neighbors",
         "description": "Get neighbors of a node at specified depth.",
         "operationId": "get_neighbors_api_graph_neighbors_post",
+        "parameters": [
+          {
+            "name": "SessionLocal",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "title": "Sessionlocal"
+            }
+          }
+        ],
         "requestBody": {
+          "required": true,
           "content": {
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/NeighborsRequest"
               }
             }
-          },
-          "required": true
+          }
         },
         "responses": {
           "200": {
@@ -2479,13 +2732,13 @@
             "content": {
               "application/json": {
                 "schema": {
+                  "type": "object",
                   "additionalProperties": {
+                    "type": "array",
                     "items": {
                       "type": "string"
-                    },
-                    "type": "array"
+                    }
                   },
-                  "type": "object",
                   "title": "Response Get Neighbors Api Graph Neighbors Post"
                 }
               }
@@ -2534,6 +2787,14 @@
               "title": "Max Depth"
             },
             "description": "Maximum depth of relationships to traverse"
+          },
+          {
+            "name": "SessionLocal",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "title": "Sessionlocal"
+            }
           }
         ],
         "responses": {
@@ -2580,6 +2841,14 @@
               "type": "string",
               "title": "Term Id"
             }
+          },
+          {
+            "name": "SessionLocal",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "title": "Sessionlocal"
+            }
           }
         ],
         "responses": {
@@ -2625,6 +2894,14 @@
             "schema": {
               "type": "string",
               "title": "Term Id"
+            }
+          },
+          {
+            "name": "SessionLocal",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "title": "Sessionlocal"
             }
           }
         ],
@@ -2678,6 +2955,14 @@
             "schema": {
               "type": "string",
               "title": "Domain Id"
+            }
+          },
+          {
+            "name": "SessionLocal",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "title": "Sessionlocal"
             }
           }
         ],
@@ -2734,6 +3019,14 @@
               "title": "Layer Id"
             },
             "description": "Optional layer ID to filter by"
+          },
+          {
+            "name": "SessionLocal",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "title": "Sessionlocal"
+            }
           }
         ],
         "responses": {
@@ -2792,6 +3085,14 @@
               "title": "Layer Id"
             },
             "description": "Optional layer ID to analyze"
+          },
+          {
+            "name": "SessionLocal",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "title": "Sessionlocal"
+            }
           }
         ],
         "responses": {
@@ -2837,6 +3138,14 @@
             "schema": {
               "type": "string",
               "title": "Layer Id"
+            }
+          },
+          {
+            "name": "SessionLocal",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "title": "Sessionlocal"
             }
           }
         ],
@@ -2890,6 +3199,14 @@
             "schema": {
               "type": "string",
               "title": "Domain Id"
+            }
+          },
+          {
+            "name": "SessionLocal",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "title": "Sessionlocal"
             }
           }
         ],
@@ -2947,6 +3264,14 @@
               "title": "Format"
             },
             "description": "Export format (json, turtle, graphml)"
+          },
+          {
+            "name": "SessionLocal",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "title": "Sessionlocal"
+            }
           }
         ],
         "responses": {
@@ -3575,6 +3900,333 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/config/": {
+      "get": {
+        "tags": [
+          "configuration"
+        ],
+        "summary": "Get Full Configuration",
+        "description": "Get complete configuration",
+        "operationId": "get_full_configuration_api_config__get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ConfigResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "patch": {
+        "tags": [
+          "configuration"
+        ],
+        "summary": "Update Configuration",
+        "description": "Update specific configuration value",
+        "operationId": "update_configuration_api_config__patch",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ConfigUpdateRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ConfigResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/config/validate": {
+      "get": {
+        "tags": [
+          "configuration"
+        ],
+        "summary": "Validate Configuration",
+        "description": "Validate current configuration",
+        "operationId": "validate_configuration_api_config_validate_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ConfigResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/config/schema/": {
+      "get": {
+        "tags": [
+          "configuration"
+        ],
+        "summary": "Get Configuration Schema",
+        "description": "Get configuration schema with field descriptions",
+        "operationId": "get_configuration_schema_api_config_schema__get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ConfigResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/config/reference-sources/{source_name}": {
+      "patch": {
+        "tags": [
+          "configuration"
+        ],
+        "summary": "Update Reference Source Config",
+        "description": "Update configuration for a specific reference source",
+        "operationId": "update_reference_source_config_api_config_reference_sources__source_name__patch",
+        "parameters": [
+          {
+            "name": "source_name",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Source Name"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ConfigUpdateRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ConfigResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "configuration"
+        ],
+        "summary": "Get Reference Source Config",
+        "description": "Get configuration for a specific reference source",
+        "operationId": "get_reference_source_config_api_config_reference_sources__source_name__get",
+        "parameters": [
+          {
+            "name": "source_name",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Source Name"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ConfigResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/config/{path}": {
+      "get": {
+        "tags": [
+          "configuration"
+        ],
+        "summary": "Get Configuration Value",
+        "description": "Get specific configuration value by path",
+        "operationId": "get_configuration_value_api_config__path__get",
+        "parameters": [
+          {
+            "name": "path",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Path"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ConfigResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/config/reload": {
+      "post": {
+        "tags": [
+          "configuration"
+        ],
+        "summary": "Reload Configuration",
+        "description": "Reload configuration from file",
+        "operationId": "reload_configuration_api_config_reload_post",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/config/reset": {
+      "post": {
+        "tags": [
+          "configuration"
+        ],
+        "summary": "Reset Configuration",
+        "description": "Reset configuration to defaults",
+        "operationId": "reset_configuration_api_config_reset_post",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/config/reference-sources": {
+      "get": {
+        "tags": [
+          "configuration"
+        ],
+        "summary": "Get Reference Sources Config",
+        "description": "Get reference sources configuration",
+        "operationId": "get_reference_sources_config_api_config_reference_sources_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ConfigResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/config/reference-sources/status": {
+      "get": {
+        "tags": [
+          "configuration"
+        ],
+        "summary": "Get Reference Sources Status",
+        "description": "Get status of all reference sources",
+        "operationId": "get_reference_sources_status_api_config_reference_sources_status_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ConfigResponse"
                 }
               }
             }
@@ -4495,6 +5147,7 @@
     "/api/pipeline-flavors": {
       "post": {
         "tags": [
+          "pipeline-flavors",
           "Pipeline Flavors"
         ],
         "summary": "Create Flavor",
@@ -4535,6 +5188,7 @@
       },
       "get": {
         "tags": [
+          "pipeline-flavors",
           "Pipeline Flavors"
         ],
         "summary": "List Flavors",
@@ -4587,6 +5241,7 @@
     "/api/pipeline-flavors/{flavor_id}": {
       "get": {
         "tags": [
+          "pipeline-flavors",
           "Pipeline Flavors"
         ],
         "summary": "Get Flavor",
@@ -4601,6 +5256,24 @@
               "type": "string",
               "title": "Flavor Id"
             }
+          },
+          {
+            "name": "pipeline",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/PipelineType"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Pipeline type (required for default flavor)",
+              "title": "Pipeline"
+            },
+            "description": "Pipeline type (required for default flavor)"
           }
         ],
         "responses": {
@@ -4628,6 +5301,7 @@
       },
       "put": {
         "tags": [
+          "pipeline-flavors",
           "Pipeline Flavors"
         ],
         "summary": "Update Flavor",
@@ -4679,6 +5353,7 @@
       },
       "delete": {
         "tags": [
+          "pipeline-flavors",
           "Pipeline Flavors"
         ],
         "summary": "Delete Flavor",
@@ -5524,6 +6199,693 @@
           }
         }
       }
+    },
+    "/admin/services/stats": {
+      "get": {
+        "tags": [
+          "service-monitoring",
+          "Service Administration"
+        ],
+        "summary": "Get comprehensive service factory statistics",
+        "description": "Get comprehensive statistics about the service factory including:\n- Cache hit rates\n- Service creation metrics\n- Performance data\n- Cache entry details",
+        "operationId": "get_service_factory_stats_admin_services_stats_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "type": "object",
+                  "title": "Response Get Service Factory Stats Admin Services Stats Get"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/admin/services/performance": {
+      "get": {
+        "tags": [
+          "service-monitoring",
+          "Service Administration"
+        ],
+        "summary": "Get performance summary",
+        "description": "Get a concise performance summary for quick monitoring:\n- Overall cache hit rate\n- Best and worst performing services\n- Total services created",
+        "operationId": "get_service_factory_performance_admin_services_performance_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "type": "object",
+                  "title": "Response Get Service Factory Performance Admin Services Performance Get"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/admin/services/health": {
+      "get": {
+        "tags": [
+          "service-monitoring",
+          "Service Administration"
+        ],
+        "summary": "Get service factory health status",
+        "description": "Get health status of the service factory:\n- Overall health status\n- Identified issues\n- System metrics",
+        "operationId": "get_service_factory_health_admin_services_health_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "type": "object",
+                  "title": "Response Get Service Factory Health Admin Services Health Get"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/admin/services/cache/clear": {
+      "post": {
+        "tags": [
+          "service-monitoring",
+          "Service Administration"
+        ],
+        "summary": "Clear service factory cache",
+        "description": "Clear all cached service entries and reset metrics.\nUse with caution - this will force recreation of all services.",
+        "operationId": "clear_service_factory_cache_admin_services_cache_clear_post",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "type": "object",
+                  "title": "Response Clear Service Factory Cache Admin Services Cache Clear Post"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/admin/services/cache/cleanup": {
+      "post": {
+        "tags": [
+          "service-monitoring",
+          "Service Administration"
+        ],
+        "summary": "Force cleanup of expired cache entries",
+        "description": "Force cleanup of expired cache entries.\nThis is normally done automatically but can be triggered manually.",
+        "operationId": "cleanup_service_factory_cache_admin_services_cache_cleanup_post",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "type": "object",
+                  "title": "Response Cleanup Service Factory Cache Admin Services Cache Cleanup Post"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/admin/services/metrics/{service_type}": {
+      "get": {
+        "tags": [
+          "service-monitoring",
+          "Service Administration"
+        ],
+        "summary": "Get metrics for specific service type",
+        "description": "Get detailed metrics for a specific service type.\n\nArgs:\n    service_type: The service type to get metrics for (e.g., 'node_service', 'llm_service')",
+        "operationId": "get_service_type_metrics_admin_services_metrics__service_type__get",
+        "parameters": [
+          {
+            "name": "service_type",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Service Type"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": true,
+                  "title": "Response Get Service Type Metrics Admin Services Metrics  Service Type  Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/admin/services/dashboard": {
+      "get": {
+        "tags": [
+          "service-monitoring",
+          "Service Administration"
+        ],
+        "summary": "Get monitoring dashboard data",
+        "description": "Get comprehensive dashboard data combining stats, performance, and health.\nPerfect for monitoring dashboards and operational visibility.",
+        "operationId": "get_service_factory_dashboard_admin_services_dashboard_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "type": "object",
+                  "title": "Response Get Service Factory Dashboard Admin Services Dashboard Get"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/admin/database/health": {
+      "get": {
+        "tags": [
+          "database-monitoring"
+        ],
+        "summary": "Enhanced Database Health Check",
+        "description": "Get comprehensive health status of the enhanced database manager.",
+        "operationId": "get_database_health_admin_database_health_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "type": "object",
+                  "title": "Response Get Database Health Admin Database Health Get"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/admin/database/performance": {
+      "get": {
+        "tags": [
+          "database-monitoring"
+        ],
+        "summary": "Database Performance Metrics",
+        "description": "Get detailed performance metrics from the enhanced database manager.",
+        "operationId": "get_database_performance_metrics_admin_database_performance_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "type": "object",
+                  "title": "Response Get Database Performance Metrics Admin Database Performance Get"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/admin/database/engines": {
+      "get": {
+        "tags": [
+          "database-monitoring"
+        ],
+        "summary": "Database Engines Status",
+        "description": "Get status information for all database engines.",
+        "operationId": "get_database_engines_status_admin_database_engines_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "type": "object",
+                  "title": "Response Get Database Engines Status Admin Database Engines Get"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/admin/database/metrics": {
+      "get": {
+        "tags": [
+          "database-monitoring"
+        ],
+        "summary": "Connection Metrics Summary",
+        "description": "Get detailed connection metrics and statistics.",
+        "operationId": "get_connection_metrics_admin_database_metrics_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "type": "object",
+                  "title": "Response Get Connection Metrics Admin Database Metrics Get"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/admin/database/optimize": {
+      "post": {
+        "tags": [
+          "database-monitoring"
+        ],
+        "summary": "Optimize Database for Workload",
+        "description": "Optimize database configuration for specific workload types.\n\nSupported workload types:\n- mixed: General purpose workload\n- read_heavy: Optimized for read operations\n- write_heavy: Optimized for write operations  \n- analytics: Optimized for analytical queries",
+        "operationId": "optimize_database_for_workload_admin_database_optimize_post",
+        "parameters": [
+          {
+            "name": "workload_type",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "default": "mixed",
+              "title": "Workload Type"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": true,
+                  "title": "Response Optimize Database For Workload Admin Database Optimize Post"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/admin/database/recommendations": {
+      "get": {
+        "tags": [
+          "database-monitoring"
+        ],
+        "summary": "Performance Recommendations",
+        "description": "Get AI-generated performance recommendations based on current metrics.",
+        "operationId": "get_performance_recommendations_admin_database_recommendations_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "type": "object",
+                  "title": "Response Get Performance Recommendations Admin Database Recommendations Get"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/admin/database/reset-metrics": {
+      "post": {
+        "tags": [
+          "database-monitoring"
+        ],
+        "summary": "Reset Performance Metrics",
+        "description": "Reset all performance metrics counters.",
+        "operationId": "reset_performance_metrics_admin_database_reset_metrics_post",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "type": "object",
+                  "title": "Response Reset Performance Metrics Admin Database Reset Metrics Post"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/admin/database/environment": {
+      "get": {
+        "tags": [
+          "database-monitoring"
+        ],
+        "summary": "Database Environment Configuration",
+        "description": "Get current database environment configuration and optimizations.",
+        "operationId": "get_environment_configuration_admin_database_environment_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "type": "object",
+                  "title": "Response Get Environment Configuration Admin Database Environment Get"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/admin/database/create-engine": {
+      "post": {
+        "tags": [
+          "database-monitoring"
+        ],
+        "summary": "Create Optimized Engine",
+        "description": "Create a new optimized database engine with specified configuration.",
+        "operationId": "create_optimized_database_engine_admin_database_create_engine_post",
+        "parameters": [
+          {
+            "name": "engine_id",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Engine Id"
+            }
+          },
+          {
+            "name": "database_url",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Database Url"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": true,
+                  "title": "Response Create Optimized Database Engine Admin Database Create Engine Post"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/admin/database/cleanup": {
+      "delete": {
+        "tags": [
+          "database-monitoring"
+        ],
+        "summary": "Cleanup Database Resources",
+        "description": "Clean up all database resources and reset the manager.",
+        "operationId": "cleanup_database_resources_admin_database_cleanup_delete",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "type": "object",
+                  "title": "Response Cleanup Database Resources Admin Database Cleanup Delete"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/admin/database/dashboard": {
+      "get": {
+        "tags": [
+          "database-monitoring"
+        ],
+        "summary": "Enhanced Database Dashboard",
+        "description": "Get comprehensive dashboard data for the enhanced database manager.",
+        "operationId": "get_database_dashboard_admin_database_dashboard_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "type": "object",
+                  "title": "Response Get Database Dashboard Admin Database Dashboard Get"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/admin/events/health": {
+      "get": {
+        "tags": [
+          "event-processor-monitoring"
+        ],
+        "summary": "Event Processor Health Check",
+        "description": "Get comprehensive health status of the event processor.",
+        "operationId": "get_event_processor_health_admin_events_health_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "type": "object",
+                  "title": "Response Get Event Processor Health Admin Events Health Get"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/admin/events/stats": {
+      "get": {
+        "tags": [
+          "event-processor-monitoring"
+        ],
+        "summary": "Event Processor Statistics",
+        "description": "Get detailed statistics from the event processor.",
+        "operationId": "get_event_processor_stats_admin_events_stats_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "type": "object",
+                  "title": "Response Get Event Processor Stats Admin Events Stats Get"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/admin/events/performance": {
+      "get": {
+        "tags": [
+          "event-processor-monitoring"
+        ],
+        "summary": "Event Processing Performance Metrics",
+        "description": "Get detailed performance metrics for event processing.",
+        "operationId": "get_event_processing_performance_admin_events_performance_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "type": "object",
+                  "title": "Response Get Event Processing Performance Admin Events Performance Get"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/admin/events/database": {
+      "get": {
+        "tags": [
+          "event-processor-monitoring"
+        ],
+        "summary": "Event Processor Database Status",
+        "description": "Get database connection status for the event processor.",
+        "operationId": "get_event_processor_database_status_admin_events_database_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "type": "object",
+                  "title": "Response Get Event Processor Database Status Admin Events Database Get"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/admin/events/restart": {
+      "post": {
+        "tags": [
+          "event-processor-monitoring"
+        ],
+        "summary": "Restart Event Processor",
+        "description": "Restart the event processor.",
+        "operationId": "restart_event_processor_admin_events_restart_post",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "type": "object",
+                  "title": "Response Restart Event Processor Admin Events Restart Post"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/admin/events/recommendations": {
+      "get": {
+        "tags": [
+          "event-processor-monitoring"
+        ],
+        "summary": "Event Processor Performance Recommendations",
+        "description": "Get performance recommendations for the event processor.",
+        "operationId": "get_event_processor_recommendations_admin_events_recommendations_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "type": "object",
+                  "title": "Response Get Event Processor Recommendations Admin Events Recommendations Get"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/admin/events/dashboard": {
+      "get": {
+        "tags": [
+          "event-processor-monitoring"
+        ],
+        "summary": "Event Processor Dashboard",
+        "description": "Get comprehensive dashboard data for event processor monitoring.",
+        "operationId": "get_event_processor_dashboard_admin_events_dashboard_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "type": "object",
+                  "title": "Response Get Event Processor Dashboard Admin Events Dashboard Get"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
@@ -5629,6 +6991,48 @@
         },
         "type": "object",
         "title": "CentralityRequest"
+      },
+      "ChangeStateEnum": {
+        "type": "string",
+        "enum": [
+          "WORKING",
+          "STAGED",
+          "PROPOSED",
+          "APPROVED",
+          "MERGED",
+          "REJECTED"
+        ],
+        "title": "ChangeStateEnum",
+        "description": "API enum for version change states."
+      },
+      "CommitRequest": {
+        "properties": {
+          "author_id": {
+            "type": "string",
+            "maxLength": 255,
+            "minLength": 1,
+            "title": "Author Id"
+          },
+          "message": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 1000
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Message",
+            "description": "Optional commit message"
+          }
+        },
+        "type": "object",
+        "required": [
+          "author_id"
+        ],
+        "title": "CommitRequest",
+        "description": "Model for committing staged changes."
       },
       "ComponentTerm": {
         "properties": {
@@ -6036,6 +7440,51 @@
         ],
         "title": "ConceptNetRelatedResponse",
         "description": "Response model for ConceptNet related concepts"
+      },
+      "ConfigResponse": {
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "title": "Success"
+          },
+          "data": {
+            "title": "Data"
+          },
+          "errors": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Errors",
+            "default": []
+          }
+        },
+        "type": "object",
+        "required": [
+          "success"
+        ],
+        "title": "ConfigResponse",
+        "description": "Response model for configuration operations"
+      },
+      "ConfigUpdateRequest": {
+        "properties": {
+          "path": {
+            "type": "string",
+            "title": "Path",
+            "description": "Configuration path in dot notation"
+          },
+          "value": {
+            "title": "Value",
+            "description": "New configuration value"
+          }
+        },
+        "type": "object",
+        "required": [
+          "path",
+          "value"
+        ],
+        "title": "ConfigUpdateRequest",
+        "description": "Request model for updating configuration values"
       },
       "CreateDatasetRequest": {
         "properties": {
@@ -6660,56 +8109,93 @@
         "title": "DefinitionSuggestionResponse",
         "description": "Response model for definition suggestion"
       },
-      "DomainCreate": {
+      "DiffFormatEnum": {
+        "type": "string",
+        "enum": [
+          "summary",
+          "detailed",
+          "json"
+        ],
+        "title": "DiffFormatEnum",
+        "description": "Enum for diff format options."
+      },
+      "DiffRequest": {
         "properties": {
-          "title": {
-            "type": "string",
-            "minLength": 2,
-            "title": "Title"
+          "entity_type": {
+            "$ref": "#/components/schemas/EntityTypeEnum"
           },
-          "definition": {
-            "type": "string",
-            "minLength": 1,
-            "title": "Definition"
-          },
-          "layer_id": {
+          "entity_id": {
             "type": "string",
             "format": "uuid",
-            "title": "Layer Id"
+            "title": "Entity Id"
           },
-          "primary_predicate_id": {
+          "before_version_number": {
             "anyOf": [
               {
-                "type": "string"
+                "type": "integer",
+                "minimum": 1.0
               },
               {
                 "type": "null"
               }
             ],
-            "title": "Primary Predicate Id"
+            "title": "Before Version Number"
           },
-          "predicate_set": {
-            "anyOf": [
-              {
-                "items": {
-                  "type": "string"
-                },
-                "type": "array"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Predicate Set"
+          "after_version_number": {
+            "type": "integer",
+            "minimum": 1.0,
+            "title": "After Version Number"
+          },
+          "format": {
+            "$ref": "#/components/schemas/DiffFormatEnum",
+            "default": "summary"
           }
         },
         "type": "object",
         "required": [
-          "title",
-          "definition",
-          "layer_id"
+          "entity_type",
+          "entity_id",
+          "after_version_number"
         ],
-        "title": "DomainCreate"
+        "title": "DiffRequest",
+        "description": "Model for requesting diffs."
+      },
+      "DiffSummaryOut": {
+        "properties": {
+          "added_items": {
+            "type": "integer",
+            "title": "Added Items",
+            "default": 0
+          },
+          "removed_items": {
+            "type": "integer",
+            "title": "Removed Items",
+            "default": 0
+          },
+          "modified_items": {
+            "type": "integer",
+            "title": "Modified Items",
+            "default": 0
+          },
+          "type_changes": {
+            "type": "integer",
+            "title": "Type Changes",
+            "default": 0
+          },
+          "moved_items": {
+            "type": "integer",
+            "title": "Moved Items",
+            "default": 0
+          },
+          "total_changes": {
+            "type": "integer",
+            "title": "Total Changes",
+            "default": 0
+          }
+        },
+        "type": "object",
+        "title": "DiffSummaryOut",
+        "description": "Model for diff summary output/response."
       },
       "DomainDefinitionRequest": {
         "properties": {
@@ -6827,28 +8313,22 @@
             "title": "Definition",
             "description": "The suggested 2-3 sentence domain definition"
           },
-          "reasoning": {
+          "purpose": {
             "type": "string",
-            "title": "Reasoning",
-            "description": "Brief reasoning for the definitional choices"
+            "title": "Purpose",
+            "description": "Purpose of the domain in the knowledge structure"
           },
-          "discrepancies": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Discrepancies",
-            "description": "Notable discrepancies between sources"
+          "scope": {
+            "type": "string",
+            "title": "Scope",
+            "description": "Scope and boundaries of the domain"
           }
         },
         "type": "object",
         "required": [
           "definition",
-          "reasoning"
+          "purpose",
+          "scope"
         ],
         "title": "DomainDefinitionResponse",
         "description": "Response model for domain definition suggestion"
@@ -6872,194 +8352,6 @@
         ],
         "title": "DomainLLMSuccessResponse",
         "description": "Success response wrapper for domain LLM endpoints"
-      },
-      "DomainOut": {
-        "properties": {
-          "title": {
-            "type": "string",
-            "minLength": 2,
-            "title": "Title"
-          },
-          "definition": {
-            "type": "string",
-            "minLength": 1,
-            "title": "Definition"
-          },
-          "layer_id": {
-            "type": "string",
-            "format": "uuid",
-            "title": "Layer Id"
-          },
-          "primary_predicate_id": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Primary Predicate Id"
-          },
-          "predicate_set": {
-            "anyOf": [
-              {
-                "items": {
-                  "type": "string"
-                },
-                "type": "array"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Predicate Set"
-          },
-          "id": {
-            "type": "string",
-            "format": "uuid",
-            "title": "Id"
-          },
-          "primary_predicate": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Primary Predicate"
-          },
-          "title_embedding": {
-            "anyOf": [
-              {
-                "items": {
-                  "type": "number"
-                },
-                "type": "array"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Title Embedding"
-          },
-          "definition_embedding": {
-            "anyOf": [
-              {
-                "items": {
-                  "type": "number"
-                },
-                "type": "array"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Definition Embedding"
-          },
-          "created_at": {
-            "type": "string",
-            "title": "Created At"
-          },
-          "version": {
-            "anyOf": [
-              {
-                "type": "integer"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Version"
-          },
-          "last_modified": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Last Modified"
-          }
-        },
-        "type": "object",
-        "required": [
-          "title",
-          "definition",
-          "layer_id",
-          "id",
-          "created_at"
-        ],
-        "title": "DomainOut"
-      },
-      "DomainUpdate": {
-        "properties": {
-          "title": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Title"
-          },
-          "definition": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Definition"
-          },
-          "layer_id": {
-            "anyOf": [
-              {
-                "type": "string",
-                "format": "uuid"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Layer Id"
-          },
-          "primary_predicate_id": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Primary Predicate Id"
-          },
-          "predicate_set": {
-            "anyOf": [
-              {
-                "items": {
-                  "type": "string"
-                },
-                "type": "array"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Predicate Set"
-          }
-        },
-        "type": "object",
-        "title": "DomainUpdate"
       },
       "EntityData": {
         "properties": {
@@ -7111,483 +8403,118 @@
         "title": "EntityData",
         "description": "Data for a named entity in the analyzed text."
       },
-      "FindDomainRequest": {
+      "EntityDiffOut": {
         "properties": {
-          "title": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Title"
+          "entity_type": {
+            "$ref": "#/components/schemas/EntityTypeEnum"
           },
-          "definition": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Definition"
+          "entity_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Entity Id"
           },
-          "layer_id": {
+          "before_version": {
             "anyOf": [
               {
-                "type": "string"
+                "$ref": "#/components/schemas/EntityVersionSummary"
               },
               {
                 "type": "null"
               }
-            ],
-            "title": "Layer Id"
+            ]
           },
-          "created_at": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Created At"
+          "after_version": {
+            "$ref": "#/components/schemas/EntityVersionSummary"
           },
-          "minimum_score": {
-            "anyOf": [
-              {
-                "type": "number"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Minimum Score",
-            "default": 0.1
+          "changes": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Changes",
+            "description": "Structured diff using DeepDiff format"
           },
-          "limit": {
-            "anyOf": [
-              {
-                "type": "integer"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Limit",
-            "default": 1
+          "summary": {
+            "$ref": "#/components/schemas/DiffSummaryOut"
+          },
+          "has_changes": {
+            "type": "boolean",
+            "title": "Has Changes"
+          },
+          "generated_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Generated At"
           }
         },
         "type": "object",
-        "title": "FindDomainRequest"
+        "required": [
+          "entity_type",
+          "entity_id",
+          "after_version",
+          "changes",
+          "summary",
+          "has_changes",
+          "generated_at"
+        ],
+        "title": "EntityDiffOut",
+        "description": "Model for entity diff output/response."
       },
-      "FindDomainResult": {
+      "EntityTypeEnum": {
+        "type": "string",
+        "enum": [
+          "structure_node",
+          "structure_node_link"
+        ],
+        "title": "EntityTypeEnum",
+        "description": "API enum for entity types that support versioning."
+      },
+      "EntityVersionOut": {
         "properties": {
-          "title": {
-            "type": "string",
-            "minLength": 2,
-            "title": "Title"
+          "entity_type": {
+            "$ref": "#/components/schemas/EntityTypeEnum"
           },
-          "definition": {
+          "entity_id": {
             "type": "string",
+            "format": "uuid",
+            "title": "Entity Id"
+          },
+          "content": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Content",
+            "description": "Full entity snapshot as JSON"
+          },
+          "state": {
+            "$ref": "#/components/schemas/ChangeStateEnum",
+            "default": "WORKING"
+          },
+          "author_id": {
+            "type": "string",
+            "maxLength": 255,
             "minLength": 1,
-            "title": "Definition"
+            "title": "Author Id"
           },
-          "layer_id": {
-            "type": "string",
-            "format": "uuid",
-            "title": "Layer Id"
-          },
-          "primary_predicate_id": {
+          "metadata": {
             "anyOf": [
               {
-                "type": "string"
+                "additionalProperties": true,
+                "type": "object"
               },
               {
                 "type": "null"
               }
             ],
-            "title": "Primary Predicate Id"
-          },
-          "predicate_set": {
-            "anyOf": [
-              {
-                "items": {
-                  "type": "string"
-                },
-                "type": "array"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Predicate Set"
+            "title": "Metadata"
           },
           "id": {
             "type": "string",
             "format": "uuid",
             "title": "Id"
           },
-          "primary_predicate": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Primary Predicate"
+          "version_number": {
+            "type": "integer",
+            "title": "Version Number"
           },
-          "title_embedding": {
-            "anyOf": [
-              {
-                "items": {
-                  "type": "number"
-                },
-                "type": "array"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Title Embedding"
-          },
-          "definition_embedding": {
-            "anyOf": [
-              {
-                "items": {
-                  "type": "number"
-                },
-                "type": "array"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Definition Embedding"
-          },
-          "created_at": {
-            "type": "string",
-            "title": "Created At"
-          },
-          "version": {
-            "anyOf": [
-              {
-                "type": "integer"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Version"
-          },
-          "last_modified": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Last Modified"
-          },
-          "score": {
-            "type": "number",
-            "title": "Score"
-          },
-          "distance": {
-            "type": "number",
-            "title": "Distance"
-          }
-        },
-        "type": "object",
-        "required": [
-          "title",
-          "definition",
-          "layer_id",
-          "id",
-          "created_at",
-          "score",
-          "distance"
-        ],
-        "title": "FindDomainResult"
-      },
-      "FindLayerRequest": {
-        "properties": {
-          "title": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Title"
-          },
-          "definition": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Definition"
-          },
-          "created_at": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Created At"
-          },
-          "minimum_score": {
-            "anyOf": [
-              {
-                "type": "number"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Minimum Score",
-            "default": 0.1
-          },
-          "limit": {
-            "anyOf": [
-              {
-                "type": "integer"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Limit",
-            "default": 1
-          }
-        },
-        "type": "object",
-        "title": "FindLayerRequest"
-      },
-      "FindLayerResult": {
-        "properties": {
-          "title": {
-            "type": "string",
-            "minLength": 2,
-            "title": "Title"
-          },
-          "definition": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Definition"
-          },
-          "id": {
-            "type": "string",
-            "format": "uuid",
-            "title": "Id"
-          },
-          "title_embedding": {
-            "anyOf": [
-              {
-                "items": {
-                  "type": "number"
-                },
-                "type": "array"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Title Embedding"
-          },
-          "definition_embedding": {
-            "anyOf": [
-              {
-                "items": {
-                  "type": "number"
-                },
-                "type": "array"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Definition Embedding"
-          },
-          "created_at": {
-            "type": "string",
-            "title": "Created At"
-          },
-          "version": {
-            "anyOf": [
-              {
-                "type": "integer"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Version"
-          },
-          "last_modified": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Last Modified"
-          },
-          "score": {
-            "type": "number",
-            "title": "Score"
-          },
-          "distance": {
-            "type": "number",
-            "title": "Distance"
-          }
-        },
-        "type": "object",
-        "required": [
-          "title",
-          "id",
-          "created_at",
-          "score",
-          "distance"
-        ],
-        "title": "FindLayerResult"
-      },
-      "FindTermRequest": {
-        "properties": {
-          "title": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Title"
-          },
-          "definition": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Definition"
-          },
-          "layer_id": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Layer Id"
-          },
-          "domain_id": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Domain Id"
-          },
-          "created_at": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Created At"
-          },
-          "minimum_score": {
-            "anyOf": [
-              {
-                "type": "number"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Minimum Score",
-            "default": 0.1
-          },
-          "limit": {
-            "anyOf": [
-              {
-                "type": "integer"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Limit",
-            "default": 1
-          }
-        },
-        "type": "object",
-        "title": "FindTermRequest"
-      },
-      "FindTermResult": {
-        "properties": {
-          "id": {
-            "type": "string",
-            "format": "uuid",
-            "title": "Id"
-          },
-          "title": {
-            "type": "string",
-            "title": "Title"
-          },
-          "definition": {
-            "type": "string",
-            "title": "Definition"
-          },
-          "domain_id": {
-            "type": "string",
-            "format": "uuid",
-            "title": "Domain Id"
-          },
-          "layer_id": {
-            "type": "string",
-            "format": "uuid",
-            "title": "Layer Id"
-          },
-          "parent_term_id": {
+          "parent_version_id": {
             "anyOf": [
               {
                 "type": "string",
@@ -7597,71 +8524,107 @@
                 "type": "null"
               }
             ],
-            "title": "Parent Term Id"
+            "title": "Parent Version Id"
           },
-          "title_embedding": {
+          "changeset_id": {
             "anyOf": [
               {
-                "items": {
-                  "type": "number"
-                },
-                "type": "array"
+                "type": "string",
+                "format": "uuid"
               },
               {
                 "type": "null"
               }
             ],
-            "title": "Title Embedding"
-          },
-          "definition_embedding": {
-            "anyOf": [
-              {
-                "items": {
-                  "type": "number"
-                },
-                "type": "array"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Definition Embedding"
+            "title": "Changeset Id"
           },
           "created_at": {
             "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "entity_type",
+          "entity_id",
+          "content",
+          "author_id",
+          "id",
+          "version_number",
+          "created_at"
+        ],
+        "title": "EntityVersionOut",
+        "description": "Model for entity version output/response."
+      },
+      "EntityVersionSummary": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "entity_type": {
+            "$ref": "#/components/schemas/EntityTypeEnum"
+          },
+          "entity_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Entity Id"
+          },
+          "version_number": {
+            "type": "integer",
+            "title": "Version Number"
+          },
+          "state": {
+            "$ref": "#/components/schemas/ChangeStateEnum"
+          },
+          "author_id": {
+            "type": "string",
+            "title": "Author Id"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
             "title": "Created At"
           },
-          "version": {
-            "type": "integer",
-            "title": "Version"
+          "parent_version_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Parent Version Id"
           },
-          "last_modified": {
-            "type": "string",
-            "title": "Last Modified"
-          },
-          "score": {
-            "type": "number",
-            "title": "Score"
-          },
-          "distance": {
-            "type": "number",
-            "title": "Distance"
+          "changeset_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Changeset Id"
           }
         },
         "type": "object",
         "required": [
           "id",
-          "title",
-          "definition",
-          "domain_id",
-          "layer_id",
-          "created_at",
-          "version",
-          "last_modified",
-          "score",
-          "distance"
+          "entity_type",
+          "entity_id",
+          "version_number",
+          "state",
+          "author_id",
+          "created_at"
         ],
-        "title": "FindTermResult"
+        "title": "EntityVersionSummary",
+        "description": "Summary model for entity version (without full content)."
       },
       "HTTPValidationError": {
         "properties": {
@@ -7846,31 +8809,6 @@
         "title": "LLMSuccessResponse",
         "description": "Success response wrapper for LLM endpoints"
       },
-      "LayerCreate": {
-        "properties": {
-          "title": {
-            "type": "string",
-            "minLength": 2,
-            "title": "Title"
-          },
-          "definition": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Definition"
-          }
-        },
-        "type": "object",
-        "required": [
-          "title"
-        ],
-        "title": "LayerCreate"
-      },
       "LayerDefinitionRequest": {
         "properties": {
           "layer_title": {
@@ -7979,28 +8917,22 @@
             "title": "Definition",
             "description": "The suggested 2-3 sentence layer definition"
           },
-          "reasoning": {
+          "purpose": {
             "type": "string",
-            "title": "Reasoning",
-            "description": "Brief reasoning for the definitional choices"
+            "title": "Purpose",
+            "description": "Purpose of the layer in the knowledge structure"
           },
-          "discrepancies": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Discrepancies",
-            "description": "Notable discrepancies between sources"
+          "rationale": {
+            "type": "string",
+            "title": "Rationale",
+            "description": "Brief rationale for the definitional choices"
           }
         },
         "type": "object",
         "required": [
           "definition",
-          "reasoning"
+          "purpose",
+          "rationale"
         ],
         "title": "LayerDefinitionResponse",
         "description": "Response model for layer definition suggestion"
@@ -8024,120 +8956,6 @@
         ],
         "title": "LayerLLMSuccessResponse",
         "description": "Success response wrapper for layer LLM endpoints"
-      },
-      "LayerOut": {
-        "properties": {
-          "title": {
-            "type": "string",
-            "minLength": 2,
-            "title": "Title"
-          },
-          "definition": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Definition"
-          },
-          "id": {
-            "type": "string",
-            "format": "uuid",
-            "title": "Id"
-          },
-          "title_embedding": {
-            "anyOf": [
-              {
-                "items": {
-                  "type": "number"
-                },
-                "type": "array"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Title Embedding"
-          },
-          "definition_embedding": {
-            "anyOf": [
-              {
-                "items": {
-                  "type": "number"
-                },
-                "type": "array"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Definition Embedding"
-          },
-          "created_at": {
-            "type": "string",
-            "title": "Created At"
-          },
-          "version": {
-            "anyOf": [
-              {
-                "type": "integer"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Version"
-          },
-          "last_modified": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Last Modified"
-          }
-        },
-        "type": "object",
-        "required": [
-          "title",
-          "id",
-          "created_at"
-        ],
-        "title": "LayerOut"
-      },
-      "LayerUpdate": {
-        "properties": {
-          "title": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Title"
-          },
-          "definition": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Definition"
-          }
-        },
-        "type": "object",
-        "title": "LayerUpdate"
       },
       "MigrationStatus": {
         "properties": {
@@ -8171,117 +8989,96 @@
         "title": "MigrationStatus",
         "description": "Status of database migrations."
       },
-      "MoveDomainRequest": {
+      "MoveNodesRequest": {
         "properties": {
-          "domain_ids": {
+          "node_ids": {
             "items": {
               "type": "string",
               "format": "uuid"
             },
             "type": "array",
-            "title": "Domain Ids"
+            "minItems": 1,
+            "title": "Node Ids",
+            "description": "List of structure_node IDs to move"
           },
-          "target_layer_id": {
-            "type": "string",
-            "format": "uuid",
-            "title": "Target Layer Id"
-          },
-          "move_terms": {
-            "type": "boolean",
-            "title": "Move Terms",
-            "default": true
-          }
-        },
-        "type": "object",
-        "required": [
-          "domain_ids",
-          "target_layer_id"
-        ],
-        "title": "MoveDomainRequest"
-      },
-      "MoveDomainResponse": {
-        "properties": {
-          "moved_domains": {
-            "items": {
-              "$ref": "#/components/schemas/DomainOut"
-            },
-            "type": "array",
-            "title": "Moved Domains"
-          },
-          "moved_terms": {
-            "items": {
-              "$ref": "#/components/schemas/DomainOut"
-            },
-            "type": "array",
-            "title": "Moved Terms"
-          },
-          "warnings": {
-            "items": {
-              "type": "string"
-            },
-            "type": "array",
-            "title": "Warnings"
-          }
-        },
-        "type": "object",
-        "required": [
-          "moved_domains",
-          "moved_terms",
-          "warnings"
-        ],
-        "title": "MoveDomainResponse"
-      },
-      "MoveTermRequest": {
-        "properties": {
-          "term_ids": {
-            "items": {
-              "type": "string",
-              "format": "uuid"
-            },
-            "type": "array",
-            "title": "Term Ids"
-          },
-          "target_domain_id": {
-            "type": "string",
-            "format": "uuid",
-            "title": "Target Domain Id"
+          "target_parent_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Target Parent Id",
+            "description": "Target parent structure_node ID (None for root level)"
           },
           "move_children": {
             "type": "boolean",
             "title": "Move Children",
+            "description": "Whether to move all child structure_nodes",
             "default": true
+          },
+          "handle_conflicts": {
+            "type": "string",
+            "pattern": "^(warn|rename|error)$",
+            "title": "Handle Conflicts",
+            "description": "How to handle title conflicts",
+            "default": "warn"
           }
         },
         "type": "object",
         "required": [
-          "term_ids",
-          "target_domain_id"
+          "node_ids"
         ],
-        "title": "MoveTermRequest"
+        "title": "MoveNodesRequest",
+        "description": "Model for moving structure_nodes to a new parent."
       },
-      "MoveTermResponse": {
+      "MoveNodesResponse": {
         "properties": {
-          "moved_terms": {
+          "moved_nodes": {
             "items": {
-              "$ref": "#/components/schemas/TermOut"
+              "$ref": "#/components/schemas/NodeOut"
             },
             "type": "array",
-            "title": "Moved Terms"
+            "title": "Moved Nodes",
+            "description": "List of successfully moved structure_nodes"
+          },
+          "updated_children": {
+            "items": {
+              "$ref": "#/components/schemas/NodeOut"
+            },
+            "type": "array",
+            "title": "Updated Children",
+            "description": "List of child structure_nodes that were also moved"
           },
           "warnings": {
             "items": {
               "type": "string"
             },
             "type": "array",
-            "title": "Warnings"
+            "title": "Warnings",
+            "description": "List of warnings encountered during the move"
+          },
+          "errors": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Errors",
+            "description": "List of errors that prevented some moves"
           }
         },
         "type": "object",
         "required": [
-          "moved_terms",
-          "warnings"
+          "moved_nodes",
+          "updated_children",
+          "warnings",
+          "errors"
         ],
-        "title": "MoveTermResponse"
+        "title": "MoveNodesResponse",
+        "description": "Model for move operation results."
       },
       "NLPAnalysisResponse": {
         "properties": {
@@ -8403,42 +9200,526 @@
         ],
         "title": "NeighborsRequest"
       },
-      "PaginatedDomainsResponse": {
+      "NodeCreate": {
         "properties": {
-          "data": {
-            "items": {
-              "$ref": "#/components/schemas/DomainOut"
-            },
-            "type": "array",
-            "title": "Data"
+          "node_type": {
+            "$ref": "#/components/schemas/NodeTypeEnum"
           },
-          "total": {
-            "type": "integer",
-            "title": "Total"
+          "parent_node_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Parent Node Id"
           },
-          "skip": {
-            "type": "integer",
-            "title": "Skip"
+          "title": {
+            "type": "string",
+            "maxLength": 255,
+            "minLength": 2,
+            "title": "Title"
           },
-          "limit": {
-            "type": "integer",
-            "title": "Limit"
+          "definition": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Definition"
+          },
+          "structural_predicate_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Structural Predicate Id"
           }
         },
         "type": "object",
         "required": [
-          "data",
-          "total",
-          "skip",
-          "limit"
+          "node_type",
+          "title"
         ],
-        "title": "PaginatedDomainsResponse"
+        "title": "NodeCreate",
+        "description": "Model for creating a new structure_node."
       },
-      "PaginatedLayersResponse": {
+      "NodeLinkCreate": {
+        "properties": {
+          "source_node_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Source Node Id"
+          },
+          "target_node_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Target Node Id"
+          },
+          "predicate": {
+            "type": "string",
+            "title": "Predicate"
+          },
+          "predicate_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Predicate Id"
+          }
+        },
+        "type": "object",
+        "required": [
+          "source_node_id",
+          "target_node_id",
+          "predicate"
+        ],
+        "title": "NodeLinkCreate",
+        "description": "Model for creating a new structure_node link."
+      },
+      "NodeLinkOut": {
+        "properties": {
+          "source_node_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Source Node Id"
+          },
+          "target_node_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Target Node Id"
+          },
+          "predicate": {
+            "type": "string",
+            "title": "Predicate"
+          },
+          "predicate_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Predicate Id"
+          },
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "created_at": {
+            "type": "string",
+            "title": "Created At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "source_node_id",
+          "target_node_id",
+          "predicate",
+          "id",
+          "created_at"
+        ],
+        "title": "NodeLinkOut",
+        "description": "Model for structure_node link output/response."
+      },
+      "NodeOut": {
+        "properties": {
+          "node_type": {
+            "$ref": "#/components/schemas/NodeTypeEnum"
+          },
+          "parent_node_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Parent Node Id"
+          },
+          "title": {
+            "type": "string",
+            "maxLength": 255,
+            "minLength": 2,
+            "title": "Title"
+          },
+          "definition": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Definition"
+          },
+          "structural_predicate_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Structural Predicate Id"
+          },
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "title_embedding": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "number"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Title Embedding"
+          },
+          "definition_embedding": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "number"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Definition Embedding"
+          },
+          "created_at": {
+            "type": "string",
+            "title": "Created At"
+          },
+          "version": {
+            "type": "integer",
+            "title": "Version"
+          },
+          "last_modified": {
+            "type": "string",
+            "title": "Last Modified"
+          }
+        },
+        "type": "object",
+        "required": [
+          "node_type",
+          "title",
+          "id",
+          "created_at",
+          "version",
+          "last_modified"
+        ],
+        "title": "NodeOut",
+        "description": "Model for structure_node output/response."
+      },
+      "NodeSearchRequest": {
+        "properties": {
+          "title": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Title"
+          },
+          "definition": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Definition"
+          },
+          "node_type": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/NodeTypeEnum"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "parent_node_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Parent Node Id"
+          },
+          "created_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Created At"
+          },
+          "minimum_score": {
+            "anyOf": [
+              {
+                "type": "number",
+                "maximum": 1.0,
+                "minimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Minimum Score",
+            "default": 0.7
+          },
+          "limit": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "maximum": 100.0,
+                "minimum": 1.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Limit",
+            "default": 10
+          }
+        },
+        "type": "object",
+        "title": "NodeSearchRequest",
+        "description": "Model for structure_node search requests."
+      },
+      "NodeSearchResult": {
+        "properties": {
+          "node_type": {
+            "$ref": "#/components/schemas/NodeTypeEnum"
+          },
+          "parent_node_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Parent Node Id"
+          },
+          "title": {
+            "type": "string",
+            "maxLength": 255,
+            "minLength": 2,
+            "title": "Title"
+          },
+          "definition": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Definition"
+          },
+          "structural_predicate_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Structural Predicate Id"
+          },
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "title_embedding": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "number"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Title Embedding"
+          },
+          "definition_embedding": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "number"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Definition Embedding"
+          },
+          "created_at": {
+            "type": "string",
+            "title": "Created At"
+          },
+          "version": {
+            "type": "integer",
+            "title": "Version"
+          },
+          "last_modified": {
+            "type": "string",
+            "title": "Last Modified"
+          },
+          "score": {
+            "type": "number",
+            "title": "Score"
+          },
+          "distance": {
+            "type": "number",
+            "title": "Distance"
+          }
+        },
+        "type": "object",
+        "required": [
+          "node_type",
+          "title",
+          "id",
+          "created_at",
+          "version",
+          "last_modified",
+          "score",
+          "distance"
+        ],
+        "title": "NodeSearchResult",
+        "description": "Model for structure_node search results."
+      },
+      "NodeTypeEnum": {
+        "type": "string",
+        "enum": [
+          "layer",
+          "domain",
+          "term"
+        ],
+        "title": "NodeTypeEnum",
+        "description": "API enum for structure_node types."
+      },
+      "NodeUpdate": {
+        "properties": {
+          "title": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 255,
+                "minLength": 2
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Title"
+          },
+          "definition": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Definition"
+          },
+          "parent_node_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Parent Node Id"
+          },
+          "structural_predicate_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Structural Predicate Id"
+          }
+        },
+        "type": "object",
+        "title": "NodeUpdate",
+        "description": "Model for updating an existing structure_node."
+      },
+      "PaginatedNodesResponse": {
         "properties": {
           "data": {
             "items": {
-              "$ref": "#/components/schemas/LayerOut"
+              "$ref": "#/components/schemas/NodeOut"
             },
             "type": "array",
             "title": "Data"
@@ -8463,7 +9744,8 @@
           "skip",
           "limit"
         ],
-        "title": "PaginatedLayersResponse"
+        "title": "PaginatedNodesResponse",
+        "description": "Model for paginated structure_node responses."
       },
       "PaginatedPredicatesResponse": {
         "properties": {
@@ -8495,37 +9777,6 @@
           "limit"
         ],
         "title": "PaginatedPredicatesResponse"
-      },
-      "PaginatedTermsResponse": {
-        "properties": {
-          "data": {
-            "items": {
-              "$ref": "#/components/schemas/TermOut"
-            },
-            "type": "array",
-            "title": "Data"
-          },
-          "total": {
-            "type": "integer",
-            "title": "Total"
-          },
-          "skip": {
-            "type": "integer",
-            "title": "Skip"
-          },
-          "limit": {
-            "type": "integer",
-            "title": "Limit"
-          }
-        },
-        "type": "object",
-        "required": [
-          "data",
-          "total",
-          "skip",
-          "limit"
-        ],
-        "title": "PaginatedTermsResponse"
       },
       "PathRequest": {
         "properties": {
@@ -8855,6 +10106,29 @@
           "rdf"
         ],
         "title": "ResponseFormat"
+      },
+      "RollbackRequest": {
+        "properties": {
+          "target_version_number": {
+            "type": "integer",
+            "minimum": 1.0,
+            "title": "Target Version Number",
+            "description": "Version number to rollback to"
+          },
+          "author_id": {
+            "type": "string",
+            "maxLength": 255,
+            "minLength": 1,
+            "title": "Author Id"
+          }
+        },
+        "type": "object",
+        "required": [
+          "target_version_number",
+          "author_id"
+        ],
+        "title": "RollbackRequest",
+        "description": "Model for rollback operation request."
       },
       "SPARQLQuery": {
         "properties": {
@@ -9774,315 +11048,24 @@
         ],
         "title": "SourceType"
       },
-      "TermCreate": {
+      "StageRequest": {
         "properties": {
-          "title": {
-            "type": "string",
-            "minLength": 2,
-            "title": "Title"
+          "entity_type": {
+            "$ref": "#/components/schemas/EntityTypeEnum"
           },
-          "definition": {
-            "type": "string",
-            "minLength": 1,
-            "title": "Definition"
-          },
-          "domain_id": {
+          "entity_id": {
             "type": "string",
             "format": "uuid",
-            "title": "Domain Id"
-          },
-          "layer_id": {
-            "type": "string",
-            "format": "uuid",
-            "title": "Layer Id"
-          },
-          "parent_term_id": {
-            "anyOf": [
-              {
-                "type": "string",
-                "format": "uuid"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Parent Term Id"
+            "title": "Entity Id"
           }
         },
         "type": "object",
         "required": [
-          "title",
-          "definition",
-          "domain_id",
-          "layer_id"
+          "entity_type",
+          "entity_id"
         ],
-        "title": "TermCreate"
-      },
-      "TermOut": {
-        "properties": {
-          "id": {
-            "type": "string",
-            "format": "uuid",
-            "title": "Id"
-          },
-          "title": {
-            "type": "string",
-            "title": "Title"
-          },
-          "definition": {
-            "type": "string",
-            "title": "Definition"
-          },
-          "domain_id": {
-            "type": "string",
-            "format": "uuid",
-            "title": "Domain Id"
-          },
-          "layer_id": {
-            "type": "string",
-            "format": "uuid",
-            "title": "Layer Id"
-          },
-          "parent_term_id": {
-            "anyOf": [
-              {
-                "type": "string",
-                "format": "uuid"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Parent Term Id"
-          },
-          "title_embedding": {
-            "anyOf": [
-              {
-                "items": {
-                  "type": "number"
-                },
-                "type": "array"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Title Embedding"
-          },
-          "definition_embedding": {
-            "anyOf": [
-              {
-                "items": {
-                  "type": "number"
-                },
-                "type": "array"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Definition Embedding"
-          },
-          "created_at": {
-            "type": "string",
-            "title": "Created At"
-          },
-          "version": {
-            "type": "integer",
-            "title": "Version"
-          },
-          "last_modified": {
-            "type": "string",
-            "title": "Last Modified"
-          }
-        },
-        "type": "object",
-        "required": [
-          "id",
-          "title",
-          "definition",
-          "domain_id",
-          "layer_id",
-          "created_at",
-          "version",
-          "last_modified"
-        ],
-        "title": "TermOut"
-      },
-      "TermRelationshipCreate": {
-        "properties": {
-          "source_term_id": {
-            "type": "string",
-            "format": "uuid",
-            "title": "Source Term Id"
-          },
-          "target_term_id": {
-            "type": "string",
-            "format": "uuid",
-            "title": "Target Term Id"
-          },
-          "predicate": {
-            "type": "string",
-            "title": "Predicate"
-          },
-          "predicate_id": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Predicate Id"
-          }
-        },
-        "type": "object",
-        "required": [
-          "source_term_id",
-          "target_term_id",
-          "predicate"
-        ],
-        "title": "TermRelationshipCreate"
-      },
-      "TermRelationshipOut": {
-        "properties": {
-          "source_term_id": {
-            "type": "string",
-            "format": "uuid",
-            "title": "Source Term Id"
-          },
-          "target_term_id": {
-            "type": "string",
-            "format": "uuid",
-            "title": "Target Term Id"
-          },
-          "predicate": {
-            "type": "string",
-            "title": "Predicate"
-          },
-          "predicate_id": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Predicate Id"
-          },
-          "id": {
-            "type": "string",
-            "format": "uuid",
-            "title": "Id"
-          },
-          "created_at": {
-            "type": "string",
-            "title": "Created At"
-          },
-          "source_term": {
-            "anyOf": [
-              {
-                "additionalProperties": true,
-                "type": "object"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Source Term"
-          },
-          "target_term": {
-            "anyOf": [
-              {
-                "additionalProperties": true,
-                "type": "object"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Target Term"
-          }
-        },
-        "type": "object",
-        "required": [
-          "source_term_id",
-          "target_term_id",
-          "predicate",
-          "id",
-          "created_at"
-        ],
-        "title": "TermRelationshipOut"
-      },
-      "TermRelationshipUpdate": {
-        "properties": {
-          "predicate": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Predicate"
-          },
-          "predicate_id": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Predicate Id"
-          }
-        },
-        "type": "object",
-        "title": "TermRelationshipUpdate"
-      },
-      "TermUpdate": {
-        "properties": {
-          "title": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Title"
-          },
-          "definition": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Definition"
-          },
-          "parent_term_id": {
-            "anyOf": [
-              {
-                "type": "string",
-                "format": "uuid"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Parent Term Id"
-          }
-        },
-        "type": "object",
-        "title": "TermUpdate"
+        "title": "StageRequest",
+        "description": "Model for staging/unstaging entities."
       },
       "TokenData": {
         "properties": {
@@ -10571,6 +11554,109 @@
         ],
         "title": "ValidationError"
       },
+      "VersionManagementHealthOut": {
+        "properties": {
+          "status": {
+            "type": "string",
+            "title": "Status",
+            "description": "Overall health status: healthy, warning, error"
+          },
+          "total_versions": {
+            "type": "integer",
+            "title": "Total Versions"
+          },
+          "total_working_tree_entries": {
+            "type": "integer",
+            "title": "Total Working Tree Entries"
+          },
+          "total_staged_entities": {
+            "type": "integer",
+            "title": "Total Staged Entities"
+          },
+          "total_modified_entities": {
+            "type": "integer",
+            "title": "Total Modified Entities"
+          },
+          "issues": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Issues"
+          },
+          "last_event_processed": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Event Processed"
+          },
+          "database_status": {
+            "type": "string",
+            "title": "Database Status"
+          }
+        },
+        "type": "object",
+        "required": [
+          "status",
+          "total_versions",
+          "total_working_tree_entries",
+          "total_staged_entities",
+          "total_modified_entities",
+          "database_status"
+        ],
+        "title": "VersionManagementHealthOut",
+        "description": "Model for version management system health."
+      },
+      "VersionManagementStatsOut": {
+        "properties": {
+          "versions_by_entity_type": {
+            "additionalProperties": {
+              "type": "integer"
+            },
+            "type": "object",
+            "title": "Versions By Entity Type"
+          },
+          "versions_by_state": {
+            "additionalProperties": {
+              "type": "integer"
+            },
+            "type": "object",
+            "title": "Versions By State"
+          },
+          "working_tree_summary": {
+            "$ref": "#/components/schemas/WorkingTreeStatusOut"
+          },
+          "recent_activity": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "type": "array",
+            "title": "Recent Activity"
+          },
+          "performance_metrics": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Performance Metrics"
+          }
+        },
+        "type": "object",
+        "required": [
+          "versions_by_entity_type",
+          "versions_by_state",
+          "working_tree_summary",
+          "recent_activity",
+          "performance_metrics"
+        ],
+        "title": "VersionManagementStatsOut",
+        "description": "Model for version management statistics."
+      },
       "WikidataEntityResponse": {
         "properties": {
           "success": {
@@ -10774,6 +11860,91 @@
         "type": "object",
         "title": "WordNetData",
         "description": "WordNet data for a token."
+      },
+      "WorkingTreeEntryOut": {
+        "properties": {
+          "entity_type": {
+            "$ref": "#/components/schemas/EntityTypeEnum"
+          },
+          "entity_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Entity Id"
+          },
+          "current_version_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Current Version Id"
+          },
+          "canonical_version_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Canonical Version Id"
+          },
+          "staged": {
+            "type": "boolean",
+            "title": "Staged"
+          },
+          "modified_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Modified At"
+          },
+          "has_changes": {
+            "type": "boolean",
+            "title": "Has Changes",
+            "description": "Whether working differs from canonical"
+          }
+        },
+        "type": "object",
+        "required": [
+          "entity_type",
+          "entity_id",
+          "current_version_id",
+          "canonical_version_id",
+          "staged",
+          "modified_at",
+          "has_changes"
+        ],
+        "title": "WorkingTreeEntryOut",
+        "description": "Model for working tree entry output/response."
+      },
+      "WorkingTreeStatusOut": {
+        "properties": {
+          "total_entities": {
+            "type": "integer",
+            "title": "Total Entities"
+          },
+          "modified_entities": {
+            "type": "integer",
+            "title": "Modified Entities"
+          },
+          "staged_entities": {
+            "type": "integer",
+            "title": "Staged Entities"
+          },
+          "unstaged_entities": {
+            "type": "integer",
+            "title": "Unstaged Entities"
+          },
+          "entries": {
+            "items": {
+              "$ref": "#/components/schemas/WorkingTreeEntryOut"
+            },
+            "type": "array",
+            "title": "Entries"
+          }
+        },
+        "type": "object",
+        "required": [
+          "total_entities",
+          "modified_entities",
+          "staged_entities",
+          "unstaged_entities",
+          "entries"
+        ],
+        "title": "WorkingTreeStatusOut",
+        "description": "Model for working tree status output/response."
       }
     }
   }

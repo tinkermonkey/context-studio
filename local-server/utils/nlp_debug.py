@@ -29,8 +29,6 @@ parent_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 print(f"Adding {parent_dir} to sys.path")
 sys.path.insert(0, parent_dir)
 
-# Disable reference API caching proxy for debug script
-os.environ['DISABLE_REFERENCE_API_PROXY'] = 'true'
 from nlp.pipeline import get_pipeline
 from nlp.processors import process_nlp_result
 

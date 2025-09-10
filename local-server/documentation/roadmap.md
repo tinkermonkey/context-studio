@@ -6,13 +6,13 @@
 
 1. Proper **Change Data Capture** / **operational transformation** model combined with **optimistic replication**
 
-1. DataNode change review / approval process
+1. StructureNode change review / approval process
 
-1. DataNode context persistence
+1. StructureNode context persistence
 
 1. Chat with structure API
 
-1. DataNode Attributes
+1. StructureNode Attributes
 
 1. Child StructureNode suggestions including Tavily/search as a reference integration
 
@@ -22,9 +22,9 @@
 
 ### UX Focused Aspects
 
-1. DataNode Link CRUD
+1. StructureNode Link CRUD
 
-1. DataNode Link Visualization
+1. StructureNode Link Visualization
 
 1. Context Blender (integrate reference sources better) w/ raw context exploration
 

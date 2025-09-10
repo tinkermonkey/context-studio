@@ -77,14 +77,17 @@ class NLPPipeline:
                 "filter_edge_weight": self.settings.nlp.edge_weight_filter
             }
             
-            # Add proxy URL if proxy is enabled for this source
-            if conceptnet_config.use_proxy and self.settings.proxy_server.enabled:
+            # Add proxy URL if proxy is enabled for this source AND proxy manager says proxy is enabled
+            if conceptnet_config.use_proxy and self.settings.proxy_server.enabled and self.proxy_manager.is_proxy_enabled():
                 proxy_host = self.settings.proxy_server.host
                 proxy_port = self.settings.proxy_server.port
                 concepcy_config["url"] = f"http://{proxy_host}:{proxy_port}/conceptnet/query?node=/c/{{lang}}/{{word}}&other=/c/{{lang}}"
+                logger.info(f"concepcy will use proxy at {proxy_host}:{proxy_port}")
+            else:
+                logger.info("concepcy will use default ConceptNet API directly")
             
             self.nlp.add_pipe("concepcy", config=concepcy_config)
-            logger.info(f"concepcy component added (proxy: {conceptnet_config.use_proxy})")
+            logger.info(f"concepcy component added (proxy: {conceptnet_config.use_proxy and self.proxy_manager.is_proxy_enabled()})")
             
         except Exception as e:
             logger.error(f"Failed to add concepcy: {e}")
@@ -103,16 +106,18 @@ class NLPPipeline:
             
             component_config = {}
             
-            # Add proxy endpoint if proxy is enabled for this source
-            if dbpedia_spotlight_config.use_proxy and self.settings.proxy_server.enabled:
+            # Add proxy endpoint if proxy is enabled for this source AND proxy manager says proxy is enabled
+            if dbpedia_spotlight_config.use_proxy and self.settings.proxy_server.enabled and self.proxy_manager.is_proxy_enabled():
                 proxy_host = self.settings.proxy_server.host
                 proxy_port = self.settings.proxy_server.port
                 component_config["dbpedia_rest_endpoint"] = f"http://{proxy_host}:{proxy_port}/dbpedia_spotlight"
+                logger.info(f"dbpedia_spotlight will use proxy at {proxy_host}:{proxy_port}")
             else:
                 component_config["dbpedia_rest_endpoint"] = dbpedia_spotlight_config.upstream_url
+                logger.info("dbpedia_spotlight will use upstream API directly")
                 
             self.nlp.add_pipe("dbpedia_spotlight", config=component_config)
-            logger.info(f"dbpedia_spotlight component added (proxy: {dbpedia_spotlight_config.use_proxy})")
+            logger.info(f"dbpedia_spotlight component added (proxy: {dbpedia_spotlight_config.use_proxy and self.proxy_manager.is_proxy_enabled()})")
             
         except Exception as e:
             logger.error(f"Failed to add dbpedia_spotlight: {e}")

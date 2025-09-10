@@ -1,17 +1,17 @@
 import React from "react";
 import { createColumnHelper } from "@tanstack/react-table";
 import { Checkbox } from "flowbite-react";
-import { TermOut } from "@/api/services/terms";
+import { StructureNode } from "@/api/types/structureNodes";
 import { renderShortDateTime, renderShortUuid } from "@/utils/renderers";
 import { TermRenderer } from "@/components/node_renderers/term_renderer";
 import { BaseNodeTable } from "./node_table";
-import { useTerms } from "@/api/hooks/terms";
-import { useDeleteTerm, useMoveTerms } from "@/api/hooks/terms";
+import { useTermNodes } from "@/api/hooks/structure_nodes/useStructureNodes";
+import { useDeleteStructureNode } from "@/api/hooks/structure_nodes/useStructureNodeMutations";
 import { TermForm } from "@/components/forms/term_form";
 import { TermMoveForm } from "@/components/forms/term_move_form";
 import type { FieldDefinition } from "@/components/misc/query_filters";
 
-const columnHelper = createColumnHelper<TermOut>();
+const columnHelper = createColumnHelper<StructureNode>();
 
 const columns = [
   columnHelper.display({
@@ -59,23 +59,12 @@ const columns = [
     cell: (info) => info.getValue() ?? "",
     header: () => "Definition",
   }),
-  columnHelper.accessor("domain_id", {
-    cell: (info) => renderShortUuid(info.getValue() ?? ""),
-    header: () => "Domain",
-  }),
-  columnHelper.accessor("layer_id", {
+  columnHelper.accessor("parent_node_id", {
     cell: (info) => {
       const value = info.getValue() ?? "";
       return value ? renderShortUuid(value) : "";
     },
-    header: () => "Layer",
-  }),
-  columnHelper.accessor("parent_term_id", {
-    cell: (info) => {
-      const value = info.getValue() ?? "";
-      return value ? <TermRenderer term_id={value} /> : "";
-    },
-    header: () => "Parent Term",
+    header: () => "Parent",
   }),
   columnHelper.accessor("version", {
     cell: (info) => info.getValue() ?? "",
@@ -116,26 +105,12 @@ const domainFilterFields: FieldDefinition[] = [
     operators: ["contains"],
   },
   {
-    field: "layer_id",
-    label: "Layer",
+    field: "parent_node_id",
+    label: "Parent",
     type: "select",
     operators: ["equals"],
-    // TODO: Populate this from the layers API and use the LayerSelector component
-    options: [
-      { value: "layer1", label: "Layer 1" },
-      { value: "layer2", label: "Layer 2" },
-    ],
-  },
-  {
-    field: "domain_id",
-    label: "Domain",
-    type: "select",
-    operators: ["equals"],
-    // TODO: Populate this from the domains API and use the DomainSelector component
-    options: [
-      { value: "domain1", label: "Domain 1" },
-      { value: "domain2", label: "Domain 2" },
-    ],
+    // TODO: Populate this from structure nodes API
+    options: [],
   },
   {
     field: "created_at",
@@ -152,7 +127,7 @@ const domainFilterFields: FieldDefinition[] = [
 ];
 
 export interface TermsTableProps {
-  data?: TermOut[];
+  data?: StructureNode[];
   onSelectionChange?: (count: number) => void;
   onEdit?: (id: string) => void;
   columnVisibility?: Record<string, boolean>;
@@ -167,15 +142,13 @@ const TermsTable = React.forwardRef<any, TermsTableProps>((props, ref) => {
   } = props;
   
   // Use query params in the terms hook
-  const { data: terms, isLoading, error, refetch } = useTerms(queryParams);
-  const { data: allTerms } = useTerms(); // Get all terms for finding children
-  const deleteTerm = useDeleteTerm();
-  const moveTerms = useMoveTerms();
+  const { data: terms, isLoading, error, refetch } = useTermNodes(undefined, queryParams);
+  const { data: allTerms } = useTermNodes(); // Get all terms for finding children
+  const deleteTerm = useDeleteStructureNode();
 
   const defaultColumnVisibility: Record<string, boolean> = {
     id: false,
-    domain_id: false,
-    layer_id: false,
+    parent_node_id: false,
     version: false,
     created_at: false,
     last_modified: false,
@@ -186,9 +159,9 @@ const TermsTable = React.forwardRef<any, TermsTableProps>((props, ref) => {
   };
 
   // Get child terms for safe deletion workflow
-  const getTermChildren = async (termId: string) => {
+  const getTermChildren = async (termId: string): Promise<StructureNode[]> => {
     if (!allTerms) return [];
-    return allTerms.filter(term => term.parent_term_id === termId);
+    return (allTerms as StructureNode[]).filter(term => term.parent_node_id === termId);
   };
 
   // Move child terms when orphaning them during parent deletion
@@ -200,22 +173,20 @@ const TermsTable = React.forwardRef<any, TermsTableProps>((props, ref) => {
     const firstChild = allTerms?.find(term => childIds.includes(term.id));
     if (!firstChild) return;
 
-    // For orphaning, we need to use the terms update API to set parent_term_id to null
-    // Since the moveTerms API doesn't support setting parent_term_id directly
+    // For orphaning, we need to use the structure node update API to set parent_node_id to null
+    // Since we don't have a bulk move API, we update each term individually
     // This is a limitation we'll need to address in a future update
     console.warn('Term orphaning not fully implemented - using move to same domain for now');
     
-    await moveTerms.mutateAsync({
-      term_ids: childIds,
-      target_domain_id: firstChild.domain_id,
-      move_children: false, // Don't recursively move children of children
-    });
+    // TODO: Implement term moving with new structure node API
+    // await updateStructureNode for each child term to change parent_node_id
+    console.warn('Term moving needs to be reimplemented with structure node API');
   };
 
   return (
     <BaseNodeTable
       columns={columns}
-      data={terms ?? []}
+      data={(terms ?? []) as StructureNode[]}
       isLoading={isLoading}
       error={error}
       onRefetch={refetch}
@@ -234,7 +205,7 @@ const TermsTable = React.forwardRef<any, TermsTableProps>((props, ref) => {
       onQueryParamsChange={onQueryParamsChange}
       filterFields={domainFilterFields}
       searchPlaceholder="Search..."
-      linkGenerator={(term: TermOut) => `/app/nodes/term/${term.id}`}
+      linkGenerator={(term: StructureNode) => `/app/nodes/term/${term.id}`}
       onGetChildren={getTermChildren}
       onMoveChildren={moveTermChildren}
     />

@@ -1,6 +1,6 @@
 import { createFileRoute } from '@tanstack/react-router';
 import { Spinner, Alert } from 'flowbite-react';
-import { useDomain } from '@/api/hooks/domains/useDomains'
+import { useStructureNode } from '@/api/hooks/structure_nodes/useStructureNodes'
 import { DomainDetails } from '@/components/node_details/domain_details'
 
 export const Route = createFileRoute('/app/nodes/domain/$domainId')({
@@ -9,7 +9,7 @@ export const Route = createFileRoute('/app/nodes/domain/$domainId')({
 
 function DomainDetailPage() {
   const { domainId } = Route.useParams() as { domainId: string };
-  const { data: domain, isLoading: domainLoading, error: domainError } = useDomain(domainId);
+  const { data: domain, isLoading: domainLoading, error: domainError } = useStructureNode(domainId);
 
   if (domainLoading) {
     return (

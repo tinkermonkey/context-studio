@@ -1,6 +1,6 @@
 import { createFileRoute } from '@tanstack/react-router';
 import { Spinner, Alert } from 'flowbite-react';
-import { useLayer } from '@/api/hooks/layers/useLayers';
+import { useStructureNode } from '@/api/hooks/structure_nodes/useStructureNodes';
 import { LayerDetails } from '@/components/node_details/layer_details';
 
 export const Route = createFileRoute('/app/nodes/layer/$layerId')({
@@ -9,7 +9,7 @@ export const Route = createFileRoute('/app/nodes/layer/$layerId')({
 
 function LayerDetailPage() {
   const { layerId } = Route.useParams() as { layerId: string };
-  const { data: layer, isLoading: layerLoading, error: layerError } = useLayer(layerId);
+  const { data: layer, isLoading: layerLoading, error: layerError } = useStructureNode(layerId);
 
   if (layerLoading) {
     return (

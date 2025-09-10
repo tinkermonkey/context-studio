@@ -1,7 +1,5 @@
 import React from "react";
-import { useTerms } from "@/api/hooks/terms";
-import { useDomain } from "@/api/hooks/domains";
-import { useLayers, useLayer } from "@/api/hooks/layers";
+import { useTermNodes, useStructureNode, useLayerNodes } from "@/api/hooks/structure_nodes/useStructureNodes";
 import {
   createFileRoute,
   useNavigate,
@@ -14,8 +12,7 @@ import { CsMain, CsMainTitle } from "@/components/layout/cs_main";
 import { CollapsibleDomainsList } from "@/components/misc/collapsible_domains_list";
 import type { components } from "@/api/client/types";
 import { Hash } from "lucide-react";
-
-type LayerOut = components["schemas"]["LayerOut"];
+import type { StructureNode } from "@/api/types/structureNodes";
 
 // Define the search parameters schema
 interface TermsSearch {
@@ -42,12 +39,12 @@ function TermsPage() {
     data: terms,
     isLoading: termsLoading,
     error: termsError,
-  } = useTerms();
+  } = useTermNodes();
   const {
     data: layers,
     isLoading: layersLoading,
     error: layersError,
-  } = useLayers();
+  } = useLayerNodes();
   const tableRef = React.useRef<any>(null);
   const navigate = useNavigate({ from: "/app/terms" });
   const search = useSearch({ from: "/app/terms" });
@@ -89,14 +86,14 @@ function TermsPage() {
     data: layer,
     isLoading: layerLoading,
     error: layerError,
-  } = useLayer(queryParams.layer_id as string);
+  } = useStructureNode(queryParams.layer_id as string ?? "");
 
   // Load the domain record if domain_id is provided
   const {
     data: domain,
     isLoading: domainLoading,
     error: domainError,
-  } = useDomain(queryParams.domain_id as string);
+  } = useStructureNode(queryParams.domain_id as string ?? "");
 
   if (termsLoading || layersLoading || layerLoading || domainLoading) {
     return <Spinner />;
@@ -127,7 +124,7 @@ function TermsPage() {
     <>
       <CsSidebar>
         <div className="space-y-4">
-          {sortedLayers.map((layer: LayerOut) => (
+          {sortedLayers.map((layer: StructureNode) => (
             <div key={layer.id} className="space-y-2">
               <CsSidebarTitle>{layer.title}</CsSidebarTitle>
               <CollapsibleDomainsList

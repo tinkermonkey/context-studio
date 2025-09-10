@@ -1,7 +1,7 @@
 import * as React from "react";
 import { Button, Alert, Spinner } from "flowbite-react";
 import { CheckCircle } from "lucide-react";
-import { useUpdateTerm, useUpdateDomain, useUpdateLayer } from "../../api";
+import { useUpdateTerm, useUpdateDomain, useUpdateLayer } from "@/api/hooks/structure_nodes/useStructureNodeMutations";
 
 interface PipelineResultViewProps {
   result: any;

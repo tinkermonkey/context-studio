@@ -2,9 +2,7 @@ import React, { useState } from "react";
 import { Button, Card, Alert, Select, Label, Spinner } from "flowbite-react";
 import { ArrowLeft, TestTube, Play } from "lucide-react";
 import { NlpAnalysisPanel } from "@/components/nlp/NlpAnalysisPanel";
-import { useLayers } from "@/api/hooks/layers";
-import { useDomains } from "@/api/hooks/domains";
-import { useTerms } from "@/api/hooks/terms";
+import { useLayerNodes, useDomainNodes, useTermNodes } from "@/api/hooks/structure_nodes/useStructureNodes";
 import type { PipelineFlavor } from "@/api/services/pipelineFlavors";
 
 interface PipelineFlavorTesterProps {
@@ -28,9 +26,9 @@ export const PipelineFlavorTester: React.FC<PipelineFlavorTesterProps> = ({
   const [pipelineError, setPipelineError] = useState<string | null>(null);
 
   // Fetch data based on pipeline type - only fetch what we need
-  const { data: layersData, isLoading: layersLoading } = useLayers();
-  const { data: domainsData, isLoading: domainsLoading } = useDomains();
-  const { data: termsData, isLoading: termsLoading } = useTerms();
+  const { data: layersData, isLoading: layersLoading } = useLayerNodes();
+  const { data: domainsData, isLoading: domainsLoading } = useDomainNodes();
+  const { data: termsData, isLoading: termsLoading } = useTermNodes();
 
   const getRecordOptions = (): TestRecord[] => {
     switch (flavor.pipeline) {

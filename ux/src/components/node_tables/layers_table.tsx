@@ -1,14 +1,14 @@
 import React from "react";
 import { createColumnHelper } from "@tanstack/react-table";
 import { Checkbox } from "flowbite-react";
-import { LayerOut } from "@/api/services/layers";
+import { StructureNode } from "@/api/types/structureNodes";
 import { renderShortDateTime, renderShortUuid } from "@/utils/renderers";
-import { useLayers } from '@/api/hooks/layers';
-import { useDeleteLayer } from '@/api/hooks/layers';
+import { useLayerNodes } from '@/api/hooks/structure_nodes/useStructureNodes';
+import { useDeleteStructureNode } from '@/api/hooks/structure_nodes/useStructureNodeMutations';
 import { LayerForm } from '@/components/forms/layer_form';
 import { BaseNodeTable } from './node_table';
 
-const columnHelper = createColumnHelper<LayerOut>();
+const columnHelper = createColumnHelper<StructureNode>();
 
 const columns = [
   columnHelper.display({
@@ -77,7 +77,7 @@ const columns = [
 
 
 export interface LayersTableProps {
-  data?: LayerOut[];
+  data?: StructureNode[];
   onSelectionChange?: (count: number) => void;
   onEdit?: (id: string) => void;
   columnVisibility?: Record<string, boolean>;
@@ -85,8 +85,8 @@ export interface LayersTableProps {
 
 
 const LayersTable = React.forwardRef<any, LayersTableProps>((props, ref) => {
-  const { data: layers, isLoading, error, refetch } = useLayers();
-  const deleteLayer = useDeleteLayer();
+  const { data: layers, isLoading, error, refetch } = useLayerNodes();
+  const deleteLayer = useDeleteStructureNode();
   
   // Default hidden columns: id, version, created_at, last_modified
   const defaultColumnVisibility: Record<string, boolean> = {
@@ -103,7 +103,7 @@ const LayersTable = React.forwardRef<any, LayersTableProps>((props, ref) => {
   return (
     <BaseNodeTable
       columns={columns}
-      data={layers ?? []}
+      data={(layers ?? []) as StructureNode[]}
       isLoading={isLoading}
       error={error}
       onRefetch={refetch}
@@ -115,7 +115,7 @@ const LayersTable = React.forwardRef<any, LayersTableProps>((props, ref) => {
       typeName="Layer"
       getId={(item) => item.id}
       columnVisibility={columnVisibility}
-      linkGenerator={(layer: LayerOut) => `/app/nodes/layer/${layer.id}`}
+      linkGenerator={(layer: StructureNode) => `/app/nodes/layer/${layer.id}`}
     />
   );
 });

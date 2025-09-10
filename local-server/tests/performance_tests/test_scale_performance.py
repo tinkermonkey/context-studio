@@ -5,24 +5,26 @@ Execute this script directly to create or reuse the scale test database, don't e
 The scale can be adjusted via the --scale argument (small, medium, large, xlarge)
 Database file: tests/performance_tests/scale_test.db
 """
+import argparse
 from math import log
 import math
 import os
+import psutil
+import sys
 import time
 import uuid
-import argparse
 from fastapi.testclient import TestClient
 
-import sys
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "../../")))
 
 from app import create_app
 from utils.logger import get_logger
-from database.utils import init_db, get_engine, get_session_local, init_db
+from database.utils import init_db, get_engine, get_session_local, get_database_manager, cleanup_database_resources
 from database.migrations.migration_manager import MigrationManager
+from services.service_factory import ServiceFactory, set_service_factory, get_service_factory
 from sqlalchemy.orm import sessionmaker
 from database.models import StructureNode, StructureNodeLink
-import psutil
+from database.enums import NodeType
 
 
 logger = get_logger('scale_perf_test')
@@ -35,30 +37,24 @@ SQLALCHEMY_DATABASE_URL = None
 
 def get_persistent_client():
     """
-    Create or reuse a persistent test database and apply all migrations.
+    Get a persistent test client that properly initializes the service factory
+    and database manager like app.py would if launched directly.
+    
+    This client handles the full application lifespan including service initialization
+    to mirror the production application behavior during testing.
     """
-
-    first_run = not os.path.exists(DB_PATH)
-    engine = get_engine(SQLALCHEMY_DATABASE_URL)
-    session_local = get_session_local(engine)
-    init_db(engine=engine)
-
-    # Apply migrations to maintain schema
-    migration_manager = MigrationManager(DB_PATH)
-    success = migration_manager.migrate_to_latest()
-    if not success:
-        raise RuntimeError("Failed to apply migrations to scale test database")
-
-    if first_run:
-        logger.info("Created new scale test database with migrations.")
-    else:
-        logger.info("Using existing scale test database with migrations.")
-    global DB_SESSION
-    if DB_SESSION is None:
-        SessionLocal = sessionmaker(bind=engine)
-        DB_SESSION = SessionLocal()
-    app = create_app(engine=engine, session_local=session_local)
-    return TestClient(app)
+    from app import create_app
+    
+    logger.info("[CLIENT] Creating persistent test client")
+    app = create_app()
+    
+    # Use context manager to properly handle lifespan events (startup/shutdown)
+    # This ensures service factory and database manager are initialized properly
+    client = TestClient(app)
+    
+    # Force lifespan startup event to initialize services by entering context
+    logger.info("[CLIENT] Test client created with lifespan initialization")
+    return client
 
 def create_layer(client, title=None):
     logger.debug(f"Creating layer with title: {title}")
@@ -70,6 +66,65 @@ def create_layer(client, title=None):
     response = client.post("/api/structure_nodes/", json=payload)
     assert response.status_code == 201, response.text
     return response.json()
+
+
+def check_service_factory_stats(client, stage=""):
+    """Check service factory statistics to verify services are being used."""
+    try:
+        response = client.get("/admin/services/stats")
+        if response.status_code == 200:
+            stats = response.json()
+            factory_id = stats.get("factory_id", "unknown")
+            total_entries = stats.get("total_cache_entries", 0)
+            logger.info(f"[SERVICE FACTORY {stage}] Factory ID: {factory_id}, Cache entries: {total_entries}")
+            
+            # Log service usage
+            service_metrics = stats.get("service_metrics", {})
+            for service_name, metrics in service_metrics.items():
+                total_created = metrics.get("total_created", 0)
+                cache_hit_rate = metrics.get("cache_hit_rate_percent", 0)
+                if total_created > 0:
+                    logger.info(f"[SERVICE FACTORY {stage}] {service_name}: {total_created} created, {cache_hit_rate:.1f}% cache hit rate")
+            
+            return stats
+        else:
+            logger.warning(f"[SERVICE FACTORY {stage}] Failed to get stats: {response.status_code}")
+            return None
+    except Exception as e:
+        logger.warning(f"[SERVICE FACTORY {stage}] Error checking stats: {e}")
+        return None
+
+
+def reset_service_factory_for_performance_test():
+    """Reset service factory cache and metrics for clean performance testing."""
+    try:
+        factory = get_service_factory()
+        if factory:
+            factory.clear_cache()
+            logger.info("Service factory cache cleared for performance test")
+    except Exception as e:
+        logger.warning(f"Could not reset service factory: {e}")
+
+
+def setup_performance_test_environment():
+    """Setup optimized environment for performance testing."""
+    try:
+        # Initialize service factory with performance-optimized settings
+        factory = ServiceFactory(
+            cache_ttl_seconds=600,    # Longer TTL for performance tests
+            cleanup_interval=60       # Less frequent cleanup
+        )
+        set_service_factory(factory)
+        logger.info("Performance-optimized service factory initialized")
+        
+        # Get database manager for optimized connections
+        db_manager = get_database_manager()
+        logger.info("Database manager initialized")
+        
+        return factory, db_manager
+    except Exception as e:
+        logger.warning(f"Could not setup performance environment: {e}")
+        return None, None
 
 def create_domain(client, parent_node_id, title=None):
     logger.debug(f"Creating domain in layer {parent_node_id}")
@@ -100,7 +155,7 @@ def create_relationship(client, source_node_id, target_node_id):
     payload = {
         "source_node_id": source_node_id,
         "target_node_id": target_node_id,
-        "relationship_type": "related"
+        "predicate": "related"
     }
     response = client.post("/api/structure_nodes/links", json=payload)
     assert response.status_code == 201, response.text
@@ -134,8 +189,6 @@ def populate_scale_test(client, num_layers, num_domains_per_layer, num_terms_per
     logger.info("Starting scale test data population:")
     logger.info(f"  - Layers: {num_layers}, Domains per layer: {num_domains_per_layer}, Terms per domain: {num_terms_per_domain}, Relationships per term: {num_relationships_per_term}")
 
-    from database.enums import NodeType
-    
     # Layers
     total_layers = num_layers
     current_layer_count = DB_SESSION.query(StructureNode).filter(StructureNode.node_type == NodeType.LAYER).count()
@@ -204,10 +257,10 @@ def populate_scale_test(client, num_layers, num_domains_per_layer, num_terms_per
     relationship_progress_check = math.floor((total_relationships / 20) if total_relationships > 5000 else (total_relationships / 10))
     for idx, term in enumerate(terms):
         current_relationships = DB_SESSION.query(StructureNodeLink).filter(StructureNodeLink.source_node_id == term["id"]).all()
-        current_layer_count = len(current_relationships)
-        if current_layer_count < num_relationships_per_term:
-            logger.debug(f"Creating {num_relationships_per_term - current_layer_count} relationships for term {term['id']}...")
-            for r in range(num_relationships_per_term - current_layer_count):
+        current_link_count = len(current_relationships)
+        if current_link_count < num_relationships_per_term:
+            logger.debug(f"Creating {num_relationships_per_term - current_link_count} relationships for term {term['id']}...")
+            for r in range(num_relationships_per_term - current_link_count):
                 target_idx = (idx + r + 1) % len(terms)
                 if not any(rel for rel in current_relationships if str(rel.target_node_id) == str(terms[target_idx]["id"])):
                     create_relationship(client, source_node_id=term["id"], target_node_id=terms[target_idx]["id"])
@@ -222,10 +275,14 @@ def populate_scale_test(client, num_layers, num_domains_per_layer, num_terms_per
 def main():
     global DB_SESSION
     parser = argparse.ArgumentParser(description="Scale Performance Test")
-    parser.add_argument("--scale", type=str, default="large", help="Scale: small, medium, large, xlarge")
+    parser.add_argument("--scale", type=str, default="small", help="Scale: small, medium, large, xlarge")
     args = parser.parse_args()
     scale = args.scale.lower()
 
+    # Setup performance test environment
+    logger.info("Setting up performance test environment...")
+    service_factory, db_manager = setup_performance_test_environment()
+    
     if scale == "small":
         num_layers = 2
         num_domains_per_layer = 2
@@ -259,135 +316,162 @@ def main():
     DB_PATH = os.path.join(os.path.dirname(__file__), f"scale_test_{scale}.db")
     SQLALCHEMY_DATABASE_URL = f"sqlite:///{DB_PATH}"
     logger.info(f"Running scale test at scale: {scale}")
+    
+    # Create persistent client with proper lifespan management
     client = get_persistent_client()
+    
+    # Use the client within a context manager to ensure lifespan events
+    with client:
+        # Initialize database session for populate_scale_test function
+        global DB_SESSION
+        from database.utils import get_session_local, get_engine
+        # Use the scale test database URL instead of the default config
+        scale_db_url = f"sqlite:///{DB_PATH}"
+        engine = get_engine(database_url=scale_db_url)
+        SessionLocal = get_session_local(engine)
+        DB_SESSION = SessionLocal()
+        
+        # Memory usage tracking
+        mem_stats = {}
+        def print_mem_usage(label):
+            proc = psutil.Process(os.getpid())
+            mem_mb = proc.memory_info().rss / (1024 * 1024)
+            db_size_mb = os.path.getsize(DB_PATH) / (1024 * 1024) if DB_PATH and os.path.exists(DB_PATH) else 0
+            mem_stats[label] = (mem_mb, db_size_mb)
+            logger.info(f"[MEM] {label}: Python RSS={mem_mb:.2f} MB, SQLite DB={db_size_mb:.2f} MB")
 
-    # Memory usage tracking
-    mem_stats = {}
-    def print_mem_usage(label):
-        proc = psutil.Process(os.getpid())
-        mem_mb = proc.memory_info().rss / (1024 * 1024)
-        db_size_mb = os.path.getsize(DB_PATH) / (1024 * 1024) if DB_PATH and os.path.exists(DB_PATH) else 0
-        mem_stats[label] = (mem_mb, db_size_mb)
-        logger.info(f"[MEM] {label}: Python RSS={mem_mb:.2f} MB, SQLite DB={db_size_mb:.2f} MB")
+        print_mem_usage("Start")
+        
+        # Check initial service factory stats
+        check_service_factory_stats(client, "INITIAL")
 
-    print_mem_usage("Start")
+        # Populate the scale test database
+        [layers, domains, terms] = populate_scale_test(client, num_layers, num_domains_per_layer, num_terms_per_domain, num_relationships_per_term)
+        db_setup_end = time.time()
+        print_mem_usage("After populate_scale_test")
+        logger.info(f"Database setup time: {db_setup_end - db_setup_start:.2f} seconds")
+        
+        # Check service factory stats after population
+        check_service_factory_stats(client, "AFTER_POPULATE")
 
-    # Populate the scale test database
-    [layers, domains, terms] = populate_scale_test(client, num_layers, num_domains_per_layer, num_terms_per_domain, num_relationships_per_term)
-    db_setup_end = time.time()
-    print_mem_usage("After populate_scale_test")
-    logger.info(f"Database setup time: {db_setup_end - db_setup_start:.2f} seconds")
+        # Performance test phase: 100 repetitions of CRUD/search for each node type
+        repetitions = 100
+        timings = {}
+        created_nodes = {"layer": [], "domain": [], "term": []}
+        for node_type, node_list in zip(["layer", "domain", "term"], [layers, domains, terms]):
+            logger.info(f"Executing performance test for {node_type}s...")
 
-    # Performance test phase: 100 repetitions of CRUD/search for each node type
-    repetitions = 100
-    timings = {}
-    created_nodes = {"layer": [], "domain": [], "term": []}
-    for node_type, node_list in zip(["layer", "domain", "term"], [layers, domains, terms]):
-        logger.info(f"Executing performance test for {node_type}s...")
+            # Create
+            start = time.time()
+            for i in range(repetitions):
+                node_id = str(uuid.uuid4())
+                if node_type == "layer":
+                    created_nodes["layer"].append(create_layer(client, title=f"PerfLayer_{node_id}"))
+                elif node_type == "domain":
+                    parent_node_id = layers[i % len(layers)]["id"]
+                    created_nodes["domain"].append(create_domain(client, parent_node_id=parent_node_id, title=f"PerfDomain_{node_id}"))
+                elif node_type == "term":
+                    domain = domains[i % len(domains)]
+                    created_nodes["term"].append(create_term(client, domain=domain, name=f"PerfTerm_{node_id}"))
+            timings[f"{node_type}_create"] = time.time() - start
+            #print_mem_usage(f"After {node_type} create")
 
-        # Create
-        start = time.time()
-        for i in range(repetitions):
-            node_id = str(uuid.uuid4())
-            if node_type == "layer":
-                created_nodes["layer"].append(create_layer(client, title=f"PerfLayer_{node_id}"))
-            elif node_type == "domain":
-                parent_node_id = layers[i % len(layers)]["id"]
-                created_nodes["domain"].append(create_domain(client, parent_node_id=parent_node_id, title=f"PerfDomain_{node_id}"))
-            elif node_type == "term":
-                domain = domains[i % len(domains)]
-                created_nodes["term"].append(create_term(client, domain=domain, name=f"PerfTerm_{node_id}"))
-        timings[f"{node_type}_create"] = time.time() - start
-        #print_mem_usage(f"After {node_type} create")
+            # Update
+            start = time.time()
+            for i in range(repetitions):
+                node = node_list[i % len(node_list)]
+                update_payload = {"title": f"Updated_{node_type}_{i}"}
+                update_node(client, node["id"], update_payload)
+            timings[f"{node_type}_update"] = time.time() - start
+            #print_mem_usage(f"After {node_type} update")
 
-        # Update
-        start = time.time()
-        for i in range(repetitions):
-            node = node_list[i % len(node_list)]
-            update_payload = {"title": f"Updated_{node_type}_{i}"}
-            update_node(client, node["id"], update_payload)
-        timings[f"{node_type}_update"] = time.time() - start
-        #print_mem_usage(f"After {node_type} update")
+            # Move
+            start = time.time()
+            for i in range(repetitions):
+                node = node_list[i % len(node_list)]
+                if node_type == "domain":
+                    # Move domain to another layer
+                    new_parent_id = layers[(i + 1) % len(layers)]["id"]
+                    move_payload = {"parent_node_id": new_parent_id}
+                    move_node(client, node["id"], move_payload)
+                elif node_type == "term":
+                    # Move term to another domain
+                    new_parent_id = domains[(i + 1) % len(domains)]["id"]
+                    move_payload = {"parent_node_id": new_parent_id}
+                    move_node(client, node["id"], move_payload)
+            timings[f"{node_type}_move"] = time.time() - start
+            #print_mem_usage(f"After {node_type} move")
 
-        # Move
-        start = time.time()
-        for i in range(repetitions):
-            node = node_list[i % len(node_list)]
-            if node_type == "domain":
-                # Move domain to another layer
-                new_parent_id = layers[(i + 1) % len(layers)]["id"]
-                move_payload = {"parent_node_id": new_parent_id}
-                move_node(client, node["id"], move_payload)
-            elif node_type == "term":
-                # Move term to another domain
-                new_parent_id = domains[(i + 1) % len(domains)]["id"]
-                move_payload = {"parent_node_id": new_parent_id}
-                move_node(client, node["id"], move_payload)
-        timings[f"{node_type}_move"] = time.time() - start
-        #print_mem_usage(f"After {node_type} move")
+            # Search
+            start = time.time()
+            for i in range(repetitions):
+                search_payload = {"title": node_list[i % len(node_list)]["title"], "limit": 10}
+                search_node(client, node_type, search_payload)
+            timings[f"{node_type}_search"] = time.time() - start
+            #print_mem_usage(f"After {node_type} search")
 
-        # Search
-        start = time.time()
-        for i in range(repetitions):
-            search_payload = {"title": node_list[i % len(node_list)]["title"], "limit": 10}
-            search_node(client, node_type, search_payload)
-        timings[f"{node_type}_search"] = time.time() - start
-        #print_mem_usage(f"After {node_type} search")
+            print_mem_usage(f"After {node_type} operations")
 
-        print_mem_usage(f"After {node_type} operations")
+        # Delete in reverse order since cascade deletes happen
+        for node_type, node_list in zip(["term", "domain", "layer"], [created_nodes["term"], created_nodes["domain"], created_nodes["layer"]]):
+            logger.info(f"Deleting {len(node_list)} {node_type}s...")
+            start = time.time()
+            for i, node in enumerate(node_list):
+                try:
+                    delete_node(client, node["id"])
+                except Exception as e:
+                    logger.error(f"Failed to delete {node_type} {node['id']}: {e}")
 
-    # Delete in reverse order since cascade deletes happen
-    for node_type, node_list in zip(["term", "domain", "layer"], [created_nodes["term"], created_nodes["domain"], created_nodes["layer"]]):
-        logger.info(f"Deleting {len(node_list)} {node_type}s...")
-        start = time.time()
-        for i, node in enumerate(node_list):
-            try:
-                delete_node(client, node["id"])
-            except Exception as e:
-                logger.error(f"Failed to delete {node_type} {node['id']}: {e}")
-
-        timings[f"{node_type}_delete"] = time.time() - start
+            timings[f"{node_type}_delete"] = time.time() - start
         #print_mem_usage(f"After {node_type} delete")
 
-    logger.info(f"============ Performance Summary ======================================")
-    logger.info(f"{'Scale:':>30} {scale}")
-    logger.info(f"{'Layers:':>30} {num_layers}")
-    logger.info(f"{'Domains:':>30} {num_domains_per_layer} per layer, {num_domains_per_layer * num_layers} total")
-    logger.info(f"{'Terms:':>30} {num_terms_per_domain} per domain, {num_terms_per_domain * num_domains_per_layer * num_layers} total")
-    logger.info(f"{'Relationships:':>30} {num_relationships_per_term} per term, {num_relationships_per_term * num_terms_per_domain * num_domains_per_layer * num_layers} total")
-    logger.info(f"{'Total records:':>30} {num_layers * num_domains_per_layer * num_terms_per_domain + num_terms_per_domain * num_relationships_per_term}")
-    logger.info(f"{'Iterations:':>30} {repetitions}")
-    logger.info(f"{'Total time for iterations:':>30} {sum(timings.values()):.2f} seconds")
-    logger.info(f"{'Database setup time:':>30} {db_setup_end - db_setup_start:.2f} seconds")
-    logger.info(f"=======================================================================")
+        # Check final service factory stats
+        check_service_factory_stats(client, "FINAL")
 
-    # log table headers
-    header_row= "             "
-    for op in ["create", "update", "move", "delete", "search"]:
-        header_row += f"{op.capitalize():<12}"
-    logger.info(header_row)
-    logger.info(f"-----------------------------------------------------------------------")
+        logger.info(f"============ Performance Summary ======================================")
+        logger.info(f"{'Scale:':>30} {scale}")
+        logger.info(f"{'Layers:':>30} {num_layers}")
+        logger.info(f"{'Domains:':>30} {num_domains_per_layer} per layer, {num_domains_per_layer * num_layers} total")
+        logger.info(f"{'Terms:':>30} {num_terms_per_domain} per domain, {num_terms_per_domain * num_domains_per_layer * num_layers} total")
+        logger.info(f"{'Relationships:':>30} {num_relationships_per_term} per term, {num_relationships_per_term * num_terms_per_domain * num_domains_per_layer * num_layers} total")
+        logger.info(f"{'Total records:':>30} {num_layers * num_domains_per_layer * num_terms_per_domain + num_terms_per_domain * num_relationships_per_term}")
+        logger.info(f"{'Iterations:':>30} {repetitions}")
+        logger.info(f"{'Total time for iterations:':>30} {sum(timings.values()):.2f} seconds")
+        logger.info(f"{'Database setup time:':>30} {db_setup_end - db_setup_start:.2f} seconds")
+        logger.info(f"=======================================================================")
 
-    for node_type in ["layer", "domain", "term"]:
-        op_row = ""
+        # log table headers
+        header_row= "             "
         for op in ["create", "update", "move", "delete", "search"]:
-            # Each op was run 'repetitions' times
-            avg_time = timings[f"{node_type}_{op}"] / repetitions
-            op_avg = f"{avg_time:.4f}s/op"
-            op_row += f"{op_avg:<12}"
-        row_lead = f"{node_type.capitalize()} avg: "
-        logger.info(f"{row_lead:>13}{op_row}")
-    logger.info("========================================================================")
+            header_row += f"{op.capitalize():<12}"
+        logger.info(header_row)
+        logger.info(f"-----------------------------------------------------------------------")
 
-    # Memory usage summary
-    initial_mem, initial_db = mem_stats.get("Start", (None, None))
-    final_mem, final_db = mem_stats.get(f"After term delete", (None, None))
-    if initial_mem is not None and final_mem is not None:
-        logger.info(f"[MEM][SUMMARY] Python RSS delta: {final_mem - initial_mem:.2f} MB (from {initial_mem:.2f} MB to {final_mem:.2f} MB)")
-    if initial_db is not None and final_db is not None:
-        logger.info(f"[MEM][SUMMARY] SQLite DB size delta: {final_db - initial_db:.2f} MB (from {initial_db:.2f} MB to {final_db:.2f} MB)")
+        for node_type in ["layer", "domain", "term"]:
+            op_row = ""
+            for op in ["create", "update", "move", "delete", "search"]:
+                # Each op was run 'repetitions' times
+                avg_time = timings[f"{node_type}_{op}"] / repetitions
+                op_avg = f"{avg_time:.4f}s/op"
+                op_row += f"{op_avg:<12}"
+            row_lead = f"{node_type.capitalize()} avg: "
+            logger.info(f"{row_lead:>13}{op_row}")
+        logger.info("========================================================================")
 
-    logger.info("Scale performance test completed.")
+        # Memory usage summary
+        initial_mem, initial_db = mem_stats.get("Start", (None, None))
+        final_mem, final_db = mem_stats.get(f"After term delete", (None, None))
+        if initial_mem is not None and final_mem is not None:
+            logger.info(f"[MEM][SUMMARY] Python RSS delta: {final_mem - initial_mem:.2f} MB (from {initial_mem:.2f} MB to {final_mem:.2f} MB)")
+        if initial_db is not None and final_db is not None:
+            logger.info(f"[MEM][SUMMARY] SQLite DB size delta: {final_db - initial_db:.2f} MB (from {initial_db:.2f} MB to {final_db:.2f} MB)")
+
+        logger.info("Scale performance test completed.")
+        
+        # Cleanup database session
+        if DB_SESSION:
+            DB_SESSION.close()
+            DB_SESSION = None
 
 if __name__ == "__main__":
     main()

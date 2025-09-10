@@ -5,6 +5,7 @@ API endpoints for managing pipeline flavors.
 from typing import List, Optional
 from fastapi import APIRouter, HTTPException, Depends, Query, status
 
+from api.dependencies.llm_services import get_pipeline_flavor_service
 from llm.flavor_service import PipelineFlavorService
 from llm.models import (
     PipelineFlavor,
@@ -21,14 +22,14 @@ logger = get_logger(__name__)
 
 
 def get_flavor_service() -> PipelineFlavorService:
-    """Dependency to get flavor service instance"""
+    """Legacy dependency to get flavor service instance"""
     return PipelineFlavorService()
 
 
 @router.post("", response_model=PipelineFlavor, status_code=status.HTTP_201_CREATED)
 async def create_flavor(
     request: CreatePipelineFlavorRequest,
-    flavor_service: PipelineFlavorService = Depends(get_flavor_service)
+    flavor_service: PipelineFlavorService = Depends(get_pipeline_flavor_service)
 ):
     """Create a new pipeline flavor"""
     try:

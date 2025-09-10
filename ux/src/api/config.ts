@@ -6,7 +6,7 @@
 
 // Get the correct localhost URL based on platform
 const getDefaultBaseURL = () => {
-  return 'http://localhost:8000';
+  return 'http://localhost:8001';
 };
 
 export const API_CONFIG = {
@@ -19,10 +19,12 @@ export const API_CONFIG = {
 } as const;
 
 export const QUERY_KEYS = {
+/*
   LAYERS: 'layers',
   DOMAINS: 'domains',
   TERMS: 'terms',
   RELATIONSHIPS: 'relationships',
+  */
   PREDICATES: 'predicates',
   GRAPH: 'graph',
   FIND: 'find',
@@ -33,13 +35,12 @@ export const QUERY_KEYS = {
   LLM: 'llm',
   PIPELINE_FLAVORS: 'pipeline-flavors',
   NLP_REFERENCE: 'nlp-reference',
+  STRUCTURE_NODES: 'structure_nodes',
+  NODE_LINKS: 'node_links',
+  CHANGE_EVENTS: 'change_events',
 } as const;
 
 export const ENDPOINTS = {
-  LAYERS: '/api/layers',
-  DOMAINS: '/api/domains',
-  TERMS: '/api/terms',
-  RELATIONSHIPS: '/api/term-relationships',
   PREDICATES: '/api/predicates',
   GRAPH: '/api/graph',
   DATASETS: '/api/datasets',
@@ -49,4 +50,7 @@ export const ENDPOINTS = {
   LLM: '/api/llm',
   PIPELINE_FLAVORS: '/api/pipeline-flavors',
   NLP_REFERENCE: '/api/nlp_analysis/reference',
+  STRUCTURE_NODES: '/api/structure_nodes',
+  NODE_LINKS: '/api/structure_nodes/links',
+  CHANGE_EVENTS: '/api/change_events',
 } as const;

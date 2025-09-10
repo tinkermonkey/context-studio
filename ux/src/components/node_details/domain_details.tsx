@@ -20,8 +20,7 @@ import {
 } from "lucide-react";
 import { Link } from "@tanstack/react-router";
 import { NlpAnalysisPanel } from "@/components/nlp/NlpAnalysisPanel";
-import { useLayer } from "@/api/hooks/layers/useLayers";
-import { useTerms } from "@/api/hooks/terms/useTerms";
+import { useStructureNode, useTermNodes } from "@/api/hooks/structure_nodes/useStructureNodes";
 import { DomainForm } from "@/components/forms/domain_form";
 import { useQueryClient } from "@tanstack/react-query";
 import { QUERY_KEYS } from "@/api/config";
@@ -34,22 +33,17 @@ import {
   CsSidebarSectionTitle,
 } from "@/components/layout/cs_sidebar";
 import { CsMain, CsMainTitle } from "@/components/layout/cs_main";
-import type { DomainOut } from "@/api/services/domains";
-import type { components } from "@/api/client/types";
-
-type TermOut = components["schemas"]["TermOut"];
+import type { StructureNode } from "@/api/types/structureNodes";
 
 interface DomainDetailsProps {
-  domain: DomainOut;
+  domain: StructureNode;
 }
 
 export const DomainDetails: React.FC<DomainDetailsProps> = ({ domain }) => {
   const queryClient = useQueryClient();
   const [isEditOpen, setIsEditOpen] = React.useState(false);
-  const { data: layer, isLoading: layerLoading } = useLayer(domain.layer_id);
-  const { data: terms, isLoading: termsLoading } = useTerms({
-    domain_id: domain.id,
-  });
+  const { data: layer, isLoading: layerLoading } = useStructureNode(domain.parent_node_id ?? "");
+  const { data: terms, isLoading: termsLoading } = useTermNodes(domain.id);
 
   // Group terms by parent-child relationships
   const { parentTerms, childTerms, rootTerms } = React.useMemo(() => {
@@ -60,16 +54,16 @@ export const DomainDetails: React.FC<DomainDetailsProps> = ({ domain }) => {
     const rootTerms: TermOut[] = [];
 
     terms.forEach((term: TermOut) => {
-      if (term.parent_term_id) {
-        // This term has a parent, so it's a child term
+      if (term.parent_node_id && term.parent_node_id !== domain.id) {
+        // This term has a parent term (not the domain), so it's a child term
         childTerms.push(term);
-      } else {
-        // This term has no parent, so it's a root term
+      } else if (!term.parent_node_id || term.parent_node_id === domain.id) {
+        // This term has no parent or domain as parent, so it's a root term
         rootTerms.push(term);
       }
 
       // Check if this term is a parent of any other terms
-      const isParent = terms.some((t) => t.parent_term_id === term.id);
+      const isParent = terms.some((t) => t.parent_node_id === term.id);
       if (isParent && !parentTerms.find((p) => p.id === term.id)) {
         parentTerms.push(term);
       }
@@ -218,7 +212,7 @@ export const DomainDetails: React.FC<DomainDetailsProps> = ({ domain }) => {
               textTitle={"Title"}
               currentDefinition={domain.definition}
               domainId={domain.id}
-              layerId={domain.layer_id}
+              layerId={domain.parent_node_id}
             />
           </div>
           
@@ -307,7 +301,7 @@ export const DomainDetails: React.FC<DomainDetailsProps> = ({ domain }) => {
                     <div className="space-y-4">
                       {parentTerms.map((parentTerm) => {
                         const children = terms.filter(
-                          (t) => t.parent_term_id === parentTerm.id,
+                          (t) => t.parent_node_id === parentTerm.id,
                         );
                         return (
                           <div
@@ -366,7 +360,7 @@ export const DomainDetails: React.FC<DomainDetailsProps> = ({ domain }) => {
                 {/* Orphaned Child Terms (have parent_term_id but parent not in this domain) */}
                 {childTerms.filter(
                   (child) =>
-                    !parentTerms.some((p) => p.id === child.parent_term_id),
+                    !parentTerms.some((p) => p.id === child.parent_node_id),
                 ).length > 0 && (
                   <div>
                     <h3 className="mb-3 flex items-center gap-2 text-lg font-medium">
@@ -377,7 +371,7 @@ export const DomainDetails: React.FC<DomainDetailsProps> = ({ domain }) => {
                           childTerms.filter(
                             (child) =>
                               !parentTerms.some(
-                                (p) => p.id === child.parent_term_id,
+                                (p) => p.id === child.parent_node_id,
                               ),
                           ).length
                         }
@@ -388,7 +382,7 @@ export const DomainDetails: React.FC<DomainDetailsProps> = ({ domain }) => {
                         .filter(
                           (child) =>
                             !parentTerms.some(
-                              (p) => p.id === child.parent_term_id,
+                              (p) => p.id === child.parent_node_id,
                             ),
                         )
                         .map((term) => (
