@@ -7,7 +7,6 @@ import logging
 
 from api.dependencies.enrichment_services import get_enrichment_service
 from enrichment.service import EnrichmentService
-from config import EnrichmentConfig, get_settings
 from enrichment.models import *
 from enrichment.exceptions import EnrichmentError, SourceError, SourceTimeoutError
 

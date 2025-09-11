@@ -10,11 +10,9 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from pydantic import BaseModel
 from typing import List, Dict, Any, Optional
 
-from database.utils import get_current_session_local, get_dataset_manager, get_db
-from api.dependencies.graph_services import get_graph_service, get_all_graph_services
+from database.utils import get_current_session_local, get_dataset_manager
+from api.dependencies.graph_services import get_graph_service
 from graph.graph_service import GraphService
-from graph.network_service import NetworkService
-from graph.sparql_service import SPARQLService
 from utils.logger import get_logger
 
 logger = get_logger(__name__)

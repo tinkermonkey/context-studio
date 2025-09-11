@@ -6,21 +6,24 @@ import sys
 import os
 
 # Add the project root to the path
-sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
+sys.path.append(
+    os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+)
 
 from utils.logger import get_logger
 
 logger = get_logger("test")
 
+
 def test_predicate_set_parsing():
     """Test the predicate_set parsing logic from to_domain_out function."""
-    
+
     # Mock domain object
     class MockDomain:
         def __init__(self, domain_id, predicate_set):
             self.id = domain_id
             self.predicate_set = predicate_set
-    
+
     def parse_predicate_set(domain):
         """Extracted logic from to_domain_out function."""
         predicate_set_list = None
@@ -35,32 +38,36 @@ def test_predicate_set_parsing():
                 elif isinstance(parsed_set, dict):
                     predicate_set_list = parsed_set.get("predicates", [])
                 else:
-                    logger.warning(f"Domain {domain.id} predicate_set has unexpected format after JSON parsing: {type(parsed_set)}")
+                    logger.warning(
+                        f"Domain {domain.id} predicate_set has unexpected format after JSON parsing: {type(parsed_set)}"
+                    )
                     predicate_set_list = None
             except (json.JSONDecodeError, TypeError) as e:
-                logger.warning(f"Invalid JSON in domain {domain.id} predicate_set: {domain.predicate_set}, error: {e}")
+                logger.warning(
+                    f"Invalid JSON in domain {domain.id} predicate_set: {domain.predicate_set}, error: {e}"
+                )
                 predicate_set_list = None
         return predicate_set_list
-    
+
     # Test cases
     test_cases = [
         # New list format
-        ('list-format', '["predicate1", "predicate2", "predicate3"]'),
+        ("list-format", '["predicate1", "predicate2", "predicate3"]'),
         # Old dict format
-        ('dict-format', '{"predicates": ["predicate1", "predicate2"]}'),
+        ("dict-format", '{"predicates": ["predicate1", "predicate2"]}'),
         # Empty dict
-        ('empty-dict', '{}'),
+        ("empty-dict", "{}"),
         # Invalid JSON
-        ('invalid-json', 'invalid json'),
+        ("invalid-json", "invalid json"),
         # None
-        ('none', None),
+        ("none", None),
         # Empty string
-        ('empty', ''),
+        ("empty", ""),
     ]
-    
+
     print("Testing predicate_set format handling...")
     print("=" * 50)
-    
+
     for test_name, predicate_set in test_cases:
         domain = MockDomain(f"test-{test_name}", predicate_set)
         result = parse_predicate_set(domain)
@@ -69,6 +76,7 @@ def test_predicate_set_parsing():
         print(f"Result: {result}")
         print(f"Type: {type(result)}")
         print("-" * 30)
+
 
 if __name__ == "__main__":
     test_predicate_set_parsing()

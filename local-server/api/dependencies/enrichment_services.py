@@ -5,7 +5,6 @@ This module provides optimized dependency injection for enrichment-related servi
 using the service factory pattern for better performance.
 """
 
-from fastapi import Depends
 
 from services.service_factory import get_service_factory
 from enrichment.service import EnrichmentService

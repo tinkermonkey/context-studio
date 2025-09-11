@@ -4,7 +4,6 @@ import os
 from typing import List
 from datetime import datetime
 from fastapi import APIRouter, HTTPException, Depends
-from sqlalchemy.orm import Session
 
 from dataset.manager import DatasetManager
 from dataset.models import (
@@ -12,11 +11,10 @@ from dataset.models import (
     CreateDatasetRequest,
     UpdateDatasetDirectoryRequest,
     AddExistingDatasetRequest,
-    DatasetInfo,
     ActionLogResponse,
     ActionLogEntry,
 )
-from database.utils import get_dataset_manager, get_db_for_current_dataset, switch_active_database
+from database.utils import get_dataset_manager, switch_active_database
 from utils.logger import get_logger
 
 logger = get_logger(__name__)

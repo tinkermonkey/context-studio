@@ -22,9 +22,9 @@ Endpoints:
 """
 
 from fastapi import APIRouter, HTTPException, Query, Depends, Path
-from typing import List, Optional
+from typing import List
 from uuid import UUID
-from services.version_manager import VersionManager, ChangeState, EntityVersion
+from services.version_manager import VersionManager, EntityVersion
 from services.working_tree_manager import WorkingTreeManager
 from services.diff_generator import DiffGenerator
 from services.service_factory import (
@@ -34,9 +34,8 @@ from services.service_factory import (
 )
 from api.models.version_management import (
     EntityVersionOut, EntityVersionSummary, WorkingTreeStatusOut, WorkingTreeEntryOut,
-    EntityDiffOut, DiffSummaryOut, RollbackRequest, StateUpdateRequest, CommitRequest,
-    StageRequest, BatchStageRequest, BatchOperationResult, VersionQueryParams,
-    DiffRequest, DiffFormatEnum, VersionManagementHealthOut, VersionManagementStatsOut,
+    EntityDiffOut, DiffSummaryOut, RollbackRequest, CommitRequest,
+    StageRequest, DiffRequest, DiffFormatEnum, VersionManagementHealthOut, VersionManagementStatsOut,
     EntityTypeEnum, ChangeStateEnum
 )
 

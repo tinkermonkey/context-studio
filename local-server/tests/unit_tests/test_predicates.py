@@ -1,12 +1,13 @@
 """Unit tests for predicate CRUD operations, identifier generation, and ConceptNet mapping."""
+
 import sys
 import os
+
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 import pytest
 import json
 import uuid
-from datetime import datetime
 from unittest.mock import Mock, patch
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
@@ -32,41 +33,45 @@ class TestPredicateCRUDOperations:
         mapping = {
             "conceptnet": {
                 "relation": "RelatedTo",
-                "url": "https://conceptnet.io/r/RelatedTo"
+                "url": "https://conceptnet.io/r/RelatedTo",
             }
         }
-        
+
         predicate = Predicate(
             identifier="related_to",
             title="Related To",
             definition="Indicates a general relationship between concepts",
-            mapping=json.dumps(mapping)
+            mapping=json.dumps(mapping),
         )
-        
+
         db_session.add(predicate)
         db_session.commit()
-        
+
         # Verify predicate was created
-        saved_predicate = db_session.query(Predicate).filter_by(identifier="related_to").first()
+        saved_predicate = (
+            db_session.query(Predicate).filter_by(identifier="related_to").first()
+        )
         assert saved_predicate is not None
         assert saved_predicate.title == "Related To"
-        assert saved_predicate.definition == "Indicates a general relationship between concepts"
+        assert (
+            saved_predicate.definition
+            == "Indicates a general relationship between concepts"
+        )
         assert json.loads(saved_predicate.mapping) == mapping
         assert saved_predicate.date_created is not None
         assert saved_predicate.date_modified is not None
 
     def test_create_predicate_minimal_fields(self, db_session):
         """Test creating a predicate with only required fields."""
-        predicate = Predicate(
-            identifier="synonym",
-            title="Synonym"
-        )
-        
+        predicate = Predicate(identifier="synonym", title="Synonym")
+
         db_session.add(predicate)
         db_session.commit()
-        
+
         # Verify predicate was created
-        saved_predicate = db_session.query(Predicate).filter_by(identifier="synonym").first()
+        saved_predicate = (
+            db_session.query(Predicate).filter_by(identifier="synonym").first()
+        )
         assert saved_predicate is not None
         assert saved_predicate.title == "Synonym"
         assert saved_predicate.definition is None
@@ -78,20 +83,20 @@ class TestPredicateCRUDOperations:
         predicate1 = Predicate(identifier="test_id", title="Test Title")
         db_session.add(predicate1)
         db_session.commit()
-        
+
         # Try to create predicate with duplicate identifier
         predicate2 = Predicate(identifier="test_id", title="Different Title")
         db_session.add(predicate2)
-        
+
         with pytest.raises(Exception):  # Should raise IntegrityError
             db_session.commit()
-        
+
         db_session.rollback()
-        
+
         # Try to create predicate with duplicate title
         predicate3 = Predicate(identifier="different_id", title="Test Title")
         db_session.add(predicate3)
-        
+
         with pytest.raises(Exception):  # Should raise IntegrityError
             db_session.commit()
 
@@ -100,7 +105,7 @@ class TestPredicateCRUDOperations:
         predicate = Predicate(identifier="test", title="Test")
         db_session.add(predicate)
         db_session.commit()
-        
+
         # Read by ID
         found_predicate = db_session.query(Predicate).filter_by(id=predicate.id).first()
         assert found_predicate is not None
@@ -112,9 +117,11 @@ class TestPredicateCRUDOperations:
         predicate = Predicate(identifier="test_identifier", title="Test")
         db_session.add(predicate)
         db_session.commit()
-        
+
         # Read by identifier
-        found_predicate = db_session.query(Predicate).filter_by(identifier="test_identifier").first()
+        found_predicate = (
+            db_session.query(Predicate).filter_by(identifier="test_identifier").first()
+        )
         assert found_predicate is not None
         assert found_predicate.title == "Test"
 
@@ -123,16 +130,18 @@ class TestPredicateCRUDOperations:
         predicate = Predicate(identifier="test", title="Original Title")
         db_session.add(predicate)
         db_session.commit()
-        
+
         original_modified = predicate.date_modified
-        
+
         # Update predicate
         predicate.title = "Updated Title"
         predicate.definition = "Updated definition"
         db_session.commit()
-        
+
         # Verify update
-        updated_predicate = db_session.query(Predicate).filter_by(id=predicate.id).first()
+        updated_predicate = (
+            db_session.query(Predicate).filter_by(id=predicate.id).first()
+        )
         assert updated_predicate.title == "Updated Title"
         assert updated_predicate.definition == "Updated definition"
         # Note: date_modified update depends on trigger or application logic
@@ -142,15 +151,17 @@ class TestPredicateCRUDOperations:
         predicate = Predicate(identifier="test", title="Test")
         db_session.add(predicate)
         db_session.commit()
-        
+
         predicate_id = predicate.id
-        
+
         # Delete predicate
         db_session.delete(predicate)
         db_session.commit()
-        
+
         # Verify deletion
-        deleted_predicate = db_session.query(Predicate).filter_by(id=predicate_id).first()
+        deleted_predicate = (
+            db_session.query(Predicate).filter_by(id=predicate_id).first()
+        )
         assert deleted_predicate is None
 
     def test_list_predicates_pagination(self, db_session):
@@ -160,11 +171,11 @@ class TestPredicateCRUDOperations:
             predicate = Predicate(identifier=f"test_{i}", title=f"Test {i}")
             db_session.add(predicate)
         db_session.commit()
-        
+
         # Test pagination
         page_1 = db_session.query(Predicate).offset(0).limit(5).all()
         page_2 = db_session.query(Predicate).offset(5).limit(5).all()
-        
+
         assert len(page_1) == 5
         assert len(page_2) == 5
         assert page_1[0].id != page_2[0].id
@@ -172,25 +183,23 @@ class TestPredicateCRUDOperations:
     def test_list_predicates_sorting(self, db_session):
         """Test listing predicates with sorting."""
         # Create predicates in random order
-        predicates_data = [
-            ("zebra", "Zebra"),
-            ("alpha", "Alpha"),
-            ("beta", "Beta")
-        ]
-        
+        predicates_data = [("zebra", "Zebra"), ("alpha", "Alpha"), ("beta", "Beta")]
+
         for identifier, title in predicates_data:
             predicate = Predicate(identifier=identifier, title=title)
             db_session.add(predicate)
         db_session.commit()
-        
+
         # Sort by title
         sorted_by_title = db_session.query(Predicate).order_by(Predicate.title).all()
         assert sorted_by_title[0].title == "Alpha"
         assert sorted_by_title[1].title == "Beta"
         assert sorted_by_title[2].title == "Zebra"
-        
+
         # Sort by identifier
-        sorted_by_identifier = db_session.query(Predicate).order_by(Predicate.identifier).all()
+        sorted_by_identifier = (
+            db_session.query(Predicate).order_by(Predicate.identifier).all()
+        )
         assert sorted_by_identifier[0].identifier == "alpha"
         assert sorted_by_identifier[1].identifier == "beta"
         assert sorted_by_identifier[2].identifier == "zebra"
@@ -214,7 +223,10 @@ class TestIdentifierGeneration:
 
     def test_generate_identifier_multiple_spaces(self):
         """Test identifier generation with multiple spaces."""
-        assert generate_identifier_from_title("Related  To  Something") == "related_to_something"
+        assert (
+            generate_identifier_from_title("Related  To  Something")
+            == "related_to_something"
+        )
         assert generate_identifier_from_title("  Leading Spaces") == "leading_spaces"
         assert generate_identifier_from_title("Trailing Spaces  ") == "trailing_spaces"
 
@@ -247,33 +259,39 @@ class TestConceptNetMapping:
         unique_suffix = str(uuid.uuid4())[:8]
         unique_title = f"TestRelation_{unique_suffix}"
         unique_identifier = f"test_relation_{unique_suffix}"
-        
+
         mapping = {
             "conceptnet": {
                 "relation": unique_title,
                 "url": f"https://conceptnet.io/r/{unique_title}",
-                "description": f"ConceptNet relation type: {unique_title}"
+                "description": f"ConceptNet relation type: {unique_title}",
             }
         }
-        
+
         predicate = Predicate(
             identifier=unique_identifier,
             title=unique_title,
             definition=f"ConceptNet relation: {unique_title}",
-            mapping=json.dumps(mapping)
+            mapping=json.dumps(mapping),
         )
-        
+
         db_session.add(predicate)
         db_session.commit()
-        
+
         # Verify mapping is stored correctly
-        saved_predicate = db_session.query(Predicate).filter_by(identifier=unique_identifier).first()
+        saved_predicate = (
+            db_session.query(Predicate).filter_by(identifier=unique_identifier).first()
+        )
         stored_mapping = json.loads(saved_predicate.mapping)
         assert stored_mapping["conceptnet"]["relation"] == unique_title
-        assert stored_mapping["conceptnet"]["url"] == f"https://conceptnet.io/r/{unique_title}"
+        assert (
+            stored_mapping["conceptnet"]["url"]
+            == f"https://conceptnet.io/r/{unique_title}"
+        )
 
     def test_get_conceptnet_relation_for_predicate(self, db_session):
         """Test extracting ConceptNet relation from predicate mapping."""
+
         def get_conceptnet_relation_for_predicate(predicate: Predicate):
             """Extract ConceptNet relation from predicate mapping."""
             if not predicate.mapping:
@@ -283,103 +301,102 @@ class TestConceptNetMapping:
                 return mapping.get("conceptnet", {}).get("relation")
             except (json.JSONDecodeError, KeyError):
                 return None
-        
+
         # Test with valid ConceptNet mapping
         mapping = {"conceptnet": {"relation": "RelatedTo"}}
         predicate = Predicate(
-            identifier="related_to",
-            title="RelatedTo",
-            mapping=json.dumps(mapping)
+            identifier="related_to", title="RelatedTo", mapping=json.dumps(mapping)
         )
-        
+
         assert get_conceptnet_relation_for_predicate(predicate) == "RelatedTo"
-        
+
         # Test with no mapping
         predicate_no_mapping = Predicate(identifier="test", title="Test")
         assert get_conceptnet_relation_for_predicate(predicate_no_mapping) is None
-        
+
         # Test with invalid JSON
         predicate_invalid = Predicate(
-            identifier="invalid",
-            title="Invalid",
-            mapping="invalid json"
+            identifier="invalid", title="Invalid", mapping="invalid json"
         )
         assert get_conceptnet_relation_for_predicate(predicate_invalid) is None
 
-    @patch('config.get_settings')
+    @patch("config.get_settings")
     def test_import_conceptnet_predicates(self, mock_get_settings, db_session):
         """Test importing ConceptNet relations as predicates."""
         # Check how many predicates exist before import (from migration)
         initial_count = db_session.query(Predicate).count()
-        
+
         # Mock config with relations not already in the migration
         unique_suffix = str(uuid.uuid4())[:8]
         mock_settings = Mock()
         mock_settings.concepcy_config = {
             "relations_of_interest": [
-                f"TestRelation1_{unique_suffix}", 
-                f"TestRelation2_{unique_suffix}", 
-                f"TestRelation3_{unique_suffix}"
+                f"TestRelation1_{unique_suffix}",
+                f"TestRelation2_{unique_suffix}",
+                f"TestRelation3_{unique_suffix}",
             ]
         }
         mock_get_settings.return_value = mock_settings
-        
+
         def import_conceptnet_predicates(db):
             """Import ConceptNet relations as predicates."""
             from config import get_settings
-            
+
             settings = get_settings()
             relations = settings.concepcy_config["relations_of_interest"]
-            
+
             predicates = []
             for relation in relations:
                 identifier = relation.lower()
-                
+
                 # Check if already exists
                 existing = db.query(Predicate).filter_by(identifier=identifier).first()
                 if existing:
                     continue
-                
+
                 mapping = {
                     "conceptnet": {
                         "relation": relation,
                         "url": f"https://conceptnet.io/r/{relation}",
-                        "description": f"ConceptNet relation type: {relation}"
+                        "description": f"ConceptNet relation type: {relation}",
                     }
                 }
-                
+
                 predicate = Predicate(
                     identifier=identifier,
                     title=relation,
                     definition=f"ConceptNet relation: {relation}",
-                    mapping=json.dumps(mapping)
+                    mapping=json.dumps(mapping),
                 )
-                
+
                 db.add(predicate)
                 predicates.append(predicate)
-            
+
             db.commit()
             return predicates
-        
+
         # Import predicates
         imported_predicates = import_conceptnet_predicates(db_session)
-        
+
         # Verify import
         assert len(imported_predicates) == 3
-        
+
         # Check total count increased by 3
         final_count = db_session.query(Predicate).count()
         assert final_count == initial_count + 3
-        
+
         # Check each imported predicate
         test1_id = f"testrelation1_{unique_suffix}"
         test1 = db_session.query(Predicate).filter_by(identifier=test1_id).first()
         assert test1 is not None
         assert test1.title == f"TestRelation1_{unique_suffix}"
-        
+
         mapping = json.loads(test1.mapping)
         assert mapping["conceptnet"]["relation"] == f"TestRelation1_{unique_suffix}"
-        assert mapping["conceptnet"]["url"] == f"https://conceptnet.io/r/TestRelation1_{unique_suffix}"
+        assert (
+            mapping["conceptnet"]["url"]
+            == f"https://conceptnet.io/r/TestRelation1_{unique_suffix}"
+        )
 
 
 class TestPredicateRelationships:
@@ -401,18 +418,18 @@ class TestPredicateRelationships:
         predicate = Predicate(identifier="synonym", title="Synonym")
         db_session.add(predicate)
         db_session.commit()
-        
+
         # Create structure node that references the predicate
         structure_node = StructureNode(
             id=str(uuid.uuid4()),
             node_type="domain",
             title="Test Domain",
             definition="Test definition",
-            structural_predicate_id=predicate.id
+            structural_predicate_id=predicate.id,
         )
         db_session.add(structure_node)
         db_session.commit()
-        
+
         # Test relationship
         assert structure_node.structural_predicate_ref == predicate
         assert predicate.structure_nodes == [structure_node]
@@ -423,18 +440,18 @@ class TestPredicateRelationships:
         predicate = Predicate(identifier="synonym", title="Synonym")
         db_session.add(predicate)
         db_session.commit()
-        
+
         # Create structure node link that references the predicate
         node_link = StructureNodeLink(
             id=str(uuid.uuid4()),
             source_node_id=str(uuid.uuid4()),
             target_node_id=str(uuid.uuid4()),
             predicate="synonym",
-            predicate_id=predicate.id
+            predicate_id=predicate.id,
         )
         db_session.add(node_link)
         db_session.commit()
-        
+
         # Test relationship
         assert node_link.predicate_ref == predicate
         assert predicate.structure_node_links == [node_link]
@@ -445,23 +462,25 @@ class TestPredicateRelationships:
         predicate = Predicate(identifier="test", title="Test")
         db_session.add(predicate)
         db_session.commit()
-        
+
         # Create structure node that references the predicate
         structure_node = StructureNode(
             id=str(uuid.uuid4()),
             node_type="domain",
             title="Test Domain",
             definition="Test definition",
-            structural_predicate_id=predicate.id
+            structural_predicate_id=predicate.id,
         )
         db_session.add(structure_node)
         db_session.commit()
-        
+
         # Delete predicate
         db_session.delete(predicate)
         db_session.commit()
-        
+
         # Check structure node still exists but reference is null
-        remaining_node = db_session.query(StructureNode).filter_by(id=structure_node.id).first()
+        remaining_node = (
+            db_session.query(StructureNode).filter_by(id=structure_node.id).first()
+        )
         assert remaining_node is not None
         # Note: Actual behavior depends on foreign key constraints setup

@@ -5,7 +5,7 @@ This module contains the Pydantic models for the version management system,
 supporting entity versioning, working tree state, and diff operations.
 """
 
-from pydantic import BaseModel, Field, field_validator, ConfigDict
+from pydantic import BaseModel, Field, ConfigDict
 from typing import Optional, List, Dict, Any
 from uuid import UUID
 from enum import Enum

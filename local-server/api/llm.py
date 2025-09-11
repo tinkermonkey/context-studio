@@ -1,19 +1,14 @@
 from fastapi import APIRouter, HTTPException, status, Depends
-from fastapi.responses import JSONResponse, StreamingResponse
+from fastapi.responses import StreamingResponse
 import datetime
-import os
 import json
-from typing import Dict, Any
 
-from api.dependencies.llm_services import get_default_llm_service, get_llm_service as get_optimized_llm_service
+from api.dependencies.llm_services import get_default_llm_service
 from llm.service import LLMService
 from llm.models import (
     DefinitionSuggestionRequest, 
-    DefinitionSuggestionResponse,
     LayerDefinitionRequest,
-    LayerDefinitionResponse,
     DomainDefinitionRequest,
-    DomainDefinitionResponse,
     LLMHealthResponse,
     LLMErrorResponse,
     LLMSuccessResponse,

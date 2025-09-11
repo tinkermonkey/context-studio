@@ -1,6 +1,9 @@
 import sys
 import os
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
+
+sys.path.insert(
+    0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+)
 import sqlite3
 import time
 import tempfile
@@ -8,13 +11,15 @@ import pytest
 from utils.event_processor import EventProcessor
 from datetime import datetime, timedelta
 
+
 @pytest.fixture
 def temp_db():
     fd, path = tempfile.mkstemp(suffix=".db")
     os.close(fd)
     conn = sqlite3.connect(path)
     cur = conn.cursor()
-    cur.execute("""
+    cur.execute(
+        """
         CREATE TABLE change_events (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             event_type TEXT NOT NULL,
@@ -34,8 +39,9 @@ def temp_db():
 
 
 def insert_event(db_url, record_type, event_type, processed=0, ts=None, record_id=None):
-    from datetime import datetime, timezone
+    from datetime import timezone
     import sqlite3
+
     # Extract file path from SQLAlchemy URL
     file_path = db_url.replace("sqlite:///", "")
     conn = sqlite3.connect(file_path)
@@ -46,7 +52,7 @@ def insert_event(db_url, record_type, event_type, processed=0, ts=None, record_i
         record_id = f"test-{record_type}-id"
     cur.execute(
         "INSERT INTO change_events (event_type, record_type, record_id, old_data, new_data, timestamp, processed) VALUES (?, ?, ?, ?, ?, ?, ?)",
-        (event_type, record_type, record_id, '{}', '{}', ts, processed)
+        (event_type, record_type, record_id, "{}", "{}", ts, processed),
     )
     conn.commit()
     conn.close()
@@ -62,6 +68,7 @@ def test_integration_event_processor_end_to_end(temp_db, capsys):
 
     import logging
     import io
+
     log_stream = io.StringIO()
     handler = logging.StreamHandler(log_stream)
     logger = logging.getLogger("utils.event_processor")
@@ -94,7 +101,8 @@ def test_integration_event_processor_end_to_end(temp_db, capsys):
 
 def test_integration_event_processor_cleanup(temp_db, capsys):
     # Insert processed events, one old, one recent
-    from datetime import datetime, timezone
+    from datetime import timezone
+
     old_ts = (datetime.now(timezone.utc) - timedelta(hours=49)).isoformat()
     insert_event(temp_db, "structure_nodes", "delete", processed=1, ts=old_ts)
     insert_event(temp_db, "structure_nodes", "update", processed=1)
@@ -119,7 +127,9 @@ def test_integration_event_processor_large_batch(temp_db, capsys):
     record_types = ["structure_node", "structure_node_link", "predicate"]
     for i in range(50):
         record_type = record_types[i % len(record_types)]
-        insert_event(temp_db, record_type, "create", record_id=f"test-{record_type}-{i}")
+        insert_event(
+            temp_db, record_type, "create", record_id=f"test-{record_type}-{i}"
+        )
 
     processor = EventProcessor(temp_db, poll_interval=0.05, max_events=10)
     try:

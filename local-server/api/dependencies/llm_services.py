@@ -5,7 +5,6 @@ This module provides optimized dependency injection for LLM and pipeline-related
 using the service factory pattern for better performance.
 """
 
-from fastapi import Depends
 
 from services.service_factory import get_service_factory
 from llm.flavor_service import PipelineFlavorService

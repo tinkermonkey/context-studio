@@ -125,7 +125,7 @@ async def cleanup_service_factory_cache(
         
         return {
             "status": "success",
-            "message": f"Cache cleanup completed",
+            "message": "Cache cleanup completed",
             "expired_entries_removed": expired_count,
             "cleaned_at": datetime.utcnow().isoformat()
         }

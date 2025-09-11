@@ -1,15 +1,18 @@
 import sys
 import os
+
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import pytest
 from nlp.pipeline import get_pipeline
 from nlp.processors import extract_token_data
+
 
 @pytest.fixture(scope="module")
 def nlp():
     pipeline = get_pipeline().get_nlp()
     assert pipeline is not None, "NLP pipeline is not initialized."
     return pipeline
+
 
 def test_spacy_token_extraction(nlp):
     doc = nlp("Apple is a company based in Cupertino.")
@@ -20,13 +23,17 @@ def test_spacy_token_extraction(nlp):
         assert token.lemma is not None
         assert token.pos is not None
 
+
 def test_concepcy_extraction(nlp):
     doc = nlp("Apple is a fruit.")
     tokens = extract_token_data(doc)
     # Currently concepcy component is not populating token attributes,
     # so we expect concepcy to be None for all tokens
     for token in tokens:
-        assert token.concepcy is None, f"Expected no concepcy data for '{token.text}', but found: {token.concepcy}"
+        assert (
+            token.concepcy is None
+        ), f"Expected no concepcy data for '{token.text}', but found: {token.concepcy}"
+
 
 def test_wordnet_extraction(nlp):
     doc = nlp("Apple is a fruit.")
@@ -40,6 +47,7 @@ def test_wordnet_extraction(nlp):
             assert isinstance(token.wordnet.definitions, list)
             break
     assert found, "No wordnet synsets extracted."
+
 
 def test_spacy_specific_token_data(nlp):
     doc = nlp("Apple is a company based in Cupertino.")
@@ -70,6 +78,7 @@ def test_spacy_specific_token_data(nlp):
     assert wn_cupertino is not None
     assert wn_cupertino.synsets == []
 
+
 def test_concepcy_specific_data(nlp):
     doc = nlp("Apple is a company based in Cupertino.")
     tokens = extract_token_data(doc)
@@ -77,7 +86,10 @@ def test_concepcy_specific_data(nlp):
     assert company_token is not None, "Token 'company' not found."
     # Currently concepcy component is not populating token attributes,
     # so we expect concepcy to be None
-    assert company_token.concepcy is None, f"Expected no concepcy data for 'company', but found: {company_token.concepcy}"
+    assert (
+        company_token.concepcy is None
+    ), f"Expected no concepcy data for 'company', but found: {company_token.concepcy}"
+
 
 def test_wordnet_specific_data(nlp):
     doc = nlp("Apple is a company based in Cupertino.")

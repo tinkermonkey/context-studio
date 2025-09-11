@@ -9,7 +9,7 @@ from fastapi import Depends
 from sqlalchemy.orm import Session
 
 from database.utils import get_db
-from services.service_factory import get_service_factory, ServiceFactory
+from services.service_factory import get_service_factory
 from graph.graph_service import GraphService
 from graph.network_service import NetworkService
 from graph.sparql_service import SPARQLService

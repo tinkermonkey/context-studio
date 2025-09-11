@@ -5,13 +5,12 @@ import threading
 import time
 from contextlib import contextmanager
 from dataclasses import dataclass, field
-from datetime import datetime, timedelta
+from datetime import datetime
 from enum import Enum
 from typing import Dict, Optional, Any, Generator, List
 from sqlalchemy import create_engine, event, text, Engine
 from sqlalchemy.orm import sessionmaker, Session
-from sqlalchemy.pool import QueuePool, NullPool, StaticPool, Pool
-from sqlalchemy.exc import SQLAlchemyError, DisconnectionError
+from sqlalchemy.pool import QueuePool, NullPool, StaticPool
 from fastapi import HTTPException
 
 from utils.logger import get_logger
@@ -709,7 +708,7 @@ def init_db(engine=None, database_url=None, connect_args=None):
             return
 
         try:
-            logger.info("Enabling SQLite extensions...")
+            logger.debug("Enabling SQLite extensions...")
             connection.enable_load_extension(True)
             sqlite_vec.load(connection)
             _loaded_connections.add(connection_id)
@@ -718,7 +717,6 @@ def init_db(engine=None, database_url=None, connect_args=None):
             raise e
         finally:
             # Disable extension loading after use
-            logger.info("Extension loaded successfully, disabling further loading.")
             connection.enable_load_extension(False)
 
     def receive_close(connection, connection_record):

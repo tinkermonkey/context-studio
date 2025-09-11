@@ -2,7 +2,7 @@
 API endpoints for managing pipeline flavors.
 """
 
-from typing import List, Optional
+from typing import Optional
 from fastapi import APIRouter, HTTPException, Depends, Query, status
 
 from api.dependencies.llm_services import get_pipeline_flavor_service

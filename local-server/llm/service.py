@@ -20,7 +20,6 @@ from .models import (
     StreamingLLMResponse,
     PipelineFlavor
 )
-from .prompts import DefinitionPromptTemplate
 from .exceptions import (
     LLMConfigurationError, 
     LLMProcessingError, 
@@ -59,9 +58,9 @@ class LLMService:
             self.logger.debug(f"Initializing LLM with model: {self.model_name}, temperature: {self.temperature}")
             
             self._llm = init_chat_model(
-                self.model_name, 
-                model_provider="openai", 
-                temperature=self.temperature, 
+                self.model_name,
+                model_provider="openai",
+                temperature=self.temperature,
                 openai_api_key=openai_api_key
             )
             self.logger.info(f"LLM initialized successfully with model: {self.model_name}")

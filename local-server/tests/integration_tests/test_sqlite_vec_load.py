@@ -2,10 +2,12 @@ import sys
 import os
 
 # Ensure project root is importable
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../../')))
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "../../")))
 
-from triage_scripts.triage_helper import create_test_app_with_migrations, cleanup_test_database
-from sqlalchemy import text
+from triage_scripts.triage_helper import (
+    create_test_app_with_migrations,
+    cleanup_test_database,
+)
 import pytest
 
 
@@ -14,7 +16,9 @@ def test_sqlite_vec_extension_loads():
 
     Fail explicitly with the loader exception message so CI can capture the root cause.
     """
-    app, test_db_fd, test_db_path, engine, TestingSessionLocal = create_test_app_with_migrations()
+    app, test_db_fd, test_db_path, engine, TestingSessionLocal = (
+        create_test_app_with_migrations()
+    )
     try:
         # First ensure the sqlite_vec package is importable
         try:

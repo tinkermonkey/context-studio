@@ -1,15 +1,26 @@
 """Shared test configuration and fixtures."""
+
 import sys
 import os
+
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 import pytest
 import tempfile
 from fastapi.testclient import TestClient
 from app import create_app
-from database.utils import get_engine, get_session_local, init_db, get_database_manager, cleanup_database_resources
+from database.utils import (
+    get_engine,
+    get_session_local,
+    init_db,
+    get_database_manager,
+    cleanup_database_resources,
+)
 from database.migrations.migration_manager import MigrationManager
-from services.service_factory import ServiceFactory, set_service_factory, get_service_factory
+from services.service_factory import (
+    ServiceFactory,
+    set_service_factory,
+)
 from sqlalchemy import text
 
 
@@ -18,19 +29,19 @@ def create_test_database_with_migrations():
     with tempfile.NamedTemporaryFile(suffix=".db", delete=False) as tf:
         db_path = tf.name
         db_url = f"sqlite:///{db_path}"
-    
+
     try:
         # Initialize database with base schema
         engine = get_engine(db_url)
         session_local = get_session_local(engine)
         init_db(engine=engine)
-        
+
         # Apply migrations to get vector tables
         migration_manager = MigrationManager(db_path)
         success = migration_manager.migrate_to_latest()
         if not success:
             raise RuntimeError("Failed to apply migrations to test database")
-        
+
         return engine, session_local, db_path
     except Exception:
         # Cleanup on failure
@@ -44,8 +55,8 @@ def test_service_factory():
     """Create test service factory with optimized settings for testing."""
     # Create factory with shorter TTL and more frequent cleanup for tests
     factory = ServiceFactory(
-        cache_ttl_seconds=30,   # Shorter TTL for tests
-        cleanup_interval=5      # More frequent cleanup
+        cache_ttl_seconds=30,  # Shorter TTL for tests
+        cleanup_interval=5,  # More frequent cleanup
     )
     set_service_factory(factory)
     yield factory
@@ -80,9 +91,14 @@ def shared_app(test_service_factory):
     try:
         # Set the global engine state for testing
         from database.utils import set_current_engine_for_testing
+
         set_current_engine_for_testing(engine, session_local)
-        
-        app = create_app(engine=engine, session_local=session_local, service_factory=test_service_factory)
+
+        app = create_app(
+            engine=engine,
+            session_local=session_local,
+            service_factory=test_service_factory,
+        )
         yield app, engine, session_local
     finally:
         # Always cleanup the temporary database
@@ -102,27 +118,31 @@ def shared_client(shared_app):
 def db_session(shared_app):
     """Provide clean database session for each test function - auto-rollback."""
     app, engine, session_local = shared_app
-    
+
     # Create a new session for this test
     session = session_local()
-    
+
     try:
         yield session
     finally:
         # Always close the session first
         session.close()
-        
+
         # Clean all tables for next test to ensure isolation
         cleanup_session = session_local()
         try:
             # Get all table names except migration tracking
-            tables_result = cleanup_session.execute(text("""
+            tables_result = cleanup_session.execute(
+                text(
+                    """
                 SELECT name FROM sqlite_master 
                 WHERE type='table' AND name NOT LIKE 'sqlite_%'
                 AND name NOT IN ('migration_versions', 'alembic_version')
                 ORDER BY name
-            """)).fetchall()
-            
+            """
+                )
+            ).fetchall()
+
             # Clear all data (preserve schema)
             cleanup_session.execute(text("PRAGMA foreign_keys = OFF"))
             for (table_name,) in tables_result:
@@ -136,14 +156,14 @@ def db_session(shared_app):
             cleanup_session.close()
 
 
-@pytest.fixture(scope="function") 
+@pytest.fixture(scope="function")
 def clean_db_session(shared_app):
     """Provide clean database session that commits changes - use sparingly."""
     app, engine, session_local = shared_app
-    
+
     # Create a new session for this test
     session = session_local()
-    
+
     try:
         yield session
         # Commit any changes made during the test
@@ -155,21 +175,28 @@ def clean_db_session(shared_app):
     finally:
         # Clean up the session
         session.close()
-        
+
         # Clean all tables for next test (more thorough than rollback)
         cleanup_session = session_local()
         try:
             # Get all table names
-            tables_result = cleanup_session.execute(text("""
+            tables_result = cleanup_session.execute(
+                text(
+                    """
                 SELECT name FROM sqlite_master 
                 WHERE type='table' AND name NOT LIKE 'sqlite_%'
                 ORDER BY name
-            """)).fetchall()
-            
+            """
+                )
+            ).fetchall()
+
             # Clear all data (preserve schema)
             cleanup_session.execute(text("PRAGMA foreign_keys = OFF"))
             for (table_name,) in tables_result:
-                if table_name not in ['migration_versions', 'alembic_version']:  # Preserve migration state
+                if table_name not in [
+                    "migration_versions",
+                    "alembic_version",
+                ]:  # Preserve migration state
                     cleanup_session.execute(text(f"DELETE FROM {table_name}"))
             cleanup_session.execute(text("PRAGMA foreign_keys = ON"))
             cleanup_session.commit()
@@ -182,7 +209,7 @@ def clean_db_session(shared_app):
 def optimized_db_session(shared_app, test_database_manager):
     """Provide optimized database session using DatabaseManager for enhanced testing."""
     app, engine, session_local = shared_app
-    
+
     # Use database manager for optimized session handling
     try:
         # Use the shared app's engine through database manager
@@ -191,11 +218,11 @@ def optimized_db_session(shared_app, test_database_manager):
             # Register the test engine with the manager
             test_database_manager._engines[engine_id] = engine
             test_database_manager._session_locals[engine_id] = session_local
-        
+
         with test_database_manager.get_optimized_session(engine_id) as session:
             yield session
-            
-    except Exception as e:
+
+    except Exception:
         # Fallback to regular session if optimized fails
         session = session_local()
         try:
@@ -212,7 +239,7 @@ def test_app(shared_app):
     return app
 
 
-@pytest.fixture(scope="function") 
+@pytest.fixture(scope="function")
 def client(shared_client):
     """Legacy fixture name - now returns shared client for backwards compatibility."""
     return shared_client

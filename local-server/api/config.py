@@ -5,15 +5,13 @@ Provides REST endpoints for reading and updating configuration settings
 using dot notation for nested values.
 """
 
-from typing import Any, Dict, List
-from datetime import datetime
-from fastapi import APIRouter, HTTPException, status
+from typing import Any, List
+from fastapi import APIRouter, HTTPException
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field
 
 from config import get_config_manager, notify_global_configuration_reload
 from enrichment.service import EnrichmentService
-from api.enrichment import get_enrichment_service
 from utils.logger import get_logger
 
 logger = get_logger(__name__)

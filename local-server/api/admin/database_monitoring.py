@@ -13,14 +13,12 @@ Features:
 - Performance recommendations
 """
 
-from fastapi import APIRouter, HTTPException, Depends
-from typing import Dict, Any, List, Optional
+from fastapi import APIRouter, HTTPException
+from typing import Dict, Any, Optional
 from datetime import datetime
 
 from database.utils import (
-    get_database_manager,
-    PoolConfiguration,
-    ConnectionMetrics
+    get_database_manager
 )
 
 router = APIRouter()

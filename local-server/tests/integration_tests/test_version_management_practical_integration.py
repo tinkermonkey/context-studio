@@ -7,12 +7,11 @@ focusing on direct API operations rather than full automatic integration.
 
 import sys
 import os
-import pytest
-import uuid
-from fastapi.testclient import TestClient
 from uuid import uuid4
 
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
+sys.path.insert(
+    0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+)
 
 
 class TestVersionManagementPracticalAPI:
@@ -22,18 +21,22 @@ class TestVersionManagementPracticalAPI:
         """Test the version management health endpoint."""
         response = client.get("/api/versions/health")
         assert response.status_code == 200
-        
+
         health = response.json()
         # Test all expected fields from VersionManagementHealthOut model
         expected_fields = [
-            "status", "total_versions", "total_working_tree_entries", 
-            "total_staged_entities", "total_modified_entities", 
-            "issues", "database_status"
+            "status",
+            "total_versions",
+            "total_working_tree_entries",
+            "total_staged_entities",
+            "total_modified_entities",
+            "issues",
+            "database_status",
         ]
-        
+
         for field in expected_fields:
             assert field in health, f"Missing field: {field}"
-        
+
         assert health["status"] in ["healthy", "warning", "error"]
         assert isinstance(health["total_versions"], int)
         assert isinstance(health["issues"], list)
@@ -47,17 +50,20 @@ class TestVersionManagementPracticalAPI:
         """Test working tree status endpoint."""
         response = client.get("/api/versions/working-tree/status")
         assert response.status_code == 200
-        
+
         status = response.json()
         # Test all expected fields from WorkingTreeStatusOut model
         expected_fields = [
-            "total_entities", "modified_entities", "staged_entities", 
-            "unstaged_entities", "entries"
+            "total_entities",
+            "modified_entities",
+            "staged_entities",
+            "unstaged_entities",
+            "entries",
         ]
-        
+
         for field in expected_fields:
             assert field in status, f"Missing field: {field}"
-        
+
         assert isinstance(status["total_entities"], int)
         assert isinstance(status["entries"], list)
 
@@ -65,7 +71,7 @@ class TestVersionManagementPracticalAPI:
         """Test getting working tree changes."""
         response = client.get("/api/versions/working-tree/changes")
         assert response.status_code == 200
-        
+
         changes = response.json()
         assert isinstance(changes, list)
         # Changes can be empty initially - that's fine
@@ -74,7 +80,7 @@ class TestVersionManagementPracticalAPI:
         """Test getting all working diffs."""
         response = client.get("/api/versions/diffs/working")
         assert response.status_code == 200
-        
+
         diffs = response.json()
         assert isinstance(diffs, list)
         # Diffs can be empty initially - that's fine
@@ -83,12 +89,12 @@ class TestVersionManagementPracticalAPI:
         """Test commit preview endpoint."""
         response = client.get("/api/versions/working-tree/preview")
         assert response.status_code == 200
-        
+
         preview = response.json()
         assert "entities" in preview
         assert "summary" in preview
         assert isinstance(preview["entities"], list)
-        
+
         summary = preview["summary"]
         assert "total_staged" in summary
         assert isinstance(summary["total_staged"], int)
@@ -96,15 +102,19 @@ class TestVersionManagementPracticalAPI:
     def test_empty_version_operations(self, client):
         """Test version operations with non-existent entities (should return 404s)."""
         fake_id = str(uuid4())
-        
+
         # Test getting versions for non-existent entity
-        response = client.get(f"/api/versions/entities/structure_node/{fake_id}/versions")
+        response = client.get(
+            f"/api/versions/entities/structure_node/{fake_id}/versions"
+        )
         assert response.status_code == 404
-        
+
         # Test getting specific version for non-existent entity
-        response = client.get(f"/api/versions/entities/structure_node/{fake_id}/versions/1")
+        response = client.get(
+            f"/api/versions/entities/structure_node/{fake_id}/versions/1"
+        )
         assert response.status_code == 404
-        
+
         # Test getting diff for non-existent entity
         response = client.get(f"/api/versions/entities/structure_node/{fake_id}/diff")
         assert response.status_code == 404
@@ -114,13 +124,17 @@ class TestVersionManagementPracticalAPI:
         # Test invalid entity type
         response = client.get("/api/versions/entities/invalid_type/123/versions")
         assert response.status_code == 422  # Validation error
-        
+
         # Test invalid UUID format
-        response = client.get("/api/versions/entities/structure_node/invalid-uuid/versions")
+        response = client.get(
+            "/api/versions/entities/structure_node/invalid-uuid/versions"
+        )
         assert response.status_code == 422  # Validation error
-        
+
         # Test invalid version number
-        response = client.get(f"/api/versions/entities/structure_node/{uuid4()}/versions/-1")
+        response = client.get(
+            f"/api/versions/entities/structure_node/{uuid4()}/versions/-1"
+        )
         assert response.status_code in [404, 422]  # Not found or validation error
 
     def test_stage_operations_invalid_data(self, client):
@@ -128,12 +142,9 @@ class TestVersionManagementPracticalAPI:
         # Test staging with missing required fields
         response = client.post("/api/versions/working-tree/stage", json={})
         assert response.status_code == 422  # Validation error
-        
+
         # Test staging with invalid entity type
-        stage_data = {
-            'entity_type': 'invalid_type',
-            'entity_id': str(uuid4())
-        }
+        stage_data = {"entity_type": "invalid_type", "entity_id": str(uuid4())}
         response = client.post("/api/versions/working-tree/stage", json=stage_data)
         assert response.status_code == 422  # Validation error
 
@@ -142,12 +153,9 @@ class TestVersionManagementPracticalAPI:
         # Test commit with missing required fields
         response = client.post("/api/versions/working-tree/commit", json={})
         assert response.status_code == 422  # Validation error
-        
+
         # Test commit with empty message (might be valid depending on implementation)
-        commit_data = {
-            'message': '',
-            'author_id': 'test-user'
-        }
+        commit_data = {"message": "", "author_id": "test-user"}
         response = client.post("/api/versions/working-tree/commit", json=commit_data)
         # Should either accept empty message or return validation error
         assert response.status_code in [200, 422]
@@ -155,19 +163,18 @@ class TestVersionManagementPracticalAPI:
     def test_rollback_invalid_data(self, client):
         """Test rollback operations with invalid data."""
         fake_id = str(uuid4())
-        
+
         # Test rollback with missing fields
-        response = client.post(f"/api/versions/entities/structure_node/{fake_id}/rollback", json={})
-        assert response.status_code == 422  # Validation error
-        
-        # Test rollback with invalid version number
-        rollback_data = {
-            'target_version': -1,
-            'author_id': 'test-user'
-        }
         response = client.post(
-            f"/api/versions/entities/structure_node/{fake_id}/rollback", 
-            json=rollback_data
+            f"/api/versions/entities/structure_node/{fake_id}/rollback", json={}
+        )
+        assert response.status_code == 422  # Validation error
+
+        # Test rollback with invalid version number
+        rollback_data = {"target_version": -1, "author_id": "test-user"}
+        response = client.post(
+            f"/api/versions/entities/structure_node/{fake_id}/rollback",
+            json=rollback_data,
         )
         assert response.status_code in [404, 422]  # Not found or validation error
 
@@ -176,13 +183,13 @@ class TestVersionManagementPracticalAPI:
         # Test comparison with missing fields
         response = client.post("/api/versions/diffs/compare", json={})
         assert response.status_code == 422  # Validation error
-        
+
         # Test comparison with invalid entity type
         compare_data = {
-            'entity_type': 'invalid_type',
-            'entity_id': str(uuid4()),
-            'before_version': 1,
-            'after_version': 2
+            "entity_type": "invalid_type",
+            "entity_id": str(uuid4()),
+            "before_version": 1,
+            "after_version": 2,
         }
         response = client.post("/api/versions/diffs/compare", json=compare_data)
         assert response.status_code == 422  # Validation error
@@ -196,7 +203,7 @@ class TestVersionManagementPracticalAPI:
             ("/api/versions/working-tree/preview", "GET", 200),
             ("/api/versions/diffs/working", "GET", 200),
         ]
-        
+
         for endpoint, method, expected_status in endpoints_to_test:
             if method == "GET":
                 response = client.get(endpoint)
@@ -204,14 +211,15 @@ class TestVersionManagementPracticalAPI:
                 response = client.post(endpoint, json={})
             else:
                 continue
-            
+
             # Should not return 404 (endpoint exists)
             assert response.status_code != 404, f"Endpoint {endpoint} not found"
-            
+
             # For GET endpoints, we expect them to work
             if method == "GET":
-                assert response.status_code == expected_status, \
-                    f"Endpoint {endpoint} returned {response.status_code}, expected {expected_status}"
+                assert (
+                    response.status_code == expected_status
+                ), f"Endpoint {endpoint} returned {response.status_code}, expected {expected_status}"
 
     def test_content_type_headers(self, client):
         """Test that API endpoints return correct content-type headers."""
@@ -230,9 +238,11 @@ class TestVersionManagementPracticalAPI:
         """Test that error responses have consistent format."""
         # Try to get a non-existent version
         fake_id = str(uuid4())
-        response = client.get(f"/api/versions/entities/structure_node/{fake_id}/versions/1")
+        response = client.get(
+            f"/api/versions/entities/structure_node/{fake_id}/versions/1"
+        )
         assert response.status_code == 404
-        
+
         # Check that error response is valid JSON
         error_data = response.json()
         assert isinstance(error_data, dict)
@@ -242,17 +252,23 @@ class TestVersionManagementPracticalAPI:
     def test_pagination_parameters(self, client):
         """Test pagination parameters where applicable."""
         fake_id = str(uuid4())
-        
+
         # Test limit parameter (even though entity doesn't exist, parameter should be valid)
-        response = client.get(f"/api/versions/entities/structure_node/{fake_id}/versions?limit=10")
+        response = client.get(
+            f"/api/versions/entities/structure_node/{fake_id}/versions?limit=10"
+        )
         # Should get 404 for non-existent entity, not 422 for invalid parameter
         assert response.status_code == 404
-        
+
         # Test offset parameter
-        response = client.get(f"/api/versions/entities/structure_node/{fake_id}/versions?offset=0")
+        response = client.get(
+            f"/api/versions/entities/structure_node/{fake_id}/versions?offset=0"
+        )
         assert response.status_code == 404
-        
+
         # Test invalid limit (negative)
-        response = client.get(f"/api/versions/entities/structure_node/{fake_id}/versions?limit=-1")
+        response = client.get(
+            f"/api/versions/entities/structure_node/{fake_id}/versions?limit=-1"
+        )
         # Should handle invalid parameter gracefully
         assert response.status_code in [404, 422]

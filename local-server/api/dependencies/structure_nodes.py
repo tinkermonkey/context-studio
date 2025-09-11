@@ -8,7 +8,7 @@ using the optimized service factory pattern for better performance.
 from fastapi import Depends
 from sqlalchemy.orm import Session
 from database.utils import get_db
-from services.service_factory import get_service_factory, ServiceFactory
+from services.service_factory import get_service_factory
 from services.node_service import NodeService
 from services.node_link_service import NodeLinkService
 

@@ -20,11 +20,7 @@ Endpoints:
 from fastapi import APIRouter, HTTPException, Query, Depends, Path
 from typing import List, Optional
 from uuid import UUID
-from sqlalchemy.orm import Session
 
-from database.models import StructureNode, StructureNodeLink
-from database.enums import NodeType
-from database.utils import get_db
 from services.node_service import NodeService
 from services.node_link_service import NodeLinkService
 from api.models.structure_nodes import (

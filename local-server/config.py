@@ -9,6 +9,7 @@ import asyncio
 from typing import Dict, Any, Optional, List, Callable
 from pydantic import BaseModel, Field, ValidationError
 from enum import Enum
+from dataclasses import dataclass
 from dotenv import load_dotenv
 
 from utils.logger import get_logger
@@ -22,6 +23,15 @@ class LogLevel(str, Enum):
     WARNING = "WARNING"
     ERROR = "ERROR"
     CRITICAL = "CRITICAL"
+
+
+@dataclass
+class S3Config:
+    bucket: str
+    region: str = "us-east-1"
+    access_key: Optional[str] = None
+    secret_key: Optional[str] = None
+    endpoint: Optional[str] = None  # For S3-compatible services
 
 
 class ServerConfig(BaseModel):
@@ -203,6 +213,28 @@ class Settings(BaseModel):
     proxy_server: ProxyServerConfig = Field(default_factory=ProxyServerConfig)
     logging: LoggingConfig = Field(default_factory=LoggingConfig)
     security: SecurityConfig = Field(default_factory=SecurityConfig)
+    
+    # S3 Configuration
+    s3_bucket: Optional[str] = Field(None, env="S3_BUCKET")
+    s3_region: str = Field("us-east-1", env="S3_REGION")
+    s3_access_key: Optional[str] = Field(None, env="S3_ACCESS_KEY")
+    s3_secret_key: Optional[str] = Field(None, env="S3_SECRET_KEY") 
+    s3_endpoint: Optional[str] = Field(None, env="S3_ENDPOINT")
+    
+    # DuckDB Configuration
+    duckdb_memory_limit: str = Field("2GB", env="DUCKDB_MEMORY_LIMIT")
+    duckdb_threads: int = Field(4, env="DUCKDB_THREADS")
+    
+    def get_s3_config(self) -> Optional[S3Config]:
+        if not self.s3_bucket:
+            return None
+        return S3Config(
+            bucket=self.s3_bucket,
+            region=self.s3_region,
+            access_key=self.s3_access_key,
+            secret_key=self.s3_secret_key,
+            endpoint=self.s3_endpoint
+        )
     
     def get_source_config(self, source_name: str) -> ReferenceSourceConfig:
         """Get configuration for a specific reference source"""

@@ -59,12 +59,6 @@ Python server for the Context Studio (a React app built using Flowbite-React). T
 - Use CamelCase for class names.
 - Use triple double quotes for docstrings.
 
-## Task Management
-
-Utilize Archon for todo task management via the archon MCP server. 
-
-Archon project ID: 9c69d18a-b6d8-4a0f-89c7-b1f719a7e411
-
 ## Best Practices
 - **Schema Management**: Use the migration manager for database migrations. Always create a migration script when modifying the database schema.
 - **Code Quality**: Follow PEP 8 style guide for Python code.

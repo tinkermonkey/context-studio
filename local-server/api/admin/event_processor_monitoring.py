@@ -12,11 +12,10 @@ Features:
 """
 
 from fastapi import APIRouter, HTTPException, Request
-from typing import Dict, Any, Optional
+from typing import Dict, Any
 from datetime import datetime
 
 from utils.event_processor import get_global_event_processor
-from database.utils import get_database_manager
 
 router = APIRouter()
 

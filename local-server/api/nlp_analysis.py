@@ -2,10 +2,10 @@
 FastAPI router for NLP Analysis API endpoint.
 """
 
-from fastapi import APIRouter, HTTPException, status, Request
+from fastapi import APIRouter, status, Request
 from fastapi.responses import JSONResponse
 from pydantic import ValidationError
-from nlp.models import NLPAnalysisRequest, NLPAnalysisResponse, NLPErrorResponse, NLPSuccessResponse
+from nlp.models import NLPAnalysisRequest, NLPErrorResponse, NLPSuccessResponse
 from nlp.pipeline import get_pipeline
 from nlp.processors import process_nlp_result
 from nlp.proxy_manager import get_proxy_manager

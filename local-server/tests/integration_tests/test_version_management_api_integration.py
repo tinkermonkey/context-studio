@@ -7,12 +7,11 @@ working tree operations, diff generation, and rollback functionality.
 
 import sys
 import os
-import pytest
-import uuid
-from fastapi.testclient import TestClient
 from uuid import uuid4
 
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
+sys.path.insert(
+    0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+)
 
 
 class TestVersionManagementAPI:
@@ -22,7 +21,7 @@ class TestVersionManagementAPI:
         """Test version management health endpoint."""
         response = client.get("/api/versions/health")
         assert response.status_code == 200
-        
+
         health = response.json()
         assert "status" in health
         assert "total_versions" in health
@@ -39,7 +38,7 @@ class TestVersionManagementAPI:
         """Test version management statistics endpoint."""
         response = client.get("/api/versions/stats")
         assert response.status_code == 200
-        
+
         stats = response.json()
         assert "versions_by_entity_type" in stats
         assert "versions_by_state" in stats
@@ -55,24 +54,26 @@ class TestVersionManagementAPI:
         # First create a structure node to version
         unique_title = f"Test Node {uuid4()}"
         node_data = {
-            'node_type': 'layer',
-            'title': unique_title,
-            'definition': 'Test layer definition for versioning'
+            "node_type": "layer",
+            "title": unique_title,
+            "definition": "Test layer definition for versioning",
         }
-        
+
         create_response = client.post("/api/structure_nodes/", json=node_data)
         assert create_response.status_code == 201
         node = create_response.json()
-        node_id = node['id']
-        
+        node_id = node["id"]
+
         # Get version history - should have 1 version created automatically
-        response = client.get(f"/api/versions/entities/structure_node/{node_id}/versions")
+        response = client.get(
+            f"/api/versions/entities/structure_node/{node_id}/versions"
+        )
         assert response.status_code == 200
-        
+
         versions = response.json()
         assert isinstance(versions, list)
         assert len(versions) >= 1  # At least one version from creation
-        
+
         # Check version structure
         version = versions[0]
         assert "id" in version
@@ -88,20 +89,22 @@ class TestVersionManagementAPI:
         # Create a structure node
         unique_title = f"Test Node {uuid4()}"
         node_data = {
-            'node_type': 'domain',
-            'title': unique_title,
-            'definition': 'Test domain for version retrieval'
+            "node_type": "domain",
+            "title": unique_title,
+            "definition": "Test domain for version retrieval",
         }
-        
+
         create_response = client.post("/api/structure_nodes/", json=node_data)
         assert create_response.status_code == 201
         node = create_response.json()
-        node_id = node['id']
-        
+        node_id = node["id"]
+
         # Get specific version (version 1)
-        response = client.get(f"/api/versions/entities/structure_node/{node_id}/versions/1")
+        response = client.get(
+            f"/api/versions/entities/structure_node/{node_id}/versions/1"
+        )
         assert response.status_code == 200
-        
+
         version = response.json()
         assert version["version_number"] == 1
         assert version["entity_type"] == "structure_node"
@@ -113,15 +116,17 @@ class TestVersionManagementAPI:
         """Test getting a non-existent version returns 404."""
         # Use a random UUID
         fake_id = str(uuid4())
-        
-        response = client.get(f"/api/versions/entities/structure_node/{fake_id}/versions/1")
+
+        response = client.get(
+            f"/api/versions/entities/structure_node/{fake_id}/versions/1"
+        )
         assert response.status_code == 404
 
     def test_working_tree_status(self, client):
         """Test getting working tree status."""
         response = client.get("/api/versions/working-tree/status")
         assert response.status_code == 200
-        
+
         status = response.json()
         assert "total_entities" in status
         assert "modified_entities" in status
@@ -135,7 +140,7 @@ class TestVersionManagementAPI:
         """Test getting all working changes."""
         response = client.get("/api/versions/working-tree/changes")
         assert response.status_code == 200
-        
+
         changes = response.json()
         assert isinstance(changes, list)
         # Changes list can be empty initially
@@ -145,43 +150,44 @@ class TestVersionManagementAPI:
         # Create a structure node
         unique_title = f"Test Node {uuid4()}"
         node_data = {
-            'node_type': 'term',
-            'title': unique_title,
-            'definition': 'Test term for staging'
+            "node_type": "term",
+            "title": unique_title,
+            "definition": "Test term for staging",
         }
-        
+
         create_response = client.post("/api/structure_nodes/", json=node_data)
         assert create_response.status_code == 201
         node = create_response.json()
-        node_id = node['id']
-        
+        node_id = node["id"]
+
         # Stage the entity
-        stage_data = {
-            'entity_type': 'structure_node',
-            'entity_id': node_id
-        }
-        
-        stage_response = client.post("/api/versions/working-tree/stage", json=stage_data)
+        stage_data = {"entity_type": "structure_node", "entity_id": node_id}
+
+        stage_response = client.post(
+            "/api/versions/working-tree/stage", json=stage_data
+        )
         assert stage_response.status_code == 200
-        
+
         stage_result = stage_response.json()
         assert stage_result["success"] is True
         assert "message" in stage_result
-        
+
         # Check that entity appears in working changes
         changes_response = client.get("/api/versions/working-tree/changes")
         assert changes_response.status_code == 200
         changes = changes_response.json()
-        
+
         # Find our staged entity
         staged_entity = next((c for c in changes if c["entity_id"] == node_id), None)
         assert staged_entity is not None
         assert staged_entity["staged"] is True
-        
+
         # Unstage the entity
-        unstage_response = client.post("/api/versions/working-tree/unstage", json=stage_data)
+        unstage_response = client.post(
+            "/api/versions/working-tree/unstage", json=stage_data
+        )
         assert unstage_response.status_code == 200
-        
+
         unstage_result = unstage_response.json()
         assert unstage_result["success"] is True
 
@@ -190,33 +196,32 @@ class TestVersionManagementAPI:
         # Create a structure node
         unique_title = f"Test Node {uuid4()}"
         node_data = {
-            'node_type': 'layer',
-            'title': unique_title,
-            'definition': 'Test layer for commit'
+            "node_type": "layer",
+            "title": unique_title,
+            "definition": "Test layer for commit",
         }
-        
+
         create_response = client.post("/api/structure_nodes/", json=node_data)
         assert create_response.status_code == 201
         node = create_response.json()
-        node_id = node['id']
-        
+        node_id = node["id"]
+
         # Stage the entity
-        stage_data = {
-            'entity_type': 'structure_node',
-            'entity_id': node_id
-        }
-        
+        stage_data = {"entity_type": "structure_node", "entity_id": node_id}
+
         client.post("/api/versions/working-tree/stage", json=stage_data)
-        
+
         # Commit staged changes
         commit_data = {
-            'message': 'Test commit of staged changes',
-            'author_id': 'test-user'
+            "message": "Test commit of staged changes",
+            "author_id": "test-user",
         }
-        
-        commit_response = client.post("/api/versions/working-tree/commit", json=commit_data)
+
+        commit_response = client.post(
+            "/api/versions/working-tree/commit", json=commit_data
+        )
         assert commit_response.status_code == 200
-        
+
         commit_result = commit_response.json()
         assert commit_result["success"] is True
         assert "committed_count" in commit_result
@@ -226,12 +231,12 @@ class TestVersionManagementAPI:
         """Test previewing what would be committed."""
         response = client.get("/api/versions/working-tree/preview")
         assert response.status_code == 200
-        
+
         preview = response.json()
         assert "entities" in preview
         assert "summary" in preview
         assert isinstance(preview["entities"], list)
-        
+
         summary = preview["summary"]
         assert "total_staged" in summary
         assert "by_entity_type" in summary
@@ -241,20 +246,20 @@ class TestVersionManagementAPI:
         # Create a structure node first
         unique_title = f"Test Node {uuid4()}"
         node_data = {
-            'node_type': 'domain',
-            'title': unique_title,
-            'definition': 'Test domain for diff generation'
+            "node_type": "domain",
+            "title": unique_title,
+            "definition": "Test domain for diff generation",
         }
-        
+
         create_response = client.post("/api/structure_nodes/", json=node_data)
         assert create_response.status_code == 201
         node = create_response.json()
-        node_id = node['id']
-        
+        node_id = node["id"]
+
         # Get working diff for the entity
         response = client.get(f"/api/versions/entities/structure_node/{node_id}/diff")
         assert response.status_code == 200
-        
+
         diff = response.json()
         assert "entity_type" in diff
         assert "entity_id" in diff
@@ -266,7 +271,7 @@ class TestVersionManagementAPI:
         """Test getting all working diffs."""
         response = client.get("/api/versions/diffs/working")
         assert response.status_code == 200
-        
+
         diffs = response.json()
         assert isinstance(diffs, list)
         # List can be empty if no working changes exist
@@ -276,38 +281,40 @@ class TestVersionManagementAPI:
         # Create a structure node
         unique_title = f"Test Node {uuid4()}"
         node_data = {
-            'node_type': 'term',
-            'title': unique_title,
-            'definition': 'Test term for version comparison'
+            "node_type": "term",
+            "title": unique_title,
+            "definition": "Test term for version comparison",
         }
-        
+
         create_response = client.post("/api/structure_nodes/", json=node_data)
         assert create_response.status_code == 201
         node = create_response.json()
-        node_id = node['id']
-        
+        node_id = node["id"]
+
         # Update the node to create a new version
         updated_data = {
-            'node_type': 'term',
-            'title': unique_title,
-            'definition': 'Updated test term definition'
+            "node_type": "term",
+            "title": unique_title,
+            "definition": "Updated test term definition",
         }
-        
-        update_response = client.put(f"/api/structure_nodes/{node_id}", json=updated_data)
+
+        update_response = client.put(
+            f"/api/structure_nodes/{node_id}", json=updated_data
+        )
         assert update_response.status_code == 200
-        
+
         # Compare versions
         compare_data = {
-            'entity_type': 'structure_node',
-            'entity_id': node_id,
-            'before_version': 1,
-            'after_version': 2,
-            'format': 'detailed'
+            "entity_type": "structure_node",
+            "entity_id": node_id,
+            "before_version": 1,
+            "after_version": 2,
+            "format": "detailed",
         }
-        
+
         compare_response = client.post("/api/versions/diffs/compare", json=compare_data)
         assert compare_response.status_code == 200
-        
+
         comparison = compare_response.json()
         assert "entity_type" in comparison
         assert "entity_id" in comparison
@@ -319,45 +326,44 @@ class TestVersionManagementAPI:
         """Test rolling back an entity to a previous version."""
         # Create a structure node
         unique_title = f"Test Node {uuid4()}"
-        original_definition = 'Original definition'
+        original_definition = "Original definition"
         node_data = {
-            'node_type': 'layer',
-            'title': unique_title,
-            'definition': original_definition
+            "node_type": "layer",
+            "title": unique_title,
+            "definition": original_definition,
         }
-        
+
         create_response = client.post("/api/structure_nodes/", json=node_data)
         assert create_response.status_code == 201
         node = create_response.json()
-        node_id = node['id']
-        
+        node_id = node["id"]
+
         # Update the node to create version 2
         updated_data = {
-            'node_type': 'layer',
-            'title': unique_title,
-            'definition': 'Updated definition'
+            "node_type": "layer",
+            "title": unique_title,
+            "definition": "Updated definition",
         }
-        
-        update_response = client.put(f"/api/structure_nodes/{node_id}", json=updated_data)
+
+        update_response = client.put(
+            f"/api/structure_nodes/{node_id}", json=updated_data
+        )
         assert update_response.status_code == 200
-        
+
         # Rollback to version 1
-        rollback_data = {
-            'target_version': 1,
-            'author_id': 'test-user'
-        }
-        
+        rollback_data = {"target_version": 1, "author_id": "test-user"}
+
         rollback_response = client.post(
-            f"/api/versions/entities/structure_node/{node_id}/rollback", 
-            json=rollback_data
+            f"/api/versions/entities/structure_node/{node_id}/rollback",
+            json=rollback_data,
         )
         assert rollback_response.status_code == 200
-        
+
         rollback_result = rollback_response.json()
         assert rollback_result["success"] is True
         assert "version" in rollback_result
         assert rollback_result["version"]["version_number"] == 3  # New version created
-        
+
         # Verify the content was rolled back
         get_response = client.get(f"/api/structure_nodes/{node_id}")
         assert get_response.status_code == 200
@@ -368,15 +374,12 @@ class TestVersionManagementAPI:
         """Test rollback to non-existent version returns error."""
         # Use a random UUID
         fake_id = str(uuid4())
-        
-        rollback_data = {
-            'target_version': 999,
-            'author_id': 'test-user'
-        }
-        
+
+        rollback_data = {"target_version": 999, "author_id": "test-user"}
+
         response = client.post(
-            f"/api/versions/entities/structure_node/{fake_id}/rollback", 
-            json=rollback_data
+            f"/api/versions/entities/structure_node/{fake_id}/rollback",
+            json=rollback_data,
         )
         assert response.status_code == 404
 
@@ -387,29 +390,25 @@ class TestVersionManagementAPI:
         for i in range(3):
             unique_title = f"Test Node {i} {uuid4()}"
             node_data = {
-                'node_type': 'domain',
-                'title': unique_title,
-                'definition': f'Test domain {i} for batch staging'
+                "node_type": "domain",
+                "title": unique_title,
+                "definition": f"Test domain {i} for batch staging",
             }
-            
+
             create_response = client.post("/api/structure_nodes/", json=node_data)
             assert create_response.status_code == 201
             node = create_response.json()
-            entities.append({
-                'entity_type': 'structure_node',
-                'entity_id': node['id']
-            })
-        
+            entities.append({"entity_type": "structure_node", "entity_id": node["id"]})
+
         # Batch stage all entities
-        batch_data = {
-            'entities': entities,
-            'operation': 'stage'
-        }
-        
+        batch_data = {"entities": entities, "operation": "stage"}
+
         # Note: This endpoint may not exist yet, but testing the pattern
         # If it doesn't exist, we can stage them individually
         for entity in entities:
-            stage_response = client.post("/api/versions/working-tree/stage", json=entity)
+            stage_response = client.post(
+                "/api/versions/working-tree/stage", json=entity
+            )
             assert stage_response.status_code == 200
 
     def test_version_query_parameters(self, client):
@@ -417,24 +416,28 @@ class TestVersionManagementAPI:
         # Create a structure node
         unique_title = f"Test Node {uuid4()}"
         node_data = {
-            'node_type': 'term',
-            'title': unique_title,
-            'definition': 'Test term for query parameters'
+            "node_type": "term",
+            "title": unique_title,
+            "definition": "Test term for query parameters",
         }
-        
+
         create_response = client.post("/api/structure_nodes/", json=node_data)
         assert create_response.status_code == 201
         node = create_response.json()
-        node_id = node['id']
-        
+        node_id = node["id"]
+
         # Test with limit parameter
-        response = client.get(f"/api/versions/entities/structure_node/{node_id}/versions?limit=1")
+        response = client.get(
+            f"/api/versions/entities/structure_node/{node_id}/versions?limit=1"
+        )
         assert response.status_code == 200
         versions = response.json()
         assert len(versions) <= 1
-        
+
         # Test with state filter
-        response = client.get(f"/api/versions/entities/structure_node/{node_id}/versions?state=WORKING")
+        response = client.get(
+            f"/api/versions/entities/structure_node/{node_id}/versions?state=WORKING"
+        )
         assert response.status_code == 200
         versions = response.json()
         # All versions should be in WORKING state or filter should work
@@ -444,13 +447,17 @@ class TestVersionManagementAPI:
         # Test invalid entity type
         response = client.get("/api/versions/entities/invalid_type/123/versions")
         assert response.status_code == 422  # Validation error
-        
+
         # Test invalid UUID format
-        response = client.get("/api/versions/entities/structure_node/invalid-uuid/versions")
+        response = client.get(
+            "/api/versions/entities/structure_node/invalid-uuid/versions"
+        )
         assert response.status_code == 422  # Validation error
-        
+
         # Test invalid version number
-        response = client.get(f"/api/versions/entities/structure_node/{uuid4()}/versions/-1")
+        response = client.get(
+            f"/api/versions/entities/structure_node/{uuid4()}/versions/-1"
+        )
         assert response.status_code == 422  # Validation error
 
     def test_concurrent_operations(self, client):
@@ -458,27 +465,28 @@ class TestVersionManagementAPI:
         # Create a structure node
         unique_title = f"Test Node {uuid4()}"
         node_data = {
-            'node_type': 'layer',
-            'title': unique_title,
-            'definition': 'Test layer for concurrency testing'
+            "node_type": "layer",
+            "title": unique_title,
+            "definition": "Test layer for concurrency testing",
         }
-        
+
         create_response = client.post("/api/structure_nodes/", json=node_data)
         assert create_response.status_code == 201
         node = create_response.json()
-        node_id = node['id']
-        
+        node_id = node["id"]
+
         # Stage the entity
-        stage_data = {
-            'entity_type': 'structure_node',
-            'entity_id': node_id
-        }
-        
-        stage_response = client.post("/api/versions/working-tree/stage", json=stage_data)
+        stage_data = {"entity_type": "structure_node", "entity_id": node_id}
+
+        stage_response = client.post(
+            "/api/versions/working-tree/stage", json=stage_data
+        )
         assert stage_response.status_code == 200
-        
+
         # Try to stage again (should handle gracefully)
-        stage_response2 = client.post("/api/versions/working-tree/stage", json=stage_data)
+        stage_response2 = client.post(
+            "/api/versions/working-tree/stage", json=stage_data
+        )
         assert stage_response2.status_code in [200, 409]  # OK or Conflict
 
     def test_large_content_versioning(self, client):
@@ -487,20 +495,22 @@ class TestVersionManagementAPI:
         large_definition = "X" * 1000  # 1KB definition
         unique_title = f"Large Test Node {uuid4()}"
         node_data = {
-            'node_type': 'domain',
-            'title': unique_title,
-            'definition': large_definition
+            "node_type": "domain",
+            "title": unique_title,
+            "definition": large_definition,
         }
-        
+
         create_response = client.post("/api/structure_nodes/", json=node_data)
         assert create_response.status_code == 201
         node = create_response.json()
-        node_id = node['id']
-        
+        node_id = node["id"]
+
         # Get the version to ensure large content is handled
-        response = client.get(f"/api/versions/entities/structure_node/{node_id}/versions/1")
+        response = client.get(
+            f"/api/versions/entities/structure_node/{node_id}/versions/1"
+        )
         assert response.status_code == 200
-        
+
         version = response.json()
         assert len(version["content"]["definition"]) == 1000
 
@@ -509,20 +519,22 @@ class TestVersionManagementAPI:
         # Create a structure node
         unique_title = f"Test Node {uuid4()}"
         node_data = {
-            'node_type': 'term',
-            'title': unique_title,
-            'definition': 'Test term for metadata testing'
+            "node_type": "term",
+            "title": unique_title,
+            "definition": "Test term for metadata testing",
         }
-        
+
         create_response = client.post("/api/structure_nodes/", json=node_data)
         assert create_response.status_code == 201
         node = create_response.json()
-        node_id = node['id']
-        
+        node_id = node["id"]
+
         # Get version and check metadata fields
-        response = client.get(f"/api/versions/entities/structure_node/{node_id}/versions/1")
+        response = client.get(
+            f"/api/versions/entities/structure_node/{node_id}/versions/1"
+        )
         assert response.status_code == 200
-        
+
         version = response.json()
         # Check that all expected metadata fields are present
         required_fields = ["id", "version_number", "state", "author_id", "created_at"]
