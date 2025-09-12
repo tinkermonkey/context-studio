@@ -2,7 +2,7 @@
 Utility functions for analyzing proxy monitoring data.
 """
 
-from typing import Dict, Any, Optional, List
+from typing import Dict, Any
 from utils.logger import get_logger
 
 logger = get_logger(__name__)

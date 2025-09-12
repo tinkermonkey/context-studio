@@ -7,18 +7,15 @@ Defines minimal endpoints for status and refresh to match the design.
 from fastapi import APIRouter, HTTPException, Query
 from typing import Dict, List, Optional, Union
 from pydantic import BaseModel
-from uuid import UUID
 from .manager import SchemaOrgManager
 from config import get_settings
 from .service import SchemaOrgService
 from utils.logger import get_logger
 from .errors import (
     DownloadError,
-    ParseError,
     BackupError,
     RestoreError,
     DatabaseError,
-    EmbeddingError,
     ValidationError,
     SearchError,
 )

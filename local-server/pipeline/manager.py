@@ -3,7 +3,7 @@ Pipeline Database Manager for handling pipeline configurations independently of 
 """
 
 import os
-from sqlalchemy import create_engine, text, event
+from sqlalchemy import create_engine, text
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import StaticPool
 

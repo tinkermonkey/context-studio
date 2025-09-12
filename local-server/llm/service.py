@@ -19,7 +19,9 @@ from .models import (
     DomainDefinitionResponse,
     PipelineType,
     StreamingLLMResponse,
-    PipelineFlavor
+    PipelineFlavor,
+    GenericPipelineExecutionRequest,
+    GenericPipelineExecutionResponse
 )
 from .exceptions import (
     LLMConfigurationError, 
@@ -216,26 +218,26 @@ class LLMService:
                 error=str(e)
             )
     
-    async def suggest_term_definition(self, request: DefinitionSuggestionRequest) -> DefinitionSuggestionResponse:
-        """Generate a term definition suggestion with execution tracking"""
+    async def execute_pipeline_flavor(self, request: GenericPipelineExecutionRequest) -> GenericPipelineExecutionResponse:
+        """Generic pipeline execution method with arbitrary context data"""
         start_time = time.time()
         execution_id = "unknown"
         
-        self.logger.info(f"Starting term definition suggestion for term: '{request.term}'")
-        self.logger.debug(f"Request details - Domain: {request.domain_title}, Parent: {request.parent_term_title}")
+        self.logger.info(f"Starting generic pipeline execution - Type: {request.pipeline_type}, Flavor: {request.flavor_id}")
+        self.logger.debug(f"Context data keys: {list(request.context_data.keys())}")
         
         try:
-            # Get flavor (use default if none specified)
-            flavor = await self._get_flavor(PipelineType.SUGGEST_TERM_DEFINITION, request.flavor)
+            # Get flavor
+            flavor = await self._get_flavor(request.pipeline_type, request.flavor_id)
             
-            # Create prompt using flavor templates
+            # Create prompt using flavor templates and generic context data
             system_prompt = flavor.system_prompt
-            user_prompt = self._render_user_prompt(flavor.user_prompt, request)
+            user_prompt = self._render_user_prompt_generic(flavor.user_prompt, request.context_data)
             
             # Start execution tracking
             execution_id = self.execution_tracker.start_execution(
                 pipeline_flavor_id=flavor.id,
-                pipeline_type=PipelineType.SUGGEST_TERM_DEFINITION.value,
+                pipeline_type=request.pipeline_type.value,
                 pipeline_flavor_version=flavor.version,
                 request=request,
                 user_prompt=user_prompt
@@ -257,11 +259,8 @@ class LLMService:
                     timeout=timeout
                 )
             except asyncio.TimeoutError:
-                self.logger.warning(f"LLM request timed out after {timeout} seconds for term: '{request.term}'")
+                self.logger.warning(f"LLM request timed out after {timeout} seconds for pipeline: {request.pipeline_type}")
                 raise LLMTimeoutError(f"Request timed out after {timeout} seconds")
-            
-            # Parse the response using the exact format from requirements
-            parsed_response = self._parse_definition_response(response.content)
             
             # Track token usage if available
             token_usage = None
@@ -282,11 +281,15 @@ class LLMService:
                 start_time=start_time
             )
             
-            # Add execution_id to response
-            parsed_response.execution_id = execution_id
+            self.logger.info(f"Successfully executed generic pipeline - Type: {request.pipeline_type}, Flavor: '{flavor.title}', execution: {execution_id}")
             
-            self.logger.info(f"Successfully generated term definition for term: '{request.term}' using flavor '{flavor.title}', execution: {execution_id}")
-            return parsed_response
+            return GenericPipelineExecutionResponse(
+                response_content=response.content,
+                execution_id=execution_id,
+                flavor_id=flavor.id,
+                pipeline_type=request.pipeline_type.value,
+                token_usage=token_usage
+            )
             
         except (LLMConfigurationError, LLMTimeoutError):
             # Complete execution tracking with error
@@ -299,7 +302,7 @@ class LLMService:
             )
             raise
         except RateLimitError as e:
-            self.logger.warning(f"OpenAI rate limit exceeded for term '{request.term}': {e}")
+            self.logger.warning(f"OpenAI rate limit exceeded for pipeline {request.pipeline_type}: {e}")
             self.execution_tracker.complete_execution(
                 execution_id=execution_id,
                 response_message="",
@@ -309,7 +312,7 @@ class LLMService:
             )
             raise LLMQuotaExceededError(f"API rate limit exceeded: {str(e)}")
         except APITimeoutError as e:
-            self.logger.warning(f"OpenAI API timeout for term '{request.term}': {e}")
+            self.logger.warning(f"OpenAI API timeout for pipeline {request.pipeline_type}: {e}")
             self.execution_tracker.complete_execution(
                 execution_id=execution_id,
                 response_message="",
@@ -319,7 +322,7 @@ class LLMService:
             )
             raise LLMTimeoutError(f"API request timeout: {str(e)}")
         except AuthenticationError as e:
-            self.logger.error(f"OpenAI authentication error for term '{request.term}': {e}")
+            self.logger.error(f"OpenAI authentication error for pipeline {request.pipeline_type}: {e}")
             self.execution_tracker.complete_execution(
                 execution_id=execution_id,
                 response_message="",
@@ -329,7 +332,7 @@ class LLMService:
             )
             raise LLMConfigurationError(f"Authentication failed: {str(e)}")
         except APIError as e:
-            self.logger.error(f"OpenAI API error for term '{request.term}': {e}")
+            self.logger.error(f"OpenAI API error for pipeline {request.pipeline_type}: {e}")
             error_msg = f"API error: {str(e)}"
             self.execution_tracker.complete_execution(
                 execution_id=execution_id,
@@ -344,7 +347,7 @@ class LLMService:
             else:
                 raise LLMProcessingError(error_msg)
         except Exception as e:
-            self.logger.error(f"Unexpected error generating term definition for term '{request.term}': {e}")
+            self.logger.error(f"Unexpected error executing pipeline {request.pipeline_type}: {e}")
             self.execution_tracker.complete_execution(
                 execution_id=execution_id,
                 response_message="",
@@ -352,279 +355,197 @@ class LLMService:
                 error_message=f"Unexpected error: {str(e)}",
                 start_time=start_time
             )
-            raise LLMProcessingError(f"Failed to generate term definition: {str(e)}")
+            raise LLMProcessingError(f"Failed to execute pipeline: {str(e)}")
+
+    async def execute_pipeline_flavor_streaming(self, request: GenericPipelineExecutionRequest) -> AsyncGenerator[StreamingLLMResponse, None]:
+        """Generic streaming pipeline execution method with arbitrary context data"""
+        execution_id = "unknown"
+        
+        self.logger.info(f"Starting generic streaming pipeline execution - Type: {request.pipeline_type}, Flavor: {request.flavor_id}")
+        self.logger.debug(f"Context data keys: {list(request.context_data.keys())}")
+        
+        try:
+            # Get flavor
+            flavor = await self._get_flavor(request.pipeline_type, request.flavor_id)
+            
+            # Create prompt using flavor templates and generic context data
+            system_prompt = flavor.system_prompt
+            user_prompt = self._render_user_prompt_generic(flavor.user_prompt, request.context_data)
+            
+            # Start execution tracking
+            execution_id = self.execution_tracker.start_execution(
+                pipeline_flavor_id=flavor.id,
+                pipeline_type=request.pipeline_type.value,
+                pipeline_flavor_version=flavor.version,
+                request=request,
+                user_prompt=user_prompt
+            )
+            
+            # Initialize LLM with flavor configuration
+            llm = self._create_llm_from_flavor(flavor)
+            
+            messages = [
+                SystemMessage(content=system_prompt),
+                HumanMessage(content=user_prompt)
+            ]
+            
+            # Send initial response with execution_id
+            yield StreamingLLMResponse(
+                flavor_id=flavor.id,
+                execution_id=execution_id,
+                done=False
+            )
+            
+            # Stream the response
+            async for chunk in llm.astream(messages):
+                if hasattr(chunk, 'content') and chunk.content:
+                    yield StreamingLLMResponse(
+                        token=chunk.content,
+                        flavor_id=flavor.id,
+                        done=False
+                    )
+            
+            # Send completion signal
+            yield StreamingLLMResponse(
+                flavor_id=flavor.id,
+                done=True
+            )
+            
+        except Exception as e:
+            self.logger.error(f"Error in streaming generic pipeline execution: {e}")
+            yield StreamingLLMResponse(
+                flavor_id=flavor.id if 'flavor' in locals() else "unknown",
+                done=True,
+                error=str(e)
+            )
+
+    async def suggest_term_definition(self, request: DefinitionSuggestionRequest) -> DefinitionSuggestionResponse:
+        """Generate a term definition suggestion with execution tracking"""
+        self.logger.info(f"Starting term definition suggestion for term: '{request.term}'")
+        self.logger.debug(f"Request details - Domain: {request.domain_title}, Parent: {request.parent_term_title}")
+        
+        # Convert DefinitionSuggestionRequest to context data for generic execution
+        from .prompts import DefinitionPromptTemplate
+        prompt_template = DefinitionPromptTemplate()
+        
+        # Format component terms
+        component_definitions = prompt_template._format_component_terms(request.component_terms)
+        conceptnet_relations = prompt_template._format_conceptnet_relations(request.component_terms)
+        wikidata_context = prompt_template._format_context_dict(request.wikidata_context)
+        dbpedia_context = prompt_template._format_context_dict(request.dbpedia_context)
+        
+        context_data = {
+            'term': request.term,
+            'domain_title': request.domain_title,
+            'domain_definition': request.domain_definition,
+            'parent_term_title': request.parent_term_title,
+            'parent_term_definition': request.parent_term_definition,
+            'parent_relationship_predicate': request.parent_relationship_predicate,
+            'component_terms': component_definitions,
+            'current_definition': request.current_definition,
+            'conceptnet_relations': conceptnet_relations,
+            'wikidata_context': wikidata_context,
+            'dbpedia_context': dbpedia_context
+        }
+        
+        # Create generic pipeline request
+        generic_request = GenericPipelineExecutionRequest(
+            flavor_id=request.flavor or "default",
+            pipeline_type=PipelineType.SUGGEST_TERM_DEFINITION,
+            context_data=context_data
+        )
+        
+        # Execute using generic method
+        generic_response = await self.execute_pipeline_flavor(generic_request)
+        
+        # Parse the response using the existing parser
+        parsed_response = self._parse_definition_response(generic_response.response_content)
+        
+        # Add execution_id to response
+        parsed_response.execution_id = generic_response.execution_id
+        
+        self.logger.info(f"Successfully generated term definition for term: '{request.term}', execution: {generic_response.execution_id}")
+        return parsed_response
     
     async def suggest_layer_definition(self, request: LayerDefinitionRequest) -> LayerDefinitionResponse:
         """Generate a layer definition suggestion with execution tracking"""
-        start_time = time.time()
-        execution_id = "unknown"
-        
         self.logger.info(f"Starting layer definition suggestion for layer: '{request.layer_title}'")
         self.logger.debug(f"Request details - Parent: {request.parent_layer_title}, Domains: {len(request.contained_domains)}")
         
-        try:
-            # Get flavor (use default if none specified)
-            flavor = await self._get_flavor(PipelineType.SUGGEST_LAYER_DEFINITION, request.flavor)
-            
-            # Create prompt using flavor templates
-            system_prompt = flavor.system_prompt
-            user_prompt = self._render_user_prompt(flavor.user_prompt, request)
-            
-            # Start execution tracking
-            execution_id = self.execution_tracker.start_execution(
-                pipeline_flavor_id=flavor.id,
-                pipeline_type=PipelineType.SUGGEST_LAYER_DEFINITION.value,
-                pipeline_flavor_version=flavor.version,
-                request=request,
-                user_prompt=user_prompt
-            )
-            
-            # Initialize LLM with flavor configuration
-            llm = self._create_llm_from_flavor(flavor)
-            
-            messages = [
-                SystemMessage(content=system_prompt),
-                HumanMessage(content=user_prompt)
-            ]
-            
-            # Add timeout to the async call
-            timeout = int(os.getenv("LLM_TIMEOUT", "30"))
-            try:
-                response = await asyncio.wait_for(
-                    llm.ainvoke(messages), 
-                    timeout=timeout
-                )
-            except asyncio.TimeoutError:
-                self.logger.warning(f"LLM request timed out after {timeout} seconds for layer: '{request.layer_title}'")
-                raise LLMTimeoutError(f"Request timed out after {timeout} seconds")
-            
-            # Parse the response
-            parsed_response = self._parse_layer_definition_response(response.content)
-            
-            # Track token usage if available
-            token_usage = None
-            if hasattr(response, 'response_metadata') and response.response_metadata.get('token_usage'):
-                usage = response.response_metadata['token_usage']
-                token_usage = {
-                    'input_tokens': usage.get('prompt_tokens', 0),
-                    'output_tokens': usage.get('completion_tokens', 0),
-                    'total_tokens': usage.get('total_tokens', 0)
-                }
-            
-            # Complete execution tracking
-            self.execution_tracker.complete_execution(
-                execution_id=execution_id,
-                response_message=response.content,
-                success=True,
-                token_usage=token_usage,
-                start_time=start_time
-            )
-            
-            # Add execution_id to response
-            parsed_response.execution_id = execution_id
-            
-            self.logger.info(f"Successfully generated layer definition for layer: '{request.layer_title}' using flavor '{flavor.title}', execution: {execution_id}")
-            return parsed_response
-            
-        except (LLMConfigurationError, LLMTimeoutError):
-            self.execution_tracker.complete_execution(
-                execution_id=execution_id,
-                response_message="",
-                success=False,
-                error_message="Configuration or timeout error",
-                start_time=start_time
-            )
-            raise
-        except RateLimitError as e:
-            self.logger.warning(f"OpenAI rate limit exceeded for layer '{request.layer_title}': {e}")
-            self.execution_tracker.complete_execution(
-                execution_id=execution_id,
-                response_message="",
-                success=False,
-                error_message=f"Rate limit exceeded: {str(e)}",
-                start_time=start_time
-            )
-            raise LLMQuotaExceededError(f"API rate limit exceeded: {str(e)}")
-        except APITimeoutError as e:
-            self.logger.warning(f"OpenAI API timeout for layer '{request.layer_title}': {e}")
-            self.execution_tracker.complete_execution(
-                execution_id=execution_id,
-                response_message="",
-                success=False,
-                error_message=f"API timeout: {str(e)}",
-                start_time=start_time
-            )
-            raise LLMTimeoutError(f"API request timeout: {str(e)}")
-        except AuthenticationError as e:
-            self.logger.error(f"OpenAI authentication error for layer '{request.layer_title}': {e}")
-            self.execution_tracker.complete_execution(
-                execution_id=execution_id,
-                response_message="",
-                success=False,
-                error_message=f"Authentication failed: {str(e)}",
-                start_time=start_time
-            )
-            raise LLMConfigurationError(f"Authentication failed: {str(e)}")
-        except APIError as e:
-            self.logger.error(f"OpenAI API error for layer '{request.layer_title}': {e}")
-            error_msg = f"API error: {str(e)}"
-            self.execution_tracker.complete_execution(
-                execution_id=execution_id,
-                response_message="",
-                success=False,
-                error_message=error_msg,
-                start_time=start_time
-            )
-            if "quota" in str(e).lower() or "billing" in str(e).lower():
-                raise LLMQuotaExceededError(f"API quota/billing error: {str(e)}")
-            else:
-                raise LLMProcessingError(error_msg)
-        except Exception as e:
-            self.logger.error(f"Unexpected error generating layer definition for layer '{request.layer_title}': {e}")
-            self.execution_tracker.complete_execution(
-                execution_id=execution_id,
-                response_message="",
-                success=False,
-                error_message=f"Unexpected error: {str(e)}",
-                start_time=start_time
-            )
-            raise LLMProcessingError(f"Failed to generate layer definition: {str(e)}")
+        # Convert LayerDefinitionRequest to context data for generic execution
+        contained_domains_text = ", ".join(request.contained_domains) if request.contained_domains else "Not specified"
+        reference_context = str(request.reference_context) if request.reference_context else "Not specified"
+        
+        context_data = {
+            'layer_title': request.layer_title,
+            'layer_description': request.layer_description,
+            'layer_purpose': request.layer_purpose,
+            'parent_layer_title': request.parent_layer_title,
+            'parent_layer_definition': request.parent_layer_definition,
+            'contained_domains': contained_domains_text,
+            'current_definition': request.current_definition,
+            'reference_context': reference_context
+        }
+        
+        # Create generic pipeline request
+        generic_request = GenericPipelineExecutionRequest(
+            flavor_id=request.flavor or "default",
+            pipeline_type=PipelineType.SUGGEST_LAYER_DEFINITION,
+            context_data=context_data
+        )
+        
+        # Execute using generic method
+        generic_response = await self.execute_pipeline_flavor(generic_request)
+        
+        # Parse the response using the existing parser
+        parsed_response = self._parse_layer_definition_response(generic_response.response_content)
+        
+        # Add execution_id to response
+        parsed_response.execution_id = generic_response.execution_id
+        
+        self.logger.info(f"Successfully generated layer definition for layer: '{request.layer_title}', execution: {generic_response.execution_id}")
+        return parsed_response
 
     async def suggest_domain_definition(self, request: DomainDefinitionRequest) -> DomainDefinitionResponse:
         """Generate a domain definition suggestion with execution tracking"""
-        start_time = time.time()
-        execution_id = "unknown"
-        
         self.logger.info(f"Starting domain definition suggestion for domain: '{request.domain_title}'")
         self.logger.debug(f"Request details - Layer: {request.layer_title}, Terms: {len(request.contained_terms)}")
         
-        try:
-            # Get flavor (use default if none specified)
-            flavor = await self._get_flavor(PipelineType.SUGGEST_DOMAIN_DEFINITION, request.flavor)
-            
-            # Create prompt using flavor templates
-            system_prompt = flavor.system_prompt
-            user_prompt = self._render_user_prompt(flavor.user_prompt, request)
-            
-            # Start execution tracking
-            execution_id = self.execution_tracker.start_execution(
-                pipeline_flavor_id=flavor.id,
-                pipeline_type=PipelineType.SUGGEST_DOMAIN_DEFINITION.value,
-                pipeline_flavor_version=flavor.version,
-                request=request,
-                user_prompt=user_prompt
-            )
-            
-            # Initialize LLM with flavor configuration
-            llm = self._create_llm_from_flavor(flavor)
-            
-            messages = [
-                SystemMessage(content=system_prompt),
-                HumanMessage(content=user_prompt)
-            ]
-            
-            # Add timeout to the async call
-            timeout = int(os.getenv("LLM_TIMEOUT", "30"))
-            try:
-                response = await asyncio.wait_for(
-                    llm.ainvoke(messages), 
-                    timeout=timeout
-                )
-            except asyncio.TimeoutError:
-                self.logger.warning(f"LLM request timed out after {timeout} seconds for domain: '{request.domain_title}'")
-                raise LLMTimeoutError(f"Request timed out after {timeout} seconds")
-            
-            # Parse the response
-            parsed_response = self._parse_domain_definition_response(response.content)
-            
-            # Track token usage if available
-            token_usage = None
-            if hasattr(response, 'response_metadata') and response.response_metadata.get('token_usage'):
-                usage = response.response_metadata['token_usage']
-                token_usage = {
-                    'input_tokens': usage.get('prompt_tokens', 0),
-                    'output_tokens': usage.get('completion_tokens', 0),
-                    'total_tokens': usage.get('total_tokens', 0)
-                }
-            
-            # Complete execution tracking
-            self.execution_tracker.complete_execution(
-                execution_id=execution_id,
-                response_message=response.content,
-                success=True,
-                token_usage=token_usage,
-                start_time=start_time
-            )
-            
-            # Add execution_id to response
-            parsed_response.execution_id = execution_id
-            
-            self.logger.info(f"Successfully generated domain definition for domain: '{request.domain_title}' using flavor '{flavor.title}', execution: {execution_id}")
-            return parsed_response
-            
-        except (LLMConfigurationError, LLMTimeoutError):
-            self.execution_tracker.complete_execution(
-                execution_id=execution_id,
-                response_message="",
-                success=False,
-                error_message="Configuration or timeout error",
-                start_time=start_time
-            )
-            raise
-        except RateLimitError as e:
-            self.logger.warning(f"OpenAI rate limit exceeded for domain '{request.domain_title}': {e}")
-            self.execution_tracker.complete_execution(
-                execution_id=execution_id,
-                response_message="",
-                success=False,
-                error_message=f"Rate limit exceeded: {str(e)}",
-                start_time=start_time
-            )
-            raise LLMQuotaExceededError(f"API rate limit exceeded: {str(e)}")
-        except APITimeoutError as e:
-            self.logger.warning(f"OpenAI API timeout for domain '{request.domain_title}': {e}")
-            self.execution_tracker.complete_execution(
-                execution_id=execution_id,
-                response_message="",
-                success=False,
-                error_message=f"API timeout: {str(e)}",
-                start_time=start_time
-            )
-            raise LLMTimeoutError(f"API request timeout: {str(e)}")
-        except AuthenticationError as e:
-            self.logger.error(f"OpenAI authentication error for domain '{request.domain_title}': {e}")
-            self.execution_tracker.complete_execution(
-                execution_id=execution_id,
-                response_message="",
-                success=False,
-                error_message=f"Authentication failed: {str(e)}",
-                start_time=start_time
-            )
-            raise LLMConfigurationError(f"Authentication failed: {str(e)}")
-        except APIError as e:
-            self.logger.error(f"OpenAI API error for domain '{request.domain_title}': {e}")
-            error_msg = f"API error: {str(e)}"
-            self.execution_tracker.complete_execution(
-                execution_id=execution_id,
-                response_message="",
-                success=False,
-                error_message=error_msg,
-                start_time=start_time
-            )
-            if "quota" in str(e).lower() or "billing" in str(e).lower():
-                raise LLMQuotaExceededError(f"API quota/billing error: {str(e)}")
-            else:
-                raise LLMProcessingError(error_msg)
-        except Exception as e:
-            self.logger.error(f"Unexpected error generating domain definition for domain '{request.domain_title}': {e}")
-            self.execution_tracker.complete_execution(
-                execution_id=execution_id,
-                response_message="",
-                success=False,
-                error_message=f"Unexpected error: {str(e)}",
-                start_time=start_time
-            )
-            raise LLMProcessingError(f"Failed to generate domain definition: {str(e)}")
+        # Convert DomainDefinitionRequest to context data for generic execution
+        contained_terms_text = ", ".join(request.contained_terms) if request.contained_terms else "Not specified"
+        related_domains_text = ", ".join(request.related_domains) if request.related_domains else "Not specified"
+        reference_context = str(request.reference_context) if request.reference_context else "Not specified"
+        
+        context_data = {
+            'domain_title': request.domain_title,
+            'domain_description': request.domain_description,
+            'domain_scope': request.domain_scope,
+            'layer_title': request.layer_title,
+            'layer_definition': request.layer_definition,
+            'contained_terms': contained_terms_text,
+            'related_domains': related_domains_text,
+            'current_definition': request.current_definition,
+            'reference_context': reference_context
+        }
+        
+        # Create generic pipeline request
+        generic_request = GenericPipelineExecutionRequest(
+            flavor_id=request.flavor or "default",
+            pipeline_type=PipelineType.SUGGEST_DOMAIN_DEFINITION,
+            context_data=context_data
+        )
+        
+        # Execute using generic method
+        generic_response = await self.execute_pipeline_flavor(generic_request)
+        
+        # Parse the response using the existing parser
+        parsed_response = self._parse_domain_definition_response(generic_response.response_content)
+        
+        # Add execution_id to response
+        parsed_response.execution_id = generic_response.execution_id
+        
+        self.logger.info(f"Successfully generated domain definition for domain: '{request.domain_title}', execution: {generic_response.execution_id}")
+        return parsed_response
     
     def _parse_definition_response(self, response_text: str) -> DefinitionSuggestionResponse:
         """Parse the LLM response in the exact format specified in requirements"""
@@ -827,9 +748,44 @@ class LLMService:
             **config
         )
     
+    def _render_user_prompt_generic(self, template: str, context_data: Dict[str, Any]) -> str:
+        """Render user prompt template with arbitrary context data"""
+        self.logger.debug("Rendering generic user prompt template with context data")
+        
+        try:
+            # Create a safe copy of context_data with None values replaced
+            safe_context = {}
+            for key, value in context_data.items():
+                if value is None:
+                    safe_context[key] = "Not specified"
+                elif isinstance(value, (list, tuple)):
+                    # Handle lists by joining them or converting to string
+                    if all(isinstance(item, str) for item in value):
+                        safe_context[key] = ", ".join(value) if value else "Not specified"
+                    else:
+                        safe_context[key] = str(value) if value else "Not specified"
+                elif isinstance(value, dict):
+                    # Handle dictionaries by converting to string representation
+                    safe_context[key] = str(value) if value else "Not specified"
+                else:
+                    safe_context[key] = str(value)
+            
+            # Render the template with the safe context data
+            rendered_prompt = template.format(**safe_context)
+            
+            self.logger.debug(f"Successfully rendered generic user prompt template (length: {len(rendered_prompt)} chars)")
+            return rendered_prompt
+            
+        except KeyError as e:
+            self.logger.error(f"Missing template variable: {e}")
+            raise LLMProcessingError(f"Template rendering failed - missing variable: {str(e)}")
+        except Exception as e:
+            self.logger.error(f"Error rendering generic user prompt template: {e}")
+            raise LLMProcessingError(f"Template rendering failed: {str(e)}")
+
     def _render_user_prompt(self, template: str, request) -> str:
         """Render user prompt template with request data using flavor template"""
-        self.logger.debug(f"Rendering user prompt template with request data")
+        self.logger.debug("Rendering user prompt template with request data")
         
         try:
             # Extract field values based on request type
@@ -897,7 +853,7 @@ class LLMService:
                 
             else:
                 # Fallback - return template as-is
-                self.logger.warning(f"Unknown request type, returning template as-is")
+                self.logger.warning("Unknown request type, returning template as-is")
                 rendered_prompt = template
             
             self.logger.debug(f"Successfully rendered user prompt template (length: {len(rendered_prompt)} chars)")

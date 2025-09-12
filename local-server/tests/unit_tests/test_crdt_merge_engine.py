@@ -13,7 +13,7 @@ sys.path.append(
 
 import pytest
 from datetime import datetime, timezone
-from unittest.mock import Mock, patch, MagicMock
+from unittest.mock import Mock, patch
 
 from services.crdt_merge_engine import CRDTMergeEngine, MergeStrategy, MergeResult
 from services.collaboration_models import Changeset, ChangesetState

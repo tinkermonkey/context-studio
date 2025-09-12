@@ -14,9 +14,7 @@ from datetime import datetime
 
 from .network_service import NetworkService
 from .sparql_service import SPARQLService
-from .network_service import NetworkService
 from database.models import StructureNode, StructureNodeLink
-from database.enums import NodeType
 from utils.logger import get_logger
 
 logger = get_logger(__name__)

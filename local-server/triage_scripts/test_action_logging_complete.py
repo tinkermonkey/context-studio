@@ -91,8 +91,8 @@ def main():
             with open(dm.action_log_path, 'r') as f:
                 log_data = json.load(f)
             
-            print(f"   File exists: ✓")
-            print(f"   Valid JSON: ✓")
+            print("   File exists: ✓")
+            print("   Valid JSON: ✓")
             print(f"   Entries: {len(log_data)}")
             
             # Check structure of first entry
@@ -105,9 +105,9 @@ def main():
                 # Check timestamp format
                 try:
                     datetime.fromisoformat(first_entry['timestamp'])
-                    print(f"   Timestamp format: ✓")
+                    print("   Timestamp format: ✓")
                 except:
-                    print(f"   Timestamp format: ✗")
+                    print("   Timestamp format: ✗")
         
         print("\n=== Test Complete ===")
         print("✓ Dataset action logging is working correctly!")

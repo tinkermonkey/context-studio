@@ -12,8 +12,7 @@ sys.path.append(
 )
 
 import pytest
-import json
-from unittest.mock import Mock, patch, MagicMock
+from unittest.mock import Mock, patch
 from datetime import datetime, timezone
 
 from services.s3_storage_optimizer import (

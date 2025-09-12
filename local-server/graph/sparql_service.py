@@ -8,7 +8,7 @@ using RDFLib to create an in-memory RDF representation of the SQLite database.
 from rdflib import Graph, Namespace, URIRef, Literal, RDF, RDFS
 from rdflib.namespace import FOAF, DCTERMS, SKOS
 from sqlalchemy.orm import Session
-from typing import Dict, List, Any, Optional, Union
+from typing import Dict, List, Any, Optional
 from datetime import datetime
 
 from database.models import StructureNode, StructureNodeLink

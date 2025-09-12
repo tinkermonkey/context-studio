@@ -5122,6 +5122,128 @@
         }
       }
     },
+    "/api/llm/execute_pipeline": {
+      "post": {
+        "tags": [
+          "llm"
+        ],
+        "summary": "Execute Pipeline",
+        "description": "Execute a generic pipeline with arbitrary context data.\n\nThis endpoint provides a unified interface for executing any pipeline type\nwith flexible context data. It supports all pipeline types and flavors\nwhile maintaining full execution tracking.\n\nUse this endpoint for custom pipeline implementations or when you need\nfine-grained control over context data.",
+        "operationId": "execute_pipeline_api_llm_execute_pipeline_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GenericPipelineExecutionRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GenericPipelineExecutionResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LLMErrorResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Request validation failure",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LLMErrorResponse"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too Many Requests",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LLMErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LLMErrorResponse"
+                }
+              }
+            }
+          },
+          "504": {
+            "description": "Gateway Timeout",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LLMErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/llm/execute_pipeline/stream": {
+      "post": {
+        "tags": [
+          "llm"
+        ],
+        "summary": "Execute Pipeline Stream",
+        "description": "Execute a generic pipeline with streaming response.\n\nThis endpoint provides streaming execution for any pipeline type with\nflexible context data. The response is streamed as Server-Sent Events (SSE)\nwith execution tracking.\n\nUse this endpoint when you need real-time streaming responses for\ncustom pipeline implementations.",
+        "operationId": "execute_pipeline_stream_api_llm_execute_pipeline_stream_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GenericPipelineExecutionRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/llm/health": {
       "get": {
         "tags": [
@@ -14945,6 +15067,81 @@
         ],
         "title": "FlavorAnalyticsResponse",
         "description": "Response model for flavor-specific analytics"
+      },
+      "GenericPipelineExecutionRequest": {
+        "properties": {
+          "flavor_id": {
+            "type": "string",
+            "title": "Flavor Id",
+            "description": "ID of the pipeline flavor to use"
+          },
+          "pipeline_type": {
+            "$ref": "#/components/schemas/PipelineType",
+            "description": "Type of pipeline to execute"
+          },
+          "context_data": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Context Data",
+            "description": "Arbitrary context data for template rendering"
+          }
+        },
+        "type": "object",
+        "required": [
+          "flavor_id",
+          "pipeline_type",
+          "context_data"
+        ],
+        "title": "GenericPipelineExecutionRequest",
+        "description": "Generic request model for pipeline execution with arbitrary context data"
+      },
+      "GenericPipelineExecutionResponse": {
+        "properties": {
+          "response_content": {
+            "type": "string",
+            "title": "Response Content",
+            "description": "Raw LLM response content"
+          },
+          "execution_id": {
+            "type": "string",
+            "title": "Execution Id",
+            "description": "Unique execution ID for tracing"
+          },
+          "flavor_id": {
+            "type": "string",
+            "title": "Flavor Id",
+            "description": "ID of the flavor that generated this response"
+          },
+          "pipeline_type": {
+            "type": "string",
+            "title": "Pipeline Type",
+            "description": "Type of pipeline that was executed"
+          },
+          "token_usage": {
+            "anyOf": [
+              {
+                "additionalProperties": {
+                  "type": "integer"
+                },
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Token Usage",
+            "description": "Token usage statistics if available"
+          }
+        },
+        "type": "object",
+        "required": [
+          "response_content",
+          "execution_id",
+          "flavor_id",
+          "pipeline_type"
+        ],
+        "title": "GenericPipelineExecutionResponse",
+        "description": "Generic response model for pipeline execution"
       },
       "HTTPValidationError": {
         "properties": {

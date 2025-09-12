@@ -10,8 +10,7 @@ import tempfile
 import threading
 import json
 from typing import List, Tuple, Any, Dict, Optional
-from sqlalchemy import create_engine, text
-from sqlalchemy.orm import sessionmaker
+from sqlalchemy import text
 from database.utils import init_db, get_engine as utils_get_engine, get_session_local as utils_get_session_local
 from utils.logger import get_logger
 from config import get_settings

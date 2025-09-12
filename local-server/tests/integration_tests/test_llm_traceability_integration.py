@@ -3,11 +3,8 @@ import os
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 import pytest
-from fastapi.testclient import TestClient
 from unittest.mock import Mock, patch
 import tempfile
-import json
-from datetime import datetime
 
 from pipeline.manager import PipelineDatabaseManager
 from llm.execution_tracker import ExecutionTracker

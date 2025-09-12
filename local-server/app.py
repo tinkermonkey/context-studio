@@ -3,7 +3,6 @@ import argparse
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
-from sqlalchemy import text
 
 from api import graph, datasets, nlp_analysis, schema, predicates, llm, pipeline_flavors
 from api import enrichment, config, structure_nodes, version_management, sync, llm_traceability

@@ -243,3 +243,28 @@ class FlavorAnalyticsResponse(BaseModel):
     flavor_id: str = Field(..., description="Flavor ID")
     analytics: Dict[str, Any] = Field(..., description="Analytics data for the flavor")
     time_range_days: int = Field(..., description="Number of days of data included")
+
+
+class GenericPipelineExecutionRequest(BaseModel):
+    """Generic request model for pipeline execution with arbitrary context data"""
+    flavor_id: str = Field(..., description="ID of the pipeline flavor to use")
+    pipeline_type: PipelineType = Field(..., description="Type of pipeline to execute")
+    context_data: Dict[str, Any] = Field(..., description="Arbitrary context data for template rendering")
+
+    @field_validator('context_data')
+    @classmethod
+    def validate_context_data(cls, v):
+        if not isinstance(v, dict):
+            raise ValueError("context_data must be a dictionary")
+        if not v:  # Empty dict
+            raise ValueError("context_data cannot be empty")
+        return v
+
+
+class GenericPipelineExecutionResponse(BaseModel):
+    """Generic response model for pipeline execution"""
+    response_content: str = Field(..., description="Raw LLM response content")
+    execution_id: str = Field(..., description="Unique execution ID for tracing")
+    flavor_id: str = Field(..., description="ID of the flavor that generated this response")
+    pipeline_type: str = Field(..., description="Type of pipeline that was executed")
+    token_usage: Optional[Dict[str, int]] = Field(None, description="Token usage statistics if available")

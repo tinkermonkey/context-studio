@@ -7,7 +7,7 @@ both automatic and guided manual resolution capabilities for collaborative workf
 
 import uuid
 import json
-from typing import List, Optional, Dict, Any, Set, Tuple
+from typing import List, Optional, Dict, Any, Tuple
 from datetime import datetime, timezone
 from sqlalchemy.orm import Session
 from sqlalchemy import text

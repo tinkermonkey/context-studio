@@ -1,7 +1,6 @@
 """Migration template for new migrations."""
 
 from sqlalchemy.engine import Connection
-from sqlalchemy import text
 from database.migrations.migration_manager import Migration
 
 

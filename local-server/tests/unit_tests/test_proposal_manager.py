@@ -13,12 +13,11 @@ sys.path.append(
 
 import pytest
 import uuid
-from datetime import datetime, timezone
-from unittest.mock import Mock, patch, MagicMock
+from unittest.mock import Mock, patch
 
 from services.proposal_manager import ProposalManager
 from services.collaboration_models import (
-    Proposal, ProposalStatus, ProposalVote, ChangesetState, Changeset
+    Proposal, ProposalStatus, ChangesetState, Changeset
 )
 from services.changeset_manager import ChangesetManager
 from services.s3_sync_manager import S3SyncManager

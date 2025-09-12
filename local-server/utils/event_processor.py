@@ -1,17 +1,13 @@
 import threading
 import time
 import json
-import os
 from datetime import datetime, timedelta, timezone
 from typing import Dict, Optional, Any
 from sqlalchemy import text
-from sqlalchemy.orm import sessionmaker
 
-from database.models import ChangeEvent
 from database.enums import RecordType
 from database.utils import (
-    get_database_manager, 
-    optimized_session
+    get_database_manager
 )
 from utils.logger import get_logger
 

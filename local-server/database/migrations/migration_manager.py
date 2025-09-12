@@ -7,7 +7,7 @@ import time
 from abc import ABC, abstractmethod
 from typing import List, Optional
 from sqlalchemy import create_engine, text
-from sqlalchemy.engine import Engine, Connection
+from sqlalchemy.engine import Connection
 
 from dataset.models import MigrationStatus
 from utils.logger import get_logger

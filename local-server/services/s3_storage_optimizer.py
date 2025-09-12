@@ -7,11 +7,9 @@ for enterprise-scale cost reduction and performance improvement.
 """
 
 import time
-import boto3
 import pandas as pd
-from typing import Dict, List, Any, Optional, Tuple
-from datetime import datetime, timezone, timedelta
-from sqlalchemy.orm import Session
+from typing import Dict, Any, Optional
+from datetime import datetime, timedelta
 from botocore.exceptions import ClientError
 
 from utils.logger import get_logger

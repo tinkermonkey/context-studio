@@ -1,5 +1,4 @@
 import spacy
-import concepcy
 import time
 import requests
 

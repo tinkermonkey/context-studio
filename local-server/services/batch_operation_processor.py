@@ -9,13 +9,11 @@ dynamic batch size optimization for enterprise-scale performance.
 import uuid
 import json
 import time
-import sqlite3
-from typing import Dict, List, Optional, Any, Tuple
+from typing import Dict, List, Optional, Any
 from dataclasses import dataclass
 from datetime import datetime, timezone
-from concurrent.futures import ThreadPoolExecutor, as_completed, Future
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from threading import Lock
-from sqlalchemy.orm import Session
 
 from utils.logger import get_logger
 

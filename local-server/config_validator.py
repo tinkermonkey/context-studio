@@ -15,7 +15,7 @@ from dataclasses import dataclass
 # Add project root to path
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
-from config import Settings, ConfigurationManager, get_config_manager, get_settings
+from config import ConfigurationManager, get_config_manager
 from utils.logger import get_logger
 
 logger = get_logger(__name__)
@@ -344,7 +344,7 @@ class ConfigurationValidator:
         passed_tests = sum(1 for r in self.results if r.passed)
         failed_tests = total_tests - passed_tests
         
-        report.append(f"\nOVERALL SUMMARY:")
+        report.append("\nOVERALL SUMMARY:")
         report.append(f"  Total Tests: {total_tests}")
         report.append(f"  Passed: {passed_tests} ({(passed_tests/total_tests)*100:.1f}%)")
         report.append(f"  Failed: {failed_tests} ({(failed_tests/total_tests)*100:.1f}%)")

@@ -23,7 +23,7 @@ import json
 import subprocess
 import traceback
 from datetime import datetime, timezone
-from typing import Dict, List, Any, Tuple
+from typing import Dict, List, Any
 
 # Add project root to Python path
 project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -645,7 +645,7 @@ class Phase5Validator:
         print(f"📅 Completed: {summary['validation_timestamp']}")
         
         # Test results summary
-        print(f"\n📋 Test Results:")
+        print("\n📋 Test Results:")
         print(f"   Unit Tests: {summary['unit_tests_passed']}/{summary['unit_tests_total']} passed")
         print(f"   Integration Tests: {summary['integration_tests_passed']}/{summary['integration_tests_total']} passed")
         print(f"   Services Validated: {summary['services_validated']}")
@@ -654,7 +654,7 @@ class Phase5Validator:
         
         # Performance benchmarks
         if self.results.performance_benchmarks:
-            print(f"\n⚡ Performance Benchmarks:")
+            print("\n⚡ Performance Benchmarks:")
             for service, metrics in self.results.performance_benchmarks.items():
                 print(f"   {service}:")
                 for metric, value in metrics.items():
@@ -668,7 +668,7 @@ class Phase5Validator:
         
         # Service validation details
         if self.results.service_validations:
-            print(f"\n🛠️  Service Validation Details:")
+            print("\n🛠️  Service Validation Details:")
             for service, validation in self.results.service_validations.items():
                 status = "✅" if validation.get('instantiation_success', False) else "❌"
                 print(f"   {service}: {status}")
@@ -676,7 +676,7 @@ class Phase5Validator:
                     print(f"     Error: {validation['error']}")
         
         # Recommendations
-        print(f"\n💡 Recommendations:")
+        print("\n💡 Recommendations:")
         if self.results.overall_success:
             print("   🎯 Phase 5 implementation is ready for production!")
             print("   🚀 All optimization features are functioning correctly")
@@ -691,7 +691,6 @@ class Phase5Validator:
 
 def main():
     """Main validation entry point."""
-    import unittest.mock  # Import here to ensure it's available
     
     try:
         validator = Phase5Validator()

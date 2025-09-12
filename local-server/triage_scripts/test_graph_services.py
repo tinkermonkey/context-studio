@@ -93,7 +93,7 @@ def test_graph_services():
         # Detect communities
         try:
             communities = graph_service.detect_communities("louvain")
-            print(f"\n=== COMMUNITY DETECTION ===")
+            print("\n=== COMMUNITY DETECTION ===")
             print(f"Found {len(communities)} communities")
             for i, community in enumerate(communities[:3]):  # Show first 3 communities
                 print(f"Community {i+1}: {len(community)} structure_nodes")
@@ -107,7 +107,7 @@ def test_graph_services():
         # Search for terms (this will work if there are terms in the database)
         try:
             search_results = graph_service.find_terms_by_title("test", exact=False)
-            print(f"\n=== SEARCH RESULTS FOR 'test' ===")
+            print("\n=== SEARCH RESULTS FOR 'test' ===")
             print(f"Found {len(search_results)} matching terms")
             for result in search_results[:3]:
                 print(f"- {result.get('title', 'N/A')}")
@@ -120,7 +120,7 @@ def test_graph_services():
         try:
             # Export as Turtle RDF
             turtle_export = graph_service.serialize_rdf("turtle")
-            print(f"\n=== RDF EXPORT (TURTLE) - First 500 chars ===")
+            print("\n=== RDF EXPORT (TURTLE) - First 500 chars ===")
             print(turtle_export[:500] + "..." if len(turtle_export) > 500 else turtle_export)
         except Exception as e:
             print(f"RDF export failed: {e}")
@@ -131,7 +131,7 @@ def test_graph_services():
         # Get all domain hierarchy
         try:
             hierarchy = graph_service.get_domain_hierarchy()
-            print(f"\n=== DOMAIN HIERARCHY ===")
+            print("\n=== DOMAIN HIERARCHY ===")
             print(f"Found {len(hierarchy)} domain-layer relationships")
             for rel in hierarchy[:5]:  # Show first 5
                 print(f"Domain: {rel.get('domainTitle', 'N/A')} -> Layer: {rel.get('layerTitle', 'N/A')}")
@@ -164,7 +164,7 @@ def test_individual_services():
         logger.info("Testing SPARQL service...")
         sparql_service = SPARQLService(session)
         sparql_stats = sparql_service.get_graph_stats()
-        print(f"\n=== SPARQL SERVICE STATS ===")
+        print("\n=== SPARQL SERVICE STATS ===")
         print(f"Total triples: {sparql_stats['total_triples']}")
         print(f"Total subjects: {sparql_stats['total_subjects']}")
         print(f"Total predicates: {sparql_stats['total_predicates']}")
@@ -173,7 +173,7 @@ def test_individual_services():
         logger.info("Testing NetworkX service...")
         network_service = NetworkService(session)
         network_stats = network_service.get_graph_stats()
-        print(f"\n=== NETWORKX SERVICE STATS ===")
+        print("\n=== NETWORKX SERVICE STATS ===")
         print(f"Total structure_nodes: {network_stats['total_nodes']}")
         print(f"Total edges: {network_stats['total_edges']}")
         print(f"StructureNode types: {network_stats.get('node_types', {})}")
@@ -212,20 +212,20 @@ def test_term_hierarchy(network_service):
         # Get hierarchy using the updated algorithm
         hierarchy = network_service.get_term_hierarchy(term_id)
         
-        print(f"\n=== TERM HIERARCHY TEST ===")
+        print("\n=== TERM HIERARCHY TEST ===")
         print(f"Term ID: {term_id}")
         print(f"Number of ancestors: {len(hierarchy['ancestors'])}")
         print(f"Number of descendants: {len(hierarchy['descendants'])}")
         
         # Print ancestors
         if hierarchy['ancestors']:
-            print(f"Ancestors:")
+            print("Ancestors:")
             for ancestor in hierarchy['ancestors']:
                 print(f"  - {ancestor['type']}: {ancestor['title']} (distance: {ancestor['distance']})")
         
         # Print descendants
         if hierarchy['descendants']:
-            print(f"Descendants:")
+            print("Descendants:")
             for descendant in hierarchy['descendants']:
                 print(f"  - {descendant['type']}: {descendant['title']} (distance: {descendant['distance']})")
         
@@ -238,7 +238,7 @@ def test_term_hierarchy(network_service):
             logger.info(f"Testing find_terms_in_domain_tree for domain: {domain_id}")
             terms_in_domain = network_service.find_terms_in_domain_tree(domain_id)
             
-            print(f"\n=== DOMAIN TREE TEST ===")
+            print("\n=== DOMAIN TREE TEST ===")
             print(f"Domain ID: {domain_id}")
             print(f"Number of terms in domain tree: {len(terms_in_domain)}")
             if terms_in_domain:

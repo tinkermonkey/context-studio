@@ -1,8 +1,6 @@
 from mitmproxy import http
 import hashlib
 from collections import OrderedDict
-import json
-import gzip
 
 class SimpleCache:
     def __init__(self, max_size=100):

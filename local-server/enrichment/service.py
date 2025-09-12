@@ -3,7 +3,6 @@
 from typing import Dict, Any, Optional, List
 import asyncio
 import aiohttp
-import logging
 from datetime import datetime, UTC
 
 from config import get_config_manager, ConfigurationManager

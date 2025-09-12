@@ -20,10 +20,9 @@ Endpoints:
 
 from fastapi import APIRouter, HTTPException, Query, Depends, Path
 from typing import List, Optional, Dict, Any
-from sqlalchemy.orm import Session
 import pandas as pd
 from services.service_factory import get_change_analytics_engine_via_factory
-from pydantic import BaseModel, Field
+from pydantic import BaseModel
 
 router = APIRouter(prefix="/api/analytics", tags=["analytics"])
 

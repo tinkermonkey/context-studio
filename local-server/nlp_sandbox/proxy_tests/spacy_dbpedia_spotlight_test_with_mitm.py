@@ -1,4 +1,3 @@
-import time
 import os
 import urllib3
 import ssl
