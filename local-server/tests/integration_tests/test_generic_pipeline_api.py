@@ -86,7 +86,7 @@ class TestGenericPipelineAPIIntegration:
         
         # Make the API request
         response = self.client.post(
-            "/llm/execute_pipeline",
+            "/api/llm/execute_pipeline",
             json=request_payload
         )
         
@@ -124,7 +124,7 @@ class TestGenericPipelineAPIIntegration:
         
         # Make the API request
         response = self.client.post(
-            "/llm/execute_pipeline",
+            "/api/llm/execute_pipeline",
             json=request_payload
         )
         
@@ -151,7 +151,7 @@ class TestGenericPipelineAPIIntegration:
         
         # Make the API request
         response = self.client.post(
-            "/llm/execute_pipeline",
+            "/api/llm/execute_pipeline",
             json=request_payload
         )
         
@@ -209,7 +209,7 @@ class TestGenericPipelineAPIIntegration:
         
         # Make the API request
         response = self.client.post(
-            "/llm/execute_pipeline/stream",
+            "/api/llm/execute_pipeline/stream",
             json=request_payload
         )
         
@@ -245,7 +245,7 @@ class TestGenericPipelineAPIIntegration:
         
         # Make the API request
         response = self.client.post(
-            "/llm/execute_pipeline/stream",
+            "/api/llm/execute_pipeline/stream",
             json=request_payload
         )
         
@@ -304,7 +304,7 @@ class TestGenericPipelineAPIIntegration:
             }
             
             response = self.client.post(
-                "/llm/execute_pipeline",
+                "/api/llm/execute_pipeline",
                 json=request_payload
             )
             
@@ -343,7 +343,7 @@ class TestGenericPipelineAPIIntegration:
         }
         
         response = self.client.post(
-            "/llm/suggest_term_definition",
+            "/api/llm/suggest_term_definition",
             json=request_payload
         )
         
@@ -382,7 +382,7 @@ class TestGenericPipelineAPIIntegration:
         }
         
         generic_response = self.client.post(
-            "/llm/execute_pipeline",
+            "/api/llm/execute_pipeline",
             json=generic_payload
         )
         
@@ -394,7 +394,7 @@ class TestGenericPipelineAPIIntegration:
         }
         
         specific_response = self.client.post(
-            "/llm/suggest_term_definition",
+            "/api/llm/suggest_term_definition",
             json=specific_payload
         )
         
@@ -420,11 +420,11 @@ class TestGenericPipelineAPIIntegration:
         paths = openapi_spec["paths"]
         
         # Verify generic endpoints are documented
-        assert "/llm/execute_pipeline" in paths
-        assert "/llm/execute_pipeline/stream" in paths
+        assert "/api/llm/execute_pipeline" in paths
+        assert "/api/llm/execute_pipeline/stream" in paths
         
         # Verify the execute_pipeline endpoint has proper documentation
-        execute_pipeline = paths["/llm/execute_pipeline"]["post"]
+        execute_pipeline = paths["/api/llm/execute_pipeline"]["post"]
         assert "Execute a generic pipeline with arbitrary context data" in execute_pipeline["description"]
         
         # Verify request schema includes GenericPipelineExecutionRequest
@@ -436,5 +436,5 @@ class TestGenericPipelineAPIIntegration:
         assert "$ref" in response_schema
         
         # Verify streaming endpoint documentation
-        execute_stream = paths["/llm/execute_pipeline/stream"]["post"]
+        execute_stream = paths["/api/llm/execute_pipeline/stream"]["post"]
         assert "Execute a generic pipeline with streaming response" in execute_stream["description"]
