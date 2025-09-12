@@ -6,7 +6,6 @@ import { Spinner } from "flowbite-react";
 import { CsSidebar, CsSidebarTitle } from "@/components/layout/cs_sidebar";
 import { CsMain, CsMainTitle } from "@/components/layout/cs_main";
 import { Layers } from "lucide-react";
-import type { StructureNode } from "@/api/types/structureNodes";
 
 export const Route = createFileRoute("/app/layers")({
   component: LayersPage,
@@ -32,7 +31,7 @@ function LayersPage() {
       <CsMain>
         <CsMainTitle icon={Layers}>Layers</CsMainTitle>
 
-        <LayersTable ref={tableRef} data={layers as LayerOut[]} />
+        <LayersTable ref={tableRef} data={layers} />
       </CsMain>
     </>
   );

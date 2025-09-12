@@ -7,9 +7,8 @@ from typing import Dict, Any, Optional
 from datetime import datetime
 from sqlalchemy import text
 
-from pipeline.manager import get_pipeline_session, get_pipeline_engine
+from pipeline.manager import get_pipeline_session
 from llm.models import (
-    DefinitionSuggestionRequest, LayerDefinitionRequest, DomainDefinitionRequest,
     PipelineType, RecordSelectionRequest
 )
 from utils.logger import get_logger
@@ -249,6 +248,137 @@ class ExecutionTracker:
                 
         except Exception as e:
             logger.error(f"Failed to get execution analytics: {e}")
+            return {"error": str(e)}
+    
+    def get_flavor_execution_history(self, flavor_id: str, limit: int = 100) -> Dict[str, Any]:
+        """Get execution history for a specific flavor."""
+        
+        try:
+            session = get_pipeline_session()
+            
+            try:
+                # Get executions for the specific flavor, ordered by most recent first
+                result = session.execute(text("""
+                    SELECT * FROM pipeline_flavor_executions 
+                    WHERE pipeline_flavor_id = :flavor_id 
+                    ORDER BY started_at DESC 
+                    LIMIT :limit
+                """), {'flavor_id': flavor_id, 'limit': limit})
+                
+                executions = []
+                for row in result:
+                    executions.append({
+                        "id": row.id,
+                        "pipeline_type": row.pipeline_type,
+                        "pipeline_flavor_version": row.pipeline_flavor_version,
+                        "status": row.status,
+                        "request_context": row.request_context,
+                        "user_prompt": row.user_prompt,
+                        "response_message": row.response_message,
+                        "execution_time_ms": row.execution_time_ms,
+                        "token_usage": {
+                            "input_tokens": row.input_tokens,
+                            "output_tokens": row.output_tokens,
+                            "total_tokens": row.total_tokens
+                        },
+                        "started_at": row.started_at,
+                        "completed_at": row.completed_at,
+                        "error_message": row.error_message
+                    })
+                
+                # Get total count for the flavor
+                count_result = session.execute(text("""
+                    SELECT COUNT(*) as total_count 
+                    FROM pipeline_flavor_executions 
+                    WHERE pipeline_flavor_id = :flavor_id
+                """), {'flavor_id': flavor_id})
+                
+                total_count = count_result.fetchone().total_count
+                
+                return {
+                    "executions": executions,
+                    "total_count": total_count,
+                    "flavor_id": flavor_id
+                }
+                
+            finally:
+                session.close()
+                
+        except Exception as e:
+            logger.error(f"Failed to get flavor execution history: {e}")
+            return {"error": str(e)}
+    
+    def get_flavor_analytics(self, flavor_id: str, days_back: int = 30) -> Dict[str, Any]:
+        """Get analytics for a specific flavor."""
+        
+        try:
+            session = get_pipeline_session()
+            
+            try:
+                # Build query with flavor filter and date range
+                where_clause = "WHERE pipeline_flavor_id = :flavor_id AND started_at >= date('now', '-{} days')".format(days_back)
+                
+                # Get execution statistics for the specific flavor
+                result = session.execute(text(f"""
+                    SELECT 
+                        COUNT(*) as total_executions,
+                        SUM(CASE WHEN status = 'success' THEN 1 ELSE 0 END) as successful_executions,
+                        AVG(CASE WHEN execution_time_ms IS NOT NULL THEN execution_time_ms ELSE 0 END) as avg_execution_time,
+                        SUM(CASE WHEN total_tokens IS NOT NULL THEN total_tokens ELSE 0 END) as total_tokens_used
+                    FROM pipeline_flavor_executions 
+                    {where_clause}
+                """), {'flavor_id': flavor_id})
+                
+                stats = result.fetchone()
+                
+                # Get selection rate for the flavor
+                selection_result = session.execute(text(f"""
+                    SELECT COUNT(DISTINCT s.id) as total_selections
+                    FROM pipeline_flavor_selections s
+                    JOIN pipeline_flavor_executions e ON s.pipeline_execution_id = e.id
+                    {where_clause}
+                """), {'flavor_id': flavor_id})
+                
+                selection_stats = selection_result.fetchone()
+                
+                if not stats or stats.total_executions == 0:
+                    return {
+                        "flavor_id": flavor_id,
+                        "analytics": {
+                            "total_executions": 0,
+                            "successful_executions": 0,
+                            "success_rate": 0,
+                            "avg_execution_time": 0,
+                            "total_tokens_used": 0,
+                            "total_selections": 0,
+                            "selection_rate": 0
+                        },
+                        "time_range_days": days_back
+                    }
+                
+                total_selections = selection_stats.total_selections if selection_stats else 0
+                
+                analytics = {
+                    "total_executions": stats.total_executions,
+                    "successful_executions": stats.successful_executions,
+                    "success_rate": stats.successful_executions / stats.total_executions if stats.total_executions else 0,
+                    "avg_execution_time": stats.avg_execution_time,
+                    "total_tokens_used": stats.total_tokens_used or 0,
+                    "total_selections": total_selections,
+                    "selection_rate": total_selections / stats.successful_executions if stats.successful_executions else 0
+                }
+                
+                return {
+                    "flavor_id": flavor_id,
+                    "analytics": analytics,
+                    "time_range_days": days_back
+                }
+                
+            finally:
+                session.close()
+                
+        except Exception as e:
+            logger.error(f"Failed to get flavor analytics: {e}")
             return {"error": str(e)}
     
     def get_execution_details(self, execution_id: str) -> Optional[Dict[str, Any]]:

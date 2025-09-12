@@ -120,6 +120,19 @@ export class PipelineFlavorService extends BaseService {
       );
     }, "delete pipeline flavor");
   }
+
+  /**
+   * Get the default pipeline flavor for a specific pipeline type
+   */
+  async getDefault(pipelineType: PipelineType): Promise<PipelineFlavor> {
+    return this.withErrorContext(() => {
+      this.validateRequired(pipelineType, "Pipeline type");
+      return this.getResource<PipelineFlavor>(
+        `${ENDPOINTS.PIPELINE_FLAVORS}/default`,
+        { pipeline: pipelineType }
+      );
+    }, "get default pipeline flavor");
+  }
 }
 
 // Export singleton instance

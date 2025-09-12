@@ -2,6 +2,26 @@
 
 Front-end code for the Context Studio app. This is front-end code only, the back-end is in a separate repository.
 
+## Core Principles
+
+**IMPORTANT: You MUST follow these principles in all code changes and PRP generations:**
+
+### KISS (Keep It Simple, Stupid)
+
+- Simplicity should be a key goal in design
+- Choose straightforward solutions over complex ones whenever possible
+- Simple solutions are easier to understand, maintain, and debug
+
+### YAGNI (You Aren't Gonna Need It)
+
+- Avoid building functionality on speculation
+- Implement features only when they are needed, not when you anticipate they might be useful in the future
+
+### Open/Closed Principle
+
+- Software entities should be open for extension but closed for modification
+- Design systems so that new functionality can be added with minimal changes to existing code
+
 ## Technology Stack
 
 - **Language**: TypeScript

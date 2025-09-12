@@ -14,7 +14,6 @@ import { Spinner } from "flowbite-react";
 import { CsSidebar, CsSidebarTitle } from "@/components/layout/cs_sidebar";
 import { CsMain, CsMainTitle } from "@/components/layout/cs_main";
 import { CollapsibleDomainsList } from "@/components/misc/collapsible_domains_list";
-import type { components } from "@/api/client/types";
 import { Hash } from "lucide-react";
 import type { StructureNode } from "@/api/types/structureNodes";
 

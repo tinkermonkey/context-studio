@@ -1,7 +1,9 @@
 import React, { useState } from "react";
-import { Button, Card, Alert, Select, Label, Spinner } from "flowbite-react";
-import { ArrowLeft, TestTube, Play } from "lucide-react";
+import { Button, Card, Select, Label, Spinner } from "flowbite-react";
+import { ArrowLeft, BarChart3, Clock } from "lucide-react";
 import { NlpAnalysisPanel } from "@/components/nlp/NlpAnalysisPanel";
+import { AnalyticsDashboard } from "@/components/llm_traceability/AnalyticsDashboard";
+import { ExecutionHistory } from "@/components/llm_traceability/ExecutionHistory";
 import {
   useLayerNodes,
   useDomainNodes,
@@ -25,10 +27,7 @@ export const PipelineFlavorTester: React.FC<PipelineFlavorTesterProps> = ({
   onClose,
 }) => {
   const [selectedRecord, setSelectedRecord] = useState<TestRecord | null>(null);
-  const [testResult, setTestResult] = useState<string | null>(null);
-  const [isTestingPipeline, setIsTestingPipeline] = useState(false);
-  const [pipelineError, setPipelineError] = useState<string | null>(null);
-
+  const [activeView, setActiveView] = useState<"analytics" | "history">("analytics");
   // Fetch data based on pipeline type - only fetch what we need
   const { data: layersData, isLoading: layersLoading } = useLayerNodes();
   const { data: domainsData, isLoading: domainsLoading } = useDomainNodes();
@@ -78,44 +77,6 @@ export const PipelineFlavorTester: React.FC<PipelineFlavorTesterProps> = ({
     }
   };
 
-  const handleTestPipeline = async () => {
-    if (!selectedRecord) return;
-
-    setIsTestingPipeline(true);
-    setPipelineError(null);
-    setTestResult(null);
-
-    try {
-      // Here you would call your LLM pipeline with the flavor configuration
-      // For now, I'll simulate the API call
-      await new Promise((resolve) => setTimeout(resolve, 2000)); // Simulate API delay
-
-      // This would be replaced with actual pipeline execution
-      const mockResult = `Generated definition for "${selectedRecord.title}" using flavor "${flavor.title}":
-
-This is a simulated response that would come from your LLM pipeline using the configured prompts and settings.
-
-Provider: ${flavor.llm_provider}
-Model: ${flavor.llm_model}
-Temperature: ${flavor.llm_config.temperature}
-
-The actual implementation would:
-1. Take the selected ${selectedRecord.type} title: "${selectedRecord.title}"
-2. Apply the system prompt: "${flavor.system_prompt.substring(0, 100)}..."
-3. Format the user prompt template with the record data
-4. Send to ${flavor.llm_provider} ${flavor.llm_model}
-5. Return the generated definition`;
-
-      setTestResult(mockResult);
-    } catch (error) {
-      setPipelineError(
-        error instanceof Error ? error.message : "Pipeline execution failed",
-      );
-    } finally {
-      setIsTestingPipeline(false);
-    }
-  };
-
   const recordOptions = getRecordOptions();
   const isLoading = layersLoading || domainsLoading || termsLoading;
 
@@ -123,7 +84,7 @@ The actual implementation would:
     <div className="space-y-6">
       {/* Header */}
       <Card>
-        <div className="mb-4 flex items-center gap-3">
+        <div className="mb-4 flex items-start gap-3">
           <Button color="gray" size="sm" onClick={onClose}>
             <ArrowLeft className="h-4 w-4" />
           </Button>
@@ -131,13 +92,28 @@ The actual implementation would:
             <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
               Test Pipeline Flavor: {flavor.title}
             </h2>
-            <p className="text-sm text-gray-500 dark:text-gray-400">
+            <div className="text-sm text-gray-500 dark:text-gray-400">
               {getPipelineDisplayName()} • {flavor.llm_provider}{" "}
               {flavor.llm_model}
-            </p>
+            </div>
+            <h3 className="mt-4 mb-2 text-lg font-semibold text-gray-900 dark:text-white">
+              System Prompt
+            </h3>
+            <pre className="text-sm text-gray-500 dark:text-gray-400 whitespace-pre-wrap">
+              {flavor.system_prompt}
+            </pre>
+            <h3 className="mt-4 mb-2 text-lg font-semibold text-gray-900 dark:text-white">
+              User Prompt
+            </h3>
+            <pre className="text-sm text-gray-500 dark:text-gray-400 whitespace-pre-wrap">
+              {flavor.user_prompt}
+            </pre>
           </div>
         </div>
+      </Card>
 
+      {/* NLP Analysis Panel */}
+      <Card>
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
           <div>
             <Label htmlFor="test-record">
@@ -172,80 +148,79 @@ The actual implementation would:
               </Select>
             )}
           </div>
+        </div>
+        {selectedRecord && (
+          <>
+            <h3 className="mb-4 text-lg font-semibold text-gray-900 dark:text-white">
+              NLP Analysis for "{selectedRecord.title}"
+            </h3>
+            <NlpAnalysisPanel
+              text={selectedRecord.title}
+              textTitle={selectedRecord.title}
+              {...(selectedRecord.type === "layer" && {
+                layerId: selectedRecord.id,
+              })}
+              {...(selectedRecord.type === "domain" && {
+                domainId: selectedRecord.id,
+              })}
+              {...(selectedRecord.type === "term" && {
+                termId: selectedRecord.id,
+              })}
+            />
+          </>
+        )}
+      </Card>
 
-          <div className="flex items-end">
+      {/* Pipeline Analytics and History */}
+      <Card>
+        <div className="mb-4 flex items-center justify-between">
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+            Pipeline Performance & History
+          </h3>
+          <div className="flex gap-2">
             <Button
-              onClick={handleTestPipeline}
-              disabled={!selectedRecord || isTestingPipeline}
-              color="blue"
-              className="w-full"
+              color={activeView === "analytics" ? "blue" : "gray"}
+              size="sm"
+              onClick={() => setActiveView("analytics")}
             >
-              {isTestingPipeline ? (
-                <Spinner size="sm" className="mr-2" />
-              ) : (
-                <Play className="mr-2 h-4 w-4" />
-              )}
-              {isTestingPipeline ? "Running Pipeline..." : "Test Pipeline"}
+              <BarChart3 className="mr-2 h-4 w-4" />
+              Analytics
+            </Button>
+            <Button
+              color={activeView === "history" ? "blue" : "gray"}
+              size="sm"
+              onClick={() => setActiveView("history")}
+            >
+              <Clock className="mr-2 h-4 w-4" />
+              Execution History
             </Button>
           </div>
         </div>
-      </Card>
 
-      {/* NLP Analysis Panel */}
-      {selectedRecord && (
-        <Card>
-          <h3 className="mb-4 text-lg font-semibold text-gray-900 dark:text-white">
-            NLP Analysis for "{selectedRecord.title}"
-          </h3>
-          <NlpAnalysisPanel
-            text={selectedRecord.title}
-            textTitle={selectedRecord.title}
-            {...(selectedRecord.type === "layer" && {
-              layerId: selectedRecord.id,
-            })}
-            {...(selectedRecord.type === "domain" && {
-              domainId: selectedRecord.id,
-            })}
-            {...(selectedRecord.type === "term" && {
-              termId: selectedRecord.id,
-            })}
+        {activeView === "analytics" && (
+          <AnalyticsDashboard
+            flavorId={flavor.id}
+            pipelineTypeFilter={flavor.pipeline}
+            config={{
+              defaultTimeRange: 30,
+              showExportButton: true,
+              autoRefresh: false,
+            }}
+            showHealthStatus={false}
           />
-        </Card>
-      )}
+        )}
 
-      {/* Pipeline Test Results */}
-      {pipelineError && (
-        <Alert color="failure">
-          <div>
-            <h4 className="mb-2 font-medium">Pipeline Execution Error</h4>
-            <p>{pipelineError}</p>
-          </div>
-        </Alert>
-      )}
-
-      {testResult && (
-        <Card>
-          <div className="mb-4 flex items-center gap-2">
-            <TestTube className="h-5 w-5 text-green-600" />
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-              Pipeline Test Results
-            </h3>
-          </div>
-          <div className="rounded-lg bg-gray-50 p-4 dark:bg-gray-800">
-            <pre className="text-sm whitespace-pre-wrap text-gray-700 dark:text-gray-300">
-              {testResult}
-            </pre>
-          </div>
-
-          <div className="mt-4 text-sm text-gray-500 dark:text-gray-400">
-            <p>
-              <strong>Note:</strong> This is a simulation. The actual
-              implementation would integrate with your LLM pipeline service to
-              execute the configured prompts and return real results.
-            </p>
-          </div>
-        </Card>
-      )}
+        {activeView === "history" && (
+          <ExecutionHistory
+            flavorId={flavor.id}
+            config={{
+              maxEntries: 25,
+              autoRefresh: false,
+            }}
+            showFilters={true}
+          />
+        )}
+      </Card>
     </div>
   );
 };

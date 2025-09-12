@@ -10,6 +10,7 @@ import {
   type PipelineFlavor,
   type PipelineFlavorListResponse,
   type ListFlavorsParams,
+  type PipelineType,
 } from "../../services/pipelineFlavors";
 import { QUERY_KEYS } from "../../config";
 import { createQueryKey } from "../../utils/queryClient";
@@ -39,6 +40,21 @@ export const usePipelineFlavor = (
     queryKey: createQueryKey(QUERY_KEYS.PIPELINE_FLAVORS, "detail", { id }),
     queryFn: () => pipelineFlavorService.get(id),
     enabled: !!id,
+    ...options,
+  });
+};
+
+/**
+ * Hook to get the default pipeline flavor for a specific pipeline type
+ */
+export const useDefaultPipelineFlavor = (
+  pipelineType: PipelineType,
+  options?: UseQueryOptions<PipelineFlavor, Error>,
+) => {
+  return useQuery({
+    queryKey: createQueryKey(QUERY_KEYS.PIPELINE_FLAVORS, "default", { pipelineType }),
+    queryFn: () => pipelineFlavorService.getDefault(pipelineType),
+    enabled: !!pipelineType,
     ...options,
   });
 };

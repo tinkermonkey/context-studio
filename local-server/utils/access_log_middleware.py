@@ -46,8 +46,16 @@ class AccessLogMiddleware(BaseHTTPMiddleware):
             f"{response.status_code} {status_text} {response_time_ms}ms"
         )
         
-        # Log at INFO level
-        logger.info(log_message)
+        # Log based on status code
+        if 400 <= response.status_code < 500:
+            # Client errors (4xx) as warnings
+            logger.warning(log_message)
+        elif response.status_code >= 500:
+            # Server errors (5xx) as errors
+            logger.error(log_message)
+        else:
+            # Success and other codes (2xx, 3xx) as info
+            logger.info(log_message)
         
         return response
     

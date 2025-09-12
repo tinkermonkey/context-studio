@@ -13,6 +13,10 @@ import {
   type LLMTraceabilityHealthResponse,
   type AnalyticsFilters,
   type ExecutionHistoryFilters,
+  type ExecutionHistoryByFlavorResponse,
+  type FlavorAnalyticsResponse,
+  type FlavorExecutionHistoryFilters,
+  type FlavorAnalyticsFilters,
 } from "../../services/llmTraceability";
 import { QUERY_KEYS } from "../../config";
 import { createQueryKey } from "../../utils/queryClient";
@@ -159,22 +163,33 @@ export const useExecutionHistories = (
 
 /**
  * Hook to get recent executions (convenience hook)
+ * @deprecated Use useFlavorExecutionHistory with a specific flavor_id instead
  */
 export const useRecentExecutions = (
   limit: number = 10,
   pipelineType?: string | null,
+  flavorId?: string | null,
   options?: UseQueryOptions<ExecutionHistoryResponse[], Error>,
 ) => {
   return useQuery({
     queryKey: createQueryKey(QUERY_KEYS.LLM_TRACEABILITY, "recent-executions", {
       limit,
       pipelineType: pipelineType || "",
+      flavorId: flavorId || "",
     }),
-    queryFn: () =>
-      llmTraceabilityService.getRecentExecutions(
+    queryFn: () => {
+      if (!flavorId) {
+        throw new Error(
+          "Recent executions requires a flavor_id. Use useFlavorExecutionHistory with a specific flavor_id instead."
+        );
+      }
+      return llmTraceabilityService.getRecentExecutions(
         limit,
         pipelineType || undefined,
-      ),
+        flavorId,
+      );
+    },
+    enabled: !!flavorId && flavorId.trim().length > 0,
     staleTime: 1 * 60 * 1000, // 1 minute - recent executions should be fresh
     gcTime: 10 * 60 * 1000, // 10 minutes
     retry: 2,
@@ -238,6 +253,90 @@ export const useExecutionHistoriesWithRefresh = (
       llmTraceabilityService.getExecutionHistories(filters || undefined),
     staleTime: 2 * 60 * 1000,
     gcTime: 15 * 60 * 1000,
+    retry: 2,
+    refetchInterval: refreshInterval,
+    refetchIntervalInBackground: false,
+    ...options,
+  });
+};
+
+/**
+ * Hook to get execution history for a specific flavor
+ */
+export const useFlavorExecutionHistory = (
+  filters: FlavorExecutionHistoryFilters | null,
+  options?: UseQueryOptions<ExecutionHistoryByFlavorResponse, Error>,
+) => {
+  return useQuery({
+    queryKey: createQueryKey(
+      QUERY_KEYS.LLM_TRACEABILITY,
+      "flavor-execution-history",
+      (filters || {}) as Record<string, unknown>,
+    ),
+    queryFn: () => {
+      if (!filters?.flavor_id) {
+        throw new Error("Flavor ID is required for flavor execution history");
+      }
+      return llmTraceabilityService.getFlavorExecutionHistory(filters);
+    },
+    enabled: !!filters?.flavor_id && filters.flavor_id.trim().length > 0,
+    staleTime: 2 * 60 * 1000, // 2 minutes - flavor executions should be relatively fresh
+    gcTime: 15 * 60 * 1000, // 15 minutes
+    retry: 2,
+    ...options,
+  });
+};
+
+/**
+ * Hook to get analytics for a specific flavor
+ */
+export const useFlavorAnalytics = (
+  filters: FlavorAnalyticsFilters | null,
+  options?: UseQueryOptions<FlavorAnalyticsResponse, Error>,
+) => {
+  return useQuery({
+    queryKey: createQueryKey(
+      QUERY_KEYS.LLM_TRACEABILITY,
+      "flavor-analytics",
+      (filters || {}) as Record<string, unknown>,
+    ),
+    queryFn: () => {
+      if (!filters?.flavor_id) {
+        throw new Error("Flavor ID is required for flavor analytics");
+      }
+      return llmTraceabilityService.getFlavorAnalytics(filters);
+    },
+    enabled: !!filters?.flavor_id && filters.flavor_id.trim().length > 0,
+    staleTime: 5 * 60 * 1000, // 5 minutes - analytics can be slightly stale
+    gcTime: 30 * 60 * 1000, // 30 minutes
+    retry: 2,
+    ...options,
+  });
+};
+
+/**
+ * Hook to get flavor analytics with auto-refresh capability
+ */
+export const useFlavorAnalyticsWithRefresh = (
+  filters: FlavorAnalyticsFilters | null,
+  refreshInterval?: number, // milliseconds
+  options?: UseQueryOptions<FlavorAnalyticsResponse, Error>,
+) => {
+  return useQuery({
+    queryKey: createQueryKey(
+      QUERY_KEYS.LLM_TRACEABILITY,
+      "flavor-analytics-refresh",
+      (filters || {}) as Record<string, unknown>,
+    ),
+    queryFn: () => {
+      if (!filters?.flavor_id) {
+        throw new Error("Flavor ID is required for flavor analytics");
+      }
+      return llmTraceabilityService.getFlavorAnalytics(filters);
+    },
+    enabled: !!filters?.flavor_id && filters.flavor_id.trim().length > 0,
+    staleTime: 5 * 60 * 1000,
+    gcTime: 30 * 60 * 1000,
     retry: 2,
     refetchInterval: refreshInterval,
     refetchIntervalInBackground: false,

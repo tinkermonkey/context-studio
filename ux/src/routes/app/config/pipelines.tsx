@@ -1,21 +1,14 @@
-import React, { useState } from "react";
-import { createFileRoute } from "@tanstack/react-router";
+import React from "react";
+import { createFileRoute, Link, Outlet } from "@tanstack/react-router";
+import { Card } from "flowbite-react";
 import { CsMainTitle } from "@/components/layout/cs_main";
-import { Settings } from "lucide-react";
-import { PipelineFlavorsList } from "@/components/llm_pipelines/flavors/PipelineFlavorsList";
+import { Settings, ChevronRight } from "lucide-react";
+import { PipelineTypes } from "@/components/llm_pipelines/flavors/pipelineTypes";
 
 export const Route = createFileRoute("/app/config/pipelines")({
-  component: PipelineConfigPage,
+  component: PipelineConfigLayout,
 });
 
-function PipelineConfigPage() {
-  return (
-    <>
-      <CsMainTitle icon={Settings}>Pipeline Flavors Configuration</CsMainTitle>
-
-      <div className="mt-6">
-        <PipelineFlavorsList />
-      </div>
-    </>
-  );
+function PipelineConfigLayout() {
+  return <Outlet />;
 }

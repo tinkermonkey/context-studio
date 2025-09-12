@@ -343,3 +343,219 @@ class TestLLMTraceabilityIntegration:
             
             for expected_index in expected_indexes:
                 assert expected_index in indexes, f"Missing index: {expected_index}"
+    
+    @patch('llm.execution_tracker.get_pipeline_session')
+    def test_get_execution_history_endpoint(self, mock_get_session):
+        """Test the new execution history endpoint with real database."""
+        
+        # Use real database session from our test pipeline manager
+        mock_get_session.side_effect = lambda: self.pipeline_manager.get_session()
+        
+        tracker = ExecutionTracker()
+        
+        # Create executions for different flavors
+        flavor_1_executions = []
+        flavor_2_executions = []
+        
+        # Create executions for flavor 1
+        for i in range(3):
+            test_request = Mock()
+            test_request.model_dump.return_value = {"term": f"flavor1_test{i}"}
+            
+            execution_id = tracker.start_execution(
+                pipeline_flavor_id="flavor-1",
+                pipeline_type="suggest_term_definition",
+                pipeline_flavor_version=1,
+                request=test_request,
+                user_prompt=f"Define: flavor1_test{i}"
+            )
+            flavor_1_executions.append(execution_id)
+            
+            tracker.complete_execution(
+                execution_id=execution_id,
+                response_message=f"Response for flavor1_test{i}",
+                success=True,
+                token_usage={"input_tokens": 10, "output_tokens": 15, "total_tokens": 25}
+            )
+        
+        # Create executions for flavor 2
+        for i in range(2):
+            test_request = Mock()
+            test_request.model_dump.return_value = {"term": f"flavor2_test{i}"}
+            
+            execution_id = tracker.start_execution(
+                pipeline_flavor_id="flavor-2",
+                pipeline_type="suggest_term_definition",
+                pipeline_flavor_version=1,
+                request=test_request,
+                user_prompt=f"Define: flavor2_test{i}"
+            )
+            flavor_2_executions.append(execution_id)
+            
+            tracker.complete_execution(
+                execution_id=execution_id,
+                response_message=f"Response for flavor2_test{i}",
+                success=True,
+                token_usage={"input_tokens": 8, "output_tokens": 12, "total_tokens": 20}
+            )
+        
+        # Test getting execution history for flavor-1
+        history_flavor_1 = tracker.get_flavor_execution_history("flavor-1", limit=10)
+        assert history_flavor_1["flavor_id"] == "flavor-1"
+        assert history_flavor_1["total_count"] == 3
+        assert len(history_flavor_1["executions"]) == 3
+        
+        # Verify all expected executions are present (order may vary due to timestamp precision)
+        execution_ids = [exec["id"] for exec in history_flavor_1["executions"]]
+        assert set(execution_ids) == set(flavor_1_executions)  # All executions present
+        
+        # Test getting execution history for flavor-2
+        history_flavor_2 = tracker.get_flavor_execution_history("flavor-2", limit=10)
+        assert history_flavor_2["flavor_id"] == "flavor-2"
+        assert history_flavor_2["total_count"] == 2
+        assert len(history_flavor_2["executions"]) == 2
+        
+        # Test with limit
+        limited_history = tracker.get_flavor_execution_history("flavor-1", limit=1)
+        assert limited_history["total_count"] == 3  # Still shows total count
+        assert len(limited_history["executions"]) == 1  # But only returns 1
+        
+        # Test with non-existent flavor
+        empty_history = tracker.get_flavor_execution_history("nonexistent-flavor")
+        assert empty_history["total_count"] == 0
+        assert len(empty_history["executions"]) == 0
+    
+    @patch('llm.execution_tracker.get_pipeline_session')
+    def test_get_flavor_analytics_endpoint(self, mock_get_session):
+        """Test the new flavor analytics endpoint with real database."""
+        
+        # Use real database session from our test pipeline manager
+        mock_get_session.side_effect = lambda: self.pipeline_manager.get_session()
+        
+        tracker = ExecutionTracker()
+        
+        # Create executions for flavor analytics testing
+        execution_ids = []
+        for i in range(4):
+            test_request = Mock()
+            test_request.model_dump.return_value = {"term": f"analytics_test{i}"}
+            
+            execution_id = tracker.start_execution(
+                pipeline_flavor_id="analytics-flavor",
+                pipeline_type="suggest_term_definition",
+                pipeline_flavor_version=1,
+                request=test_request,
+                user_prompt=f"Define: analytics_test{i}"
+            )
+            execution_ids.append(execution_id)
+            
+            # Complete with success (3 out of 4)
+            success = i < 3
+            tracker.complete_execution(
+                execution_id=execution_id,
+                response_message=f"Response for analytics_test{i}" if success else "",
+                success=success,
+                error_message="Test error" if not success else None,
+                token_usage={"input_tokens": 10, "output_tokens": 15, "total_tokens": 25} if success else None
+            )
+        
+        # Add some selections (2 out of 3 successful executions)
+        for i in range(2):
+            selection_request = RecordSelectionRequest(
+                execution_id=execution_ids[i],
+                record_type="structure_node",
+                record_id=f"analytics-node-{i}",
+                suggestion_field="definition",
+                selected_content=f"Selected analytics content {i}"
+            )
+            tracker.record_selection(selection_request)
+        
+        # Test flavor analytics
+        analytics = tracker.get_flavor_analytics("analytics-flavor", days_back=30)
+        
+        assert analytics["flavor_id"] == "analytics-flavor"
+        assert analytics["time_range_days"] == 30
+        
+        analytics_data = analytics["analytics"]
+        assert analytics_data["total_executions"] == 4
+        assert analytics_data["successful_executions"] == 3
+        assert analytics_data["success_rate"] == 0.75  # 3/4
+        assert analytics_data["total_tokens_used"] == 75  # 3 * 25
+        assert analytics_data["total_selections"] == 2
+        assert analytics_data["selection_rate"] == 2/3  # 2/3 successful executions
+        
+        # Test with different days_back parameter
+        analytics_short = tracker.get_flavor_analytics("analytics-flavor", days_back=1)
+        assert analytics_short["time_range_days"] == 1
+        # Should have same results since we just created the data
+        assert analytics_short["analytics"]["total_executions"] == 4
+        
+        # Test with non-existent flavor
+        empty_analytics = tracker.get_flavor_analytics("nonexistent-flavor")
+        assert empty_analytics["flavor_id"] == "nonexistent-flavor"
+        assert empty_analytics["analytics"]["total_executions"] == 0
+        assert empty_analytics["analytics"]["success_rate"] == 0
+    
+    @patch('llm.execution_tracker.get_pipeline_session')
+    def test_execution_details_endpoint_still_works(self, mock_get_session):
+        """Test that the renamed execution-details endpoint still works correctly."""
+        
+        # Use real database session from our test pipeline manager
+        mock_get_session.side_effect = lambda: self.pipeline_manager.get_session()
+        
+        tracker = ExecutionTracker()
+        
+        # Create a test execution
+        test_request = Mock()
+        test_request.model_dump.return_value = {"term": "execution_details_test"}
+        
+        execution_id = tracker.start_execution(
+            pipeline_flavor_id="details-flavor",
+            pipeline_type="suggest_term_definition",
+            pipeline_flavor_version=2,
+            request=test_request,
+            user_prompt="Define: execution_details_test"
+        )
+        
+        tracker.complete_execution(
+            execution_id=execution_id,
+            response_message="Details test response",
+            success=True,
+            token_usage={"input_tokens": 12, "output_tokens": 18, "total_tokens": 30},
+            start_time=1000000000.0
+        )
+        
+        # Add a selection
+        selection_request = RecordSelectionRequest(
+            execution_id=execution_id,
+            record_type="structure_node",
+            record_id="details-node-123",
+            suggestion_field="definition",
+            selected_content="Selected details content"
+        )
+        selection_id = tracker.record_selection(selection_request)
+        
+        # Test getting execution details
+        details = tracker.get_execution_details(execution_id)
+        
+        assert details is not None
+        assert details["execution"]["id"] == execution_id
+        assert details["execution"]["pipeline_type"] == "suggest_term_definition"
+        assert details["execution"]["pipeline_flavor_id"] == "details-flavor"
+        assert details["execution"]["pipeline_flavor_version"] == 2
+        assert details["execution"]["status"] == "success"
+        assert details["execution"]["response_message"] == "Details test response"
+        assert details["execution"]["token_usage"]["total_tokens"] == 30
+        
+        # Verify selection is included
+        assert len(details["selections"]) == 1
+        selection = details["selections"][0]
+        assert selection["id"] == selection_id
+        assert selection["record_type"] == "structure_node"
+        assert selection["record_id"] == "details-node-123"
+        assert selection["suggestion_field"] == "definition"
+        assert selection["selected_content"] == "Selected details content"
+        
+        # Test with non-existent execution
+        empty_details = tracker.get_execution_details("nonexistent-execution")
+        assert empty_details is None

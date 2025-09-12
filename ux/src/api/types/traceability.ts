@@ -65,6 +65,8 @@ export interface ExecutionDetails {
   input_data: Record<string, unknown>;
   output_data: Record<string, unknown>;
   error_details?: string;
+  user_prompt?: string;
+  response_message?: string;
 }
 
 export interface ExecutionHistoryData {
@@ -75,6 +77,19 @@ export interface ExecutionHistoryData {
 export interface ExecutionHistoryResponse {
   success: boolean;
   data: ExecutionHistoryData;
+}
+
+// New response models for flavor-specific endpoints
+export interface ExecutionHistoryByFlavorResponse {
+  executions: Array<Record<string, unknown>>;
+  total_count: number;
+  flavor_id: string;
+}
+
+export interface FlavorAnalyticsResponse {
+  flavor_id: string;
+  analytics: Record<string, unknown>;
+  time_range_days: number;
 }
 
 export interface LLMTraceabilityHealthResponse {
@@ -106,6 +121,22 @@ export interface ExecutionHistoryFilters {
   end_date?: string;
   limit?: number;
   offset?: number;
+  /**
+   * Required flavor_id for execution history queries
+   * The current API requires this parameter
+   */
+  flavor_id?: string;
+}
+
+// New filter types for flavor-specific queries
+export interface FlavorExecutionHistoryFilters {
+  flavor_id: string;
+  limit?: number;
+}
+
+export interface FlavorAnalyticsFilters {
+  flavor_id: string;
+  days_back?: number;
 }
 
 // Error interfaces following existing patterns

@@ -16,11 +16,15 @@ import {
   Spinner,
   Alert,
   Modal,
+  Accordion,
+  AccordionPanel,
+  AccordionTitle,
+  AccordionContent,
 } from "flowbite-react";
 import {
   useExecutionHistory,
   useExecutionHistories,
-  useRecentExecutions,
+  useFlavorExecutionHistory,
 } from "@/api/hooks/llm/useLLMTraceability";
 import type {
   ExecutionHistoryResponse,
@@ -35,6 +39,11 @@ export interface ExecutionHistoryProps {
    * Specific execution ID to show details for (single execution mode)
    */
   executionId?: string;
+
+  /**
+   * Optional flavor ID for flavor-specific execution history
+   */
+  flavorId?: string;
 
   /**
    * Configuration options
@@ -88,7 +97,7 @@ const ExecutionDetailModal: React.FC<{
   onClose: () => void;
 }> = ({ execution, selections, isOpen, onClose }) => {
   return (
-    <Modal show={isOpen} onClose={onClose} size="4xl">
+    <Modal show={isOpen} onClose={onClose} size="6xl">
       <div className="flex items-center justify-between p-4 md:p-5 border-b rounded-t dark:border-gray-600">
         <h3 className="text-xl font-semibold text-gray-900 dark:text-white">
           Execution Details: {execution.execution_id}
@@ -109,7 +118,7 @@ const ExecutionDetailModal: React.FC<{
           </svg>
         </button>
       </div>
-      <div className="p-4 md:p-5 space-y-4">
+      <div className="p-4 md:p-5 space-y-4 max-h-[80vh] overflow-y-auto">
         <div className="space-y-6">
           {/* Execution Overview */}
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
@@ -137,81 +146,114 @@ const ExecutionDetailModal: React.FC<{
             </Card>
           </div>
 
-          {/* Input/Output Data */}
-          <div className="space-y-4">
-            <Card>
-              <h4 className="mb-3 text-lg font-medium text-gray-900 dark:text-white">Input Data</h4>
-              <pre className="max-h-64 overflow-auto rounded bg-gray-100 p-4 text-sm">
-                {JSON.stringify(execution.input_data, null, 2)}
-              </pre>
-            </Card>
-            
-            <Card>
-              <h4 className="mb-3 text-lg font-medium text-gray-900 dark:text-white">Output Data</h4>
-              <pre className="max-h-64 overflow-auto rounded bg-gray-100 p-4 text-sm">
-                {JSON.stringify(execution.output_data, null, 2)}
-              </pre>
-            </Card>
-
-            {execution.error_details && (
-              <Card>
-                <h4 className="mb-3 text-lg font-medium text-gray-900 dark:text-white">Error Details</h4>
-                <Alert color="failure">
-                  <pre className="text-sm whitespace-pre-wrap">
-                    {execution.error_details}
-                  </pre>
-                </Alert>
-              </Card>
-            )}
-          </div>
-
-          {/* Selection History */}
-          {selections.length > 0 && (
-            <div>
-              <h3 className="mb-4 text-lg font-semibold">Selection History</h3>
-              <div className="relative overflow-x-auto">
-                <table className="w-full text-sm text-left rtl:text-right text-gray-500 dark:text-gray-400">
-                  <thead className="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
-                    <tr>
-                      <th scope="col" className="px-6 py-3">Selection ID</th>
-                      <th scope="col" className="px-6 py-3">Record ID</th>
-                      <th scope="col" className="px-6 py-3">Field</th>
-                      <th scope="col" className="px-6 py-3">Content Preview</th>
-                      <th scope="col" className="px-6 py-3">Timestamp</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {selections.map((selection) => (
-                      <tr key={selection.selection_id} className="bg-white border-b dark:bg-gray-800 dark:border-gray-700">
-                        <td className="px-6 py-4 font-mono text-xs">
-                          {selection.selection_id.substring(0, 8)}...
-                        </td>
-                        <td className="px-6 py-4 font-mono text-xs">
-                          {selection.record_id}
-                        </td>
-                        <td className="px-6 py-4">
-                          <Badge color="info" size="sm">
-                            {selection.suggestion_field}
-                          </Badge>
-                        </td>
-                        <td className="px-6 py-4 max-w-xs">
-                          <div
-                            className="truncate"
-                            title={selection.selected_content}
-                          >
-                            {selection.selected_content}
-                          </div>
-                        </td>
-                        <td className="px-6 py-4 text-sm text-gray-500">
-                          {new Date(selection.timestamp).toLocaleString()}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+          {/* Error Details - moved above accordion */}
+          {execution.error_details && (
+            <Alert color="failure">
+              <div>
+                <h4 className="mb-2 text-lg font-medium text-red-800 dark:text-red-400">Error Details</h4>
+                <pre className="text-sm whitespace-pre-wrap">
+                  {execution.error_details}
+                </pre>
               </div>
-            </div>
+            </Alert>
           )}
+
+          <Accordion>
+            <AccordionPanel>
+              <AccordionTitle>User Prompt</AccordionTitle>
+              <AccordionContent>
+                <div className="max-h-64 overflow-auto rounded bg-gray-100 dark:bg-gray-700 p-4 text-sm font-mono">
+                  <pre className="whitespace-pre-wrap text-gray-800 dark:text-gray-200">
+                    {execution.user_prompt || "No user prompt available"}
+                  </pre>
+                </div>
+              </AccordionContent>
+            </AccordionPanel>
+
+            <AccordionPanel>
+              <AccordionTitle>LLM Response</AccordionTitle>
+              <AccordionContent>
+                <div className="max-h-64 overflow-auto rounded bg-gray-100 dark:bg-gray-700 p-4 text-sm font-mono">
+                  <pre className="whitespace-pre-wrap text-gray-800 dark:text-gray-200">
+                    {execution.response_message || "No response message available"}
+                  </pre>
+                </div>
+              </AccordionContent>
+            </AccordionPanel>
+
+            <AccordionPanel>
+              <AccordionTitle>Input Data</AccordionTitle>
+              <AccordionContent>
+                <div className="max-h-64 overflow-auto rounded bg-gray-100 dark:bg-gray-700 p-4 text-sm font-mono">
+                  <pre className="text-gray-800 dark:text-gray-200">
+                    {JSON.stringify(execution.input_data, null, 2)}
+                  </pre>
+                </div>
+              </AccordionContent>
+            </AccordionPanel>
+
+            <AccordionPanel>
+              <AccordionTitle>Output Data</AccordionTitle>
+              <AccordionContent>
+                <div className="max-h-64 overflow-auto rounded bg-gray-100 dark:bg-gray-700 p-4 text-sm font-mono">
+                  <pre className="text-gray-800 dark:text-gray-200">
+                    {JSON.stringify(execution.output_data, null, 2)}
+                  </pre>
+                </div>
+              </AccordionContent>
+            </AccordionPanel>
+
+            <AccordionPanel>
+              <AccordionTitle>Selection History ({selections.length})</AccordionTitle>
+              <AccordionContent>
+                {selections.length > 0 ? (
+                  <div className="relative overflow-x-auto">
+                    <table className="w-full text-sm text-left rtl:text-right text-gray-500 dark:text-gray-400">
+                      <thead className="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
+                        <tr>
+                          <th scope="col" className="px-6 py-3">Selection ID</th>
+                          <th scope="col" className="px-6 py-3">Record ID</th>
+                          <th scope="col" className="px-6 py-3">Field</th>
+                          <th scope="col" className="px-6 py-3">Content Preview</th>
+                          <th scope="col" className="px-6 py-3">Timestamp</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {selections.map((selection) => (
+                          <tr key={selection.selection_id} className="bg-white border-b dark:bg-gray-800 dark:border-gray-700">
+                            <td className="px-6 py-4 font-mono text-xs">
+                              {selection.selection_id.substring(0, 8)}...
+                            </td>
+                            <td className="px-6 py-4 font-mono text-xs">
+                              {selection.record_id}
+                            </td>
+                            <td className="px-6 py-4">
+                              <Badge color="info" size="sm">
+                                {selection.suggestion_field}
+                              </Badge>
+                            </td>
+                            <td className="px-6 py-4 max-w-xs">
+                              <div
+                                className="truncate"
+                                title={selection.selected_content}
+                              >
+                                {selection.selected_content}
+                              </div>
+                            </td>
+                            <td className="px-6 py-4 text-sm text-gray-500">
+                              {new Date(selection.timestamp).toLocaleString()}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                ) : (
+                  <p className="text-gray-600 dark:text-gray-400">No selection history available for this execution.</p>
+                )}
+              </AccordionContent>
+            </AccordionPanel>
+          </Accordion>
         </div>
       </div>
       <div className="flex items-center p-4 md:p-5 border-t border-gray-200 rounded-b dark:border-gray-600">
@@ -228,6 +270,7 @@ const ExecutionDetailModal: React.FC<{
  */
 export const ExecutionHistory: React.FC<ExecutionHistoryProps> = ({
   executionId,
+  flavorId,
   config = {},
   className = "",
   onExecutionSelected,
@@ -255,24 +298,78 @@ export const ExecutionHistory: React.FC<ExecutionHistoryProps> = ({
     error: singleExecutionError,
   } = useExecutionHistory(executionId || null);
 
-  // Multi-execution mode
+  // Flavor-specific execution history
+  const flavorHistoryFilters = flavorId && !executionId ? { flavor_id: flavorId, limit: filters.limit } : null;
+  const {
+    data: flavorExecutionData,
+    isLoading: flavorExecutionLoading,
+    error: flavorExecutionError,
+    refetch: refetchFlavorExecutions,
+  } = useFlavorExecutionHistory(flavorHistoryFilters);
+
+  // Multi-execution mode (general) - disabled since API requires flavor_id
   const {
     data: multiExecutionData,
     isLoading: multiExecutionLoading,
     error: multiExecutionError,
-    refetch: refetchExecutions,
-  } = useExecutionHistories(executionId ? null : filters);
+    refetch: refetchGeneralExecutions,
+  } = useExecutionHistories(null); // Always null - general execution history not supported by current API
+
+  // Convert flavor execution data to match expected format
+  const flavorExecutions = useMemo(() => {
+    if (!flavorExecutionData?.executions) return [];
+    
+    // Convert flavor execution data to ExecutionHistoryResponse format
+    // Map database fields to what the UI component expects
+    return flavorExecutionData.executions.map((exec: any) => ({
+      success: true,
+      data: {
+        execution: {
+          execution_id: exec.id, // Database uses 'id', UI expects 'execution_id'
+          pipeline_type: exec.pipeline_type,
+          status: exec.status as "completed" | "failed" | "in_progress",
+          execution_time: exec.execution_time_ms || 0,
+          tokens_used: exec.total_tokens || 0,
+          timestamp: exec.started_at,
+          input_data: (() => {
+            try {
+              return exec.request_context ? JSON.parse(exec.request_context) : {};
+            } catch (e) {
+              return { raw: exec.request_context };
+            }
+          })(),
+          output_data: exec.response_message ? { message: exec.response_message } : {},
+          error_details: exec.error_message || undefined,
+          user_prompt: exec.user_prompt || undefined,
+          response_message: exec.response_message || undefined,
+        },
+        selections: [], // Will be populated separately if needed
+      }
+    })) as ExecutionHistoryResponse[];
+  }, [flavorExecutionData]);
 
   // Computed values
   const isLoading = executionId
     ? singleExecutionLoading
-    : multiExecutionLoading;
-  const error = executionId ? singleExecutionError : multiExecutionError;
+    : flavorId 
+      ? flavorExecutionLoading
+      : multiExecutionLoading;
+  
+  const error = executionId 
+    ? singleExecutionError 
+    : flavorId
+      ? flavorExecutionError
+      : multiExecutionError;
+  
   const executions = executionId
     ? singleExecutionData
       ? [singleExecutionData]
       : []
-    : multiExecutionData || [];
+    : flavorId
+      ? flavorExecutions
+      : multiExecutionData || [];
+  
+  const refetchExecutions = flavorId ? refetchFlavorExecutions : refetchGeneralExecutions;
 
   // Filtered executions for search
   const filteredExecutions = useMemo(() => {
@@ -328,12 +425,18 @@ export const ExecutionHistory: React.FC<ExecutionHistoryProps> = ({
       <div className="mb-6 flex items-center justify-between">
         <div>
           <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
-            {executionId ? "Execution Details" : "Execution History"}
+            {executionId 
+              ? "Execution Details" 
+              : flavorId 
+                ? "Flavor Execution History"
+                : "Execution History"}
           </h2>
           <p className="mt-1 text-gray-600 dark:text-gray-400">
             {executionId
               ? `Detailed audit trail for execution ${executionId.substring(0, 8)}...`
-              : "Detailed audit trails for LLM executions"}
+              : flavorId
+                ? `Execution history for flavor ${flavorId.substring(0, 8)}...`
+                : "Detailed audit trails for LLM executions"}
           </p>
         </div>
 
@@ -393,6 +496,14 @@ export const ExecutionHistory: React.FC<ExecutionHistoryProps> = ({
         <Alert color="failure" className="mb-6">
           <span className="font-medium">Failed to load execution history:</span>{" "}
           {error.message}
+        </Alert>
+      )}
+
+      {/* Missing Flavor ID Alert */}
+      {!executionId && !flavorId && (
+        <Alert color="warning" className="mb-6">
+          <span className="font-medium">Flavor ID Required:</span>{" "}
+          Please provide a flavor ID to view execution history. General execution history is not currently supported by the API.
         </Alert>
       )}
 
@@ -498,7 +609,9 @@ export const ExecutionHistory: React.FC<ExecutionHistoryProps> = ({
             <p className="text-gray-600 dark:text-gray-400">
               {executionId
                 ? "No execution found with the specified ID."
-                : "No LLM executions found. Try adjusting your filters."}
+                : flavorId
+                  ? "No LLM executions found for this flavor."
+                  : "A flavor ID is required to view execution history."}
             </p>
           </div>
         )}

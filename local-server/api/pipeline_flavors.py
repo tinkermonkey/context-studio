@@ -87,6 +87,9 @@ async def get_flavor(
         
     except FlavorNotFoundError as e:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
+    except HTTPException:
+        # Let HTTPExceptions bubble up naturally
+        raise
     except Exception as e:
         logger.error(f"Error getting flavor {flavor_id}: {e}")
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Internal server error")

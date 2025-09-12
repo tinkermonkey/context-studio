@@ -50,8 +50,10 @@ export const ENDPOINTS = {
   LLM_TRACEABILITY: {
     RECORD_SELECTION: "/api/llm/record-selection",
     EXECUTION_ANALYTICS: "/api/llm/execution-analytics",
-    EXECUTION_HISTORY: "/api/llm/execution-history",
-    HEALTH: "/api/llm/traceability/health",
+    EXECUTION_HISTORY: "/api/llm/execution-history", // New: gets history by flavor_id query param
+    EXECUTION_DETAILS: "/api/llm/execution-details", // Renamed from execution-history/{id}
+    FLAVOR_ANALYTICS: "/api/llm/flavor-analytics", // New: flavor-specific analytics
+    HEALTH: "/api/llm/health",
   },
   PIPELINE_FLAVORS: "/api/pipeline-flavors",
   NLP_REFERENCE: "/api/nlp_analysis/reference",

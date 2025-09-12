@@ -11,6 +11,8 @@ import {
   useAnalyticsForTimeRange,
   useAnalyticsWithRefresh,
   useLLMTraceabilityHealth,
+  useFlavorAnalytics,
+  useFlavorAnalyticsWithRefresh,
 } from "@/api/hooks/llm/useLLMTraceability";
 import type {
   ExecutionAnalyticsData,
@@ -39,6 +41,11 @@ export interface AnalyticsDashboardProps {
    * Optional pipeline type filter
    */
   pipelineTypeFilter?: string;
+
+  /**
+   * Optional flavor ID for flavor-specific analytics
+   */
+  flavorId?: string;
 
   /**
    * Callback when analytics data changes
@@ -100,6 +107,7 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
   className = "",
   showHealthStatus = true,
   pipelineTypeFilter,
+  flavorId,
   onDataUpdate,
 }) => {
   const {
@@ -113,14 +121,47 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
     useState<number>(defaultTimeRange);
 
   // Fetch analytics data with optional auto-refresh
+  // Use flavor-specific hooks when flavorId is provided
+  const flavorAnalyticsFilters = flavorId ? { flavor_id: flavorId, days_back: selectedTimeRange } : null;
+  
   const {
-    data: analyticsData,
-    isLoading: analyticsLoading,
-    error: analyticsError,
-    refetch: refetchAnalytics,
-  } = autoRefresh
+    data: flavorAnalyticsData,
+    isLoading: flavorAnalyticsLoading,
+    error: flavorAnalyticsError,
+    refetch: refetchFlavorAnalytics,
+  } = flavorId && autoRefresh
+    ? useFlavorAnalyticsWithRefresh(flavorAnalyticsFilters, refreshInterval)
+    : useFlavorAnalytics(flavorAnalyticsFilters);
+
+  const {
+    data: generalAnalyticsData,
+    isLoading: generalAnalyticsLoading,
+    error: generalAnalyticsError,
+    refetch: refetchGeneralAnalytics,
+  } = !flavorId && autoRefresh
     ? useAnalyticsWithRefresh(selectedTimeRange, refreshInterval)
-    : useAnalyticsForTimeRange(selectedTimeRange, pipelineTypeFilter);
+    : useAnalyticsForTimeRange(flavorId ? null : selectedTimeRange, pipelineTypeFilter);
+
+  // Convert flavor analytics data to match the expected ExecutionAnalyticsResponse format
+  const convertedFlavorData = useMemo(() => {
+    if (!flavorAnalyticsData) return null;
+    // The flavor analytics response structure may need adjustment based on backend implementation
+    // For now, we'll assume it contains similar fields to ExecutionAnalyticsData
+    return {
+      success: true,
+      data: flavorAnalyticsData.analytics as unknown as ExecutionAnalyticsData,
+      filters: {
+        pipeline_type: "",
+        days_back: flavorAnalyticsData.time_range_days,
+      }
+    };
+  }, [flavorAnalyticsData]);
+
+  // Use flavor-specific data when available, otherwise use general data
+  const analyticsData = flavorId ? convertedFlavorData : generalAnalyticsData;
+  const analyticsLoading = flavorId ? flavorAnalyticsLoading : generalAnalyticsLoading;
+  const analyticsError = flavorId ? flavorAnalyticsError : generalAnalyticsError;
+  const refetchAnalytics = flavorId ? refetchFlavorAnalytics : refetchGeneralAnalytics;
 
   // Health status
   const { data: healthData, isLoading: healthLoading } =
@@ -180,10 +221,13 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
       <div className="mb-6 flex items-center justify-between">
         <div>
           <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
-            LLM Analytics Dashboard
+            {flavorId ? "Flavor Analytics Dashboard" : "LLM Analytics Dashboard"}
           </h2>
           <p className="mt-1 text-gray-600 dark:text-gray-400">
-            Track AI suggestion usage and performance metrics
+            {flavorId 
+              ? `Analytics for flavor ${flavorId.substring(0, 8)}...`
+              : "Track AI suggestion usage and performance metrics"
+            }
           </p>
         </div>
 

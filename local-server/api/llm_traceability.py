@@ -1,10 +1,10 @@
 """API endpoints for LLM traceability and selection tracking."""
 
-from fastapi import APIRouter, HTTPException, status
+from fastapi import APIRouter, HTTPException, Query, status
 from typing import Dict, Any, Optional
 
 from llm.execution_tracker import ExecutionTracker
-from llm.models import RecordSelectionRequest, SelectionResponse, PipelineType
+from llm.models import RecordSelectionRequest, SelectionResponse, PipelineType, ExecutionHistoryResponse, FlavorAnalyticsResponse
 from utils.logger import get_logger
 
 logger = get_logger(__name__)
@@ -67,7 +67,7 @@ async def get_execution_analytics(
         )
 
 
-@router.get("/execution-history/{execution_id}")
+@router.get("/execution-details/{execution_id}")
 async def get_execution_details(execution_id: str) -> Dict[str, Any]:
     """Get detailed information about a specific execution."""
     
@@ -93,6 +93,74 @@ async def get_execution_details(execution_id: str) -> Dict[str, Any]:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Failed to get execution details"
+        )
+
+
+@router.get("/execution-history", response_model=ExecutionHistoryResponse)
+async def get_execution_history(
+    flavor_id: str = Query(..., description="Flavor ID to get execution history for"),
+    limit: int = Query(100, description="Maximum number of executions to return")
+) -> ExecutionHistoryResponse:
+    """Get execution history for a specific flavor."""
+    
+    try:
+        tracker = ExecutionTracker()
+        history = tracker.get_flavor_execution_history(flavor_id, limit)
+        
+        if "error" in history:
+            raise Exception(history["error"])
+        
+        return ExecutionHistoryResponse(
+            executions=history["executions"],
+            total_count=history["total_count"],
+            flavor_id=history["flavor_id"]
+        )
+        
+    except ValueError as e:
+        logger.warning(f"Invalid execution history request: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(e)
+        )
+    except Exception as e:
+        logger.error(f"Error getting execution history: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to get execution history"
+        )
+
+
+@router.get("/flavor-analytics/{flavor_id}", response_model=FlavorAnalyticsResponse)
+async def get_flavor_analytics(
+    flavor_id: str,
+    days_back: int = Query(30, description="Number of days of data to include")
+) -> FlavorAnalyticsResponse:
+    """Get analytics for a specific flavor."""
+    
+    try:
+        tracker = ExecutionTracker()
+        analytics_data = tracker.get_flavor_analytics(flavor_id, days_back)
+        
+        if "error" in analytics_data:
+            raise Exception(analytics_data["error"])
+        
+        return FlavorAnalyticsResponse(
+            flavor_id=analytics_data["flavor_id"],
+            analytics=analytics_data["analytics"],
+            time_range_days=analytics_data["time_range_days"]
+        )
+        
+    except ValueError as e:
+        logger.warning(f"Invalid flavor analytics request: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(e)
+        )
+    except Exception as e:
+        logger.error(f"Error getting flavor analytics: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to get flavor analytics"
         )
 
 

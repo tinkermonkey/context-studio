@@ -2,7 +2,6 @@ from pydantic import BaseModel, Field, field_validator
 from typing import List, Optional, Dict, Any
 from enum import Enum
 from datetime import datetime
-import uuid
 
 class PipelineType(str, Enum):
     """Enumeration of supported pipeline types"""
@@ -230,3 +229,17 @@ class SelectionResponse(BaseModel):
     success: bool = Field(..., description="Whether selection was recorded successfully")
     selection_id: str = Field(..., description="ID of the recorded selection")
     message: str = Field(..., description="Status message")
+
+
+class ExecutionHistoryResponse(BaseModel):
+    """Response model for execution history by flavor"""
+    executions: List[Dict[str, Any]] = Field(..., description="List of executions for the flavor")
+    total_count: int = Field(..., description="Total number of executions")
+    flavor_id: str = Field(..., description="Flavor ID that was filtered")
+
+
+class FlavorAnalyticsResponse(BaseModel):
+    """Response model for flavor-specific analytics"""
+    flavor_id: str = Field(..., description="Flavor ID")
+    analytics: Dict[str, Any] = Field(..., description="Analytics data for the flavor")
+    time_range_days: int = Field(..., description="Number of days of data included")
