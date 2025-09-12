@@ -17,10 +17,10 @@ npm install @antv/g6-extension-react
 2. Import and Register
 
 ```js
-import { ExtensionCategory, register } from '@antv/g6';
-import { ReactNode } from '@antv/g6-extension-react';
+import { ExtensionCategory, register } from "@antv/g6";
+import { ReactNode } from "@antv/g6-extension-react";
 
-register(ExtensionCategory.NODE, 'react', ReactNode);
+register(ExtensionCategory.NODE, "react", ReactNode);
 ```
 
 3. Define Node
@@ -54,7 +54,7 @@ Use ReactNode:
 const graph = new Graph({
   // ... other options
   node: {
-    type: 'react',
+    type: "react",
     style: {
       component: () => <ReactNode />,
     },
@@ -68,7 +68,7 @@ Use GNode:
 const graph = new Graph({
   // ... other options
   node: {
-    type: 'g',
+    type: "g",
     style: {
       component: () => <GNode />,
     },

@@ -7,35 +7,38 @@ Below is a non-react example of the two-side indented layout
 [Source](https://g6.antv.antgroup.com/en/examples/layout/indented/#auto-side)
 
 ### Example Code
+
 ```javascript
-import { Graph, treeToGraphData } from '@antv/g6';
+import { Graph, treeToGraphData } from "@antv/g6";
 
 const getNodeSide = (graph, datum) => {
-  const parentData = graph.getParentData(datum.id, 'tree');
-  if (!parentData) return 'center';
-  return datum.style.x > parentData.style.x ? 'right' : 'left';
+  const parentData = graph.getParentData(datum.id, "tree");
+  if (!parentData) return "center";
+  return datum.style.x > parentData.style.x ? "right" : "left";
 };
 
-fetch('https://gw.alipayobjects.com/os/antvdemo/assets/data/algorithm-category.json')
+fetch(
+  "https://gw.alipayobjects.com/os/antvdemo/assets/data/algorithm-category.json",
+)
   .then((res) => res.json())
   .then((data) => {
     const graph = new Graph({
-      container: 'container',
+      container: "container",
       data: treeToGraphData(data),
-      autoFit: 'view',
+      autoFit: "view",
       node: {
         style: function (d) {
           const side = getNodeSide(this, d);
           return {
             labelText: d.id,
-            labelPlacement: side === 'center' ? 'bottom' : side,
+            labelPlacement: side === "center" ? "bottom" : side,
             labelBackground: true,
             ports:
-              side === 'center'
-                ? [{ placement: 'bottom' }]
-                : side === 'right'
-                  ? [{ placement: 'bottom' }, { placement: 'left' }]
-                  : [{ placement: 'bottom' }, { placement: 'right' }],
+              side === "center"
+                ? [{ placement: "bottom" }]
+                : side === "right"
+                  ? [{ placement: "bottom" }, { placement: "left" }]
+                  : [{ placement: "bottom" }, { placement: "right" }],
           };
         },
         animation: {
@@ -43,11 +46,11 @@ fetch('https://gw.alipayobjects.com/os/antvdemo/assets/data/algorithm-category.j
         },
       },
       edge: {
-        type: 'polyline',
+        type: "polyline",
         style: {
           radius: 4,
           router: {
-            type: 'orth',
+            type: "orth",
           },
         },
         animation: {
@@ -55,14 +58,19 @@ fetch('https://gw.alipayobjects.com/os/antvdemo/assets/data/algorithm-category.j
         },
       },
       layout: {
-        type: 'indented',
-        direction: 'H',
+        type: "indented",
+        direction: "H",
         indent: 80,
         preLayout: false,
         getHeight: () => 16,
         getWidth: () => 32,
       },
-      behaviors: ['drag-canvas', 'zoom-canvas', 'drag-element', 'collapse-expand'],
+      behaviors: [
+        "drag-canvas",
+        "zoom-canvas",
+        "drag-element",
+        "collapse-expand",
+      ],
     });
 
     graph.render();

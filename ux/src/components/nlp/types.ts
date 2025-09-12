@@ -3,7 +3,7 @@
  */
 
 export interface NodeContext {
-  type: 'input' | 'sense' | 'relation';
+  type: "input" | "sense" | "relation";
   text?: string;
   lemma?: string;
   pos?: string;

@@ -9,7 +9,7 @@ import { CsSidebar, CsSidebarTitle } from "@/components/layout/cs_sidebar";
 import { CsMain, CsMainTitle } from "@/components/layout/cs_main";
 import { CollapsibleLayersList } from "@/components/misc/collapsible_layers_list";
 import { useStructureNode } from "@/api/hooks/structure_nodes/useStructureNodes";
-import { Database } from "lucide-react"
+import { Database } from "lucide-react";
 
 // Define the search parameters schema
 interface DomainsSearch {
@@ -95,13 +95,17 @@ function DomainsPage() {
           <>
             <div className="text-md">
               Domains in the layer{" "}
-              <i className="font-bold">{layer?.title || String(queryParams.layer_id)}</i>
+              <i className="font-bold">
+                {layer?.title || String(queryParams.layer_id)}
+              </i>
               {layerLoading && <span> (loading...)</span>}
               {layerError && (
                 <span className="text-red-500"> (error loading layer)</span>
               )}
             </div>
-            <div className="py-3 pb-6">{layer?.definition && `Layer definition: ${layer.definition}`}</div>
+            <div className="py-3 pb-6">
+              {layer?.definition && `Layer definition: ${layer.definition}`}
+            </div>
           </>
         )}
 

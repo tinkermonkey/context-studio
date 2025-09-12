@@ -1,12 +1,16 @@
 /**
  * Axios Client Configuration
- * 
+ *
  * Main HTTP client instance with configured interceptors
  */
 
-import axios, { AxiosInstance } from 'axios';
-import { API_CONFIG } from '../config';
-import { requestInterceptor, responseInterceptor, errorInterceptor } from './interceptors';
+import axios, { AxiosInstance } from "axios";
+import { API_CONFIG } from "../config";
+import {
+  requestInterceptor,
+  responseInterceptor,
+  errorInterceptor,
+} from "./interceptors";
 
 // Lazily initialize the axios instance so test setup can modify global environment
 // (delete fetch/XMLHttpRequest) before adapter selection occurs.
@@ -57,8 +61,8 @@ export const updateBaseURL = (newBaseURL: string) => {
 export const setAuthToken = (token: string | null) => {
   const client = ensureClient();
   if (token) {
-    client.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+    client.defaults.headers.common["Authorization"] = `Bearer ${token}`;
   } else {
-    delete client.defaults.headers.common['Authorization'];
+    delete client.defaults.headers.common["Authorization"];
   }
 };

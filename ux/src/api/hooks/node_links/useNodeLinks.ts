@@ -1,31 +1,37 @@
 /**
  * Node Links Query Hooks
- * 
+ *
  * React Query hooks for structure node links (replaces term relationships)
  */
 
-import { useQuery, UseQueryOptions } from '@tanstack/react-query';
-import { nodeLinkService } from '../../services/nodeLinks';
-import { QUERY_KEYS } from '../../config';
-import { createQueryKey } from '../../utils/queryClient';
-import type { PaginatedResponse } from '../../services/base';
+import { useQuery, UseQueryOptions } from "@tanstack/react-query";
+import { nodeLinkService } from "../../services/nodeLinks";
+import { QUERY_KEYS } from "../../config";
+import { createQueryKey } from "../../utils/queryClient";
+import type { PaginatedResponse } from "../../services/base";
 import {
   StructureNodeLink,
-  StructureNodeLinkListParams
-} from '../../types/structureNodes';
+  StructureNodeLinkListParams,
+} from "../../types/structureNodes";
 
 // Query keys for node links
 export const nodeLinkQueryKeys = {
   all: [QUERY_KEYS.NODE_LINKS] as const,
-  lists: () => [...nodeLinkQueryKeys.all, 'list'] as const,
-  list: (params?: StructureNodeLinkListParams) => [...nodeLinkQueryKeys.lists(), params] as const,
-  details: () => [...nodeLinkQueryKeys.all, 'detail'] as const,
+  lists: () => [...nodeLinkQueryKeys.all, "list"] as const,
+  list: (params?: StructureNodeLinkListParams) =>
+    [...nodeLinkQueryKeys.lists(), params] as const,
+  details: () => [...nodeLinkQueryKeys.all, "detail"] as const,
   detail: (id: string) => [...nodeLinkQueryKeys.details(), id] as const,
-  byNode: (nodeId: string) => [...nodeLinkQueryKeys.all, 'byNode', nodeId] as const,
-  fromNode: (nodeId: string) => [...nodeLinkQueryKeys.all, 'fromNode', nodeId] as const,
-  toNode: (nodeId: string) => [...nodeLinkQueryKeys.all, 'toNode', nodeId] as const,
-  byPredicate: (predicate: string) => [...nodeLinkQueryKeys.all, 'byPredicate', predicate] as const,
-  betweenNodes: (sourceId: string, targetId: string) => [...nodeLinkQueryKeys.all, 'between', sourceId, targetId] as const,
+  byNode: (nodeId: string) =>
+    [...nodeLinkQueryKeys.all, "byNode", nodeId] as const,
+  fromNode: (nodeId: string) =>
+    [...nodeLinkQueryKeys.all, "fromNode", nodeId] as const,
+  toNode: (nodeId: string) =>
+    [...nodeLinkQueryKeys.all, "toNode", nodeId] as const,
+  byPredicate: (predicate: string) =>
+    [...nodeLinkQueryKeys.all, "byPredicate", predicate] as const,
+  betweenNodes: (sourceId: string, targetId: string) =>
+    [...nodeLinkQueryKeys.all, "between", sourceId, targetId] as const,
 };
 
 /**
@@ -34,7 +40,7 @@ export const nodeLinkQueryKeys = {
  */
 export const useNodeLinks = (
   params?: StructureNodeLinkListParams,
-  options?: UseQueryOptions<StructureNodeLink[], Error>
+  options?: UseQueryOptions<StructureNodeLink[], Error>,
 ) => {
   return useQuery({
     queryKey: nodeLinkQueryKeys.list(params),
@@ -51,10 +57,10 @@ export const useNodeLinks = (
  */
 export const useNodeLinksPage = (
   params?: StructureNodeLinkListParams,
-  options?: UseQueryOptions<StructureNodeLink[], Error>
+  options?: UseQueryOptions<StructureNodeLink[], Error>,
 ) => {
   return useQuery({
-    queryKey: createQueryKey(QUERY_KEYS.NODE_LINKS, 'page', params),
+    queryKey: createQueryKey(QUERY_KEYS.NODE_LINKS, "page", params),
     queryFn: () => nodeLinkService.listPage(params),
     staleTime: 1000 * 60 * 5, // 5 minutes
     retry: 3,
@@ -68,10 +74,10 @@ export const useNodeLinksPage = (
  */
 export const useNodeLinksPageWithMetadata = (
   params?: StructureNodeLinkListParams,
-  options?: UseQueryOptions<PaginatedResponse<StructureNodeLink>, Error>
+  options?: UseQueryOptions<PaginatedResponse<StructureNodeLink>, Error>,
 ) => {
   return useQuery({
-    queryKey: createQueryKey(QUERY_KEYS.NODE_LINKS, 'page-metadata', params),
+    queryKey: createQueryKey(QUERY_KEYS.NODE_LINKS, "page-metadata", params),
     queryFn: () => nodeLinkService.listPageWithMetadata(params),
     staleTime: 1000 * 60 * 5, // 5 minutes
     retry: 3,
@@ -85,7 +91,7 @@ export const useNodeLinksPageWithMetadata = (
  */
 export const useNodeLink = (
   id: string,
-  options?: UseQueryOptions<StructureNodeLink, Error>
+  options?: UseQueryOptions<StructureNodeLink, Error>,
 ) => {
   return useQuery({
     queryKey: nodeLinkQueryKeys.detail(id),
@@ -103,7 +109,7 @@ export const useNodeLink = (
  */
 export const useNodeLinksByNode = (
   nodeId: string,
-  options?: UseQueryOptions<StructureNodeLink[], Error>
+  options?: UseQueryOptions<StructureNodeLink[], Error>,
 ) => {
   return useQuery({
     queryKey: nodeLinkQueryKeys.byNode(nodeId),
@@ -121,7 +127,7 @@ export const useNodeLinksByNode = (
  */
 export const useNodeLinksFromNode = (
   nodeId: string,
-  options?: UseQueryOptions<StructureNodeLink[], Error>
+  options?: UseQueryOptions<StructureNodeLink[], Error>,
 ) => {
   return useQuery({
     queryKey: nodeLinkQueryKeys.fromNode(nodeId),
@@ -139,7 +145,7 @@ export const useNodeLinksFromNode = (
  */
 export const useNodeLinksToNode = (
   nodeId: string,
-  options?: UseQueryOptions<StructureNodeLink[], Error>
+  options?: UseQueryOptions<StructureNodeLink[], Error>,
 ) => {
   return useQuery({
     queryKey: nodeLinkQueryKeys.toNode(nodeId),
@@ -157,7 +163,7 @@ export const useNodeLinksToNode = (
  */
 export const useNodeLinksByPredicate = (
   predicate: string,
-  options?: UseQueryOptions<StructureNodeLink[], Error>
+  options?: UseQueryOptions<StructureNodeLink[], Error>,
 ) => {
   return useQuery({
     queryKey: nodeLinkQueryKeys.byPredicate(predicate),
@@ -176,7 +182,7 @@ export const useNodeLinksByPredicate = (
 export const useNodeLinksBetweenNodes = (
   sourceId: string,
   targetId: string,
-  options?: UseQueryOptions<StructureNodeLink[], Error>
+  options?: UseQueryOptions<StructureNodeLink[], Error>,
 ) => {
   return useQuery({
     queryKey: nodeLinkQueryKeys.betweenNodes(sourceId, targetId),
@@ -196,23 +202,25 @@ export const useNodeLinksBetweenNodes = (
  * @deprecated Use useNodeLinks instead
  */
 export const useTermRelationships = (
-  params?: { 
-    skip?: number; 
-    limit?: number; 
-    source_term_id?: string; 
-    target_term_id?: string; 
-    predicate?: string; 
+  params?: {
+    skip?: number;
+    limit?: number;
+    source_term_id?: string;
+    target_term_id?: string;
+    predicate?: string;
   },
-  options?: UseQueryOptions<StructureNodeLink[], Error>
+  options?: UseQueryOptions<StructureNodeLink[], Error>,
 ) => {
   const queryParams: StructureNodeLinkListParams = {};
-  
+
   if (params?.skip !== undefined) queryParams.skip = params.skip;
   if (params?.limit !== undefined) queryParams.limit = params.limit;
-  if (params?.source_term_id) queryParams.source_node_id = params.source_term_id;
-  if (params?.target_term_id) queryParams.target_node_id = params.target_term_id;
+  if (params?.source_term_id)
+    queryParams.source_node_id = params.source_term_id;
+  if (params?.target_term_id)
+    queryParams.target_node_id = params.target_term_id;
   if (params?.predicate) queryParams.predicate = params.predicate;
-  
+
   return useNodeLinks(queryParams, options);
 };
 
@@ -222,7 +230,7 @@ export const useTermRelationships = (
  */
 export const useTermRelationshipsByTerm = (
   termId: string,
-  options?: UseQueryOptions<StructureNodeLink[], Error>
+  options?: UseQueryOptions<StructureNodeLink[], Error>,
 ) => {
   return useNodeLinksByNode(termId, options);
 };
@@ -233,7 +241,7 @@ export const useTermRelationshipsByTerm = (
  */
 export const useTermRelationshipsByPredicate = (
   predicate: string,
-  options?: UseQueryOptions<StructureNodeLink[], Error>
+  options?: UseQueryOptions<StructureNodeLink[], Error>,
 ) => {
   return useNodeLinksByPredicate(predicate, options);
 };

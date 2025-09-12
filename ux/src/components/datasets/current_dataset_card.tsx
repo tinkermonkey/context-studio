@@ -54,13 +54,15 @@ export const CurrentDatasetCard: React.FC<CurrentDatasetCardProps> = ({
   if (error || !activeDataset) {
     return (
       <Card className={`w-full ${className}`}>
-        <div className="text-center py-8">
-          <Database className="mx-auto h-12 w-12 text-gray-400 mb-4" />
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
+        <div className="py-8 text-center">
+          <Database className="mx-auto mb-4 h-12 w-12 text-gray-400" />
+          <h3 className="mb-2 text-lg font-semibold text-gray-900 dark:text-white">
             No Active Dataset
           </h3>
-          <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
-            {error ? "Failed to load dataset information" : "No dataset is currently active"}
+          <p className="mb-4 text-sm text-gray-500 dark:text-gray-400">
+            {error
+              ? "Failed to load dataset information"
+              : "No dataset is currently active"}
           </p>
           <Link to="/app/datasets">
             <Button size="sm">
@@ -85,8 +87,8 @@ export const CurrentDatasetCard: React.FC<CurrentDatasetCardProps> = ({
             <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
               {activeDataset.title}
             </h3>
-            <p className="text-sm text-gray-500 dark:text-gray-400 flex items-center">
-              <FileText className="h-4 w-4 mr-1" />
+            <p className="flex items-center text-sm text-gray-500 dark:text-gray-400">
+              <FileText className="mr-1 h-4 w-4" />
               {activeDataset.filename}
             </p>
           </div>
@@ -97,26 +99,28 @@ export const CurrentDatasetCard: React.FC<CurrentDatasetCardProps> = ({
       </div>
 
       {/* Metrics Grid */}
-      <div className="grid grid-cols-2 gap-4 mt-6">
-        <div className="text-center p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
+      <div className="mt-6 grid grid-cols-2 gap-4">
+        <div className="rounded-lg bg-gray-50 p-3 text-center dark:bg-gray-700">
           <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">
             {activeDataset.metrics.layers_count}
           </div>
           <div className="text-sm text-gray-600 dark:text-gray-400">Layers</div>
         </div>
-        <div className="text-center p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
+        <div className="rounded-lg bg-gray-50 p-3 text-center dark:bg-gray-700">
           <div className="text-2xl font-bold text-green-600 dark:text-green-400">
             {activeDataset.metrics.domains_count}
           </div>
-          <div className="text-sm text-gray-600 dark:text-gray-400">Domains</div>
+          <div className="text-sm text-gray-600 dark:text-gray-400">
+            Domains
+          </div>
         </div>
-        <div className="text-center p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
+        <div className="rounded-lg bg-gray-50 p-3 text-center dark:bg-gray-700">
           <div className="text-2xl font-bold text-purple-600 dark:text-purple-400">
             {activeDataset.metrics.terms_count}
           </div>
           <div className="text-sm text-gray-600 dark:text-gray-400">Terms</div>
         </div>
-        <div className="text-center p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
+        <div className="rounded-lg bg-gray-50 p-3 text-center dark:bg-gray-700">
           <div className="text-2xl font-bold text-orange-600 dark:text-orange-400">
             {activeDataset.metrics.relationships_count}
           </div>
@@ -127,10 +131,10 @@ export const CurrentDatasetCard: React.FC<CurrentDatasetCardProps> = ({
       </div>
 
       {/* Details */}
-      <div className="space-y-3 mt-6 pt-6 border-t border-gray-200 dark:border-gray-700">
+      <div className="mt-6 space-y-3 border-t border-gray-200 pt-6 dark:border-gray-700">
         <div className="flex items-center justify-between text-sm">
           <span className="flex items-center text-gray-600 dark:text-gray-400">
-            <Hash className="h-4 w-4 mr-2" />
+            <Hash className="mr-2 h-4 w-4" />
             Dataset ID
           </span>
           <span className="font-mono text-xs text-gray-900 dark:text-white">
@@ -140,7 +144,7 @@ export const CurrentDatasetCard: React.FC<CurrentDatasetCardProps> = ({
 
         <div className="flex items-center justify-between text-sm">
           <span className="flex items-center text-gray-600 dark:text-gray-400">
-            <Activity className="h-4 w-4 mr-2" />
+            <Activity className="mr-2 h-4 w-4" />
             Schema Version
           </span>
           <Badge color="gray" size="sm">
@@ -150,7 +154,7 @@ export const CurrentDatasetCard: React.FC<CurrentDatasetCardProps> = ({
 
         <div className="flex items-center justify-between text-sm">
           <span className="flex items-center text-gray-600 dark:text-gray-400">
-            <Calendar className="h-4 w-4 mr-2" />
+            <Calendar className="mr-2 h-4 w-4" />
             Created
           </span>
           <span className="text-gray-900 dark:text-white">
@@ -160,7 +164,7 @@ export const CurrentDatasetCard: React.FC<CurrentDatasetCardProps> = ({
 
         <div className="flex items-center justify-between text-sm">
           <span className="flex items-center text-gray-600 dark:text-gray-400">
-            <Clock className="h-4 w-4 mr-2" />
+            <Clock className="mr-2 h-4 w-4" />
             Last Accessed
           </span>
           <span className="text-gray-900 dark:text-white">
@@ -170,7 +174,7 @@ export const CurrentDatasetCard: React.FC<CurrentDatasetCardProps> = ({
       </div>
 
       {/* Actions */}
-      <div className="flex space-x-3 mt-6 pt-6 border-t border-gray-200 dark:border-gray-700">
+      <div className="mt-6 flex space-x-3 border-t border-gray-200 pt-6 dark:border-gray-700">
         <Link to="/app/datasets" className="flex-1">
           <Button size="sm" outline className="w-full">
             <Settings className="mr-2 h-4 w-4" />

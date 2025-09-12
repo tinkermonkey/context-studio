@@ -1,17 +1,26 @@
-import { useQuery, UseQueryOptions } from '@tanstack/react-query';
-import { predicateService, PredicateListParams, PredicateOut, PaginatedPredicatesResponse } from '@/api/services/predicates';
-import { QUERY_KEYS } from '@/api/config';
-import { createQueryKey } from '@/api/utils/queryClient';
+import { useQuery, UseQueryOptions } from "@tanstack/react-query";
+import {
+  predicateService,
+  PredicateListParams,
+  PredicateOut,
+  PaginatedPredicatesResponse,
+} from "@/api/services/predicates";
+import { QUERY_KEYS } from "@/api/config";
+import { createQueryKey } from "@/api/utils/queryClient";
 
 /**
  * Hook to fetch paginated predicates
  */
 export const usePredicates = (
   params?: PredicateListParams,
-  options?: UseQueryOptions<PaginatedPredicatesResponse, Error>
+  options?: UseQueryOptions<PaginatedPredicatesResponse, Error>,
 ) => {
   return useQuery({
-    queryKey: createQueryKey(QUERY_KEYS.PREDICATES, undefined, params as Record<string, unknown>),
+    queryKey: createQueryKey(
+      QUERY_KEYS.PREDICATES,
+      undefined,
+      params as Record<string, unknown>,
+    ),
     queryFn: () => predicateService.list(params),
     staleTime: 5 * 60 * 1000, // 5 minutes
     ...options,
@@ -23,7 +32,7 @@ export const usePredicates = (
  */
 export const usePredicate = (
   id?: string,
-  options?: UseQueryOptions<PredicateOut, Error>
+  options?: UseQueryOptions<PredicateOut, Error>,
 ) => {
   return useQuery({
     queryKey: createQueryKey(QUERY_KEYS.PREDICATES, id),
@@ -38,10 +47,12 @@ export const usePredicate = (
  */
 export const usePredicateByIdentifier = (
   identifier?: string,
-  options?: UseQueryOptions<PredicateOut, Error>
+  options?: UseQueryOptions<PredicateOut, Error>,
 ) => {
   return useQuery({
-    queryKey: createQueryKey(QUERY_KEYS.PREDICATES, 'by-identifier', { identifier }),
+    queryKey: createQueryKey(QUERY_KEYS.PREDICATES, "by-identifier", {
+      identifier,
+    }),
     queryFn: () => predicateService.getByIdentifier(identifier!),
     enabled: !!identifier,
     ...options,
@@ -52,10 +63,10 @@ export const usePredicateByIdentifier = (
  * Hook to fetch ConceptNet relations
  */
 export const useConceptNetRelations = (
-  options?: UseQueryOptions<string[], Error>
+  options?: UseQueryOptions<string[], Error>,
 ) => {
   return useQuery({
-    queryKey: createQueryKey(QUERY_KEYS.PREDICATES, 'conceptnet-relations'),
+    queryKey: createQueryKey(QUERY_KEYS.PREDICATES, "conceptnet-relations"),
     queryFn: () => predicateService.getConceptNetRelations(),
     staleTime: 30 * 60 * 1000, // 30 minutes
     ...options,
@@ -66,10 +77,10 @@ export const useConceptNetRelations = (
  * Hook to fetch ConceptNet mapping
  */
 export const useConceptNetMapping = (
-  options?: UseQueryOptions<Record<string, string>, Error>
+  options?: UseQueryOptions<Record<string, string>, Error>,
 ) => {
   return useQuery({
-    queryKey: createQueryKey(QUERY_KEYS.PREDICATES, 'conceptnet-mapping'),
+    queryKey: createQueryKey(QUERY_KEYS.PREDICATES, "conceptnet-mapping"),
     queryFn: () => predicateService.getConceptNetMapping(),
     staleTime: 10 * 60 * 1000, // 10 minutes
     ...options,
@@ -81,10 +92,12 @@ export const useConceptNetMapping = (
  */
 export const usePredicateConceptNetRelation = (
   id?: string,
-  options?: UseQueryOptions<string | null, Error>
+  options?: UseQueryOptions<string | null, Error>,
 ) => {
   return useQuery({
-    queryKey: createQueryKey(QUERY_KEYS.PREDICATES, 'conceptnet-relation', { id }),
+    queryKey: createQueryKey(QUERY_KEYS.PREDICATES, "conceptnet-relation", {
+      id,
+    }),
     queryFn: () => predicateService.getConceptNetRelation(id!),
     enabled: !!id,
     ...options,

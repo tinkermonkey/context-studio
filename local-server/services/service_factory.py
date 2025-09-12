@@ -21,11 +21,25 @@ from services.version_manager import VersionManager
 from services.working_tree_manager import WorkingTreeManager
 from services.diff_generator import DiffGenerator
 from services.s3_sync_manager import S3SyncManager
+from services.changeset_manager import ChangesetManager
+from services.proposal_manager import ProposalManager
+from services.crdt_merge_engine import CRDTMergeEngine
+from services.identity_manager import IdentityManager
+from services.conflict_resolution_engine import ConflictResolutionEngine, IntelligentConflictDetector
+from services.duckdb_service import DuckDBService, ChangeAnalyticsEngine
+from services.incremental_sync_engine import IncrementalSyncEngine
+# Phase 5 Optimization Services
+from services.duckdb_query_optimizer import DuckDBQueryOptimizer
+from services.s3_storage_optimizer import S3StorageOptimizer
+from services.hierarchical_diff_engine import HierarchicalDiffEngine
+from services.batch_operation_processor import BatchOperationProcessor
+from services.performance_monitor import PerformanceMonitor
 from graph.graph_service import GraphService
 from graph.network_service import NetworkService
 from graph.sparql_service import SPARQLService
 from llm.flavor_service import PipelineFlavorService
 from llm.service import LLMService
+from llm.execution_tracker import ExecutionTracker
 from enrichment.service import EnrichmentService
 from schema_org.service import SchemaOrgService
 from database.utils import get_db
@@ -50,9 +64,25 @@ class ServiceType(Enum):
     SPARQL_SERVICE = "sparql_service"
     PIPELINE_FLAVOR_SERVICE = "pipeline_flavor_service"
     LLM_SERVICE = "llm_service"
+    EXECUTION_TRACKER = "execution_tracker"
     ENRICHMENT_SERVICE = "enrichment_service"
     SCHEMA_ORG_SERVICE = "schema_org_service"
     S3_SYNC_MANAGER = "s3_sync_manager"
+    CHANGESET_MANAGER = "changeset_manager"
+    PROPOSAL_MANAGER = "proposal_manager"
+    CRDT_MERGE_ENGINE = "crdt_merge_engine"
+    IDENTITY_MANAGER = "identity_manager"
+    # Phase 4 Advanced Features
+    CONFLICT_RESOLUTION_ENGINE = "conflict_resolution_engine"
+    DUCKDB_SERVICE = "duckdb_service"
+    CHANGE_ANALYTICS_ENGINE = "change_analytics_engine"
+    INCREMENTAL_SYNC_ENGINE = "incremental_sync_engine"
+    # Phase 5 Optimization Services
+    DUCKDB_QUERY_OPTIMIZER = "duckdb_query_optimizer"
+    S3_STORAGE_OPTIMIZER = "s3_storage_optimizer"
+    HIERARCHICAL_DIFF_ENGINE = "hierarchical_diff_engine"
+    BATCH_OPERATION_PROCESSOR = "batch_operation_processor"
+    PERFORMANCE_MONITOR = "performance_monitor"
 
 
 @dataclass
@@ -313,6 +343,17 @@ class ServiceFactory:
             service_key, ServiceType.LLM_SERVICE, LLMService, model_name, temperature
         )
 
+    def get_execution_tracker(self) -> ExecutionTracker:
+        """
+        Get ExecutionTracker instance.
+        
+        ExecutionTracker is stateless and doesn't need caching.
+        
+        Returns:
+            ExecutionTracker instance
+        """
+        return ExecutionTracker()
+
     def create_enrichment_service(self) -> EnrichmentService:
         """
         Create EnrichmentService with optimized instantiation.
@@ -330,6 +371,299 @@ class ServiceFactory:
             SchemaOrgService instance
         """
         return self._create_service(ServiceType.SCHEMA_ORG_SERVICE, SchemaOrgService)
+    
+    def create_changeset_manager(
+        self, 
+        db: Session, 
+        s3_sync_manager: Optional[S3SyncManager] = None,
+        working_tree_manager: Optional[WorkingTreeManager] = None,
+        version_manager: Optional[VersionManager] = None
+    ) -> ChangesetManager:
+        """
+        Create ChangesetManager with optimized instantiation.
+        
+        Args:
+            db: Database session for this request
+            s3_sync_manager: Optional S3SyncManager dependency
+            working_tree_manager: Optional WorkingTreeManager dependency
+            version_manager: Optional VersionManager dependency
+            
+        Returns:
+            ChangesetManager instance
+        """
+        def create_service():
+            s3_sync = s3_sync_manager or self.get_s3_sync_manager(db)
+            working_tree = working_tree_manager or self.create_working_tree_manager(db)
+            version_mgr = version_manager or self.create_version_manager(db)
+            return ChangesetManager(db, s3_sync, working_tree, version_mgr)
+        
+        return self._create_service_with_factory(ServiceType.CHANGESET_MANAGER, create_service)
+    
+    def create_proposal_manager(
+        self,
+        db: Session,
+        s3_sync_manager: Optional[S3SyncManager] = None,
+        changeset_manager: Optional[ChangesetManager] = None
+    ) -> ProposalManager:
+        """
+        Create ProposalManager with optimized instantiation.
+        
+        Args:
+            db: Database session for this request
+            s3_sync_manager: Optional S3SyncManager dependency
+            changeset_manager: Optional ChangesetManager dependency
+            
+        Returns:
+            ProposalManager instance
+        """
+        def create_service():
+            s3_sync = s3_sync_manager or self.get_s3_sync_manager(db)
+            changeset_mgr = changeset_manager or self.create_changeset_manager(db)
+            return ProposalManager(db, s3_sync, changeset_mgr)
+        
+        return self._create_service_with_factory(ServiceType.PROPOSAL_MANAGER, create_service)
+    
+    def create_crdt_merge_engine(
+        self,
+        db: Session,
+        version_manager: Optional[VersionManager] = None,
+        changeset_manager: Optional[ChangesetManager] = None
+    ) -> CRDTMergeEngine:
+        """
+        Create CRDTMergeEngine with optimized instantiation.
+        
+        Args:
+            db: Database session for this request
+            version_manager: Optional VersionManager dependency
+            changeset_manager: Optional ChangesetManager dependency
+            
+        Returns:
+            CRDTMergeEngine instance
+        """
+        def create_service():
+            version_mgr = version_manager or self.create_version_manager(db)
+            changeset_mgr = changeset_manager or self.create_changeset_manager(db)
+            return CRDTMergeEngine(db, version_mgr, changeset_mgr)
+        
+        return self._create_service_with_factory(ServiceType.CRDT_MERGE_ENGINE, create_service)
+    
+    def create_identity_manager(
+        self,
+        db: Session,
+        s3_sync_manager: Optional[S3SyncManager] = None
+    ) -> IdentityManager:
+        """
+        Create IdentityManager with optimized instantiation.
+        
+        Args:
+            db: Database session for this request
+            s3_sync_manager: Optional S3SyncManager dependency
+            
+        Returns:
+            IdentityManager instance
+        """
+        def create_service():
+            s3_sync = s3_sync_manager or self.get_s3_sync_manager(db)
+            return IdentityManager(db, s3_sync)
+        
+        return self._create_service_with_factory(ServiceType.IDENTITY_MANAGER, create_service)
+
+    # Phase 4 Advanced Features Services
+
+
+    def create_conflict_resolution_engine(
+        self, db: Session
+    ) -> ConflictResolutionEngine:
+        """
+        Create ConflictResolutionEngine with optimized instantiation and dependency injection.
+        
+        Args:
+            db: Database session for this request
+            
+        Returns:
+            ConflictResolutionEngine instance
+        """
+        def create_service():
+            conflict_detector = IntelligentConflictDetector()
+            version_manager = self.create_version_manager(db)
+            return ConflictResolutionEngine(db, conflict_detector, version_manager)
+        
+        return self._create_service_with_factory(ServiceType.CONFLICT_RESOLUTION_ENGINE, create_service)
+
+    def create_duckdb_service(self, s3_config: Optional[Dict[str, str]] = None) -> DuckDBService:
+        """
+        Create DuckDBService with optimized instantiation.
+        
+        Args:
+            s3_config: Optional S3 configuration dictionary
+            
+        Returns:
+            DuckDBService instance
+        """
+        def create_service():
+            if s3_config is None:
+                settings = get_settings()
+                s3_conf = settings.get_s3_config()
+            else:
+                s3_conf = s3_config
+            return DuckDBService(db_path=None, s3_config=s3_conf)
+        
+        return self._create_service_with_factory(ServiceType.DUCKDB_SERVICE, create_service)
+
+    def create_change_analytics_engine(
+        self, duckdb_service: Optional[DuckDBService] = None
+    ) -> ChangeAnalyticsEngine:
+        """
+        Create ChangeAnalyticsEngine with optimized instantiation and dependency injection.
+        
+        Args:
+            duckdb_service: Optional DuckDBService dependency
+            
+        Returns:
+            ChangeAnalyticsEngine instance
+        """
+        def create_service():
+            duckdb = duckdb_service or self.create_duckdb_service()
+            return ChangeAnalyticsEngine(duckdb)
+        
+        return self._create_service_with_factory(ServiceType.CHANGE_ANALYTICS_ENGINE, create_service)
+
+    def create_incremental_sync_engine(
+        self, db: Session, s3_sync_manager: Optional[S3SyncManager] = None
+    ) -> IncrementalSyncEngine:
+        """
+        Create IncrementalSyncEngine with optimized instantiation and dependency injection.
+        
+        Args:
+            db: Database session for this request
+            s3_sync_manager: Optional S3SyncManager dependency
+            
+        Returns:
+            IncrementalSyncEngine instance
+        """
+        def create_service():
+            s3_sync = s3_sync_manager or self.get_s3_sync_manager(db)
+            return IncrementalSyncEngine(db, s3_sync)
+        
+        return self._create_service_with_factory(ServiceType.INCREMENTAL_SYNC_ENGINE, create_service)
+
+    # Phase 5 Optimization Services
+
+    def create_duckdb_query_optimizer(
+        self, duckdb_conn=None, s3_config: Optional[Dict[str, str]] = None
+    ) -> DuckDBQueryOptimizer:
+        """
+        Create DuckDBQueryOptimizer with optimized instantiation and dependency injection.
+        
+        Args:
+            duckdb_conn: Optional DuckDB connection
+            s3_config: Optional S3 configuration dictionary
+            
+        Returns:
+            DuckDBQueryOptimizer instance
+        """
+        def create_service():
+            if s3_config is None:
+                settings = get_settings()
+                s3_conf = settings.get_s3_config()
+            else:
+                s3_conf = s3_config
+                
+            if duckdb_conn is None:
+                duckdb_service = self.create_duckdb_service(s3_conf)
+                duckdb_connection = duckdb_service.duckdb_conn
+            else:
+                duckdb_connection = duckdb_conn
+                
+            return DuckDBQueryOptimizer(duckdb_connection, s3_conf)
+        
+        return self._create_service_with_factory(ServiceType.DUCKDB_QUERY_OPTIMIZER, create_service)
+
+    def create_s3_storage_optimizer(
+        self, s3_config: Optional[Dict[str, str]] = None
+    ) -> S3StorageOptimizer:
+        """
+        Create S3StorageOptimizer with optimized instantiation and dependency injection.
+        
+        Args:
+            s3_config: Optional S3 configuration dictionary
+            
+        Returns:
+            S3StorageOptimizer instance
+        """
+        def create_service():
+            if s3_config is None:
+                settings = get_settings()
+                s3_conf = settings.get_s3_config()
+            else:
+                s3_conf = s3_config
+            return S3StorageOptimizer(s3_conf)
+        
+        return self._create_service_with_factory(ServiceType.S3_STORAGE_OPTIMIZER, create_service)
+
+    def create_hierarchical_diff_engine(
+        self, db: Session, nlp_service=None
+    ) -> HierarchicalDiffEngine:
+        """
+        Create HierarchicalDiffEngine with optimized instantiation and dependency injection.
+        
+        Args:
+            db: Database session for this request
+            nlp_service: Optional NLP service for semantic analysis
+            
+        Returns:
+            HierarchicalDiffEngine instance
+        """
+        def create_service():
+            # nlp_service would come from actual NLP service dependency
+            return HierarchicalDiffEngine(db, nlp_service)
+        
+        return self._create_service_with_factory(ServiceType.HIERARCHICAL_DIFF_ENGINE, create_service)
+
+    def create_batch_operation_processor(
+        self, db: Session, s3_sync_manager: Optional[S3SyncManager] = None
+    ) -> BatchOperationProcessor:
+        """
+        Create BatchOperationProcessor with optimized instantiation and dependency injection.
+        
+        Args:
+            db: Database session for this request
+            s3_sync_manager: Optional S3SyncManager dependency
+            
+        Returns:
+            BatchOperationProcessor instance
+        """
+        def create_service():
+            s3_sync = s3_sync_manager or self.get_s3_sync_manager(db)
+            version_manager = self.create_version_manager(db)
+            working_tree_manager = self.create_working_tree_manager(db)
+            return BatchOperationProcessor(db, s3_sync, version_manager, working_tree_manager)
+        
+        return self._create_service_with_factory(ServiceType.BATCH_OPERATION_PROCESSOR, create_service)
+
+    def create_performance_monitor(
+        self, sqlite_conn=None, duckdb_conn=None, s3_sync_manager: Optional[S3SyncManager] = None
+    ) -> PerformanceMonitor:
+        """
+        Create PerformanceMonitor with optimized instantiation and dependency injection.
+        
+        Args:
+            sqlite_conn: SQLite database connection
+            duckdb_conn: Optional DuckDB connection for analytics
+            s3_sync_manager: Optional S3 sync manager
+            
+        Returns:
+            PerformanceMonitor instance
+        """
+        def create_service():
+            # Use provided connections or create default ones
+            sqlite_connection = sqlite_conn
+            duckdb_connection = duckdb_conn
+            s3_sync = s3_sync_manager
+            
+            return PerformanceMonitor(sqlite_connection, duckdb_connection, s3_sync)
+        
+        return self._create_service_with_factory(ServiceType.PERFORMANCE_MONITOR, create_service)
 
     def get_s3_sync_manager(self, db_session: Session) -> S3SyncManager:
         """
@@ -824,3 +1158,119 @@ def get_diff_generator_via_factory(db: Session = Depends(get_db)) -> DiffGenerat
     """
     factory = get_service_factory()
     return factory.create_diff_generator(db)
+
+
+# Phase 4 Advanced Features Service Dependencies
+
+
+def get_conflict_resolution_engine_via_factory(db: Session = Depends(get_db)) -> ConflictResolutionEngine:
+    """
+    FastAPI dependency for ConflictResolutionEngine using optimized service factory.
+
+    Args:
+        db: Database session from dependency injection
+
+    Returns:
+        ConflictResolutionEngine instance
+    """
+    factory = get_service_factory()
+    return factory.create_conflict_resolution_engine(db)
+
+
+def get_duckdb_service_via_factory() -> DuckDBService:
+    """
+    FastAPI dependency for DuckDBService using optimized service factory.
+
+    Returns:
+        DuckDBService instance
+    """
+    factory = get_service_factory()
+    return factory.create_duckdb_service()
+
+
+def get_change_analytics_engine_via_factory() -> ChangeAnalyticsEngine:
+    """
+    FastAPI dependency for ChangeAnalyticsEngine using optimized service factory.
+
+    Returns:
+        ChangeAnalyticsEngine instance
+    """
+    factory = get_service_factory()
+    return factory.create_change_analytics_engine()
+
+
+def get_incremental_sync_engine_via_factory(db: Session = Depends(get_db)) -> IncrementalSyncEngine:
+    """
+    FastAPI dependency for IncrementalSyncEngine using optimized service factory.
+
+    Args:
+        db: Database session from dependency injection
+
+    Returns:
+        IncrementalSyncEngine instance
+    """
+    factory = get_service_factory()
+    return factory.create_incremental_sync_engine(db)
+
+
+# Phase 5 Optimization Service Dependencies
+
+def get_duckdb_query_optimizer_via_factory() -> DuckDBQueryOptimizer:
+    """
+    FastAPI dependency for DuckDBQueryOptimizer using optimized service factory.
+
+    Returns:
+        DuckDBQueryOptimizer instance
+    """
+    factory = get_service_factory()
+    return factory.create_duckdb_query_optimizer()
+
+
+def get_s3_storage_optimizer_via_factory() -> S3StorageOptimizer:
+    """
+    FastAPI dependency for S3StorageOptimizer using optimized service factory.
+
+    Returns:
+        S3StorageOptimizer instance
+    """
+    factory = get_service_factory()
+    return factory.create_s3_storage_optimizer()
+
+
+def get_hierarchical_diff_engine_via_factory(db: Session = Depends(get_db)) -> HierarchicalDiffEngine:
+    """
+    FastAPI dependency for HierarchicalDiffEngine using optimized service factory.
+
+    Args:
+        db: Database session from dependency injection
+
+    Returns:
+        HierarchicalDiffEngine instance
+    """
+    factory = get_service_factory()
+    return factory.create_hierarchical_diff_engine(db)
+
+
+def get_batch_operation_processor_via_factory(db: Session = Depends(get_db)) -> BatchOperationProcessor:
+    """
+    FastAPI dependency for BatchOperationProcessor using optimized service factory.
+
+    Args:
+        db: Database session from dependency injection
+
+    Returns:
+        BatchOperationProcessor instance
+    """
+    factory = get_service_factory()
+    return factory.create_batch_operation_processor(db)
+
+
+def get_performance_monitor_via_factory() -> PerformanceMonitor:
+    """
+    FastAPI dependency for PerformanceMonitor using optimized service factory.
+
+    Returns:
+        PerformanceMonitor instance
+    """
+    factory = get_service_factory()
+    return factory.create_performance_monitor()

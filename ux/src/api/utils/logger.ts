@@ -1,10 +1,10 @@
 /**
  * API Logger
- * 
+ *
  * Structured logging utility for API operations
  */
 
-type LogLevel = 'debug' | 'info' | 'warn' | 'error';
+type LogLevel = "debug" | "info" | "warn" | "error";
 
 interface LogEntry {
   level: LogLevel;
@@ -14,9 +14,13 @@ interface LogEntry {
 }
 
 class ApiLogger {
-  private isDev = process.env.NODE_ENV === 'development';
+  private isDev = process.env.NODE_ENV === "development";
 
-  private formatMessage(level: LogLevel, message: string, context?: Record<string, unknown>): LogEntry {
+  private formatMessage(
+    level: LogLevel,
+    message: string,
+    context?: Record<string, unknown>,
+  ): LogEntry {
     return {
       level,
       message,
@@ -30,7 +34,7 @@ class ApiLogger {
 
     const logFn = console[entry.level] || console.log;
     const prefix = `[API ${entry.level.toUpperCase()}]`;
-    
+
     if (entry.context) {
       logFn(`${prefix} ${entry.message}`, entry.context);
     } else {
@@ -39,19 +43,19 @@ class ApiLogger {
   }
 
   debug(message: string, context?: Record<string, unknown>) {
-    this.log(this.formatMessage('debug', message, context));
+    this.log(this.formatMessage("debug", message, context));
   }
 
   info(message: string, context?: Record<string, unknown>) {
-    this.log(this.formatMessage('info', message, context));
+    this.log(this.formatMessage("info", message, context));
   }
 
   warn(message: string, context?: Record<string, unknown>) {
-    this.log(this.formatMessage('warn', message, context));
+    this.log(this.formatMessage("warn", message, context));
   }
 
   error(message: string, context?: Record<string, unknown>) {
-    this.log(this.formatMessage('error', message, context));
+    this.log(this.formatMessage("error", message, context));
   }
 
   request(method: string, url: string, data?: unknown) {

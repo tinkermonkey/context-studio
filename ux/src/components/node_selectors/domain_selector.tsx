@@ -8,7 +8,11 @@ export interface DomainSelectorProps {
   className?: string;
 }
 
-export const DomainSelector: React.FC<DomainSelectorProps> = ({ onSelect, value, className }) => {
+export const DomainSelector: React.FC<DomainSelectorProps> = ({
+  onSelect,
+  value,
+  className,
+}) => {
   const { data: domains, isLoading, error } = useDomainNodes();
   return (
     <PortalRecordSelector

@@ -1,11 +1,11 @@
 /**
  * Schema.org Query Hooks
- * 
+ *
  * React Query hooks for Schema.org entity and property operations
  */
 
-import { useQuery, UseQueryOptions } from '@tanstack/react-query';
-import { 
+import { useQuery, UseQueryOptions } from "@tanstack/react-query";
+import {
   schemaOrgService,
   type SchemaOrgStatus,
   type SchemaOrgEntityOut,
@@ -13,19 +13,19 @@ import {
   type SearchResult,
   type SchemaOrgEntityListParams,
   type SchemaOrgPropertyListParams,
-  type SchemaOrgSearchParams
-} from '../../services/schemaOrg';
-import { QUERY_KEYS } from '../../config';
-import { createQueryKey } from '../../utils/queryClient';
+  type SchemaOrgSearchParams,
+} from "../../services/schemaOrg";
+import { QUERY_KEYS } from "../../config";
+import { createQueryKey } from "../../utils/queryClient";
 
 /**
  * Hook to get Schema.org database status
  */
 export const useSchemaOrgStatus = (
-  options?: UseQueryOptions<SchemaOrgStatus, Error>
+  options?: UseQueryOptions<SchemaOrgStatus, Error>,
 ) => {
   return useQuery({
-    queryKey: createQueryKey(QUERY_KEYS.SCHEMA_ORG, 'status'),
+    queryKey: createQueryKey(QUERY_KEYS.SCHEMA_ORG, "status"),
     queryFn: () => schemaOrgService.getStatus(),
     ...options,
   });
@@ -36,10 +36,10 @@ export const useSchemaOrgStatus = (
  */
 export const useSchemaOrgEntities = (
   params?: SchemaOrgEntityListParams,
-  options?: UseQueryOptions<SearchResult, Error>
+  options?: UseQueryOptions<SearchResult, Error>,
 ) => {
   return useQuery({
-    queryKey: createQueryKey(QUERY_KEYS.SCHEMA_ORG, 'entities', params),
+    queryKey: createQueryKey(QUERY_KEYS.SCHEMA_ORG, "entities", params),
     queryFn: () => schemaOrgService.listEntities(params),
     ...options,
   });
@@ -50,10 +50,10 @@ export const useSchemaOrgEntities = (
  */
 export const useSchemaOrgProperties = (
   params?: SchemaOrgPropertyListParams,
-  options?: UseQueryOptions<SearchResult, Error>
+  options?: UseQueryOptions<SearchResult, Error>,
 ) => {
   return useQuery({
-    queryKey: createQueryKey(QUERY_KEYS.SCHEMA_ORG, 'properties', params),
+    queryKey: createQueryKey(QUERY_KEYS.SCHEMA_ORG, "properties", params),
     queryFn: () => schemaOrgService.listProperties(params),
     ...options,
   });
@@ -64,10 +64,10 @@ export const useSchemaOrgProperties = (
  */
 export const useSchemaOrgEntity = (
   identifier: string,
-  options?: UseQueryOptions<SchemaOrgEntityOut, Error>
+  options?: UseQueryOptions<SchemaOrgEntityOut, Error>,
 ) => {
   return useQuery({
-    queryKey: createQueryKey(QUERY_KEYS.SCHEMA_ORG, 'entity', { identifier }),
+    queryKey: createQueryKey(QUERY_KEYS.SCHEMA_ORG, "entity", { identifier }),
     queryFn: () => schemaOrgService.getEntity(identifier),
     enabled: !!identifier,
     ...options,
@@ -79,10 +79,10 @@ export const useSchemaOrgEntity = (
  */
 export const useSchemaOrgProperty = (
   identifier: string,
-  options?: UseQueryOptions<SchemaOrgPropertyOut, Error>
+  options?: UseQueryOptions<SchemaOrgPropertyOut, Error>,
 ) => {
   return useQuery({
-    queryKey: createQueryKey(QUERY_KEYS.SCHEMA_ORG, 'property', { identifier }),
+    queryKey: createQueryKey(QUERY_KEYS.SCHEMA_ORG, "property", { identifier }),
     queryFn: () => schemaOrgService.getProperty(identifier),
     enabled: !!identifier,
     ...options,
@@ -94,10 +94,10 @@ export const useSchemaOrgProperty = (
  */
 export const useSchemaOrgSearch = (
   params: SchemaOrgSearchParams,
-  options?: UseQueryOptions<SearchResult, Error>
+  options?: UseQueryOptions<SearchResult, Error>,
 ) => {
   return useQuery({
-    queryKey: createQueryKey(QUERY_KEYS.SCHEMA_ORG, 'search', params),
+    queryKey: createQueryKey(QUERY_KEYS.SCHEMA_ORG, "search", params),
     queryFn: () => schemaOrgService.search(params),
     enabled: !!params.query?.trim(),
     ...options,

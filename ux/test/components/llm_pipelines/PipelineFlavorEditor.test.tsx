@@ -1,40 +1,42 @@
-import React from 'react';
-import { render, screen, waitFor } from '@testing-library/react';
-import { vi } from 'vitest';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { PipelineFlavorEditor } from '@/components/llm_pipelines/flavors/PipelineFlavorEditor';
+import React from "react";
+import { render, screen, waitFor } from "@testing-library/react";
+import { vi } from "vitest";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { PipelineFlavorEditor } from "@/components/llm_pipelines/flavors/PipelineFlavorEditor";
 
 // Mock the pipeline flavors hooks - use simpler approach
-vi.mock('@/api/hooks/pipelineFlavors');
+vi.mock("@/api/hooks/pipelineFlavors");
 
 // Mock data
 const mockExistingFlavor = {
-  id: 'existing-flavor-1',
-  pipeline: 'suggest_term_definition' as const,
-  title: 'Default Term Flavor',
-  llm_provider: 'openai',
-  llm_model: 'gpt-4o',
-  system_prompt: 'You are an expert at creating precise, informative definitions for technical terms.',
-  user_prompt: 'Create a definition for the term "{title}" in the context of {domain_context}.',
+  id: "existing-flavor-1",
+  pipeline: "suggest_term_definition" as const,
+  title: "Default Term Flavor",
+  llm_provider: "openai",
+  llm_model: "gpt-4o",
+  system_prompt:
+    "You are an expert at creating precise, informative definitions for technical terms.",
+  user_prompt:
+    'Create a definition for the term "{title}" in the context of {domain_context}.',
   llm_config: {
     temperature: 0.5,
     max_tokens: 500,
     top_p: 0.9,
     frequency_penalty: 0.1,
-    presence_penalty: 0.2
+    presence_penalty: 0.2,
   },
   enabled: true,
   version: 1,
-  last_updated: '2025-09-02T10:00:00Z',
-  date_created: '2025-09-01T10:00:00Z'
+  last_updated: "2025-09-02T10:00:00Z",
+  date_created: "2025-09-01T10:00:00Z",
 };
 
-describe('PipelineFlavorEditor - Default Population', () => {
+describe("PipelineFlavorEditor - Default Population", () => {
   let queryClient: QueryClient;
 
   beforeEach(() => {
     vi.clearAllMocks();
-    
+
     // Create a fresh QueryClient for each test
     queryClient = new QueryClient({
       defaultOptions: {
@@ -52,30 +54,34 @@ describe('PipelineFlavorEditor - Default Population', () => {
     queryClient.clear();
   });
 
-  it('populates default values from existing flavor when creating new', async () => {
-    const { usePipelineFlavors, useCreatePipelineFlavor, useUpdatePipelineFlavor } = await import('@/api/hooks/pipelineFlavors');
-    
+  it("populates default values from existing flavor when creating new", async () => {
+    const {
+      usePipelineFlavors,
+      useCreatePipelineFlavor,
+      useUpdatePipelineFlavor,
+    } = await import("@/api/hooks/pipelineFlavors");
+
     vi.mocked(usePipelineFlavors).mockReturnValue({
       data: {
         flavors: [mockExistingFlavor],
-        total_count: 1
+        total_count: 1,
       },
       isLoading: false,
-      error: null
+      error: null,
     } as any);
 
     vi.mocked(useCreatePipelineFlavor).mockReturnValue({
       mutate: vi.fn(),
-      isPending: false
+      isPending: false,
     } as any);
 
     vi.mocked(useUpdatePipelineFlavor).mockReturnValue({
       mutate: vi.fn(),
-      isPending: false
+      isPending: false,
     } as any);
 
     const mockOnClose = vi.fn();
-    
+
     render(
       <QueryClientProvider client={queryClient}>
         <PipelineFlavorEditor
@@ -83,39 +89,46 @@ describe('PipelineFlavorEditor - Default Population', () => {
           flavor={null}
           onClose={mockOnClose}
         />
-      </QueryClientProvider>
+      </QueryClientProvider>,
     );
 
     // Should show the "Defaults populated" alert
-    await waitFor(() => {
-      expect(screen.getByText(/Defaults populated/)).toBeInTheDocument();
-    }, { timeout: 1000 });
+    await waitFor(
+      () => {
+        expect(screen.getByText(/Defaults populated/)).toBeInTheDocument();
+      },
+      { timeout: 1000 },
+    );
   });
 
-  it('does not fetch defaults when editing existing flavor', async () => {
-    const { usePipelineFlavors, useCreatePipelineFlavor, useUpdatePipelineFlavor } = await import('@/api/hooks/pipelineFlavors');
-    
+  it("does not fetch defaults when editing existing flavor", async () => {
+    const {
+      usePipelineFlavors,
+      useCreatePipelineFlavor,
+      useUpdatePipelineFlavor,
+    } = await import("@/api/hooks/pipelineFlavors");
+
     vi.mocked(usePipelineFlavors).mockReturnValue({
       data: {
         flavors: [mockExistingFlavor],
-        total_count: 1
+        total_count: 1,
       },
       isLoading: false,
-      error: null
+      error: null,
     } as any);
 
     vi.mocked(useCreatePipelineFlavor).mockReturnValue({
       mutate: vi.fn(),
-      isPending: false
+      isPending: false,
     } as any);
 
     vi.mocked(useUpdatePipelineFlavor).mockReturnValue({
       mutate: vi.fn(),
-      isPending: false
+      isPending: false,
     } as any);
 
     const mockOnClose = vi.fn();
-    
+
     render(
       <QueryClientProvider client={queryClient}>
         <PipelineFlavorEditor
@@ -123,34 +136,38 @@ describe('PipelineFlavorEditor - Default Population', () => {
           flavor={mockExistingFlavor}
           onClose={mockOnClose}
         />
-      </QueryClientProvider>
+      </QueryClientProvider>,
     );
 
     // Should not show the "Defaults populated" alert
     expect(screen.queryByText(/Defaults populated/)).not.toBeInTheDocument();
   });
 
-  it('shows loading state when fetching defaults', async () => {
-    const { usePipelineFlavors, useCreatePipelineFlavor, useUpdatePipelineFlavor } = await import('@/api/hooks/pipelineFlavors');
-    
+  it("shows loading state when fetching defaults", async () => {
+    const {
+      usePipelineFlavors,
+      useCreatePipelineFlavor,
+      useUpdatePipelineFlavor,
+    } = await import("@/api/hooks/pipelineFlavors");
+
     vi.mocked(usePipelineFlavors).mockReturnValue({
       data: null,
       isLoading: true,
-      error: null
+      error: null,
     } as any);
 
     vi.mocked(useCreatePipelineFlavor).mockReturnValue({
       mutate: vi.fn(),
-      isPending: false
+      isPending: false,
     } as any);
 
     vi.mocked(useUpdatePipelineFlavor).mockReturnValue({
       mutate: vi.fn(),
-      isPending: false
+      isPending: false,
     } as any);
 
     const mockOnClose = vi.fn();
-    
+
     render(
       <QueryClientProvider client={queryClient}>
         <PipelineFlavorEditor
@@ -158,37 +175,41 @@ describe('PipelineFlavorEditor - Default Population', () => {
           flavor={null}
           onClose={mockOnClose}
         />
-      </QueryClientProvider>
+      </QueryClientProvider>,
     );
 
     // Should show loading message
     expect(screen.getByText(/Loading default values/)).toBeInTheDocument();
   });
 
-  it('handles case when no existing flavors exist', async () => {
-    const { usePipelineFlavors, useCreatePipelineFlavor, useUpdatePipelineFlavor } = await import('@/api/hooks/pipelineFlavors');
-    
+  it("handles case when no existing flavors exist", async () => {
+    const {
+      usePipelineFlavors,
+      useCreatePipelineFlavor,
+      useUpdatePipelineFlavor,
+    } = await import("@/api/hooks/pipelineFlavors");
+
     vi.mocked(usePipelineFlavors).mockReturnValue({
       data: {
         flavors: [],
-        total_count: 0
+        total_count: 0,
       },
       isLoading: false,
-      error: null
+      error: null,
     } as any);
 
     vi.mocked(useCreatePipelineFlavor).mockReturnValue({
       mutate: vi.fn(),
-      isPending: false
+      isPending: false,
     } as any);
 
     vi.mocked(useUpdatePipelineFlavor).mockReturnValue({
       mutate: vi.fn(),
-      isPending: false
+      isPending: false,
     } as any);
 
     const mockOnClose = vi.fn();
-    
+
     render(
       <QueryClientProvider client={queryClient}>
         <PipelineFlavorEditor
@@ -196,7 +217,7 @@ describe('PipelineFlavorEditor - Default Population', () => {
           flavor={null}
           onClose={mockOnClose}
         />
-      </QueryClientProvider>
+      </QueryClientProvider>,
     );
 
     // Should not show defaults populated alert

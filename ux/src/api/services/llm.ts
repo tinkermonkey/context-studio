@@ -1,21 +1,27 @@
 /**
  * LLM Service
- * 
+ *
  * Service for Large Language Model operations including definition suggestions
  */
 
-import { BaseService } from './base';
-import { ENDPOINTS } from '../config';
-import type { components } from '@/api/client/types';
+import { BaseService } from "./base";
+import { ENDPOINTS } from "../config";
+import type { components } from "@/api/client/types";
 
 // Type aliases for better readability - using the latest OpenAPI schema
-export type DefinitionSuggestionRequest = components['schemas']['DefinitionSuggestionRequest'];
-export type DefinitionSuggestionResponse = components['schemas']['DefinitionSuggestionResponse'];
-export type DomainDefinitionRequest = components['schemas']['DomainDefinitionRequest'];
-export type DomainDefinitionResponse = components['schemas']['DomainDefinitionResponse'];
-export type LayerDefinitionRequest = components['schemas']['LayerDefinitionRequest'];
-export type LayerDefinitionResponse = components['schemas']['LayerDefinitionResponse'];
-export type ComponentTerm = components['schemas']['ComponentTerm'];
+export type DefinitionSuggestionRequest =
+  components["schemas"]["DefinitionSuggestionRequest"];
+export type DefinitionSuggestionResponse =
+  components["schemas"]["DefinitionSuggestionResponse"];
+export type DomainDefinitionRequest =
+  components["schemas"]["DomainDefinitionRequest"];
+export type DomainDefinitionResponse =
+  components["schemas"]["DomainDefinitionResponse"];
+export type LayerDefinitionRequest =
+  components["schemas"]["LayerDefinitionRequest"];
+export type LayerDefinitionResponse =
+  components["schemas"]["LayerDefinitionResponse"];
+export type ComponentTerm = components["schemas"]["ComponentTerm"];
 
 // Legacy interface for backward compatibility
 export interface SelectedRelation {
@@ -49,23 +55,22 @@ export class LLMService extends BaseService {
    * @param request The term definition suggestion request containing term and context
    * @returns Term definition suggestion with reasoning
    */
-  async suggestTermDefinition(request: DefinitionSuggestionRequest): Promise<DefinitionSuggestionResponse> {
-    this.validateRequired(request.term, 'term');
-    const sanitizedTerm = this.sanitizeString(request.term, 'term');
-    
-    return this.withErrorContext(
-      async () => {
-        const response = await this.postResource<LLMSuccessResponse>(
-          `${ENDPOINTS.LLM}/suggest_term_definition`,
-          {
-            ...request,
-            term: sanitizedTerm,
-          }
-        );
-        return response.data;
-      },
-      'suggesting term definition'
-    );
+  async suggestTermDefinition(
+    request: DefinitionSuggestionRequest,
+  ): Promise<DefinitionSuggestionResponse> {
+    this.validateRequired(request.term, "term");
+    const sanitizedTerm = this.sanitizeString(request.term, "term");
+
+    return this.withErrorContext(async () => {
+      const response = await this.postResource<LLMSuccessResponse>(
+        `${ENDPOINTS.LLM}/suggest_term_definition`,
+        {
+          ...request,
+          term: sanitizedTerm,
+        },
+      );
+      return response.data;
+    }, "suggesting term definition");
   }
 
   /**
@@ -73,23 +78,25 @@ export class LLMService extends BaseService {
    * @param request The domain definition suggestion request containing domain and context
    * @returns Domain definition suggestion with reasoning
    */
-  async suggestDomainDefinition(request: DomainDefinitionRequest): Promise<DomainDefinitionResponse> {
-    this.validateRequired(request.domain_title, 'domain_title');
-    const sanitizedTitle = this.sanitizeString(request.domain_title, 'domain_title');
-    
-    return this.withErrorContext(
-      async () => {
-        const response = await this.postResource<{ success: boolean; data: DomainDefinitionResponse }>(
-          `${ENDPOINTS.LLM}/suggest_domain_definition`,
-          {
-            ...request,
-            domain_title: sanitizedTitle,
-          }
-        );
-        return response.data;
-      },
-      'suggesting domain definition'
+  async suggestDomainDefinition(
+    request: DomainDefinitionRequest,
+  ): Promise<DomainDefinitionResponse> {
+    this.validateRequired(request.domain_title, "domain_title");
+    const sanitizedTitle = this.sanitizeString(
+      request.domain_title,
+      "domain_title",
     );
+
+    return this.withErrorContext(async () => {
+      const response = await this.postResource<{
+        success: boolean;
+        data: DomainDefinitionResponse;
+      }>(`${ENDPOINTS.LLM}/suggest_domain_definition`, {
+        ...request,
+        domain_title: sanitizedTitle,
+      });
+      return response.data;
+    }, "suggesting domain definition");
   }
 
   /**
@@ -97,23 +104,25 @@ export class LLMService extends BaseService {
    * @param request The layer definition suggestion request containing layer and context
    * @returns Layer definition suggestion with reasoning
    */
-  async suggestLayerDefinition(request: LayerDefinitionRequest): Promise<LayerDefinitionResponse> {
-    this.validateRequired(request.layer_title, 'layer_title');
-    const sanitizedTitle = this.sanitizeString(request.layer_title, 'layer_title');
-    
-    return this.withErrorContext(
-      async () => {
-        const response = await this.postResource<{ success: boolean; data: LayerDefinitionResponse }>(
-          `${ENDPOINTS.LLM}/suggest_layer_definition`,
-          {
-            ...request,
-            layer_title: sanitizedTitle,
-          }
-        );
-        return response.data;
-      },
-      'suggesting layer definition'
+  async suggestLayerDefinition(
+    request: LayerDefinitionRequest,
+  ): Promise<LayerDefinitionResponse> {
+    this.validateRequired(request.layer_title, "layer_title");
+    const sanitizedTitle = this.sanitizeString(
+      request.layer_title,
+      "layer_title",
     );
+
+    return this.withErrorContext(async () => {
+      const response = await this.postResource<{
+        success: boolean;
+        data: LayerDefinitionResponse;
+      }>(`${ENDPOINTS.LLM}/suggest_layer_definition`, {
+        ...request,
+        layer_title: sanitizedTitle,
+      });
+      return response.data;
+    }, "suggesting layer definition");
   }
 
   /**
@@ -122,8 +131,12 @@ export class LLMService extends BaseService {
    * @param request The definition suggestion request containing term and context
    * @returns Definition suggestion with reasoning
    */
-  async suggestDefinition(request: DefinitionSuggestionRequest): Promise<DefinitionSuggestionResponse> {
-    console.warn('suggestDefinition is deprecated, use suggestTermDefinition instead');
+  async suggestDefinition(
+    request: DefinitionSuggestionRequest,
+  ): Promise<DefinitionSuggestionResponse> {
+    console.warn(
+      "suggestDefinition is deprecated, use suggestTermDefinition instead",
+    );
     return this.suggestTermDefinition(request);
   }
 
@@ -134,7 +147,7 @@ export class LLMService extends BaseService {
   async healthCheck(): Promise<LLMHealthResponse> {
     return this.withErrorContext(
       () => this.getResource<LLMHealthResponse>(`${ENDPOINTS.LLM}/health`),
-      'checking LLM health'
+      "checking LLM health",
     );
   }
 
@@ -143,7 +156,9 @@ export class LLMService extends BaseService {
    * @param term The term to generate a definition for
    * @returns Term definition suggestion
    */
-  async generateSimpleTermDefinition(term: string): Promise<DefinitionSuggestionResponse> {
+  async generateSimpleTermDefinition(
+    term: string,
+  ): Promise<DefinitionSuggestionResponse> {
     return this.suggestTermDefinition({ term });
   }
 
@@ -157,7 +172,7 @@ export class LLMService extends BaseService {
   async generateTermDefinitionWithDomain(
     term: string,
     domainTitle: string,
-    domainDefinition?: string
+    domainDefinition?: string,
   ): Promise<DefinitionSuggestionResponse> {
     return this.suggestTermDefinition({
       term,
@@ -178,7 +193,7 @@ export class LLMService extends BaseService {
     term: string,
     parentTermTitle: string,
     parentTermDefinition?: string,
-    relationshipPredicate?: string
+    relationshipPredicate?: string,
   ): Promise<DefinitionSuggestionResponse> {
     return this.suggestTermDefinition({
       term,
@@ -196,7 +211,7 @@ export class LLMService extends BaseService {
    */
   async generateTermDefinitionWithComponents(
     term: string,
-    componentTerms: ComponentTerm[]
+    componentTerms: ComponentTerm[],
   ): Promise<DefinitionSuggestionResponse> {
     return this.suggestTermDefinition({
       term,
@@ -209,7 +224,9 @@ export class LLMService extends BaseService {
    * @param domainTitle The domain title to generate a definition for
    * @returns Domain definition suggestion
    */
-  async generateSimpleDomainDefinition(domainTitle: string): Promise<DomainDefinitionResponse> {
+  async generateSimpleDomainDefinition(
+    domainTitle: string,
+  ): Promise<DomainDefinitionResponse> {
     return this.suggestDomainDefinition({ domain_title: domainTitle });
   }
 
@@ -218,7 +235,9 @@ export class LLMService extends BaseService {
    * @param layerTitle The layer title to generate a definition for
    * @returns Layer definition suggestion
    */
-  async generateSimpleLayerDefinition(layerTitle: string): Promise<LayerDefinitionResponse> {
+  async generateSimpleLayerDefinition(
+    layerTitle: string,
+  ): Promise<LayerDefinitionResponse> {
     return this.suggestLayerDefinition({ layer_title: layerTitle });
   }
 
@@ -226,8 +245,12 @@ export class LLMService extends BaseService {
    * @deprecated Use generateSimpleTermDefinition instead
    * Generate definition with minimal context (just term)
    */
-  async generateSimpleDefinition(term: string): Promise<DefinitionSuggestionResponse> {
-    console.warn('generateSimpleDefinition is deprecated, use generateSimpleTermDefinition instead');
+  async generateSimpleDefinition(
+    term: string,
+  ): Promise<DefinitionSuggestionResponse> {
+    console.warn(
+      "generateSimpleDefinition is deprecated, use generateSimpleTermDefinition instead",
+    );
     return this.generateSimpleTermDefinition(term);
   }
 
@@ -238,10 +261,16 @@ export class LLMService extends BaseService {
   async generateDefinitionWithDomain(
     term: string,
     domainTitle: string,
-    domainDefinition?: string
+    domainDefinition?: string,
   ): Promise<DefinitionSuggestionResponse> {
-    console.warn('generateDefinitionWithDomain is deprecated, use generateTermDefinitionWithDomain instead');
-    return this.generateTermDefinitionWithDomain(term, domainTitle, domainDefinition);
+    console.warn(
+      "generateDefinitionWithDomain is deprecated, use generateTermDefinitionWithDomain instead",
+    );
+    return this.generateTermDefinitionWithDomain(
+      term,
+      domainTitle,
+      domainDefinition,
+    );
   }
 
   /**
@@ -252,10 +281,17 @@ export class LLMService extends BaseService {
     term: string,
     parentTermTitle: string,
     parentTermDefinition?: string,
-    relationshipPredicate?: string
+    relationshipPredicate?: string,
   ): Promise<DefinitionSuggestionResponse> {
-    console.warn('generateDefinitionWithParent is deprecated, use generateTermDefinitionWithParent instead');
-    return this.generateTermDefinitionWithParent(term, parentTermTitle, parentTermDefinition, relationshipPredicate);
+    console.warn(
+      "generateDefinitionWithParent is deprecated, use generateTermDefinitionWithParent instead",
+    );
+    return this.generateTermDefinitionWithParent(
+      term,
+      parentTermTitle,
+      parentTermDefinition,
+      relationshipPredicate,
+    );
   }
 
   /**
@@ -264,9 +300,11 @@ export class LLMService extends BaseService {
    */
   async generateDefinitionWithComponents(
     term: string,
-    componentTerms: ComponentTerm[]
+    componentTerms: ComponentTerm[],
   ): Promise<DefinitionSuggestionResponse> {
-    console.warn('generateDefinitionWithComponents is deprecated, use generateTermDefinitionWithComponents instead');
+    console.warn(
+      "generateDefinitionWithComponents is deprecated, use generateTermDefinitionWithComponents instead",
+    );
     return this.generateTermDefinitionWithComponents(term, componentTerms);
   }
 
@@ -280,7 +318,7 @@ export class LLMService extends BaseService {
   async generateTermDefinitionWithReferences(
     term: string,
     dbpediaContext?: Record<string, any>,
-    wikidataContext?: Record<string, any>
+    wikidataContext?: Record<string, any>,
   ): Promise<DefinitionSuggestionResponse> {
     return this.suggestTermDefinition({
       term,
@@ -295,7 +333,7 @@ export class LLMService extends BaseService {
    * @returns Term definition suggestion with full context analysis
    */
   async generateComprehensiveTermDefinition(
-    request: DefinitionSuggestionRequest
+    request: DefinitionSuggestionRequest,
   ): Promise<DefinitionSuggestionResponse> {
     return this.suggestTermDefinition(request);
   }
@@ -307,10 +345,16 @@ export class LLMService extends BaseService {
   async generateDefinitionWithReferences(
     term: string,
     dbpediaContext?: Record<string, any>,
-    wikidataContext?: Record<string, any>
+    wikidataContext?: Record<string, any>,
   ): Promise<DefinitionSuggestionResponse> {
-    console.warn('generateDefinitionWithReferences is deprecated, use generateTermDefinitionWithReferences instead');
-    return this.generateTermDefinitionWithReferences(term, dbpediaContext, wikidataContext);
+    console.warn(
+      "generateDefinitionWithReferences is deprecated, use generateTermDefinitionWithReferences instead",
+    );
+    return this.generateTermDefinitionWithReferences(
+      term,
+      dbpediaContext,
+      wikidataContext,
+    );
   }
 
   /**
@@ -318,9 +362,11 @@ export class LLMService extends BaseService {
    * Generate comprehensive definition with all available context
    */
   async generateComprehensiveDefinition(
-    request: DefinitionSuggestionRequest
+    request: DefinitionSuggestionRequest,
   ): Promise<DefinitionSuggestionResponse> {
-    console.warn('generateComprehensiveDefinition is deprecated, use generateComprehensiveTermDefinition instead');
+    console.warn(
+      "generateComprehensiveDefinition is deprecated, use generateComprehensiveTermDefinition instead",
+    );
     return this.generateComprehensiveTermDefinition(request);
   }
 }

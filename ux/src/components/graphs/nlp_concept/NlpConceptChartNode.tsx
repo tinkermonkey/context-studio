@@ -30,12 +30,12 @@ interface Props {
   selected?: boolean;
 }
 
-export const NlpConceptChartNode: React.FC<Props> = ({ 
-  node, 
+export const NlpConceptChartNode: React.FC<Props> = ({
+  node,
   nodeStyle,
   textStyle,
-  onClick, 
-  selected, 
+  onClick,
+  selected,
 }) => {
   const [isHovered, setIsHovered] = useState(false);
   const foreignObjectRef = useRef<SVGForeignObjectElement>(null);
@@ -50,42 +50,36 @@ export const NlpConceptChartNode: React.FC<Props> = ({
       key={node.id}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
-        onClick={() => {
+      onClick={() => {
+        onClick?.(node);
+      }}
+      onKeyDown={(e) => {
+        if (e.key === "Enter" || e.key === " ") {
           onClick?.(node);
-        }}
-        onKeyDown={(e) => {
-          if (e.key === "Enter" || e.key === " ") {
-            onClick?.(node);
-          }
-        }}
+        }
+      }}
       role="button"
       tabIndex={0}
       style={{ cursor: isHovered ? "pointer" : "default" }}
     >
-        {/* change hover to bright stroke color; selected uses a primary-700 border */}
-        <rect
-          x={node.x}
-          y={node.y}
-          width={node.width}
-          height={node.height}
-          fill={nodeStyle.fill}
-          stroke={
-            selected
-              ? "#1D4ED8" 
-              : isHovered
-                ? "#38BDF8" 
-                : nodeStyle.stroke
-          }
-          strokeWidth={selected ? 2 : 1}
-          rx={nodeStyle.rx}
-        />
+      {/* change hover to bright stroke color; selected uses a primary-700 border */}
+      <rect
+        x={node.x}
+        y={node.y}
+        width={node.width}
+        height={node.height}
+        fill={nodeStyle.fill}
+        stroke={selected ? "#1D4ED8" : isHovered ? "#38BDF8" : nodeStyle.stroke}
+        strokeWidth={selected ? 2 : 1}
+        rx={nodeStyle.rx}
+      />
       {node.type === "sense" ? (
         <foreignObject
           ref={foreignObjectRef}
           x={node.x + 10}
           y={node.y + 8}
-          width={node.width - 2*10}
-          height={node.height - 2*8}
+          width={node.width - 2 * 10}
+          height={node.height - 2 * 8}
         >
           <div
             style={{

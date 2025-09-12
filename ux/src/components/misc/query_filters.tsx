@@ -1,20 +1,30 @@
 import React from "react";
-import { 
-  Select, 
-  TextInput, 
+import {
+  Select,
+  TextInput,
   Button,
   Card,
   Accordion,
   AccordionContent,
   AccordionPanel,
   AccordionTitle,
-  Label
+  Label,
 } from "flowbite-react";
 import { Filter, X } from "lucide-react";
 
 export interface QueryFilter {
   field: string;
-  operator: 'equals' | 'contains' | 'starts_with' | 'ends_with' | 'gt' | 'gte' | 'lt' | 'lte' | 'between' | 'in';
+  operator:
+    | "equals"
+    | "contains"
+    | "starts_with"
+    | "ends_with"
+    | "gt"
+    | "gte"
+    | "lt"
+    | "lte"
+    | "between"
+    | "in";
   value: string | number | (string | number)[];
   label?: string;
 }
@@ -22,8 +32,8 @@ export interface QueryFilter {
 export interface FieldDefinition {
   field: string;
   label: string;
-  type: 'text' | 'number' | 'date' | 'select';
-  operators?: QueryFilter['operator'][];
+  type: "text" | "number" | "date" | "select";
+  operators?: QueryFilter["operator"][];
   options?: { value: string | number; label: string }[]; // For select fields
 }
 
@@ -40,24 +50,27 @@ interface QueryFiltersProps {
   title?: string;
 }
 
-const DEFAULT_OPERATORS_BY_TYPE: Record<FieldDefinition['type'], QueryFilter['operator'][]> = {
-  text: ['equals', 'contains', 'starts_with', 'ends_with'],
-  number: ['equals', 'gt', 'gte', 'lt', 'lte', 'between'],
-  date: ['equals', 'gt', 'gte', 'lt', 'lte', 'between'],
-  select: ['equals', 'in'],
+const DEFAULT_OPERATORS_BY_TYPE: Record<
+  FieldDefinition["type"],
+  QueryFilter["operator"][]
+> = {
+  text: ["equals", "contains", "starts_with", "ends_with"],
+  number: ["equals", "gt", "gte", "lt", "lte", "between"],
+  date: ["equals", "gt", "gte", "lt", "lte", "between"],
+  select: ["equals", "in"],
 };
 
-const OPERATOR_LABELS: Record<QueryFilter['operator'], string> = {
-  equals: 'Equals',
-  contains: 'Contains',
-  starts_with: 'Starts with',
-  ends_with: 'Ends with',
-  gt: 'Greater than',
-  gte: 'Greater than or equal',
-  lt: 'Less than',
-  lte: 'Less than or equal',
-  between: 'Between',
-  in: 'In list',
+const OPERATOR_LABELS: Record<QueryFilter["operator"], string> = {
+  equals: "Equals",
+  contains: "Contains",
+  starts_with: "Starts with",
+  ends_with: "Ends with",
+  gt: "Greater than",
+  gte: "Greater than or equal",
+  lt: "Less than",
+  lte: "Less than or equal",
+  between: "Between",
+  in: "In list",
 };
 
 const QueryFilters: React.FC<QueryFiltersProps> = ({
@@ -71,14 +84,15 @@ const QueryFilters: React.FC<QueryFiltersProps> = ({
     const firstField = fields[0];
     if (!firstField) return;
 
-    const availableOperators = firstField.operators || DEFAULT_OPERATORS_BY_TYPE[firstField.type];
+    const availableOperators =
+      firstField.operators || DEFAULT_OPERATORS_BY_TYPE[firstField.type];
     const newFilter: QueryFilter = {
       field: firstField.field,
       operator: availableOperators[0],
-      value: '',
+      value: "",
       label: firstField.label,
     };
-    
+
     onFiltersChange([...filters, newFilter]);
   };
 
@@ -97,15 +111,17 @@ const QueryFilters: React.FC<QueryFiltersProps> = ({
     onFiltersChange([]);
   };
 
-  const getFieldDefinition = (fieldName: string): FieldDefinition | undefined => {
-    return fields.find(f => f.field === fieldName);
+  const getFieldDefinition = (
+    fieldName: string,
+  ): FieldDefinition | undefined => {
+    return fields.find((f) => f.field === fieldName);
   };
 
   const renderValueInput = (filter: QueryFilter, index: number) => {
     const fieldDef = getFieldDefinition(filter.field);
     if (!fieldDef) return null;
 
-    if (fieldDef.type === 'select' && fieldDef.options) {
+    if (fieldDef.type === "select" && fieldDef.options) {
       return (
         <Select
           value={filter.value as string}
@@ -113,7 +129,7 @@ const QueryFilters: React.FC<QueryFiltersProps> = ({
           className="min-w-[120px]"
         >
           <option value="">Select...</option>
-          {fieldDef.options.map(option => (
+          {fieldDef.options.map((option) => (
             <option key={option.value} value={option.value}>
               {option.label}
             </option>
@@ -122,36 +138,57 @@ const QueryFilters: React.FC<QueryFiltersProps> = ({
       );
     }
 
-    if (filter.operator === 'between') {
-      const values = Array.isArray(filter.value) ? filter.value : ['', ''];
+    if (filter.operator === "between") {
+      const values = Array.isArray(filter.value) ? filter.value : ["", ""];
       return (
-        <div className="flex gap-2 items-center">
+        <div className="flex items-center gap-2">
           <TextInput
-            type={fieldDef.type === 'number' ? 'number' : fieldDef.type === 'date' ? 'date' : 'text'}
+            type={
+              fieldDef.type === "number"
+                ? "number"
+                : fieldDef.type === "date"
+                  ? "date"
+                  : "text"
+            }
             placeholder="From"
-            value={values[0] || ''}
-            onChange={(e) => updateFilter(index, { value: [e.target.value, values[1] || ''] })}
+            value={values[0] || ""}
+            onChange={(e) =>
+              updateFilter(index, { value: [e.target.value, values[1] || ""] })
+            }
             className="min-w-[100px]"
           />
           <span className="text-gray-500">to</span>
           <TextInput
-            type={fieldDef.type === 'number' ? 'number' : fieldDef.type === 'date' ? 'date' : 'text'}
+            type={
+              fieldDef.type === "number"
+                ? "number"
+                : fieldDef.type === "date"
+                  ? "date"
+                  : "text"
+            }
             placeholder="To"
-            value={values[1] || ''}
-            onChange={(e) => updateFilter(index, { value: [values[0] || '', e.target.value] })}
+            value={values[1] || ""}
+            onChange={(e) =>
+              updateFilter(index, { value: [values[0] || "", e.target.value] })
+            }
             className="min-w-[100px]"
           />
         </div>
       );
     }
 
-    if (filter.operator === 'in') {
+    if (filter.operator === "in") {
       return (
         <TextInput
           placeholder="Comma-separated values"
-          value={Array.isArray(filter.value) ? filter.value.join(', ') : filter.value}
+          value={
+            Array.isArray(filter.value) ? filter.value.join(", ") : filter.value
+          }
           onChange={(e) => {
-            const values = e.target.value.split(',').map(v => v.trim()).filter(v => v);
+            const values = e.target.value
+              .split(",")
+              .map((v) => v.trim())
+              .filter((v) => v);
             updateFilter(index, { value: values });
           }}
           className="min-w-[150px]"
@@ -161,7 +198,13 @@ const QueryFilters: React.FC<QueryFiltersProps> = ({
 
     return (
       <TextInput
-        type={fieldDef.type === 'number' ? 'number' : fieldDef.type === 'date' ? 'date' : 'text'}
+        type={
+          fieldDef.type === "number"
+            ? "number"
+            : fieldDef.type === "date"
+              ? "date"
+              : "text"
+        }
         placeholder="Value"
         value={filter.value as string}
         onChange={(e) => updateFilter(index, { value: e.target.value })}
@@ -178,10 +221,10 @@ const QueryFilters: React.FC<QueryFiltersProps> = ({
     <Accordion collapseAll={defaultCollapsed} className="mb-4">
       <AccordionPanel>
         <AccordionTitle className="flex items-center gap-2">
-          <Filter size={16} className="inline mr-2"/>
+          <Filter size={16} className="mr-2 inline" />
           {title}
           {filters.length > 0 && (
-            <span className="bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 text-xs font-medium px-2 py-1 rounded-full">
+            <span className="rounded-full bg-blue-100 px-2 py-1 text-xs font-medium text-blue-800 dark:bg-blue-900 dark:text-blue-200">
               {filters.length}
             </span>
           )}
@@ -190,8 +233,10 @@ const QueryFilters: React.FC<QueryFiltersProps> = ({
           <div className="space-y-3">
             {filters.map((filter, index) => {
               const fieldDef = getFieldDefinition(filter.field);
-              const availableOperators = fieldDef?.operators || DEFAULT_OPERATORS_BY_TYPE[fieldDef?.type || 'text'];
-              
+              const availableOperators =
+                fieldDef?.operators ||
+                DEFAULT_OPERATORS_BY_TYPE[fieldDef?.type || "text"];
+
               return (
                 <Card key={index} className="p-3">
                   <div className="flex flex-wrap items-center gap-3">
@@ -201,18 +246,24 @@ const QueryFilters: React.FC<QueryFiltersProps> = ({
                       <Select
                         value={filter.field}
                         onChange={(e) => {
-                          const newFieldDef = getFieldDefinition(e.target.value);
-                          const newOperators = newFieldDef?.operators || DEFAULT_OPERATORS_BY_TYPE[newFieldDef?.type || 'text'];
-                          updateFilter(index, { 
+                          const newFieldDef = getFieldDefinition(
+                            e.target.value,
+                          );
+                          const newOperators =
+                            newFieldDef?.operators ||
+                            DEFAULT_OPERATORS_BY_TYPE[
+                              newFieldDef?.type || "text"
+                            ];
+                          updateFilter(index, {
                             field: e.target.value,
                             operator: newOperators[0],
-                            value: '',
-                            label: newFieldDef?.label 
+                            value: "",
+                            label: newFieldDef?.label,
                           });
                         }}
                         className="min-w-[120px]"
                       >
-                        {fields.map(field => (
+                        {fields.map((field) => (
                           <option key={field.field} value={field.field}>
                             {field.label}
                           </option>
@@ -225,13 +276,15 @@ const QueryFilters: React.FC<QueryFiltersProps> = ({
                       <Label className="text-xs">Condition</Label>
                       <Select
                         value={filter.operator}
-                        onChange={(e) => updateFilter(index, { 
-                          operator: e.target.value as QueryFilter['operator'],
-                          value: '' // Reset value when operator changes
-                        })}
+                        onChange={(e) =>
+                          updateFilter(index, {
+                            operator: e.target.value as QueryFilter["operator"],
+                            value: "", // Reset value when operator changes
+                          })
+                        }
                         className="min-w-[140px]"
                       >
-                        {availableOperators.map(op => (
+                        {availableOperators.map((op) => (
                           <option key={op} value={op}>
                             {OPERATOR_LABELS[op]}
                           </option>
@@ -261,19 +314,11 @@ const QueryFilters: React.FC<QueryFiltersProps> = ({
 
             {/* Action Buttons */}
             <div className="flex gap-2 pt-2">
-              <Button
-                color="blue"
-                size="sm"
-                onClick={addFilter}
-              >
+              <Button color="blue" size="sm" onClick={addFilter}>
                 Add Filter
               </Button>
               {filters.length > 0 && (
-                <Button
-                  color="gray"
-                  size="sm"
-                  onClick={clearAllFilters}
-                >
+                <Button color="gray" size="sm" onClick={clearAllFilters}>
                   Clear All
                 </Button>
               )}

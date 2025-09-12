@@ -1,6 +1,6 @@
 /**
  * Query Parameter Utilities
- * 
+ *
  * Utilities for working with TanStack Query parameters and filters
  */
 
@@ -10,64 +10,70 @@ import type { QueryFilter } from "@/components/misc/query_filters";
  * Convert query filters to URL search parameters
  * This follows TanStack Query best practices by including all filter criteria in the query key
  */
-export function filtersToQueryParams(filters: QueryFilter[]): Record<string, unknown> {
+export function filtersToQueryParams(
+  filters: QueryFilter[],
+): Record<string, unknown> {
   const params: Record<string, unknown> = {};
 
-  filters.forEach(filter => {
-    if (filter.value === undefined || filter.value === null || filter.value === '') {
+  filters.forEach((filter) => {
+    if (
+      filter.value === undefined ||
+      filter.value === null ||
+      filter.value === ""
+    ) {
       return;
     }
 
     const { field, operator, value } = filter;
 
     switch (operator) {
-      case 'equals':
+      case "equals":
         params[field] = value;
         break;
-      
-      case 'contains':
+
+      case "contains":
         params[`${field}_contains`] = value;
         break;
-      
-      case 'starts_with':
+
+      case "starts_with":
         params[`${field}_starts_with`] = value;
         break;
-      
-      case 'ends_with':
+
+      case "ends_with":
         params[`${field}_ends_with`] = value;
         break;
-      
-      case 'gt':
+
+      case "gt":
         params[`${field}_gt`] = value;
         break;
-      
-      case 'gte':
+
+      case "gte":
         params[`${field}_gte`] = value;
         break;
-      
-      case 'lt':
+
+      case "lt":
         params[`${field}_lt`] = value;
         break;
-      
-      case 'lte':
+
+      case "lte":
         params[`${field}_lte`] = value;
         break;
-      
-      case 'between':
+
+      case "between":
         if (Array.isArray(value) && value.length === 2) {
           const [min, max] = value;
-          if (min !== undefined && min !== null && min !== '') {
+          if (min !== undefined && min !== null && min !== "") {
             params[`${field}_gte`] = min;
           }
-          if (max !== undefined && max !== null && max !== '') {
+          if (max !== undefined && max !== null && max !== "") {
             params[`${field}_lte`] = max;
           }
         }
         break;
-      
-      case 'in':
+
+      case "in":
         if (Array.isArray(value)) {
-          params[`${field}_in`] = value.join(',');
+          params[`${field}_in`] = value.join(",");
         } else {
           params[`${field}_in`] = value;
         }
@@ -83,54 +89,54 @@ export function filtersToQueryParams(filters: QueryFilter[]): Record<string, unk
  * Useful for initializing filter state from URL params or saved queries
  */
 export function queryParamsToFilters(
-  params: Record<string, unknown>, 
-  fieldDefinitions: Array<{ field: string; label: string }>
+  params: Record<string, unknown>,
+  fieldDefinitions: Array<{ field: string; label: string }>,
 ): QueryFilter[] {
   const filters: QueryFilter[] = [];
   const processedFields = new Set<string>();
 
   Object.entries(params).forEach(([key, value]) => {
-    if (value === undefined || value === null || value === '') {
+    if (value === undefined || value === null || value === "") {
       return;
     }
 
     // Skip common pagination/sorting params
-    if (['query', 'skip', 'limit', 'sort', 'page', 'pageSize'].includes(key)) {
+    if (["query", "skip", "limit", "sort", "page", "pageSize"].includes(key)) {
       return;
     }
 
     let field = key;
-    let operator: QueryFilter['operator'] = 'equals';
+    let operator: QueryFilter["operator"] = "equals";
 
     // Parse operator suffixes
-    if (key.endsWith('_contains')) {
+    if (key.endsWith("_contains")) {
       field = key.slice(0, -9);
-      operator = 'contains';
-    } else if (key.endsWith('_starts_with')) {
+      operator = "contains";
+    } else if (key.endsWith("_starts_with")) {
       field = key.slice(0, -12);
-      operator = 'starts_with';
-    } else if (key.endsWith('_ends_with')) {
+      operator = "starts_with";
+    } else if (key.endsWith("_ends_with")) {
       field = key.slice(0, -10);
-      operator = 'ends_with';
-    } else if (key.endsWith('_gte')) {
+      operator = "ends_with";
+    } else if (key.endsWith("_gte")) {
       field = key.slice(0, -4);
-      operator = 'gte';
-    } else if (key.endsWith('_gt')) {
+      operator = "gte";
+    } else if (key.endsWith("_gt")) {
       field = key.slice(0, -3);
-      operator = 'gt';
-    } else if (key.endsWith('_lte')) {
+      operator = "gt";
+    } else if (key.endsWith("_lte")) {
       field = key.slice(0, -4);
-      operator = 'lte';
-    } else if (key.endsWith('_lt')) {
+      operator = "lte";
+    } else if (key.endsWith("_lt")) {
       field = key.slice(0, -3);
-      operator = 'lt';
-    } else if (key.endsWith('_in')) {
+      operator = "lt";
+    } else if (key.endsWith("_in")) {
       field = key.slice(0, -3);
-      operator = 'in';
+      operator = "in";
     }
 
     // Find the field definition
-    const fieldDef = fieldDefinitions.find(f => f.field === field);
+    const fieldDef = fieldDefinitions.find((f) => f.field === field);
     if (!fieldDef) {
       return; // Skip unknown fields
     }
@@ -144,10 +150,10 @@ export function queryParamsToFilters(
         const lteValue = params[lteKey];
         filters.push({
           field,
-          operator: 'between',
+          operator: "between",
           value: [
-            gteValue !== undefined ? String(gteValue) : '', 
-            lteValue !== undefined ? String(lteValue) : ''
+            gteValue !== undefined ? String(gteValue) : "",
+            lteValue !== undefined ? String(lteValue) : "",
           ],
           label: fieldDef.label,
         });
@@ -157,10 +163,14 @@ export function queryParamsToFilters(
     }
 
     // Handle 'in' operator with comma-separated values
-    if (operator === 'in') {
-      const values = typeof value === 'string' 
-        ? value.split(',').map(v => v.trim()).filter(v => v) 
-        : [String(value)];
+    if (operator === "in") {
+      const values =
+        typeof value === "string"
+          ? value
+              .split(",")
+              .map((v) => v.trim())
+              .filter((v) => v)
+          : [String(value)];
       filters.push({
         field,
         operator,
@@ -190,7 +200,7 @@ export function createFilteredQueryKey(
   baseKey: unknown[],
   searchTerm?: string,
   filters?: QueryFilter[],
-  otherParams?: Record<string, unknown>
+  otherParams?: Record<string, unknown>,
 ): unknown[] {
   const key = [...baseKey];
 
@@ -222,7 +232,7 @@ export function createFilteredQueryKey(
 export function combineQueryParams(
   searchTerm?: string,
   filters?: QueryFilter[],
-  otherParams?: Record<string, unknown>
+  otherParams?: Record<string, unknown>,
 ): Record<string, unknown> {
   const params: Record<string, unknown> = { ...otherParams };
 

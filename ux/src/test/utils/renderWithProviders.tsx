@@ -1,2 +1,1 @@
-export * from '../../../test/utils/renderWithProviders';
-
+export * from "../../../test/utils/renderWithProviders";

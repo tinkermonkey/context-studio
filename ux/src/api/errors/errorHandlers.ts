@@ -1,23 +1,23 @@
 /**
  * API Error Handlers
- * 
+ *
  * Utilities for handling API errors and showing user-friendly messages
  */
 
-import { 
-  ApiError, 
-  ValidationError, 
-  NotFoundError, 
-  ConflictError, 
+import {
+  ApiError,
+  ValidationError,
+  NotFoundError,
+  ConflictError,
   BadRequestError,
   UnauthorizedError,
   ForbiddenError,
   TooManyRequestsError,
   InternalServerError,
   ServiceUnavailableError,
-  NetworkError 
-} from './ApiError';
-import { apiLogger } from '../utils/logger';
+  NetworkError,
+} from "./ApiError";
+import { apiLogger } from "../utils/logger";
 
 // TODO: Replace with your actual toast implementation
 // import { showToast } from '../utils/toast';
@@ -30,25 +30,25 @@ interface ErrorHandlerOptions {
 }
 
 const DEFAULT_ERROR_MESSAGES = {
-  400: 'Bad request. Please check your input.',
-  401: 'Authentication required. Please log in.',
-  403: 'Access denied. You don\'t have permission to perform this action.',
-  404: 'Resource not found.',
-  409: 'Conflict. The resource already exists or is in use.',
-  422: 'Validation error. Please check your input.',
-  429: 'Too many requests. Please wait and try again.',
-  500: 'Internal server error. Please try again later.',
-  503: 'Service unavailable. Please try again later.',
+  400: "Bad request. Please check your input.",
+  401: "Authentication required. Please log in.",
+  403: "Access denied. You don't have permission to perform this action.",
+  404: "Resource not found.",
+  409: "Conflict. The resource already exists or is in use.",
+  422: "Validation error. Please check your input.",
+  429: "Too many requests. Please wait and try again.",
+  500: "Internal server error. Please try again later.",
+  503: "Service unavailable. Please try again later.",
 } as const;
 
 export const handleApiError = (
   error: unknown,
-  options: ErrorHandlerOptions = {}
+  options: ErrorHandlerOptions = {},
 ): ApiError => {
   const {
     showToast = true,
     logError = true,
-    defaultMessage = 'An unexpected error occurred',
+    defaultMessage = "An unexpected error occurred",
     context,
   } = options;
 
@@ -57,7 +57,10 @@ export const handleApiError = (
   if (error instanceof ApiError) {
     apiError = error;
   } else if (error instanceof Error) {
-    if (error.message.includes('Network Error') || error.message.includes('timeout')) {
+    if (
+      error.message.includes("Network Error") ||
+      error.message.includes("timeout")
+    ) {
       apiError = new NetworkError(error.message);
     } else {
       apiError = new ApiError(500, error.message || defaultMessage);
@@ -67,7 +70,7 @@ export const handleApiError = (
   }
 
   if (logError) {
-    apiLogger.error('API Error occurred', {
+    apiLogger.error("API Error occurred", {
       status: apiError.status,
       message: apiError.message,
       code: apiError.code,
@@ -87,7 +90,7 @@ export const handleApiError = (
 
 const showErrorToast = (error: ApiError, context?: string) => {
   let message = error.getUserFriendlyMessage();
-  
+
   // Add context if provided
   if (context) {
     message = `${context}: ${message}`;
@@ -103,15 +106,15 @@ const showErrorToast = (error: ApiError, context?: string) => {
 
   // TODO: Replace with actual toast implementation
   // showToast(message, 'error');
-  console.error('Toast would show:', message);
+  console.error("Toast would show:", message);
 };
 
 export const getErrorMessage = (error: unknown, context?: string): string => {
-  let message = 'An unexpected error occurred';
-  
+  let message = "An unexpected error occurred";
+
   if (error instanceof ApiError) {
     message = error.getUserFriendlyMessage();
-    
+
     // Special handling for validation errors
     if (error instanceof ValidationError) {
       const validationMessage = error.getValidationMessage();
@@ -122,11 +125,13 @@ export const getErrorMessage = (error: unknown, context?: string): string => {
   } else if (error instanceof Error) {
     message = error.message;
   }
-  
+
   return context ? `${context}: ${message}` : message;
 };
 
-export const getDetailedErrorInfo = (error: unknown): {
+export const getDetailedErrorInfo = (
+  error: unknown,
+): {
   message: string;
   status?: number;
   code?: string;
@@ -142,7 +147,7 @@ export const getDetailedErrorInfo = (error: unknown): {
       validationErrors: error.validationErrors,
     };
   }
-  
+
   if (error instanceof ApiError) {
     return {
       message: error.message,
@@ -151,21 +156,23 @@ export const getDetailedErrorInfo = (error: unknown): {
       detail: error.detail,
     };
   }
-  
+
   if (error instanceof Error) {
     return {
       message: error.message,
     };
   }
-  
+
   return {
-    message: 'An unexpected error occurred',
+    message: "An unexpected error occurred",
   };
 };
 
 export const isNetworkError = (error: unknown): boolean => {
-  return error instanceof NetworkError || 
-         (error instanceof Error && error.message.includes('Network Error'));
+  return (
+    error instanceof NetworkError ||
+    (error instanceof Error && error.message.includes("Network Error"))
+  );
 };
 
 export const isValidationError = (error: unknown): error is ValidationError => {
@@ -184,7 +191,9 @@ export const isBadRequestError = (error: unknown): error is BadRequestError => {
   return error instanceof BadRequestError;
 };
 
-export const isUnauthorizedError = (error: unknown): error is UnauthorizedError => {
+export const isUnauthorizedError = (
+  error: unknown,
+): error is UnauthorizedError => {
   return error instanceof UnauthorizedError;
 };
 
@@ -192,7 +201,9 @@ export const isForbiddenError = (error: unknown): error is ForbiddenError => {
   return error instanceof ForbiddenError;
 };
 
-export const isTooManyRequestsError = (error: unknown): error is TooManyRequestsError => {
+export const isTooManyRequestsError = (
+  error: unknown,
+): error is TooManyRequestsError => {
   return error instanceof TooManyRequestsError;
 };
 
@@ -227,7 +238,9 @@ export const hasFieldErrors = (error: unknown, field: string): boolean => {
 /**
  * Format error for form display
  */
-export const formatFormError = (error: unknown): {
+export const formatFormError = (
+  error: unknown,
+): {
   message: string;
   fieldErrors: Record<string, string[]>;
 } => {
@@ -237,7 +250,7 @@ export const formatFormError = (error: unknown): {
       fieldErrors: error.validationErrors,
     };
   }
-  
+
   return {
     message: getErrorMessage(error),
     fieldErrors: {},

@@ -1,6 +1,6 @@
 /**
  * Predicate Set Selector Component
- * 
+ *
  * Multi-select interface for choosing multiple predicates
  */
 
@@ -22,7 +22,7 @@ export const PredicateSetSelector: React.FC<PredicateSetSelectorProps> = ({
   onSelectionChange,
   placeholder = "Select predicates...",
   disabled = false,
-  maxSelections
+  maxSelections,
 }) => {
   const { data: predicates, isLoading } = usePredicates();
 
@@ -30,7 +30,7 @@ export const PredicateSetSelector: React.FC<PredicateSetSelectorProps> = ({
     <PortalRecordSelector
       records={predicates?.data ?? []}
       loading={isLoading}
-      fieldMap={{ value: 'id', title: 'title', definition: 'definition' }}
+      fieldMap={{ value: "id", title: "title", definition: "definition" }}
       placeholder={placeholder}
       disabled={disabled}
       multi

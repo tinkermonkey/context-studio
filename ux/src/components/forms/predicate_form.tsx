@@ -1,6 +1,6 @@
 /**
  * Predicate Form Component
- * 
+ *
  * Form for creating and editing predicates
  */
 
@@ -18,13 +18,13 @@ interface PredicateFormProps {
   onSuccess?: (predicate: PredicateOut) => void;
   predicate?: PredicateOut; // For edit mode
   // Future child form props
-  mode?: 'create' | 'edit' | 'child';
+  mode?: "create" | "edit" | "child";
 }
 
-const PredicateForm: React.FC<PredicateFormProps> = ({ 
-  onSuccess, 
+const PredicateForm: React.FC<PredicateFormProps> = ({
+  onSuccess,
   predicate,
-  mode = 'create'
+  mode = "create",
 }) => {
   const createPredicateMutation = useCreatePredicate();
   const updatePredicateMutation = useUpdatePredicate();
@@ -35,9 +35,9 @@ const PredicateForm: React.FC<PredicateFormProps> = ({
   const generateIdentifier = (title: string): string => {
     return title
       .toLowerCase()
-      .replace(/[^a-z0-9]/g, '_')
-      .replace(/_+/g, '_')
-      .replace(/^_|_$/g, '');
+      .replace(/[^a-z0-9]/g, "_")
+      .replace(/_+/g, "_")
+      .replace(/^_|_$/g, "");
   };
 
   const form = useForm({
@@ -52,7 +52,7 @@ const PredicateForm: React.FC<PredicateFormProps> = ({
         // Auto-generate identifier if not provided
         const submissionData = {
           ...value,
-          identifier: value.identifier || generateIdentifier(value.title)
+          identifier: value.identifier || generateIdentifier(value.title),
         };
 
         let result;
@@ -93,7 +93,9 @@ const PredicateForm: React.FC<PredicateFormProps> = ({
         setSubmitError(message);
         // TODO: Use useButterToast for error notification
         console.error(
-          isEdit ? "Failed to update predicate:" : "Failed to create predicate:",
+          isEdit
+            ? "Failed to update predicate:"
+            : "Failed to create predicate:",
           error,
         );
       }
@@ -117,7 +119,10 @@ const PredicateForm: React.FC<PredicateFormProps> = ({
         >
           {(field) => (
             <div>
-              <Label htmlFor="predicate-title" className="mb-1 block font-medium">
+              <Label
+                htmlFor="predicate-title"
+                className="mb-1 block font-medium"
+              >
                 Title
               </Label>
               <TextInput
@@ -128,9 +133,15 @@ const PredicateForm: React.FC<PredicateFormProps> = ({
                 onChange={(e) => {
                   field.handleChange(e.target.value);
                   // Auto-update identifier if it's empty or auto-generated
-                  const currentIdentifier = form.getFieldValue('identifier');
-                  if (!currentIdentifier || currentIdentifier === generateIdentifier(field.state.value)) {
-                    form.setFieldValue('identifier', generateIdentifier(e.target.value));
+                  const currentIdentifier = form.getFieldValue("identifier");
+                  if (
+                    !currentIdentifier ||
+                    currentIdentifier === generateIdentifier(field.state.value)
+                  ) {
+                    form.setFieldValue(
+                      "identifier",
+                      generateIdentifier(e.target.value),
+                    );
                   }
                 }}
                 required
@@ -213,8 +224,8 @@ const PredicateForm: React.FC<PredicateFormProps> = ({
             {submitError}
           </Alert>
         )}
-        
-        <div className="flex justify-end items-center gap-2">
+
+        <div className="flex items-center justify-end gap-2">
           <Button
             type="submit"
             disabled={

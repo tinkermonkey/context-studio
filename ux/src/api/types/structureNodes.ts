@@ -1,6 +1,6 @@
 /**
  * Structure Nodes Type Definitions
- * 
+ *
  * Unified type definitions for the Great Normalization migration
  * Consolidates layers, domains, and terms into a single structure_nodes model
  */
@@ -8,21 +8,21 @@
 // Core enums for structure node system
 export enum NodeType {
   LAYER = "layer",
-  DOMAIN = "domain", 
-  TERM = "term"
+  DOMAIN = "domain",
+  TERM = "term",
 }
 
 export enum RecordType {
   STRUCTURE_NODE = "structure_node",
   STRUCTURE_NODE_LINK = "structure_node_link",
-  PREDICATE = "predicate"
+  PREDICATE = "predicate",
 }
 
 // Main unified structure node interface
 export interface StructureNode {
   id: string;
   node_type: NodeType;
-  parent_node_id?: string;        // Replaces layer_id, domain_id, parent_term_id
+  parent_node_id?: string; // Replaces layer_id, domain_id, parent_term_id
   title: string;
   definition?: string;
   structural_predicate_id?: string; // Replaces primary_predicate_id
@@ -36,7 +36,7 @@ export interface StructureNode {
 // Create structure node interface
 export interface StructureNodeCreate {
   node_type: NodeType;
-  parent_node_id?: string;  // Required for domains and terms
+  parent_node_id?: string; // Required for domains and terms
   title: string;
   definition?: string;
   structural_predicate_id?: string;
@@ -54,7 +54,7 @@ export interface StructureNodeUpdate {
 export interface StructureNodeListParams {
   skip?: number;
   limit?: number;
-  sort?: 'title' | 'created_at';
+  sort?: "title" | "created_at";
   node_type?: NodeType;
   parent_node_id?: string;
   [key: string]: unknown;
@@ -74,8 +74,8 @@ export interface StructureNodeFindParams {
 export interface ChangeEvent {
   id: number;
   event_type: "create" | "update" | "delete";
-  record_type: RecordType;        // Replaces node_type
-  record_id?: string;             // Replaces node_id
+  record_type: RecordType; // Replaces node_type
+  record_id?: string; // Replaces node_id
   old_data?: any;
   new_data?: any;
   timestamp: string;
@@ -85,8 +85,8 @@ export interface ChangeEvent {
 // Structure node links (replaces term relationships)
 export interface StructureNodeLink {
   id: string;
-  source_node_id: string;         // Replaces source_term_id
-  target_node_id: string;         // Replaces target_term_id
+  source_node_id: string; // Replaces source_term_id
+  target_node_id: string; // Replaces target_term_id
   predicate: string;
   predicate_id?: string;
   created_at: string;
@@ -156,11 +156,11 @@ export function isPredicateEvent(event: ChangeEvent): boolean {
   return event.record_type === RecordType.PREDICATE;
 }
 
-export interface DomainCreate extends Omit<StructureNodeCreate, 'node_type'> {
+export interface DomainCreate extends Omit<StructureNodeCreate, "node_type"> {
   parent_node_id: string; // Required for domains (layer_id)
 }
 
-export interface TermCreate extends Omit<StructureNodeCreate, 'node_type'> {
+export interface TermCreate extends Omit<StructureNodeCreate, "node_type"> {
   parent_node_id: string; // Required for terms (domain_id or parent_term_id)
 }
 

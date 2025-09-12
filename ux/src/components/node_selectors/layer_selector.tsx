@@ -7,7 +7,10 @@ export interface LayerSelectorProps {
   value?: string;
 }
 
-export const LayerSelector: React.FC<LayerSelectorProps> = ({ onSelect, value }) => {
+export const LayerSelector: React.FC<LayerSelectorProps> = ({
+  onSelect,
+  value,
+}) => {
   const { data: layers, isLoading, error } = useLayerNodes();
   return (
     <PortalRecordSelector

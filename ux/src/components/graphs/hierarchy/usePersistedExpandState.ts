@@ -40,7 +40,10 @@ export const usePersistedExpandState = () => {
     try {
       // Convert Map to plain object for JSON serialization
       const stateObject = Object.fromEntries(expandState);
-      sessionStorage.setItem(EXPAND_STATE_STORAGE_KEY, JSON.stringify(stateObject));
+      sessionStorage.setItem(
+        EXPAND_STATE_STORAGE_KEY,
+        JSON.stringify(stateObject),
+      );
     } catch (error) {
       console.warn("Failed to save expand state to session storage:", error);
     }
@@ -53,7 +56,10 @@ export const usePersistedExpandState = () => {
       scrollLeft: window.scrollX || document.documentElement.scrollLeft,
     };
     try {
-      sessionStorage.setItem(SCROLL_STATE_STORAGE_KEY, JSON.stringify(scrollState));
+      sessionStorage.setItem(
+        SCROLL_STATE_STORAGE_KEY,
+        JSON.stringify(scrollState),
+      );
     } catch (error) {
       console.warn("Failed to save scroll state to session storage:", error);
     }
@@ -70,12 +76,15 @@ export const usePersistedExpandState = () => {
           window.scrollTo({
             top: scrollState.scrollTop,
             left: scrollState.scrollLeft,
-            behavior: 'auto' // Use 'auto' to avoid animation when restoring
+            behavior: "auto", // Use 'auto' to avoid animation when restoring
           });
         });
       }
     } catch (error) {
-      console.warn("Failed to restore scroll state from session storage:", error);
+      console.warn(
+        "Failed to restore scroll state from session storage:",
+        error,
+      );
     }
   }, []);
 
@@ -86,20 +95,23 @@ export const usePersistedExpandState = () => {
     };
 
     // Add scroll listener to window
-    window.addEventListener('scroll', handleScroll, { passive: true });
-    
+    window.addEventListener("scroll", handleScroll, { passive: true });
+
     // Cleanup listener on unmount
     return () => {
-      window.removeEventListener('scroll', handleScroll);
+      window.removeEventListener("scroll", handleScroll);
     };
   }, [saveScrollPosition]);
 
   // Handler for toggling node expansion
-  const handleNodeToggle = useCallback((nodeId: string) => {
-    // Save scroll position before expanding/collapsing
-    saveScrollPosition();
-    setExpandState((prev) => toggleExpandState(prev, nodeId));
-  }, [saveScrollPosition]);
+  const handleNodeToggle = useCallback(
+    (nodeId: string) => {
+      // Save scroll position before expanding/collapsing
+      saveScrollPosition();
+      setExpandState((prev) => toggleExpandState(prev, nodeId));
+    },
+    [saveScrollPosition],
+  );
 
   // Function to clear all expand state and scroll state (useful for reset functionality)
   const clearPersistedState = useCallback(() => {
@@ -108,7 +120,10 @@ export const usePersistedExpandState = () => {
       sessionStorage.removeItem(EXPAND_STATE_STORAGE_KEY);
       sessionStorage.removeItem(SCROLL_STATE_STORAGE_KEY);
     } catch (error) {
-      console.warn("Failed to clear persisted state from session storage:", error);
+      console.warn(
+        "Failed to clear persisted state from session storage:",
+        error,
+      );
     }
   }, []);
 

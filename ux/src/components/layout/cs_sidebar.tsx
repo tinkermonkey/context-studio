@@ -12,8 +12,11 @@ interface CsSidebarSectionTitleProps {
 
 const CsSidebar: React.FC<CsSidebarProps> = ({ children }) => {
   return (
-    <div className="fixed inset-0 z-50 hidden size-full max-w-64 overflow-y-auto bg-white lg:sticky lg:top-[61px] lg:block lg:h-[calc(100vh-4rem)] dark:bg-gray-900 pt-8">
-      <nav className="px-1 pb-8 pl-3 pt-16 text-base font-normal lg:pl-0 lg:pt-2 lg:text-sm" aria-label="Main Sidebar">
+    <div className="fixed inset-0 z-50 hidden size-full max-w-64 overflow-y-auto bg-white pt-8 lg:sticky lg:top-[61px] lg:block lg:h-[calc(100vh-4rem)] dark:bg-gray-900">
+      <nav
+        className="px-1 pt-16 pb-8 pl-3 text-base font-normal lg:pt-2 lg:pl-0 lg:text-sm"
+        aria-label="Main Sidebar"
+      >
         {children}
       </nav>
     </div>
@@ -22,29 +25,28 @@ const CsSidebar: React.FC<CsSidebarProps> = ({ children }) => {
 
 const CsSidebarTitle: React.FC<CsSidebarProps> = ({ children }) => {
   return (
-    <div className="mb-4 text-md font-semibold uppercase tracking-wide text-gray-900 lg:text-xs dark:text-white">
+    <div className="text-md mb-4 font-semibold tracking-wide text-gray-900 uppercase lg:text-xs dark:text-white">
       {children}
     </div>
   );
 };
 
 const CsSidebarSection: React.FC<CsSidebarProps> = ({ children }) => {
-  return (
-    <div className="mb-6">
-      {children}
-    </div>
-  );
+  return <div className="mb-6">{children}</div>;
 };
 
-const CsSidebarSectionTitle: React.FC<CsSidebarSectionTitleProps> = ({ children, icon: Icon }) => {
+const CsSidebarSectionTitle: React.FC<CsSidebarSectionTitleProps> = ({
+  children,
+  icon: Icon,
+}) => {
   return (
-    <div className="mb-4 text-md font-semibold text-gray-900 lg:text-xs dark:text-white">
+    <div className="text-md mb-4 font-semibold text-gray-900 lg:text-xs dark:text-white">
       <div className="flex items-center gap-2">
         {Icon && <Icon className="h-4 w-4" />}
         {children}
       </div>
     </div>
   );
-}
+};
 
 export { CsSidebar, CsSidebarTitle, CsSidebarSection, CsSidebarSectionTitle };

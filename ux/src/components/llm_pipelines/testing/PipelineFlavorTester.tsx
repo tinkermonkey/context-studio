@@ -2,7 +2,11 @@ import React, { useState } from "react";
 import { Button, Card, Alert, Select, Label, Spinner } from "flowbite-react";
 import { ArrowLeft, TestTube, Play } from "lucide-react";
 import { NlpAnalysisPanel } from "@/components/nlp/NlpAnalysisPanel";
-import { useLayerNodes, useDomainNodes, useTermNodes } from "@/api/hooks/structure_nodes/useStructureNodes";
+import {
+  useLayerNodes,
+  useDomainNodes,
+  useTermNodes,
+} from "@/api/hooks/structure_nodes/useStructureNodes";
 import type { PipelineFlavor } from "@/api/services/pipelineFlavors";
 
 interface PipelineFlavorTesterProps {
@@ -13,12 +17,12 @@ interface PipelineFlavorTesterProps {
 interface TestRecord {
   id: string;
   title: string;
-  type: 'layer' | 'domain' | 'term';
+  type: "layer" | "domain" | "term";
 }
 
 export const PipelineFlavorTester: React.FC<PipelineFlavorTesterProps> = ({
   flavor,
-  onClose
+  onClose,
 }) => {
   const [selectedRecord, setSelectedRecord] = useState<TestRecord | null>(null);
   const [testResult, setTestResult] = useState<string | null>(null);
@@ -33,22 +37,22 @@ export const PipelineFlavorTester: React.FC<PipelineFlavorTesterProps> = ({
   const getRecordOptions = (): TestRecord[] => {
     switch (flavor.pipeline) {
       case "suggest_layer_definition":
-        return (layersData || []).map(layer => ({
+        return (layersData || []).map((layer) => ({
           id: layer.id,
           title: layer.title,
-          type: 'layer' as const
+          type: "layer" as const,
         }));
       case "suggest_domain_definition":
-        return (domainsData || []).map(domain => ({
+        return (domainsData || []).map((domain) => ({
           id: domain.id,
           title: domain.title,
-          type: 'domain' as const
+          type: "domain" as const,
         }));
       case "suggest_term_definition":
-        return (termsData || []).map(term => ({
+        return (termsData || []).map((term) => ({
           id: term.id,
           title: term.title,
-          type: 'term' as const
+          type: "term" as const,
         }));
       default:
         return [];
@@ -56,7 +60,9 @@ export const PipelineFlavorTester: React.FC<PipelineFlavorTesterProps> = ({
   };
 
   const getPipelineDisplayName = () => {
-    return flavor.pipeline.replace(/_/g, " ").replace(/\b\w/g, l => l.toUpperCase());
+    return flavor.pipeline
+      .replace(/_/g, " ")
+      .replace(/\b\w/g, (l) => l.toUpperCase());
   };
 
   const getRecordTypeDisplayName = () => {
@@ -82,8 +88,8 @@ export const PipelineFlavorTester: React.FC<PipelineFlavorTesterProps> = ({
     try {
       // Here you would call your LLM pipeline with the flavor configuration
       // For now, I'll simulate the API call
-      await new Promise(resolve => setTimeout(resolve, 2000)); // Simulate API delay
-      
+      await new Promise((resolve) => setTimeout(resolve, 2000)); // Simulate API delay
+
       // This would be replaced with actual pipeline execution
       const mockResult = `Generated definition for "${selectedRecord.title}" using flavor "${flavor.title}":
 
@@ -102,7 +108,9 @@ The actual implementation would:
 
       setTestResult(mockResult);
     } catch (error) {
-      setPipelineError(error instanceof Error ? error.message : "Pipeline execution failed");
+      setPipelineError(
+        error instanceof Error ? error.message : "Pipeline execution failed",
+      );
     } finally {
       setIsTestingPipeline(false);
     }
@@ -115,7 +123,7 @@ The actual implementation would:
     <div className="space-y-6">
       {/* Header */}
       <Card>
-        <div className="flex items-center gap-3 mb-4">
+        <div className="mb-4 flex items-center gap-3">
           <Button color="gray" size="sm" onClick={onClose}>
             <ArrowLeft className="h-4 w-4" />
           </Button>
@@ -124,30 +132,39 @@ The actual implementation would:
               Test Pipeline Flavor: {flavor.title}
             </h2>
             <p className="text-sm text-gray-500 dark:text-gray-400">
-              {getPipelineDisplayName()} • {flavor.llm_provider} {flavor.llm_model}
+              {getPipelineDisplayName()} • {flavor.llm_provider}{" "}
+              {flavor.llm_model}
             </p>
           </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
           <div>
-            <Label htmlFor="test-record">Select {getRecordTypeDisplayName()} to Test</Label>
+            <Label htmlFor="test-record">
+              Select {getRecordTypeDisplayName()} to Test
+            </Label>
             {isLoading ? (
-              <div className="flex items-center gap-2 p-3 border rounded-lg">
+              <div className="flex items-center gap-2 rounded-lg border p-3">
                 <Spinner size="sm" />
-                <span className="text-sm">Loading {getRecordTypeDisplayName().toLowerCase()}s...</span>
+                <span className="text-sm">
+                  Loading {getRecordTypeDisplayName().toLowerCase()}s...
+                </span>
               </div>
             ) : (
               <Select
                 id="test-record"
                 value={selectedRecord?.id || ""}
                 onChange={(e) => {
-                  const option = recordOptions.find(r => r.id === e.target.value);
+                  const option = recordOptions.find(
+                    (r) => r.id === e.target.value,
+                  );
                   setSelectedRecord(option || null);
                 }}
               >
-                <option value="">Select a {getRecordTypeDisplayName().toLowerCase()}...</option>
-                {recordOptions.map(record => (
+                <option value="">
+                  Select a {getRecordTypeDisplayName().toLowerCase()}...
+                </option>
+                {recordOptions.map((record) => (
                   <option key={record.id} value={record.id}>
                     {record.title}
                   </option>
@@ -177,15 +194,21 @@ The actual implementation would:
       {/* NLP Analysis Panel */}
       {selectedRecord && (
         <Card>
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+          <h3 className="mb-4 text-lg font-semibold text-gray-900 dark:text-white">
             NLP Analysis for "{selectedRecord.title}"
           </h3>
           <NlpAnalysisPanel
             text={selectedRecord.title}
             textTitle={selectedRecord.title}
-            {...(selectedRecord.type === 'layer' && { layerId: selectedRecord.id })}
-            {...(selectedRecord.type === 'domain' && { domainId: selectedRecord.id })}
-            {...(selectedRecord.type === 'term' && { termId: selectedRecord.id })}
+            {...(selectedRecord.type === "layer" && {
+              layerId: selectedRecord.id,
+            })}
+            {...(selectedRecord.type === "domain" && {
+              domainId: selectedRecord.id,
+            })}
+            {...(selectedRecord.type === "term" && {
+              termId: selectedRecord.id,
+            })}
           />
         </Card>
       )}
@@ -194,7 +217,7 @@ The actual implementation would:
       {pipelineError && (
         <Alert color="failure">
           <div>
-            <h4 className="font-medium mb-2">Pipeline Execution Error</h4>
+            <h4 className="mb-2 font-medium">Pipeline Execution Error</h4>
             <p>{pipelineError}</p>
           </div>
         </Alert>
@@ -202,20 +225,24 @@ The actual implementation would:
 
       {testResult && (
         <Card>
-          <div className="flex items-center gap-2 mb-4">
+          <div className="mb-4 flex items-center gap-2">
             <TestTube className="h-5 w-5 text-green-600" />
             <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
               Pipeline Test Results
             </h3>
           </div>
-          <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-4">
-            <pre className="whitespace-pre-wrap text-sm text-gray-700 dark:text-gray-300">
+          <div className="rounded-lg bg-gray-50 p-4 dark:bg-gray-800">
+            <pre className="text-sm whitespace-pre-wrap text-gray-700 dark:text-gray-300">
               {testResult}
             </pre>
           </div>
-          
+
           <div className="mt-4 text-sm text-gray-500 dark:text-gray-400">
-            <p><strong>Note:</strong> This is a simulation. The actual implementation would integrate with your LLM pipeline service to execute the configured prompts and return real results.</p>
+            <p>
+              <strong>Note:</strong> This is a simulation. The actual
+              implementation would integrate with your LLM pipeline service to
+              execute the configured prompts and return real results.
+            </p>
           </div>
         </Card>
       )}

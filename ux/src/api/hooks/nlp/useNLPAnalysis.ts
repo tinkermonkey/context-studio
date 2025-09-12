@@ -1,26 +1,31 @@
 /**
  * NLP Hooks
- * 
+ *
  * React Query hooks for natural language processing operations
  */
 
-import { useQuery, UseQueryOptions } from '@tanstack/react-query';
-import { nlpService, type NLPAnalysisResponse, type TokenData, type EntityData } from '../../services/nlp';
-import { QUERY_KEYS } from '../../config';
-import { createQueryKey } from '../../utils/queryClient';
+import { useQuery, UseQueryOptions } from "@tanstack/react-query";
+import {
+  nlpService,
+  type NLPAnalysisResponse,
+  type TokenData,
+  type EntityData,
+} from "../../services/nlp";
+import { QUERY_KEYS } from "../../config";
+import { createQueryKey } from "../../utils/queryClient";
 
 /**
  * Hook to analyze text using NLP pipeline
  */
 export const useNLPAnalysis = (
   text: string | null,
-  options?: UseQueryOptions<NLPAnalysisResponse, Error>
+  options?: UseQueryOptions<NLPAnalysisResponse, Error>,
 ) => {
   return useQuery({
-    queryKey: createQueryKey(QUERY_KEYS.NLP, 'analysis', { text: text || '' }),
+    queryKey: createQueryKey(QUERY_KEYS.NLP, "analysis", { text: text || "" }),
     queryFn: () => {
       if (!text) {
-        throw new Error('Text is required for NLP analysis');
+        throw new Error("Text is required for NLP analysis");
       }
       return nlpService.analyzeText(text);
     },
@@ -36,13 +41,13 @@ export const useNLPAnalysis = (
  */
 export const useTokenExtraction = (
   text: string | null,
-  options?: UseQueryOptions<TokenData[], Error>
+  options?: UseQueryOptions<TokenData[], Error>,
 ) => {
   return useQuery({
-    queryKey: createQueryKey(QUERY_KEYS.NLP, 'tokens', { text: text || '' }),
+    queryKey: createQueryKey(QUERY_KEYS.NLP, "tokens", { text: text || "" }),
     queryFn: () => {
       if (!text) {
-        throw new Error('Text is required for token extraction');
+        throw new Error("Text is required for token extraction");
       }
       return nlpService.extractTokens(text);
     },
@@ -58,13 +63,13 @@ export const useTokenExtraction = (
  */
 export const useEntityExtraction = (
   text: string | null,
-  options?: UseQueryOptions<EntityData[], Error>
+  options?: UseQueryOptions<EntityData[], Error>,
 ) => {
   return useQuery({
-    queryKey: createQueryKey(QUERY_KEYS.NLP, 'entities', { text: text || '' }),
+    queryKey: createQueryKey(QUERY_KEYS.NLP, "entities", { text: text || "" }),
     queryFn: () => {
       if (!text) {
-        throw new Error('Text is required for entity extraction');
+        throw new Error("Text is required for entity extraction");
       }
       return nlpService.extractEntities(text);
     },
@@ -80,13 +85,15 @@ export const useEntityExtraction = (
  */
 export const useComprehensiveNLPAnalysis = (
   text: string | null,
-  options?: UseQueryOptions<NLPAnalysisResponse, Error>
+  options?: UseQueryOptions<NLPAnalysisResponse, Error>,
 ) => {
   return useQuery({
-    queryKey: createQueryKey(QUERY_KEYS.NLP, 'comprehensive', { text: text || '' }),
+    queryKey: createQueryKey(QUERY_KEYS.NLP, "comprehensive", {
+      text: text || "",
+    }),
     queryFn: () => {
       if (!text) {
-        throw new Error('Text is required for comprehensive NLP analysis');
+        throw new Error("Text is required for comprehensive NLP analysis");
       }
       return nlpService.getComprehensiveAnalysis(text);
     },

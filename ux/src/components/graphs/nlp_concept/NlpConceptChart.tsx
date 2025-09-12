@@ -415,7 +415,9 @@ const NlpConceptChart: React.FC<NlpConceptChartProps> = ({
     );
 
     const totalWidth = providedWidth ? providedWidth : containerWidth;
-    const totalHeight = Math.max(maxRelationY, senseY, STYLES.nodeHeight + STYLES.chartPadding) + STYLES.chartPadding;
+    const totalHeight =
+      Math.max(maxRelationY, senseY, STYLES.nodeHeight + STYLES.chartPadding) +
+      STYLES.chartPadding;
 
     return {
       nodes,

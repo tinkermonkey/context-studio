@@ -3,6 +3,7 @@
 Front-end code for the Context Studio app. This is front-end code only, the back-end is in a separate repository.
 
 ## Technology Stack
+
 - **Language**: TypeScript
 - **Components**: Flowbite React, TanStack Tables, TanStack Forms
 - **Build Tool**: Vite
@@ -16,6 +17,7 @@ Front-end code for the Context Studio app. This is front-end code only, the back
 ## Best Practices
 
 ### Code Style
+
 - Don't create documentation files unless explicitly requested
 - All markdown reports and summaries other than README.md should be placed in the `documentation/task_reports` directory
 - use absolute imports for components and hooks
@@ -23,28 +25,32 @@ Front-end code for the Context Studio app. This is front-end code only, the back
 
 ## Task Management
 
-Utilize Archon for all todo task management via the archon MCP server. 
+Utilize Archon for all todo task management via the archon MCP server.
 
 Archon project ID: e0d2283c-831e-43a9-b713-9db26305aabf
 
 ### API Client Architecture
+
 - Prefer type-safe clients generated from OpenAPI specs
 - Use TanStack Query for state management and caching
 - Implement proper error handling with custom error classes
 - Structure API code in services layer with React hooks
 
 ### Testing Strategy
+
 - Unit tests for services and utilities
 - Integration tests for React hooks and components
 - Mock external dependencies (APIs, native modules)
 - Separate test configs for different test types (API vs integration)
 
 ### Documentation Standards
+
 - Technical reports should include implementation details, architecture decisions, and current status
 - Include code examples and usage patterns
 - Document known issues and workarounds
 
 ### Code Structure
+
 ```text
 /
 ├── .env                            # Dev environment variables (not in git)

@@ -1,13 +1,13 @@
-import React from 'react';
-import { render, screen, fireEvent } from '@testing-library/react';
-import { vi } from 'vitest';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { mockAnalysis } from '../../utils/mockNlpData';
+import React from "react";
+import { render, screen, fireEvent } from "@testing-library/react";
+import { vi } from "vitest";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { mockAnalysis } from "../../utils/mockNlpData";
 
 // Mock the useNLPAnalysis hook to return our mockAnalysis
-vi.mock('@/api/hooks/nlp/useNLPAnalysis', () => ({
+vi.mock("@/api/hooks/nlp/useNLPAnalysis", () => ({
   useNLPAnalysis: (text: string, options: any) => ({
-    data: options?.enabled === false ? null : (text ? mockAnalysis : null),
+    data: options?.enabled === false ? null : text ? mockAnalysis : null,
     isLoading: false,
     error: null,
     refetch: vi.fn(),
@@ -15,7 +15,7 @@ vi.mock('@/api/hooks/nlp/useNLPAnalysis', () => ({
 }));
 
 // Mock the API hooks used by LlmPipelineRun
-vi.mock('@/api/hooks/pipelines/usePipelineFlavors', () => ({
+vi.mock("@/api/hooks/pipelines/usePipelineFlavors", () => ({
   usePipelineFlavors: () => ({
     data: [],
     isLoading: false,
@@ -23,21 +23,21 @@ vi.mock('@/api/hooks/pipelines/usePipelineFlavors', () => ({
   }),
 }));
 
-vi.mock('@/api/hooks/llm/useLlmMutations', () => ({
+vi.mock("@/api/hooks/llm/useLlmMutations", () => ({
   useLlmMutation: () => ({
     mutateAsync: vi.fn(),
     isPending: false,
   }),
 }));
 
-vi.mock('@/api/hooks/terms/useTermMutations', () => ({
+vi.mock("@/api/hooks/terms/useTermMutations", () => ({
   useUpdateTerm: () => ({
     mutateAsync: vi.fn(),
     isPending: false,
   }),
 }));
 
-import { NlpAnalysisPanel } from '@/components/nlp/NlpAnalysisPanel';
+import { NlpAnalysisPanel } from "@/components/nlp/NlpAnalysisPanel";
 
 const renderWithQueryClient = (component: React.ReactElement) => {
   const queryClient = new QueryClient({
@@ -52,20 +52,22 @@ const renderWithQueryClient = (component: React.ReactElement) => {
   });
 
   return render(
-    <QueryClientProvider client={queryClient}>
-      {component}
-    </QueryClientProvider>
+    <QueryClientProvider client={queryClient}>{component}</QueryClientProvider>,
   );
 };
 
-describe('NlpAnalysisPanel', () => {
-  it('shows tokens and entities when analysis is available', async () => {
-    renderWithQueryClient(<NlpAnalysisPanel text="database" textTitle="Term" />);
+describe("NlpAnalysisPanel", () => {
+  it("shows tokens and entities when analysis is available", async () => {
+    renderWithQueryClient(
+      <NlpAnalysisPanel text="database" textTitle="Term" />,
+    );
 
     // Should show analyze button initially since enabled: false
-    expect(screen.getByText('Analyze Term')).toBeInTheDocument();
-    
+    expect(screen.getByText("Analyze Term")).toBeInTheDocument();
+
     // Our component should display correctly with a proper title
-    expect(screen.getByRole('button', { name: /Analyze Term/i })).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: /Analyze Term/i }),
+    ).toBeInTheDocument();
   });
 });

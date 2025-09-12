@@ -26,7 +26,14 @@ import {
   Radio,
   Label,
 } from "flowbite-react";
-import { RefreshCcw, Plus, Search, CircleArrowRight, Move, AlertTriangle } from "lucide-react";
+import {
+  RefreshCcw,
+  Plus,
+  Search,
+  CircleArrowRight,
+  Move,
+  AlertTriangle,
+} from "lucide-react";
 import {
   QueryFilters,
   type QueryFilter,
@@ -76,14 +83,17 @@ export interface BaseNodeTableProps<T> {
   // Optional custom button bar to replace the default create button
   buttonBar?: React.ReactNode;
   // Move functionality
-  moveForm?: React.ComponentType<{ 
+  moveForm?: React.ComponentType<{
     selectedNodes: T[];
     onSuccess: () => void;
     onCancel: () => void;
   }>;
   // Safe deletion functionality
   onGetChildren?: (id: string) => Promise<T[]>;
-  onMoveChildren?: (childIds: string[], newParentId: string | null) => Promise<void>;
+  onMoveChildren?: (
+    childIds: string[],
+    newParentId: string | null,
+  ) => Promise<void>;
 }
 
 function BaseNodeTable<T>({
@@ -121,7 +131,9 @@ function BaseNodeTable<T>({
   const [pendingDeleteRows, setPendingDeleteRows] = React.useState<any[]>([]);
   const [pendingMoveRows, setPendingMoveRows] = React.useState<any[]>([]);
   const [childrenToHandle, setChildrenToHandle] = React.useState<T[]>([]);
-  const [deleteOption, setDeleteOption] = React.useState<'delete' | 'orphan'>('orphan');
+  const [deleteOption, setDeleteOption] = React.useState<"delete" | "orphan">(
+    "orphan",
+  );
   const [editNodeId, setEditNodeId] = React.useState<string | undefined>(
     undefined,
   );
@@ -363,15 +375,15 @@ function BaseNodeTable<T>({
 
   // Debug effect to track modal state changes
   React.useEffect(() => {
-    console.log('showMoveModal changed to:', showMoveModal);
+    console.log("showMoveModal changed to:", showMoveModal);
   }, [showMoveModal]);
 
   React.useEffect(() => {
-    console.log('selectedCount changed to:', selectedCount);
+    console.log("selectedCount changed to:", selectedCount);
   }, [selectedCount]);
 
   React.useEffect(() => {
-    console.log('pendingMoveRows changed to:', pendingMoveRows.length);
+    console.log("pendingMoveRows changed to:", pendingMoveRows.length);
   }, [pendingMoveRows]);
 
   if (isLoading) return <Spinner />;
@@ -381,30 +393,30 @@ function BaseNodeTable<T>({
   }
 
   const handleMoveSelected = () => {
-    console.log('handleMoveSelected called');
+    console.log("handleMoveSelected called");
     const selectedRows = table.getSelectedRowModel().rows;
-    console.log('Selected rows:', selectedRows.length);
-    
+    console.log("Selected rows:", selectedRows.length);
+
     if (selectedRows.length === 0 || !MoveForm) {
-      console.log('No rows selected or no move form');
+      console.log("No rows selected or no move form");
       return;
     }
-    
+
     setIsProcessing(true);
     setPendingMoveRows(selectedRows);
     setShowMoveModal(true);
-    console.log('Move modal should be shown');
+    console.log("Move modal should be shown");
   };
 
   const handleDeleteSelected = () => {
     const selectedRows = table.getSelectedRowModel().rows;
     if (selectedRows.length === 0) return;
-    
+
     setPendingDeleteRows(selectedRows);
-    
+
     // Check for children only for terms (safe deletion workflow)
     // For layers and domains, deletion cascades automatically in the database
-    if (onGetChildren && typeName.toLowerCase() === 'term') {
+    if (onGetChildren && typeName.toLowerCase() === "term") {
       (async () => {
         try {
           let allChildren: T[] = [];
@@ -413,19 +425,19 @@ function BaseNodeTable<T>({
             const children = await onGetChildren(nodeId);
             allChildren = [...allChildren, ...children];
           }
-          
+
           setChildrenToHandle(allChildren);
-          
+
           if (allChildren.length > 0) {
             // Show the safe deletion modal with options
-            setDeleteOption('orphan'); // Default to orphan
+            setDeleteOption("orphan"); // Default to orphan
             setShowDeleteModal(true);
           } else {
             // No children, proceed with normal deletion
             setShowDeleteModal(true);
           }
         } catch (err) {
-          console.error('Failed to check for children:', err);
+          console.error("Failed to check for children:", err);
           // Fall back to normal delete modal
           setShowDeleteModal(true);
         }
@@ -439,26 +451,30 @@ function BaseNodeTable<T>({
   const confirmDeleteSelected = async () => {
     setShowDeleteModal(false);
     if (pendingDeleteRows.length === 0) return;
-    
+
     try {
       // Handle children first if needed (only for terms)
-      if (childrenToHandle.length > 0 && onMoveChildren && typeName.toLowerCase() === 'term') {
-        if (deleteOption === 'orphan') {
+      if (
+        childrenToHandle.length > 0 &&
+        onMoveChildren &&
+        typeName.toLowerCase() === "term"
+      ) {
+        if (deleteOption === "orphan") {
           // Move children to orphan state (null parent)
-          const childIds = childrenToHandle.map(child => getId(child));
+          const childIds = childrenToHandle.map((child) => getId(child));
           await onMoveChildren(childIds, null);
-        } else if (deleteOption === 'delete') {
+        } else if (deleteOption === "delete") {
           // Delete children first
-          const childIds = childrenToHandle.map(child => getId(child));
+          const childIds = childrenToHandle.map((child) => getId(child));
           await onDelete(childIds);
         }
       }
-      
+
       // Then delete the selected items
       await onDelete(pendingDeleteRows.map((row: any) => getId(row.original)));
       setPendingDeleteRows([]);
       setChildrenToHandle([]);
-      
+
       if (typeof table.resetRowSelection === "function") {
         table.resetRowSelection();
       }
@@ -531,8 +547,10 @@ function BaseNodeTable<T>({
                 key={index}
                 onClick={() => {
                   const selectedRows = table.getFilteredSelectedRowModel().rows;
-                  const selectedItems = selectedRows.map(row => row.original);
-                  const selectedIds = selectedRows.map(row => getId(row.original));
+                  const selectedItems = selectedRows.map((row) => row.original);
+                  const selectedIds = selectedRows.map((row) =>
+                    getId(row.original),
+                  );
                   action.onClick(selectedItems, selectedIds);
                 }}
                 className={action.className}
@@ -572,7 +590,7 @@ function BaseNodeTable<T>({
         </TableHead>
         <TableBody>
           {table.getRowModel().rows.map((row) => (
-            <TableRow 
+            <TableRow
               key={row.id}
               onDoubleClick={() => {
                 setEditNodeId(getId(row.original));
@@ -606,19 +624,23 @@ function BaseNodeTable<T>({
                   <a
                     onClick={() => customRowAction.onClick(row.original)}
                     className={
-                      typeof customRowAction.className === 'function' 
+                      typeof customRowAction.className === "function"
                         ? customRowAction.className(row.original)
-                        : customRowAction.className || "cursor-pointer text-blue-600 hover:underline"
+                        : customRowAction.className ||
+                          "cursor-pointer text-blue-600 hover:underline"
                     }
                     style={{
-                      pointerEvents: customRowAction.disabled?.(row.original) ? 'none' : 'auto',
-                      opacity: customRowAction.disabled?.(row.original) ? 0.5 : 1
+                      pointerEvents: customRowAction.disabled?.(row.original)
+                        ? "none"
+                        : "auto",
+                      opacity: customRowAction.disabled?.(row.original)
+                        ? 0.5
+                        : 1,
                     }}
                   >
-                    {typeof customRowAction.label === 'function' 
+                    {typeof customRowAction.label === "function"
                       ? customRowAction.label(row.original)
-                      : customRowAction.label
-                    }
+                      : customRowAction.label}
                   </a>
                 ) : (
                   <a
@@ -714,43 +736,50 @@ function BaseNodeTable<T>({
             {typeName.toLowerCase()}
             {pendingDeleteRows.length > 1 ? "s" : ""}?
           </div>
-          
+
           {/* Show cascade warning for layers and domains */}
-          {(typeName.toLowerCase() === 'layer' || typeName.toLowerCase() === 'domain') && (
-            <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
-              <div className="flex items-center gap-2 mb-3">
+          {(typeName.toLowerCase() === "layer" ||
+            typeName.toLowerCase() === "domain") && (
+            <div className="mb-6 rounded-lg border border-red-200 bg-red-50 p-4">
+              <div className="mb-3 flex items-center gap-2">
                 <AlertTriangle className="h-4 w-4 text-red-600" />
-                <span className="text-red-800 font-medium">
+                <span className="font-medium text-red-800">
                   Warning: Cascade Delete
                 </span>
               </div>
-              <p className="text-red-700 text-sm">
-                Deleting {typeName.toLowerCase()}{pendingDeleteRows.length > 1 ? "s" : ""} will also permanently delete all child records (terms, domains, and relationships).
+              <p className="text-sm text-red-700">
+                Deleting {typeName.toLowerCase()}
+                {pendingDeleteRows.length > 1 ? "s" : ""} will also permanently
+                delete all child records (terms, domains, and relationships).
               </p>
             </div>
           )}
-          
+
           {/* Show child handling options only for terms */}
-          {childrenToHandle.length > 0 && typeName.toLowerCase() === 'term' && (
-            <div className="mb-6 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
-              <div className="flex items-center gap-2 mb-3">
+          {childrenToHandle.length > 0 && typeName.toLowerCase() === "term" && (
+            <div className="mb-6 rounded-lg border border-yellow-200 bg-yellow-50 p-4">
+              <div className="mb-3 flex items-center gap-2">
                 <AlertTriangle className="h-4 w-4 text-yellow-600" />
-                <span className="text-yellow-800 font-medium">
-                  Warning: {childrenToHandle.length} child {typeName.toLowerCase()}
+                <span className="font-medium text-yellow-800">
+                  Warning: {childrenToHandle.length} child{" "}
+                  {typeName.toLowerCase()}
                   {childrenToHandle.length > 1 ? "s" : ""} found
                 </span>
               </div>
-              <p className="text-yellow-700 text-sm mb-4">
-                What would you like to do with the child {typeName.toLowerCase()}s?
+              <p className="mb-4 text-sm text-yellow-700">
+                What would you like to do with the child{" "}
+                {typeName.toLowerCase()}s?
               </p>
-              
+
               <div className="space-y-3">
                 <div className="flex items-center gap-2">
                   <Radio
                     id="orphan"
                     value="orphan"
-                    checked={deleteOption === 'orphan'}
-                    onChange={(e) => setDeleteOption(e.target.value as 'delete' | 'orphan')}
+                    checked={deleteOption === "orphan"}
+                    onChange={(e) =>
+                      setDeleteOption(e.target.value as "delete" | "orphan")
+                    }
                   />
                   <Label htmlFor="orphan" className="text-sm">
                     Keep children but remove parent relationship (orphan them)
@@ -760,8 +789,10 @@ function BaseNodeTable<T>({
                   <Radio
                     id="delete"
                     value="delete"
-                    checked={deleteOption === 'delete'}
-                    onChange={(e) => setDeleteOption(e.target.value as 'delete' | 'orphan')}
+                    checked={deleteOption === "delete"}
+                    onChange={(e) =>
+                      setDeleteOption(e.target.value as "delete" | "orphan")
+                    }
                   />
                   <Label htmlFor="delete" className="text-sm text-red-600">
                     Delete children as well (cascade delete)
@@ -770,11 +801,11 @@ function BaseNodeTable<T>({
               </div>
             </div>
           )}
-          
+
           <div className="mb-4 text-sm text-gray-600">
             This action cannot be undone.
           </div>
-          
+
           <div className="flex justify-end gap-2">
             <Button color="gray" onClick={() => setShowDeleteModal(false)}>
               Cancel
@@ -785,13 +816,13 @@ function BaseNodeTable<T>({
           </div>
         </ModalBody>
       </Modal>
-      
+
       {/* Move Modal */}
       {MoveForm && (
-        <Modal 
-          show={showMoveModal} 
+        <Modal
+          show={showMoveModal}
           onClose={() => {
-            console.log('Move modal closing');
+            console.log("Move modal closing");
             setShowMoveModal(false);
             setPendingMoveRows([]);
             setIsProcessing(false);
@@ -803,9 +834,9 @@ function BaseNodeTable<T>({
           </ModalHeader>
           <ModalBody>
             <MoveForm
-              selectedNodes={pendingMoveRows.map(row => row.original)}
+              selectedNodes={pendingMoveRows.map((row) => row.original)}
               onSuccess={() => {
-                console.log('Move success');
+                console.log("Move success");
                 setShowMoveModal(false);
                 setPendingMoveRows([]);
                 setIsProcessing(false);
@@ -814,7 +845,7 @@ function BaseNodeTable<T>({
                 }
               }}
               onCancel={() => {
-                console.log('Move cancelled');
+                console.log("Move cancelled");
                 setShowMoveModal(false);
                 setPendingMoveRows([]);
                 setIsProcessing(false);

@@ -1,15 +1,36 @@
-import React from 'react';
-import { createColumnHelper } from '@tanstack/react-table';
-import { Badge, Button, Modal, ModalHeader, ModalBody, Checkbox } from 'flowbite-react';
-import { Calendar, Database, HardDrive, Hash, Activity, Layers, Plus, FolderOpen } from 'lucide-react';
-import { BaseNodeTable } from '@/components/node_tables/node_table';
-import { DatasetForm } from '@/components/forms/dataset_form';
-import { AddExistingDatasetForm } from '@/components/forms/add_existing_dataset_form';
-import { useDatasets, useDeleteDataset, useActivateDataset, useForgetDataset } from '@/api/hooks/datasets';
-import type { components } from '@/api/client/types';
+import React from "react";
+import { createColumnHelper } from "@tanstack/react-table";
+import {
+  Badge,
+  Button,
+  Modal,
+  ModalHeader,
+  ModalBody,
+  Checkbox,
+} from "flowbite-react";
+import {
+  Calendar,
+  Database,
+  HardDrive,
+  Hash,
+  Activity,
+  Layers,
+  Plus,
+  FolderOpen,
+} from "lucide-react";
+import { BaseNodeTable } from "@/components/node_tables/node_table";
+import { DatasetForm } from "@/components/forms/dataset_form";
+import { AddExistingDatasetForm } from "@/components/forms/add_existing_dataset_form";
+import {
+  useDatasets,
+  useDeleteDataset,
+  useActivateDataset,
+  useForgetDataset,
+} from "@/api/hooks/datasets";
+import type { components } from "@/api/client/types";
 
 // Type alias for DatasetResponse
-type DatasetResponse = components['schemas']['DatasetResponse'];
+type DatasetResponse = components["schemas"]["DatasetResponse"];
 
 // Props interface
 interface DatasetsTableProps {
@@ -22,13 +43,13 @@ const columnHelper = createColumnHelper<DatasetResponse>();
 // Define table columns
 const columns = [
   columnHelper.display({
-    id: 'select',
+    id: "select",
     header: ({ table }) => {
       const { rows } = table.getRowModel();
-      const selectedCount = rows.filter(row => row.getIsSelected()).length;
+      const selectedCount = rows.filter((row) => row.getIsSelected()).length;
       const isAllSelected = rows.length > 0 && selectedCount === rows.length;
       const isSomeSelected = selectedCount > 0 && selectedCount < rows.length;
-      
+
       return (
         <Checkbox
           checked={isAllSelected}
@@ -36,10 +57,10 @@ const columns = [
           onChange={() => {
             if (isAllSelected || isSomeSelected) {
               // Deselect all visible rows
-              rows.forEach(row => row.toggleSelected(false));
+              rows.forEach((row) => row.toggleSelected(false));
             } else {
               // Select all visible rows
-              rows.forEach(row => row.toggleSelected(true));
+              rows.forEach((row) => row.toggleSelected(true));
             }
           }}
         />
@@ -53,8 +74,8 @@ const columns = [
     ),
     size: 32,
   }),
-  columnHelper.accessor('title', {
-    header: 'Dataset',
+  columnHelper.accessor("title", {
+    header: "Dataset",
     cell: (info) => {
       const dataset = info.row.original;
       return (
@@ -73,7 +94,7 @@ const columns = [
                 </Badge>
               )}
             </div>
-            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+            <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
               {dataset.filename}
             </p>
           </div>
@@ -81,19 +102,19 @@ const columns = [
       );
     },
   }),
-  columnHelper.accessor('filename', {
-    header: 'Filename',
+  columnHelper.accessor("filename", {
+    header: "Filename",
     cell: (info) => (
       <div className="flex items-center space-x-2">
         <HardDrive className="h-4 w-4 text-gray-400" />
-        <span className="text-sm text-gray-900 dark:text-white font-mono">
+        <span className="font-mono text-sm text-gray-900 dark:text-white">
           {info.getValue()}
         </span>
       </div>
     ),
   }),
-  columnHelper.accessor('created_at', {
-    header: 'Created',
+  columnHelper.accessor("created_at", {
+    header: "Created",
     cell: (info) => (
       <div className="flex items-center space-x-2">
         <Calendar className="h-4 w-4 text-gray-400" />
@@ -103,12 +124,13 @@ const columns = [
       </div>
     ),
   }),
-  columnHelper.accessor('metrics', {
-    header: 'Statistics',
+  columnHelper.accessor("metrics", {
+    header: "Statistics",
     cell: (info) => {
       const metrics = info.getValue();
-      if (!metrics) return <span className="text-sm text-gray-400">No stats</span>;
-      
+      if (!metrics)
+        return <span className="text-sm text-gray-400">No stats</span>;
+
       return (
         <div className="space-y-1">
           <div className="flex items-center space-x-1 text-xs text-gray-600 dark:text-gray-400">
@@ -130,19 +152,24 @@ const columns = [
 ];
 
 // Custom datasets table component that extends BaseNodeTable with dataset-specific actions
-export const DatasetsTable: React.FC<DatasetsTableProps> = ({ className = "" }) => {
+export const DatasetsTable: React.FC<DatasetsTableProps> = ({
+  className = "",
+}) => {
   const { data: datasets = [], isLoading, error, refetch } = useDatasets();
   const deleteDatasetMutation = useDeleteDataset();
   const activateDatasetMutation = useActivateDataset();
   const forgetDatasetMutation = useForgetDataset();
-  
+
   // Custom action modals
   const [showCreateModal, setShowCreateModal] = React.useState(false);
   const [showAddExistingModal, setShowAddExistingModal] = React.useState(false);
   const [showActivateModal, setShowActivateModal] = React.useState(false);
   const [showForgetModal, setShowForgetModal] = React.useState(false);
-  const [selectedDatasetIds, setSelectedDatasetIds] = React.useState<string[]>([]);
-  const [datasetToActivate, setDatasetToActivate] = React.useState<DatasetResponse | null>(null);
+  const [selectedDatasetIds, setSelectedDatasetIds] = React.useState<string[]>(
+    [],
+  );
+  const [datasetToActivate, setDatasetToActivate] =
+    React.useState<DatasetResponse | null>(null);
 
   const handleDelete = async (ids: string[]) => {
     for (const id of ids) {
@@ -153,7 +180,7 @@ export const DatasetsTable: React.FC<DatasetsTableProps> = ({ className = "" }) 
   const handleSetActive = (dataset: DatasetResponse) => {
     // Don't show modal if dataset is already active
     if (dataset.is_active) return;
-    
+
     setDatasetToActivate(dataset);
     setShowActivateModal(true);
   };
@@ -174,7 +201,10 @@ export const DatasetsTable: React.FC<DatasetsTableProps> = ({ className = "" }) 
     setSelectedDatasetIds([]);
   };
 
-  const handleForgetSelected = (selectedItems: DatasetResponse[], selectedIds: string[]) => {
+  const handleForgetSelected = (
+    selectedItems: DatasetResponse[],
+    selectedIds: string[],
+  ) => {
     setSelectedDatasetIds(selectedIds);
     setShowForgetModal(true);
   };
@@ -223,20 +253,21 @@ export const DatasetsTable: React.FC<DatasetsTableProps> = ({ className = "" }) 
           </>
         }
         customRowAction={{
-          label: (dataset: DatasetResponse) => dataset.is_active ? "Active" : "Set Active",
+          label: (dataset: DatasetResponse) =>
+            dataset.is_active ? "Active" : "Set Active",
           onClick: handleSetActive,
-          className: (dataset: DatasetResponse) => 
-            dataset.is_active 
-              ? "cursor-default text-gray-400" 
+          className: (dataset: DatasetResponse) =>
+            dataset.is_active
+              ? "cursor-default text-gray-400"
               : "cursor-pointer text-green-600 hover:underline",
-          disabled: (dataset: DatasetResponse) => dataset.is_active
+          disabled: (dataset: DatasetResponse) => dataset.is_active,
         }}
         customBulkActions={[
           {
             label: "Forget Selected",
             onClick: handleForgetSelected,
             className: "text-orange-600 hover:bg-orange-50",
-          }
+          },
         ]}
       />
 
@@ -249,39 +280,54 @@ export const DatasetsTable: React.FC<DatasetsTableProps> = ({ className = "" }) 
       </Modal>
 
       {/* Add Existing Dataset Modal */}
-      <Modal show={showAddExistingModal} onClose={() => setShowAddExistingModal(false)}>
+      <Modal
+        show={showAddExistingModal}
+        onClose={() => setShowAddExistingModal(false)}
+      >
         <ModalHeader>Add Existing Dataset</ModalHeader>
         <ModalBody>
-          <AddExistingDatasetForm onSuccess={() => setShowAddExistingModal(false)} />
+          <AddExistingDatasetForm
+            onSuccess={() => setShowAddExistingModal(false)}
+          />
         </ModalBody>
       </Modal>
 
-      <Modal show={showActivateModal} onClose={() => {
-        setShowActivateModal(false);
-        setDatasetToActivate(null);
-      }}>
+      <Modal
+        show={showActivateModal}
+        onClose={() => {
+          setShowActivateModal(false);
+          setDatasetToActivate(null);
+        }}
+      >
         <ModalHeader>Activate Dataset</ModalHeader>
         <ModalBody>
           <div className="space-y-4">
             <p>
-              Are you sure you want to activate the dataset <strong>"{getSelectedDataset()?.title}"</strong>?
+              Are you sure you want to activate the dataset{" "}
+              <strong>"{getSelectedDataset()?.title}"</strong>?
             </p>
             <p className="text-sm text-gray-600">
-              This will switch the active dataset and reload all data from the new dataset.
+              This will switch the active dataset and reload all data from the
+              new dataset.
             </p>
             <div className="flex justify-end gap-2 pt-4">
-              <Button color="gray" onClick={() => {
-                setShowActivateModal(false);
-                setDatasetToActivate(null);
-              }}>
+              <Button
+                color="gray"
+                onClick={() => {
+                  setShowActivateModal(false);
+                  setDatasetToActivate(null);
+                }}
+              >
                 Cancel
               </Button>
-              <Button 
-                color="blue" 
+              <Button
+                color="blue"
                 onClick={confirmActivate}
                 disabled={activateDatasetMutation.isPending}
               >
-                {activateDatasetMutation.isPending ? "Activating..." : "Activate Dataset"}
+                {activateDatasetMutation.isPending
+                  ? "Activating..."
+                  : "Activate Dataset"}
               </Button>
             </div>
           </div>
@@ -289,26 +335,34 @@ export const DatasetsTable: React.FC<DatasetsTableProps> = ({ className = "" }) 
       </Modal>
 
       <Modal show={showForgetModal} onClose={() => setShowForgetModal(false)}>
-        <ModalHeader>Forget Dataset{selectedDatasetIds.length > 1 ? 's' : ''}</ModalHeader>
+        <ModalHeader>
+          Forget Dataset{selectedDatasetIds.length > 1 ? "s" : ""}
+        </ModalHeader>
         <ModalBody>
           <div className="space-y-4">
             <p>
-              Are you sure you want to forget {selectedDatasetIds.length} dataset{selectedDatasetIds.length > 1 ? 's' : ''}?
+              Are you sure you want to forget {selectedDatasetIds.length}{" "}
+              dataset{selectedDatasetIds.length > 1 ? "s" : ""}?
             </p>
             <p className="text-sm text-gray-600">
-              This will remove the dataset{selectedDatasetIds.length > 1 ? 's' : ''} from the inventory but leave the file{selectedDatasetIds.length > 1 ? 's' : ''} intact on disk.
-              You can add {selectedDatasetIds.length > 1 ? 'them' : 'it'} back later using "Add Existing Dataset".
+              This will remove the dataset
+              {selectedDatasetIds.length > 1 ? "s" : ""} from the inventory but
+              leave the file{selectedDatasetIds.length > 1 ? "s" : ""} intact on
+              disk. You can add {selectedDatasetIds.length > 1 ? "them" : "it"}{" "}
+              back later using "Add Existing Dataset".
             </p>
             <div className="flex justify-end gap-2 pt-4">
               <Button color="gray" onClick={() => setShowForgetModal(false)}>
                 Cancel
               </Button>
-              <Button 
-                color="orange" 
+              <Button
+                color="orange"
                 onClick={confirmForget}
                 disabled={forgetDatasetMutation.isPending}
               >
-                {forgetDatasetMutation.isPending ? "Forgetting..." : `Forget Dataset${selectedDatasetIds.length > 1 ? 's' : ''}`}
+                {forgetDatasetMutation.isPending
+                  ? "Forgetting..."
+                  : `Forget Dataset${selectedDatasetIds.length > 1 ? "s" : ""}`}
               </Button>
             </div>
           </div>

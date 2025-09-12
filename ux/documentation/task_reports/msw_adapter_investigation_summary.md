@@ -1,11 +1,13 @@
 # MSW + Axios Adapter Investigation Summary
 
 ## Issue
+
 When attempting to use MSW (Mock Service Worker) with axios in a Vitest/jsdom test environment, MSW was not consistently intercepting HTTP requests made by axios. This caused integration tests to hit real backends instead of using mock handlers.
 
 ## Root Cause Analysis
 
 ### The Problem
+
 1. **Adapter Selection**: Axios automatically selects an adapter based on the environment:
    - In browsers: `xhr` adapter (XMLHttpRequest)
    - In Node.js: `http` adapter (Node's http/https modules)
@@ -15,7 +17,7 @@ When attempting to use MSW (Mock Service Worker) with axios in a Vitest/jsdom te
 
 3. **Module Loading Order**: In our setup:
    - Vitest loads test files
-   - Test files import `apiClient` from axios.ts 
+   - Test files import `apiClient` from axios.ts
    - axios.ts creates axios instance and may capture http/https references
    - MSW server starts later in test setup or per-test
 
@@ -31,6 +33,7 @@ When attempting to use MSW (Mock Service Worker) with axios in a Vitest/jsdom te
 3. **Custom Adapters**: Created adapters that import http/https inside the adapter function rather than at module load time.
 
 ### Results
+
 - **Direct fetch + MSW**: Works reliably (MSW intercepts fetch calls)
 - **Axios + MSW**: Inconsistent interception due to timing and adapter selection
 - **Service-level spies**: Work reliably in all environments
@@ -41,13 +44,16 @@ Instead of relying on MSW to intercept network calls made by axios, we use Vites
 
 ```typescript
 // Instead of MSW network interception:
-server.use(rest.put('/api/domains/1', handler));
+server.use(rest.put("/api/domains/1", handler));
 
 // Use service-level spy:
-const mockUpdate = vi.spyOn(domainService, 'update').mockResolvedValue(mockData);
+const mockUpdate = vi
+  .spyOn(domainService, "update")
+  .mockResolvedValue(mockData);
 ```
 
 ### Benefits of Service-Level Mocking
+
 1. **Reliability**: Works consistently across environments
 2. **Determinism**: No timing or adapter selection issues
 3. **Precision**: Mock exactly what the component uses
@@ -56,11 +62,13 @@ const mockUpdate = vi.spyOn(domainService, 'update').mockResolvedValue(mockData)
 ### When to Use Each Approach
 
 **MSW (network-level)**:
+
 - ✅ Components that use fetch directly
 - ✅ Testing network error handling
 - ✅ End-to-end scenarios where you want to test the full HTTP stack
 
 **Service-level spies**:
+
 - ✅ Components that use React Query hooks
 - ✅ Testing component behavior with different data states
 - ✅ Unit/integration tests focused on UI logic
@@ -69,6 +77,7 @@ const mockUpdate = vi.spyOn(domainService, 'update').mockResolvedValue(mockData)
 ## Implementation
 
 The `DomainDetails` integration test now uses:
+
 - Service-level spy: `vi.spyOn(domainService, 'update')`
 - Hoistable mocks for router and hooks to avoid external dependencies
 - Assertions on `QueryClient.invalidateQueries` calls

@@ -20,9 +20,9 @@ const EditableText: React.FC<EditableTextProps> = ({
   const [html, setHtml] = useState(
     typeof children === "string"
       ? children
-      : React.Children.map(children, child =>
-          typeof child === "string" ? child : ""
-        )?.join("") || ""
+      : React.Children.map(children, (child) =>
+          typeof child === "string" ? child : "",
+        )?.join("") || "",
   );
 
   const handleChange = (evt: React.ChangeEvent<any>) => {

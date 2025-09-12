@@ -5,7 +5,7 @@ import { PredicatesTable } from "@/components/node_tables/predicates_table";
 import { Spinner } from "flowbite-react";
 import { CsSidebar, CsSidebarTitle } from "@/components/layout/cs_sidebar";
 import { CsMain, CsMainTitle } from "@/components/layout/cs_main";
-import { Hash } from "lucide-react"
+import { Hash } from "lucide-react";
 
 export const Route = createFileRoute("/app/predicates")({
   component: PredicatesPage,

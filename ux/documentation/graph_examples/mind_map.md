@@ -9,7 +9,7 @@ Below is a non-react example of the mind map layout
 ### Example Code
 
 ```javascript
-import { Rect, Text } from '@antv/g';
+import { Rect, Text } from "@antv/g";
 import {
   Badge,
   BaseBehavior,
@@ -26,33 +26,33 @@ import {
   positionOf,
   register,
   treeToGraphData,
-} from '@antv/g6';
+} from "@antv/g6";
 
-const style = document.createElement('style');
+const style = document.createElement("style");
 style.innerHTML = `@import url('${iconfont.css}');`;
 document.head.appendChild(style);
 
 const RootNodeStyle = {
-  fill: '#EFF0F0',
-  labelFill: '#262626',
+  fill: "#EFF0F0",
+  labelFill: "#262626",
   labelFontSize: 24,
   labelFontWeight: 600,
   labelOffsetY: 8,
-  labelPlacement: 'center',
-  ports: [{ placement: 'right' }, { placement: 'left' }],
+  labelPlacement: "center",
+  ports: [{ placement: "right" }, { placement: "left" }],
   radius: 8,
 };
 
 const NodeStyle = {
-  fill: 'transparent',
-  labelPlacement: 'center',
+  fill: "transparent",
+  labelPlacement: "center",
   labelFontSize: 16,
-  ports: [{ placement: 'right-bottom' }, { placement: 'left-bottom' }],
+  ports: [{ placement: "right-bottom" }, { placement: "left-bottom" }],
 };
 
 const TreeEvent = {
-  COLLAPSE_EXPAND: 'collapse-expand',
-  ADD_CHILD: 'add-child',
+  COLLAPSE_EXPAND: "collapse-expand",
+  ADD_CHILD: "add-child",
 };
 
 let textShape;
@@ -65,7 +65,13 @@ const measureText = (text) => {
 const getNodeWidth = (nodeId, isRoot) => {
   const padding = isRoot ? 40 : 30;
   const nodeStyle = isRoot ? RootNodeStyle : NodeStyle;
-  return measureText({ text: nodeId, fontSize: nodeStyle.labelFontSize, fontFamily: 'Gill Sans' }) + padding;
+  return (
+    measureText({
+      text: nodeId,
+      fontSize: nodeStyle.labelFontSize,
+      fontFamily: "Gill Sans",
+    }) + padding
+  );
 };
 
 const getNodeSize = (nodeId, isRoot) => {
@@ -106,22 +112,22 @@ class MindmapNode extends BaseNode {
       backgroundFill: color,
       backgroundHeight: 12,
       backgroundWidth: 12,
-      cursor: 'pointer',
-      fill: '#fff',
-      fontFamily: 'iconfont',
+      cursor: "pointer",
+      fill: "#fff",
+      fontFamily: "iconfont",
       fontSize: 8,
-      text: '\ue6e4',
-      textAlign: 'center',
-      transform: direction === 'left' ? [['rotate', 90]] : [['rotate', -90]],
-      visibility: showIcon ? 'visible' : 'hidden',
-      x: direction === 'left' ? -6 : width + 6,
+      text: "\ue6e4",
+      textAlign: "center",
+      transform: direction === "left" ? [["rotate", 90]] : [["rotate", -90]],
+      visibility: showIcon ? "visible" : "hidden",
+      x: direction === "left" ? -6 : width + 6,
       y: height,
     };
   }
 
   drawCollapseShape(attributes, container) {
     const iconStyle = this.getCollapseStyle(attributes);
-    const btn = this.upsert('collapse-expand', Badge, iconStyle, container);
+    const btn = this.upsert("collapse-expand", Badge, iconStyle, container);
 
     this.forwardEvent(btn, CommonEvent.CLICK, (event) => {
       event.stopPropagation();
@@ -141,19 +147,19 @@ class MindmapNode extends BaseNode {
       backgroundFill: color,
       backgroundHeight: 12,
       backgroundWidth: 12,
-      cursor: 'pointer',
-      fill: '#fff',
+      cursor: "pointer",
+      fill: "#fff",
       fontSize: 8,
       text: count.toString(),
-      textAlign: 'center',
-      x: direction === 'left' ? -6 : width + 6,
+      textAlign: "center",
+      x: direction === "left" ? -6 : width + 6,
       y: height,
     };
   }
 
   drawCountShape(attributes, container) {
     const countStyle = this.getCountStyle(attributes);
-    const btn = this.upsert('count', Badge, countStyle, container);
+    const btn = this.upsert("count", Badge, countStyle, container);
 
     this.forwardEvent(btn, CommonEvent.CLICK, (event) => {
       event.stopPropagation();
@@ -168,30 +174,34 @@ class MindmapNode extends BaseNode {
     const { collapsed, showIcon, direction } = attributes;
     if (collapsed || !showIcon) return false;
     const [width, height] = this.getSize(attributes);
-    const color = '#ddd';
+    const color = "#ddd";
 
     const offsetX = this.isShowCollapse(attributes) ? 24 : 12;
     const isRoot = this.id === this.rootId;
 
     return {
-      backgroundFill: '#fff',
+      backgroundFill: "#fff",
       backgroundHeight: 12,
       backgroundLineWidth: 1,
       backgroundStroke: color,
       backgroundWidth: 12,
-      cursor: 'pointer',
+      cursor: "pointer",
       fill: color,
-      fontFamily: 'iconfont',
+      fontFamily: "iconfont",
       fontSize: 8,
-      text: '\ue664',
-      textAlign: 'center',
-      x: isRoot ? width + 12 : direction === 'left' ? -offsetX : width + offsetX,
+      text: "\ue664",
+      textAlign: "center",
+      x: isRoot
+        ? width + 12
+        : direction === "left"
+          ? -offsetX
+          : width + offsetX,
       y: isRoot ? height / 2 : height,
     };
   }
 
   getAddBarStyle(attributes) {
-    const { collapsed, showIcon, direction, color = '#1783FF' } = attributes;
+    const { collapsed, showIcon, direction, color = "#1783FF" } = attributes;
     if (collapsed || !showIcon) return false;
     const [width, height] = this.getSize(attributes);
 
@@ -202,14 +212,18 @@ class MindmapNode extends BaseNode {
     const WIDTH = 6;
 
     return {
-      cursor: 'pointer',
+      cursor: "pointer",
       fill:
-        direction === 'left'
+        direction === "left"
           ? `linear-gradient(180deg, #fff 20%, ${color})`
           : `linear-gradient(0deg, #fff 20%, ${color})`,
       height: HEIGHT,
       width: WIDTH,
-      x: isRoot ? width : direction === 'left' ? -offsetX - WIDTH : width + offsetX,
+      x: isRoot
+        ? width
+        : direction === "left"
+          ? -offsetX - WIDTH
+          : width + offsetX,
       y: isRoot ? height / 2 - HEIGHT / 2 : height - HEIGHT / 2,
       zIndex: -1,
     };
@@ -218,18 +232,21 @@ class MindmapNode extends BaseNode {
   drawAddShape(attributes, container) {
     const addStyle = this.getAddStyle(attributes);
     const addBarStyle = this.getAddBarStyle(attributes);
-    this.upsert('add-bar', Rect, addBarStyle, container);
-    const btn = this.upsert('add', Badge, addStyle, container);
+    this.upsert("add-bar", Rect, addBarStyle, container);
+    const btn = this.upsert("add", Badge, addStyle, container);
 
     this.forwardEvent(btn, CommonEvent.CLICK, (event) => {
       event.stopPropagation();
-      this.context.graph.emit(TreeEvent.ADD_CHILD, { id: this.id, direction: attributes.direction });
+      this.context.graph.emit(TreeEvent.ADD_CHILD, {
+        id: this.id,
+        direction: attributes.direction,
+      });
     });
   }
 
   forwardEvent(target, type, listener) {
-    if (target && !Reflect.has(target, '__bind__')) {
-      Reflect.set(target, '__bind__', true);
+    if (target && !Reflect.has(target, "__bind__")) {
+      Reflect.set(target, "__bind__", true);
       target.addEventListener(type, listener);
     }
   }
@@ -242,7 +259,7 @@ class MindmapNode extends BaseNode {
 
   drawKeyShape(attributes, container) {
     const keyStyle = this.getKeyStyle(attributes);
-    return this.upsert('key', Rect, keyStyle, container);
+    return this.upsert("key", Rect, keyStyle, container);
   }
 
   render(attributes = this.parsedAttributes, container = this) {
@@ -266,8 +283,9 @@ class MindmapEdge extends CubicHorizontal {
     const labelWidth = getNodeWidth(this.targetNode.id, isRoot);
 
     const [, tp] = this.getEndpoints(attributes);
-    const sign = this.sourceNode.getCenter()[0] < this.targetNode.getCenter()[0] ? 1 : -1;
-    return [...path, ['L', tp[0] + labelWidth * sign, tp[1]]];
+    const sign =
+      this.sourceNode.getCenter()[0] < this.targetNode.getCenter()[0] ? 1 : -1;
+    return [...path, ["L", tp[0] + labelWidth * sign, tp[1]]];
   }
 }
 
@@ -301,7 +319,7 @@ class CollapseExpandTree extends BaseBehavior {
     graph.off(TreeEvent.ADD_CHILD, this.addChild);
   }
 
-  status = 'idle';
+  status = "idle";
 
   showIcon = (event) => {
     this.setIcon(event, true);
@@ -312,7 +330,7 @@ class CollapseExpandTree extends BaseBehavior {
   };
 
   setIcon = (event, show) => {
-    if (this.status !== 'idle') return;
+    if (this.status !== "idle") return;
     const { target } = event;
     const id = target.id;
     const { graph, element } = this.context;
@@ -321,17 +339,17 @@ class CollapseExpandTree extends BaseBehavior {
   };
 
   onCollapseExpand = async (event) => {
-    this.status = 'busy';
+    this.status = "busy";
     const { id, collapsed } = event;
     const { graph } = this.context;
     await graph.frontElement(id);
     if (collapsed) await graph.collapseElement(id);
     else await graph.expandElement(id);
-    this.status = 'idle';
+    this.status = "idle";
   };
 
   addChild = async (event) => {
-    this.status = 'busy';
+    this.status = "busy";
     const {
       onCreateChild = () => {
         const currentTime = new Date(Date.now()).toLocaleString();
@@ -353,28 +371,31 @@ class CollapseExpandTree extends BaseBehavior {
     ]);
     await graph.render();
     await graph.focusElement(datum.id);
-    this.status = 'idle';
+    this.status = "idle";
   };
 }
 
 class AssignColorByBranch extends BaseTransform {
   static defaultOptions = {
     colors: [
-      '#1783FF',
-      '#F08F56',
-      '#D580FF',
-      '#00C9C9',
-      '#7863FF',
-      '#DB9D0D',
-      '#60C42D',
-      '#FF80CA',
-      '#2491B3',
-      '#17C76F',
+      "#1783FF",
+      "#F08F56",
+      "#D580FF",
+      "#00C9C9",
+      "#7863FF",
+      "#DB9D0D",
+      "#60C42D",
+      "#FF80CA",
+      "#2491B3",
+      "#17C76F",
     ],
   };
 
   constructor(context, options) {
-    super(context, Object.assign({}, AssignColorByBranch.defaultOptions, options));
+    super(
+      context,
+      Object.assign({}, AssignColorByBranch.defaultOptions, options),
+    );
   }
 
   beforeDraw(input) {
@@ -388,30 +409,41 @@ class AssignColorByBranch extends BaseTransform {
       if (!node) return;
 
       node.style ||= {};
-      node.style.color = color || this.options.colors[colorIndex++ % this.options.colors.length];
+      node.style.color =
+        color || this.options.colors[colorIndex++ % this.options.colors.length];
       node.children?.forEach((childId) => dfs(childId, node.style?.color));
     };
 
-    nodes.filter((node) => node.depth === 1).forEach((rootNode) => dfs(rootNode.id));
+    nodes
+      .filter((node) => node.depth === 1)
+      .forEach((rootNode) => dfs(rootNode.id));
 
     return input;
   }
 }
 
-register(ExtensionCategory.NODE, 'mindmap', MindmapNode);
-register(ExtensionCategory.EDGE, 'mindmap', MindmapEdge);
-register(ExtensionCategory.BEHAVIOR, 'collapse-expand-tree', CollapseExpandTree);
-register(ExtensionCategory.TRANSFORM, 'assign-color-by-branch', AssignColorByBranch);
+register(ExtensionCategory.NODE, "mindmap", MindmapNode);
+register(ExtensionCategory.EDGE, "mindmap", MindmapEdge);
+register(
+  ExtensionCategory.BEHAVIOR,
+  "collapse-expand-tree",
+  CollapseExpandTree,
+);
+register(
+  ExtensionCategory.TRANSFORM,
+  "assign-color-by-branch",
+  AssignColorByBranch,
+);
 
 const getNodeSide = (nodeData, parentData) => {
-  if (!parentData) return 'center';
+  if (!parentData) return "center";
 
   const nodePositionX = positionOf(nodeData)[0];
   const parentPositionX = positionOf(parentData)[0];
-  return parentPositionX > nodePositionX ? 'left' : 'right';
+  return parentPositionX > nodePositionX ? "left" : "right";
 };
 
-fetch('https://assets.antv.antgroup.com/g6/algorithm-category.json')
+fetch("https://assets.antv.antgroup.com/g6/algorithm-category.json")
   .then((res) => res.json())
   .then((data) => {
     const rootId = data.id;
@@ -419,44 +451,45 @@ fetch('https://assets.antv.antgroup.com/g6/algorithm-category.json')
     const graph = new Graph({
       data: treeToGraphData(data),
       node: {
-        type: 'mindmap',
+        type: "mindmap",
         style: function (d) {
-          const direction = getNodeSide(d, this.getParentData(idOf(d), 'tree'));
+          const direction = getNodeSide(d, this.getParentData(idOf(d), "tree"));
           const isRoot = idOf(d) === rootId;
 
           return {
             direction,
             labelText: idOf(d),
             size: getNodeSize(idOf(d), isRoot),
-            labelFontFamily: 'Gill Sans',
+            labelFontFamily: "Gill Sans",
             // 通过设置节点标签背景来扩大交互区域 | Expand the interaction area by setting the node label background
             labelBackground: true,
-            labelBackgroundFill: 'transparent',
-            labelPadding: direction === 'left' ? [2, 0, 10, 40] : [2, 40, 10, 0],
+            labelBackgroundFill: "transparent",
+            labelPadding:
+              direction === "left" ? [2, 0, 10, 40] : [2, 40, 10, 0],
             ...(isRoot ? RootNodeStyle : NodeStyle),
           };
         },
       },
       edge: {
-        type: 'mindmap',
+        type: "mindmap",
         style: {
           lineWidth: 3,
           stroke: function (data) {
-            return this.getNodeData(data.target).style.color || '#99ADD1';
+            return this.getNodeData(data.target).style.color || "#99ADD1";
           },
         },
       },
       layout: {
-        type: 'mindmap',
-        direction: 'H',
+        type: "mindmap",
+        direction: "H",
         getHeight: () => 30,
         getWidth: (node) => getNodeWidth(node.id, node.id === rootId),
         getVGap: () => 6,
         getHGap: () => 60,
         animation: false,
       },
-      behaviors: ['drag-canvas', 'zoom-canvas', 'collapse-expand-tree'],
-      transforms: ['assign-color-by-branch'],
+      behaviors: ["drag-canvas", "zoom-canvas", "collapse-expand-tree"],
+      transforms: ["assign-color-by-branch"],
       animation: false,
     });
 

@@ -2,10 +2,11 @@ import React from "react";
 import { useForm } from "@tanstack/react-form";
 import { TextInput, Button, Alert, Label } from "flowbite-react";
 import { Info } from "lucide-react";
-import type { CreateDatasetRequest, DatasetResponse } from "@/api/services/datasets";
-import {
-  useCreateDataset,
-} from "@/api/hooks/datasets/useDatasetMutations";
+import type {
+  CreateDatasetRequest,
+  DatasetResponse,
+} from "@/api/services/datasets";
+import { useCreateDataset } from "@/api/hooks/datasets/useDatasetMutations";
 
 interface DatasetFormProps {
   onSuccess?: (dataset: any) => void;
@@ -14,7 +15,7 @@ interface DatasetFormProps {
 const DatasetForm: React.FC<DatasetFormProps> = ({ onSuccess }) => {
   const createDatasetMutation = useCreateDataset();
   const [submitError, setSubmitError] = React.useState<string | null>(null);
-  
+
   const form = useForm({
     defaultValues: {
       title: "",
@@ -23,7 +24,9 @@ const DatasetForm: React.FC<DatasetFormProps> = ({ onSuccess }) => {
     onSubmit: async ({ value }) => {
       setSubmitError(null);
       try {
-        const result = await createDatasetMutation.mutateAsync(value as CreateDatasetRequest);
+        const result = await createDatasetMutation.mutateAsync(
+          value as CreateDatasetRequest,
+        );
         if (onSuccess) onSuccess(result);
         form.reset();
       } catch (error: any) {
@@ -85,7 +88,9 @@ const DatasetForm: React.FC<DatasetFormProps> = ({ onSuccess }) => {
                 onBlur={field.handleBlur}
                 onChange={(e) => field.handleChange(e.target.value)}
                 placeholder="Enter dataset title"
-                color={field.state.meta.errors.length > 0 ? "failure" : undefined}
+                color={
+                  field.state.meta.errors.length > 0 ? "failure" : undefined
+                }
               />
               {field.state.meta.errors.length > 0 && (
                 <div className="mt-1 text-sm text-red-600">
@@ -101,15 +106,19 @@ const DatasetForm: React.FC<DatasetFormProps> = ({ onSuccess }) => {
           validators={{
             onChange: ({ value }) => {
               if (!value) return "Filename is required";
-              if (!value.endsWith('.db')) return "Filename must end with .db";
-              if (!/^[a-zA-Z0-9_\-\.]+$/.test(value)) return "Filename contains invalid characters";
+              if (!value.endsWith(".db")) return "Filename must end with .db";
+              if (!/^[a-zA-Z0-9_\-\.]+$/.test(value))
+                return "Filename contains invalid characters";
               return undefined;
             },
           }}
         >
           {(field) => (
             <div>
-              <Label htmlFor="dataset-filename" className="mb-1 block font-medium">
+              <Label
+                htmlFor="dataset-filename"
+                className="mb-1 block font-medium"
+              >
                 Filename
               </Label>
               <TextInput
@@ -119,7 +128,9 @@ const DatasetForm: React.FC<DatasetFormProps> = ({ onSuccess }) => {
                 onBlur={field.handleBlur}
                 onChange={(e) => field.handleChange(e.target.value)}
                 placeholder="my_dataset.db"
-                color={field.state.meta.errors.length > 0 ? "failure" : undefined}
+                color={
+                  field.state.meta.errors.length > 0 ? "failure" : undefined
+                }
               />
               {field.state.meta.errors.length > 0 ? (
                 <div className="mt-1 text-sm text-red-600">

@@ -2,12 +2,12 @@ MSW interception follow-up
 
 Status: open
 
-Context
--------
+## Context
+
 We temporarily mocked `domainService.domainService.update` in `test/integration/domain_edit.integration.test.tsx` because MSW did not intercept the PUT request in the test environment during initial debugging. The integration test is left mocked to keep CI green and avoid flaky behavior while we diagnose the root cause.
 
-Next steps (investigation)
--------------------------
+## Next steps (investigation)
+
 1. Reproduce minimal failing case
    - Create a tiny isolated test that performs a single axios.put against `API_CONFIG.baseURL + '/api/domains/1'` and assert MSW/node intercepts it.
    - This isolates adapters and baseURL resolution.
@@ -29,7 +29,7 @@ Next steps (investigation)
 Owner: @tinkermonkey
 Estimated effort: 1–3 hours
 
-Notes
------
+## Notes
+
 - Common causes: axios using fetch/XHR adapter, mismatched baseURL or trailing slash, and handler ordering.
 - Keep `vitest.setup.ts` MSW startup with `onUnhandledRequest: 'warn'` enabled during investigation to surface mismatches.

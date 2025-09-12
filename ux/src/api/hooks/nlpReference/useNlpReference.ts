@@ -1,11 +1,11 @@
 /**
  * NLP Reference Query Hooks
- * 
+ *
  * React Query hooks for external NLP reference data sources (DBpedia, ConceptNet, Wikidata, etc.)
  */
 
-import { useQuery, UseQueryOptions } from '@tanstack/react-query';
-import { 
+import { useQuery, UseQueryOptions } from "@tanstack/react-query";
+import {
   nlpReferenceService,
   type DBpediaResourceParams,
   type DBpediaSearchParams,
@@ -23,10 +23,10 @@ import {
   type WikidataEntityResponse,
   type SchemaOrgEntityResponse,
   type SchemaOrgPropertyResponse,
-  type SchemaOrgSearchResponse
-} from '../../services/nlpReference';
-import { QUERY_KEYS } from '../../config';
-import { createQueryKey } from '../../utils/queryClient';
+  type SchemaOrgSearchResponse,
+} from "../../services/nlpReference";
+import { QUERY_KEYS } from "../../config";
+import { createQueryKey } from "../../utils/queryClient";
 
 // DBpedia Hooks
 /**
@@ -34,10 +34,14 @@ import { createQueryKey } from '../../utils/queryClient';
  */
 export const useDBpediaResource = (
   params: DBpediaResourceParams,
-  options?: UseQueryOptions<DBpediaResourceResponse, Error>
+  options?: UseQueryOptions<DBpediaResourceResponse, Error>,
 ) => {
   return useQuery({
-    queryKey: createQueryKey(QUERY_KEYS.NLP_REFERENCE, 'dbpedia-resource', params),
+    queryKey: createQueryKey(
+      QUERY_KEYS.NLP_REFERENCE,
+      "dbpedia-resource",
+      params,
+    ),
     queryFn: () => nlpReferenceService.getDBpediaResource(params),
     enabled: !!params.resource_url,
     ...options,
@@ -49,10 +53,14 @@ export const useDBpediaResource = (
  */
 export const useDBpediaSearch = (
   params: DBpediaSearchParams,
-  options?: UseQueryOptions<DBpediaSearchResponse, Error>
+  options?: UseQueryOptions<DBpediaSearchResponse, Error>,
 ) => {
   return useQuery({
-    queryKey: createQueryKey(QUERY_KEYS.NLP_REFERENCE, 'dbpedia-search', params),
+    queryKey: createQueryKey(
+      QUERY_KEYS.NLP_REFERENCE,
+      "dbpedia-search",
+      params,
+    ),
     queryFn: () => nlpReferenceService.searchDBpedia(params),
     enabled: !!params.query?.trim(),
     ...options,
@@ -65,10 +73,14 @@ export const useDBpediaSearch = (
  */
 export const useConceptNetQuery = (
   params?: ConceptNetQueryParams,
-  options?: UseQueryOptions<ConceptNetQueryResponse, Error>
+  options?: UseQueryOptions<ConceptNetQueryResponse, Error>,
 ) => {
   return useQuery({
-    queryKey: createQueryKey(QUERY_KEYS.NLP_REFERENCE, 'conceptnet-query', params),
+    queryKey: createQueryKey(
+      QUERY_KEYS.NLP_REFERENCE,
+      "conceptnet-query",
+      params,
+    ),
     queryFn: () => nlpReferenceService.queryConceptNet(params),
     ...options,
   });
@@ -79,10 +91,12 @@ export const useConceptNetQuery = (
  */
 export const useConceptNetConcept = (
   conceptPath: string,
-  options?: UseQueryOptions<ConceptNetConceptResponse, Error>
+  options?: UseQueryOptions<ConceptNetConceptResponse, Error>,
 ) => {
   return useQuery({
-    queryKey: createQueryKey(QUERY_KEYS.NLP_REFERENCE, 'conceptnet-concept', { conceptPath }),
+    queryKey: createQueryKey(QUERY_KEYS.NLP_REFERENCE, "conceptnet-concept", {
+      conceptPath,
+    }),
     queryFn: () => nlpReferenceService.getConceptNetConcept(conceptPath),
     enabled: !!conceptPath,
     ...options,
@@ -95,11 +109,15 @@ export const useConceptNetConcept = (
 export const useConceptNetRelated = (
   conceptPath: string,
   params?: ConceptNetRelatedParams,
-  options?: UseQueryOptions<ConceptNetRelatedResponse, Error>
+  options?: UseQueryOptions<ConceptNetRelatedResponse, Error>,
 ) => {
   return useQuery({
-    queryKey: createQueryKey(QUERY_KEYS.NLP_REFERENCE, 'conceptnet-related', { conceptPath, ...params }),
-    queryFn: () => nlpReferenceService.getConceptNetRelated(conceptPath, params),
+    queryKey: createQueryKey(QUERY_KEYS.NLP_REFERENCE, "conceptnet-related", {
+      conceptPath,
+      ...params,
+    }),
+    queryFn: () =>
+      nlpReferenceService.getConceptNetRelated(conceptPath, params),
     enabled: !!conceptPath,
     ...options,
   });
@@ -111,10 +129,14 @@ export const useConceptNetRelated = (
  */
 export const useWikidataEntity = (
   params: WikidataEntityParams,
-  options?: UseQueryOptions<WikidataEntityResponse, Error>
+  options?: UseQueryOptions<WikidataEntityResponse, Error>,
 ) => {
   return useQuery({
-    queryKey: createQueryKey(QUERY_KEYS.NLP_REFERENCE, 'wikidata-entity', params),
+    queryKey: createQueryKey(
+      QUERY_KEYS.NLP_REFERENCE,
+      "wikidata-entity",
+      params,
+    ),
     queryFn: () => nlpReferenceService.getWikidataEntity(params),
     enabled: !!params.entity_url,
     ...options,
@@ -128,10 +150,13 @@ export const useWikidataEntity = (
 export const useSchemaOrgReferenceEntity = (
   identifier: string,
   params?: SchemaOrgEntityParams,
-  options?: UseQueryOptions<SchemaOrgEntityResponse, Error>
+  options?: UseQueryOptions<SchemaOrgEntityResponse, Error>,
 ) => {
   return useQuery({
-    queryKey: createQueryKey(QUERY_KEYS.NLP_REFERENCE, 'schemaorg-entity', { identifier, ...params }),
+    queryKey: createQueryKey(QUERY_KEYS.NLP_REFERENCE, "schemaorg-entity", {
+      identifier,
+      ...params,
+    }),
     queryFn: () => nlpReferenceService.getSchemaOrgEntity(identifier, params),
     enabled: !!identifier,
     ...options,
@@ -144,10 +169,13 @@ export const useSchemaOrgReferenceEntity = (
 export const useSchemaOrgReferenceProperty = (
   identifier: string,
   params?: SchemaOrgPropertyParams,
-  options?: UseQueryOptions<SchemaOrgPropertyResponse, Error>
+  options?: UseQueryOptions<SchemaOrgPropertyResponse, Error>,
 ) => {
   return useQuery({
-    queryKey: createQueryKey(QUERY_KEYS.NLP_REFERENCE, 'schemaorg-property', { identifier, ...params }),
+    queryKey: createQueryKey(QUERY_KEYS.NLP_REFERENCE, "schemaorg-property", {
+      identifier,
+      ...params,
+    }),
     queryFn: () => nlpReferenceService.getSchemaOrgProperty(identifier, params),
     enabled: !!identifier,
     ...options,
@@ -159,10 +187,14 @@ export const useSchemaOrgReferenceProperty = (
  */
 export const useSchemaOrgReferenceSearch = (
   params: SchemaOrgReferenceSearchParams,
-  options?: UseQueryOptions<SchemaOrgSearchResponse, Error>
+  options?: UseQueryOptions<SchemaOrgSearchResponse, Error>,
 ) => {
   return useQuery({
-    queryKey: createQueryKey(QUERY_KEYS.NLP_REFERENCE, 'schemaorg-search', params),
+    queryKey: createQueryKey(
+      QUERY_KEYS.NLP_REFERENCE,
+      "schemaorg-search",
+      params,
+    ),
     queryFn: () => nlpReferenceService.searchSchemaOrg(params),
     enabled: !!params.query?.trim(),
     ...options,
@@ -173,10 +205,10 @@ export const useSchemaOrgReferenceSearch = (
  * Hook to get NLP reference APIs health status
  */
 export const useNLPReferenceHealth = (
-  options?: UseQueryOptions<unknown, Error>
+  options?: UseQueryOptions<unknown, Error>,
 ) => {
   return useQuery({
-    queryKey: createQueryKey(QUERY_KEYS.NLP_REFERENCE, 'health'),
+    queryKey: createQueryKey(QUERY_KEYS.NLP_REFERENCE, "health"),
     queryFn: () => nlpReferenceService.getHealthStatus(),
     ...options,
   });

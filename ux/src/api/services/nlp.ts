@@ -1,11 +1,11 @@
 /**
  * NLP Service
- * 
+ *
  * Service for natural language processing operations
  */
 
-import { BaseService } from './base';
-import { ENDPOINTS } from '../config';
+import { BaseService } from "./base";
+import { ENDPOINTS } from "../config";
 
 // Type definitions based on OpenAPI schema
 export interface TokenData {
@@ -124,18 +124,15 @@ export class NLPService extends BaseService {
    * @returns NLP analysis results including tokens and entities
    */
   async analyzeText(text: string): Promise<NLPAnalysisResponse> {
-    const sanitizedText = this.sanitizeString(text, 'text');
-    
-    return this.withErrorContext(
-      async () => {
-        const response = await this.postResource<NLPSuccessResponse>(
-          ENDPOINTS.NLP,
-          { text: sanitizedText }
-        );
-        return response.data;
-      },
-      'analyzing text'
-    );
+    const sanitizedText = this.sanitizeString(text, "text");
+
+    return this.withErrorContext(async () => {
+      const response = await this.postResource<NLPSuccessResponse>(
+        ENDPOINTS.NLP,
+        { text: sanitizedText },
+      );
+      return response.data;
+    }, "analyzing text");
   }
 
   /**
@@ -172,14 +169,16 @@ export class NLPService extends BaseService {
    * @param config Proxy configuration object
    * @returns Configuration response
    */
-  async configureProxy(config: ProxyConfiguration): Promise<ProxyConfigureResponse> {
-    return this.withErrorContext(
-      () => {
-        this.validateRequired(config, 'Proxy configuration');
-        return this.postResource<ProxyConfigureResponse>(`${ENDPOINTS.NLP}/proxy/configure`, config);
-      },
-      'configure NLP proxy'
-    );
+  async configureProxy(
+    config: ProxyConfiguration,
+  ): Promise<ProxyConfigureResponse> {
+    return this.withErrorContext(() => {
+      this.validateRequired(config, "Proxy configuration");
+      return this.postResource<ProxyConfigureResponse>(
+        `${ENDPOINTS.NLP}/proxy/configure`,
+        config,
+      );
+    }, "configure NLP proxy");
   }
 
   /**
@@ -187,7 +186,9 @@ export class NLPService extends BaseService {
    * @returns Current proxy status
    */
   async getProxyStatus(): Promise<ProxyStatusResponse> {
-    return this.getResource<ProxyStatusResponse>(`${ENDPOINTS.NLP}/proxy/status`);
+    return this.getResource<ProxyStatusResponse>(
+      `${ENDPOINTS.NLP}/proxy/status`,
+    );
   }
 
   /**
@@ -195,7 +196,9 @@ export class NLPService extends BaseService {
    * @returns Monitoring statistics or null if proxy is not running
    */
   async getProxyMonitoring(): Promise<ProxyMonitoringResponse | null> {
-    return this.getResource<ProxyMonitoringResponse | null>(`${ENDPOINTS.NLP}/proxy/monitor`);
+    return this.getResource<ProxyMonitoringResponse | null>(
+      `${ENDPOINTS.NLP}/proxy/monitor`,
+    );
   }
 }
 

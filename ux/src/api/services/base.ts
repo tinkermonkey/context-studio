@@ -1,11 +1,11 @@
 /**
  * Base Service Class
- * 
+ *
  * Abstract base class for all API services
  */
 
-import { AxiosInstance, AxiosRequestConfig } from 'axios';
-import { apiClient } from '../client/axios';
+import { AxiosInstance, AxiosRequestConfig } from "axios";
+import { apiClient } from "../client/axios";
 
 export interface ListParams {
   skip?: number;
@@ -57,35 +57,49 @@ export abstract class BaseService {
     }
   }
 
-  protected async getResource<T>(url: string, params?: Record<string, unknown>): Promise<T> {
+  protected async getResource<T>(
+    url: string,
+    params?: Record<string, unknown>,
+  ): Promise<T> {
     return this.request<T>({
-      method: 'GET',
+      method: "GET",
       url,
       params,
     });
   }
 
-  protected async postResource<T>(url: string, data?: unknown, config?: { params?: Record<string, unknown> }): Promise<T> {
+  protected async postResource<T>(
+    url: string,
+    data?: unknown,
+    config?: { params?: Record<string, unknown> },
+  ): Promise<T> {
     return this.request<T>({
-      method: 'POST',
+      method: "POST",
       url,
       data,
       params: config?.params,
     });
   }
 
-  protected async putResource<T>(url: string, data?: unknown, config?: { params?: Record<string, unknown> }): Promise<T> {
+  protected async putResource<T>(
+    url: string,
+    data?: unknown,
+    config?: { params?: Record<string, unknown> },
+  ): Promise<T> {
     return this.request<T>({
-      method: 'PUT',
+      method: "PUT",
       url,
       data,
       params: config?.params,
     });
   }
 
-  protected async deleteResource<T>(url: string, config?: { params?: Record<string, unknown> }): Promise<T> {
+  protected async deleteResource<T>(
+    url: string,
+    config?: { params?: Record<string, unknown> },
+  ): Promise<T> {
     return this.request<T>({
-      method: 'DELETE',
+      method: "DELETE",
       url,
       params: config?.params,
     });
@@ -97,35 +111,41 @@ export abstract class BaseService {
    * @param params Base parameters for the request
    * @returns Array of all items across all pages
    */
-  protected async getAllPaginated<T>(url: string, params?: Record<string, unknown>): Promise<T[]> {
+  protected async getAllPaginated<T>(
+    url: string,
+    params?: Record<string, unknown>,
+  ): Promise<T[]> {
     const allItems: T[] = [];
     let skip = 0;
     const limit = this.paginationConfig.maxPageSize; // Use max page size for efficiency
-    
+
     while (true) {
       const pageParams = {
         ...params,
         skip,
         limit,
       };
-      
-      const response = await this.getResource<PaginatedResponse<T>>(url, pageParams);
-      
+
+      const response = await this.getResource<PaginatedResponse<T>>(
+        url,
+        pageParams,
+      );
+
       // If we got no items, we've reached the end
       if (!response.data || response.data.length === 0) {
         break;
       }
-      
+
       allItems.push(...response.data);
-      
+
       // If we got fewer items than the limit, or if we've reached the total, we've reached the end
       if (response.data.length < limit || allItems.length >= response.total) {
         break;
       }
-      
+
       skip += limit;
     }
-    
+
     return allItems;
   }
 
@@ -135,7 +155,10 @@ export abstract class BaseService {
    * @param params Parameters including pagination options
    * @returns Single page of items
    */
-  protected async getPage<T>(url: string, params?: Record<string, unknown>): Promise<T[]> {
+  protected async getPage<T>(
+    url: string,
+    params?: Record<string, unknown>,
+  ): Promise<T[]> {
     const response = await this.getResource<PaginatedResponse<T>>(url, params);
     return response.data;
   }
@@ -146,7 +169,10 @@ export abstract class BaseService {
    * @param params Parameters including pagination options
    * @returns Paginated response with data and metadata
    */
-  protected async getPaginatedResponse<T>(url: string, params?: Record<string, unknown>): Promise<PaginatedResponse<T>> {
+  protected async getPaginatedResponse<T>(
+    url: string,
+    params?: Record<string, unknown>,
+  ): Promise<PaginatedResponse<T>> {
     return this.getResource<PaginatedResponse<T>>(url, params);
   }
 
@@ -155,14 +181,14 @@ export abstract class BaseService {
    */
   protected async withErrorContext<T>(
     operation: () => Promise<T>,
-    context: string
+    context: string,
   ): Promise<T> {
     try {
       return await operation();
     } catch (error) {
       // Add service and operation context to errors
       if (error instanceof Error) {
-        const serviceName = this.constructor.name.replace('Service', '');
+        const serviceName = this.constructor.name.replace("Service", "");
         error.message = `${serviceName} ${context}: ${error.message}`;
       }
       throw error;
@@ -173,7 +199,7 @@ export abstract class BaseService {
    * Validate required parameters
    */
   protected validateRequired<T>(value: T, paramName: string): T {
-    if (value === null || value === undefined || value === '') {
+    if (value === null || value === undefined || value === "") {
       throw new Error(`${paramName} is required`);
     }
     return value;
@@ -182,7 +208,11 @@ export abstract class BaseService {
   /**
    * Validate and sanitize string parameters
    */
-  protected sanitizeString(value: string, paramName: string, maxLength?: number): string {
+  protected sanitizeString(
+    value: string,
+    paramName: string,
+    maxLength?: number,
+  ): string {
     const sanitized = value?.trim();
     if (!sanitized) {
       throw new Error(`${paramName} cannot be empty`);

@@ -1,4 +1,10 @@
-import React, { useCallback, useMemo, useEffect, useRef, useState } from "react";
+import React, {
+  useCallback,
+  useMemo,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
 import { type ChartData } from "./tree_data";
 import { ChartStyles } from "./tree_styles";
 import TreeTrunk from "./tree_trunk";
@@ -21,25 +27,29 @@ interface TreeChartProps {
    */
   highlightedTermId?: string;
 }
-const TreeChart: React.FC<TreeChartProps> = ({ chartData, initialExpandState, highlightedTermId }) => {
+const TreeChart: React.FC<TreeChartProps> = ({
+  chartData,
+  initialExpandState,
+  highlightedTermId,
+}) => {
   // Container ref to measure width
   const containerRef = useRef<HTMLDivElement>(null);
   const [containerWidth, setContainerWidth] = useState<number>(0);
   const [containerHeight, setContainerHeight] = useState<number>(0);
 
   // Use persisted expand state and scroll management hook
-  const { 
-    expandState, 
-    handleNodeToggle, 
+  const {
+    expandState,
+    handleNodeToggle,
     restoreScrollPosition,
-    setInitialExpandState
+    setInitialExpandState,
   } = usePersistedExpandState();
 
   // Set initial expand state when initialExpandState prop changes
   useEffect(() => {
     if (initialExpandState && initialExpandState.length > 0) {
       const initialState = new Map<string, boolean>();
-      initialExpandState.forEach(nodeId => {
+      initialExpandState.forEach((nodeId) => {
         initialState.set(nodeId, true);
       });
       setInitialExpandState(initialState);
@@ -84,10 +94,10 @@ const TreeChart: React.FC<TreeChartProps> = ({ chartData, initialExpandState, hi
   // Early return with alert if no chart data is provided
   if (!chartData) {
     return (
-        <Alert color="warning">
-          No chart data provided. Please provide valid chart data to render the
-          tree.
-        </Alert>
+      <Alert color="warning">
+        No chart data provided. Please provide valid chart data to render the
+        tree.
+      </Alert>
     );
   }
 
@@ -95,7 +105,13 @@ const TreeChart: React.FC<TreeChartProps> = ({ chartData, initialExpandState, hi
   const { root, dimensions } = useMemo(() => {
     // Only pass container width if it's been measured (> 0)
     const maxWidth = containerWidth > 0 ? containerWidth : undefined;
-    return calculateLayout(chartData, expandState, undefined, undefined, maxWidth);
+    return calculateLayout(
+      chartData,
+      expandState,
+      undefined,
+      undefined,
+      maxWidth,
+    );
   }, [chartData, expandState, containerWidth]);
 
   // Calculate the actual height needed for the chart content
@@ -111,7 +127,7 @@ const TreeChart: React.FC<TreeChartProps> = ({ chartData, initialExpandState, hi
     const timeoutId = setTimeout(() => {
       restoreScrollPosition();
     }, 100);
-    
+
     return () => clearTimeout(timeoutId);
   }, [restoreScrollPosition, dimensions]);
 
@@ -129,16 +145,19 @@ const TreeChart: React.FC<TreeChartProps> = ({ chartData, initialExpandState, hi
   }, []);
 
   return (
-    <div ref={containerRef} style={{
-      ...ChartStyles.chartContainer,
-      position: 'relative', // Enable relative positioning for the container
-      minHeight: chartHeight // Ensure container has minimum height for the chart
-    }}>
+    <div
+      ref={containerRef}
+      style={{
+        ...ChartStyles.chartContainer,
+        position: "relative", // Enable relative positioning for the container
+        minHeight: chartHeight, // Ensure container has minimum height for the chart
+      }}
+    >
       {/* SVG Layer with embedded definitions via foreignObject */}
-      <svg 
-        width={dimensions.width} 
+      <svg
+        width={dimensions.width}
         height={chartHeight}
-        style={{ display: 'block' }} // Remove default inline spacing
+        style={{ display: "block" }} // Remove default inline spacing
       >
         {/* Render all children of the root node */}
         {root.children.map((child: any, index: number) => (

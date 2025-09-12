@@ -20,7 +20,10 @@ import {
 } from "lucide-react";
 import { Link } from "@tanstack/react-router";
 import { NlpAnalysisPanel } from "@/components/nlp/NlpAnalysisPanel";
-import { useStructureNode, useTermNodes } from "@/api/hooks/structure_nodes/useStructureNodes";
+import {
+  useStructureNode,
+  useTermNodes,
+} from "@/api/hooks/structure_nodes/useStructureNodes";
 import { DomainForm } from "@/components/forms/domain_form";
 import { useQueryClient } from "@tanstack/react-query";
 import { QUERY_KEYS } from "@/api/config";
@@ -42,7 +45,9 @@ interface DomainDetailsProps {
 export const DomainDetails: React.FC<DomainDetailsProps> = ({ domain }) => {
   const queryClient = useQueryClient();
   const [isEditOpen, setIsEditOpen] = React.useState(false);
-  const { data: layer, isLoading: layerLoading } = useStructureNode(domain.parent_node_id ?? "");
+  const { data: layer, isLoading: layerLoading } = useStructureNode(
+    domain.parent_node_id ?? "",
+  );
   const { data: terms, isLoading: termsLoading } = useTermNodes(domain.id);
 
   // Group terms by parent-child relationships
@@ -215,7 +220,7 @@ export const DomainDetails: React.FC<DomainDetailsProps> = ({ domain }) => {
               layerId={domain.parent_node_id}
             />
           </div>
-          
+
           {/* Definition */}
           <Card>
             <h2 className="mb-3 text-xl font-semibold">Definition</h2>

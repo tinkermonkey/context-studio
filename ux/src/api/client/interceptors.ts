@@ -1,31 +1,31 @@
 /**
  * Axios Interceptors
- * 
+ *
  * Request and response interceptors for the API client
  */
 
-import { InternalAxiosRequestConfig, AxiosResponse, AxiosError } from 'axios';
-import { apiLogger } from '../utils/logger';
-import { 
-  ApiError, 
-  ValidationError, 
-  NotFoundError, 
-  ConflictError, 
+import { InternalAxiosRequestConfig, AxiosResponse, AxiosError } from "axios";
+import { apiLogger } from "../utils/logger";
+import {
+  ApiError,
+  ValidationError,
+  NotFoundError,
+  ConflictError,
   BadRequestError,
   UnauthorizedError,
   ForbiddenError,
   TooManyRequestsError,
   InternalServerError,
   ServiceUnavailableError,
-  NetworkError 
-} from '../errors/ApiError';
-import type { components } from './types';
+  NetworkError,
+} from "../errors/ApiError";
+import type { components } from "./types";
 
-type HTTPValidationError = components['schemas']['HTTPValidationError'];
+type HTTPValidationError = components["schemas"]["HTTPValidationError"];
 
 export const requestInterceptor = (config: InternalAxiosRequestConfig) => {
   // Log outgoing requests
-  apiLogger.request(config.method || 'GET', config.url || '', config.data);
+  apiLogger.request(config.method || "GET", config.url || "", config.data);
   // In test environment, print a compact debug line to help MSW handler matching
   // NOTE: removed test-only console output to keep test logs clean.
 
@@ -38,10 +38,10 @@ export const requestInterceptor = (config: InternalAxiosRequestConfig) => {
 export const responseInterceptor = (response: AxiosResponse) => {
   // Log successful responses
   apiLogger.response(
-    response.config.method || 'GET',
-    response.config.url || '',
+    response.config.method || "GET",
+    response.config.url || "",
     response.status,
-    response.data
+    response.data,
   );
 
   return response;
@@ -53,11 +53,7 @@ export const errorInterceptor = (error: AxiosError) => {
   const method = config?.method?.toUpperCase();
 
   // Log the error
-  apiLogger.requestError(
-    method || 'GET',
-    endpoint || '',
-    error
-  );
+  apiLogger.requestError(method || "GET", endpoint || "", error);
 
   // Handle different error scenarios
   if (response) {
@@ -68,127 +64,120 @@ export const errorInterceptor = (error: AxiosError) => {
       case 400:
         return Promise.reject(
           new BadRequestError(
-            extractErrorMessage(data, 'Bad Request'),
+            extractErrorMessage(data, "Bad Request"),
             data,
             endpoint,
-            method
-          )
+            method,
+          ),
         );
-      
+
       case 401:
         return Promise.reject(
           new UnauthorizedError(
-            extractErrorMessage(data, 'Unauthorized'),
+            extractErrorMessage(data, "Unauthorized"),
             data,
             endpoint,
-            method
-          )
+            method,
+          ),
         );
-      
+
       case 403:
         return Promise.reject(
           new ForbiddenError(
-            extractErrorMessage(data, 'Forbidden'),
+            extractErrorMessage(data, "Forbidden"),
             data,
             endpoint,
-            method
-          )
+            method,
+          ),
         );
-      
+
       case 404:
         return Promise.reject(
-          new NotFoundError(
-            'Resource',
-            undefined,
-            data,
-            endpoint,
-            method
-          )
+          new NotFoundError("Resource", undefined, data, endpoint, method),
         );
-      
+
       case 409:
         return Promise.reject(
           new ConflictError(
-            extractErrorMessage(data, 'Resource conflict'),
+            extractErrorMessage(data, "Resource conflict"),
             data,
             endpoint,
-            method
-          )
+            method,
+          ),
         );
-      
+
       case 422:
         // Handle FastAPI validation errors
         if (isValidationErrorResponse(data)) {
           return Promise.reject(
-            ValidationError.fromValidationResponse(data, endpoint, method)
+            ValidationError.fromValidationResponse(data, endpoint, method),
           );
         }
         return Promise.reject(
-          new ValidationError(
-            'Validation failed',
-            {},
-            data,
-            endpoint,
-            method
-          )
+          new ValidationError("Validation failed", {}, data, endpoint, method),
         );
 
       case 429:
         return Promise.reject(
           new TooManyRequestsError(
-            extractErrorMessage(data, 'Too many requests'),
+            extractErrorMessage(data, "Too many requests"),
             data,
             endpoint,
-            method
-          )
+            method,
+          ),
         );
-      
+
       case 500:
         return Promise.reject(
           new InternalServerError(
-            extractErrorMessage(data, 'Internal Server Error'),
+            extractErrorMessage(data, "Internal Server Error"),
             data,
             endpoint,
-            method
-          )
+            method,
+          ),
         );
 
       case 503:
         return Promise.reject(
           new ServiceUnavailableError(
-            extractErrorMessage(data, 'Service Unavailable'),
+            extractErrorMessage(data, "Service Unavailable"),
             data,
             endpoint,
-            method
-          )
+            method,
+          ),
         );
-      
+
       default:
         return Promise.reject(
-          ApiError.fromResponse(response, 'An error occurred', endpoint, method)
+          ApiError.fromResponse(
+            response,
+            "An error occurred",
+            endpoint,
+            method,
+          ),
         );
     }
   } else if (request) {
     // Network error
     return Promise.reject(
       new NetworkError(
-        'Network error - no response received',
+        "Network error - no response received",
         undefined,
         endpoint,
-        method
-      )
+        method,
+      ),
     );
   } else {
     // Something else happened
     return Promise.reject(
       new ApiError(
-        0, 
-        error.message || 'An unknown error occurred', 
-        'UNKNOWN_ERROR', 
+        0,
+        error.message || "An unknown error occurred",
+        "UNKNOWN_ERROR",
         error,
         endpoint,
-        method
-      )
+        method,
+      ),
     );
   }
 };
@@ -197,7 +186,7 @@ export const errorInterceptor = (error: AxiosError) => {
  * Extract error message from response data
  */
 function extractErrorMessage(data: unknown, fallback: string): string {
-  if (typeof data === 'object' && data !== null) {
+  if (typeof data === "object" && data !== null) {
     const errorData = data as any;
     return errorData.message || errorData.detail || fallback;
   }
@@ -209,9 +198,9 @@ function extractErrorMessage(data: unknown, fallback: string): string {
  */
 function isValidationErrorResponse(data: unknown): data is HTTPValidationError {
   return (
-    typeof data === 'object' && 
-    data !== null && 
-    'detail' in data && 
+    typeof data === "object" &&
+    data !== null &&
+    "detail" in data &&
     Array.isArray((data as any).detail)
   );
 }

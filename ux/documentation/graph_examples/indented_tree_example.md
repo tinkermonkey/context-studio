@@ -9,7 +9,7 @@ Below is a non-react example of the indented tree graph
 ### Example code
 
 ```javascript
-import { Text as GText, Rect } from '@antv/g';
+import { Text as GText, Rect } from "@antv/g";
 import {
   Badge,
   BaseBehavior,
@@ -24,30 +24,30 @@ import {
   register,
   subStyleProps,
   treeToGraphData,
-} from '@antv/g6';
+} from "@antv/g6";
 
-const style = document.createElement('style');
+const style = document.createElement("style");
 style.innerHTML = `@import url('${iconfont.css}');`;
 document.head.appendChild(style);
 
-const rootId = 'Modeling Methods';
+const rootId = "Modeling Methods";
 
 const COLORS = [
-  '#5B8FF9',
-  '#F6BD16',
-  '#5AD8A6',
-  '#945FB9',
-  '#E86452',
-  '#6DC8EC',
-  '#FF99C3',
-  '#1E9493',
-  '#FF9845',
-  '#5D7092',
+  "#5B8FF9",
+  "#F6BD16",
+  "#5AD8A6",
+  "#945FB9",
+  "#E86452",
+  "#6DC8EC",
+  "#FF99C3",
+  "#1E9493",
+  "#FF9845",
+  "#5D7092",
 ];
 
 const TreeEvent = {
-  COLLAPSE_EXPAND: 'collapse-expand',
-  ADD_CHILD: 'add-child',
+  COLLAPSE_EXPAND: "collapse-expand",
+  ADD_CHILD: "add-child",
 };
 
 let textShape;
@@ -61,12 +61,12 @@ class IndentedNode extends BaseNode {
   static defaultStyleProps = {
     ports: [
       {
-        key: 'in',
-        placement: 'right-bottom',
+        key: "in",
+        placement: "right-bottom",
       },
       {
-        key: 'out',
-        placement: 'left-bottom',
+        key: "out",
+        placement: "left-bottom",
       },
     ],
   };
@@ -87,36 +87,36 @@ class IndentedNode extends BaseNode {
       width,
       height,
       ...keyStyle,
-      fill: 'transparent',
+      fill: "transparent",
     };
   }
 
   drawKeyShape(attributes, container) {
     const keyStyle = this.getKeyStyle(attributes);
-    return this.upsert('key', 'rect', keyStyle, container);
+    return this.upsert("key", "rect", keyStyle, container);
   }
 
   getLabelStyle(attributes) {
     if (attributes.label === false || !attributes.labelText) return false;
-    return subStyleProps(this.getGraphicStyle(attributes), 'label');
+    return subStyleProps(this.getGraphicStyle(attributes), "label");
   }
 
   drawIconArea(attributes, container) {
     const [, h] = this.getSize(attributes);
     const iconAreaStyle = {
-      fill: 'transparent',
+      fill: "transparent",
       height: 30,
       width: 12,
       x: -6,
       y: h,
       zIndex: -1,
     };
-    this.upsert('icon-area', Rect, iconAreaStyle, container);
+    this.upsert("icon-area", Rect, iconAreaStyle, container);
   }
 
   forwardEvent(target, type, listener) {
-    if (target && !Reflect.has(target, '__bind__')) {
-      Reflect.set(target, '__bind__', true);
+    if (target && !Reflect.has(target, "__bind__")) {
+      Reflect.set(target, "__bind__", true);
       target.addEventListener(type, listener);
     }
   }
@@ -127,12 +127,12 @@ class IndentedNode extends BaseNode {
       const [, height] = this.getSize(attributes);
       return {
         backgroundFill: color,
-        cursor: 'pointer',
-        fill: '#fff',
+        cursor: "pointer",
+        fill: "#fff",
         fontSize: 8,
         padding: [0, 10],
         text: `${this.childrenData.length}`,
-        textAlign: 'center',
+        textAlign: "center",
         y: height + 8,
       };
     }
@@ -142,7 +142,7 @@ class IndentedNode extends BaseNode {
 
   drawCountShape(attributes, container) {
     const countStyle = this.getCountStyle(attributes);
-    const btn = this.upsert('count', Badge, countStyle, container);
+    const btn = this.upsert("count", Badge, countStyle, container);
 
     this.forwardEvent(btn, CommonEvent.CLICK, (event) => {
       event.stopPropagation();
@@ -162,16 +162,16 @@ class IndentedNode extends BaseNode {
     if (!this.isShowCollapse(attributes)) return false;
     const [, height] = this.getSize(attributes);
     return {
-      visibility: showIcon ? 'visible' : 'hidden',
+      visibility: showIcon ? "visible" : "hidden",
       backgroundFill: color,
       backgroundHeight: 12,
       backgroundWidth: 12,
-      cursor: 'pointer',
-      fill: '#fff',
-      fontFamily: 'iconfont',
+      cursor: "pointer",
+      fill: "#fff",
+      fontFamily: "iconfont",
       fontSize: 8,
-      text: '\ue6e4',
-      textAlign: 'center',
+      text: "\ue6e4",
+      textAlign: "center",
       x: -1, // half of edge line width
       y: height + 8,
     };
@@ -179,7 +179,7 @@ class IndentedNode extends BaseNode {
 
   drawCollapseShape(attributes, container) {
     const iconStyle = this.getCollapseStyle(attributes);
-    const btn = this.upsert('collapse-expand', Badge, iconStyle, container);
+    const btn = this.upsert("collapse-expand", Badge, iconStyle, container);
 
     this.forwardEvent(btn, CommonEvent.CLICK, (event) => {
       event.stopPropagation();
@@ -194,21 +194,21 @@ class IndentedNode extends BaseNode {
     const { collapsed, showIcon } = attributes;
     if (collapsed) return false;
     const [, height] = this.getSize(attributes);
-    const color = '#ddd';
+    const color = "#ddd";
     const lineWidth = 1;
 
     return {
-      visibility: showIcon ? 'visible' : 'hidden',
-      backgroundFill: '#fff',
+      visibility: showIcon ? "visible" : "hidden",
+      backgroundFill: "#fff",
       backgroundHeight: 12,
       backgroundLineWidth: lineWidth,
       backgroundStroke: color,
       backgroundWidth: 12,
-      cursor: 'pointer',
+      cursor: "pointer",
       fill: color,
-      fontFamily: 'iconfont',
-      text: '\ue664',
-      textAlign: 'center',
+      fontFamily: "iconfont",
+      text: "\ue664",
+      textAlign: "center",
       x: -1,
       y: height + (this.isShowCollapse(attributes) ? 22 : 8),
     };
@@ -216,7 +216,7 @@ class IndentedNode extends BaseNode {
 
   drawAddShape(attributes, container) {
     const addStyle = this.getAddStyle(attributes);
-    const btn = this.upsert('add', Badge, addStyle, container);
+    const btn = this.upsert("add", Badge, addStyle, container);
 
     this.forwardEvent(btn, CommonEvent.CLICK, (event) => {
       event.stopPropagation();
@@ -274,7 +274,7 @@ class CollapseExpandTree extends BaseBehavior {
     graph.off(TreeEvent.ADD_CHILD, this.addChild);
   }
 
-  status = 'idle';
+  status = "idle";
 
   showIcon = (event) => {
     this.setIcon(event, true);
@@ -285,7 +285,7 @@ class CollapseExpandTree extends BaseBehavior {
   };
 
   setIcon = (event, show) => {
-    if (this.status !== 'idle') return;
+    if (this.status !== "idle") return;
     const { target } = event;
     const id = target.id;
     const { graph, element } = this.context;
@@ -294,23 +294,32 @@ class CollapseExpandTree extends BaseBehavior {
   };
 
   onCollapseExpand = async (event) => {
-    this.status = 'busy';
+    this.status = "busy";
     const { id, collapsed } = event;
     const { graph } = this.context;
     if (collapsed) await graph.collapseElement(id);
     else await graph.expandElement(id);
-    this.status = 'idle';
+    this.status = "idle";
   };
 
   addChild(event) {
-    const { onCreateChild = () => ({ id: `${Date.now()}`, style: { labelText: 'new node' } }) } = this.options;
+    const {
+      onCreateChild = () => ({
+        id: `${Date.now()}`,
+        style: { labelText: "new node" },
+      }),
+    } = this.options;
     const { graph } = this.context;
     const datum = onCreateChild(event.id);
     graph.addNodeData([datum]);
     graph.addEdgeData([{ source: event.id, target: datum.id }]);
     const parent = graph.getNodeData(event.id);
     graph.updateNodeData([
-      { id: event.id, children: [...(parent.children || []), datum.id], style: { collapsed: false } },
+      {
+        id: event.id,
+        children: [...(parent.children || []), datum.id],
+        style: { collapsed: false },
+      },
     ]);
     graph.render();
   }
@@ -358,20 +367,20 @@ class DragBranch extends BaseBehavior {
   validate(event) {
     if (this.destroyed) return false;
     const { enable = (evt) => evt.target.id !== rootId } = this.options;
-    if (typeof enable === 'function') return enable(event);
+    if (typeof enable === "function") return enable(event);
     return !!enable;
   }
 
   createShadow(target) {
-    const shadowStyle = subStyleProps(this.options, 'shadow');
-    const positionStyle = target.getShape('label').getBBox();
+    const shadowStyle = subStyleProps(this.options, "shadow");
+    const positionStyle = target.getShape("label").getBBox();
 
     this.shadow = new Rect({
       style: {
-        pointerEvents: 'none',
-        fill: '#F3F9FF',
+        pointerEvents: "none",
+        fill: "#F3F9FF",
         fillOpacity: 0.5,
-        stroke: '#1890FF',
+        stroke: "#1890FF",
         strokeOpacity: 0.9,
         lineDash: [5, 5],
         ...shadowStyle,
@@ -421,7 +430,7 @@ class DragBranch extends BaseBehavior {
     const childId = this.child.id;
     const parentId = this.parent.id;
 
-    const originalParent = graph.getParentData(childId, 'tree');
+    const originalParent = graph.getParentData(childId, "tree");
 
     // 前后父节点不应该相同
     // The previous and current parent nodes should not be the same
@@ -429,7 +438,7 @@ class DragBranch extends BaseBehavior {
 
     // 新的父节点不应该是当前节点的子节点
     // The new parent node should not be a child node of the current node
-    const ancestors = graph.getAncestorsData(parentId, 'tree');
+    const ancestors = graph.getAncestorsData(parentId, "tree");
     if (ancestors.some((ancestor) => ancestor.id === childId)) return;
 
     const edges = graph
@@ -438,10 +447,17 @@ class DragBranch extends BaseBehavior {
       .map(idOf);
     graph.removeEdgeData(edges);
     graph.updateNodeData([
-      { id: idOf(originalParent), children: originalParent?.children?.filter((child) => child !== childId) },
+      {
+        id: idOf(originalParent),
+        children: originalParent?.children?.filter(
+          (child) => child !== childId,
+        ),
+      },
     ]);
     const modifiedParent = graph.getNodeData(parentId);
-    graph.updateNodeData([{ id: parentId, children: [...(modifiedParent.children || []), childId] }]);
+    graph.updateNodeData([
+      { id: parentId, children: [...(modifiedParent.children || []), childId] },
+    ]);
     graph.addEdgeData([{ source: parentId, target: childId }]);
     graph.render();
   };
@@ -455,7 +471,7 @@ class DragBranch extends BaseBehavior {
     }
 
     this.parent = event.target;
-    graph.updateNodeData([{ id: targetId, states: ['selected'] }]);
+    graph.updateNodeData([{ id: targetId, states: ["selected"] }]);
     element.draw({ animation: false, silence: true });
   };
 
@@ -469,71 +485,79 @@ class DragBranch extends BaseBehavior {
   };
 }
 
-register(ExtensionCategory.NODE, 'indented', IndentedNode);
-register(ExtensionCategory.EDGE, 'indented', IndentedEdge);
-register(ExtensionCategory.BEHAVIOR, 'collapse-expand-tree', CollapseExpandTree);
-register(ExtensionCategory.BEHAVIOR, 'drag-branch', DragBranch);
+register(ExtensionCategory.NODE, "indented", IndentedNode);
+register(ExtensionCategory.EDGE, "indented", IndentedEdge);
+register(
+  ExtensionCategory.BEHAVIOR,
+  "collapse-expand-tree",
+  CollapseExpandTree,
+);
+register(ExtensionCategory.BEHAVIOR, "drag-branch", DragBranch);
 
-fetch('https://assets.antv.antgroup.com/g6/algorithm-category.json')
+fetch("https://assets.antv.antgroup.com/g6/algorithm-category.json")
   .then((res) => res.json())
   .then((data) => {
     const graph = new Graph({
-      container: 'container',
+      container: "container",
       x: 60,
       data: treeToGraphData(data),
       node: {
-        type: 'indented',
+        type: "indented",
         style: {
           size: (d) => [measureText({ text: d.id, fontSize: 12 }) + 6, 20],
           labelBackground: (datum) => datum.id === rootId,
           labelBackgroundRadius: 0,
-          labelBackgroundFill: '#576286',
-          labelFill: (datum) => (datum.id === rootId ? '#fff' : '#666'),
+          labelBackgroundFill: "#576286",
+          labelFill: (datum) => (datum.id === rootId ? "#fff" : "#666"),
           labelText: (d) => d.style?.labelText || d.id,
-          labelTextAlign: (datum) => (datum.id === rootId ? 'center' : 'left'),
-          labelTextBaseline: 'top',
+          labelTextAlign: (datum) => (datum.id === rootId ? "center" : "left"),
+          labelTextBaseline: "top",
           color: (datum) => {
-            const depth = graph.getAncestorsData(datum.id, 'tree').length - 1;
-            return COLORS[depth % COLORS.length] || '#576286';
+            const depth = graph.getAncestorsData(datum.id, "tree").length - 1;
+            return COLORS[depth % COLORS.length] || "#576286";
           },
         },
         state: {
           selected: {
             lineWidth: 0,
-            labelFill: '#40A8FF',
+            labelFill: "#40A8FF",
             labelBackground: true,
-            labelFontWeight: 'normal',
-            labelBackgroundFill: '#e8f7ff',
+            labelFontWeight: "normal",
+            labelBackgroundFill: "#e8f7ff",
             labelBackgroundRadius: 10,
           },
         },
       },
       edge: {
-        type: 'indented',
+        type: "indented",
         style: {
           radius: 16,
           lineWidth: 2,
-          sourcePort: 'out',
-          targetPort: 'in',
+          sourcePort: "out",
+          targetPort: "in",
           stroke: (datum) => {
-            const depth = graph.getAncestorsData(datum.source, 'tree').length;
+            const depth = graph.getAncestorsData(datum.source, "tree").length;
             return COLORS[depth % COLORS.length];
           },
         },
       },
       layout: {
-        type: 'indented',
-        direction: 'LR',
+        type: "indented",
+        direction: "LR",
         isHorizontal: true,
         indent: 40,
         getHeight: () => 20,
         getVGap: () => 10,
       },
       behaviors: [
-        'scroll-canvas',
-        'drag-branch',
-        'collapse-expand-tree',
-        { type: 'click-select', enable: (event) => event.targetType === 'node' && event.target.id !== rootId },
+        "scroll-canvas",
+        "drag-branch",
+        "collapse-expand-tree",
+        {
+          type: "click-select",
+          enable: (event) =>
+            event.targetType === "node" && event.target.id !== rootId,
+        },
       ],
     });
 

@@ -116,9 +116,7 @@ function HomeComponent() {
           <h1 className="relative text-center text-4xl leading-[125%] font-bold text-gray-900 dark:text-gray-200">
             Build fast with us
           </h1>
-          <Button href="/app">
-            Get started
-          </Button>
+          <Button href="/app">Get started</Button>
           <span className="inline-flex flex-wrap items-center justify-center gap-2.5 text-center">
             <span className="inline text-xl text-gray-600 dark:text-gray-400">
               Your app is ready, start building with

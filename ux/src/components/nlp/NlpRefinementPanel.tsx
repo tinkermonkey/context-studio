@@ -96,14 +96,14 @@ export const NlpRefinementPanel: React.FC<NlpRefinementPanelProps> = ({
 
   return (
     <div className={`${className}`}>
-      <div className="flex flex-col w-full">
-        <div className="w-full mb-3 bg-gray-100 dark:bg-grey-900 divide-gray-200 dark:divide-gray-700 px-2 py-5">
+      <div className="flex w-full flex-col">
+        <div className="dark:bg-grey-900 mb-3 w-full divide-gray-200 bg-gray-100 px-2 py-5 dark:divide-gray-700">
           <h5 className="text-lg font-semibold">Selected Node Context</h5>
         </div>
         {selectedNodeContext.size === 0 ? (
-          <div className="text-sm text-gray-500 p-2">No nodes selected</div>
+          <div className="p-2 text-sm text-gray-500">No nodes selected</div>
         ) : (
-          <div className="space-y-4 text-sm p-2">
+          <div className="space-y-4 p-2 text-sm">
             {groupedContexts.map(
               ({
                 tokenKey,

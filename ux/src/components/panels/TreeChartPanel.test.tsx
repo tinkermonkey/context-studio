@@ -2,19 +2,24 @@
  * TreeChartPanel Component Tests
  */
 
-import React from 'react';
-import { render, screen, waitFor } from '@testing-library/react';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { TreeChartPanel } from '@/components/panels/TreeChartPanel';
-import { useLayerNodes, useDomainNodes, useTermNodes, useStructureNode } from '@/api/hooks/structure_nodes/useStructureNodes';
-import { vi } from 'vitest';
+import React from "react";
+import { render, screen, waitFor } from "@testing-library/react";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { TreeChartPanel } from "@/components/panels/TreeChartPanel";
+import {
+  useLayerNodes,
+  useDomainNodes,
+  useTermNodes,
+  useStructureNode,
+} from "@/api/hooks/structure_nodes/useStructureNodes";
+import { vi } from "vitest";
 
 // Mock the hooks
-vi.mock('@/api/hooks/structure_nodes/useStructureNodes');
-vi.mock('@/components/graphs/hierarchy/tree_chart', () => ({
+vi.mock("@/api/hooks/structure_nodes/useStructureNodes");
+vi.mock("@/components/graphs/hierarchy/tree_chart", () => ({
   TreeChart: ({ chartData }: any) => (
     <div data-testid="tree-chart">
-      Tree Chart - Root: {chartData?.root?.title || 'No data'}
+      Tree Chart - Root: {chartData?.root?.title || "No data"}
     </div>
   ),
 }));
@@ -24,39 +29,38 @@ const mockUseDomainNodes = useDomainNodes as ReturnType<typeof vi.fn>;
 const mockUseStructureNodeNodes = useTermNodes as ReturnType<typeof vi.fn>;
 const mockUseStructureNode = useStructureNode as ReturnType<typeof vi.fn>;
 
-const createTestQueryClient = () => new QueryClient({
-  defaultOptions: {
-    queries: {
-      retry: false,
+const createTestQueryClient = () =>
+  new QueryClient({
+    defaultOptions: {
+      queries: {
+        retry: false,
+      },
     },
-  },
-});
+  });
 
 const TestWrapper: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const queryClient = createTestQueryClient();
   return (
-    <QueryClientProvider client={queryClient}>
-      {children}
-    </QueryClientProvider>
+    <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
   );
 };
 
-describe('TreeChartPanel', () => {
+describe("TreeChartPanel", () => {
   const mockLayers = [
-    { id: '1', title: 'Layer 1', definition: 'Test layer 1' }
+    { id: "1", title: "Layer 1", definition: "Test layer 1" },
   ];
-  
+
   const mockDomains = [
-    { id: '1', layer_id: '1', title: 'Domain 1', definition: 'Test domain 1' }
+    { id: "1", layer_id: "1", title: "Domain 1", definition: "Test domain 1" },
   ];
-  
+
   const mockTerms = [
-    { id: '1', domain_id: '1', title: 'Term 1', definition: 'Test term 1' }
+    { id: "1", domain_id: "1", title: "Term 1", definition: "Test term 1" },
   ];
 
   beforeEach(() => {
     vi.clearAllMocks();
-    
+
     // Default mock return value for useStructureNode
     mockUseStructureNode.mockReturnValue({
       data: undefined,
@@ -65,7 +69,7 @@ describe('TreeChartPanel', () => {
     } as any);
   });
 
-  it('displays loading state while data is being fetched', () => {
+  it("displays loading state while data is being fetched", () => {
     mockUseLayerNodes.mockReturnValue({
       data: undefined,
       isLoading: true,
@@ -85,15 +89,15 @@ describe('TreeChartPanel', () => {
     render(
       <TestWrapper>
         <TreeChartPanel />
-      </TestWrapper>
+      </TestWrapper>,
     );
 
-    expect(screen.getByRole('status')).toBeInTheDocument(); // Spinner
+    expect(screen.getByRole("status")).toBeInTheDocument(); // Spinner
   });
 
-  it('displays error state when data loading fails', () => {
-    const testError = new Error('Failed to load data');
-    
+  it("displays error state when data loading fails", () => {
+    const testError = new Error("Failed to load data");
+
     mockUseLayerNodes.mockReturnValue({
       data: undefined,
       isLoading: false,
@@ -113,14 +117,14 @@ describe('TreeChartPanel', () => {
     render(
       <TestWrapper>
         <TreeChartPanel />
-      </TestWrapper>
+      </TestWrapper>,
     );
 
-    expect(screen.getByText('Error loading data')).toBeInTheDocument();
-    expect(screen.getByText('Failed to load data')).toBeInTheDocument();
+    expect(screen.getByText("Error loading data")).toBeInTheDocument();
+    expect(screen.getByText("Failed to load data")).toBeInTheDocument();
   });
 
-  it('renders TreeChart when data is successfully loaded', async () => {
+  it("renders TreeChart when data is successfully loaded", async () => {
     mockUseLayerNodes.mockReturnValue({
       data: mockLayers,
       isLoading: false,
@@ -140,21 +144,21 @@ describe('TreeChartPanel', () => {
     render(
       <TestWrapper>
         <TreeChartPanel />
-      </TestWrapper>
+      </TestWrapper>,
     );
 
     await waitFor(() => {
-      expect(screen.getByTestId('tree-chart')).toBeInTheDocument();
+      expect(screen.getByTestId("tree-chart")).toBeInTheDocument();
     });
   });
 
-  it('loads specific term when termId is provided', async () => {
-    const testTermId = 'test-term-id';
-    const mockTargetTerm = { 
-      id: testTermId, 
-      domain_id: '1', 
-      title: 'Target Term', 
-      definition: 'Target term definition' 
+  it("loads specific term when termId is provided", async () => {
+    const testTermId = "test-term-id";
+    const mockTargetTerm = {
+      id: testTermId,
+      domain_id: "1",
+      title: "Target Term",
+      definition: "Target term definition",
     };
 
     mockUseLayerNodes.mockReturnValue({
@@ -181,20 +185,24 @@ describe('TreeChartPanel', () => {
     render(
       <TestWrapper>
         <TreeChartPanel termId={testTermId} />
-      </TestWrapper>
+      </TestWrapper>,
     );
 
     // Verify that useStructureNode was called with the correct termId
-    expect(mockUseStructureNode).toHaveBeenCalledWith(testTermId, { enabled: true });
+    expect(mockUseStructureNode).toHaveBeenCalledWith(testTermId, {
+      enabled: true,
+    });
 
     await waitFor(() => {
-      expect(screen.getByTestId('tree-chart')).toBeInTheDocument();
+      expect(screen.getByTestId("tree-chart")).toBeInTheDocument();
     });
   });
 
-  it('displays custom loading component when provided', () => {
-    const customLoadingComponent = <div data-testid="custom-loading">Custom loading...</div>;
-    
+  it("displays custom loading component when provided", () => {
+    const customLoadingComponent = (
+      <div data-testid="custom-loading">Custom loading...</div>
+    );
+
     mockUseLayerNodes.mockReturnValue({
       data: undefined,
       isLoading: true,
@@ -214,17 +222,19 @@ describe('TreeChartPanel', () => {
     render(
       <TestWrapper>
         <TreeChartPanel loadingComponent={customLoadingComponent} />
-      </TestWrapper>
+      </TestWrapper>,
     );
 
-    expect(screen.getByTestId('custom-loading')).toBeInTheDocument();
-    expect(screen.getByText('Custom loading...')).toBeInTheDocument();
+    expect(screen.getByTestId("custom-loading")).toBeInTheDocument();
+    expect(screen.getByText("Custom loading...")).toBeInTheDocument();
   });
 
-  it('displays custom error component when provided', () => {
-    const customErrorComponent = <div data-testid="custom-error">Custom error message</div>;
-    const testError = new Error('Failed to load');
-    
+  it("displays custom error component when provided", () => {
+    const customErrorComponent = (
+      <div data-testid="custom-error">Custom error message</div>
+    );
+    const testError = new Error("Failed to load");
+
     mockUseLayerNodes.mockReturnValue({
       data: undefined,
       isLoading: false,
@@ -244,14 +254,14 @@ describe('TreeChartPanel', () => {
     render(
       <TestWrapper>
         <TreeChartPanel errorComponent={customErrorComponent} />
-      </TestWrapper>
+      </TestWrapper>,
     );
 
-    expect(screen.getByTestId('custom-error')).toBeInTheDocument();
-    expect(screen.getByText('Custom error message')).toBeInTheDocument();
+    expect(screen.getByTestId("custom-error")).toBeInTheDocument();
+    expect(screen.getByText("Custom error message")).toBeInTheDocument();
   });
 
-  it('applies custom className when provided', () => {
+  it("applies custom className when provided", () => {
     mockUseLayerNodes.mockReturnValue({
       data: mockLayers,
       isLoading: false,
@@ -271,9 +281,9 @@ describe('TreeChartPanel', () => {
     const { container } = render(
       <TestWrapper>
         <TreeChartPanel className="custom-tree-panel" />
-      </TestWrapper>
+      </TestWrapper>,
     );
 
-    expect(container.querySelector('.custom-tree-panel')).toBeInTheDocument();
+    expect(container.querySelector(".custom-tree-panel")).toBeInTheDocument();
   });
 });

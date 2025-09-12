@@ -6,18 +6,22 @@ import type { components } from "@/api/client/types";
 import { useAddExistingDataset } from "@/api/hooks/datasets/useDatasetMutations";
 import { useDatasetsDirectory } from "@/api/hooks/datasets";
 
-type AddExistingDatasetRequest = components['schemas']['AddExistingDatasetRequest'];
+type AddExistingDatasetRequest =
+  components["schemas"]["AddExistingDatasetRequest"];
 
 interface AddExistingDatasetFormProps {
   onSuccess?: (dataset: any) => void;
 }
 
-const AddExistingDatasetForm: React.FC<AddExistingDatasetFormProps> = ({ onSuccess }) => {
+const AddExistingDatasetForm: React.FC<AddExistingDatasetFormProps> = ({
+  onSuccess,
+}) => {
   const addExistingDatasetMutation = useAddExistingDataset();
-  const { data: directoryInfo, isLoading: directoryLoading } = useDatasetsDirectory();
+  const { data: directoryInfo, isLoading: directoryLoading } =
+    useDatasetsDirectory();
   const [submitError, setSubmitError] = React.useState<string | null>(null);
   const fileInputRef = React.useRef<HTMLInputElement>(null);
-  
+
   const form = useForm({
     defaultValues: {
       title: "",
@@ -28,16 +32,22 @@ const AddExistingDatasetForm: React.FC<AddExistingDatasetFormProps> = ({ onSucce
       try {
         // Construct the full path - if it doesn't start with /, assume it's relative to datasets directory
         let fullPath = value.file_path;
-        if (directoryInfo?.datasets_directory && !fullPath.startsWith('/') && !fullPath.includes(':\\')) {
+        if (
+          directoryInfo?.datasets_directory &&
+          !fullPath.startsWith("/") &&
+          !fullPath.includes(":\\")
+        ) {
           fullPath = `${directoryInfo.datasets_directory}/${fullPath}`;
         }
-        
+
         const requestData = {
           ...value,
-          file_path: fullPath
+          file_path: fullPath,
         };
-        
-        const result = await addExistingDatasetMutation.mutateAsync(requestData as AddExistingDatasetRequest);
+
+        const result = await addExistingDatasetMutation.mutateAsync(
+          requestData as AddExistingDatasetRequest,
+        );
         if (onSuccess) onSuccess(result);
         form.reset();
       } catch (error: any) {
@@ -72,11 +82,11 @@ const AddExistingDatasetForm: React.FC<AddExistingDatasetFormProps> = ({ onSucce
     if (file) {
       // For web file inputs, we'll use just the filename
       // The form will handle constructing the full path based on the datasets directory
-      form.setFieldValue('file_path', file.name);
+      form.setFieldValue("file_path", file.name);
       // Auto-populate title with filename without extension if title is empty
-      if (!form.getFieldValue('title')) {
+      if (!form.getFieldValue("title")) {
         const nameWithoutExt = file.name.replace(/\.[^/.]+$/, "");
-        form.setFieldValue('title', nameWithoutExt.replace(/[_-]/g, ' '));
+        form.setFieldValue("title", nameWithoutExt.replace(/[_-]/g, " "));
       }
     }
   };
@@ -99,13 +109,16 @@ const AddExistingDatasetForm: React.FC<AddExistingDatasetFormProps> = ({ onSucce
         {directoryInfo?.datasets_directory && (
           <Card>
             <div className="text-sm">
-              <p className="font-medium text-gray-700 mb-1">Datasets Directory:</p>
-              <p className="text-gray-600 font-mono text-xs break-all">
+              <p className="mb-1 font-medium text-gray-700">
+                Datasets Directory:
+              </p>
+              <p className="font-mono text-xs break-all text-gray-600">
                 {directoryInfo.datasets_directory}
               </p>
-              <p className="text-gray-500 text-xs mt-2">
-                Files will be looked for in this directory. You can enter just the filename if the file is in this directory, 
-                or provide a full path to a file elsewhere.
+              <p className="mt-2 text-xs text-gray-500">
+                Files will be looked for in this directory. You can enter just
+                the filename if the file is in this directory, or provide a full
+                path to a file elsewhere.
               </p>
             </div>
           </Card>
@@ -136,7 +149,9 @@ const AddExistingDatasetForm: React.FC<AddExistingDatasetFormProps> = ({ onSucce
                 onBlur={field.handleBlur}
                 onChange={(e) => field.handleChange(e.target.value)}
                 placeholder="Enter dataset title"
-                color={field.state.meta.errors.length > 0 ? "failure" : undefined}
+                color={
+                  field.state.meta.errors.length > 0 ? "failure" : undefined
+                }
               />
               {field.state.meta.errors.length > 0 && (
                 <div className="mt-1 text-sm text-red-600">
@@ -152,14 +167,17 @@ const AddExistingDatasetForm: React.FC<AddExistingDatasetFormProps> = ({ onSucce
           validators={{
             onChange: ({ value }) => {
               if (!value) return "Please enter a file path or select a file";
-              if (!value.endsWith('.db')) return "File must be a .db file";
+              if (!value.endsWith(".db")) return "File must be a .db file";
               return undefined;
             },
           }}
         >
           {(field) => (
             <div>
-              <Label htmlFor="dataset-file-path" className="mb-1 block font-medium">
+              <Label
+                htmlFor="dataset-file-path"
+                className="mb-1 block font-medium"
+              >
                 Dataset File Path
               </Label>
               <div className="flex gap-2">
@@ -170,7 +188,9 @@ const AddExistingDatasetForm: React.FC<AddExistingDatasetFormProps> = ({ onSucce
                   onBlur={field.handleBlur}
                   onChange={(e) => field.handleChange(e.target.value)}
                   placeholder="filename.db or /full/path/to/file.db"
-                  color={field.state.meta.errors.length > 0 ? "failure" : undefined}
+                  color={
+                    field.state.meta.errors.length > 0 ? "failure" : undefined
+                  }
                   className="flex-1"
                 />
                 <Button
@@ -196,7 +216,8 @@ const AddExistingDatasetForm: React.FC<AddExistingDatasetFormProps> = ({ onSucce
                 </div>
               ) : (
                 <div className="mt-1 text-sm text-gray-500">
-                  Enter the filename if it's in the datasets directory, or provide a full path
+                  Enter the filename if it's in the datasets directory, or
+                  provide a full path
                 </div>
               )}
             </div>

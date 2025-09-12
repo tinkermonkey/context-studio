@@ -2,7 +2,7 @@
  * Test utility to force axios to use MSW-compatible adapters
  */
 
-import type { AxiosInstance } from 'axios';
+import type { AxiosInstance } from "axios";
 
 /**
  * Forces an axios instance to use the MSW-compatible HTTP adapter.
@@ -12,14 +12,14 @@ export function forceMSWCompatibleAdapter(client: AxiosInstance): void {
   // Use a lazy-loading adapter that imports http/https at request time
   client.defaults.adapter = function mswCompatibleAdapter(config: any) {
     // Import http/https inside the adapter function to ensure MSW patches are applied
-    const http = require('http');
-    const https = require('https');
-    const { URL } = require('url');
-    
+    const http = require("http");
+    const https = require("https");
+    const { URL } = require("url");
+
     return new Promise((resolve, reject) => {
       try {
         const url = new URL(config.url, config.baseURL || undefined);
-        const isHttps = url.protocol === 'https:';
+        const isHttps = url.protocol === "https:";
         const transport = isHttps ? https : http;
 
         // Normalize headers
@@ -31,25 +31,25 @@ export function forceMSWCompatibleAdapter(client: AxiosInstance): void {
             }
           });
         }
-        
+
         let body: string | Buffer | null = null;
-        
+
         if (config.data !== undefined && config.data !== null) {
-          if (typeof config.data === 'string' || Buffer.isBuffer(config.data)) {
+          if (typeof config.data === "string" || Buffer.isBuffer(config.data)) {
             body = config.data;
           } else {
             body = JSON.stringify(config.data);
-            if (!headers['Content-Type'] && !headers['content-type']) {
-              headers['Content-Type'] = 'application/json;charset=utf-8';
+            if (!headers["Content-Type"] && !headers["content-type"]) {
+              headers["Content-Type"] = "application/json;charset=utf-8";
             }
           }
           if (body !== null) {
-            headers['Content-Length'] = String(Buffer.byteLength(body));
+            headers["Content-Length"] = String(Buffer.byteLength(body));
           }
         }
 
         const requestOptions = {
-          method: (config.method || 'get').toUpperCase(),
+          method: (config.method || "get").toUpperCase(),
           hostname: url.hostname,
           port: url.port || (isHttps ? 443 : 80),
           path: `${url.pathname}${url.search}`,
@@ -59,16 +59,16 @@ export function forceMSWCompatibleAdapter(client: AxiosInstance): void {
 
         const req = transport.request(requestOptions, (res: any) => {
           const chunks: Buffer[] = [];
-          res.on('data', (chunk: Buffer) => chunks.push(chunk));
-          res.on('end', () => {
+          res.on("data", (chunk: Buffer) => chunks.push(chunk));
+          res.on("end", () => {
             const buffer = Buffer.concat(chunks);
-            const contentType = res.headers['content-type'] || '';
+            const contentType = res.headers["content-type"] || "";
             let data: any = buffer.toString();
-            
-            if (contentType.includes('application/json')) {
-              try { 
-                data = JSON.parse(data); 
-              } catch (e) { 
+
+            if (contentType.includes("application/json")) {
+              try {
+                data = JSON.parse(data);
+              } catch (e) {
                 // keep raw string if JSON parsing fails
               }
             }
@@ -76,7 +76,7 @@ export function forceMSWCompatibleAdapter(client: AxiosInstance): void {
             const response = {
               data,
               status: res.statusCode,
-              statusText: res.statusMessage || '',
+              statusText: res.statusMessage || "",
               headers: res.headers,
               config: config,
               request: req,
@@ -86,12 +86,12 @@ export function forceMSWCompatibleAdapter(client: AxiosInstance): void {
           });
         });
 
-        req.on('error', (err: any) => reject(err));
-        
+        req.on("error", (err: any) => reject(err));
+
         if (requestOptions.timeout) {
           req.setTimeout(requestOptions.timeout, () => {
             req.destroy();
-            reject(new Error('Request timeout'));
+            reject(new Error("Request timeout"));
           });
         }
 

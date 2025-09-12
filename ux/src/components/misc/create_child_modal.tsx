@@ -15,9 +15,9 @@ export const CreateChildModal: React.FC<CreateChildModalProps> = ({
   children,
 }) => {
   return (
-    <Modal 
-      show={isOpen} 
-      onClose={onClose} 
+    <Modal
+      show={isOpen}
+      onClose={onClose}
       size="lg"
       role="dialog"
       aria-labelledby="modal-title"
@@ -26,9 +26,7 @@ export const CreateChildModal: React.FC<CreateChildModalProps> = ({
       <ModalHeader>
         <h2 id="modal-title">{title}</h2>
       </ModalHeader>
-      <ModalBody>
-        {children}
-      </ModalBody>
+      <ModalBody>{children}</ModalBody>
     </Modal>
   );
 };

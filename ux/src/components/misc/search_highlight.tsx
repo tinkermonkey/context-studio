@@ -1,4 +1,3 @@
-
 import React from "react";
 import { Badge } from "flowbite-react";
 
@@ -7,7 +6,10 @@ interface SearchHighlightProps {
   searchText?: string;
 }
 
-const SearchHighlight: React.FC<SearchHighlightProps> = ({ content = "", searchText = "" }) => {
+const SearchHighlight: React.FC<SearchHighlightProps> = ({
+  content = "",
+  searchText = "",
+}) => {
   if (!searchText || !content) return <>{content}</>;
 
   // Split content by searchText, keeping matches
@@ -17,10 +19,12 @@ const SearchHighlight: React.FC<SearchHighlightProps> = ({ content = "", searchT
     <>
       {parts.map((part, idx) =>
         part.toLowerCase() === searchText.toLowerCase() ? (
-          <Badge color="info" key={idx} className="inline px-0">{part}</Badge>
+          <Badge color="info" key={idx} className="inline px-0">
+            {part}
+          </Badge>
         ) : (
           <React.Fragment key={idx}>{part}</React.Fragment>
-        )
+        ),
       )}
     </>
   );

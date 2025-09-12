@@ -89,7 +89,48 @@ class PipelineDatabaseManager:
                 )
             """))
             
-            # Create indexes for better performance
+            # Create pipeline_flavor_executions table for LLM traceability
+            conn.execute(text("""
+                CREATE TABLE IF NOT EXISTS pipeline_flavor_executions (
+                    id TEXT PRIMARY KEY,
+                    pipeline_flavor_id TEXT NOT NULL,
+                    pipeline_type TEXT NOT NULL,
+                    pipeline_flavor_version INTEGER NOT NULL,
+                    request_context TEXT NOT NULL,  -- JSON
+                    user_prompt TEXT NOT NULL,
+                    response_message TEXT,
+                    
+                    execution_time_ms INTEGER,
+                    input_tokens INTEGER,
+                    output_tokens INTEGER,
+                    total_tokens INTEGER,
+                    
+                    status TEXT NOT NULL DEFAULT 'pending',
+                    error_message TEXT,
+                    
+                    started_at TEXT DEFAULT (datetime('now')),
+                    completed_at TEXT,
+                    
+                    FOREIGN KEY (pipeline_flavor_id) REFERENCES pipeline_flavors(id) ON DELETE CASCADE
+                )
+            """))
+            
+            # Create pipeline_flavor_selections table for user selection tracking
+            conn.execute(text("""
+                CREATE TABLE IF NOT EXISTS pipeline_flavor_selections (
+                    id TEXT PRIMARY KEY,
+                    pipeline_execution_id TEXT NOT NULL,
+                    record_type TEXT NOT NULL,
+                    record_id TEXT NOT NULL,
+                    suggestion_field TEXT NOT NULL,
+                    selected_content TEXT NOT NULL,
+                    date_created TEXT DEFAULT (datetime('now')),
+                    
+                    FOREIGN KEY (pipeline_execution_id) REFERENCES pipeline_flavor_executions(id) ON DELETE CASCADE
+                )
+            """))
+            
+            # Create indexes for pipeline_flavors performance
             conn.execute(text("""
                 CREATE INDEX IF NOT EXISTS idx_pipeline_flavors_pipeline 
                 ON pipeline_flavors(pipeline)
@@ -103,6 +144,43 @@ class PipelineDatabaseManager:
             conn.execute(text("""
                 CREATE INDEX IF NOT EXISTS idx_pipeline_flavors_created_at 
                 ON pipeline_flavors(created_at)
+            """))
+            
+            # Create indexes for pipeline_flavor_executions performance
+            conn.execute(text("""
+                CREATE INDEX IF NOT EXISTS idx_executions_flavor_id 
+                ON pipeline_flavor_executions(pipeline_flavor_id)
+            """))
+            
+            conn.execute(text("""
+                CREATE INDEX IF NOT EXISTS idx_executions_pipeline_type 
+                ON pipeline_flavor_executions(pipeline_type)
+            """))
+            
+            conn.execute(text("""
+                CREATE INDEX IF NOT EXISTS idx_executions_status 
+                ON pipeline_flavor_executions(status)
+            """))
+            
+            conn.execute(text("""
+                CREATE INDEX IF NOT EXISTS idx_executions_started_at 
+                ON pipeline_flavor_executions(started_at)
+            """))
+            
+            # Create indexes for pipeline_flavor_selections performance
+            conn.execute(text("""
+                CREATE INDEX IF NOT EXISTS idx_selections_execution_id 
+                ON pipeline_flavor_selections(pipeline_execution_id)
+            """))
+            
+            conn.execute(text("""
+                CREATE INDEX IF NOT EXISTS idx_selections_record 
+                ON pipeline_flavor_selections(record_type, record_id)
+            """))
+            
+            conn.execute(text("""
+                CREATE INDEX IF NOT EXISTS idx_selections_created 
+                ON pipeline_flavor_selections(date_created)
             """))
             
             conn.commit()

@@ -1,29 +1,34 @@
 /**
  * LLM Mutation Hooks
- * 
+ *
  * React Query mutation hooks for Large Language Model operations
  */
 
-import { useMutation, UseMutationOptions } from '@tanstack/react-query';
-import { 
-  llmService, 
-  type DefinitionSuggestionResponse, 
+import { useMutation, UseMutationOptions } from "@tanstack/react-query";
+import {
+  llmService,
+  type DefinitionSuggestionResponse,
   type DefinitionSuggestionRequest,
   type DomainDefinitionRequest,
   type DomainDefinitionResponse,
   type LayerDefinitionRequest,
   type LayerDefinitionResponse,
-  type ComponentTerm 
-} from '../../services/llm';
+  type ComponentTerm,
+} from "../../services/llm";
 
 /**
  * Hook to suggest term definition using mutation pattern (for manual triggering)
  */
 export const useSuggestTermDefinitionMutation = (
-  options?: UseMutationOptions<DefinitionSuggestionResponse, Error, DefinitionSuggestionRequest>
+  options?: UseMutationOptions<
+    DefinitionSuggestionResponse,
+    Error,
+    DefinitionSuggestionRequest
+  >,
 ) => {
   return useMutation({
-    mutationFn: (request: DefinitionSuggestionRequest) => llmService.suggestTermDefinition(request),
+    mutationFn: (request: DefinitionSuggestionRequest) =>
+      llmService.suggestTermDefinition(request),
     ...options,
   });
 };
@@ -32,10 +37,15 @@ export const useSuggestTermDefinitionMutation = (
  * Hook to suggest domain definition using mutation pattern (for manual triggering)
  */
 export const useSuggestDomainDefinitionMutation = (
-  options?: UseMutationOptions<DomainDefinitionResponse, Error, DomainDefinitionRequest>
+  options?: UseMutationOptions<
+    DomainDefinitionResponse,
+    Error,
+    DomainDefinitionRequest
+  >,
 ) => {
   return useMutation({
-    mutationFn: (request: DomainDefinitionRequest) => llmService.suggestDomainDefinition(request),
+    mutationFn: (request: DomainDefinitionRequest) =>
+      llmService.suggestDomainDefinition(request),
     ...options,
   });
 };
@@ -44,10 +54,15 @@ export const useSuggestDomainDefinitionMutation = (
  * Hook to suggest layer definition using mutation pattern (for manual triggering)
  */
 export const useSuggestLayerDefinitionMutation = (
-  options?: UseMutationOptions<LayerDefinitionResponse, Error, LayerDefinitionRequest>
+  options?: UseMutationOptions<
+    LayerDefinitionResponse,
+    Error,
+    LayerDefinitionRequest
+  >,
 ) => {
   return useMutation({
-    mutationFn: (request: LayerDefinitionRequest) => llmService.suggestLayerDefinition(request),
+    mutationFn: (request: LayerDefinitionRequest) =>
+      llmService.suggestLayerDefinition(request),
     ...options,
   });
 };
@@ -57,11 +72,18 @@ export const useSuggestLayerDefinitionMutation = (
  * Hook to suggest definition using mutation pattern (for manual triggering)
  */
 export const useSuggestDefinitionMutation = (
-  options?: UseMutationOptions<DefinitionSuggestionResponse, Error, DefinitionSuggestionRequest>
+  options?: UseMutationOptions<
+    DefinitionSuggestionResponse,
+    Error,
+    DefinitionSuggestionRequest
+  >,
 ) => {
-  console.warn('useSuggestDefinitionMutation is deprecated, use useSuggestTermDefinitionMutation instead');
+  console.warn(
+    "useSuggestDefinitionMutation is deprecated, use useSuggestTermDefinitionMutation instead",
+  );
   return useMutation({
-    mutationFn: (request: DefinitionSuggestionRequest) => llmService.suggestDefinition(request),
+    mutationFn: (request: DefinitionSuggestionRequest) =>
+      llmService.suggestDefinition(request),
     ...options,
   });
 };
@@ -70,7 +92,7 @@ export const useSuggestDefinitionMutation = (
  * Hook to generate simple term definition using mutation pattern
  */
 export const useGenerateSimpleTermDefinitionMutation = (
-  options?: UseMutationOptions<DefinitionSuggestionResponse, Error, string>
+  options?: UseMutationOptions<DefinitionSuggestionResponse, Error, string>,
 ) => {
   return useMutation({
     mutationFn: (term: string) => llmService.generateSimpleTermDefinition(term),
@@ -82,10 +104,11 @@ export const useGenerateSimpleTermDefinitionMutation = (
  * Hook to generate simple domain definition using mutation pattern
  */
 export const useGenerateSimpleDomainDefinitionMutation = (
-  options?: UseMutationOptions<DomainDefinitionResponse, Error, string>
+  options?: UseMutationOptions<DomainDefinitionResponse, Error, string>,
 ) => {
   return useMutation({
-    mutationFn: (domainTitle: string) => llmService.generateSimpleDomainDefinition(domainTitle),
+    mutationFn: (domainTitle: string) =>
+      llmService.generateSimpleDomainDefinition(domainTitle),
     ...options,
   });
 };
@@ -94,10 +117,11 @@ export const useGenerateSimpleDomainDefinitionMutation = (
  * Hook to generate simple layer definition using mutation pattern
  */
 export const useGenerateSimpleLayerDefinitionMutation = (
-  options?: UseMutationOptions<LayerDefinitionResponse, Error, string>
+  options?: UseMutationOptions<LayerDefinitionResponse, Error, string>,
 ) => {
   return useMutation({
-    mutationFn: (layerTitle: string) => llmService.generateSimpleLayerDefinition(layerTitle),
+    mutationFn: (layerTitle: string) =>
+      llmService.generateSimpleLayerDefinition(layerTitle),
     ...options,
   });
 };
@@ -107,9 +131,11 @@ export const useGenerateSimpleLayerDefinitionMutation = (
  * Hook to generate simple definition using mutation pattern
  */
 export const useGenerateSimpleDefinitionMutation = (
-  options?: UseMutationOptions<DefinitionSuggestionResponse, Error, string>
+  options?: UseMutationOptions<DefinitionSuggestionResponse, Error, string>,
 ) => {
-  console.warn('useGenerateSimpleDefinitionMutation is deprecated, use useGenerateSimpleTermDefinitionMutation instead');
+  console.warn(
+    "useGenerateSimpleDefinitionMutation is deprecated, use useGenerateSimpleTermDefinitionMutation instead",
+  );
   return useMutation({
     mutationFn: (term: string) => llmService.generateSimpleDefinition(term),
     ...options,
@@ -124,11 +150,15 @@ export const useGenerateTermDefinitionWithDomainMutation = (
     DefinitionSuggestionResponse,
     Error,
     { term: string; domainTitle: string; domainDefinition?: string }
-  >
+  >,
 ) => {
   return useMutation({
     mutationFn: ({ term, domainTitle, domainDefinition }) =>
-      llmService.generateTermDefinitionWithDomain(term, domainTitle, domainDefinition),
+      llmService.generateTermDefinitionWithDomain(
+        term,
+        domainTitle,
+        domainDefinition,
+      ),
     ...options,
   });
 };
@@ -146,11 +176,21 @@ export const useGenerateTermDefinitionWithParentMutation = (
       parentTermDefinition?: string;
       relationshipPredicate?: string;
     }
-  >
+  >,
 ) => {
   return useMutation({
-    mutationFn: ({ term, parentTermTitle, parentTermDefinition, relationshipPredicate }) =>
-      llmService.generateTermDefinitionWithParent(term, parentTermTitle, parentTermDefinition, relationshipPredicate),
+    mutationFn: ({
+      term,
+      parentTermTitle,
+      parentTermDefinition,
+      relationshipPredicate,
+    }) =>
+      llmService.generateTermDefinitionWithParent(
+        term,
+        parentTermTitle,
+        parentTermDefinition,
+        relationshipPredicate,
+      ),
     ...options,
   });
 };
@@ -163,7 +203,7 @@ export const useGenerateTermDefinitionWithComponentsMutation = (
     DefinitionSuggestionResponse,
     Error,
     { term: string; componentTerms: ComponentTerm[] }
-  >
+  >,
 ) => {
   return useMutation({
     mutationFn: ({ term, componentTerms }) =>
@@ -184,11 +224,15 @@ export const useGenerateTermDefinitionWithReferencesMutation = (
       dbpediaContext?: Record<string, any>;
       wikidataContext?: Record<string, any>;
     }
-  >
+  >,
 ) => {
   return useMutation({
     mutationFn: ({ term, dbpediaContext, wikidataContext }) =>
-      llmService.generateTermDefinitionWithReferences(term, dbpediaContext, wikidataContext),
+      llmService.generateTermDefinitionWithReferences(
+        term,
+        dbpediaContext,
+        wikidataContext,
+      ),
     ...options,
   });
 };
@@ -197,7 +241,11 @@ export const useGenerateTermDefinitionWithReferencesMutation = (
  * Hook to generate comprehensive term definition using mutation pattern
  */
 export const useGenerateComprehensiveTermDefinitionMutation = (
-  options?: UseMutationOptions<DefinitionSuggestionResponse, Error, DefinitionSuggestionRequest>
+  options?: UseMutationOptions<
+    DefinitionSuggestionResponse,
+    Error,
+    DefinitionSuggestionRequest
+  >,
 ) => {
   return useMutation({
     mutationFn: (request: DefinitionSuggestionRequest) =>
@@ -215,12 +263,18 @@ export const useGenerateDefinitionWithDomainMutation = (
     DefinitionSuggestionResponse,
     Error,
     { term: string; domainTitle: string; domainDefinition?: string }
-  >
+  >,
 ) => {
-  console.warn('useGenerateDefinitionWithDomainMutation is deprecated, use useGenerateTermDefinitionWithDomainMutation instead');
+  console.warn(
+    "useGenerateDefinitionWithDomainMutation is deprecated, use useGenerateTermDefinitionWithDomainMutation instead",
+  );
   return useMutation({
     mutationFn: ({ term, domainTitle, domainDefinition }) =>
-      llmService.generateDefinitionWithDomain(term, domainTitle, domainDefinition),
+      llmService.generateDefinitionWithDomain(
+        term,
+        domainTitle,
+        domainDefinition,
+      ),
     ...options,
   });
 };
@@ -239,12 +293,24 @@ export const useGenerateDefinitionWithParentMutation = (
       parentTermDefinition?: string;
       relationshipPredicate?: string;
     }
-  >
+  >,
 ) => {
-  console.warn('useGenerateDefinitionWithParentMutation is deprecated, use useGenerateTermDefinitionWithParentMutation instead');
+  console.warn(
+    "useGenerateDefinitionWithParentMutation is deprecated, use useGenerateTermDefinitionWithParentMutation instead",
+  );
   return useMutation({
-    mutationFn: ({ term, parentTermTitle, parentTermDefinition, relationshipPredicate }) =>
-      llmService.generateDefinitionWithParent(term, parentTermTitle, parentTermDefinition, relationshipPredicate),
+    mutationFn: ({
+      term,
+      parentTermTitle,
+      parentTermDefinition,
+      relationshipPredicate,
+    }) =>
+      llmService.generateDefinitionWithParent(
+        term,
+        parentTermTitle,
+        parentTermDefinition,
+        relationshipPredicate,
+      ),
     ...options,
   });
 };
@@ -258,9 +324,11 @@ export const useGenerateDefinitionWithComponentsMutation = (
     DefinitionSuggestionResponse,
     Error,
     { term: string; componentTerms: ComponentTerm[] }
-  >
+  >,
 ) => {
-  console.warn('useGenerateDefinitionWithComponentsMutation is deprecated, use useGenerateTermDefinitionWithComponentsMutation instead');
+  console.warn(
+    "useGenerateDefinitionWithComponentsMutation is deprecated, use useGenerateTermDefinitionWithComponentsMutation instead",
+  );
   return useMutation({
     mutationFn: ({ term, componentTerms }) =>
       llmService.generateDefinitionWithComponents(term, componentTerms),
@@ -281,12 +349,18 @@ export const useGenerateDefinitionWithReferencesMutation = (
       dbpediaContext?: Record<string, any>;
       wikidataContext?: Record<string, any>;
     }
-  >
+  >,
 ) => {
-  console.warn('useGenerateDefinitionWithReferencesMutation is deprecated, use useGenerateTermDefinitionWithReferencesMutation instead');
+  console.warn(
+    "useGenerateDefinitionWithReferencesMutation is deprecated, use useGenerateTermDefinitionWithReferencesMutation instead",
+  );
   return useMutation({
     mutationFn: ({ term, dbpediaContext, wikidataContext }) =>
-      llmService.generateDefinitionWithReferences(term, dbpediaContext, wikidataContext),
+      llmService.generateDefinitionWithReferences(
+        term,
+        dbpediaContext,
+        wikidataContext,
+      ),
     ...options,
   });
 };
@@ -296,9 +370,15 @@ export const useGenerateDefinitionWithReferencesMutation = (
  * Hook to generate comprehensive definition using mutation pattern
  */
 export const useGenerateComprehensiveDefinitionMutation = (
-  options?: UseMutationOptions<DefinitionSuggestionResponse, Error, DefinitionSuggestionRequest>
+  options?: UseMutationOptions<
+    DefinitionSuggestionResponse,
+    Error,
+    DefinitionSuggestionRequest
+  >,
 ) => {
-  console.warn('useGenerateComprehensiveDefinitionMutation is deprecated, use useGenerateComprehensiveTermDefinitionMutation instead');
+  console.warn(
+    "useGenerateComprehensiveDefinitionMutation is deprecated, use useGenerateComprehensiveTermDefinitionMutation instead",
+  );
   return useMutation({
     mutationFn: (request: DefinitionSuggestionRequest) =>
       llmService.generateComprehensiveDefinition(request),

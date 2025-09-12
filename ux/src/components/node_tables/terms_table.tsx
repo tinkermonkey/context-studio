@@ -18,10 +18,10 @@ const columns = [
     id: "select",
     header: ({ table }) => {
       const { rows } = table.getRowModel();
-      const selectedCount = rows.filter(row => row.getIsSelected()).length;
+      const selectedCount = rows.filter((row) => row.getIsSelected()).length;
       const isAllSelected = rows.length > 0 && selectedCount === rows.length;
       const isSomeSelected = selectedCount > 0 && selectedCount < rows.length;
-      
+
       return (
         <Checkbox
           checked={isAllSelected}
@@ -29,10 +29,10 @@ const columns = [
           onChange={() => {
             if (isAllSelected || isSomeSelected) {
               // Deselect all visible rows
-              rows.forEach(row => row.toggleSelected(false));
+              rows.forEach((row) => row.toggleSelected(false));
             } else {
               // Select all visible rows
-              rows.forEach(row => row.toggleSelected(true));
+              rows.forEach((row) => row.toggleSelected(true));
             }
           }}
         />
@@ -136,13 +136,15 @@ export interface TermsTableProps {
 }
 
 const TermsTable = React.forwardRef<any, TermsTableProps>((props, ref) => {
-  const { 
-    queryParams = {}, 
-    onQueryParamsChange 
-  } = props;
-  
+  const { queryParams = {}, onQueryParamsChange } = props;
+
   // Use query params in the terms hook
-  const { data: terms, isLoading, error, refetch } = useTermNodes(undefined, queryParams);
+  const {
+    data: terms,
+    isLoading,
+    error,
+    refetch,
+  } = useTermNodes(undefined, queryParams);
   const { data: allTerms } = useTermNodes(); // Get all terms for finding children
   const deleteTerm = useDeleteStructureNode();
 
@@ -161,26 +163,35 @@ const TermsTable = React.forwardRef<any, TermsTableProps>((props, ref) => {
   // Get child terms for safe deletion workflow
   const getTermChildren = async (termId: string): Promise<StructureNode[]> => {
     if (!allTerms) return [];
-    return (allTerms as StructureNode[]).filter(term => term.parent_node_id === termId);
+    return (allTerms as StructureNode[]).filter(
+      (term) => term.parent_node_id === termId,
+    );
   };
 
   // Move child terms when orphaning them during parent deletion
-  const moveTermChildren = async (childIds: string[], newParentId: string | null) => {
+  const moveTermChildren = async (
+    childIds: string[],
+    newParentId: string | null,
+  ) => {
     if (childIds.length === 0) return;
-    
+
     // Find a target domain for the orphaned terms
     // We'll use the domain of the first child term since terms must belong to a domain
-    const firstChild = allTerms?.find(term => childIds.includes(term.id));
+    const firstChild = allTerms?.find((term) => childIds.includes(term.id));
     if (!firstChild) return;
 
     // For orphaning, we need to use the structure node update API to set parent_node_id to null
     // Since we don't have a bulk move API, we update each term individually
     // This is a limitation we'll need to address in a future update
-    console.warn('Term orphaning not fully implemented - using move to same domain for now');
-    
+    console.warn(
+      "Term orphaning not fully implemented - using move to same domain for now",
+    );
+
     // TODO: Implement term moving with new structure node API
     // await updateStructureNode for each child term to change parent_node_id
-    console.warn('Term moving needs to be reimplemented with structure node API');
+    console.warn(
+      "Term moving needs to be reimplemented with structure node API",
+    );
   };
 
   return (

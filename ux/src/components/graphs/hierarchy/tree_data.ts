@@ -17,7 +17,7 @@ interface HierarchyNode {
   id: string;
   title: string;
   definition?: string;
-  type?: 'dataset' | 'layer' | 'domain' | 'term';
+  type?: "dataset" | "layer" | "domain" | "term";
   x?: number;
   y?: number;
   depth: number;
@@ -40,8 +40,4 @@ export interface ChartData {
 }
 
 // Export types and data for use in other components
-export type { 
-  HierarchyNode,
-  Dimensions,
-  LayoutConfig,
-};
+export type { HierarchyNode, Dimensions, LayoutConfig };

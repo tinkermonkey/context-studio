@@ -1,14 +1,14 @@
 /**
  * Domain Move Form
- * 
+ *
  * Form for moving domains between layers
  */
 
-import React, { useState } from 'react';
-import { Button, Label, Checkbox } from 'flowbite-react';
-import { StructureNode } from '@/api/types/structureNodes';
-import { LayerSelector } from '@/components/node_selectors/layer_selector';
-import { useUpdateStructureNode } from '@/api/hooks/structure_nodes/useStructureNodeMutations';
+import React, { useState } from "react";
+import { Button, Label, Checkbox } from "flowbite-react";
+import { StructureNode } from "@/api/types/structureNodes";
+import { LayerSelector } from "@/components/node_selectors/layer_selector";
+import { useUpdateStructureNode } from "@/api/hooks/structure_nodes/useStructureNodeMutations";
 
 interface DomainMoveFormProps {
   selectedNodes: StructureNode[];
@@ -16,14 +16,18 @@ interface DomainMoveFormProps {
   onCancel: () => void;
 }
 
-export function DomainMoveForm({ selectedNodes, onSuccess, onCancel }: DomainMoveFormProps) {
-  const [targetLayerId, setTargetLayerId] = useState<string>('');
+export function DomainMoveForm({
+  selectedNodes,
+  onSuccess,
+  onCancel,
+}: DomainMoveFormProps) {
+  const [targetLayerId, setTargetLayerId] = useState<string>("");
   const [moveTerms, setMoveTerms] = useState(true);
   const updateDomain = useUpdateStructureNode();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!targetLayerId) {
       return;
     }
@@ -31,19 +35,19 @@ export function DomainMoveForm({ selectedNodes, onSuccess, onCancel }: DomainMov
     try {
       // Move each domain individually using the structure node update API
       await Promise.all(
-        selectedNodes.map(domain => 
+        selectedNodes.map((domain) =>
           updateDomain.mutateAsync({
             id: domain.id,
             data: {
               parent_node_id: targetLayerId,
             },
-          })
-        )
+          }),
+        ),
       );
-      
+
       onSuccess();
     } catch (error) {
-      console.error('Failed to move domains:', error);
+      console.error("Failed to move domains:", error);
     }
   };
 
@@ -53,7 +57,7 @@ export function DomainMoveForm({ selectedNodes, onSuccess, onCancel }: DomainMov
         <Label htmlFor="target-layer">Target Layer</Label>
         <LayerSelector
           value={targetLayerId}
-          onSelect={(layer) => setTargetLayerId(layer?.id || '')}
+          onSelect={(layer) => setTargetLayerId(layer?.id || "")}
         />
       </div>
 
@@ -69,16 +73,13 @@ export function DomainMoveForm({ selectedNodes, onSuccess, onCancel }: DomainMov
       </div>
 
       <div className="text-sm text-gray-600">
-        Moving {selectedNodes.length} domain{selectedNodes.length > 1 ? 's' : ''} to a new layer.
-        {moveTerms && ' All terms in these domains will also be moved.'}
+        Moving {selectedNodes.length} domain
+        {selectedNodes.length > 1 ? "s" : ""} to a new layer.
+        {moveTerms && " All terms in these domains will also be moved."}
       </div>
 
       <div className="flex justify-end gap-2 pt-4">
-        <Button
-          type="button"
-          color="gray"
-          onClick={onCancel}
-        >
+        <Button type="button" color="gray" onClick={onCancel}>
           Cancel
         </Button>
         <Button
@@ -86,7 +87,7 @@ export function DomainMoveForm({ selectedNodes, onSuccess, onCancel }: DomainMov
           color="blue"
           disabled={!targetLayerId || moveDomains.isPending}
         >
-          {moveDomains.isPending ? 'Moving...' : 'Move Domains'}
+          {moveDomains.isPending ? "Moving..." : "Move Domains"}
         </Button>
       </div>
     </form>

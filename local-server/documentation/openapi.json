@@ -4013,100 +4013,6 @@
         }
       }
     },
-    "/api/config/reference-sources/{source_name}": {
-      "patch": {
-        "tags": [
-          "configuration"
-        ],
-        "summary": "Update Reference Source Config",
-        "description": "Update configuration for a specific reference source",
-        "operationId": "update_reference_source_config_api_config_reference_sources__source_name__patch",
-        "parameters": [
-          {
-            "name": "source_name",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "title": "Source Name"
-            }
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/ConfigUpdateRequest"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ConfigResponse"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      },
-      "get": {
-        "tags": [
-          "configuration"
-        ],
-        "summary": "Get Reference Source Config",
-        "description": "Get configuration for a specific reference source",
-        "operationId": "get_reference_source_config_api_config_reference_sources__source_name__get",
-        "parameters": [
-          {
-            "name": "source_name",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "title": "Source Name"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ConfigResponse"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
     "/api/config/{path}": {
       "get": {
         "tags": [
@@ -4205,6 +4111,100 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/ConfigResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/config/reference-sources/{source_name}": {
+      "get": {
+        "tags": [
+          "configuration"
+        ],
+        "summary": "Get Reference Source Config",
+        "description": "Get configuration for a specific reference source",
+        "operationId": "get_reference_source_config_api_config_reference_sources__source_name__get",
+        "parameters": [
+          {
+            "name": "source_name",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Source Name"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ConfigResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "patch": {
+        "tags": [
+          "configuration"
+        ],
+        "summary": "Update Reference Source Config",
+        "description": "Update configuration for a specific reference source",
+        "operationId": "update_reference_source_config_api_config_reference_sources__source_name__patch",
+        "parameters": [
+          {
+            "name": "source_name",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Source Name"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ConfigUpdateRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ConfigResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
                 }
               }
             }
@@ -5125,18 +5125,173 @@
     "/api/llm/health": {
       "get": {
         "tags": [
-          "llm"
+          "llm-traceability",
+          "LLM Traceability"
         ],
-        "summary": "Health Check",
-        "description": "Check the health status of the LLM service.",
-        "operationId": "health_check_api_llm_health_get",
+        "summary": "Traceability Health",
+        "description": "Health check endpoint for LLM traceability service.",
+        "operationId": "traceability_health_api_llm_health_get",
         "responses": {
           "200": {
             "description": "Successful Response",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/LLMHealthResponse"
+                  "additionalProperties": true,
+                  "type": "object",
+                  "title": "Response Traceability Health Api Llm Health Get"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/llm/record-selection": {
+      "post": {
+        "tags": [
+          "llm-traceability",
+          "LLM Traceability"
+        ],
+        "summary": "Record Selection",
+        "description": "Record when a user selects an LLM suggestion.",
+        "operationId": "record_selection_api_llm_record_selection_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RecordSelectionRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SelectionResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/llm/execution-analytics": {
+      "get": {
+        "tags": [
+          "llm-traceability",
+          "LLM Traceability"
+        ],
+        "summary": "Get Execution Analytics",
+        "description": "Get analytics for LLM executions.",
+        "operationId": "get_execution_analytics_api_llm_execution_analytics_get",
+        "parameters": [
+          {
+            "name": "pipeline_type",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/PipelineType"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Pipeline Type"
+            }
+          },
+          {
+            "name": "days_back",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "default": 30,
+              "title": "Days Back"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": true,
+                  "title": "Response Get Execution Analytics Api Llm Execution Analytics Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/llm/execution-history/{execution_id}": {
+      "get": {
+        "tags": [
+          "llm-traceability",
+          "LLM Traceability"
+        ],
+        "summary": "Get Execution Details",
+        "description": "Get detailed information about a specific execution.",
+        "operationId": "get_execution_details_api_llm_execution_history__execution_id__get",
+        "parameters": [
+          {
+            "name": "execution_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Execution Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": true,
+                  "title": "Response Get Execution Details Api Llm Execution History  Execution Id  Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
                 }
               }
             }
@@ -6194,6 +6349,198 @@
             "content": {
               "application/json": {
                 "schema": {}
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/sync/push": {
+      "post": {
+        "tags": [
+          "sync",
+          "sync"
+        ],
+        "summary": "Push Changes",
+        "description": "Push local changes to S3.",
+        "operationId": "push_changes_api_sync_push_post",
+        "parameters": [
+          {
+            "name": "SessionLocal",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "title": "Sessionlocal"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PushRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SyncResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/sync/pull": {
+      "post": {
+        "tags": [
+          "sync",
+          "sync"
+        ],
+        "summary": "Pull Changes",
+        "description": "Pull remote changes from S3.",
+        "operationId": "pull_changes_api_sync_pull_post",
+        "parameters": [
+          {
+            "name": "SessionLocal",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "title": "Sessionlocal"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PullRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SyncResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/sync/status": {
+      "get": {
+        "tags": [
+          "sync",
+          "sync"
+        ],
+        "summary": "Get Sync Status",
+        "description": "Get synchronization status.",
+        "operationId": "get_sync_status_api_sync_status_get",
+        "parameters": [
+          {
+            "name": "SessionLocal",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "title": "Sessionlocal"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SyncResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/sync/test": {
+      "get": {
+        "tags": [
+          "sync",
+          "sync"
+        ],
+        "summary": "Test S3 Connection",
+        "description": "Test S3 connectivity.",
+        "operationId": "test_s3_connection_api_sync_test_get",
+        "parameters": [
+          {
+            "name": "SessionLocal",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "title": "Sessionlocal"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SyncResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
               }
             }
           }
@@ -8099,12 +8446,18 @@
             ],
             "title": "Discrepancies",
             "description": "Notable discrepancies between sources"
+          },
+          "execution_id": {
+            "type": "string",
+            "title": "Execution Id",
+            "description": "Unique execution ID for tracing"
           }
         },
         "type": "object",
         "required": [
           "definition",
-          "reasoning"
+          "reasoning",
+          "execution_id"
         ],
         "title": "DefinitionSuggestionResponse",
         "description": "Response model for definition suggestion"
@@ -8322,13 +8675,19 @@
             "type": "string",
             "title": "Scope",
             "description": "Scope and boundaries of the domain"
+          },
+          "execution_id": {
+            "type": "string",
+            "title": "Execution Id",
+            "description": "Unique execution ID for tracing"
           }
         },
         "type": "object",
         "required": [
           "definition",
           "purpose",
-          "scope"
+          "scope",
+          "execution_id"
         ],
         "title": "DomainDefinitionResponse",
         "description": "Response model for domain definition suggestion"
@@ -8344,11 +8703,17 @@
           "data": {
             "$ref": "#/components/schemas/DomainDefinitionResponse",
             "description": "The response data"
+          },
+          "execution_id": {
+            "type": "string",
+            "title": "Execution Id",
+            "description": "Unique execution ID for tracing"
           }
         },
         "type": "object",
         "required": [
-          "data"
+          "data",
+          "execution_id"
         ],
         "title": "DomainLLMSuccessResponse",
         "description": "Success response wrapper for domain LLM endpoints"
@@ -8800,11 +9165,17 @@
           "data": {
             "$ref": "#/components/schemas/DefinitionSuggestionResponse",
             "description": "The response data"
+          },
+          "execution_id": {
+            "type": "string",
+            "title": "Execution Id",
+            "description": "Unique execution ID for tracing"
           }
         },
         "type": "object",
         "required": [
-          "data"
+          "data",
+          "execution_id"
         ],
         "title": "LLMSuccessResponse",
         "description": "Success response wrapper for LLM endpoints"
@@ -8926,13 +9297,19 @@
             "type": "string",
             "title": "Rationale",
             "description": "Brief rationale for the definitional choices"
+          },
+          "execution_id": {
+            "type": "string",
+            "title": "Execution Id",
+            "description": "Unique execution ID for tracing"
           }
         },
         "type": "object",
         "required": [
           "definition",
           "purpose",
-          "rationale"
+          "rationale",
+          "execution_id"
         ],
         "title": "LayerDefinitionResponse",
         "description": "Response model for layer definition suggestion"
@@ -8948,11 +9325,17 @@
           "data": {
             "$ref": "#/components/schemas/LayerDefinitionResponse",
             "description": "The response data"
+          },
+          "execution_id": {
+            "type": "string",
+            "title": "Execution Id",
+            "description": "Unique execution ID for tracing"
           }
         },
         "type": "object",
         "required": [
-          "data"
+          "data",
+          "execution_id"
         ],
         "title": "LayerLLMSuccessResponse",
         "description": "Success response wrapper for layer LLM endpoints"
@@ -10098,6 +10481,73 @@
         "type": "object",
         "title": "PredicateUpdate"
       },
+      "PullRequest": {
+        "properties": {
+          "since": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Since"
+          }
+        },
+        "type": "object",
+        "title": "PullRequest"
+      },
+      "PushRequest": {
+        "properties": {
+          "author_id": {
+            "type": "string",
+            "title": "Author Id",
+            "default": "system"
+          }
+        },
+        "type": "object",
+        "title": "PushRequest"
+      },
+      "RecordSelectionRequest": {
+        "properties": {
+          "execution_id": {
+            "type": "string",
+            "title": "Execution Id",
+            "description": "Execution ID from LLM response"
+          },
+          "record_type": {
+            "type": "string",
+            "title": "Record Type",
+            "description": "Type of record (structure_node, etc.)"
+          },
+          "record_id": {
+            "type": "string",
+            "title": "Record Id",
+            "description": "Primary key of the record"
+          },
+          "suggestion_field": {
+            "type": "string",
+            "title": "Suggestion Field",
+            "description": "Field that was selected (definition, etc.)"
+          },
+          "selected_content": {
+            "type": "string",
+            "title": "Selected Content",
+            "description": "The content that was selected"
+          }
+        },
+        "type": "object",
+        "required": [
+          "execution_id",
+          "record_type",
+          "record_id",
+          "suggestion_field",
+          "selected_content"
+        ],
+        "title": "RecordSelectionRequest",
+        "description": "Request model for recording user selection of LLM suggestions."
+      },
       "ResponseFormat": {
         "type": "string",
         "enum": [
@@ -10984,6 +11434,33 @@
         "title": "SelectedRelation",
         "description": "A selected ConceptNet relation for a component term"
       },
+      "SelectionResponse": {
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "title": "Success",
+            "description": "Whether selection was recorded successfully"
+          },
+          "selection_id": {
+            "type": "string",
+            "title": "Selection Id",
+            "description": "ID of the recorded selection"
+          },
+          "message": {
+            "type": "string",
+            "title": "Message",
+            "description": "Status message"
+          }
+        },
+        "type": "object",
+        "required": [
+          "success",
+          "selection_id",
+          "message"
+        ],
+        "title": "SelectionResponse",
+        "description": "Response model for selection recording."
+      },
       "Sense2VecData": {
         "properties": {
           "in_s2v": {
@@ -11066,6 +11543,36 @@
         ],
         "title": "StageRequest",
         "description": "Model for staging/unstaging entities."
+      },
+      "SyncResponse": {
+        "properties": {
+          "status": {
+            "type": "string",
+            "title": "Status"
+          },
+          "message": {
+            "type": "string",
+            "title": "Message"
+          },
+          "data": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Data"
+          }
+        },
+        "type": "object",
+        "required": [
+          "status",
+          "message"
+        ],
+        "title": "SyncResponse"
       },
       "TokenData": {
         "properties": {

@@ -3,22 +3,22 @@ import { createColumnHelper } from "@tanstack/react-table";
 import { Checkbox } from "flowbite-react";
 import { StructureNode } from "@/api/types/structureNodes";
 import { renderShortDateTime, renderShortUuid } from "@/utils/renderers";
-import { useLayerNodes } from '@/api/hooks/structure_nodes/useStructureNodes';
-import { useDeleteStructureNode } from '@/api/hooks/structure_nodes/useStructureNodeMutations';
-import { LayerForm } from '@/components/forms/layer_form';
-import { BaseNodeTable } from './node_table';
+import { useLayerNodes } from "@/api/hooks/structure_nodes/useStructureNodes";
+import { useDeleteStructureNode } from "@/api/hooks/structure_nodes/useStructureNodeMutations";
+import { LayerForm } from "@/components/forms/layer_form";
+import { BaseNodeTable } from "./node_table";
 
 const columnHelper = createColumnHelper<StructureNode>();
 
 const columns = [
   columnHelper.display({
-    id: 'select',
+    id: "select",
     header: ({ table }) => {
       const { rows } = table.getRowModel();
-      const selectedCount = rows.filter(row => row.getIsSelected()).length;
+      const selectedCount = rows.filter((row) => row.getIsSelected()).length;
       const isAllSelected = rows.length > 0 && selectedCount === rows.length;
       const isSomeSelected = selectedCount > 0 && selectedCount < rows.length;
-      
+
       return (
         <Checkbox
           checked={isAllSelected}
@@ -26,10 +26,10 @@ const columns = [
           onChange={() => {
             if (isAllSelected || isSomeSelected) {
               // Deselect all visible rows
-              rows.forEach(row => row.toggleSelected(false));
+              rows.forEach((row) => row.toggleSelected(false));
             } else {
               // Select all visible rows
-              rows.forEach(row => row.toggleSelected(true));
+              rows.forEach((row) => row.toggleSelected(true));
             }
           }}
         />
@@ -44,7 +44,8 @@ const columns = [
     size: 32,
   }),
   columnHelper.accessor("id", {
-    cell: (info) => info.getValue() ? renderShortUuid(info.getValue()) : "null",
+    cell: (info) =>
+      info.getValue() ? renderShortUuid(info.getValue()) : "null",
     header: () => "ID",
   }),
   columnHelper.accessor("title", {
@@ -62,19 +63,22 @@ const columns = [
   columnHelper.accessor("created_at", {
     cell: (info) => {
       const value = info.getValue();
-      return value !== null && value !== undefined ? renderShortDateTime(value) : "";
+      return value !== null && value !== undefined
+        ? renderShortDateTime(value)
+        : "";
     },
     header: () => "Created",
   }),
   columnHelper.accessor("last_modified", {
     cell: (info) => {
       const value = info.getValue();
-      return value !== null && value !== undefined ? renderShortDateTime(value) : "";
+      return value !== null && value !== undefined
+        ? renderShortDateTime(value)
+        : "";
     },
     header: () => "Modified",
   }),
 ];
-
 
 export interface LayersTableProps {
   data?: StructureNode[];
@@ -83,11 +87,10 @@ export interface LayersTableProps {
   columnVisibility?: Record<string, boolean>;
 }
 
-
 const LayersTable = React.forwardRef<any, LayersTableProps>((props, ref) => {
   const { data: layers, isLoading, error, refetch } = useLayerNodes();
   const deleteLayer = useDeleteStructureNode();
-  
+
   // Default hidden columns: id, version, created_at, last_modified
   const defaultColumnVisibility: Record<string, boolean> = {
     id: false,
@@ -111,7 +114,9 @@ const LayersTable = React.forwardRef<any, LayersTableProps>((props, ref) => {
         await Promise.all(ids.map((id) => deleteLayer.mutateAsync(id)));
       }}
       createForm={({ onSuccess }) => <LayerForm onSuccess={onSuccess} />}
-      editForm={({ node, onSuccess }) => <LayerForm layer={node} onSuccess={onSuccess} />}
+      editForm={({ node, onSuccess }) => (
+        <LayerForm layer={node} onSuccess={onSuccess} />
+      )}
       typeName="Layer"
       getId={(item) => item.id}
       columnVisibility={columnVisibility}

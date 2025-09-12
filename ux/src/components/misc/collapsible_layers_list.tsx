@@ -12,7 +12,7 @@ interface CollapsibleLayersListProps {
   useLinks?: boolean;
 }
 
-const CollapsibleLayersList: React.FC<CollapsibleLayersListProps> = ({ 
+const CollapsibleLayersList: React.FC<CollapsibleLayersListProps> = ({
   showCount = 30,
   onLayerClick,
   selectedLayerId,
@@ -30,9 +30,9 @@ const CollapsibleLayersList: React.FC<CollapsibleLayersListProps> = ({
   }
 
   if (error) {
-    console.error('Error loading layers:', error);
+    console.error("Error loading layers:", error);
     return (
-      <div className="text-sm text-red-600 dark:text-red-400 py-2">
+      <div className="py-2 text-sm text-red-600 dark:text-red-400">
         Error loading layers
       </div>
     );
@@ -40,19 +40,22 @@ const CollapsibleLayersList: React.FC<CollapsibleLayersListProps> = ({
 
   if (!layers || layers.length === 0) {
     return (
-      <div className="text-sm text-gray-500 dark:text-gray-400 py-2">
+      <div className="py-2 text-sm text-gray-500 dark:text-gray-400">
         No layers found
       </div>
     );
   }
 
   // Sort layers alphabetically by title
-  const sortedLayers = [...layers].sort((a, b) => a.title.localeCompare(b.title));
-  
+  const sortedLayers = [...layers].sort((a, b) =>
+    a.title.localeCompare(b.title),
+  );
+
   const shouldShowExpandButton = sortedLayers.length > showCount;
-  const displayedLayers = shouldShowExpandButton && !isExpanded 
-    ? sortedLayers.slice(0, showCount)
-    : sortedLayers;
+  const displayedLayers =
+    shouldShowExpandButton && !isExpanded
+      ? sortedLayers.slice(0, showCount)
+      : sortedLayers;
 
   const handleToggleExpanded = () => {
     setIsExpanded(!isExpanded);
@@ -65,15 +68,15 @@ const CollapsibleLayersList: React.FC<CollapsibleLayersListProps> = ({
   };
 
   return (
-    <div className="space-y-1 mx-1">
+    <div className="mx-1 space-y-1">
       {displayedLayers.map((layer: StructureNode) => {
         const isSelected = selectedLayerId === layer.id;
         const className = `text-sm cursor-pointer px-2 py-1 rounded transition-colors block ${
           isSelected
-            ? 'bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 font-medium'
-            : 'text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-800'
+            ? "bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 font-medium"
+            : "text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-800"
         }`;
-        
+
         if (useLinks) {
           return (
             <Link
@@ -99,13 +102,13 @@ const CollapsibleLayersList: React.FC<CollapsibleLayersListProps> = ({
           );
         }
       })}
-      
+
       {shouldShowExpandButton && (
         <Button
           size="xs"
           color={"light"}
           onClick={handleToggleExpanded}
-          className="w-full mt-2 text-xs justify-start border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200"
+          className="mt-2 w-full justify-start border-gray-300 text-xs text-gray-600 hover:text-gray-800 dark:border-gray-600 dark:text-gray-400 dark:hover:text-gray-200"
         >
           <div className="flex items-center justify-center gap-1">
             {isExpanded ? (

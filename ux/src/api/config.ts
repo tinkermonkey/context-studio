@@ -1,12 +1,12 @@
 /**
  * API Configuration
- * 
+ *
  * Configuration settings for the Context Studio API client
  */
 
 // Get the correct localhost URL based on platform
 const getDefaultBaseURL = () => {
-  return 'http://localhost:8001';
+  return "http://localhost:8001";
 };
 
 export const API_CONFIG = {
@@ -19,38 +19,43 @@ export const API_CONFIG = {
 } as const;
 
 export const QUERY_KEYS = {
-/*
   LAYERS: 'layers',
   DOMAINS: 'domains',
   TERMS: 'terms',
   RELATIONSHIPS: 'relationships',
-  */
-  PREDICATES: 'predicates',
-  GRAPH: 'graph',
-  FIND: 'find',
-  DATASETS: 'datasets',
-  SCHEMA: 'schema',
-  SCHEMA_ORG: 'schema-org',
-  NLP: 'nlp',
-  LLM: 'llm',
-  PIPELINE_FLAVORS: 'pipeline-flavors',
-  NLP_REFERENCE: 'nlp-reference',
-  STRUCTURE_NODES: 'structure_nodes',
-  NODE_LINKS: 'node_links',
-  CHANGE_EVENTS: 'change_events',
+  PREDICATES: "predicates",
+  GRAPH: "graph",
+  FIND: "find",
+  DATASETS: "datasets",
+  SCHEMA: "schema",
+  SCHEMA_ORG: "schema-org",
+  NLP: "nlp",
+  LLM: "llm",
+  LLM_TRACEABILITY: "llm_traceability",
+  PIPELINE_FLAVORS: "pipeline-flavors",
+  NLP_REFERENCE: "nlp-reference",
+  STRUCTURE_NODES: "structure_nodes",
+  NODE_LINKS: "node_links",
+  CHANGE_EVENTS: "change_events",
 } as const;
 
 export const ENDPOINTS = {
-  PREDICATES: '/api/predicates',
-  GRAPH: '/api/graph',
-  DATASETS: '/api/datasets',
-  SCHEMA: '/api/schema',
-  SCHEMA_ORG: '/api/schema-org',
-  NLP: '/api/nlp_analysis',
-  LLM: '/api/llm',
-  PIPELINE_FLAVORS: '/api/pipeline-flavors',
-  NLP_REFERENCE: '/api/nlp_analysis/reference',
-  STRUCTURE_NODES: '/api/structure_nodes',
-  NODE_LINKS: '/api/structure_nodes/links',
-  CHANGE_EVENTS: '/api/change_events',
+  PREDICATES: "/api/predicates",
+  GRAPH: "/api/graph",
+  DATASETS: "/api/datasets",
+  SCHEMA: "/api/schema",
+  SCHEMA_ORG: "/api/schema-org",
+  NLP: "/api/nlp_analysis",
+  LLM: "/api/llm",
+  LLM_TRACEABILITY: {
+    RECORD_SELECTION: "/api/llm/record-selection",
+    EXECUTION_ANALYTICS: "/api/llm/execution-analytics",
+    EXECUTION_HISTORY: "/api/llm/execution-history",
+    HEALTH: "/api/llm/traceability/health",
+  },
+  PIPELINE_FLAVORS: "/api/pipeline-flavors",
+  NLP_REFERENCE: "/api/nlp_analysis/reference",
+  STRUCTURE_NODES: "/api/structure_nodes",
+  NODE_LINKS: "/api/structure_nodes/links",
+  CHANGE_EVENTS: "/api/change_events",
 } as const;

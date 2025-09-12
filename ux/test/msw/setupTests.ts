@@ -1,6 +1,6 @@
-import { server } from './server';
-import { handlers } from './handlers';
-import { rest } from 'msw';
+import { server } from "./server";
+import { handlers } from "./handlers";
+import { rest } from "msw";
 
 /**
  * setupMocks
@@ -11,7 +11,7 @@ import { rest } from 'msw';
  * lifecycle when desired.
  */
 export function setupMocks() {
-  beforeAll(() => server.listen({ onUnhandledRequest: 'warn' }));
+  beforeAll(() => server.listen({ onUnhandledRequest: "warn" }));
   afterEach(() => server.resetHandlers());
   afterAll(() => server.close());
 }

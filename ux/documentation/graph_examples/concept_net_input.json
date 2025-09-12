@@ -1,990 +1,984 @@
+{
+  "text": "apples",
+  "lemma": "apple",
+  "pos": "NOUN",
+  "dep": "nsubjpass",
+  "tag": "NNS",
+  "start_idx": 0,
+  "end_idx": 6,
+  "head": {
+    "index": 2,
+    "text": "used",
+    "pos": "VERB",
+    "start_idx": 11,
+    "end_idx": 15
+  },
+  "children": [],
+  "ancestors": [
     {
-      "text": "apples",
-      "lemma": "apple",
-      "pos": "NOUN",
-      "dep": "nsubjpass",
-      "tag": "NNS",
-      "start_idx": 0,
-      "end_idx": 6,
-      "head": {
-        "index": 2,
-        "text": "used",
-        "pos": "VERB",
-        "start_idx": 11,
-        "end_idx": 15
-      },
-      "children": [],
-      "ancestors": [
-        {
-          "index": 2,
-          "text": "used",
-          "pos": "VERB",
-          "start_idx": 11,
-          "end_idx": 15
-        }
-      ],
-      "subtree": [
-        {
-          "index": 0,
-          "text": "apples",
-          "pos": "NOUN",
-          "start_idx": 0,
-          "end_idx": 6
-        }
-      ],
-      "is_alpha": true,
-      "is_stop": false,
-      "is_oov": true,
-      "like_url": false,
-      "is_digit": false,
-      "ent_iob": "O",
-      "ent_type": null,
-      "ent_kb_id": null,
-      "ent_id": 0,
-      "sentiment": 0.0,
-      "concepcy": {
-        "related_terms": [
-          {
-            "subject": {
-              "id": "/c/en/apple",
-              "label": "apple",
-              "language": "en",
-              "term": "/c/en/apple"
-            },
-            "object": {
-              "id": "/c/en/fruit",
-              "label": "fruit",
-              "language": "en",
-              "term": "/c/en/fruit"
-            },
-            "relation": "RelatedTo",
-            "text": "[[apple]] is related to [[fruit]]",
-            "weight": 12.80968383684781
-          },
-          {
-            "subject": {
-              "id": "/c/en/apple",
-              "label": "apple",
-              "language": "en",
-              "term": "/c/en/apple"
-            },
-            "object": {
-              "id": "/c/en/red",
-              "label": "red",
-              "language": "en",
-              "term": "/c/en/red"
-            },
-            "relation": "RelatedTo",
-            "text": "[[apple]] is related to [[red]]",
-            "weight": 9.309350138436088
-          },
-          {
-            "subject": {
-              "id": "/c/en/apple",
-              "label": "apple",
-              "language": "en",
-              "term": "/c/en/apple"
-            },
-            "object": {
-              "id": "/c/en/red_fruit",
-              "label": "red fruit",
-              "language": "en",
-              "term": "/c/en/red_fruit"
-            },
-            "relation": "RelatedTo",
-            "text": "[[apple]] is related to [[red fruit]]",
-            "weight": 4.827835954131002
-          },
-          {
-            "subject": {
-              "id": "/c/en/apple",
-              "label": "apple",
-              "language": "en",
-              "term": "/c/en/apple"
-            },
-            "object": {
-              "id": "/c/en/green",
-              "label": "green",
-              "language": "en",
-              "term": "/c/en/green"
-            },
-            "relation": "RelatedTo",
-            "text": "[[apple]] is related to [[green]]",
-            "weight": 4.44837048816755
-          },
-          {
-            "subject": {
-              "id": "/c/en/apple",
-              "label": "apple",
-              "language": "en",
-              "term": "/c/en/apple"
-            },
-            "object": {
-              "id": "/c/en/core",
-              "label": "core",
-              "language": "en",
-              "term": "/c/en/core"
-            },
-            "relation": "RelatedTo",
-            "text": "[[apple]] is related to [[core]]",
-            "weight": 4.441171016747722
-          },
-          {
-            "subject": {
-              "id": "/c/en/apple",
-              "label": "apple",
-              "language": "en",
-              "term": "/c/en/apple"
-            },
-            "object": {
-              "id": "/c/en/eve",
-              "label": "eve",
-              "language": "en",
-              "term": "/c/en/eve"
-            },
-            "relation": "RelatedTo",
-            "text": "[[apple]] is related to [[eve]]",
-            "weight": 4.315089802078283
-          },
-          {
-            "subject": {
-              "id": "/c/en/apple",
-              "label": "apple",
-              "language": "en",
-              "term": "/c/en/apple"
-            },
-            "object": {
-              "id": "/c/en/tree",
-              "label": "tree",
-              "language": "en",
-              "term": "/c/en/tree"
-            },
-            "relation": "RelatedTo",
-            "text": "[[apple]] is related to [[tree]]",
-            "weight": 4.297441099072796
-          },
-          {
-            "subject": {
-              "id": "/c/en/apple",
-              "label": "apple",
-              "language": "en",
-              "term": "/c/en/apple"
-            },
-            "object": {
-              "id": "/c/en/computer",
-              "label": "computer",
-              "language": "en",
-              "term": "/c/en/computer"
-            },
-            "relation": "RelatedTo",
-            "text": "[[apple]] is related to [[computer]]",
-            "weight": 4.164132562731402
-          },
-          {
-            "subject": {
-              "id": "/c/en/apple",
-              "label": "apple",
-              "language": "en",
-              "term": "/c/en/apple"
-            },
-            "object": {
-              "id": "/c/en/round",
-              "label": "round",
-              "language": "en",
-              "term": "/c/en/round"
-            },
-            "relation": "RelatedTo",
-            "text": "[[apple]] is related to [[round]]",
-            "weight": 4.144393803682271
-          },
-          {
-            "subject": {
-              "id": "/c/en/apple",
-              "label": "apple",
-              "language": "en",
-              "term": "/c/en/apple"
-            },
-            "object": {
-              "id": "/c/en/mac",
-              "label": "mac",
-              "language": "en",
-              "term": "/c/en/mac"
-            },
-            "relation": "RelatedTo",
-            "text": "[[apple]] is related to [[mac]]",
-            "weight": 3.887415593938986
-          },
-          {
-            "subject": {
-              "id": "/c/en/apple",
-              "label": "apple",
-              "language": "en",
-              "term": "/c/en/apple"
-            },
-            "object": {
-              "id": "/c/en/adam",
-              "label": "adam",
-              "language": "en",
-              "term": "/c/en/adam"
-            },
-            "relation": "RelatedTo",
-            "text": "[[apple]] is related to [[adam]]",
-            "weight": 3.6149688795340964
-          },
-          {
-            "subject": {
-              "id": "/c/en/apple",
-              "label": "apple",
-              "language": "en",
-              "term": "/c/en/apple"
-            },
-            "object": {
-              "id": "/c/en/pie",
-              "label": "pie",
-              "language": "en",
-              "term": "/c/en/pie"
-            },
-            "relation": "RelatedTo",
-            "text": "[[apple]] is related to [[pie]]",
-            "weight": 3.604441704342019
-          },
-          {
-            "subject": {
-              "id": "/c/en/apple",
-              "label": "apple",
-              "language": "en",
-              "term": "/c/en/apple"
-            },
-            "object": {
-              "id": "/c/en/pear",
-              "label": "pear",
-              "language": "en",
-              "term": "/c/en/pear"
-            },
-            "relation": "RelatedTo",
-            "text": "[[apple]] is related to [[pear]]",
-            "weight": 3.0672463220289305
-          },
-          {
-            "subject": {
-              "id": "/c/en/apple",
-              "label": "apple",
-              "language": "en",
-              "term": "/c/en/apple"
-            },
-            "object": {
-              "id": "/c/en/macintosh",
-              "label": "macintosh",
-              "language": "en",
-              "term": "/c/en/macintosh"
-            },
-            "relation": "RelatedTo",
-            "text": "[[apple]] is related to [[macintosh]]",
-            "weight": 2.9933259094191538
-          },
-          {
-            "subject": {
-              "id": "/c/en/apple",
-              "label": "apple",
-              "language": "en",
-              "term": "/c/en/apple"
-            },
-            "object": {
-              "id": "/c/en/seeds",
-              "label": "seeds",
-              "language": "en",
-              "term": "/c/en/seeds"
-            },
-            "relation": "RelatedTo",
-            "text": "[[apple]] is related to [[seeds]]",
-            "weight": 2.93393933134276
-          },
-          {
-            "subject": {
-              "id": "/c/en/apple",
-              "label": "apple",
-              "language": "en",
-              "term": "/c/en/apple"
-            },
-            "object": {
-              "id": "/c/en/eden",
-              "label": "eden",
-              "language": "en",
-              "term": "/c/en/eden"
-            },
-            "relation": "RelatedTo",
-            "text": "[[apple]] is related to [[eden]]",
-            "weight": 2.9318935860634507
-          },
-          {
-            "subject": {
-              "id": "/c/en/apple",
-              "label": "apple",
-              "language": "en",
-              "term": "/c/en/apple"
-            },
-            "object": {
-              "id": "/c/en/stem",
-              "label": "stem",
-              "language": "en",
-              "term": "/c/en/stem"
-            },
-            "relation": "RelatedTo",
-            "text": "[[apple]] is related to [[stem]]",
-            "weight": 2.6877499883731746
-          },
-          {
-            "subject": {
-              "id": "/c/en/apple",
-              "label": "apple",
-              "language": "en",
-              "term": "/c/en/apple"
-            },
-            "object": {
-              "id": "/c/en/trees",
-              "label": "trees",
-              "language": "en",
-              "term": "/c/en/trees"
-            },
-            "relation": "RelatedTo",
-            "text": "[[apple]] is related to [[trees]]",
-            "weight": 2.6765649627834556
-          },
-          {
-            "subject": {
-              "id": "/c/en/apple",
-              "label": "apple",
-              "language": "en",
-              "term": "/c/en/apple"
-            },
-            "object": {
-              "id": "/c/en/orange",
-              "label": "orange",
-              "language": "en",
-              "term": "/c/en/orange"
-            },
-            "relation": "RelatedTo",
-            "text": "[[apple]] is related to [[orange]]",
-            "weight": 2.571380951940027
-          },
-          {
-            "subject": {
-              "id": "/c/en/apple",
-              "label": "apple",
-              "language": "en",
-              "term": "/c/en/apple"
-            },
-            "object": {
-              "id": "/c/en/delicious",
-              "label": "delicious",
-              "language": "en",
-              "term": "/c/en/delicious"
-            },
-            "relation": "RelatedTo",
-            "text": "[[apple]] is related to [[delicious]]",
-            "weight": 2.42404620418011
-          },
-          {
-            "subject": {
-              "id": "/c/en/apple",
-              "label": "apple",
-              "language": "en",
-              "term": "/c/en/apple"
-            },
-            "object": {
-              "id": "/c/en/food",
-              "label": "food",
-              "language": "en",
-              "term": "/c/en/food"
-            },
-            "relation": "RelatedTo",
-            "text": "[[apple]] is related to [[food]]",
-            "weight": 2.318620279390311
-          },
-          {
-            "subject": {
-              "id": "/c/en/apple",
-              "label": "apple",
-              "language": "en",
-              "term": "/c/en/apple"
-            },
-            "object": {
-              "id": "/c/en/adam_eve",
-              "label": "adam eve",
-              "language": "en",
-              "term": "/c/en/adam_eve"
-            },
-            "relation": "RelatedTo",
-            "text": "[[apple]] is related to [[adam eve]]",
-            "weight": 2.2045407685048604
-          },
-          {
-            "subject": {
-              "id": "/c/en/apple",
-              "label": "apple",
-              "language": "en",
-              "term": "/c/en/apple"
-            },
-            "object": {
-              "id": "/c/en/skin",
-              "label": "skin",
-              "language": "en",
-              "term": "/c/en/skin"
-            },
-            "relation": "RelatedTo",
-            "text": "[[apple]] is related to [[skin]]",
-            "weight": 2.1762352813976715
-          },
-          {
-            "subject": {
-              "id": "/c/en/apple/n/wn/plant",
-              "label": "apple",
-              "language": "en",
-              "term": "/c/en/apple"
-            },
-            "object": {
-              "id": "/c/en/apple_tree/n/wn/plant",
-              "label": "apple tree",
-              "language": "en",
-              "term": "/c/en/apple_tree"
-            },
-            "relation": "IsA",
-            "text": "[[apple]] is a type of [[apple tree]]",
-            "weight": 2.0
-          },
-          {
-            "subject": {
-              "id": "/c/en/apple",
-              "label": "Apple",
-              "language": "en",
-              "term": "/c/en/apple"
-            },
-            "object": {
-              "id": "/c/en/computer_brand",
-              "label": "computer brand",
-              "language": "en",
-              "term": "/c/en/computer_brand"
-            },
-            "relation": "IsA",
-            "text": "[[Apple]] is a kind of [[computer brand]].",
-            "weight": 2.0
-          },
-          {
-            "subject": {
-              "id": "/c/en/apple/n/wn/food",
-              "label": "apple",
-              "language": "en",
-              "term": "/c/en/apple"
-            },
-            "object": {
-              "id": "/c/en/pome/n/wn/plant",
-              "label": "pome",
-              "language": "en",
-              "term": "/c/en/pome"
-            },
-            "relation": "IsA",
-            "text": "[[apple]] is a type of [[pome]]",
-            "weight": 2.0
-          },
-          {
-            "subject": {
-              "id": "/c/en/eating_apple/n/wn/food",
-              "label": "eating apple",
-              "language": "en",
-              "term": "/c/en/eating_apple"
-            },
-            "object": {
-              "id": "/c/en/apple/n/wn/food",
-              "label": "apple",
-              "language": "en",
-              "term": "/c/en/apple"
-            },
-            "relation": "IsA",
-            "text": "[[eating apple]] is a type of [[apple]]",
-            "weight": 2.0
-          },
-          {
-            "subject": {
-              "id": "/c/en/apple/n/wn/food",
-              "label": "apple",
-              "language": "en",
-              "term": "/c/en/apple"
-            },
-            "object": {
-              "id": "/c/en/edible_fruit/n/wn/food",
-              "label": "edible fruit",
-              "language": "en",
-              "term": "/c/en/edible_fruit"
-            },
-            "relation": "IsA",
-            "text": "[[apple]] is a type of [[edible fruit]]",
-            "weight": 2.0
-          },
-          {
-            "subject": {
-              "id": "/c/en/crab_apple/n/wn/food",
-              "label": "crab apple",
-              "language": "en",
-              "term": "/c/en/crab_apple"
-            },
-            "object": {
-              "id": "/c/en/apple/n/wn/food",
-              "label": "apple",
-              "language": "en",
-              "term": "/c/en/apple"
-            },
-            "relation": "IsA",
-            "text": "[[crab apple]] is a type of [[apple]]",
-            "weight": 2.0
-          },
-          {
-            "subject": {
-              "id": "/c/en/cooking_apple/n/wn/food",
-              "label": "cooking apple",
-              "language": "en",
-              "term": "/c/en/cooking_apple"
-            },
-            "object": {
-              "id": "/c/en/apple/n/wn/food",
-              "label": "apple",
-              "language": "en",
-              "term": "/c/en/apple"
-            },
-            "relation": "IsA",
-            "text": "[[cooking apple]] is a type of [[apple]]",
-            "weight": 2.0
-          },
-          {
-            "subject": {
-              "id": "/c/en/apple/n/wn/food",
-              "label": "apple",
-              "language": "en",
-              "term": "/c/en/apple"
-            },
-            "object": {
-              "id": "/c/en/apple/n/wn/plant",
-              "label": "apple",
-              "language": "en",
-              "term": "/c/en/apple"
-            },
-            "relation": "PartOf",
-            "text": "[[apple]] is a part of [[apple]]",
-            "weight": 2.0
-          },
-          {
-            "subject": {
-              "id": "/c/en/apple",
-              "label": "An apple",
-              "language": "en",
-              "term": "/c/en/apple"
-            },
-            "object": {
-              "id": "/c/en/core",
-              "label": "a core",
-              "language": "en",
-              "term": "/c/en/core"
-            },
-            "relation": "HasA",
-            "text": "[[An apple]] has [[a core]]",
-            "weight": 4.898979485566356
-          },
-          {
-            "subject": {
-              "id": "/c/en/apple",
-              "label": "An apple",
-              "language": "en",
-              "term": "/c/en/apple"
-            },
-            "object": {
-              "id": "/c/en/many_cooking_uses",
-              "label": "many cooking uses",
-              "language": "en",
-              "term": "/c/en/many_cooking_uses"
-            },
-            "relation": "HasA",
-            "text": "[[An apple]] has [[many cooking uses]]",
-            "weight": 2.0
-          },
-          {
-            "subject": {
-              "id": "/c/en/apple",
-              "label": "an apple",
-              "language": "en",
-              "term": "/c/en/apple"
-            },
-            "object": {
-              "id": "/c/en/skin",
-              "label": "a skin",
-              "language": "en",
-              "term": "/c/en/skin"
-            },
-            "relation": "HasA",
-            "text": "[[an apple]] has [[a skin]]",
-            "weight": 2.0
-          },
-          {
-            "subject": {
-              "id": "/c/en/apple",
-              "label": "An apple",
-              "language": "en",
-              "term": "/c/en/apple"
-            },
-            "object": {
-              "id": "/c/en/seeds_inside",
-              "label": "seeds inside",
-              "language": "en",
-              "term": "/c/en/seeds_inside"
-            },
-            "relation": "HasA",
-            "text": "[[An apple]] has [[seeds inside]]",
-            "weight": 2.0
-          },
-          {
-            "subject": {
-              "id": "/c/en/apple",
-              "label": "apple",
-              "language": "en",
-              "term": "/c/en/apple"
-            },
-            "object": {
-              "id": "/c/en/eating",
-              "label": "eating",
-              "language": "en",
-              "term": "/c/en/eating"
-            },
-            "relation": "UsedFor",
-            "text": "[[apple]] is for [[eating]]",
-            "weight": 5.291502622129181
-          },
-          {
-            "subject": {
-              "id": "/c/en/apple",
-              "label": "an apple",
-              "language": "en",
-              "term": "/c/en/apple"
-            },
-            "object": {
-              "id": "/c/en/making_apple_pie",
-              "label": "making apple pie",
-              "language": "en",
-              "term": "/c/en/making_apple_pie"
-            },
-            "relation": "UsedFor",
-            "text": "[[an apple]] is used for [[making apple pie]]",
-            "weight": 2.0
-          },
-          {
-            "subject": {
-              "id": "/c/en/apple",
-              "label": "an apple",
-              "language": "en",
-              "term": "/c/en/apple"
-            },
-            "object": {
-              "id": "/c/en/sate_hunger",
-              "label": "sate hunger",
-              "language": "en",
-              "term": "/c/en/sate_hunger"
-            },
-            "relation": "UsedFor",
-            "text": "You can use [[an apple]] to [[sate hunger]]",
-            "weight": 2.0
-          },
-          {
-            "subject": {
-              "id": "/c/en/apple",
-              "label": "an apple",
-              "language": "en",
-              "term": "/c/en/apple"
-            },
-            "object": {
-              "id": "/c/en/fall_from_tree",
-              "label": "fall from a tree",
-              "language": "en",
-              "term": "/c/en/fall_from_tree"
-            },
-            "relation": "CapableOf",
-            "text": "[[an apple]] can [[fall from a tree]]",
-            "weight": 5.291502622129181
-          },
-          {
-            "subject": {
-              "id": "/c/en/apple",
-              "label": "an apple",
-              "language": "en",
-              "term": "/c/en/apple"
-            },
-            "object": {
-              "id": "/c/en/apple_tree",
-              "label": "apple tree",
-              "language": "en",
-              "term": "/c/en/apple_tree"
-            },
-            "relation": "AtLocation",
-            "text": "You are likely to find [[an apple]] in [[apple tree]]",
-            "weight": 5.656854249492381
-          },
-          {
-            "subject": {
-              "id": "/c/en/apple",
-              "label": "an apple",
-              "language": "en",
-              "term": "/c/en/apple"
-            },
-            "object": {
-              "id": "/c/en/grocery_store",
-              "label": "a grocery store",
-              "language": "en",
-              "term": "/c/en/grocery_store"
-            },
-            "relation": "AtLocation",
-            "text": "You are likely to find [[an apple]] in [[a grocery store]]",
-            "weight": 4.0
-          },
-          {
-            "subject": {
-              "id": "/c/en/apple",
-              "label": "apple",
-              "language": "en",
-              "term": "/c/en/apple"
-            },
-            "object": {
-              "id": "/c/en/red",
-              "label": "red",
-              "language": "en",
-              "term": "/c/en/red"
-            },
-            "relation": "HasProperty",
-            "text": "[[apple]] can be [[red]]",
-            "weight": 9.591663046625438
-          },
-          {
-            "subject": {
-              "id": "/c/en/apple",
-              "label": "apple",
-              "language": "en",
-              "term": "/c/en/apple"
-            },
-            "object": {
-              "id": "/c/en/green",
-              "label": "green",
-              "language": "en",
-              "term": "/c/en/green"
-            },
-            "relation": "HasProperty",
-            "text": "[[apple]] can be [[green]]",
-            "weight": 7.211102550927979
-          },
-          {
-            "subject": {
-              "id": "/c/en/malus_pumila/n/wn/plant",
-              "label": "Malus pumila",
-              "language": "en",
-              "term": "/c/en/malus_pumila"
-            },
-            "object": {
-              "id": "/c/en/apple/n/wn/plant",
-              "label": "apple",
-              "language": "en",
-              "term": "/c/en/apple"
-            },
-            "relation": "Synonym",
-            "text": "[[Malus pumila]] is a synonym of [[apple]]",
-            "weight": 2.0
-          },
-          {
-            "subject": {
-              "id": "/c/en/orchard_apple_tree/n/wn/plant",
-              "label": "orchard apple tree",
-              "language": "en",
-              "term": "/c/en/orchard_apple_tree"
-            },
-            "object": {
-              "id": "/c/en/apple/n/wn/plant",
-              "label": "apple",
-              "language": "en",
-              "term": "/c/en/apple"
-            },
-            "relation": "Synonym",
-            "text": "[[orchard apple tree]] is a synonym of [[apple]]",
-            "weight": 2.0
-          },
-          {
-            "subject": {
-              "id": "/c/en/apple_pie",
-              "label": "apple pie",
-              "language": "en",
-              "term": "/c/en/apple_pie"
-            },
-            "object": {
-              "id": "/c/en/apple/n",
-              "label": "apple",
-              "language": "en",
-              "term": "/c/en/apple"
-            },
-            "relation": "DerivedFrom",
-            "text": null,
-            "weight": 2.0
-          },
-          {
-            "subject": {
-              "id": "/c/en/apple_strudel",
-              "label": "apple strudel",
-              "language": "en",
-              "term": "/c/en/apple_strudel"
-            },
-            "object": {
-              "id": "/c/en/apple/n",
-              "label": "apple",
-              "language": "en",
-              "term": "/c/en/apple"
-            },
-            "relation": "DerivedFrom",
-            "text": null,
-            "weight": 2.0
-          },
-          {
-            "subject": {
-              "id": "/c/en/apple_core",
-              "label": "apple core",
-              "language": "en",
-              "term": "/c/en/apple_core"
-            },
-            "object": {
-              "id": "/c/en/apple/n",
-              "label": "apple",
-              "language": "en",
-              "term": "/c/en/apple"
-            },
-            "relation": "DerivedFrom",
-            "text": null,
-            "weight": 2.0
-          },
-          {
-            "subject": {
-              "id": "/c/en/apple_juice",
-              "label": "apple juice",
-              "language": "en",
-              "term": "/c/en/apple_juice"
-            },
-            "object": {
-              "id": "/c/en/apple/n",
-              "label": "apple",
-              "language": "en",
-              "term": "/c/en/apple"
-            },
-            "relation": "DerivedFrom",
-            "text": null,
-            "weight": 2.0
-          },
-          {
-            "subject": {
-              "id": "/c/en/apple",
-              "label": "an apple",
-              "language": "en",
-              "term": "/c/en/apple"
-            },
-            "object": {
-              "id": "/c/en/eaten",
-              "label": "eaten",
-              "language": "en",
-              "term": "/c/en/eaten"
-            },
-            "relation": "ReceivesAction",
-            "text": "[[an apple]] can be [[eaten]]",
-            "weight": 6.32455532033676
-          }
-        ]
-      },
-      "wordnet": {
-        "synsets": [
-          {
-            "name": "apple.n.01",
-            "definition": "fruit with red or yellow or green skin and sweet to tart crisp whitish flesh",
-            "lemmas": [
-              "apple"
-            ],
-            "pos": "n",
-            "offset": 7739125,
-            "domain": "noun.food"
-          },
-          {
-            "name": "apple.n.02",
-            "definition": "native Eurasian tree widely cultivated in many varieties for its firm rounded edible fruits",
-            "lemmas": [
-              "apple",
-              "orchard_apple_tree",
-              "Malus_pumila"
-            ],
-            "pos": "n",
-            "offset": 12633994,
-            "domain": "noun.plant"
-          }
-        ],
-        "lemmas": [
-          {
-            "name": "apple",
-            "synset": "apple.n.01",
-            "count": 1
-          },
-          {
-            "name": "apple",
-            "synset": "apple.n.02",
-            "count": 0
-          },
-          {
-            "name": "orchard_apple_tree",
-            "synset": "apple.n.02",
-            "count": 0
-          },
-          {
-            "name": "Malus_pumila",
-            "synset": "apple.n.02",
-            "count": 0
-          }
-        ],
-        "definitions": [
-          "fruit with red or yellow or green skin and sweet to tart crisp whitish flesh",
-          "native Eurasian tree widely cultivated in many varieties for its firm rounded edible fruits"
-        ]
-      },
-      "sense2vec": {
-        "in_s2v": true,
-        "key": "apples|NOUN",
-        "freq": 44594,
-        "other_senses": [
-          "Apples|PRODUCT",
-          "Apples|ORG",
-          "Apples|PERSON",
-          "Apples|NORP",
-          "apples|VERB"
-        ],
-        "most_similar": [
-          {
-            "word": "oranges",
-            "sense": "NOUN",
-            "score": 0.9056000113487244
-          },
-          {
-            "word": "even apples",
-            "sense": "NOUN",
-            "score": 0.8443999886512756
-          },
-          {
-            "word": "tangerines",
-            "sense": "NOUN",
-            "score": 0.8395000100135803
-          },
-          {
-            "word": "pears",
-            "sense": "NOUN",
-            "score": 0.8313999772071838
-          },
-          {
-            "word": "Apples",
-            "sense": "ORG",
-            "score": 0.8292999863624573
-          }
-        ]
-      }
+      "index": 2,
+      "text": "used",
+      "pos": "VERB",
+      "start_idx": 11,
+      "end_idx": 15
     }
+  ],
+  "subtree": [
+    {
+      "index": 0,
+      "text": "apples",
+      "pos": "NOUN",
+      "start_idx": 0,
+      "end_idx": 6
+    }
+  ],
+  "is_alpha": true,
+  "is_stop": false,
+  "is_oov": true,
+  "like_url": false,
+  "is_digit": false,
+  "ent_iob": "O",
+  "ent_type": null,
+  "ent_kb_id": null,
+  "ent_id": 0,
+  "sentiment": 0.0,
+  "concepcy": {
+    "related_terms": [
+      {
+        "subject": {
+          "id": "/c/en/apple",
+          "label": "apple",
+          "language": "en",
+          "term": "/c/en/apple"
+        },
+        "object": {
+          "id": "/c/en/fruit",
+          "label": "fruit",
+          "language": "en",
+          "term": "/c/en/fruit"
+        },
+        "relation": "RelatedTo",
+        "text": "[[apple]] is related to [[fruit]]",
+        "weight": 12.80968383684781
+      },
+      {
+        "subject": {
+          "id": "/c/en/apple",
+          "label": "apple",
+          "language": "en",
+          "term": "/c/en/apple"
+        },
+        "object": {
+          "id": "/c/en/red",
+          "label": "red",
+          "language": "en",
+          "term": "/c/en/red"
+        },
+        "relation": "RelatedTo",
+        "text": "[[apple]] is related to [[red]]",
+        "weight": 9.309350138436088
+      },
+      {
+        "subject": {
+          "id": "/c/en/apple",
+          "label": "apple",
+          "language": "en",
+          "term": "/c/en/apple"
+        },
+        "object": {
+          "id": "/c/en/red_fruit",
+          "label": "red fruit",
+          "language": "en",
+          "term": "/c/en/red_fruit"
+        },
+        "relation": "RelatedTo",
+        "text": "[[apple]] is related to [[red fruit]]",
+        "weight": 4.827835954131002
+      },
+      {
+        "subject": {
+          "id": "/c/en/apple",
+          "label": "apple",
+          "language": "en",
+          "term": "/c/en/apple"
+        },
+        "object": {
+          "id": "/c/en/green",
+          "label": "green",
+          "language": "en",
+          "term": "/c/en/green"
+        },
+        "relation": "RelatedTo",
+        "text": "[[apple]] is related to [[green]]",
+        "weight": 4.44837048816755
+      },
+      {
+        "subject": {
+          "id": "/c/en/apple",
+          "label": "apple",
+          "language": "en",
+          "term": "/c/en/apple"
+        },
+        "object": {
+          "id": "/c/en/core",
+          "label": "core",
+          "language": "en",
+          "term": "/c/en/core"
+        },
+        "relation": "RelatedTo",
+        "text": "[[apple]] is related to [[core]]",
+        "weight": 4.441171016747722
+      },
+      {
+        "subject": {
+          "id": "/c/en/apple",
+          "label": "apple",
+          "language": "en",
+          "term": "/c/en/apple"
+        },
+        "object": {
+          "id": "/c/en/eve",
+          "label": "eve",
+          "language": "en",
+          "term": "/c/en/eve"
+        },
+        "relation": "RelatedTo",
+        "text": "[[apple]] is related to [[eve]]",
+        "weight": 4.315089802078283
+      },
+      {
+        "subject": {
+          "id": "/c/en/apple",
+          "label": "apple",
+          "language": "en",
+          "term": "/c/en/apple"
+        },
+        "object": {
+          "id": "/c/en/tree",
+          "label": "tree",
+          "language": "en",
+          "term": "/c/en/tree"
+        },
+        "relation": "RelatedTo",
+        "text": "[[apple]] is related to [[tree]]",
+        "weight": 4.297441099072796
+      },
+      {
+        "subject": {
+          "id": "/c/en/apple",
+          "label": "apple",
+          "language": "en",
+          "term": "/c/en/apple"
+        },
+        "object": {
+          "id": "/c/en/computer",
+          "label": "computer",
+          "language": "en",
+          "term": "/c/en/computer"
+        },
+        "relation": "RelatedTo",
+        "text": "[[apple]] is related to [[computer]]",
+        "weight": 4.164132562731402
+      },
+      {
+        "subject": {
+          "id": "/c/en/apple",
+          "label": "apple",
+          "language": "en",
+          "term": "/c/en/apple"
+        },
+        "object": {
+          "id": "/c/en/round",
+          "label": "round",
+          "language": "en",
+          "term": "/c/en/round"
+        },
+        "relation": "RelatedTo",
+        "text": "[[apple]] is related to [[round]]",
+        "weight": 4.144393803682271
+      },
+      {
+        "subject": {
+          "id": "/c/en/apple",
+          "label": "apple",
+          "language": "en",
+          "term": "/c/en/apple"
+        },
+        "object": {
+          "id": "/c/en/mac",
+          "label": "mac",
+          "language": "en",
+          "term": "/c/en/mac"
+        },
+        "relation": "RelatedTo",
+        "text": "[[apple]] is related to [[mac]]",
+        "weight": 3.887415593938986
+      },
+      {
+        "subject": {
+          "id": "/c/en/apple",
+          "label": "apple",
+          "language": "en",
+          "term": "/c/en/apple"
+        },
+        "object": {
+          "id": "/c/en/adam",
+          "label": "adam",
+          "language": "en",
+          "term": "/c/en/adam"
+        },
+        "relation": "RelatedTo",
+        "text": "[[apple]] is related to [[adam]]",
+        "weight": 3.6149688795340964
+      },
+      {
+        "subject": {
+          "id": "/c/en/apple",
+          "label": "apple",
+          "language": "en",
+          "term": "/c/en/apple"
+        },
+        "object": {
+          "id": "/c/en/pie",
+          "label": "pie",
+          "language": "en",
+          "term": "/c/en/pie"
+        },
+        "relation": "RelatedTo",
+        "text": "[[apple]] is related to [[pie]]",
+        "weight": 3.604441704342019
+      },
+      {
+        "subject": {
+          "id": "/c/en/apple",
+          "label": "apple",
+          "language": "en",
+          "term": "/c/en/apple"
+        },
+        "object": {
+          "id": "/c/en/pear",
+          "label": "pear",
+          "language": "en",
+          "term": "/c/en/pear"
+        },
+        "relation": "RelatedTo",
+        "text": "[[apple]] is related to [[pear]]",
+        "weight": 3.0672463220289305
+      },
+      {
+        "subject": {
+          "id": "/c/en/apple",
+          "label": "apple",
+          "language": "en",
+          "term": "/c/en/apple"
+        },
+        "object": {
+          "id": "/c/en/macintosh",
+          "label": "macintosh",
+          "language": "en",
+          "term": "/c/en/macintosh"
+        },
+        "relation": "RelatedTo",
+        "text": "[[apple]] is related to [[macintosh]]",
+        "weight": 2.9933259094191538
+      },
+      {
+        "subject": {
+          "id": "/c/en/apple",
+          "label": "apple",
+          "language": "en",
+          "term": "/c/en/apple"
+        },
+        "object": {
+          "id": "/c/en/seeds",
+          "label": "seeds",
+          "language": "en",
+          "term": "/c/en/seeds"
+        },
+        "relation": "RelatedTo",
+        "text": "[[apple]] is related to [[seeds]]",
+        "weight": 2.93393933134276
+      },
+      {
+        "subject": {
+          "id": "/c/en/apple",
+          "label": "apple",
+          "language": "en",
+          "term": "/c/en/apple"
+        },
+        "object": {
+          "id": "/c/en/eden",
+          "label": "eden",
+          "language": "en",
+          "term": "/c/en/eden"
+        },
+        "relation": "RelatedTo",
+        "text": "[[apple]] is related to [[eden]]",
+        "weight": 2.9318935860634507
+      },
+      {
+        "subject": {
+          "id": "/c/en/apple",
+          "label": "apple",
+          "language": "en",
+          "term": "/c/en/apple"
+        },
+        "object": {
+          "id": "/c/en/stem",
+          "label": "stem",
+          "language": "en",
+          "term": "/c/en/stem"
+        },
+        "relation": "RelatedTo",
+        "text": "[[apple]] is related to [[stem]]",
+        "weight": 2.6877499883731746
+      },
+      {
+        "subject": {
+          "id": "/c/en/apple",
+          "label": "apple",
+          "language": "en",
+          "term": "/c/en/apple"
+        },
+        "object": {
+          "id": "/c/en/trees",
+          "label": "trees",
+          "language": "en",
+          "term": "/c/en/trees"
+        },
+        "relation": "RelatedTo",
+        "text": "[[apple]] is related to [[trees]]",
+        "weight": 2.6765649627834556
+      },
+      {
+        "subject": {
+          "id": "/c/en/apple",
+          "label": "apple",
+          "language": "en",
+          "term": "/c/en/apple"
+        },
+        "object": {
+          "id": "/c/en/orange",
+          "label": "orange",
+          "language": "en",
+          "term": "/c/en/orange"
+        },
+        "relation": "RelatedTo",
+        "text": "[[apple]] is related to [[orange]]",
+        "weight": 2.571380951940027
+      },
+      {
+        "subject": {
+          "id": "/c/en/apple",
+          "label": "apple",
+          "language": "en",
+          "term": "/c/en/apple"
+        },
+        "object": {
+          "id": "/c/en/delicious",
+          "label": "delicious",
+          "language": "en",
+          "term": "/c/en/delicious"
+        },
+        "relation": "RelatedTo",
+        "text": "[[apple]] is related to [[delicious]]",
+        "weight": 2.42404620418011
+      },
+      {
+        "subject": {
+          "id": "/c/en/apple",
+          "label": "apple",
+          "language": "en",
+          "term": "/c/en/apple"
+        },
+        "object": {
+          "id": "/c/en/food",
+          "label": "food",
+          "language": "en",
+          "term": "/c/en/food"
+        },
+        "relation": "RelatedTo",
+        "text": "[[apple]] is related to [[food]]",
+        "weight": 2.318620279390311
+      },
+      {
+        "subject": {
+          "id": "/c/en/apple",
+          "label": "apple",
+          "language": "en",
+          "term": "/c/en/apple"
+        },
+        "object": {
+          "id": "/c/en/adam_eve",
+          "label": "adam eve",
+          "language": "en",
+          "term": "/c/en/adam_eve"
+        },
+        "relation": "RelatedTo",
+        "text": "[[apple]] is related to [[adam eve]]",
+        "weight": 2.2045407685048604
+      },
+      {
+        "subject": {
+          "id": "/c/en/apple",
+          "label": "apple",
+          "language": "en",
+          "term": "/c/en/apple"
+        },
+        "object": {
+          "id": "/c/en/skin",
+          "label": "skin",
+          "language": "en",
+          "term": "/c/en/skin"
+        },
+        "relation": "RelatedTo",
+        "text": "[[apple]] is related to [[skin]]",
+        "weight": 2.1762352813976715
+      },
+      {
+        "subject": {
+          "id": "/c/en/apple/n/wn/plant",
+          "label": "apple",
+          "language": "en",
+          "term": "/c/en/apple"
+        },
+        "object": {
+          "id": "/c/en/apple_tree/n/wn/plant",
+          "label": "apple tree",
+          "language": "en",
+          "term": "/c/en/apple_tree"
+        },
+        "relation": "IsA",
+        "text": "[[apple]] is a type of [[apple tree]]",
+        "weight": 2.0
+      },
+      {
+        "subject": {
+          "id": "/c/en/apple",
+          "label": "Apple",
+          "language": "en",
+          "term": "/c/en/apple"
+        },
+        "object": {
+          "id": "/c/en/computer_brand",
+          "label": "computer brand",
+          "language": "en",
+          "term": "/c/en/computer_brand"
+        },
+        "relation": "IsA",
+        "text": "[[Apple]] is a kind of [[computer brand]].",
+        "weight": 2.0
+      },
+      {
+        "subject": {
+          "id": "/c/en/apple/n/wn/food",
+          "label": "apple",
+          "language": "en",
+          "term": "/c/en/apple"
+        },
+        "object": {
+          "id": "/c/en/pome/n/wn/plant",
+          "label": "pome",
+          "language": "en",
+          "term": "/c/en/pome"
+        },
+        "relation": "IsA",
+        "text": "[[apple]] is a type of [[pome]]",
+        "weight": 2.0
+      },
+      {
+        "subject": {
+          "id": "/c/en/eating_apple/n/wn/food",
+          "label": "eating apple",
+          "language": "en",
+          "term": "/c/en/eating_apple"
+        },
+        "object": {
+          "id": "/c/en/apple/n/wn/food",
+          "label": "apple",
+          "language": "en",
+          "term": "/c/en/apple"
+        },
+        "relation": "IsA",
+        "text": "[[eating apple]] is a type of [[apple]]",
+        "weight": 2.0
+      },
+      {
+        "subject": {
+          "id": "/c/en/apple/n/wn/food",
+          "label": "apple",
+          "language": "en",
+          "term": "/c/en/apple"
+        },
+        "object": {
+          "id": "/c/en/edible_fruit/n/wn/food",
+          "label": "edible fruit",
+          "language": "en",
+          "term": "/c/en/edible_fruit"
+        },
+        "relation": "IsA",
+        "text": "[[apple]] is a type of [[edible fruit]]",
+        "weight": 2.0
+      },
+      {
+        "subject": {
+          "id": "/c/en/crab_apple/n/wn/food",
+          "label": "crab apple",
+          "language": "en",
+          "term": "/c/en/crab_apple"
+        },
+        "object": {
+          "id": "/c/en/apple/n/wn/food",
+          "label": "apple",
+          "language": "en",
+          "term": "/c/en/apple"
+        },
+        "relation": "IsA",
+        "text": "[[crab apple]] is a type of [[apple]]",
+        "weight": 2.0
+      },
+      {
+        "subject": {
+          "id": "/c/en/cooking_apple/n/wn/food",
+          "label": "cooking apple",
+          "language": "en",
+          "term": "/c/en/cooking_apple"
+        },
+        "object": {
+          "id": "/c/en/apple/n/wn/food",
+          "label": "apple",
+          "language": "en",
+          "term": "/c/en/apple"
+        },
+        "relation": "IsA",
+        "text": "[[cooking apple]] is a type of [[apple]]",
+        "weight": 2.0
+      },
+      {
+        "subject": {
+          "id": "/c/en/apple/n/wn/food",
+          "label": "apple",
+          "language": "en",
+          "term": "/c/en/apple"
+        },
+        "object": {
+          "id": "/c/en/apple/n/wn/plant",
+          "label": "apple",
+          "language": "en",
+          "term": "/c/en/apple"
+        },
+        "relation": "PartOf",
+        "text": "[[apple]] is a part of [[apple]]",
+        "weight": 2.0
+      },
+      {
+        "subject": {
+          "id": "/c/en/apple",
+          "label": "An apple",
+          "language": "en",
+          "term": "/c/en/apple"
+        },
+        "object": {
+          "id": "/c/en/core",
+          "label": "a core",
+          "language": "en",
+          "term": "/c/en/core"
+        },
+        "relation": "HasA",
+        "text": "[[An apple]] has [[a core]]",
+        "weight": 4.898979485566356
+      },
+      {
+        "subject": {
+          "id": "/c/en/apple",
+          "label": "An apple",
+          "language": "en",
+          "term": "/c/en/apple"
+        },
+        "object": {
+          "id": "/c/en/many_cooking_uses",
+          "label": "many cooking uses",
+          "language": "en",
+          "term": "/c/en/many_cooking_uses"
+        },
+        "relation": "HasA",
+        "text": "[[An apple]] has [[many cooking uses]]",
+        "weight": 2.0
+      },
+      {
+        "subject": {
+          "id": "/c/en/apple",
+          "label": "an apple",
+          "language": "en",
+          "term": "/c/en/apple"
+        },
+        "object": {
+          "id": "/c/en/skin",
+          "label": "a skin",
+          "language": "en",
+          "term": "/c/en/skin"
+        },
+        "relation": "HasA",
+        "text": "[[an apple]] has [[a skin]]",
+        "weight": 2.0
+      },
+      {
+        "subject": {
+          "id": "/c/en/apple",
+          "label": "An apple",
+          "language": "en",
+          "term": "/c/en/apple"
+        },
+        "object": {
+          "id": "/c/en/seeds_inside",
+          "label": "seeds inside",
+          "language": "en",
+          "term": "/c/en/seeds_inside"
+        },
+        "relation": "HasA",
+        "text": "[[An apple]] has [[seeds inside]]",
+        "weight": 2.0
+      },
+      {
+        "subject": {
+          "id": "/c/en/apple",
+          "label": "apple",
+          "language": "en",
+          "term": "/c/en/apple"
+        },
+        "object": {
+          "id": "/c/en/eating",
+          "label": "eating",
+          "language": "en",
+          "term": "/c/en/eating"
+        },
+        "relation": "UsedFor",
+        "text": "[[apple]] is for [[eating]]",
+        "weight": 5.291502622129181
+      },
+      {
+        "subject": {
+          "id": "/c/en/apple",
+          "label": "an apple",
+          "language": "en",
+          "term": "/c/en/apple"
+        },
+        "object": {
+          "id": "/c/en/making_apple_pie",
+          "label": "making apple pie",
+          "language": "en",
+          "term": "/c/en/making_apple_pie"
+        },
+        "relation": "UsedFor",
+        "text": "[[an apple]] is used for [[making apple pie]]",
+        "weight": 2.0
+      },
+      {
+        "subject": {
+          "id": "/c/en/apple",
+          "label": "an apple",
+          "language": "en",
+          "term": "/c/en/apple"
+        },
+        "object": {
+          "id": "/c/en/sate_hunger",
+          "label": "sate hunger",
+          "language": "en",
+          "term": "/c/en/sate_hunger"
+        },
+        "relation": "UsedFor",
+        "text": "You can use [[an apple]] to [[sate hunger]]",
+        "weight": 2.0
+      },
+      {
+        "subject": {
+          "id": "/c/en/apple",
+          "label": "an apple",
+          "language": "en",
+          "term": "/c/en/apple"
+        },
+        "object": {
+          "id": "/c/en/fall_from_tree",
+          "label": "fall from a tree",
+          "language": "en",
+          "term": "/c/en/fall_from_tree"
+        },
+        "relation": "CapableOf",
+        "text": "[[an apple]] can [[fall from a tree]]",
+        "weight": 5.291502622129181
+      },
+      {
+        "subject": {
+          "id": "/c/en/apple",
+          "label": "an apple",
+          "language": "en",
+          "term": "/c/en/apple"
+        },
+        "object": {
+          "id": "/c/en/apple_tree",
+          "label": "apple tree",
+          "language": "en",
+          "term": "/c/en/apple_tree"
+        },
+        "relation": "AtLocation",
+        "text": "You are likely to find [[an apple]] in [[apple tree]]",
+        "weight": 5.656854249492381
+      },
+      {
+        "subject": {
+          "id": "/c/en/apple",
+          "label": "an apple",
+          "language": "en",
+          "term": "/c/en/apple"
+        },
+        "object": {
+          "id": "/c/en/grocery_store",
+          "label": "a grocery store",
+          "language": "en",
+          "term": "/c/en/grocery_store"
+        },
+        "relation": "AtLocation",
+        "text": "You are likely to find [[an apple]] in [[a grocery store]]",
+        "weight": 4.0
+      },
+      {
+        "subject": {
+          "id": "/c/en/apple",
+          "label": "apple",
+          "language": "en",
+          "term": "/c/en/apple"
+        },
+        "object": {
+          "id": "/c/en/red",
+          "label": "red",
+          "language": "en",
+          "term": "/c/en/red"
+        },
+        "relation": "HasProperty",
+        "text": "[[apple]] can be [[red]]",
+        "weight": 9.591663046625438
+      },
+      {
+        "subject": {
+          "id": "/c/en/apple",
+          "label": "apple",
+          "language": "en",
+          "term": "/c/en/apple"
+        },
+        "object": {
+          "id": "/c/en/green",
+          "label": "green",
+          "language": "en",
+          "term": "/c/en/green"
+        },
+        "relation": "HasProperty",
+        "text": "[[apple]] can be [[green]]",
+        "weight": 7.211102550927979
+      },
+      {
+        "subject": {
+          "id": "/c/en/malus_pumila/n/wn/plant",
+          "label": "Malus pumila",
+          "language": "en",
+          "term": "/c/en/malus_pumila"
+        },
+        "object": {
+          "id": "/c/en/apple/n/wn/plant",
+          "label": "apple",
+          "language": "en",
+          "term": "/c/en/apple"
+        },
+        "relation": "Synonym",
+        "text": "[[Malus pumila]] is a synonym of [[apple]]",
+        "weight": 2.0
+      },
+      {
+        "subject": {
+          "id": "/c/en/orchard_apple_tree/n/wn/plant",
+          "label": "orchard apple tree",
+          "language": "en",
+          "term": "/c/en/orchard_apple_tree"
+        },
+        "object": {
+          "id": "/c/en/apple/n/wn/plant",
+          "label": "apple",
+          "language": "en",
+          "term": "/c/en/apple"
+        },
+        "relation": "Synonym",
+        "text": "[[orchard apple tree]] is a synonym of [[apple]]",
+        "weight": 2.0
+      },
+      {
+        "subject": {
+          "id": "/c/en/apple_pie",
+          "label": "apple pie",
+          "language": "en",
+          "term": "/c/en/apple_pie"
+        },
+        "object": {
+          "id": "/c/en/apple/n",
+          "label": "apple",
+          "language": "en",
+          "term": "/c/en/apple"
+        },
+        "relation": "DerivedFrom",
+        "text": null,
+        "weight": 2.0
+      },
+      {
+        "subject": {
+          "id": "/c/en/apple_strudel",
+          "label": "apple strudel",
+          "language": "en",
+          "term": "/c/en/apple_strudel"
+        },
+        "object": {
+          "id": "/c/en/apple/n",
+          "label": "apple",
+          "language": "en",
+          "term": "/c/en/apple"
+        },
+        "relation": "DerivedFrom",
+        "text": null,
+        "weight": 2.0
+      },
+      {
+        "subject": {
+          "id": "/c/en/apple_core",
+          "label": "apple core",
+          "language": "en",
+          "term": "/c/en/apple_core"
+        },
+        "object": {
+          "id": "/c/en/apple/n",
+          "label": "apple",
+          "language": "en",
+          "term": "/c/en/apple"
+        },
+        "relation": "DerivedFrom",
+        "text": null,
+        "weight": 2.0
+      },
+      {
+        "subject": {
+          "id": "/c/en/apple_juice",
+          "label": "apple juice",
+          "language": "en",
+          "term": "/c/en/apple_juice"
+        },
+        "object": {
+          "id": "/c/en/apple/n",
+          "label": "apple",
+          "language": "en",
+          "term": "/c/en/apple"
+        },
+        "relation": "DerivedFrom",
+        "text": null,
+        "weight": 2.0
+      },
+      {
+        "subject": {
+          "id": "/c/en/apple",
+          "label": "an apple",
+          "language": "en",
+          "term": "/c/en/apple"
+        },
+        "object": {
+          "id": "/c/en/eaten",
+          "label": "eaten",
+          "language": "en",
+          "term": "/c/en/eaten"
+        },
+        "relation": "ReceivesAction",
+        "text": "[[an apple]] can be [[eaten]]",
+        "weight": 6.32455532033676
+      }
+    ]
+  },
+  "wordnet": {
+    "synsets": [
+      {
+        "name": "apple.n.01",
+        "definition": "fruit with red or yellow or green skin and sweet to tart crisp whitish flesh",
+        "lemmas": ["apple"],
+        "pos": "n",
+        "offset": 7739125,
+        "domain": "noun.food"
+      },
+      {
+        "name": "apple.n.02",
+        "definition": "native Eurasian tree widely cultivated in many varieties for its firm rounded edible fruits",
+        "lemmas": ["apple", "orchard_apple_tree", "Malus_pumila"],
+        "pos": "n",
+        "offset": 12633994,
+        "domain": "noun.plant"
+      }
+    ],
+    "lemmas": [
+      {
+        "name": "apple",
+        "synset": "apple.n.01",
+        "count": 1
+      },
+      {
+        "name": "apple",
+        "synset": "apple.n.02",
+        "count": 0
+      },
+      {
+        "name": "orchard_apple_tree",
+        "synset": "apple.n.02",
+        "count": 0
+      },
+      {
+        "name": "Malus_pumila",
+        "synset": "apple.n.02",
+        "count": 0
+      }
+    ],
+    "definitions": [
+      "fruit with red or yellow or green skin and sweet to tart crisp whitish flesh",
+      "native Eurasian tree widely cultivated in many varieties for its firm rounded edible fruits"
+    ]
+  },
+  "sense2vec": {
+    "in_s2v": true,
+    "key": "apples|NOUN",
+    "freq": 44594,
+    "other_senses": [
+      "Apples|PRODUCT",
+      "Apples|ORG",
+      "Apples|PERSON",
+      "Apples|NORP",
+      "apples|VERB"
+    ],
+    "most_similar": [
+      {
+        "word": "oranges",
+        "sense": "NOUN",
+        "score": 0.9056000113487244
+      },
+      {
+        "word": "even apples",
+        "sense": "NOUN",
+        "score": 0.8443999886512756
+      },
+      {
+        "word": "tangerines",
+        "sense": "NOUN",
+        "score": 0.8395000100135803
+      },
+      {
+        "word": "pears",
+        "sense": "NOUN",
+        "score": 0.8313999772071838
+      },
+      {
+        "word": "Apples",
+        "sense": "ORG",
+        "score": 0.8292999863624573
+      }
+    ]
+  }
+}

@@ -1,8 +1,15 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react';
-import ReactDOM from 'react-dom';
-import { Button, Badge, TextInput, Spinner, Checkbox, Label } from 'flowbite-react';
-import { ChevronDown, Search, X, CircleX } from 'lucide-react';
-import SearchHighlight from '@/components/misc/search_highlight';
+import React, { useEffect, useMemo, useRef, useState } from "react";
+import ReactDOM from "react-dom";
+import {
+  Button,
+  Badge,
+  TextInput,
+  Spinner,
+  Checkbox,
+  Label,
+} from "flowbite-react";
+import { ChevronDown, Search, X, CircleX } from "lucide-react";
+import SearchHighlight from "@/components/misc/search_highlight";
 
 export interface FieldMap<T = any> {
   value: keyof T | string;
@@ -24,13 +31,15 @@ export interface PortalRecordSelectorProps<T = any> {
   maxSelections?: number;
 }
 
-export function PortalRecordSelector<T = any>(props: PortalRecordSelectorProps<T>): React.ReactElement {
+export function PortalRecordSelector<T = any>(
+  props: PortalRecordSelectorProps<T>,
+): React.ReactElement {
   const {
     records,
     loading = false,
     error = null,
     fieldMap,
-    placeholder = 'Select Record',
+    placeholder = "Select Record",
     disabled = false,
     multi = false,
     value,
@@ -39,7 +48,7 @@ export function PortalRecordSelector<T = any>(props: PortalRecordSelectorProps<T
     maxSelections,
   } = props;
 
-  const [searchTerm, setSearchTerm] = useState('');
+  const [searchTerm, setSearchTerm] = useState("");
   const [showDefinitions, setShowDefinitions] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
   const [highlightedId, setHighlightedId] = useState<string | null>(null);
@@ -49,10 +58,12 @@ export function PortalRecordSelector<T = any>(props: PortalRecordSelectorProps<T
   const optionRefs = useRef<Record<string, HTMLDivElement | null>>({});
   const [menuStyle, setMenuStyle] = useState<React.CSSProperties>({});
 
-  const getValue = (item: any) => String(item[fieldMap.value as string] ?? '');
-  const getTitle = (item: any) => String(item[fieldMap.title as string] ?? '');
+  const getValue = (item: any) => String(item[fieldMap.value as string] ?? "");
+  const getTitle = (item: any) => String(item[fieldMap.title as string] ?? "");
   const getDefinition = (item: any) =>
-    fieldMap.definition ? String(item[fieldMap.definition as string] ?? '') : '';
+    fieldMap.definition
+      ? String(item[fieldMap.definition as string] ?? "")
+      : "";
 
   const filtered = useMemo(() => {
     if (!records) return [] as T[];
@@ -63,7 +74,11 @@ export function PortalRecordSelector<T = any>(props: PortalRecordSelectorProps<T
       const def = getDefinition(r).toLowerCase();
       const id = getValue(r).toLowerCase();
       // include definition matches only if showDefinitions is enabled
-      return title.includes(q) || id.includes(q) || (showDefinitions && def.includes(q));
+      return (
+        title.includes(q) ||
+        id.includes(q) ||
+        (showDefinitions && def.includes(q))
+      );
     });
   }, [records, searchTerm, showDefinitions]);
 
@@ -72,7 +87,7 @@ export function PortalRecordSelector<T = any>(props: PortalRecordSelectorProps<T
     if (multi) {
       return Array.isArray(value) && value.includes(id);
     }
-    return typeof value === 'string' && value === id;
+    return typeof value === "string" && value === id;
   };
 
   const toggleMulti = (id: string) => {
@@ -94,7 +109,7 @@ export function PortalRecordSelector<T = any>(props: PortalRecordSelectorProps<T
       if (!triggerRef.current) return;
       const rect = triggerRef.current.getBoundingClientRect();
       setMenuStyle({
-        position: 'absolute',
+        position: "absolute",
         top: rect.bottom + window.scrollY,
         left: rect.left + window.scrollX,
         minWidth: rect.width,
@@ -117,23 +132,26 @@ export function PortalRecordSelector<T = any>(props: PortalRecordSelectorProps<T
 
     const onKey = (e: KeyboardEvent) => {
       if (!isOpen) return;
-      if (e.key === 'Escape') {
+      if (e.key === "Escape") {
         setIsOpen(false);
         triggerRef.current?.focus();
         return;
       }
-      if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+      if (e.key === "ArrowDown" || e.key === "ArrowUp") {
         e.preventDefault();
         const ids = filtered.map((r) => getValue(r));
         if (ids.length === 0) return;
         const currentIndex = highlightedId ? ids.indexOf(highlightedId) : -1;
-        const nextIndex = e.key === 'ArrowDown' ? Math.min(ids.length - 1, currentIndex + 1) : Math.max(0, currentIndex - 1);
+        const nextIndex =
+          e.key === "ArrowDown"
+            ? Math.min(ids.length - 1, currentIndex + 1)
+            : Math.max(0, currentIndex - 1);
         const nextId = ids[nextIndex];
         setHighlightedId(nextId);
         setTimeout(() => optionRefs.current[nextId]?.focus(), 0);
         return;
       }
-      if (e.key === 'Enter') {
+      if (e.key === "Enter") {
         if (highlightedId) {
           const item = records.find((r) => getValue(r) === highlightedId);
           if (item) {
@@ -146,17 +164,17 @@ export function PortalRecordSelector<T = any>(props: PortalRecordSelectorProps<T
 
     if (isOpen) {
       updatePosition();
-      window.addEventListener('resize', updatePosition);
-      window.addEventListener('scroll', updatePosition, true);
-      document.addEventListener('mousedown', onDocClick);
-      document.addEventListener('keydown', onKey);
+      window.addEventListener("resize", updatePosition);
+      window.addEventListener("scroll", updatePosition, true);
+      document.addEventListener("mousedown", onDocClick);
+      document.addEventListener("keydown", onKey);
     }
 
     return () => {
-      window.removeEventListener('resize', updatePosition);
-      window.removeEventListener('scroll', updatePosition, true);
-      document.removeEventListener('mousedown', onDocClick);
-      document.removeEventListener('keydown', onKey);
+      window.removeEventListener("resize", updatePosition);
+      window.removeEventListener("scroll", updatePosition, true);
+      document.removeEventListener("mousedown", onDocClick);
+      document.removeEventListener("keydown", onKey);
     };
   }, [isOpen, filtered, highlightedId, records]);
 
@@ -174,7 +192,7 @@ export function PortalRecordSelector<T = any>(props: PortalRecordSelectorProps<T
 
   return (
     <div className="relative">
-      <div className="flex items-center gap-0 w-full">
+      <div className="flex w-full items-center gap-0">
         <Button
           color="light"
           onClick={() => setIsOpen(!isOpen)}
@@ -189,7 +207,7 @@ export function PortalRecordSelector<T = any>(props: PortalRecordSelectorProps<T
         </Button>
 
         {/* clear button for single-select */}
-        {!multi && value && typeof value === 'string' && (
+        {!multi && value && typeof value === "string" && (
           <button
             type="button"
             aria-label="Clear selection"
@@ -208,10 +226,10 @@ export function PortalRecordSelector<T = any>(props: PortalRecordSelectorProps<T
             const item = records.find((r) => getValue(r) === id);
             if (!item) return null;
             return (
-              <Badge key={id} className="flex items-center gap-1 py-1 px-2">
+              <Badge key={id} className="flex items-center gap-1 px-2 py-1">
                 {getTitle(item)}
                 <X
-                  className="h-3 w-3 ml-1 cursor-pointer hover:text-red-500 inline-flex"
+                  className="ml-1 inline-flex h-3 w-3 cursor-pointer hover:text-red-500"
                   onClick={() => toggleMulti(id)}
                 />
               </Badge>
@@ -222,9 +240,14 @@ export function PortalRecordSelector<T = any>(props: PortalRecordSelectorProps<T
 
       {isOpen && triggerRef.current
         ? ReactDOM.createPortal(
-            <div style={menuStyle} ref={menuRef} role="dialog" aria-modal="false">
-              <div className="bg-white border rounded-md shadow-lg dark:bg-gray-800 dark:border-gray-700">
-                <div className="p-2 border-b dark:border-gray-700">
+            <div
+              style={menuStyle}
+              ref={menuRef}
+              role="dialog"
+              aria-modal="false"
+            >
+              <div className="rounded-md border bg-white shadow-lg dark:border-gray-700 dark:bg-gray-800">
+                <div className="border-b p-2 dark:border-gray-700">
                   <TextInput
                     placeholder="Search..."
                     value={searchTerm}
@@ -239,19 +262,28 @@ export function PortalRecordSelector<T = any>(props: PortalRecordSelectorProps<T
                       checked={showDefinitions}
                       onChange={() => setShowDefinitions(!showDefinitions)}
                     />
-                    <Label htmlFor="portal-record-selector-show-definitions" className="flex pl-2">
+                    <Label
+                      htmlFor="portal-record-selector-show-definitions"
+                      className="flex pl-2"
+                    >
                       Show Definitions
                     </Label>
                   </div>
                 </div>
 
-                <div className="max-h-60 overflow-y-auto" role="listbox" aria-label="Records list">
+                <div
+                  className="max-h-60 overflow-y-auto"
+                  role="listbox"
+                  aria-label="Records list"
+                >
                   {loading ? (
                     <div className="p-4 text-center">
                       <Spinner size="sm" />
                     </div>
                   ) : filtered.length === 0 ? (
-                    <div className="p-4 text-center text-gray-500 dark:text-gray-400">No records found</div>
+                    <div className="p-4 text-center text-gray-500 dark:text-gray-400">
+                      No records found
+                    </div>
                   ) : (
                     filtered.map((item) => {
                       const id = getValue(item);
@@ -262,23 +294,36 @@ export function PortalRecordSelector<T = any>(props: PortalRecordSelectorProps<T
                           role="option"
                           aria-selected={isSelected(id)}
                           tabIndex={-1}
-                          ref={(el) => { optionRefs.current[id] = el; }}
+                          ref={(el) => {
+                            optionRefs.current[id] = el;
+                          }}
                           onMouseEnter={() => setHighlightedId(id)}
-                          onClick={() => (multi ? toggleMulti(id) : handleSingleSelect(item))}
-                          className={`px-3 py-2 cursor-pointer ${highlightedId === id ? 'bg-gray-100 dark:bg-gray-700' : 'hover:bg-gray-50 dark:hover:bg-gray-700'}`}
+                          onClick={() =>
+                            multi ? toggleMulti(id) : handleSingleSelect(item)
+                          }
+                          className={`cursor-pointer px-3 py-2 ${highlightedId === id ? "bg-gray-100 dark:bg-gray-700" : "hover:bg-gray-50 dark:hover:bg-gray-700"}`}
                         >
                           {showDefinitions && fieldMap.definition ? (
                             <div className="flex flex-row items-start gap-4">
                               <span className="w-1/3 text-left font-medium whitespace-normal">
-                                <SearchHighlight content={getTitle(item)} searchText={searchTerm} />
+                                <SearchHighlight
+                                  content={getTitle(item)}
+                                  searchText={searchTerm}
+                                />
                               </span>
                               <span className="w-2/3 text-left whitespace-normal text-gray-500">
-                                <SearchHighlight content={getDefinition(item)} searchText={searchTerm} />
+                                <SearchHighlight
+                                  content={getDefinition(item)}
+                                  searchText={searchTerm}
+                                />
                               </span>
                             </div>
                           ) : (
                             <div className="font-medium whitespace-normal">
-                              <SearchHighlight content={getTitle(item)} searchText={searchTerm} />
+                              <SearchHighlight
+                                content={getTitle(item)}
+                                searchText={searchTerm}
+                              />
                             </div>
                           )}
                         </div>

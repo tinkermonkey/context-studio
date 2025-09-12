@@ -1,24 +1,32 @@
 /**
  * Node Links Mutation Hooks
- * 
+ *
  * React Query mutation hooks for structure node links (replaces term relationships)
  */
 
-import { useMutation, useQueryClient, UseMutationOptions } from '@tanstack/react-query';
-import { nodeLinkService } from '../../services/nodeLinks';
-import { QUERY_KEYS } from '../../config';
-import { createQueryKey } from '../../utils/queryClient';
+import {
+  useMutation,
+  useQueryClient,
+  UseMutationOptions,
+} from "@tanstack/react-query";
+import { nodeLinkService } from "../../services/nodeLinks";
+import { QUERY_KEYS } from "../../config";
+import { createQueryKey } from "../../utils/queryClient";
 import {
   StructureNodeLink,
-  StructureNodeLinkCreate
-} from '../../types/structureNodes';
-import { nodeLinkQueryKeys } from './useNodeLinks';
+  StructureNodeLinkCreate,
+} from "../../types/structureNodes";
+import { nodeLinkQueryKeys } from "./useNodeLinks";
 
 /**
  * Hook to create a new structure node link
  */
 export const useCreateNodeLink = (
-  options?: UseMutationOptions<StructureNodeLink, Error, StructureNodeLinkCreate>
+  options?: UseMutationOptions<
+    StructureNodeLink,
+    Error,
+    StructureNodeLinkCreate
+  >,
 ) => {
   const queryClient = useQueryClient();
 
@@ -29,11 +37,11 @@ export const useCreateNodeLink = (
       queryClient.invalidateQueries({
         queryKey: [QUERY_KEYS.NODE_LINKS],
       });
-      
+
       // Add the new link to the cache
       queryClient.setQueryData(
         createQueryKey(QUERY_KEYS.NODE_LINKS, data.id),
-        data
+        data,
       );
 
       // Invalidate specific node queries
@@ -57,7 +65,10 @@ export const useCreateNodeLink = (
 
       // Invalidate between-nodes queries
       queryClient.invalidateQueries({
-        queryKey: nodeLinkQueryKeys.betweenNodes(variables.source_node_id, variables.target_node_id),
+        queryKey: nodeLinkQueryKeys.betweenNodes(
+          variables.source_node_id,
+          variables.target_node_id,
+        ),
       });
     },
     ...options,
@@ -68,7 +79,7 @@ export const useCreateNodeLink = (
  * Hook to delete a structure node link
  */
 export const useDeleteNodeLink = (
-  options?: UseMutationOptions<void, Error, string>
+  options?: UseMutationOptions<void, Error, string>,
 ) => {
   const queryClient = useQueryClient();
 
@@ -77,9 +88,9 @@ export const useDeleteNodeLink = (
     onMutate: async (id: string) => {
       // Get the link being deleted for cache invalidation
       const linkToDelete = queryClient.getQueryData<StructureNodeLink>(
-        createQueryKey(QUERY_KEYS.NODE_LINKS, id)
+        createQueryKey(QUERY_KEYS.NODE_LINKS, id),
       );
-      
+
       return { linkToDelete };
     },
     onSuccess: (_, id, context) => {
@@ -87,7 +98,7 @@ export const useDeleteNodeLink = (
       queryClient.removeQueries({
         queryKey: createQueryKey(QUERY_KEYS.NODE_LINKS, id),
       });
-      
+
       // Invalidate all node links queries
       queryClient.invalidateQueries({
         queryKey: [QUERY_KEYS.NODE_LINKS],
@@ -97,7 +108,7 @@ export const useDeleteNodeLink = (
       const contextData = context as { linkToDelete?: StructureNodeLink };
       if (contextData?.linkToDelete) {
         const link = contextData.linkToDelete;
-        
+
         queryClient.invalidateQueries({
           queryKey: nodeLinkQueryKeys.byNode(link.source_node_id),
         });
@@ -118,7 +129,10 @@ export const useDeleteNodeLink = (
 
         // Invalidate between-nodes queries
         queryClient.invalidateQueries({
-          queryKey: nodeLinkQueryKeys.betweenNodes(link.source_node_id, link.target_node_id),
+          queryKey: nodeLinkQueryKeys.betweenNodes(
+            link.source_node_id,
+            link.target_node_id,
+          ),
         });
       }
     },
@@ -133,22 +147,26 @@ export const useDeleteNodeLink = (
  * @deprecated Use useCreateNodeLink instead
  */
 export const useCreateTermRelationship = (
-  options?: UseMutationOptions<StructureNodeLink, Error, {
-    source_term_id: string;
-    target_term_id: string;
-    predicate: string;
-    predicate_id?: string;
-  }>
+  options?: UseMutationOptions<
+    StructureNodeLink,
+    Error,
+    {
+      source_term_id: string;
+      target_term_id: string;
+      predicate: string;
+      predicate_id?: string;
+    }
+  >,
 ) => {
   const createNodeLink = useCreateNodeLink();
-  
+
   return useMutation({
-    mutationFn: ({ source_term_id, target_term_id, predicate, predicate_id }) => 
+    mutationFn: ({ source_term_id, target_term_id, predicate, predicate_id }) =>
       createNodeLink.mutateAsync({
         source_node_id: source_term_id,
         target_node_id: target_term_id,
         predicate,
-        predicate_id
+        predicate_id,
       }),
     ...options,
   });
@@ -159,7 +177,7 @@ export const useCreateTermRelationship = (
  * @deprecated Use useDeleteNodeLink instead
  */
 export const useDeleteTermRelationship = (
-  options?: UseMutationOptions<void, Error, string>
+  options?: UseMutationOptions<void, Error, string>,
 ) => {
   return useDeleteNodeLink(options);
 };
@@ -170,22 +188,26 @@ export const useDeleteTermRelationship = (
  * Hook to create a link between two terms with a specific predicate
  */
 export const useCreateTermLink = (
-  options?: UseMutationOptions<StructureNodeLink, Error, {
-    sourceTermId: string;
-    targetTermId: string;
-    predicate: string;
-    predicateId?: string;
-  }>
+  options?: UseMutationOptions<
+    StructureNodeLink,
+    Error,
+    {
+      sourceTermId: string;
+      targetTermId: string;
+      predicate: string;
+      predicateId?: string;
+    }
+  >,
 ) => {
   const createNodeLink = useCreateNodeLink();
-  
+
   return useMutation({
-    mutationFn: ({ sourceTermId, targetTermId, predicate, predicateId }) => 
+    mutationFn: ({ sourceTermId, targetTermId, predicate, predicateId }) =>
       createNodeLink.mutateAsync({
         source_node_id: sourceTermId,
         target_node_id: targetTermId,
         predicate,
-        predicate_id: predicateId
+        predicate_id: predicateId,
       }),
     ...options,
   });
@@ -195,7 +217,7 @@ export const useCreateTermLink = (
  * Hook to remove all links for a specific node
  */
 export const useDeleteNodeLinks = (
-  options?: UseMutationOptions<void, Error, string>
+  options?: UseMutationOptions<void, Error, string>,
 ) => {
   const queryClient = useQueryClient();
 
@@ -203,9 +225,9 @@ export const useDeleteNodeLinks = (
     mutationFn: async (nodeId: string) => {
       // First get all links for this node
       const links = await nodeLinkService.getNodeLinks(nodeId);
-      
+
       // Delete all links in parallel
-      await Promise.all(links.map(link => nodeLinkService.delete(link.id)));
+      await Promise.all(links.map((link) => nodeLinkService.delete(link.id)));
     },
     onSuccess: (_, nodeId) => {
       // Invalidate all node links queries

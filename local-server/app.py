@@ -6,7 +6,9 @@ from contextlib import asynccontextmanager
 from sqlalchemy import text
 
 from api import graph, datasets, nlp_analysis, schema, predicates, llm, pipeline_flavors
-from api import enrichment, config, structure_nodes, version_management, sync
+from api import enrichment, config, structure_nodes, version_management, sync, llm_traceability
+from api import changeset_management, proposal_management, identity_management
+from api import conflict_resolution, analytics, incremental_sync, optimization
 from api.admin import service_monitoring
 from schema_org import api as schema_org_api
 from api.graph import get_cached_graph_service, invalidate_graph_cache
@@ -165,12 +167,18 @@ def create_app(dataset_id=None, engine=None, session_local=None, service_factory
     app.include_router(schema_org_api.router)
     app.include_router(nlp_analysis.router, prefix="/api", tags=["nlp"])
     app.include_router(llm.router, prefix="/api", tags=["llm"])
+    app.include_router(llm_traceability.router, tags=["llm-traceability"])
     app.include_router(pipeline_flavors.router, tags=["pipeline-flavors"])
     app.include_router(enrichment.router, prefix="", tags=["nlp-reference"])
     app.include_router(sync.router, tags=["sync"])
     
     # Phase 2: Administrative monitoring endpoints for service factory
     app.include_router(service_monitoring.router, tags=["service-monitoring"])
+    
+    # Phase 3: Collaboration workflow APIs
+    app.include_router(changeset_management.router, tags=["changeset-management"])
+    app.include_router(proposal_management.router, tags=["proposal-management"])
+    app.include_router(identity_management.router, tags=["identity-management"])
     
     # Phase 3: Enhanced database management monitoring endpoints
     from api.admin import database_monitoring
@@ -179,6 +187,14 @@ def create_app(dataset_id=None, engine=None, session_local=None, service_factory
     # Enhanced Event Processor monitoring endpoints
     from api.admin import event_processor_monitoring
     app.include_router(event_processor_monitoring.router, tags=["event-processor-monitoring"])
+    
+    # Phase 4: Advanced collaborative features
+    app.include_router(conflict_resolution.router, tags=["conflict-resolution"])
+    app.include_router(analytics.router, tags=["analytics"])
+    app.include_router(incremental_sync.router, tags=["incremental-sync"])
+    
+    # Phase 5: Enterprise-scale optimization features
+    app.include_router(optimization.router, tags=["optimization"])
     return app
 
 # Default app for production

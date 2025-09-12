@@ -21,7 +21,7 @@ export const defaultLayoutConfig: LayoutConfig = {
     top: 30,
     left: 20,
     right: 10,
-    bottom: 30
+    bottom: 30,
   },
 };
 
@@ -192,16 +192,17 @@ export function calculateLayout(
     node.x = x;
     node.y = y;
     node.depth = depth;
-    
+
     // Use sibling max text width if provided, otherwise calculate individual width
-    node.textWidth = siblingMaxTextWidth ?? textWidthCache.getTextWidth(node.title);
-    
+    node.textWidth =
+      siblingMaxTextWidth ?? textWidthCache.getTextWidth(node.title);
+
     node.definitionWidth = maxWidth
       ? maxWidth - (config.margins.right || 0) - node.x - (node.textWidth || 0)
       : 0;
     node.definitionHeight = measureHtmlTextHeight(
-      node.definition || '',
-      node.definitionWidth
+      node.definition || "",
+      node.definitionWidth,
     );
     node.expanded = isExpanded;
     node.hasChildren = node.children && node.children.length > 0;
@@ -209,14 +210,20 @@ export function calculateLayout(
     maxY = Math.max(maxY, y);
     // Calculate the bottom Y position considering the definition height
     // Definition starts at nodeY - nodeLabel.height and extends downward by definitionHeight
-    const definitionBottom = y - ChartStyles.nodeLabel.height + (node.definitionHeight || ChartStyles.nodeLabel.height);
-    let currentBottomY = Math.max(y + config.spacing.vertical, definitionBottom + config.spacing.vertical);
+    const definitionBottom =
+      y -
+      ChartStyles.nodeLabel.height +
+      (node.definitionHeight || ChartStyles.nodeLabel.height);
+    let currentBottomY = Math.max(
+      y + config.spacing.vertical,
+      definitionBottom + config.spacing.vertical,
+    );
 
     // Only process children if node is expanded
     if (node.children && node.children.length > 0 && isExpanded) {
       // First pass: calculate text widths for all children
-      const childrenTextWidths = node.children.map((child) => 
-        textWidthCache.getTextWidth(child.title)
+      const childrenTextWidths = node.children.map((child) =>
+        textWidthCache.getTextWidth(child.title),
       );
 
       // Calculate maximum text width among siblings
@@ -224,7 +231,13 @@ export function calculateLayout(
 
       // Second pass: process children with consistent text width
       node.children = node.children.map((child) => {
-        const result = processNode(child, depth + 1, x, currentBottomY, maxSiblingTextWidth);
+        const result = processNode(
+          child,
+          depth + 1,
+          x,
+          currentBottomY,
+          maxSiblingTextWidth,
+        );
         currentBottomY = result.bottomY;
         return result.node;
       });
@@ -246,7 +259,8 @@ export function calculateLayout(
   const textPadding = 20;
 
   // Calculate natural width based on content including right margin
-  const naturalWidth = maxX + maxTextWidth + textPadding + (config.margins.right || 0);
+  const naturalWidth =
+    maxX + maxTextWidth + textPadding + (config.margins.right || 0);
 
   // Define minimum width to ensure chart remains usable
   const minimumWidth = 300;

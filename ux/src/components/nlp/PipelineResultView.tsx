@@ -1,7 +1,11 @@
 import * as React from "react";
 import { Button, Alert, Spinner } from "flowbite-react";
 import { CheckCircle } from "lucide-react";
-import { useUpdateTerm, useUpdateDomain, useUpdateLayer } from "@/api/hooks/structure_nodes/useStructureNodeMutations";
+import {
+  useUpdateTerm,
+  useUpdateDomain,
+  useUpdateLayer,
+} from "@/api/hooks/structure_nodes/useStructureNodeMutations";
 
 interface PipelineResultViewProps {
   result: any;
@@ -20,9 +24,12 @@ const PipelineResultView: React.FC<PipelineResultViewProps> = ({
   domainId,
   layerId,
 }) => {
-  const [saveMessageLocal, setSaveMessageLocal] = React.useState<string | null>(null);
+  const [saveMessageLocal, setSaveMessageLocal] = React.useState<string | null>(
+    null,
+  );
   const [isSavingLocal, setIsSavingLocal] = React.useState(false);
-  const [savedContextSnapshotLocal, setSavedContextSnapshotLocal] = React.useState<string | null>(null);
+  const [savedContextSnapshotLocal, setSavedContextSnapshotLocal] =
+    React.useState<string | null>(null);
   const [savedVisibleLocal, setSavedVisibleLocal] = React.useState(false);
 
   const updateTerm = useUpdateTerm();
@@ -40,17 +47,27 @@ const PipelineResultView: React.FC<PipelineResultViewProps> = ({
   }, [apiContext, buildApiContext]);
 
   const isSavedAndUnchangedLocal = Boolean(
-    savedContextSnapshotLocal && currentContextSnapshotLocal && savedContextSnapshotLocal === currentContextSnapshotLocal,
+    savedContextSnapshotLocal &&
+      currentContextSnapshotLocal &&
+      savedContextSnapshotLocal === currentContextSnapshotLocal,
   );
 
   // Hide the saved indicator when the current snapshot diverges from the saved snapshot
   React.useEffect(() => {
-    if (savedVisibleLocal && savedContextSnapshotLocal && currentContextSnapshotLocal) {
+    if (
+      savedVisibleLocal &&
+      savedContextSnapshotLocal &&
+      currentContextSnapshotLocal
+    ) {
       if (savedContextSnapshotLocal !== currentContextSnapshotLocal) {
         setSavedVisibleLocal(false);
       }
     }
-  }, [currentContextSnapshotLocal, savedContextSnapshotLocal, savedVisibleLocal]);
+  }, [
+    currentContextSnapshotLocal,
+    savedContextSnapshotLocal,
+    savedVisibleLocal,
+  ]);
 
   const handleSaveLocal = async (res: any) => {
     if (!res?.data?.definition) return;
@@ -92,21 +109,33 @@ const PipelineResultView: React.FC<PipelineResultViewProps> = ({
     return (
       <div className="flex h-full flex-col space-y-3">
         <div className="rounded-lg bg-gray-50 p-3 dark:bg-gray-800">
-          <h5 className="mb-2 font-medium text-gray-900 dark:text-white">Definition</h5>
-          <p className="text-sm text-gray-700 dark:text-gray-300">{data.definition}</p>
+          <h5 className="mb-2 font-medium text-gray-900 dark:text-white">
+            Definition
+          </h5>
+          <p className="text-sm text-gray-700 dark:text-gray-300">
+            {data.definition}
+          </p>
         </div>
 
         {data.reasoning && (
           <div className="rounded-lg bg-blue-50 p-3 dark:bg-blue-900/20">
-            <h5 className="mb-2 font-medium text-blue-900 dark:text-blue-200">Reasoning</h5>
-            <p className="text-sm text-blue-700 dark:text-blue-300">{data.reasoning}</p>
+            <h5 className="mb-2 font-medium text-blue-900 dark:text-blue-200">
+              Reasoning
+            </h5>
+            <p className="text-sm text-blue-700 dark:text-blue-300">
+              {data.reasoning}
+            </p>
           </div>
         )}
 
         {data.discrepancies && (
           <div className="rounded-lg bg-yellow-50 p-3 dark:bg-yellow-900/20">
-            <h5 className="mb-2 font-medium text-yellow-900 dark:text-yellow-200">Discrepancies</h5>
-            <p className="text-sm text-yellow-700 dark:text-yellow-300">{data.discrepancies}</p>
+            <h5 className="mb-2 font-medium text-yellow-900 dark:text-yellow-200">
+              Discrepancies
+            </h5>
+            <p className="text-sm text-yellow-700 dark:text-yellow-300">
+              {data.discrepancies}
+            </p>
           </div>
         )}
 
@@ -116,10 +145,18 @@ const PipelineResultView: React.FC<PipelineResultViewProps> = ({
               size="xs"
               onClick={() => handleSaveLocal(result)}
               disabled={isSavingLocal || !canSaveLocal || savedVisibleLocal}
-              title={isSavingLocal ? "Saving..." : canSaveLocal ? "Save this definition to the selected target" : "No context ID provided for saving"}
+              title={
+                isSavingLocal
+                  ? "Saving..."
+                  : canSaveLocal
+                    ? "Save this definition to the selected target"
+                    : "No context ID provided for saving"
+              }
             >
               {isSavingLocal ? (
-                <span className="flex items-center gap-2"><Spinner size="sm" /> Saving</span>
+                <span className="flex items-center gap-2">
+                  <Spinner size="sm" /> Saving
+                </span>
               ) : (
                 "Use This Definition"
               )}
@@ -135,7 +172,9 @@ const PipelineResultView: React.FC<PipelineResultViewProps> = ({
         </div>
 
         {saveMessageLocal && (
-          <div className={`text-xs ${saveMessageLocal.includes("successfully") ? "text-green-700" : "text-red-700"}`}>
+          <div
+            className={`text-xs ${saveMessageLocal.includes("successfully") ? "text-green-700" : "text-red-700"}`}
+          >
             {saveMessageLocal}
           </div>
         )}
@@ -156,7 +195,9 @@ const PipelineResultView: React.FC<PipelineResultViewProps> = ({
 
   return (
     <div className="flex items-center justify-center p-8 text-gray-500 dark:text-gray-400">
-      {result.status === "running" ? "Executing pipeline..." : "Waiting to execute..."}
+      {result.status === "running"
+        ? "Executing pipeline..."
+        : "Waiting to execute..."}
     </div>
   );
 };

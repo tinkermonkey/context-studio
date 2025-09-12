@@ -4,6 +4,10 @@
 *.log*
 coverage/
 
+# Claude
+.claude/
+PRPs/
+
 # Dist
 node_modules
 dist/

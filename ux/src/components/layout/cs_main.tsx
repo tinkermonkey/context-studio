@@ -11,16 +11,18 @@ interface CsMainTitleProps {
 }
 
 const CsMain: React.FC<CsMainProps> = ({ children }) => {
-  return (
-    <div className="w-full min-w-0 overflow-x-auto p-2">
-      {children}
-    </div>
-  );
+  return <div className="w-full min-w-0 overflow-x-auto p-2">{children}</div>;
 };
 
-const CsMainTitle: React.FC<CsMainTitleProps> = ({ children, icon: Icon, className }) => {
+const CsMainTitle: React.FC<CsMainTitleProps> = ({
+  children,
+  icon: Icon,
+  className,
+}) => {
   return (
-    <div className={`pt-6 pb-4 text-3xl font-semibold text-gray-900 dark:text-white flex items-center gap-2 ${className}`}>
+    <div
+      className={`flex items-center gap-2 pt-6 pb-4 text-3xl font-semibold text-gray-900 dark:text-white ${className}`}
+    >
       {Icon && <Icon className="mr-2 inline align-baseline" />}
       {children}
     </div>

@@ -20,6 +20,7 @@ Updated the NLP Analysis API integration to align with the enhanced OpenAPI sche
 - **Response Types**: Updated to use `NLPSuccessResponse` and `NLPErrorResponse` instead of generic types
 
 **Schema Alignment:**
+
 - All interfaces now match the OpenAPI schema exactly
 - Proper optional field handling with `?` operator
 - More specific type definitions for better TypeScript support
@@ -27,11 +28,13 @@ Updated the NLP Analysis API integration to align with the enhanced OpenAPI sche
 ### 2. Enhanced Test Suite (`src/api/tests/nlpTests.ts`)
 
 **New Test Functions:**
+
 - `testNLPFeatures()`: Tests specific NLP features like WordNet, ConceptNet, and DBpedia data
 - Enhanced `testNLPIntegration()` with detailed structure validation
 - Improved `testNLPWithVariousInputs()` with POS tag and entity type analysis
 
 **Test Improvements:**
+
 - Validates token structure including POS tags, lemmas, and knowledge base data
 - Tests entity structure including labels, KB IDs, and DBpedia integration
 - Better error reporting and feature availability checking
@@ -39,6 +42,7 @@ Updated the NLP Analysis API integration to align with the enhanced OpenAPI sche
 ### 3. Enhanced Example Component (`src/components/examples/NLPAnalysisExample.tsx`)
 
 **UI Improvements:**
+
 - Detailed token display showing POS tags, lemmas, positions
 - Enhanced entity display with DBpedia information
 - Better visual structure with cards instead of simple tags
@@ -47,6 +51,7 @@ Updated the NLP Analysis API integration to align with the enhanced OpenAPI sche
 ### 4. Updated Documentation (`src/api/services/README_NLP.md`)
 
 **Documentation Enhancements:**
+
 - Added error response schema
 - Detailed type definitions for all interfaces
 - Examples showing knowledge base integration
@@ -67,7 +72,7 @@ Updated the NLP Analysis API integration to align with the enhanced OpenAPI sche
   }
 }
 
-// Error Response  
+// Error Response
 {
   success: false,
   error: string
@@ -118,23 +123,23 @@ Updated the NLP Analysis API integration to align with the enhanced OpenAPI sche
 ```typescript
 // Enhanced token analysis
 const analysis = await nlpService.analyzeText("Apple Inc. is innovative.");
-analysis.tokens?.forEach(token => {
+analysis.tokens?.forEach((token) => {
   console.log({
     text: token.text,
-    pos: token.pos,           // Part of speech
-    lemma: token.lemma,       // Base form
-    wordnet: token.wordnet?.definitions,  // WordNet definitions
-    concepcy: token.concepcy?.score       // ConceptNet similarity
+    pos: token.pos, // Part of speech
+    lemma: token.lemma, // Base form
+    wordnet: token.wordnet?.definitions, // WordNet definitions
+    concepcy: token.concepcy?.score, // ConceptNet similarity
   });
 });
 
 // Enhanced entity analysis
-analysis.entities?.forEach(entity => {
+analysis.entities?.forEach((entity) => {
   console.log({
     text: entity.text,
-    label: entity.label,      // Entity type
-    dbpedia: entity.dbpedia?.uri,     // DBpedia URI
-    similarity: entity.dbpedia?.similarity  // Similarity score
+    label: entity.label, // Entity type
+    dbpedia: entity.dbpedia?.uri, // DBpedia URI
+    similarity: entity.dbpedia?.similarity, // Similarity score
   });
 });
 ```

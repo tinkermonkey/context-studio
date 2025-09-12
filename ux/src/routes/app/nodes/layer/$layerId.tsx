@@ -1,19 +1,23 @@
-import { createFileRoute } from '@tanstack/react-router';
-import { Spinner, Alert } from 'flowbite-react';
-import { useStructureNode } from '@/api/hooks/structure_nodes/useStructureNodes';
-import { LayerDetails } from '@/components/node_details/layer_details';
+import { createFileRoute } from "@tanstack/react-router";
+import { Spinner, Alert } from "flowbite-react";
+import { useStructureNode } from "@/api/hooks/structure_nodes/useStructureNodes";
+import { LayerDetails } from "@/components/node_details/layer_details";
 
-export const Route = createFileRoute('/app/nodes/layer/$layerId')({
+export const Route = createFileRoute("/app/nodes/layer/$layerId")({
   component: LayerDetailPage,
 });
 
 function LayerDetailPage() {
   const { layerId } = Route.useParams() as { layerId: string };
-  const { data: layer, isLoading: layerLoading, error: layerError } = useStructureNode(layerId);
+  const {
+    data: layer,
+    isLoading: layerLoading,
+    error: layerError,
+  } = useStructureNode(layerId);
 
   if (layerLoading) {
     return (
-      <div className="flex justify-center items-center p-8">
+      <div className="flex items-center justify-center p-8">
         <Spinner size="lg" aria-label="Loading layer..." />
         <span className="ml-3 text-lg">Loading layer...</span>
       </div>
@@ -23,10 +27,11 @@ function LayerDetailPage() {
   if (layerError || !layer) {
     return (
       <Alert color="failure" className="m-4">
-        <span className="font-medium">Error!</span> Unable to load layer with ID: {layerId}
+        <span className="font-medium">Error!</span> Unable to load layer with
+        ID: {layerId}
       </Alert>
     );
   }
-  
+
   return <LayerDetails layer={layer} />;
 }

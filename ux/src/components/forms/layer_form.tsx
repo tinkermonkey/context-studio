@@ -2,7 +2,11 @@ import React from "react";
 import { useForm } from "@tanstack/react-form";
 import { TextInput, Textarea, Button, Alert, Label } from "flowbite-react";
 import { Info } from "lucide-react";
-import type { StructureNode, StructureNodeCreate, StructureNodeUpdate } from "@/api/types/structureNodes";
+import type {
+  StructureNode,
+  StructureNodeCreate,
+  StructureNodeUpdate,
+} from "@/api/types/structureNodes";
 import { useCreateLayer } from "@/api/hooks/structure_nodes/useStructureNodeMutations";
 import { useUpdateStructureNode } from "@/api/hooks/structure_nodes/useStructureNodeMutations";
 
@@ -136,8 +140,8 @@ const LayerForm: React.FC<LayerFormProps> = ({ onSuccess, layer }) => {
             {submitError}
           </Alert>
         )}
-        
-        <div className="flex justify-end items-center gap-2">
+
+        <div className="flex items-center justify-end gap-2">
           <Button
             type="submit"
             disabled={

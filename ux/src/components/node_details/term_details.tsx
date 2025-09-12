@@ -20,7 +20,10 @@ import {
   CircleArrowRight,
 } from "lucide-react";
 import { Link as RouterLink } from "@tanstack/react-router";
-import { useStructureNode, useTermNodes } from "@/api/hooks/structure_nodes/useStructureNodes";
+import {
+  useStructureNode,
+  useTermNodes,
+} from "@/api/hooks/structure_nodes/useStructureNodes";
 import { useNodeLinks } from "@/api/hooks/node_links/useNodeLinks";
 import { NodeType } from "@/api/types/structureNodes";
 import { useTermHierarchy } from "@/api/hooks/graph/useGraph";
@@ -54,27 +57,28 @@ export const TermDetails: React.FC<TermPageProps> = ({ term }) => {
   // For now, assume direct parent is domain (simplified approach)
   // TODO: Implement full hierarchy traversal when needed
   const { data: parentNode } = useStructureNode(term.parent_node_id ?? "");
-  
+
   // Try to get domain - either the parent is a domain, or we need to traverse further
   const isDomainParent = parentNode?.node_type === NodeType.DOMAIN;
   const { data: domain, isLoading: domainLoading } = useStructureNode(
-    isDomainParent ? (parentNode?.id ?? "") : ""
+    isDomainParent ? (parentNode?.id ?? "") : "",
   );
-  
+
   // Get layer from domain if we have it
   const { data: layer, isLoading: layerLoading } = useStructureNode(
-    domain?.parent_node_id ?? ""
+    domain?.parent_node_id ?? "",
   );
   // Use parentNode for both domain and term parents
   const parentTerm = !isDomainParent ? (parentNode as any) : null;
   const parentTermLoading = false; // Already loaded via parentNode
-  const { data: relationships, isLoading: relationshipsLoading } =
-    useNodeLinks({ source_node_id: term.id });
+  const { data: relationships, isLoading: relationshipsLoading } = useNodeLinks(
+    { source_node_id: term.id },
+  );
   const { data: termHierarchy, isLoading: hierarchyLoading } = useTermHierarchy(
     term.id,
   );
   const { data: childTerms, isLoading: childTermsLoading } = useTermNodes(
-    term.id
+    term.id,
   );
 
   // Group relationships by predicate and direction
@@ -290,9 +294,7 @@ export const TermDetails: React.FC<TermPageProps> = ({ term }) => {
       <CsMain>
         <div className="mb-6 flex items-center justify-between">
           <div>
-            <CsMainTitle icon={Hash}>
-              {term.title}
-            </CsMainTitle>
+            <CsMainTitle icon={Hash}>{term.title}</CsMainTitle>
             <div className="flex items-center gap-4 text-sm text-gray-600 dark:text-gray-400">
               <div className="flex items-center gap-1">
                 <Hash className="h-4 w-4" />
@@ -350,7 +352,9 @@ export const TermDetails: React.FC<TermPageProps> = ({ term }) => {
                       <BreadcrumbItem
                         key={ancestorTerm.id}
                         href={
-                          isLast ? undefined : `/app/nodes/term/${ancestorTerm.id}`
+                          isLast
+                            ? undefined
+                            : `/app/nodes/term/${ancestorTerm.id}`
                         }
                         icon={Hash}
                       >
@@ -362,7 +366,7 @@ export const TermDetails: React.FC<TermPageProps> = ({ term }) => {
 
                 // If more than 3 terms, show first, "...", and last
                 const breadcrumbItems = [];
-                
+
                 // First term
                 const firstTerm = termLineage[0];
                 breadcrumbItems.push(
@@ -372,25 +376,22 @@ export const TermDetails: React.FC<TermPageProps> = ({ term }) => {
                     icon={Hash}
                   >
                     {firstTerm.title}
-                  </BreadcrumbItem>
+                  </BreadcrumbItem>,
                 );
 
                 // Ellipsis placeholder for intermediate terms
                 breadcrumbItems.push(
                   <BreadcrumbItem key="ellipsis" icon={Hash}>
                     ...
-                  </BreadcrumbItem>
+                  </BreadcrumbItem>,
                 );
 
                 // Last term (current term)
                 const lastTerm = termLineage[termLineage.length - 1];
                 breadcrumbItems.push(
-                  <BreadcrumbItem
-                    key={lastTerm.id}
-                    icon={Hash}
-                  >
+                  <BreadcrumbItem key={lastTerm.id} icon={Hash}>
                     {lastTerm.title}
-                  </BreadcrumbItem>
+                  </BreadcrumbItem>,
                 );
 
                 return breadcrumbItems;
@@ -401,18 +402,26 @@ export const TermDetails: React.FC<TermPageProps> = ({ term }) => {
 
         <div className="space-y-6">
           {/* NLP */}
-          <NlpAnalysisPanel 
-            text={term.title} 
-            textTitle={"Title"} 
-            domainContext={domain ? {
-              title: domain.title,
-              definition: domain.definition || ""
-            } : null}
-            parentTermContext={parentTerm ? {
-              title: parentTerm.title,
-              definition: parentTerm.definition || "",
-              relationshipPredicate: "child_of" // You may want to determine this from actual relationship data
-            } : null}
+          <NlpAnalysisPanel
+            text={term.title}
+            textTitle={"Title"}
+            domainContext={
+              domain
+                ? {
+                    title: domain.title,
+                    definition: domain.definition || "",
+                  }
+                : null
+            }
+            parentTermContext={
+              parentTerm
+                ? {
+                    title: parentTerm.title,
+                    definition: parentTerm.definition || "",
+                    relationshipPredicate: "child_of", // You may want to determine this from actual relationship data
+                  }
+                : null
+            }
             currentDefinition={term.definition}
             termId={term.id}
           />
@@ -428,9 +437,7 @@ export const TermDetails: React.FC<TermPageProps> = ({ term }) => {
           {/* Term Hierarchy */}
           <Card>
             <h2 className="text-xl font-semibold">Term Hierarchy</h2>
-            <TreeChartPanel 
-              termId={term.id}
-            />
+            <TreeChartPanel termId={term.id} />
           </Card>
 
           {/* Child Terms */}
@@ -558,31 +565,33 @@ export const TermDetails: React.FC<TermPageProps> = ({ term }) => {
   );
 };
 
-  // Edit Modal for Term
-  const TermEditModal: React.FC<{
-    term: TermOut;
-    isOpen: boolean;
-    onClose: () => void;
-  }> = ({ term, isOpen, onClose }) => {
-    const queryClient = useQueryClient();
+// Edit Modal for Term
+const TermEditModal: React.FC<{
+  term: TermOut;
+  isOpen: boolean;
+  onClose: () => void;
+}> = ({ term, isOpen, onClose }) => {
+  const queryClient = useQueryClient();
 
-    const handleSuccess = (updated: any) => {
-      onClose();
+  const handleSuccess = (updated: any) => {
+    onClose();
 
-      try {
-        queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.STRUCTURE_NODES, term.id] });
-        queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.STRUCTURE_NODES] });
-      } catch (e) {
-        console.warn("Failed to invalidate term queries", e);
-      }
-    };
-
-    return (
-      <Modal show={isOpen} onClose={onClose} size="lg">
-        <ModalHeader className="border-b-0">Edit Term</ModalHeader>
-        <ModalBody>
-          <TermForm term={term} onSuccess={handleSuccess} />
-        </ModalBody>
-      </Modal>
-    );
+    try {
+      queryClient.invalidateQueries({
+        queryKey: [QUERY_KEYS.STRUCTURE_NODES, term.id],
+      });
+      queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.STRUCTURE_NODES] });
+    } catch (e) {
+      console.warn("Failed to invalidate term queries", e);
+    }
   };
+
+  return (
+    <Modal show={isOpen} onClose={onClose} size="lg">
+      <ModalHeader className="border-b-0">Edit Term</ModalHeader>
+      <ModalBody>
+        <TermForm term={term} onSuccess={handleSuccess} />
+      </ModalBody>
+    </Modal>
+  );
+};

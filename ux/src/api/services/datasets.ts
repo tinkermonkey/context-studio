@@ -1,20 +1,23 @@
 /**
  * Datasets Service
- * 
+ *
  * Service for managing dataset entities and operations
  */
 
-import { BaseService } from './base';
-import { ENDPOINTS } from '../config';
-import type { components } from '../client/types';
+import { BaseService } from "./base";
+import { ENDPOINTS } from "../config";
+import type { components } from "../client/types";
 
 // Type aliases for better readability
-export type DatasetResponse = components['schemas']['DatasetResponse'];
-export type CreateDatasetRequest = components['schemas']['CreateDatasetRequest'];
-export type AddExistingDatasetRequest = components['schemas']['AddExistingDatasetRequest'];
-export type UpdateDatasetDirectoryRequest = components['schemas']['UpdateDatasetDirectoryRequest'];
-export type ActionLogResponse = components['schemas']['ActionLogResponse'];
-export type ActionLogEntry = components['schemas']['ActionLogEntry'];
+export type DatasetResponse = components["schemas"]["DatasetResponse"];
+export type CreateDatasetRequest =
+  components["schemas"]["CreateDatasetRequest"];
+export type AddExistingDatasetRequest =
+  components["schemas"]["AddExistingDatasetRequest"];
+export type UpdateDatasetDirectoryRequest =
+  components["schemas"]["UpdateDatasetDirectoryRequest"];
+export type ActionLogResponse = components["schemas"]["ActionLogResponse"];
+export type ActionLogEntry = components["schemas"]["ActionLogEntry"];
 
 export interface ActionLogParams extends Record<string, unknown> {
   days?: number;
@@ -27,7 +30,7 @@ export class DatasetService extends BaseService {
   async list(): Promise<DatasetResponse[]> {
     return this.withErrorContext(
       () => this.getResource<DatasetResponse[]>(ENDPOINTS.DATASETS),
-      'list datasets'
+      "list datasets",
     );
   }
 
@@ -35,44 +38,35 @@ export class DatasetService extends BaseService {
    * Get a specific dataset by ID
    */
   async get(id: string): Promise<DatasetResponse> {
-    return this.withErrorContext(
-      () => {
-        this.validateRequired(id, 'Dataset ID');
-        return this.getResource<DatasetResponse>(`${ENDPOINTS.DATASETS}/${id}`);
-      },
-      'get dataset'
-    );
+    return this.withErrorContext(() => {
+      this.validateRequired(id, "Dataset ID");
+      return this.getResource<DatasetResponse>(`${ENDPOINTS.DATASETS}/${id}`);
+    }, "get dataset");
   }
 
   /**
    * Create a new dataset
    */
   async create(data: CreateDatasetRequest): Promise<DatasetResponse> {
-    return this.withErrorContext(
-      () => {
-        this.validateRequired(data, 'Dataset data');
-        this.validateRequired(data.title, 'Dataset title');
-        this.validateRequired(data.filename, 'Dataset filename');
-        this.sanitizeString(data.title, 'Dataset title', 255);
-        this.sanitizeString(data.filename, 'Dataset filename', 255);
-        
-        return this.postResource<DatasetResponse>(ENDPOINTS.DATASETS, data);
-      },
-      'create dataset'
-    );
+    return this.withErrorContext(() => {
+      this.validateRequired(data, "Dataset data");
+      this.validateRequired(data.title, "Dataset title");
+      this.validateRequired(data.filename, "Dataset filename");
+      this.sanitizeString(data.title, "Dataset title", 255);
+      this.sanitizeString(data.filename, "Dataset filename", 255);
+
+      return this.postResource<DatasetResponse>(ENDPOINTS.DATASETS, data);
+    }, "create dataset");
   }
 
   /**
    * Delete a dataset
    */
   async delete(id: string): Promise<void> {
-    return this.withErrorContext(
-      () => {
-        this.validateRequired(id, 'Dataset ID');
-        return this.deleteResource<void>(`${ENDPOINTS.DATASETS}/${id}`);
-      },
-      'delete dataset'
-    );
+    return this.withErrorContext(() => {
+      this.validateRequired(id, "Dataset ID");
+      return this.deleteResource<void>(`${ENDPOINTS.DATASETS}/${id}`);
+    }, "delete dataset");
   }
 
   /**
@@ -81,7 +75,7 @@ export class DatasetService extends BaseService {
   async getActive(): Promise<DatasetResponse> {
     return this.withErrorContext(
       () => this.getResource<DatasetResponse>(`${ENDPOINTS.DATASETS}/active`),
-      'get active dataset'
+      "get active dataset",
     );
   }
 
@@ -89,44 +83,38 @@ export class DatasetService extends BaseService {
    * Activate a dataset
    */
   async activate(id: string): Promise<unknown> {
-    return this.withErrorContext(
-      () => {
-        this.validateRequired(id, 'Dataset ID');
-        return this.postResource<unknown>(`${ENDPOINTS.DATASETS}/${id}/activate`);
-      },
-      'activate dataset'
-    );
+    return this.withErrorContext(() => {
+      this.validateRequired(id, "Dataset ID");
+      return this.postResource<unknown>(`${ENDPOINTS.DATASETS}/${id}/activate`);
+    }, "activate dataset");
   }
 
   /**
    * Forget a dataset (remove from inventory but keep file)
    */
   async forget(id: string): Promise<unknown> {
-    return this.withErrorContext(
-      () => {
-        this.validateRequired(id, 'Dataset ID');
-        return this.postResource<unknown>(`${ENDPOINTS.DATASETS}/${id}/forget`);
-      },
-      'forget dataset'
-    );
+    return this.withErrorContext(() => {
+      this.validateRequired(id, "Dataset ID");
+      return this.postResource<unknown>(`${ENDPOINTS.DATASETS}/${id}/forget`);
+    }, "forget dataset");
   }
 
   /**
    * Add an existing dataset file to the inventory
    */
   async addExisting(data: AddExistingDatasetRequest): Promise<DatasetResponse> {
-    return this.withErrorContext(
-      () => {
-        this.validateRequired(data, 'Dataset data');
-        this.validateRequired(data.title, 'Dataset title');
-        this.validateRequired(data.file_path, 'Dataset file path');
-        this.sanitizeString(data.title, 'Dataset title', 255);
-        this.sanitizeString(data.file_path, 'Dataset file path', 1000);
-        
-        return this.postResource<DatasetResponse>(`${ENDPOINTS.DATASETS}/add-existing`, data);
-      },
-      'add existing dataset'
-    );
+    return this.withErrorContext(() => {
+      this.validateRequired(data, "Dataset data");
+      this.validateRequired(data.title, "Dataset title");
+      this.validateRequired(data.file_path, "Dataset file path");
+      this.sanitizeString(data.title, "Dataset title", 255);
+      this.sanitizeString(data.file_path, "Dataset file path", 1000);
+
+      return this.postResource<DatasetResponse>(
+        `${ENDPOINTS.DATASETS}/add-existing`,
+        data,
+      );
+    }, "add existing dataset");
   }
 
   /**
@@ -135,7 +123,7 @@ export class DatasetService extends BaseService {
   async getDirectory(): Promise<unknown> {
     return this.withErrorContext(
       () => this.getResource<unknown>(`${ENDPOINTS.DATASETS}/directory`),
-      'get datasets directory'
+      "get datasets directory",
     );
   }
 
@@ -143,16 +131,16 @@ export class DatasetService extends BaseService {
    * Update the datasets directory path
    */
   async updateDirectory(data: UpdateDatasetDirectoryRequest): Promise<unknown> {
-    return this.withErrorContext(
-      () => {
-        this.validateRequired(data, 'Directory data');
-        this.validateRequired(data.datasets_directory, 'Datasets directory');
-        this.sanitizeString(data.datasets_directory, 'Datasets directory', 1000);
-        
-        return this.postResource<unknown>(`${ENDPOINTS.DATASETS}/directory`, data);
-      },
-      'update datasets directory'
-    );
+    return this.withErrorContext(() => {
+      this.validateRequired(data, "Directory data");
+      this.validateRequired(data.datasets_directory, "Datasets directory");
+      this.sanitizeString(data.datasets_directory, "Datasets directory", 1000);
+
+      return this.postResource<unknown>(
+        `${ENDPOINTS.DATASETS}/directory`,
+        data,
+      );
+    }, "update datasets directory");
   }
 
   /**
@@ -161,7 +149,7 @@ export class DatasetService extends BaseService {
   async getStartupInfo(): Promise<unknown> {
     return this.withErrorContext(
       () => this.getResource<unknown>(`${ENDPOINTS.DATASETS}/startup-info`),
-      'get startup info'
+      "get startup info",
     );
   }
 
@@ -170,8 +158,12 @@ export class DatasetService extends BaseService {
    */
   async getActionLog(params?: ActionLogParams): Promise<ActionLogResponse> {
     return this.withErrorContext(
-      () => this.getResource<ActionLogResponse>(`${ENDPOINTS.DATASETS}/action-log`, params),
-      'get action log'
+      () =>
+        this.getResource<ActionLogResponse>(
+          `${ENDPOINTS.DATASETS}/action-log`,
+          params,
+        ),
+      "get action log",
     );
   }
 }

@@ -7,7 +7,10 @@ export interface TermSelectorProps {
   value?: string;
 }
 
-export const TermSelector: React.FC<TermSelectorProps> = ({ onSelect, value }) => {
+export const TermSelector: React.FC<TermSelectorProps> = ({
+  onSelect,
+  value,
+}) => {
   const { data: terms, isLoading, error } = useTermNodes();
   return (
     <PortalRecordSelector

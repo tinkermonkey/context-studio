@@ -1,22 +1,24 @@
-import http from 'http';
-import https from 'https';
-import { URL } from 'url';
-import type { AxiosRequestConfig, AxiosResponse } from 'axios';
-import type { OutgoingHttpHeaders } from 'http';
+import http from "http";
+import https from "https";
+import { URL } from "url";
+import type { AxiosRequestConfig, AxiosResponse } from "axios";
+import type { OutgoingHttpHeaders } from "http";
 
 /**
  * MSW-compatible HTTP adapter for axios
- * 
+ *
  * This adapter is designed to work with MSW by importing http/https modules
  * lazily (inside the adapter function) rather than at module load time.
  * This ensures MSW has a chance to patch these modules before they're used.
  */
-export function mswCompatibleHttpAdapter(config: AxiosRequestConfig): Promise<AxiosResponse> {
+export function mswCompatibleHttpAdapter(
+  config: AxiosRequestConfig,
+): Promise<AxiosResponse> {
   return new Promise((resolve, reject) => {
     try {
       const url = new URL(config.url!, config.baseURL || undefined);
-      const isHttps = url.protocol === 'https:';
-      
+      const isHttps = url.protocol === "https:";
+
       // Import http/https modules lazily to ensure MSW patches are applied
       const transport = isHttps ? https : http;
 
@@ -29,23 +31,23 @@ export function mswCompatibleHttpAdapter(config: AxiosRequestConfig): Promise<Ax
           }
         });
       }
-      
+
       let body: string | Buffer | null = null;
-      
+
       if (config.data !== undefined && config.data !== null) {
-        if (typeof config.data === 'string' || Buffer.isBuffer(config.data)) {
+        if (typeof config.data === "string" || Buffer.isBuffer(config.data)) {
           body = config.data;
         } else {
           body = JSON.stringify(config.data);
-          if (!headers['Content-Type'] && !headers['content-type']) {
-            headers['Content-Type'] = 'application/json;charset=utf-8';
+          if (!headers["Content-Type"] && !headers["content-type"]) {
+            headers["Content-Type"] = "application/json;charset=utf-8";
           }
         }
-        headers['Content-Length'] = Buffer.byteLength(body);
+        headers["Content-Length"] = Buffer.byteLength(body);
       }
 
       const requestOptions = {
-        method: (config.method || 'get').toUpperCase(),
+        method: (config.method || "get").toUpperCase(),
         hostname: url.hostname,
         port: url.port || (isHttps ? 443 : 80),
         path: `${url.pathname}${url.search}`,
@@ -55,16 +57,16 @@ export function mswCompatibleHttpAdapter(config: AxiosRequestConfig): Promise<Ax
 
       const req = transport.request(requestOptions, (res) => {
         const chunks: Buffer[] = [];
-        res.on('data', (chunk: Buffer) => chunks.push(chunk));
-        res.on('end', () => {
+        res.on("data", (chunk: Buffer) => chunks.push(chunk));
+        res.on("end", () => {
           const buffer = Buffer.concat(chunks);
-          const contentType = res.headers['content-type'] || '';
+          const contentType = res.headers["content-type"] || "";
           let data: any = buffer.toString();
-          
-          if (contentType.includes('application/json')) {
-            try { 
-              data = JSON.parse(data); 
-            } catch (e) { 
+
+          if (contentType.includes("application/json")) {
+            try {
+              data = JSON.parse(data);
+            } catch (e) {
               // keep raw string if JSON parsing fails
             }
           }
@@ -72,7 +74,7 @@ export function mswCompatibleHttpAdapter(config: AxiosRequestConfig): Promise<Ax
           const response: AxiosResponse = {
             data,
             status: res.statusCode!,
-            statusText: res.statusMessage || '',
+            statusText: res.statusMessage || "",
             headers: res.headers,
             config: config as any, // Cast to avoid config type mismatch
             request: req,
@@ -82,12 +84,12 @@ export function mswCompatibleHttpAdapter(config: AxiosRequestConfig): Promise<Ax
         });
       });
 
-      req.on('error', (err) => reject(err));
-      
+      req.on("error", (err) => reject(err));
+
       if (requestOptions.timeout) {
         req.setTimeout(requestOptions.timeout, () => {
           req.destroy();
-          reject(new Error('Request timeout'));
+          reject(new Error("Request timeout"));
         });
       }
 

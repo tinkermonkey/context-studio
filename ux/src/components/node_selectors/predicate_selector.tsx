@@ -1,6 +1,6 @@
 /**
  * Predicate Selector Component
- * 
+ *
  * Dropdown selector for choosing a single predicate
  */
 
@@ -15,14 +15,14 @@ export interface PredicateSelectorProps {
   disabled?: boolean;
 }
 
-export const PredicateSelector: React.FC<PredicateSelectorProps> = ({ 
-  onSelect, 
+export const PredicateSelector: React.FC<PredicateSelectorProps> = ({
+  onSelect,
   value,
   placeholder = "Select predicate...",
-  disabled = false
+  disabled = false,
 }) => {
   const { data: predicates, isLoading, error } = usePredicates();
-  
+
   return (
     <PortalRecordSelector
       records={predicates?.data ?? []}

@@ -26,9 +26,11 @@ import { CurrentDatasetCard } from '@/components/datasets/current_dataset';
 ## API Integration
 
 This component uses the new dataset API endpoints:
+
 - `/api/datasets/active` - Gets the currently active dataset information
 
 The component automatically handles:
+
 - Loading states while fetching data
 - Error states when no dataset is active
 - Cache invalidation when dataset changes

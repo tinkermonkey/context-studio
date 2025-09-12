@@ -6,6 +6,6 @@
 
 @layer base {
   a {
-    @apply text-primary-600 dark:text-primary-500 font-medium hover:underline cursor-pointer;
+    @apply text-primary-600 dark:text-primary-500 cursor-pointer font-medium hover:underline;
   }
 }

@@ -79,6 +79,7 @@ class StreamingLLMResponse(BaseModel):
     token: Optional[str] = Field(None, description="Token content")
     done: bool = Field(default=False, description="Whether streaming is complete")
     flavor_id: str = Field(..., description="ID of the flavor generating this response")
+    execution_id: Optional[str] = Field(None, description="Execution ID (set when streaming starts)")
     error: Optional[str] = Field(None, description="Error message if any")
 
 class SelectedRelation(BaseModel):
@@ -166,18 +167,21 @@ class DefinitionSuggestionResponse(BaseModel):
     definition: str = Field(..., description="The suggested 2-3 sentence definition")
     reasoning: str = Field(..., description="Brief reasoning for the definitional choices")
     discrepancies: Optional[str] = Field(None, description="Notable discrepancies between sources")
+    execution_id: str = Field(..., description="Unique execution ID for tracing")
 
 class LayerDefinitionResponse(BaseModel):
     """Response model for layer definition suggestion"""
     definition: str = Field(..., description="The suggested 2-3 sentence layer definition")
     purpose: str = Field(..., description="Purpose of the layer in the knowledge structure")
     rationale: str = Field(..., description="Brief rationale for the definitional choices")
+    execution_id: str = Field(..., description="Unique execution ID for tracing")
 
 class DomainDefinitionResponse(BaseModel):
     """Response model for domain definition suggestion"""
     definition: str = Field(..., description="The suggested 2-3 sentence domain definition")
     purpose: str = Field(..., description="Purpose of the domain in the knowledge structure")
     scope: str = Field(..., description="Scope and boundaries of the domain")
+    execution_id: str = Field(..., description="Unique execution ID for tracing")
 
 class LLMHealthResponse(BaseModel):
     """Health check response for LLM service"""
@@ -197,13 +201,32 @@ class LLMSuccessResponse(BaseModel):
     """Success response wrapper for LLM endpoints"""
     success: bool = Field(True, description="Always true for success responses")
     data: DefinitionSuggestionResponse = Field(..., description="The response data")
+    execution_id: str = Field(..., description="Unique execution ID for tracing")
 
 class LayerLLMSuccessResponse(BaseModel):
     """Success response wrapper for layer LLM endpoints"""
     success: bool = Field(True, description="Always true for success responses")
     data: LayerDefinitionResponse = Field(..., description="The response data")
+    execution_id: str = Field(..., description="Unique execution ID for tracing")
 
 class DomainLLMSuccessResponse(BaseModel):
     """Success response wrapper for domain LLM endpoints"""
     success: bool = Field(True, description="Always true for success responses")
     data: DomainDefinitionResponse = Field(..., description="The response data")
+    execution_id: str = Field(..., description="Unique execution ID for tracing")
+
+
+class RecordSelectionRequest(BaseModel):
+    """Request model for recording user selection of LLM suggestions."""
+    execution_id: str = Field(..., description="Execution ID from LLM response")
+    record_type: str = Field(..., description="Type of record (structure_node, etc.)")
+    record_id: str = Field(..., description="Primary key of the record")
+    suggestion_field: str = Field(..., description="Field that was selected (definition, etc.)")
+    selected_content: str = Field(..., description="The content that was selected")
+
+
+class SelectionResponse(BaseModel):
+    """Response model for selection recording."""
+    success: bool = Field(..., description="Whether selection was recorded successfully")
+    selection_id: str = Field(..., description="ID of the recorded selection")
+    message: str = Field(..., description="Status message")

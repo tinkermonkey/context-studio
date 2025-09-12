@@ -1,12 +1,12 @@
 /**
  * React Query Configuration
- * 
+ *
  * Query client setup for TanStack Query
  */
 
-import { QueryClient, QueryClientConfig } from '@tanstack/react-query';
-import { API_CONFIG } from '../config';
-import { handleApiError } from '../errors/errorHandlers';
+import { QueryClient, QueryClientConfig } from "@tanstack/react-query";
+import { API_CONFIG } from "../config";
+import { handleApiError } from "../errors/errorHandlers";
 
 const queryClientConfig: QueryClientConfig = {
   defaultOptions: {
@@ -15,7 +15,7 @@ const queryClientConfig: QueryClientConfig = {
       gcTime: API_CONFIG.cacheTime, // formerly cacheTime
       retry: (failureCount, error) => {
         // Don't retry on 4xx errors
-        if (error instanceof Error && 'status' in error) {
+        if (error instanceof Error && "status" in error) {
           const status = (error as any).status;
           if (status >= 400 && status < 500) {
             return false;
@@ -40,17 +40,17 @@ export const queryClient = new QueryClient(queryClientConfig);
 export const createQueryKey = (
   entity: string,
   id?: string | number,
-  params?: Record<string, unknown>
+  params?: Record<string, unknown>,
 ): string[] => {
   const key = [entity];
-  
+
   if (id !== undefined) {
     key.push(String(id));
   }
-  
+
   if (params) {
     key.push(JSON.stringify(params));
   }
-  
+
   return key;
 };

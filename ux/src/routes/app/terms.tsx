@@ -1,5 +1,9 @@
 import React from "react";
-import { useTermNodes, useStructureNode, useLayerNodes } from "@/api/hooks/structure_nodes/useStructureNodes";
+import {
+  useTermNodes,
+  useStructureNode,
+  useLayerNodes,
+} from "@/api/hooks/structure_nodes/useStructureNodes";
 import {
   createFileRoute,
   useNavigate,
@@ -86,14 +90,14 @@ function TermsPage() {
     data: layer,
     isLoading: layerLoading,
     error: layerError,
-  } = useStructureNode(queryParams.layer_id as string ?? "");
+  } = useStructureNode((queryParams.layer_id as string) ?? "");
 
   // Load the domain record if domain_id is provided
   const {
     data: domain,
     isLoading: domainLoading,
     error: domainError,
-  } = useStructureNode(queryParams.domain_id as string ?? "");
+  } = useStructureNode((queryParams.domain_id as string) ?? "");
 
   if (termsLoading || layersLoading || layerLoading || domainLoading) {
     return <Spinner />;
@@ -127,10 +131,7 @@ function TermsPage() {
           {sortedLayers.map((layer: StructureNode) => (
             <div key={layer.id} className="space-y-2">
               <CsSidebarTitle>{layer.title}</CsSidebarTitle>
-              <CollapsibleDomainsList
-                layerId={layer.id}
-                useLinks={true}
-              />
+              <CollapsibleDomainsList layerId={layer.id} useLinks={true} />
             </div>
           ))}
         </div>

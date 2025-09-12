@@ -2,7 +2,11 @@ import React from "react";
 import { useForm } from "@tanstack/react-form";
 import { TextInput, Textarea, Button, Alert, Label } from "flowbite-react";
 import { Info, Database, Hash } from "lucide-react";
-import type { StructureNode, StructureNodeCreate, StructureNodeUpdate } from "@/api/types/structureNodes";
+import type {
+  StructureNode,
+  StructureNodeCreate,
+  StructureNodeUpdate,
+} from "@/api/types/structureNodes";
 import { useCreateTerm } from "@/api/hooks/structure_nodes/useStructureNodeMutations";
 import { useUpdateStructureNode } from "@/api/hooks/structure_nodes/useStructureNodeMutations";
 import { DomainSelector } from "@/components/node_selectors/domain_selector";
@@ -16,30 +20,31 @@ interface TermFormProps {
   parentDomain?: StructureNode;
   parentTermId?: string;
   parentTerm?: StructureNode;
-  mode?: 'create' | 'edit' | 'child';
+  mode?: "create" | "edit" | "child";
 }
 
-const TermForm: React.FC<TermFormProps> = ({ 
-  onSuccess, 
-  term, 
+const TermForm: React.FC<TermFormProps> = ({
+  onSuccess,
+  term,
   parentDomainId,
   parentDomain,
   parentTermId,
   parentTerm,
-  mode = 'create'
+  mode = "create",
 }) => {
   const createTermMutation = useCreateTerm();
   const updateTermMutation = useUpdateStructureNode();
   const isEdit = !!term;
-  const isChildMode = mode === 'child' || !!parentDomainId || !!parentTermId;
+  const isChildMode = mode === "child" || !!parentDomainId || !!parentTermId;
   const [submitError, setSubmitError] = React.useState<string | null>(null);
-  
+
   const getDefaultValues = () => ({
     title: term?.title ?? "",
     definition: term?.definition ?? "",
-    parent_node_id: term?.parent_node_id ?? parentDomainId ?? parentTermId ?? "",
+    parent_node_id:
+      term?.parent_node_id ?? parentDomainId ?? parentTermId ?? "",
   });
-  
+
   const form = useForm({
     defaultValues: getDefaultValues(),
     onSubmit: async ({ value }) => {
@@ -108,7 +113,9 @@ const TermForm: React.FC<TermFormProps> = ({
           <div className="rounded-lg bg-blue-50 p-4 dark:bg-blue-900/20">
             <div className="flex items-center gap-2 text-sm text-blue-700 dark:text-blue-300">
               <Info className="h-4 w-4" />
-              <span>Creating term in {parentDomain ? 'domain' : 'parent term'}:</span>
+              <span>
+                Creating term in {parentDomain ? "domain" : "parent term"}:
+              </span>
             </div>
             <div className="mt-1 flex items-center gap-2">
               {parentDomain ? (
@@ -172,7 +179,7 @@ const TermForm: React.FC<TermFormProps> = ({
             </div>
           )}
         </form.Field>
-        
+
         {/* Hide domain selector in child mode when parent is provided */}
         {!isChildMode && (
           <form.Field
@@ -185,7 +192,10 @@ const TermForm: React.FC<TermFormProps> = ({
             {(field) => {
               return (
                 <div>
-                  <Label htmlFor="term-parent" className="mb-1 block font-medium">
+                  <Label
+                    htmlFor="term-parent"
+                    className="mb-1 block font-medium"
+                  >
                     Parent (Domain or Term)
                   </Label>
                   <DomainSelector
@@ -204,15 +214,15 @@ const TermForm: React.FC<TermFormProps> = ({
             }}
           </form.Field>
         )}
-        
+
         {/* Parent selection is now unified under parent_node_id */}
-        
+
         {submitError && (
           <Alert color="failure" className="mb-2" icon={Info}>
             {submitError}
           </Alert>
         )}
-        <div className="flex justify-end items-center gap-2">
+        <div className="flex items-center justify-end gap-2">
           <Button
             type="submit"
             disabled={

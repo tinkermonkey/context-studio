@@ -63,7 +63,8 @@ export const NlpConceptChartLink: React.FC<NlpConceptChartLinkProps> = ({
     // Determine whether the curve should be treated as 'horizontal' or 'vertical'.
     // preferVertical forces a vertical-style control point layout unless forceHorizontal is true.
     const isHorizontal =
-      forceHorizontal || (!preferVertical && Math.abs(deltaX) > Math.abs(deltaY));
+      forceHorizontal ||
+      (!preferVertical && Math.abs(deltaX) > Math.abs(deltaY));
 
     // Create control points for smooth curve
     let controlPoint1X, controlPoint1Y, controlPoint2X, controlPoint2Y;
@@ -101,7 +102,7 @@ export const NlpConceptChartLink: React.FC<NlpConceptChartLinkProps> = ({
     <g>
       {/* Main smooth curve from start to branch point */}
       <path
-    d={createSmoothCurve(startPoint, branchPoint, false, startVertical)}
+        d={createSmoothCurve(startPoint, branchPoint, false, startVertical)}
         stroke={strokeColor}
         strokeWidth={strokeWidth}
         fill="none"
@@ -111,7 +112,12 @@ export const NlpConceptChartLink: React.FC<NlpConceptChartLinkProps> = ({
       {endPoints.map((endPoint, index) => {
         // Create a smooth curve to a point just before the endpoint, then a horizontal line
         const preEndPoint = { x: endPoint.x - 10, y: endPoint.y };
-  const branchToPreEnd = createSmoothCurve(branchPoint, preEndPoint, true, false);
+        const branchToPreEnd = createSmoothCurve(
+          branchPoint,
+          preEndPoint,
+          true,
+          false,
+        );
         const horizontalSegment = `M ${preEndPoint.x} ${preEndPoint.y} L ${endPoint.x} ${endPoint.y}`;
 
         return (

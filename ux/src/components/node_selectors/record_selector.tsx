@@ -124,7 +124,10 @@ export const RecordSelector: React.FC<RecordSelectorProps> = ({
                 checked={showDefinitions}
                 onChange={() => setShowDefinitions(!showDefinitions)}
               />
-              <Label htmlFor="record-selector-show-definitions" className="flex pl-2">
+              <Label
+                htmlFor="record-selector-show-definitions"
+                className="flex pl-2"
+              >
                 Show Definitions
               </Label>
             </div>
@@ -150,21 +153,32 @@ export const RecordSelector: React.FC<RecordSelectorProps> = ({
                 onSelect?.(record);
                 setOpen(false);
               }}
-              className={"px-3 py-2 hover:bg-gray-100 cursor-pointer " +
-                (showDefinitions ? "flex flex-row items-start gap-4" : "")}
+              className={
+                "cursor-pointer px-3 py-2 hover:bg-gray-100 " +
+                (showDefinitions ? "flex flex-row items-start gap-4" : "")
+              }
             >
               {showDefinitions && fieldMap.definition ? (
                 <>
                   <span className="w-1/3 text-left font-medium whitespace-normal">
-                    <SearchHighlight content={record[fieldMap.title]} searchText={search} />
+                    <SearchHighlight
+                      content={record[fieldMap.title]}
+                      searchText={search}
+                    />
                   </span>
                   <span className="w-2/3 text-left whitespace-normal text-gray-500">
-                    <SearchHighlight content={record[fieldMap.definition]} searchText={search} />
+                    <SearchHighlight
+                      content={record[fieldMap.definition]}
+                      searchText={search}
+                    />
                   </span>
                 </>
               ) : (
                 <span className="font-medium whitespace-normal">
-                  <SearchHighlight content={record[fieldMap.title]} searchText={search} />
+                  <SearchHighlight
+                    content={record[fieldMap.title]}
+                    searchText={search}
+                  />
                 </span>
               )}
             </div>
@@ -180,13 +194,26 @@ export const RecordSelector: React.FC<RecordSelectorProps> = ({
           ref={triggerRef}
           type="button"
           onClick={toggleOpen}
-          className="inline-flex items-center justify-between rounded border px-3 py-2 w-full text-left bg-white"
+          className="inline-flex w-full items-center justify-between rounded border bg-white px-3 py-2 text-left"
         >
           <span className="truncate">
-            {loading ? "Loading..." : selectedRecord ? selectedRecord[fieldMap.title] : "Select Record"}
+            {loading
+              ? "Loading..."
+              : selectedRecord
+                ? selectedRecord[fieldMap.title]
+                : "Select Record"}
           </span>
-          <svg className="ml-2 h-4 w-4" viewBox="0 0 20 20" fill="currentColor" aria-hidden>
-            <path fillRule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 10.94l3.71-3.71a.75.75 0 111.06 1.06l-4.24 4.24a.75.75 0 01-1.06 0L5.21 8.29a.75.75 0 01.02-1.08z" clipRule="evenodd" />
+          <svg
+            className="ml-2 h-4 w-4"
+            viewBox="0 0 20 20"
+            fill="currentColor"
+            aria-hidden
+          >
+            <path
+              fillRule="evenodd"
+              d="M5.23 7.21a.75.75 0 011.06.02L10 10.94l3.71-3.71a.75.75 0 111.06 1.06l-4.24 4.24a.75.75 0 01-1.06 0L5.21 8.29a.75.75 0 01.02-1.08z"
+              clipRule="evenodd"
+            />
           </svg>
         </button>
         {value && (
@@ -202,9 +229,7 @@ export const RecordSelector: React.FC<RecordSelectorProps> = ({
       </div>
       {open && triggerRef.current
         ? ReactDOM.createPortal(
-            <div style={menuStyle}>
-              {menu}
-            </div>,
+            <div style={menuStyle}>{menu}</div>,
             document.body,
           )
         : null}

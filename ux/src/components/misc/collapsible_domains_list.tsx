@@ -13,7 +13,7 @@ interface CollapsibleDomainsListProps {
   useLinks?: boolean;
 }
 
-const CollapsibleDomainsList: React.FC<CollapsibleDomainsListProps> = ({ 
+const CollapsibleDomainsList: React.FC<CollapsibleDomainsListProps> = ({
   layerId,
   showCount = 20,
   onDomainClick,
@@ -32,9 +32,9 @@ const CollapsibleDomainsList: React.FC<CollapsibleDomainsListProps> = ({
   }
 
   if (error) {
-    console.error('Error loading domains:', error);
+    console.error("Error loading domains:", error);
     return (
-      <div className="text-sm text-red-600 dark:text-red-400 py-2">
+      <div className="py-2 text-sm text-red-600 dark:text-red-400">
         Error loading domains
       </div>
     );
@@ -42,19 +42,22 @@ const CollapsibleDomainsList: React.FC<CollapsibleDomainsListProps> = ({
 
   if (!domains || domains.length === 0) {
     return (
-      <div className="text-sm text-gray-500 dark:text-gray-400 py-2">
+      <div className="py-2 text-sm text-gray-500 dark:text-gray-400">
         No domains found
       </div>
     );
   }
 
   // Sort domains alphabetically by title
-  const sortedDomains = [...domains].sort((a, b) => a.title.localeCompare(b.title));
-  
+  const sortedDomains = [...domains].sort((a, b) =>
+    a.title.localeCompare(b.title),
+  );
+
   const shouldShowExpandButton = sortedDomains.length > showCount;
-  const displayedDomains = shouldShowExpandButton && !isExpanded 
-    ? sortedDomains.slice(0, showCount)
-    : sortedDomains;
+  const displayedDomains =
+    shouldShowExpandButton && !isExpanded
+      ? sortedDomains.slice(0, showCount)
+      : sortedDomains;
 
   const handleToggleExpanded = () => {
     setIsExpanded(!isExpanded);
@@ -67,15 +70,15 @@ const CollapsibleDomainsList: React.FC<CollapsibleDomainsListProps> = ({
   };
 
   return (
-    <div className="space-y-1 mx-1 mb-8">
+    <div className="mx-1 mb-8 space-y-1">
       {displayedDomains.map((domain: StructureNode) => {
         const isSelected = selectedDomainId === domain.id;
         const className = `text-sm cursor-pointer px-2 py-1 rounded transition-colors block ${
           isSelected
-            ? 'bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 font-medium'
-            : 'text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-800'
+            ? "bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 font-medium"
+            : "text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-800"
         }`;
-        
+
         if (useLinks) {
           return (
             <Link
@@ -101,13 +104,13 @@ const CollapsibleDomainsList: React.FC<CollapsibleDomainsListProps> = ({
           );
         }
       })}
-      
+
       {shouldShowExpandButton && (
         <Button
           size="xs"
           color={"light"}
           onClick={handleToggleExpanded}
-          className="w-full mt-2 justify-start text-xs border-none text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200"
+          className="mt-2 w-full justify-start border-none text-xs text-gray-600 hover:text-gray-800 dark:text-gray-400 dark:hover:text-gray-200"
         >
           <div className="flex items-center justify-center gap-1">
             {isExpanded ? (

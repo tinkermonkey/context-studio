@@ -1,13 +1,22 @@
-import { useMutation, useQueryClient, UseMutationOptions } from '@tanstack/react-query';
-import { predicateService, PredicateOut, PredicateCreate, PredicateUpdate } from '@/api/services/predicates';
-import { QUERY_KEYS } from '@/api/config';
-import { createQueryKey } from '@/api/utils/queryClient';
+import {
+  useMutation,
+  useQueryClient,
+  UseMutationOptions,
+} from "@tanstack/react-query";
+import {
+  predicateService,
+  PredicateOut,
+  PredicateCreate,
+  PredicateUpdate,
+} from "@/api/services/predicates";
+import { QUERY_KEYS } from "@/api/config";
+import { createQueryKey } from "@/api/utils/queryClient";
 
 /**
  * Hook to create a new predicate
  */
 export const useCreatePredicate = (
-  options?: UseMutationOptions<PredicateOut, Error, PredicateCreate>
+  options?: UseMutationOptions<PredicateOut, Error, PredicateCreate>,
 ) => {
   const queryClient = useQueryClient();
 
@@ -16,17 +25,17 @@ export const useCreatePredicate = (
     onSuccess: (newPredicate) => {
       // Invalidate predicates list
       queryClient.invalidateQueries({
-        queryKey: createQueryKey(QUERY_KEYS.PREDICATES)
+        queryKey: createQueryKey(QUERY_KEYS.PREDICATES),
       });
-      
+
       // Set the new predicate in cache
       queryClient.setQueryData(
         createQueryKey(QUERY_KEYS.PREDICATES, newPredicate.id),
-        newPredicate
+        newPredicate,
       );
     },
     onError: (error) => {
-      console.error('Error creating predicate:', error);
+      console.error("Error creating predicate:", error);
     },
     ...options,
   });
@@ -36,27 +45,31 @@ export const useCreatePredicate = (
  * Hook to update a predicate
  */
 export const useUpdatePredicate = (
-  options?: UseMutationOptions<PredicateOut, Error, { id: string; data: PredicateUpdate }>
+  options?: UseMutationOptions<
+    PredicateOut,
+    Error,
+    { id: string; data: PredicateUpdate }
+  >,
 ) => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ id, data }: { id: string; data: PredicateUpdate }) => 
+    mutationFn: ({ id, data }: { id: string; data: PredicateUpdate }) =>
       predicateService.update(id, data),
     onSuccess: (updatedPredicate) => {
       // Invalidate predicates list
       queryClient.invalidateQueries({
-        queryKey: createQueryKey(QUERY_KEYS.PREDICATES)
+        queryKey: createQueryKey(QUERY_KEYS.PREDICATES),
       });
-      
+
       // Update the predicate in cache
       queryClient.setQueryData(
         createQueryKey(QUERY_KEYS.PREDICATES, updatedPredicate.id),
-        updatedPredicate
+        updatedPredicate,
       );
     },
     onError: (error) => {
-      console.error('Error updating predicate:', error);
+      console.error("Error updating predicate:", error);
     },
     ...options,
   });
@@ -66,7 +79,7 @@ export const useUpdatePredicate = (
  * Hook to delete a predicate
  */
 export const useDeletePredicate = (
-  options?: UseMutationOptions<void, Error, string>
+  options?: UseMutationOptions<void, Error, string>,
 ) => {
   const queryClient = useQueryClient();
 
@@ -75,16 +88,16 @@ export const useDeletePredicate = (
     onSuccess: (_, deletedId) => {
       // Invalidate predicates list
       queryClient.invalidateQueries({
-        queryKey: createQueryKey(QUERY_KEYS.PREDICATES)
+        queryKey: createQueryKey(QUERY_KEYS.PREDICATES),
       });
-      
+
       // Remove from cache
       queryClient.removeQueries({
-        queryKey: createQueryKey(QUERY_KEYS.PREDICATES, deletedId)
+        queryKey: createQueryKey(QUERY_KEYS.PREDICATES, deletedId),
       });
     },
     onError: (error) => {
-      console.error('Error deleting predicate:', error);
+      console.error("Error deleting predicate:", error);
     },
     ...options,
   });
@@ -94,20 +107,21 @@ export const useDeletePredicate = (
  * Hook to import predicates from ConceptNet
  */
 export const useImportFromConceptNet = (
-  options?: UseMutationOptions<PredicateOut[], Error, string[] | undefined>
+  options?: UseMutationOptions<PredicateOut[], Error, string[] | undefined>,
 ) => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (relations?: string[]) => predicateService.importFromConceptNet(relations),
+    mutationFn: (relations?: string[]) =>
+      predicateService.importFromConceptNet(relations),
     onSuccess: () => {
       // Invalidate predicates list and related queries
       queryClient.invalidateQueries({
-        queryKey: createQueryKey(QUERY_KEYS.PREDICATES)
+        queryKey: createQueryKey(QUERY_KEYS.PREDICATES),
       });
     },
     onError: (error) => {
-      console.error('Error importing predicates from ConceptNet:', error);
+      console.error("Error importing predicates from ConceptNet:", error);
     },
     ...options,
   });

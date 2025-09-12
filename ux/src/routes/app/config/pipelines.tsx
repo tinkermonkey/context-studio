@@ -2,9 +2,7 @@ import React, { useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { CsMainTitle } from "@/components/layout/cs_main";
 import { Settings } from "lucide-react";
-import {
-  PipelineFlavorsList,
-} from "@/components/llm_pipelines/flavors/PipelineFlavorsList";
+import { PipelineFlavorsList } from "@/components/llm_pipelines/flavors/PipelineFlavorsList";
 
 export const Route = createFileRoute("/app/config/pipelines")({
   component: PipelineConfigPage,

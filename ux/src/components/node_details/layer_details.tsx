@@ -18,7 +18,11 @@ import {
 } from "lucide-react";
 import { Link } from "@tanstack/react-router";
 import { NlpAnalysisPanel } from "@/components/nlp/NlpAnalysisPanel";
-import { useDomainNodes, useTermNodes } from "@/api/hooks/structure_nodes/useStructureNodes";
+import {
+  useDomainNodes,
+  useTermNodes,
+  useStructureNode,
+} from "@/api/hooks/structure_nodes/useStructureNodes";
 import { TermRenderer } from "@/components/node_renderers/term_renderer";
 import { CreateChildButton } from "@/components/misc/create_child_button";
 import { LayerForm } from "@/components/forms/layer_form";
@@ -42,9 +46,7 @@ export const LayerDetails: React.FC<LayerDetailsProps> = ({ layer }) => {
   const [isEditOpen, setIsEditOpen] = React.useState(false);
   const { data: terms, isLoading: termsLoading } = useTermNodes();
 
-  const { data: domains, isLoading: domainsLoading } = useDomainNodes(
-    layer.id
-  );
+  const { data: domains, isLoading: domainsLoading } = useDomainNodes(layer.id);
 
   // Group terms by domain for better organization
   const termsByDomain = React.useMemo(() => {
@@ -54,12 +56,15 @@ export const LayerDetails: React.FC<LayerDetailsProps> = ({ layer }) => {
 
     terms.forEach((term: StructureNode) => {
       // Find the term's domain by checking its parent hierarchy
-      const domainParent = domains?.find(d => d.id === term.parent_node_id) || 
-                          domains?.find(d => 
-                            terms.some(t => t.parent_node_id === d.id && t.id === term.parent_node_id)
-                          );
-      const domainId = domainParent?.id || 'unknown';
-      
+      const domainParent =
+        domains?.find((d) => d.id === term.parent_node_id) ||
+        domains?.find((d) =>
+          terms.some(
+            (t) => t.parent_node_id === d.id && t.id === term.parent_node_id,
+          ),
+        );
+      const domainId = domainParent?.id || "unknown";
+
       if (!grouped[domainId]) {
         grouped[domainId] = [];
       }
@@ -142,8 +147,8 @@ export const LayerDetails: React.FC<LayerDetailsProps> = ({ layer }) => {
 
         <div className="space-y-6">
           {/* NLP title analysis for the layer */}
-          <NlpAnalysisPanel 
-            text={layer.title} 
+          <NlpAnalysisPanel
+            text={layer.title}
             textTitle={"Title"}
             currentDefinition={layer.definition}
             layerId={layer.id}
@@ -211,7 +216,7 @@ export const LayerDetails: React.FC<LayerDetailsProps> = ({ layer }) => {
 
 // Edit Modal for Layer
 const LayerEditModal: React.FC<{
-  layer: LayerOut;
+  layer: StructureNode;
   isOpen: boolean;
   onClose: () => void;
 }> = ({ layer, isOpen, onClose }) => {
@@ -253,7 +258,7 @@ const DomainTermsSection: React.FC<DomainTermsSectionProps> = ({
   domainId,
   terms,
 }) => {
-  const { data: domain, isLoading: domainLoading } = useDomain(domainId);
+  const { data: domain, isLoading: domainLoading } = useStructureNode(domainId);
 
   return (
     <div className="rounded-lg border p-4 dark:border-gray-600">

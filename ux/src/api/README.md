@@ -41,7 +41,7 @@ npm run generate-types
 ### 3. Wrap Your App
 
 ```tsx
-import { ApiProvider } from '@/api';
+import { ApiProvider } from "@/api";
 
 export default function App() {
   return (
@@ -57,18 +57,18 @@ export default function App() {
 ### Basic Queries
 
 ```tsx
-import { useLayers, useLayer } from '@/api/hooks/layers';
+import { useLayers, useLayer } from "@/api/hooks/layers";
 
 function LayerList() {
   const { data: layers, isLoading, error } = useLayers();
-  const { data: layer } = useLayer('layer-id');
+  const { data: layer } = useLayer("layer-id");
 
   if (isLoading) return <div>Loading...</div>;
   if (error) return <div>Error: {error.message}</div>;
 
   return (
     <div>
-      {layers?.map(layer => (
+      {layers?.map((layer) => (
         <div key={layer.id}>{layer.title}</div>
       ))}
     </div>
@@ -79,7 +79,11 @@ function LayerList() {
 ### Mutations
 
 ```tsx
-import { useCreateLayer, useUpdateLayer, useDeleteLayer } from '@/api/hooks/layers';
+import {
+  useCreateLayer,
+  useUpdateLayer,
+  useDeleteLayer,
+} from "@/api/hooks/layers";
 
 function LayerForm() {
   const createLayer = useCreateLayer();
@@ -98,11 +102,8 @@ function LayerForm() {
   return (
     <form onSubmit={handleCreate}>
       {/* form fields */}
-      <button 
-        type="submit" 
-        disabled={createLayer.isPending}
-      >
-        {createLayer.isPending ? 'Creating...' : 'Create'}
+      <button type="submit" disabled={createLayer.isPending}>
+        {createLayer.isPending ? "Creating..." : "Create"}
       </button>
     </form>
   );
@@ -112,24 +113,24 @@ function LayerForm() {
 ### Search/Find
 
 ```tsx
-import { useLayerSearch } from '@/api/hooks/layers';
+import { useLayerSearch } from "@/api/hooks/layers";
 
 function SearchLayers() {
-  const [query, setQuery] = useState('');
+  const [query, setQuery] = useState("");
   const { data: results, isLoading } = useLayerSearch(
     { query },
-    { enabled: query.length > 2 }
+    { enabled: query.length > 2 },
   );
 
   return (
     <div>
-      <input 
+      <input
         value={query}
         onChange={(e) => setQuery(e.target.value)}
         placeholder="Search layers..."
       />
       {isLoading && <div>Searching...</div>}
-      {results?.map(result => (
+      {results?.map((result) => (
         <div key={result.id}>
           {result.title} (Score: {result.score})
         </div>
@@ -142,19 +143,19 @@ function SearchLayers() {
 ### Graph Operations
 
 ```tsx
-import { 
-  useGraphStats, 
-  useTermSearch, 
-  useRelatedTerms, 
+import {
+  useGraphStats,
+  useTermSearch,
+  useRelatedTerms,
   useSparqlQuery,
-  useGraphRefresh 
-} from '@/api/hooks/graph';
+  useGraphRefresh,
+} from "@/api/hooks/graph";
 
 function GraphAnalytics() {
   const { data: stats } = useGraphStats();
-  const { data: terms } = useTermSearch({ title: 'concept', exact: false });
-  const { data: related } = useRelatedTerms('term-id-123', { max_depth: 2 });
-  
+  const { data: terms } = useTermSearch({ title: "concept", exact: false });
+  const { data: related } = useRelatedTerms("term-id-123", { max_depth: 2 });
+
   const sparqlQuery = useSparqlQuery();
   const refreshGraph = useGraphRefresh();
 
@@ -166,20 +167,20 @@ function GraphAnalytics() {
             ?term a :Term .
             ?term :title ?title .
           } LIMIT 10
-        `
+        `,
       });
-      console.log('SPARQL Results:', results);
+      console.log("SPARQL Results:", results);
     } catch (error) {
-      console.error('SPARQL Error:', error);
+      console.error("SPARQL Error:", error);
     }
   };
 
   const handleRefresh = async () => {
     try {
       await refreshGraph.mutateAsync();
-      console.log('Graph refreshed successfully');
+      console.log("Graph refreshed successfully");
     } catch (error) {
-      console.error('Refresh failed:', error);
+      console.error("Refresh failed:", error);
     }
   };
 
@@ -187,21 +188,21 @@ function GraphAnalytics() {
     <div>
       <h2>Graph Statistics</h2>
       <pre>{JSON.stringify(stats, null, 2)}</pre>
-      
+
       <h2>Term Search Results</h2>
       {terms?.map((term, index) => (
         <div key={index}>{JSON.stringify(term)}</div>
       ))}
-      
+
       <h2>Related Terms</h2>
       <pre>{JSON.stringify(related, null, 2)}</pre>
-      
+
       <button onClick={handleSparqlQuery} disabled={sparqlQuery.isPending}>
-        {sparqlQuery.isPending ? 'Executing...' : 'Execute SPARQL Query'}
+        {sparqlQuery.isPending ? "Executing..." : "Execute SPARQL Query"}
       </button>
-      
+
       <button onClick={handleRefresh} disabled={refreshGraph.isPending}>
-        {refreshGraph.isPending ? 'Refreshing...' : 'Refresh Graph'}
+        {refreshGraph.isPending ? "Refreshing..." : "Refresh Graph"}
       </button>
     </div>
   );
@@ -211,6 +212,7 @@ function GraphAnalytics() {
 ## API Structure
 
 The API follows a hierarchical structure:
+
 - **Layers**: Top-level organizational units
 - **Domains**: Belong to layers, represent subject areas
 - **Terms**: Belong to domains, represent specific concepts
@@ -220,6 +222,7 @@ The API follows a hierarchical structure:
 ## Available Hooks
 
 ### Layers
+
 - `useLayers(params?, options?)` - List all layers
 - `useLayer(id, options?)` - Get a specific layer
 - `useLayerSearch(params, options?)` - Search layers
@@ -228,6 +231,7 @@ The API follows a hierarchical structure:
 - `useDeleteLayer(options?)` - Delete a layer
 
 ### Domains
+
 - `useDomains(params?, options?)` - List all domains
 - `useDomain(id, options?)` - Get a specific domain
 - `useDomainsByLayer(layerId, options?)` - Get domains by layer
@@ -237,6 +241,7 @@ The API follows a hierarchical structure:
 - `useDeleteDomain(options?)` - Delete a domain
 
 ### Terms
+
 - `useTerms(params?, options?)` - List all terms
 - `useTerm(id, options?)` - Get a specific term
 - `useTermsByDomain(domainId, options?)` - Get terms by domain
@@ -246,6 +251,7 @@ The API follows a hierarchical structure:
 - `useDeleteTerm(options?)` - Delete a term
 
 ### Graph Analytics & Operations
+
 - `useGraphStats(options?)` - Get comprehensive graph statistics
 - `useTermSearch(params, options?)` - Search terms using SPARQL
 - `useTermInfo(termId, options?)` - Get detailed term information
@@ -262,6 +268,7 @@ The API follows a hierarchical structure:
 - `useGraphExport(params?, options?)` - Export graph data
 
 ### Graph Mutations
+
 - `useGraphRefresh(options?)` - Refresh graph from database
 - `useSparqlQuery(options?)` - Execute SPARQL queries
 - `useSearchAndAnalyze(options?)` - Search and analyze terms

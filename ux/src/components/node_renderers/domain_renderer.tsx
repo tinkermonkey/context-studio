@@ -1,6 +1,5 @@
-
-import React from 'react';
-import { useStructureNode } from '@/api/hooks/structure_nodes/useStructureNodes';
+import React from "react";
+import { useStructureNode } from "@/api/hooks/structure_nodes/useStructureNodes";
 
 type DomainProps = {
   domain_id: string;
