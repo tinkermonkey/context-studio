@@ -13,16 +13,11 @@ sys.path.append(
 )
 
 import pytest
-import uuid
-import time
-from datetime import datetime, timezone
 from sqlalchemy import text
-from unittest.mock import Mock, patch
+from unittest.mock import patch
 
-from database.utils import get_current_engine
 from services.service_factory import ServiceFactory
 from services.collaboration_models import ChangesetState, ProposalStatus, MergeStrategy
-from database.migrations.migration_manager import MigrationManager
 
 
 @pytest.fixture

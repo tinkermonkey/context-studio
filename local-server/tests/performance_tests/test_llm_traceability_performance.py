@@ -2,7 +2,6 @@ import sys
 import os
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-import pytest
 import time
 import tempfile
 from unittest.mock import Mock, patch
@@ -335,7 +334,7 @@ class TestLLMTraceabilityPerformance:
         max_details_time = max(details_times)
         p95_details_time = statistics.quantiles(details_times, n=20)[18]
         
-        print(f"\nExecution Details Query Performance (20 queries):")
+        print("\nExecution Details Query Performance (20 queries):")
         print(f"  Average: {avg_details_time:.2f}ms")
         print(f"  Maximum: {max_details_time:.2f}ms")
         print(f"  95th percentile: {p95_details_time:.2f}ms")

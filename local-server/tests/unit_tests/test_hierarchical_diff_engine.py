@@ -12,9 +12,7 @@ sys.path.append(
 )
 
 import pytest
-import json
-from unittest.mock import Mock, patch, MagicMock
-from datetime import datetime, timezone
+from unittest.mock import Mock, patch
 
 from services.hierarchical_diff_engine import (
     HierarchicalDiffEngine,
@@ -502,7 +500,6 @@ class TestHierarchicalDiffEngine:
     
     def test_concurrent_diff_operations(self, diff_engine):
         """Test thread safety of diff operations."""
-        import threading
         import concurrent.futures
         
         results = []

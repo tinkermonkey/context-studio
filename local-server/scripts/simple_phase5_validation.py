@@ -393,7 +393,7 @@ class SimplePhase5Validator:
             for i, error in enumerate(self.results['errors'], 1):
                 print(f"   {i}. {error}")
         
-        print(f"\n💡 Summary:")
+        print("\n💡 Summary:")
         if self.results['overall_success']:
             print("   🎯 Phase 5 implementation structure is complete!")
             print("   ✅ All required files are present")

@@ -11,8 +11,7 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 import pytest
 import pandas as pd
-from unittest.mock import Mock, patch, MagicMock
-from datetime import datetime, timezone
+from unittest.mock import Mock, patch
 
 from services.duckdb_service import DuckDBService, ChangeAnalyticsEngine
 

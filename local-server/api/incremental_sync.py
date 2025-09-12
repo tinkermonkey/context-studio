@@ -17,7 +17,6 @@ Endpoints:
 
 from fastapi import APIRouter, HTTPException, Query, Depends, Path, BackgroundTasks
 from typing import List, Optional, Dict, Any
-from uuid import UUID
 from sqlalchemy.orm import Session
 from datetime import datetime, timezone
 from database.utils import get_db

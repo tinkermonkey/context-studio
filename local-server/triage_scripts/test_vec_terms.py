@@ -97,17 +97,17 @@ if __name__ == "__main__":
 
         term_data = [
             {
-                "title": f"Amazing test flights",
+                "title": "Amazing test flights",
                 "definition": "Amazing test flights are test flights which go really well and result in a wonderful outcome.",
                 "primary_predicate": "test_predicate",
             },
             {
-                "title": f"A wonderful sunset",
+                "title": "A wonderful sunset",
                 "definition": "A wonderful sunset is a sunset that is particularly beautiful and inspiring.",
                 "primary_predicate": "another_predicate",
             },
             {
-                "title": f"Peanuts and jelly",
+                "title": "Peanuts and jelly",
                 "definition": "Peanuts and jelly is a classic sandwich combination that is both delicious and satisfying.",
                 "primary_predicate": "third_predicate",
             },
@@ -160,7 +160,7 @@ if __name__ == "__main__":
                     logger.info(f"Searching for term with title: {term['title']}")
                     try:
                         sql = text(
-                            f"""
+                            """
                             SELECT id, distance
                             FROM terms_vec
                             WHERE title_embedding match :emb

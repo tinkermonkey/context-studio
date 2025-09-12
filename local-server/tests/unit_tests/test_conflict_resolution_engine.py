@@ -10,7 +10,6 @@ import os
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 import pytest
-import uuid
 from unittest.mock import Mock, patch, MagicMock
 from datetime import datetime, timezone
 from sqlalchemy.orm import Session

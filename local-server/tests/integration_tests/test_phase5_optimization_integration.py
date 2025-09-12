@@ -19,12 +19,7 @@ sys.path.append(
 )
 
 import pytest
-import time
-import json
-from unittest.mock import patch, Mock
-from datetime import datetime, timezone
 
-from services.service_factory import get_service_factory
 
 
 class TestPhase5OptimizationIntegration:
@@ -466,7 +461,6 @@ class TestPhase5OptimizationIntegration:
     
     def test_optimization_performance_under_load(self, shared_client):
         """Test optimization system performance under concurrent load."""
-        import threading
         import concurrent.futures
         
         client = shared_client

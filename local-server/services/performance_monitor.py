@@ -8,11 +8,10 @@ enterprise-scale performance management and automated tuning.
 
 import time
 import statistics
-from typing import Dict, List, Optional, Any, Tuple
+from typing import Dict, List, Optional, Any
 from dataclasses import dataclass
 from datetime import datetime, timezone, timedelta
 from threading import Lock
-from sqlalchemy.orm import Session
 
 from utils.logger import get_logger
 

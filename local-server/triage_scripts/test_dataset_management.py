@@ -45,7 +45,7 @@ def test_dataset_manager():
             print(f"- {dataset.title}: {dataset.filename} (active: {dataset.id == manager.active_dataset_id})")
         
         # Test switching datasets
-        print(f"\nSwitching to dataset 2...")
+        print("\nSwitching to dataset 2...")
         success = manager.switch_dataset(dataset2.id)
         print(f"Switch successful: {success}")
         

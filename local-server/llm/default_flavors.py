@@ -8,7 +8,6 @@ Users who want custom configurations should create new flavors.
 
 from typing import Dict
 from datetime import datetime, timezone
-import uuid
 
 from .models import PipelineFlavor, PipelineType, LLMConfig
 from .prompts import DefinitionPromptTemplate

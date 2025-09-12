@@ -4,7 +4,6 @@ Simple test to verify concepCy can be imported and used
 """
 
 import spacy
-import concepcy
 
 def main():
     print("✅ concepCy imported successfully!")

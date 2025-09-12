@@ -2,13 +2,8 @@ import argparse
 import csv
 import sys
 
-import sys
-import os
-import csv
-import argparse
 import uuid
 from sqlalchemy.orm import Session
-from database.models import StructureNode
 from database.utils import get_engine, get_session_local, init_db
 from utils.logger import get_logger
 

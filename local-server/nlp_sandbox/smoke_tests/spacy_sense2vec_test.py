@@ -1,6 +1,5 @@
 import os
 import spacy
-from sense2vec import Sense2VecComponent
 
 nlp = spacy.load("en_core_web_sm")
 s2v = nlp.add_pipe("sense2vec")

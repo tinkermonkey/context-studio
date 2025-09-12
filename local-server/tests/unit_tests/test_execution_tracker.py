@@ -3,13 +3,10 @@ import os
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 import pytest
-from unittest.mock import Mock, patch, MagicMock
-from datetime import datetime
-import json
-import uuid
+from unittest.mock import Mock, patch
 
 from llm.execution_tracker import ExecutionTracker
-from llm.models import DefinitionSuggestionRequest, RecordSelectionRequest, PipelineType
+from llm.models import RecordSelectionRequest, PipelineType
 
 
 class TestExecutionTracker:

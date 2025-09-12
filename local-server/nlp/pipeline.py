@@ -1,10 +1,7 @@
 import threading
 import spacy
 import spacy.tokens
-import concepcy
-import spacy_dbpedia_spotlight
 from typing import Optional
-from spacy_wordnet.wordnet_annotator import WordnetAnnotator
 from config import get_settings, get_config_manager
 from utils.logger import get_logger
 from nlp.proxy_manager import get_proxy_manager

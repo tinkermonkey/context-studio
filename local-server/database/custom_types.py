@@ -6,7 +6,6 @@ special data type conversions and constraints.
 """
 
 from sqlalchemy.types import TypeDecorator, String
-from sqlalchemy import Enum as SQLEnum
 from database.enums import NodeType, RecordType
 
 

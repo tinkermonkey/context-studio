@@ -8,7 +8,6 @@ import shutil
 from datetime import datetime, timezone, timedelta
 from typing import Dict, List, Optional
 from sqlalchemy import create_engine, text
-from sqlalchemy.orm import sessionmaker
 
 from database.utils import init_db, get_session_local
 from dataset.models import DatasetInfo, DatasetMetrics

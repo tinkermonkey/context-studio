@@ -5,7 +5,7 @@ the enrichment design (DBpedia, ConceptNet, Wikidata, Schema.org).
 """
 
 from pydantic import BaseModel, Field, field_validator
-from typing import List, Dict, Optional, Any, Union, Literal
+from typing import List, Dict, Optional, Any, Literal
 from datetime import datetime
 from enum import Enum
 
@@ -42,7 +42,7 @@ class DBpediaResourceRequest(BaseModel):
     @classmethod
     def validate_resource_url(cls, v):
         # More flexible validation - accept any URL that contains dbpedia.org/resource/
-        if not ('dbpedia.org/resource/' in v):
+        if 'dbpedia.org/resource/' not in v:
             raise ValueError('Must be a valid DBpedia resource URL containing dbpedia.org/resource/')
         return v
 

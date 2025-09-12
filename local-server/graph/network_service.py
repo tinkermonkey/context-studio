@@ -7,11 +7,10 @@ the SPARQL service for comprehensive graph operations.
 
 import networkx as nx
 from sqlalchemy.orm import Session
-from typing import Dict, List, Any, Tuple, Optional, Set
+from typing import Dict, List, Any, Optional, Set
 from datetime import datetime
 
 from database.models import StructureNode, StructureNodeLink
-from database.enums import NodeType
 from utils.logger import get_logger
 
 logger = get_logger(__name__)

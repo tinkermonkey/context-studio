@@ -13,8 +13,7 @@ sys.path.append(
 
 import pytest
 import time
-import statistics
-from unittest.mock import Mock, patch, MagicMock
+from unittest.mock import Mock, patch
 from datetime import datetime, timezone, timedelta
 
 from services.performance_monitor import (
@@ -488,7 +487,6 @@ class TestPerformanceMonitor:
     
     def test_concurrent_metrics_collection(self, performance_monitor):
         """Test thread safety of metrics collection."""
-        import threading
         import concurrent.futures
         
         results = []

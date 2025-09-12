@@ -7,10 +7,8 @@ It removes the incorrect migration history entry and re-runs the correct migrati
 """
 
 import os
-import sys
 import importlib.util
 from sqlalchemy import create_engine, text
-from database.migrations.migration_manager import MigrationManager
 
 def fix_database(db_path: str, dry_run: bool = True):
     """Fix a single database file."""
@@ -99,7 +97,6 @@ def fix_database(db_path: str, dry_run: bool = True):
                 # Step 3: Add migration 006 to schema history
                 print("3. Adding migration 006 to schema history...")
                 import hashlib
-                import time
                 
                 # Calculate checksum for the correct migration file
                 migration_file_path = os.path.join(

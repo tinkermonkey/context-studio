@@ -1,10 +1,8 @@
 """DBpedia source implementation"""
 
-from typing import Dict, Any, Optional
-import urllib.parse
 
 from .base import BaseReferenceSource
-from config import SourceType, get_settings
+from config import get_settings
 from ..models import DBpediaResourceResponse, DBpediaSearchResponse, DBpediaSparqlResponse
 
 

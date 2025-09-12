@@ -1,10 +1,6 @@
 """Schema.org source implementation that leverages the existing SchemaOrgManager"""
 
-from typing import Dict, Any, Optional, List
-import asyncio
-import concurrent.futures
 from .base import BaseReferenceSource
-from config import SourceType
 from ..models import SchemaOrgEntityResponse, SchemaOrgPropertyResponse, SchemaOrgSearchResponse
 from schema_org.manager import SchemaOrgManager
 

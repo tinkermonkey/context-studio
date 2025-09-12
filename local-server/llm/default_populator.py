@@ -2,7 +2,6 @@
 Service for populating default flavors on application startup.
 """
 
-from typing import Dict, Any
 from .flavor_service import PipelineFlavorService
 from .models import PipelineType, CreatePipelineFlavorRequest, LLMConfig
 from .prompts import DefinitionPromptTemplate

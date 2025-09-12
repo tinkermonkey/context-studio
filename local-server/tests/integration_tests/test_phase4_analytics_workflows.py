@@ -14,10 +14,9 @@ import pandas as pd
 from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session
 from datetime import datetime, timezone, timedelta
-from unittest.mock import Mock, patch, MagicMock
+from unittest.mock import Mock
 
 from app import create_app
-from database.utils import get_db
 from services.service_factory import ServiceFactory
 
 

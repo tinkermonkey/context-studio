@@ -4,7 +4,6 @@
 
 import spacy
 
-from spacy_wordnet.wordnet_annotator import WordnetAnnotator 
 
 # Load an spacy model
 nlp = spacy.load('en_core_web_sm')

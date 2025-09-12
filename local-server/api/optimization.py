@@ -23,8 +23,8 @@ Endpoints:
 - GET /api/optimization/batch/stats - Get batch processing statistics
 """
 
-from fastapi import APIRouter, HTTPException, Query, Depends, Path, BackgroundTasks
-from typing import List, Optional, Dict, Any, Union
+from fastapi import APIRouter, HTTPException, Query, Depends, BackgroundTasks
+from typing import List, Optional, Dict, Any
 from sqlalchemy.orm import Session
 from pydantic import BaseModel, Field
 from datetime import datetime

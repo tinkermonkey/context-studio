@@ -14,9 +14,8 @@ sys.path.append(
 import pytest
 import time
 import threading
-from unittest.mock import Mock, patch, MagicMock
+from unittest.mock import Mock, patch
 from datetime import datetime, timezone
-from concurrent.futures import ThreadPoolExecutor
 
 from services.batch_operation_processor import (
     BatchOperationProcessor,

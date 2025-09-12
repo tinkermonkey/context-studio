@@ -1,6 +1,5 @@
 from logging import config
 import spacy
-import spacyfishing
 
 text_en = "Victor Hugo and Honoré de Balzac are French writers who lived in Paris."
 #text_en = "Truck"

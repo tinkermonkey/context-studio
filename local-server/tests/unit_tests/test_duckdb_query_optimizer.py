@@ -13,8 +13,8 @@ sys.path.append(
 
 import pytest
 import time
-from unittest.mock import Mock, patch, MagicMock
-from datetime import datetime, timezone
+from unittest.mock import Mock, patch
+from datetime import datetime
 
 from services.duckdb_query_optimizer import (
     DuckDBQueryOptimizer,

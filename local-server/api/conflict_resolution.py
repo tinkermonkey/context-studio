@@ -19,7 +19,6 @@ Endpoints:
 
 from fastapi import APIRouter, HTTPException, Query, Depends, Path
 from typing import List, Optional, Dict, Any
-from uuid import UUID
 from sqlalchemy.orm import Session
 from database.utils import get_db
 from services.service_factory import get_conflict_resolution_engine_via_factory

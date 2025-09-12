@@ -7,14 +7,13 @@ bundling related changes together for proposal and review processes.
 
 import uuid
 import json
-from typing import List, Optional, Dict, Any
+from typing import List, Optional
 from datetime import datetime, timezone
 from sqlalchemy.orm import Session
 from sqlalchemy import text
 
 from services.collaboration_models import (
-    Changeset, ChangesetState, ChangesetVersion,
-    row_to_changeset
+    Changeset, ChangesetState, row_to_changeset
 )
 from services.version_manager import VersionManager
 from services.working_tree_manager import WorkingTreeManager

@@ -8,14 +8,10 @@ views for enterprise-scale analytical performance.
 
 import time
 import hashlib
-import uuid
 import duckdb
-import pandas as pd
-from typing import Dict, List, Optional, Any, Tuple
+from typing import Dict, Optional, Any, Tuple
 from dataclasses import dataclass
-from concurrent.futures import ThreadPoolExecutor, as_completed
-from datetime import datetime, timezone, timedelta
-from sqlalchemy.orm import Session
+from datetime import datetime, timezone
 
 from utils.logger import get_logger
 

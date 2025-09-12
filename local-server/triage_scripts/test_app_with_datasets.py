@@ -41,7 +41,7 @@ async def test_app_with_datasets():
         print(f"Created dataset: {dataset2.title} ({dataset2.id})")
         
         # Switch to second dataset
-        print(f"\nSwitching to second dataset...")
+        print("\nSwitching to second dataset...")
         success = manager.switch_dataset(dataset2.id)
         print(f"Switch successful: {success}")
         

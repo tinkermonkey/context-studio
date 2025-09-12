@@ -1,9 +1,8 @@
 """ConceptNet source implementation"""
 
-from typing import Dict, Any, Optional, List
-import urllib.parse
+from typing import Optional
 from .base import BaseReferenceSource
-from config import SourceType, get_settings
+from config import get_settings
 from ..models import ConceptNetQueryResponse, ConceptNetConceptResponse, ConceptNetRelatedResponse
 
 
