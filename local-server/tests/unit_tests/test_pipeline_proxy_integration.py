@@ -187,23 +187,57 @@ class TestPipelineProxyIntegration:
         mock_nlp.add_pipe.assert_any_call("concepcy", config=expected_config)
 
     @patch("nlp.pipeline.get_settings")
+    @patch("nlp.pipeline.get_config_manager")
     @patch("nlp.pipeline.get_proxy_manager")
     @patch("nlp.pipeline.spacy.load")
     def test_add_dbpedia_component_with_proxy(
-        self, mock_spacy_load, mock_get_proxy_manager, mock_get_settings
+        self,
+        mock_spacy_load,
+        mock_get_proxy_manager,
+        mock_get_config_manager,
+        mock_get_settings,
     ):
         """Test adding DBpedia Spotlight component with proxy enabled"""
-        # Mock settings
+        # Mock config manager and settings
+        mock_config_manager = Mock()
         mock_settings = Mock()
-        mock_settings.ENABLE_CACHING_PROXY = {
-            "concepcy": False,
-            "spacy_dbpedia_spotlight": True,
-        }
-        mock_settings.s2v_config = {"abs_path": "/test/path"}
-        mock_settings.get_concepcy_config.return_value = {"test": "config"}
-        mock_settings.REFERENCE_API_BUDDY_CONFIG = {
-            "server": {"host": "127.0.0.1", "port": 18080}
-        }
+
+        # Mock reference sources config for dbpedia_spotlight
+        mock_dbpedia_spotlight_config = Mock()
+        mock_dbpedia_spotlight_config.enabled = True
+        mock_dbpedia_spotlight_config.use_proxy = True
+        mock_dbpedia_spotlight_config.upstream_url = (
+            "https://api.dbpedia-spotlight.org/en/"
+        )
+
+        # Mock conceptnet config (disabled for this test)
+        mock_conceptnet_config = Mock()
+        mock_conceptnet_config.enabled = False
+
+        # Mock proxy server config
+        mock_proxy_server_config = Mock()
+        mock_proxy_server_config.enabled = True
+        mock_proxy_server_config.host = "127.0.0.1"
+        mock_proxy_server_config.port = 18080
+
+        # Mock NLP config
+        mock_nlp_config = Mock()
+        mock_nlp_config.sense2vec_path = "/test/path"
+
+        # Mock reference sources
+        mock_reference_sources = Mock()
+        mock_reference_sources.conceptnet = mock_conceptnet_config
+        mock_reference_sources.dbpedia_spotlight = mock_dbpedia_spotlight_config
+
+        # Setup settings mock
+        mock_settings.reference_sources = mock_reference_sources
+        mock_settings.proxy_server = mock_proxy_server_config
+        mock_settings.nlp = mock_nlp_config
+
+        mock_config_manager.settings = mock_settings
+        mock_get_config_manager.return_value = mock_config_manager
+
+        # Mock get_settings for sense2vec component
         mock_get_settings.return_value = mock_settings
 
         # Mock proxy manager
