@@ -45,6 +45,7 @@ class TestPipelineProxyIntegration:
 
         # Mock spaCy
         mock_nlp = Mock()
+        mock_nlp.pipe_names = []  # Make pipe_names iterable
         mock_spacy_load.return_value = mock_nlp
 
         pipeline = NLPPipeline()
@@ -78,9 +79,10 @@ class TestPipelineProxyIntegration:
 
         # Mock spaCy
         mock_nlp = Mock()
+        mock_nlp.pipe_names = []  # Make pipe_names iterable
         mock_spacy_load.return_value = mock_nlp
 
-        pipeline = NLPPipeline()
+        _pipeline = NLPPipeline()
 
         # Verify proxy was started
         mock_proxy_manager.start_proxy.assert_called_once()
@@ -173,7 +175,7 @@ class TestPipelineProxyIntegration:
         mock_nlp.pipe_names = []  # Make pipe_names iterable
         mock_spacy_load.return_value = mock_nlp
 
-        pipeline = NLPPipeline()
+        _pipeline = NLPPipeline()
 
         # Verify concepcy was added with proxy config
         expected_config = {
@@ -212,9 +214,10 @@ class TestPipelineProxyIntegration:
 
         # Mock spaCy
         mock_nlp = Mock()
+        mock_nlp.pipe_names = []  # Make pipe_names iterable
         mock_spacy_load.return_value = mock_nlp
 
-        pipeline = NLPPipeline()
+        _pipeline = NLPPipeline()
 
         # Verify DBpedia Spotlight was added with proxy config
         mock_nlp.add_pipe.assert_any_call(
@@ -286,7 +289,7 @@ class TestPipelineProxyIntegration:
         mock_nlp.pipe_names = []  # Make pipe_names iterable
         mock_spacy_load.return_value = mock_nlp
 
-        pipeline = NLPPipeline()
+        _pipeline = NLPPipeline()
 
         # Verify DBpedia Spotlight was added with upstream URL (no proxy)
         expected_config = {
@@ -318,6 +321,7 @@ class TestPipelineProxyIntegration:
 
         # Mock spaCy
         mock_nlp = Mock()
+        mock_nlp.pipe_names = []  # Make pipe_names iterable
         mock_spacy_load.return_value = mock_nlp
 
         pipeline = NLPPipeline()
@@ -350,6 +354,7 @@ class TestPipelineProxyIntegration:
 
         # Mock spaCy
         mock_nlp = Mock()
+        mock_nlp.pipe_names = []  # Make pipe_names iterable
         mock_spacy_load.return_value = mock_nlp
 
         pipeline = NLPPipeline()
