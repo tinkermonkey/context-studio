@@ -270,17 +270,22 @@ describe("LLM Traceability Integration", () => {
       }: {
         onSelect?: (content: string) => void;
         onAccept?: (content: string) => void;
-      }) => (
-        <button
-          onClick={() => {
-            onSelect?.("Selected content");
-            onAccept?.("Selected content");
-          }}
-          data-testid="suggestion-button"
-        >
-          Accept Suggestion
-        </button>
-      );
+      }) => {
+        const handleClick = () => {
+          const content = "Selected content";
+          onSelect?.(content);
+          onAccept?.(content);
+        };
+
+        return (
+          <button
+            onClick={handleClick}
+            data-testid="suggestion-button"
+          >
+            Accept Suggestion
+          </button>
+        );
+      };
 
       const TestComponent = () => (
         <SelectionTracker

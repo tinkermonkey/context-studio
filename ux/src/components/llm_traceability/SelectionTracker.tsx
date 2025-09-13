@@ -159,6 +159,9 @@ export const SelectionTracker: React.FC<SelectionTrackerProps> = ({
     // Look for common selection props and enhance them
     const enhancedProps: any = {};
 
+    // Check if this is a DOM element (lowercase tag name) vs React component (uppercase or function)
+    const isDOMElement = typeof child.type === 'string' && child.type[0] === child.type[0].toLowerCase();
+
     if (hasMultipleChildren) {
       // Multiple children scenario: use event-level deduplication (1 call per click)
       let hasTrackedThisEvent = false;
@@ -175,9 +178,12 @@ export const SelectionTracker: React.FC<SelectionTrackerProps> = ({
         originalHandler?.(content);
       };
 
-      enhancedProps.onSelect = createHandler(originalOnSelect);
-      enhancedProps.onAccept = createHandler(originalOnAccept);
-      enhancedProps.onApply = createHandler(originalOnApply);
+      // Only add custom props to React components, not DOM elements
+      if (!isDOMElement) {
+        enhancedProps.onSelect = createHandler(originalOnSelect);
+        enhancedProps.onAccept = createHandler(originalOnAccept);
+        enhancedProps.onApply = createHandler(originalOnApply);
+      }
     } else {
       // Single child scenario: use content-specific tracking
       const trackedContent = new Set<string>();
@@ -199,9 +205,12 @@ export const SelectionTracker: React.FC<SelectionTrackerProps> = ({
         originalHandler?.(content);
       };
 
-      enhancedProps.onSelect = createHandler(originalOnSelect);
-      enhancedProps.onAccept = createHandler(originalOnAccept);
-      enhancedProps.onApply = createHandler(originalOnApply);
+      // Only add custom props to React components, not DOM elements
+      if (!isDOMElement) {
+        enhancedProps.onSelect = createHandler(originalOnSelect);
+        enhancedProps.onAccept = createHandler(originalOnAccept);
+        enhancedProps.onApply = createHandler(originalOnApply);
+      }
     }
 
     if (typeof dataContent === "string") {
@@ -209,6 +218,25 @@ export const SelectionTracker: React.FC<SelectionTrackerProps> = ({
       enhancedProps.onClick = (event: React.MouseEvent) => {
         handleSelection(dataContent);
         originalOnClick?.(event);
+      };
+    }
+
+    // For DOM elements without custom handlers, try to hook into onClick
+    if (isDOMElement && (originalOnSelect || originalOnAccept || originalOnApply)) {
+      // If the DOM element had these handlers, we need to preserve them via onClick
+      const existingOnClick = originalOnClick;
+      enhancedProps.onClick = (event: React.MouseEvent) => {
+        // Try to extract content from various sources
+        const target = event.currentTarget as HTMLElement;
+        const content = dataContent || target.textContent || target.innerText || "Selected content";
+
+        // Call original handlers if they exist
+        if (originalOnSelect) originalOnSelect(content);
+        if (originalOnAccept) originalOnAccept(content);
+        if (originalOnApply) originalOnApply(content);
+
+        handleSelection(content);
+        existingOnClick?.(event);
       };
     }
 
