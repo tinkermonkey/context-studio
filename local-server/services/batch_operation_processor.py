@@ -21,6 +21,15 @@ logger = get_logger(__name__)
 
 
 @dataclass
+class BatchOperationError:
+    """Error information for failed batch operations."""
+    entity_id: str
+    error_type: str
+    error_message: str
+    additional_context: Optional[Dict[str, Any]] = None
+
+
+@dataclass
 class BatchOperationResult:
     """Result of a batch operation."""
     operation_id: str

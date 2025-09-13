@@ -23,6 +23,9 @@ from services.service_factory import (
 )
 from sqlalchemy import text
 
+# Import test configuration utilities
+from tests.test_config import TestConfigurationManager
+
 
 def create_test_database_with_migrations():
     """Create a test database with all migrations applied."""
@@ -82,6 +85,68 @@ def reset_service_factory_cache(test_service_factory):
     yield
     # Clear cache after test
     test_service_factory.clear_cache()
+
+
+@pytest.fixture(scope="function")
+def test_settings(tmp_path):
+    """
+    Provide isolated test settings for each test function.
+    
+    This fixture creates a completely isolated configuration environment
+    for each test, preventing test data pollution in config.json and
+    ensuring database files are created in temporary directories.
+    
+    Args:
+        tmp_path: pytest's temporary directory fixture
+        
+    Yields:
+        Settings: Isolated settings instance for the test
+    """
+    # Create test configuration manager
+    config_manager = TestConfigurationManager(str(tmp_path))
+    
+    try:
+        # Get isolated test settings
+        settings = config_manager.get_test_settings()
+        yield settings
+    finally:
+        # Clean up test artifacts
+        config_manager.cleanup()
+
+
+@pytest.fixture(scope="function")
+def isolated_test_settings(tmp_path):
+    """
+    Provide isolated test settings with custom overrides.
+    
+    This fixture allows tests to specify custom configuration overrides
+    while maintaining complete isolation from the global configuration.
+    
+    Usage:
+        def test_with_custom_config(isolated_test_settings):
+            settings = isolated_test_settings({
+                "database.default_url": "sqlite:///:memory:",
+                "logging.level": "DEBUG"
+            })
+            # Test with custom settings
+    
+    Args:
+        tmp_path: pytest's temporary directory fixture
+        
+    Returns:
+        Function that creates settings with overrides
+    """
+    def _create_settings_with_overrides(overrides=None):
+        config_manager = TestConfigurationManager(str(tmp_path))
+        return config_manager.get_test_settings(overrides)
+    
+    return _create_settings_with_overrides
+
+
+# Note: For performance reasons, we maintain the existing shared database approach
+# and only provide configuration isolation. Database isolation fixtures are available
+# in tests/test_db_utils.py and tests/test_environment.py for tests that specifically
+# need complete database isolation.
 
 
 @pytest.fixture(scope="session")

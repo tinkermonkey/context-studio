@@ -635,6 +635,29 @@ def get_settings() -> Settings:
     return config_manager.settings
 
 
+def get_test_settings() -> Settings:
+    """
+    Get settings instance for testing with dependency injection support.
+    
+    This function is designed to be overridden in tests using FastAPI's
+    dependency injection system (app.dependency_overrides) or pytest fixtures.
+    
+    By default, it returns the same settings as get_settings(), but tests
+    can override this to provide isolated test configurations.
+    
+    Example usage in tests:
+        @pytest.fixture
+        def test_settings():
+            return create_test_settings(temp_dir, overrides)
+            
+        app.dependency_overrides[get_test_settings] = lambda: test_settings
+        
+    Returns:
+        Settings instance (can be overridden for testing)
+    """
+    return get_settings()
+
+
 class ConfigurationNotifier:
     """Manages configuration change notifications"""
     

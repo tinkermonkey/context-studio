@@ -274,7 +274,7 @@ async def suggest_term_definition(
         result = await llm_service.suggest_term_definition(request)
         
         logger.info(f"Successfully generated term definition for term: '{request.term}'")
-        return LLMSuccessResponse(data=result)
+        return LLMSuccessResponse(data=result, execution_id=result.execution_id)
         
     except HTTPException:
         # Re-raise HTTP exceptions as-is
@@ -329,7 +329,7 @@ async def suggest_layer_definition(
         result = await llm_service.suggest_layer_definition(request)
         
         logger.info(f"Successfully generated layer definition for layer: '{request.layer_title}'")
-        return LayerLLMSuccessResponse(data=result)
+        return LayerLLMSuccessResponse(data=result, execution_id=result.execution_id)
         
     except HTTPException:
         # Re-raise HTTP exceptions as-is
@@ -384,7 +384,7 @@ async def suggest_domain_definition(
         result = await llm_service.suggest_domain_definition(request)
         
         logger.info(f"Successfully generated domain definition for domain: '{request.domain_title}'")
-        return DomainLLMSuccessResponse(data=result)
+        return DomainLLMSuccessResponse(data=result, execution_id=result.execution_id)
         
     except HTTPException:
         # Re-raise HTTP exceptions as-is
