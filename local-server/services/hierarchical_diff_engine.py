@@ -12,6 +12,7 @@ from typing import Dict, List, Optional, Any
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from difflib import SequenceMatcher
+from sqlalchemy.orm import Session
 
 from utils.logger import get_logger
 
@@ -35,12 +36,14 @@ class ConflictDescriptor:
 class HierarchicalDiffEngine:
     """Advanced diff algorithms for efficient change detection."""
     
-    def __init__(self):
-        """Initialize the hierarchical diff engine."""
+    def __init__(self, db: Session, nlp_service=None):
+        """Initialize the hierarchical diff engine with dependencies."""
+        self.db = db
+        self.nlp_service = nlp_service
         self.diff_cache = {}
         self.semantic_analyzers = {}
         self.performance_metrics = []
-        
+
         logger.info("HierarchicalDiffEngine initialized with advanced diff capabilities")
         
     def compute_hierarchical_diff(self, before: Dict[str, Any], 
