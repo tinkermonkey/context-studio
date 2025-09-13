@@ -140,6 +140,9 @@ export const SelectionTracker: React.FC<SelectionTrackerProps> = ({
   );
 
   // Clone children and inject selection handler
+  const childrenArray = React.Children.toArray(children);
+  const hasMultipleChildren = childrenArray.length > 1;
+
   const enhancedChildren = React.Children.map(children, (child) => {
     if (!isValidElement(child)) {
       return child;
@@ -156,31 +159,50 @@ export const SelectionTracker: React.FC<SelectionTrackerProps> = ({
     // Look for common selection props and enhance them
     const enhancedProps: any = {};
 
-    // Track unique content per event to allow content-specific tracking
-    // while preventing duplicates of the same content
-    const trackedContent = new Set<string>();
-    let isProcessingEvent = false;
+    if (hasMultipleChildren) {
+      // Multiple children scenario: use event-level deduplication (1 call per click)
+      let hasTrackedThisEvent = false;
 
-    const createHandler = (originalHandler: any) => (content: string) => {
-      if (!isProcessingEvent) {
-        isProcessingEvent = true;
-        setTimeout(() => {
-          trackedContent.clear();
-          isProcessingEvent = false;
-        }, 0);
-      }
+      const createHandler = (originalHandler: any) => (content: string) => {
+        if (!hasTrackedThisEvent) {
+          hasTrackedThisEvent = true;
+          handleSelection(content);
+          // Reset after current event loop to allow new user interactions
+          setTimeout(() => {
+            hasTrackedThisEvent = false;
+          }, 0);
+        }
+        originalHandler?.(content);
+      };
 
-      if (!trackedContent.has(content)) {
-        trackedContent.add(content);
-        handleSelection(content);
-      }
-      originalHandler?.(content);
-    };
+      enhancedProps.onSelect = createHandler(originalOnSelect);
+      enhancedProps.onAccept = createHandler(originalOnAccept);
+      enhancedProps.onApply = createHandler(originalOnApply);
+    } else {
+      // Single child scenario: use content-specific tracking
+      const trackedContent = new Set<string>();
+      let isProcessingEvent = false;
 
-    // Always provide these handlers - components may or may not use them
-    enhancedProps.onSelect = createHandler(originalOnSelect);
-    enhancedProps.onAccept = createHandler(originalOnAccept);
-    enhancedProps.onApply = createHandler(originalOnApply);
+      const createHandler = (originalHandler: any) => (content: string) => {
+        if (!isProcessingEvent) {
+          isProcessingEvent = true;
+          setTimeout(() => {
+            trackedContent.clear();
+            isProcessingEvent = false;
+          }, 0);
+        }
+
+        if (!trackedContent.has(content)) {
+          trackedContent.add(content);
+          handleSelection(content);
+        }
+        originalHandler?.(content);
+      };
+
+      enhancedProps.onSelect = createHandler(originalOnSelect);
+      enhancedProps.onAccept = createHandler(originalOnAccept);
+      enhancedProps.onApply = createHandler(originalOnApply);
+    }
 
     if (typeof dataContent === "string") {
       // Handle buttons/elements with data-content attribute
