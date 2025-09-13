@@ -1,11 +1,31 @@
 import "@testing-library/jest-dom";
-import { vi } from "vitest";
+import { vi, beforeEach, afterEach } from "vitest";
+import { cleanup } from "@testing-library/react";
 
-// polyfill for createPortal target in jsdom
-if (typeof document !== "undefined") {
-  const root = document.getElementById("root") || document.createElement("div");
+// Clean up after each test
+afterEach(() => {
+  cleanup();
+});
+
+// Ensure DOM is properly set up before each test
+beforeEach(() => {
+  // Clean up any existing DOM content
+  document.body.innerHTML = "";
+
+  // Create a fresh root element for each test
+  const root = document.createElement("div");
   root.setAttribute("id", "root");
   document.body.appendChild(root);
+});
+
+// Initial DOM setup for test environment
+if (typeof document !== "undefined") {
+  // Ensure we have a root element for the initial setup
+  if (!document.getElementById("root")) {
+    const root = document.createElement("div");
+    root.setAttribute("id", "root");
+    document.body.appendChild(root);
+  }
 }
 
 // DOM compatibility fixes for appendChild issues
