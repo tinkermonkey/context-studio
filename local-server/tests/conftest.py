@@ -23,6 +23,9 @@ from services.service_factory import (
 )
 from sqlalchemy import text
 
+# Import test configuration utilities
+from tests.test_config import TestConfigurationManager
+
 
 def create_test_database_with_migrations():
     """Create a test database with all migrations applied."""
@@ -82,6 +85,169 @@ def reset_service_factory_cache(test_service_factory):
     yield
     # Clear cache after test
     test_service_factory.clear_cache()
+
+
+@pytest.fixture(scope="function")
+def test_settings(tmp_path):
+    """
+    Provide isolated test settings for each test function.
+    
+    This fixture creates a completely isolated configuration environment
+    for each test, preventing test data pollution in config.json and
+    ensuring database files are created in temporary directories.
+    
+    Args:
+        tmp_path: pytest's temporary directory fixture
+        
+    Yields:
+        Settings: Isolated settings instance for the test
+    """
+    # Create test configuration manager
+    config_manager = TestConfigurationManager(str(tmp_path))
+    
+    try:
+        # Get isolated test settings
+        settings = config_manager.get_test_settings()
+        yield settings
+    finally:
+        # Clean up test artifacts
+        config_manager.cleanup()
+
+
+@pytest.fixture(scope="function")
+def isolated_test_settings(tmp_path):
+    """
+    Provide isolated test settings with custom overrides.
+    
+    This fixture allows tests to specify custom configuration overrides
+    while maintaining complete isolation from the global configuration.
+    
+    Usage:
+        def test_with_custom_config(isolated_test_settings):
+            settings = isolated_test_settings({
+                "database.default_url": "sqlite:///:memory:",
+                "logging.level": "DEBUG"
+            })
+            # Test with custom settings
+    
+    Args:
+        tmp_path: pytest's temporary directory fixture
+        
+    Returns:
+        Function that creates settings with overrides
+    """
+    def _create_settings_with_overrides(overrides=None):
+        config_manager = TestConfigurationManager(str(tmp_path))
+        return config_manager.get_test_settings(overrides)
+    
+    return _create_settings_with_overrides
+
+
+@pytest.fixture(scope="function")
+def isolated_db_session(tmp_path, test_settings):
+    """
+    Provide completely isolated database session for each test function.
+    
+    This fixture creates a new database in a temporary directory for each test,
+    applies migrations, and ensures complete cleanup after the test.
+    
+    Args:
+        tmp_path: pytest's temporary directory fixture
+        test_settings: isolated test settings fixture
+        
+    Yields:
+        SQLAlchemy session: Isolated database session
+    """
+    # Create test database in temporary directory
+    db_path = tmp_path / "isolated_test.db"
+    db_url = f"sqlite:///{db_path}"
+    
+    try:
+        # Initialize database with base schema
+        engine = get_engine(db_url)
+        session_local = get_session_local(engine)
+        init_db(engine=engine)
+        
+        # Apply migrations
+        migration_manager = MigrationManager(str(db_path))
+        success = migration_manager.migrate_to_latest()
+        if not success:
+            raise RuntimeError("Failed to apply migrations to isolated test database")
+        
+        # Create session for test
+        session = session_local()
+        
+        try:
+            yield session
+        finally:
+            # Clean up session
+            session.close()
+            
+    finally:
+        # Clean up database file and related artifacts
+        for db_file in tmp_path.glob("*.db*"):
+            if db_file.is_file():
+                try:
+                    db_file.unlink()
+                except (OSError, PermissionError):
+                    pass  # Handle locked files gracefully
+
+
+@pytest.fixture(scope="function") 
+def clean_isolated_db_session(tmp_path, test_settings):
+    """
+    Provide isolated database session that commits changes - use sparingly.
+    
+    This fixture creates an isolated database and commits changes during the test.
+    Use this only when you need to test transaction behavior or when the test
+    requires committed data.
+    
+    Args:
+        tmp_path: pytest's temporary directory fixture
+        test_settings: isolated test settings fixture
+        
+    Yields:
+        SQLAlchemy session: Isolated database session with commit capability
+    """
+    # Create test database in temporary directory
+    db_path = tmp_path / "clean_isolated_test.db"
+    db_url = f"sqlite:///{db_path}"
+    
+    try:
+        # Initialize database with base schema
+        engine = get_engine(db_url)
+        session_local = get_session_local(engine)
+        init_db(engine=engine)
+        
+        # Apply migrations
+        migration_manager = MigrationManager(str(db_path))
+        success = migration_manager.migrate_to_latest()
+        if not success:
+            raise RuntimeError("Failed to apply migrations to clean isolated test database")
+        
+        # Create session for test
+        session = session_local()
+        
+        try:
+            yield session
+            # Commit any changes made during the test
+            session.commit()
+        except Exception:
+            # Rollback on error
+            session.rollback()
+            raise
+        finally:
+            # Clean up session
+            session.close()
+            
+    finally:
+        # Clean up database file and related artifacts
+        for db_file in tmp_path.glob("*.db*"):
+            if db_file.is_file():
+                try:
+                    db_file.unlink()
+                except (OSError, PermissionError):
+                    pass  # Handle locked files gracefully
 
 
 @pytest.fixture(scope="session")
