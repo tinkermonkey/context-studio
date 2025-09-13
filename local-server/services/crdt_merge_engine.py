@@ -10,6 +10,7 @@ from datetime import datetime, timezone
 from sqlalchemy.orm import Session
 from sqlalchemy import text
 from dataclasses import dataclass
+from enum import Enum
 
 from services.collaboration_models import CRDTConflictError, ChangesetState
 from services.version_manager import VersionManager, EntityVersion, ChangeState
@@ -17,6 +18,14 @@ from services.changeset_manager import ChangesetManager
 from utils.logger import get_logger
 
 logger = get_logger(__name__)
+
+
+class MergeStrategy(Enum):
+    """Strategy for resolving merge conflicts."""
+    LAST_WRITER_WINS = "last_writer_wins"
+    MERGE_BOTH = "merge_both"
+    AUTHOR_PRIORITY = "author_priority"
+    MANUAL_RESOLUTION = "manual_resolution"
 
 
 @dataclass
