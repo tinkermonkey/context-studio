@@ -189,9 +189,7 @@ describe("TreeChartPanel", () => {
     );
 
     // Verify that useStructureNode was called with the correct termId
-    expect(mockUseStructureNode).toHaveBeenCalledWith(testTermId, {
-      enabled: true,
-    });
+    expect(mockUseStructureNode).toHaveBeenCalledWith(testTermId);
 
     await waitFor(() => {
       expect(screen.getByTestId("tree-chart")).toBeInTheDocument();
