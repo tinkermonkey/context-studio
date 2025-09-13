@@ -19,6 +19,7 @@ from services.crdt_merge_engine import CRDTMergeEngine, MergeStrategy, MergeResu
 from services.collaboration_models import Changeset, ChangesetState
 from services.changeset_manager import ChangesetManager
 from services.working_tree_manager import WorkingTreeManager
+from services.version_manager import VersionManager
 
 
 class TestCRDTMergeEngine:
@@ -44,12 +45,17 @@ class TestCRDTMergeEngine:
         return Mock(spec=WorkingTreeManager)
 
     @pytest.fixture
-    def crdt_merge_engine(self, mock_db_session, mock_changeset_manager, mock_working_tree_manager):
+    def mock_version_manager(self):
+        """Mock VersionManager."""
+        return Mock(spec=VersionManager)
+
+    @pytest.fixture
+    def crdt_merge_engine(self, mock_db_session, mock_changeset_manager, mock_version_manager):
         """Create CRDTMergeEngine instance for testing."""
         return CRDTMergeEngine(
             db=mock_db_session,
             changeset_manager=mock_changeset_manager,
-            working_tree_manager=mock_working_tree_manager
+            version_manager=mock_version_manager
         )
 
     @pytest.fixture
@@ -62,11 +68,11 @@ class TestCRDTMergeEngine:
         changeset.created_at = datetime.now(timezone.utc)
         return changeset
 
-    def test_initialization(self, crdt_merge_engine, mock_db_session, mock_changeset_manager, mock_working_tree_manager):
+    def test_initialization(self, crdt_merge_engine, mock_db_session, mock_changeset_manager, mock_version_manager):
         """Test CRDTMergeEngine initialization."""
         assert crdt_merge_engine.db == mock_db_session
         assert crdt_merge_engine.changeset_manager == mock_changeset_manager
-        assert crdt_merge_engine.working_tree == mock_working_tree_manager
+        assert crdt_merge_engine.version_manager == mock_version_manager
 
     def test_merge_changesets_success(self, crdt_merge_engine, mock_changeset_manager, mock_changeset):
         """Test successful changeset merging."""
