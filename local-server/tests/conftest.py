@@ -120,6 +120,18 @@ def global_test_isolation():
                 final_key = parts[-1]
                 if hasattr(obj, final_key):
                     setattr(obj, final_key, value)
+
+                    # Trigger notifications like the real ConfigurationManager does
+                    try:
+                        import asyncio
+                        loop = asyncio.get_event_loop()
+                        # Import the notification function from config
+                        from config import notify_configuration_change
+                        loop.create_task(notify_configuration_change(path))
+                    except RuntimeError:
+                        # No event loop available, skip notifications
+                        pass
+
                     return True
                 else:
                     raise KeyError(f"Configuration key not found: {final_key}")

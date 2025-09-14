@@ -167,8 +167,8 @@ class TestConfigurationNotifications:
         config_manager = get_config_manager()
 
         # Test that set method returns True for valid operations
-        # TODO: I think this breaks the local config, so, make a better test
-        # result = config_manager.set("server.port", 8000)
+        # Use a safe test value that won't break the local config
+        result = config_manager.set("nlp.edge_weight_filter", 2.5)
         assert result is True
 
         # Test that set method returns False for invalid operations
