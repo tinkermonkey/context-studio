@@ -67,6 +67,30 @@ export const handlers = [
       ctx.json({ data: [{ id: "domain-1", title: "Domain 1" }] }),
     );
   }),
+  rest.get("http://localhost:8001/api/domains/:id", (req, res, ctx) => {
+    const { id } = req.params as { id: string };
+    return res(
+      ctx.status(200),
+      ctx.json({ data: { id, title: `Domain ${id}` } }),
+    );
+  }),
+  rest.post("http://localhost:8001/api/domains", async (req, res, ctx) => {
+    const body = await req.json();
+    return res(
+      ctx.status(201),
+      ctx.json({ data: { ...body, id: "new-domain" } }),
+    );
+  }),
+  rest.put("http://localhost:8001/api/domains/:id", async (req, res, ctx) => {
+    const { id } = req.params as { id: string };
+    const body = await req.json();
+    return res(ctx.status(200), ctx.json({ data: { ...body, id } }));
+  }),
+  rest.put("http://localhost:8001/api/domains/:id/", async (req, res, ctx) => {
+    const { id } = req.params as { id: string };
+    const body = await req.json();
+    return res(ctx.status(200), ctx.json({ data: { ...body, id } }));
+  }),
   rest.get("/api/domains/:id", (req, res, ctx) => {
     const { id } = req.params as { id: string };
     return res(
@@ -152,6 +176,25 @@ export const handlers = [
       ctx.json({ data: { id, title: `Layer ${id}` } }),
     );
   }),
+  rest.get("http://localhost:8001/api/layers", (req, res, ctx) => {
+    return res(
+      ctx.status(200),
+      ctx.json({ data: [{ id: "layer-1", title: "Layer 1" }] }),
+    );
+  }),
+  rest.get("http://localhost:8001/api/layers/", (req, res, ctx) => {
+    return res(
+      ctx.status(200),
+      ctx.json({ data: [{ id: "layer-1", title: "Layer 1" }] }),
+    );
+  }),
+  rest.get("http://localhost:8001/api/layers/:id", (req, res, ctx) => {
+    const { id } = req.params as { id: string };
+    return res(
+      ctx.status(200),
+      ctx.json({ data: { id, title: `Layer ${id}` } }),
+    );
+  }),
 
   // Terms list & create
   rest.get("/api/terms", (req, res, ctx) => {
@@ -172,7 +215,26 @@ export const handlers = [
       ctx.json({ data: [{ id: "term-1", title: "Term 1" }] }),
     );
   }),
+  rest.get("http://localhost:8001/api/terms", (req, res, ctx) => {
+    return res(
+      ctx.status(200),
+      ctx.json({ data: [{ id: "term-1", title: "Term 1" }] }),
+    );
+  }),
+  rest.get("http://localhost:8001/api/terms/", (req, res, ctx) => {
+    return res(
+      ctx.status(200),
+      ctx.json({ data: [{ id: "term-1", title: "Term 1" }] }),
+    );
+  }),
   rest.post("/api/terms", async (req, res, ctx) => {
+    const body = await req.json();
+    return res(
+      ctx.status(201),
+      ctx.json({ data: { ...body, id: "new-term" } }),
+    );
+  }),
+  rest.post("http://localhost:8001/api/terms", async (req, res, ctx) => {
     const body = await req.json();
     return res(
       ctx.status(201),
@@ -190,9 +252,18 @@ export const handlers = [
   rest.get("http://localhost:8000/api/predicates/", (req, res, ctx) => {
     return res(ctx.status(200), ctx.json({ data: [] }));
   }),
+  rest.get("http://localhost:8001/api/predicates", (req, res, ctx) => {
+    return res(ctx.status(200), ctx.json({ data: [] }));
+  }),
+  rest.get("http://localhost:8001/api/predicates/", (req, res, ctx) => {
+    return res(ctx.status(200), ctx.json({ data: [] }));
+  }),
 
   // Relationships
   rest.get("/api/relationships", (req, res, ctx) => {
+    return res(ctx.status(200), ctx.json({ data: [] }));
+  }),
+  rest.get("http://localhost:8001/api/relationships", (req, res, ctx) => {
     return res(ctx.status(200), ctx.json({ data: [] }));
   }),
 ];
