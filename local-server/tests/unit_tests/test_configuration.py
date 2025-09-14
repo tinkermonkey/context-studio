@@ -10,7 +10,7 @@ sys.path.append(
     os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 )
 
-from config import get_settings, Settings
+from config import Settings
 from pydantic import ValidationError
 
 
@@ -45,7 +45,7 @@ def test_environment_variables():
         print(f"  ⚠️  LLM_TEMPERATURE: {temperature} (different from spec default)")
 
 
-def test_configuration_schema():
+def test_configuration_schema(test_settings):
     """Test 10.2.6.2 Configuration Schema implementation"""
     print("🧪 Testing 10.2.6.2 Configuration Schema")
 
@@ -57,7 +57,7 @@ def test_configuration_schema():
         "LLM_TIMEOUT": int,
     }
 
-    settings = get_settings()
+    settings = test_settings
 
     for field_name, expected_type in required_fields.items():
         if hasattr(settings, field_name):
@@ -165,11 +165,11 @@ def test_field_descriptions():
             print(f"  ❌ {field_name}: Field not found")
 
 
-def test_integration_with_existing_config():
+def test_integration_with_existing_config(test_settings):
     """Test that LLM config integrates properly with existing configuration"""
     print("🧪 Testing Integration with Existing Configuration")
 
-    settings = get_settings()
+    settings = test_settings
 
     # Test that existing configuration is still present
     existing_fields = [
@@ -196,7 +196,7 @@ def test_integration_with_existing_config():
         print(f"  ❌ Existing configuration broken: {e}")
 
 
-def test_environment_override():
+def test_environment_override(test_settings):
     """Test that environment variables can override configuration"""
     print("🧪 Testing Environment Variable Override")
 
@@ -204,7 +204,7 @@ def test_environment_override():
     current_model = os.getenv("LLM_MODEL_NAME")
     current_temp = os.getenv("LLM_TEMPERATURE")
 
-    settings = get_settings()
+    settings = test_settings
 
     if current_model:
         print(f"  Environment LLM_MODEL_NAME: {current_model}")

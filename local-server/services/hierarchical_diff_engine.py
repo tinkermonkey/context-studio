@@ -12,6 +12,7 @@ from typing import Dict, List, Optional, Any
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from difflib import SequenceMatcher
+from sqlalchemy.orm import Session
 
 from utils.logger import get_logger
 
@@ -21,26 +22,29 @@ logger = get_logger(__name__)
 @dataclass
 class ConflictDescriptor:
     """Describes a conflict between different versions."""
-    conflict_id: str
     conflict_type: str
     path: str
     local_value: Any
     remote_value: Any
     base_value: Optional[Any]
-    confidence_score: float
     resolution_suggestions: List[Dict[str, Any]]
-    created_at: datetime
+    severity: Optional[str] = None
+    conflict_id: str = ""
+    confidence_score: float = 0.0
+    created_at: Optional[datetime] = None
 
 
 class HierarchicalDiffEngine:
     """Advanced diff algorithms for efficient change detection."""
     
-    def __init__(self):
-        """Initialize the hierarchical diff engine."""
+    def __init__(self, db: Session, nlp_service=None):
+        """Initialize the hierarchical diff engine with dependencies."""
+        self.db = db
+        self.nlp_service = nlp_service
         self.diff_cache = {}
         self.semantic_analyzers = {}
         self.performance_metrics = []
-        
+
         logger.info("HierarchicalDiffEngine initialized with advanced diff capabilities")
         
     def compute_hierarchical_diff(self, before: Dict[str, Any], 
@@ -302,18 +306,24 @@ class HierarchicalDiffEngine:
             if not self._changes_are_equivalent(local_change, remote_change):
                 conflict_id = hashlib.sha256(f"conflict_{key}_{time.time()}".encode()).hexdigest()[:16]
                 
+                conflict_type = self._classify_conflict_type(local_change, remote_change)
+                confidence_score = self._calculate_conflict_confidence(local_change, remote_change)
+                local_value = self._extract_change_value(local_change, 'after')
+                remote_value = self._extract_change_value(remote_change, 'after')
+
                 conflict = ConflictDescriptor(
                     conflict_id=conflict_id,
-                    conflict_type=self._classify_conflict_type(local_change, remote_change),
+                    conflict_type=conflict_type,
                     path=key,
-                    local_value=self._extract_change_value(local_change, 'after'),
-                    remote_value=self._extract_change_value(remote_change, 'after'),
+                    local_value=local_value,
+                    remote_value=remote_value,
                     base_value=self._extract_change_value(local_change, 'before'),
-                    confidence_score=self._calculate_conflict_confidence(local_change, remote_change),
+                    confidence_score=confidence_score,
                     resolution_suggestions=self._generate_conflict_resolution_suggestions(
                         local_change, remote_change
                     ),
-                    created_at=datetime.now(timezone.utc)
+                    created_at=datetime.now(timezone.utc),
+                    severity=self._calculate_conflict_severity(conflict_type, confidence_score, local_value, remote_value)
                 )
                 
                 conflicts.append(conflict)
@@ -330,19 +340,25 @@ class HierarchicalDiffEngine:
         for key in add_remove_conflicts:
             conflict_id = hashlib.sha256(f"add_remove_conflict_{key}_{time.time()}".encode()).hexdigest()[:16]
             
+            conflict_type = "add_remove_conflict"
+            confidence_score = 0.9  # High confidence for add/remove conflicts
+            local_value = "ADDED" if key in local_added else "REMOVED"
+            remote_value = "REMOVED" if key in remote_removed else "ADDED"
+
             conflict = ConflictDescriptor(
                 conflict_id=conflict_id,
-                conflict_type="add_remove_conflict",
+                conflict_type=conflict_type,
                 path=key,
-                local_value="ADDED" if key in local_added else "REMOVED",
-                remote_value="REMOVED" if key in remote_removed else "ADDED",
+                local_value=local_value,
+                remote_value=remote_value,
                 base_value=None,
-                confidence_score=0.9,  # High confidence for add/remove conflicts
+                confidence_score=confidence_score,
                 resolution_suggestions=[
                     {"type": "keep_addition", "description": "Keep the added value"},
                     {"type": "accept_removal", "description": "Accept the removal"}
                 ],
-                created_at=datetime.now(timezone.utc)
+                created_at=datetime.now(timezone.utc),
+                severity=self._calculate_conflict_severity(conflict_type, confidence_score, local_value, remote_value)
             )
             
             conflicts.append(conflict)
@@ -497,7 +513,36 @@ class HierarchicalDiffEngine:
         return suggestions
     
     # Helper methods
-    
+
+    def _calculate_conflict_severity(self, conflict_type: str, confidence_score: float,
+                                   local_value: Any, remote_value: Any) -> str:
+        """Calculate severity level for a conflict."""
+
+        # Critical patterns - conflicts in critical fields
+        critical_patterns = ['id', 'key', 'type', 'status', 'delete', 'remove']
+
+        # Check if it's an add/remove conflict (always high severity)
+        if conflict_type == "add_remove_conflict":
+            return "high"
+
+        # Check if it's a type conflict (usually high severity)
+        if conflict_type == "type_conflict":
+            return "high"
+
+        # Check for critical field patterns
+        if any(pattern in str(local_value).lower() + str(remote_value).lower() for pattern in critical_patterns):
+            return "critical"
+
+        # Base severity on confidence score
+        if confidence_score >= 0.9:
+            return "high"
+        elif confidence_score >= 0.7:
+            return "medium"
+        elif confidence_score >= 0.5:
+            return "low"
+        else:
+            return "low"
+
     def _classify_value_change(self, before_val: Any, after_val: Any) -> str:
         """Classify the type of value change."""
         

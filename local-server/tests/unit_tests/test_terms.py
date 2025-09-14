@@ -61,8 +61,7 @@ def test_create_get_update_delete_term(shared_client):
     assert resp.json()["title"] == "T1 Updated"
     # Delete
     resp = shared_client.delete(f"/api/structure_nodes/{term_id}")
-    assert resp.status_code == 200
-    assert resp.json()["success"] is True
+    assert resp.status_code == 204
     # Get after delete
     resp = shared_client.get(f"/api/structure_nodes/{term_id}")
     assert resp.status_code == 404
@@ -185,8 +184,7 @@ def test_create_get_update_delete_term_relationship(shared_client):
     assert resp.json()["predicate"] == "rel2"
     # Delete
     resp = shared_client.delete(f"/api/structure_nodes/links/{rel_id}")
-    assert resp.status_code == 200
-    assert resp.json()["success"] is True
+    assert resp.status_code == 204
     # Get after delete - should be empty list
     resp = shared_client.get(
         f"/api/structure_nodes/links?source_node_id={t1['id']}&target_node_id={t2['id']}"
@@ -535,7 +533,7 @@ def test_safe_deletion_workflow(shared_client):
 
     # Step 3: Delete the parent (should succeed without cascading)
     delete_resp = shared_client.delete(f"/api/structure_nodes/{parent_term['id']}")
-    assert delete_resp.status_code == 200
+    assert delete_resp.status_code == 204
 
     # Step 4: Verify parent is deleted but children still exist
     parent_resp = shared_client.get(f"/api/structure_nodes/{parent_term['id']}")

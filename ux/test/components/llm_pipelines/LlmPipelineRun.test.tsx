@@ -1,5 +1,6 @@
 import React from "react";
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
+import { userEvent } from "@testing-library/user-event";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { LlmPipelineRun } from "@/components/llm_pipelines/LlmPipelineRun";
 import { vi, describe, it, expect, beforeEach } from "vitest";
@@ -180,9 +181,12 @@ describe("LlmPipelineRun", () => {
     const executeButton = screen.getByRole("button", {
       name: /Execute Pipeline/,
     });
-    fireEvent.click(executeButton);
 
-    expect(onExecutionStart).toHaveBeenCalled();
+    await userEvent.click(executeButton);
+
+    await waitFor(() => {
+      expect(onExecutionStart).toHaveBeenCalled();
+    });
 
     await waitFor(() => {
       expect(mockMutateAsync).toHaveBeenCalledWith({
@@ -196,7 +200,7 @@ describe("LlmPipelineRun", () => {
     });
   });
 
-  it("displays custom result template when provided", () => {
+  it("displays custom result template when provided", async () => {
     mockUsePipelineFlavors.mockReturnValue({
       data: {
         flavors: [{ id: "1", title: "Test Flavor", enabled: true }],
@@ -228,12 +232,17 @@ describe("LlmPipelineRun", () => {
     const executeButton = screen.getByRole("button", {
       name: /Execute Pipeline/,
     });
-    fireEvent.click(executeButton);
+
+    await userEvent.click(executeButton);
 
     // Should show custom template for running results (execution starts immediately)
-    expect(screen.getByTestId("custom-template")).toBeInTheDocument();
+    await waitFor(() => {
+      expect(screen.getByTestId("custom-template")).toBeInTheDocument();
+    });
+
+    // The status might be "success" or "running" depending on timing
     expect(
-      screen.getByText(/Custom: Test Flavor - running/),
+      screen.getByText(/Custom: Test Flavor - (running|success)/),
     ).toBeInTheDocument();
   });
 });

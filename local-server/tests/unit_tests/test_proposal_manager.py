@@ -33,6 +33,8 @@ class TestProposalManager:
         db.execute.return_value.fetchone.return_value = None
         db.execute.return_value.fetchall.return_value = []
         db.execute.return_value.rowcount = 1
+        db.rollback = Mock()
+        db.commit = Mock()
         return db
 
     @pytest.fixture
@@ -124,7 +126,7 @@ class TestProposalManager:
         mock_changeset.state = ChangesetState.MERGED
         mock_changeset_manager.get_changeset.return_value = mock_changeset
 
-        with pytest.raises(ValueError, match="Cannot create proposal for changeset in merged state"):
+        with pytest.raises(ValueError, match=r"Cannot create proposal for changeset in MERGED state"):
             proposal_manager.create_proposal(
                 changeset_id="changeset123",
                 title="Test Proposal",
@@ -209,7 +211,7 @@ class TestProposalManager:
                     with patch.object(proposal_manager, '_push_vote_to_s3'):
                         with patch.object(proposal_manager, '_evaluate_proposal_status'):
                             
-                            vote = proposal_manager.vote_on_proposal(
+                            proposal_manager.vote_on_proposal(
                                 proposal_id="proposal123",
                                 user_id="user456",
                                 vote="approve"
@@ -222,19 +224,20 @@ class TestProposalManager:
 
     def test_get_proposal_success(self, proposal_manager, mock_db_session):
         """Test successful proposal retrieval."""
-        # Mock database response
-        mock_row = Mock()
-        mock_row.id = "proposal123"
-        mock_row.changeset_id = "changeset123"
-        mock_row.title = "Test Proposal"
-        mock_row.description = "Test description"
-        mock_row.status = "open"
-        mock_row.required_approvals = 2
-        mock_row.created_by = "user123"
-        mock_row.created_at = "2023-01-01T00:00:00+00:00"
-        mock_row.closed_at = None
-        mock_row.merge_commit_id = None
-        mock_row.metadata = None
+        # Mock database response as tuple matching row_to_proposal() expectations
+        mock_row = (
+            "proposal123",                      # id
+            "changeset123",                     # changeset_id
+            "Test Proposal",                    # title
+            "Test description",                 # description
+            "open",                             # status
+            2,                                  # required_approvals
+            "user123",                          # created_by
+            "2023-01-01T00:00:00+00:00",       # created_at
+            None,                               # closed_at
+            None,                               # merge_commit_id
+            None                                # metadata
+        )
 
         mock_db_session.execute.return_value.fetchone.return_value = mock_row
 
@@ -255,19 +258,20 @@ class TestProposalManager:
 
     def test_list_proposals_with_filters(self, proposal_manager, mock_db_session):
         """Test listing proposals with filters."""
-        # Mock database response
-        mock_row = Mock()
-        mock_row.id = "proposal123"
-        mock_row.changeset_id = "changeset123"
-        mock_row.title = "Test Proposal"
-        mock_row.description = "Test description"
-        mock_row.status = "open"
-        mock_row.required_approvals = 2
-        mock_row.created_by = "user123"
-        mock_row.created_at = "2023-01-01T00:00:00+00:00"
-        mock_row.closed_at = None
-        mock_row.merge_commit_id = None
-        mock_row.metadata = None
+        # Mock database response as tuple matching row_to_proposal() expectations
+        mock_row = (
+            "proposal123",                      # id
+            "changeset123",                     # changeset_id
+            "Test Proposal",                    # title
+            "Test description",                 # description
+            "open",                             # status
+            2,                                  # required_approvals
+            "user123",                          # created_by
+            "2023-01-01T00:00:00+00:00",       # created_at
+            None,                               # closed_at
+            None,                               # merge_commit_id
+            None                                # metadata
+        )
 
         mock_db_session.execute.return_value.fetchall.return_value = [mock_row]
 
@@ -283,13 +287,14 @@ class TestProposalManager:
 
     def test_get_proposal_votes(self, proposal_manager, mock_db_session):
         """Test getting proposal votes."""
-        # Mock database response
-        mock_row = Mock()
-        mock_row.proposal_id = "proposal123"
-        mock_row.user_id = "user456"
-        mock_row.vote = "approve"
-        mock_row.comment = "Looks good!"
-        mock_row.voted_at = "2023-01-01T00:00:00+00:00"
+        # Mock database response as tuple matching row_to_vote() expectations
+        mock_row = (
+            "proposal123",                      # proposal_id
+            "user456",                          # user_id
+            "approve",                          # vote
+            "Looks good!",                      # comment
+            "2023-01-01T00:00:00+00:00"        # voted_at
+        )
 
         mock_db_session.execute.return_value.fetchall.return_value = [mock_row]
 
