@@ -17,7 +17,7 @@ import {
 describe("LLM Service Integration", () => {
   it("should export LLM service with all methods", () => {
     expect(llmService).toBeDefined();
-    expect(llmService.suggestDefinition).toBeInstanceOf(Function);
+    expect(llmService.suggestTermDefinition).toBeInstanceOf(Function);
     expect(llmService.healthCheck).toBeInstanceOf(Function);
     expect(llmService.generateSimpleDefinition).toBeInstanceOf(Function);
     expect(llmService.generateDefinitionWithDomain).toBeInstanceOf(Function);
@@ -47,7 +47,7 @@ describe("LLM Service Integration", () => {
   });
 
   it("should validate required parameters in service methods", async () => {
-    await expect(llmService.suggestDefinition({ term: "" })).rejects.toThrow(
+    await expect(llmService.suggestTermDefinition({ term: "" })).rejects.toThrow(
       "term is required",
     );
   });
