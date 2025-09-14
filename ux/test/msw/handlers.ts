@@ -55,6 +55,18 @@ export const handlers = [
       ctx.json({ data: [{ id: "domain-1", title: "Domain 1" }] }),
     );
   }),
+  rest.get("http://localhost:8001/api/domains", (req, res, ctx) => {
+    return res(
+      ctx.status(200),
+      ctx.json({ data: [{ id: "domain-1", title: "Domain 1" }] }),
+    );
+  }),
+  rest.get("http://localhost:8001/api/domains/", (req, res, ctx) => {
+    return res(
+      ctx.status(200),
+      ctx.json({ data: [{ id: "domain-1", title: "Domain 1" }] }),
+    );
+  }),
   rest.get("/api/domains/:id", (req, res, ctx) => {
     const { id } = req.params as { id: string };
     return res(
