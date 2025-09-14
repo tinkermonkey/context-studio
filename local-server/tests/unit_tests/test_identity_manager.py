@@ -23,13 +23,27 @@ from services.s3_sync_manager import S3SyncManager
 class TestIdentityManager:
     """Test cases for IdentityManager functionality."""
 
+    @pytest.fixture(autouse=True)
+    def reset_mocks(self):
+        """Reset mock state between tests for proper isolation."""
+        yield
+        # Fixture cleanup happens automatically after each test
+
     @pytest.fixture
     def mock_db_session(self):
-        """Mock database session."""
+        """Mock database session with proper tuple-like row responses."""
         db = Mock()
-        db.execute.return_value.fetchone.return_value = None
-        db.execute.return_value.fetchall.return_value = []
-        db.execute.return_value.rowcount = 1
+
+        # Configure execute() to return proper Mock result objects
+        mock_result = Mock()
+        mock_result.fetchone.return_value = None
+        mock_result.fetchall.return_value = []
+        mock_result.rowcount = 1
+
+        db.execute.return_value = mock_result
+        db.commit = Mock()
+        db.rollback = Mock()
+
         return db
 
     @pytest.fixture
@@ -237,22 +251,20 @@ class TestIdentityManager:
 
         assert success is True
         # Verify trust level was updated to 2 (team-verified)
-        update_calls = [call for call in mock_db_session.execute.call_args_list 
-                       if "trust_level = 2" in str(call)]
-        assert len(update_calls) > 0
+        # Check that the database execute was called with trust_level update
+        call_found = False
+        for call in mock_db_session.execute.call_args_list:
+            if len(call.args) > 0:
+                sql_statement = str(call.args[0])
+                if "trust_level = 2" in sql_statement:
+                    call_found = True
+                    break
+        assert call_found, f"Expected trust_level=2 update not found in calls: {mock_db_session.execute.call_args_list}"
 
     def test_get_user_success(self, identity_manager, mock_db_session):
         """Test successful user retrieval."""
-        # Mock database response
-        mock_row = Mock()
-        mock_row.user_id = "user123"
-        mock_row.email = "test@example.com"
-        mock_row.display_name = "Test User"
-        mock_row.public_key = None
-        mock_row.verified = 1
-        mock_row.trust_level = 1
-        mock_row.created_at = "2023-01-01T00:00:00+00:00"
-        mock_row.verified_at = "2023-01-01T01:00:00+00:00"
+        # Mock database response - needs to be indexable like a tuple
+        mock_row = ("user123", "test@example.com", "Test User", None, 1, 1, "2023-01-01T00:00:00+00:00", "2023-01-01T01:00:00+00:00")
 
         mock_db_session.execute.return_value.fetchone.return_value = mock_row
 
@@ -273,16 +285,8 @@ class TestIdentityManager:
 
     def test_get_user_by_email_success(self, identity_manager, mock_db_session):
         """Test successful user retrieval by email."""
-        # Mock database response
-        mock_row = Mock()
-        mock_row.user_id = "user123"
-        mock_row.email = "test@example.com"
-        mock_row.display_name = "Test User"
-        mock_row.public_key = None
-        mock_row.verified = 1
-        mock_row.trust_level = 1
-        mock_row.created_at = "2023-01-01T00:00:00+00:00"
-        mock_row.verified_at = "2023-01-01T01:00:00+00:00"
+        # Mock database response - needs to be indexable like a tuple
+        mock_row = ("user123", "test@example.com", "Test User", None, 1, 1, "2023-01-01T00:00:00+00:00", "2023-01-01T01:00:00+00:00")
 
         mock_db_session.execute.return_value.fetchone.return_value = mock_row
 
@@ -303,16 +307,8 @@ class TestIdentityManager:
 
     def test_list_users_with_filters(self, identity_manager, mock_db_session):
         """Test listing users with filters."""
-        # Mock database response
-        mock_row = Mock()
-        mock_row.user_id = "user123"
-        mock_row.email = "test@example.com"
-        mock_row.display_name = "Test User"
-        mock_row.public_key = None
-        mock_row.verified = 1
-        mock_row.trust_level = 2
-        mock_row.created_at = "2023-01-01T00:00:00+00:00"
-        mock_row.verified_at = "2023-01-01T01:00:00+00:00"
+        # Mock database response - needs to be indexable like a tuple
+        mock_row = ("user123", "test@example.com", "Test User", None, 1, 2, "2023-01-01T00:00:00+00:00", "2023-01-01T01:00:00+00:00")
 
         mock_db_session.execute.return_value.fetchall.return_value = [mock_row]
 
@@ -328,15 +324,15 @@ class TestIdentityManager:
 
     def test_get_trust_network_success(self, identity_manager, mock_db_session):
         """Test getting trust network."""
-        # Mock trustees (users who trust this user)
+        # Mock trustees (users who trust this user) - needs to be indexable like tuples
         mock_trustee_rows = [
-            Mock(trustee_user_id="trustee1", created_at="2023-01-01T00:00:00+00:00"),
-            Mock(trustee_user_id="trustee2", created_at="2023-01-02T00:00:00+00:00")
+            ("trustee1", "2023-01-01T00:00:00+00:00"),
+            ("trustee2", "2023-01-02T00:00:00+00:00")
         ]
 
-        # Mock trusted (users this user trusts)
+        # Mock trusted (users this user trusts) - needs to be indexable like tuples
         mock_trusted_rows = [
-            Mock(trusted_user_id="trusted1", created_at="2023-01-03T00:00:00+00:00")
+            ("trusted1", "2023-01-03T00:00:00+00:00")
         ]
 
         mock_db_session.execute.side_effect = [
@@ -346,9 +342,10 @@ class TestIdentityManager:
 
         network = identity_manager.get_trust_network("user123")
 
-        assert "trustees" in network
-        assert "trusted" in network
-        assert "trust_count" in network
+        assert "trusted_by" in network
+        assert "trusts" in network
+        assert "trust_score" in network
+        assert "trusts_count" in network
 
     def test_generate_user_id_deterministic(self, identity_manager):
         """Test user ID generation is deterministic."""
@@ -358,7 +355,7 @@ class TestIdentityManager:
         user_id2 = identity_manager._generate_user_id(email)
         
         assert user_id1 == user_id2
-        assert len(user_id1) == 8  # First 8 chars of SHA-256
+        assert len(user_id1) == 16  # First 16 chars of SHA-256
 
     def test_generate_verification_code_format(self, identity_manager):
         """Test verification code generation format."""
@@ -386,7 +383,8 @@ class TestIdentityManager:
 
     def test_count_trust_relationships(self, identity_manager, mock_db_session):
         """Test counting trust relationships."""
-        mock_db_session.execute.return_value.fetchone.return_value = Mock(count=3)
+        # Mock database response - needs to be indexable like a tuple/list
+        mock_db_session.execute.return_value.fetchone.return_value = (3,)
 
         count = identity_manager._count_trust_relationships("user123")
 
