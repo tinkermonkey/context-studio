@@ -260,10 +260,15 @@ class TestServiceFactory:
         self, mock_logger, service_factory, mock_db_session
     ):
         """Test error handling when service creation fails."""
-        with patch("services.node_service.NodeService") as mock_node_service:
-            # Make service creation fail
-            mock_node_service.side_effect = Exception("Service creation failed")
+        # Mock the NodeService constructor to raise an exception during instantiation
+        original_node_service = service_factory._create_service.__globals__['NodeService']
 
+        class FailingNodeService:
+            def __init__(self, *args, **kwargs):
+                raise Exception("Service creation failed")
+
+        # Patch NodeService in the service factory's scope
+        with patch('services.service_factory.NodeService', FailingNodeService):
             with pytest.raises(Exception, match="Service creation failed"):
                 service_factory.create_node_service(mock_db_session)
 

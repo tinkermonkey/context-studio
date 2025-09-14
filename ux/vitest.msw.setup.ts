@@ -1,45 +1,7 @@
 import "@testing-library/jest-dom";
 import { vi, beforeEach, afterEach } from "vitest";
 import { cleanup } from "@testing-library/react";
-
-// Mock Axios to prevent real HTTP requests during tests
-vi.mock("axios", () => {
-  return {
-    default: {
-      create: vi.fn(() => ({
-        interceptors: {
-          request: { use: vi.fn() },
-          response: { use: vi.fn() }
-        },
-        request: vi.fn(() => Promise.resolve({ data: {} })),
-        get: vi.fn(() => Promise.resolve({ data: {} })),
-        post: vi.fn(() => Promise.resolve({ data: {} })),
-        put: vi.fn(() => Promise.resolve({ data: {} })),
-        delete: vi.fn(() => Promise.resolve({ data: {} }))
-      }))
-    }
-  };
-});
-
-// Mock the API client directly to ensure no HTTP requests are made
-vi.mock("@/api/client/axios", () => ({
-  apiClient: {
-    request: vi.fn(() => Promise.resolve({ data: {} })),
-    get: vi.fn(() => Promise.resolve({ data: {} })),
-    post: vi.fn(() => Promise.resolve({ data: {} })),
-    put: vi.fn(() => Promise.resolve({ data: {} })),
-    delete: vi.fn(() => Promise.resolve({ data: {} })),
-    interceptors: {
-      request: { use: vi.fn() },
-      response: { use: vi.fn() }
-    },
-    defaults: {
-      headers: { common: {} }
-    }
-  },
-  updateBaseURL: vi.fn(),
-  setAuthToken: vi.fn()
-}));
+import { server } from "./test/msw/server";
 
 // Clean up after each test
 afterEach(() => {
@@ -139,3 +101,8 @@ global.ResizeObserver = class ResizeObserver {
     // No-op
   }
 };
+
+// Setup MSW for this test environment
+beforeAll(() => server.listen({ onUnhandledRequest: "warn" }));
+afterEach(() => server.resetHandlers());
+afterAll(() => server.close());

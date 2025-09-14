@@ -6,6 +6,7 @@ Tests hierarchical diff algorithms, semantic analysis, three-way merge, and conf
 
 import sys
 import os
+import time
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 

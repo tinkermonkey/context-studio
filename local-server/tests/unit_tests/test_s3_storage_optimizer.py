@@ -12,6 +12,7 @@ sys.path.append(
 )
 
 import pytest
+import pandas as pd
 from unittest.mock import Mock, patch
 from datetime import datetime, timezone
 
