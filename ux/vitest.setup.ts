@@ -31,7 +31,7 @@ if (typeof document !== "undefined") {
 // DOM compatibility fixes for appendChild issues
 if (typeof Node !== "undefined") {
   const originalAppendChild = Node.prototype.appendChild;
-  Node.prototype.appendChild = function(child) {
+  Node.prototype.appendChild = function (child) {
     if (!child || typeof child !== "object") {
       // Create a text node for primitive values
       child = document.createTextNode(String(child));
@@ -43,7 +43,7 @@ if (typeof Node !== "undefined") {
   };
 
   const originalInsertBefore = Node.prototype.insertBefore;
-  Node.prototype.insertBefore = function(newNode, referenceNode) {
+  Node.prototype.insertBefore = function (newNode, referenceNode) {
     if (!newNode || typeof newNode !== "object") {
       newNode = document.createTextNode(String(newNode));
     }
@@ -57,7 +57,7 @@ if (typeof Node !== "undefined") {
 // Enhanced JSDOM setup for better React compatibility
 Object.defineProperty(window, "matchMedia", {
   writable: true,
-  value: vi.fn().mockImplementation(query => ({
+  value: vi.fn().mockImplementation((query) => ({
     matches: false,
     media: query,
     onchange: null,

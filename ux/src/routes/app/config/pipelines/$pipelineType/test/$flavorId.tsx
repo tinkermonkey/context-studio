@@ -7,7 +7,10 @@ import { CsMainTitle } from "@/components/layout/cs_main";
 import { NlpAnalysisPanel } from "@/components/nlp/NlpAnalysisPanel";
 import { AnalyticsDashboard } from "@/components/llm_traceability/AnalyticsDashboard";
 import { ExecutionHistory } from "@/components/llm_traceability/ExecutionHistory";
-import { usePipelineFlavor, useDefaultPipelineFlavor } from "@/api/hooks/pipelineFlavors";
+import {
+  usePipelineFlavor,
+  useDefaultPipelineFlavor,
+} from "@/api/hooks/pipelineFlavors";
 import {
   useLayerNodes,
   useDomainNodes,
@@ -24,9 +27,13 @@ interface TestRecord {
 
 type TabType = "analytics" | "history";
 
-export const Route = createFileRoute("/app/config/pipelines/$pipelineType/test/$flavorId")({
+export const Route = createFileRoute(
+  "/app/config/pipelines/$pipelineType/test/$flavorId",
+)({
   component: TestFlavorPage,
-  validateSearch: (search: Record<string, unknown>): { tab?: TabType; recordId?: string } => {
+  validateSearch: (
+    search: Record<string, unknown>,
+  ): { tab?: TabType; recordId?: string } => {
     return {
       tab: (search.tab as TabType) || "analytics",
       recordId: search.recordId as string,
@@ -35,22 +42,26 @@ export const Route = createFileRoute("/app/config/pipelines/$pipelineType/test/$
 });
 
 function TestFlavorPage() {
-  const { pipelineType, flavorId } = Route.useParams() as { 
-    pipelineType: PipelineType; 
-    flavorId: string; 
+  const { pipelineType, flavorId } = Route.useParams() as {
+    pipelineType: PipelineType;
+    flavorId: string;
   };
   const { tab, recordId } = Route.useSearch();
   const navigate = Route.useNavigate();
-  
+
   const [selectedRecord, setSelectedRecord] = useState<TestRecord | null>(null);
-  
+
   const isDefault = flavorId === "default";
-  const { data: flavor, isLoading: flavorLoading, error: flavorError } = usePipelineFlavor(
-    isDefault ? "" : flavorId
-  );
-  const { data: defaultFlavor, isLoading: defaultFlavorLoading, error: defaultFlavorError } = useDefaultPipelineFlavor(
-    pipelineType
-  );
+  const {
+    data: flavor,
+    isLoading: flavorLoading,
+    error: flavorError,
+  } = usePipelineFlavor(isDefault ? "" : flavorId);
+  const {
+    data: defaultFlavor,
+    isLoading: defaultFlavorLoading,
+    error: defaultFlavorError,
+  } = useDefaultPipelineFlavor(pipelineType);
 
   const currentFlavor = isDefault ? defaultFlavor : flavor;
   const currentFlavorLoading = isDefault ? defaultFlavorLoading : flavorLoading;
@@ -61,7 +72,7 @@ function TestFlavorPage() {
 
   const getRecordOptions = (): TestRecord[] => {
     if (!currentFlavor) return [];
-    
+
     switch (currentFlavor.pipeline) {
       case "suggest_layer_definition":
         return (layersData || []).map((layer) => ({
@@ -101,15 +112,15 @@ function TestFlavorPage() {
   const handleRecordSelection = (recordId: string) => {
     const record = recordOptions.find((r) => r.id === recordId);
     setSelectedRecord(record || null);
-    
+
     // Update URL with the selected record ID
     navigate({
       search: (prev) => ({ ...prev, recordId: recordId || undefined }),
       replace: true,
     });
   };
-  
-  const pipelineConfig = PipelineTypes.find(p => p.value === pipelineType);
+
+  const pipelineConfig = PipelineTypes.find((p) => p.value === pipelineType);
 
   const getPipelineDisplayName = () => {
     if (!currentFlavor) return "";
@@ -151,7 +162,8 @@ function TestFlavorPage() {
   if (currentFlavorError || !currentFlavor) {
     return (
       <Alert color="failure" className="m-4">
-        <span className="font-medium">Error!</span> Unable to load flavor with ID: {flavorId}
+        <span className="font-medium">Error!</span> Unable to load flavor with
+        ID: {flavorId}
       </Alert>
     );
   }
@@ -160,8 +172,8 @@ function TestFlavorPage() {
     <>
       <CsMainTitle icon={BarChart3}>
         <div className="flex items-center gap-3">
-          <Link 
-            to="/app/config/pipelines/$pipelineType" 
+          <Link
+            to="/app/config/pipelines/$pipelineType"
             params={{ pipelineType }}
             className="hover:text-blue-600"
           >
@@ -186,13 +198,13 @@ function TestFlavorPage() {
               <h3 className="mt-4 mb-2 text-lg font-semibold text-gray-900 dark:text-white">
                 System Prompt
               </h3>
-              <pre className="text-sm text-gray-500 dark:text-gray-400 whitespace-pre-wrap">
+              <pre className="text-sm whitespace-pre-wrap text-gray-500 dark:text-gray-400">
                 {currentFlavor.system_prompt}
               </pre>
               <h3 className="mt-4 mb-2 text-lg font-semibold text-gray-900 dark:text-white">
                 User Prompt
               </h3>
-              <pre className="text-sm text-gray-500 dark:text-gray-400 whitespace-pre-wrap">
+              <pre className="text-sm whitespace-pre-wrap text-gray-500 dark:text-gray-400">
                 {currentFlavor.user_prompt}
               </pre>
             </div>

@@ -586,7 +586,8 @@ class LLMService:
             return DefinitionSuggestionResponse(
                 definition=definition,
                 reasoning=reasoning,
-                discrepancies=discrepancies
+                discrepancies=discrepancies,
+                execution_id="temp_id"  # Will be overridden by caller
             )
             
         except LLMProcessingError:
@@ -633,7 +634,8 @@ class LLMService:
             return LayerDefinitionResponse(
                 definition=definition,
                 purpose=purpose,
-                rationale=rationale
+                rationale=rationale,
+                execution_id="temp_id"  # Will be overridden by caller
             )
             
         except LLMProcessingError:
@@ -680,7 +682,8 @@ class LLMService:
             return DomainDefinitionResponse(
                 definition=definition,
                 purpose=purpose,
-                scope=scope
+                scope=scope,
+                execution_id="temp_id"  # Will be overridden by caller
             )
             
         except LLMProcessingError:

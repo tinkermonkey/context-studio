@@ -164,6 +164,7 @@ def test_definition_suggestion_response_model():
         definition="The suggested 2-3 sentence definition here.",
         reasoning="Brief reasoning for the definitional choices made.",
         discrepancies="Notable discrepancies between sources identified.",
+        execution_id="test_execution_123",
     )
 
     assert response.definition == "The suggested 2-3 sentence definition here."
@@ -173,7 +174,7 @@ def test_definition_suggestion_response_model():
 
     # Test without optional discrepancies
     response_no_disc = DefinitionSuggestionResponse(
-        definition="Another definition.", reasoning="Another reasoning."
+        definition="Another definition.", reasoning="Another reasoning.", execution_id="test_execution_456"
     )
 
     assert response_no_disc.discrepancies is None
@@ -233,10 +234,10 @@ def test_error_response_models():
 
     # Test success response
     test_response = DefinitionSuggestionResponse(
-        definition="Test definition", reasoning="Test reasoning"
+        definition="Test definition", reasoning="Test reasoning", execution_id="test_exec_789"
     )
 
-    success = LLMSuccessResponse(data=test_response)
+    success = LLMSuccessResponse(data=test_response, execution_id="test_exec_789")
 
     assert success.success is True  # Default value
     assert success.data.definition == "Test definition"

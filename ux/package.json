@@ -4,7 +4,7 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "test": "vitest",
+    "test": "vitest run",
     "test:run": "vitest run --no-coverage",
     "test:ci": "vitest run --reporter verbose --coverage",
     "test:coverage": "vitest run --coverage",

@@ -129,7 +129,7 @@ export class PipelineFlavorService extends BaseService {
       this.validateRequired(pipelineType, "Pipeline type");
       return this.getResource<PipelineFlavor>(
         `${ENDPOINTS.PIPELINE_FLAVORS}/default`,
-        { pipeline: pipelineType }
+        { pipeline: pipelineType },
       );
     }, "get default pipeline flavor");
   }

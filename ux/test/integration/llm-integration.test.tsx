@@ -47,9 +47,9 @@ describe("LLM Service Integration", () => {
   });
 
   it("should validate required parameters in service methods", async () => {
-    await expect(llmService.suggestTermDefinition({ term: "" })).rejects.toThrow(
-      "term is required",
-    );
+    await expect(
+      llmService.suggestTermDefinition({ term: "" }),
+    ).rejects.toThrow("term is required");
   });
 
   it("should handle minimal definition request", () => {
