@@ -31,6 +31,8 @@ class TestChangesetManager:
         db.execute.return_value.fetchone.return_value = None
         db.execute.return_value.fetchall.return_value = []
         db.execute.return_value.rowcount = 1
+        db.rollback = Mock()
+        db.commit = Mock()
         return db
 
     @pytest.fixture
@@ -129,18 +131,19 @@ class TestChangesetManager:
 
     def test_get_changeset_success(self, changeset_manager, mock_db_session):
         """Test successful changeset retrieval."""
-        # Mock database response
-        mock_row = Mock()
-        mock_row.id = "changeset123"
-        mock_row.title = "Test Changeset"
-        mock_row.description = "Test description"
-        mock_row.state = "draft"
-        mock_row.branch_name = "changeset-branch-123"
-        mock_row.parent_changeset_id = None
-        mock_row.author_id = "user123"
-        mock_row.created_at = "2023-01-01T00:00:00+00:00"
-        mock_row.merged_at = None
-        mock_row.metadata = None
+        # Mock database response as tuple matching row_to_changeset() expectations
+        mock_row = (
+            "changeset123",                         # id
+            "Test Changeset",                       # title
+            "Test description",                     # description
+            "DRAFT",                                # state
+            "changeset-branch-123",                 # branch_name
+            None,                                   # parent_changeset_id
+            "user123",                              # author_id
+            "2023-01-01T00:00:00+00:00",           # created_at
+            None,                                   # merged_at
+            None                                    # metadata
+        )
 
         mock_db_session.execute.return_value.fetchone.return_value = mock_row
 
@@ -161,18 +164,19 @@ class TestChangesetManager:
 
     def test_list_changesets_with_filters(self, changeset_manager, mock_db_session):
         """Test listing changesets with filters."""
-        # Mock database response
-        mock_row = Mock()
-        mock_row.id = "changeset123"
-        mock_row.title = "Test Changeset"
-        mock_row.description = "Test description"
-        mock_row.state = "draft"
-        mock_row.branch_name = "changeset-branch-123"
-        mock_row.parent_changeset_id = None
-        mock_row.author_id = "user123"
-        mock_row.created_at = "2023-01-01T00:00:00+00:00"
-        mock_row.merged_at = None
-        mock_row.metadata = None
+        # Mock database response as tuple matching row_to_changeset() expectations
+        mock_row = (
+            "changeset123",                         # id
+            "Test Changeset",                       # title
+            "Test description",                     # description
+            "DRAFT",                                # state
+            "changeset-branch-123",                 # branch_name
+            None,                                   # parent_changeset_id
+            "user123",                              # author_id
+            "2023-01-01T00:00:00+00:00",           # created_at
+            None,                                   # merged_at
+            None                                    # metadata
+        )
 
         mock_db_session.execute.return_value.fetchall.return_value = [mock_row]
 
@@ -288,18 +292,20 @@ class TestChangesetManager:
         
         with patch.object(changeset_manager, 'get_changeset', return_value=mock_changeset):
             success = changeset_manager.push_changeset_to_s3("changeset123")
-            
-            # Should return True but log warning (doesn't fail operation)
-            assert success is True
 
-    def test_get_changeset_versions(self, changeset_manager, mock_working_tree_manager):
+            # Should return False on S3 failure
+            assert success is False
+
+    def test_get_changeset_versions(self, changeset_manager, mock_db_session):
         """Test getting changeset versions."""
-        mock_working_tree_manager.get_changeset_versions.return_value = ["v1", "v2", "v3"]
+        # Mock database response for version IDs query
+        mock_db_session.execute.return_value.fetchall.return_value = [
+            ("v1",), ("v2",), ("v3",)
+        ]
 
         versions = changeset_manager.get_changeset_versions("changeset123")
 
         assert versions == ["v1", "v2", "v3"]
-        mock_working_tree_manager.get_changeset_versions.assert_called_once_with("changeset123")
 
     def test_generate_branch_name(self, changeset_manager):
         """Test branch name generation."""
