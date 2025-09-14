@@ -454,10 +454,18 @@ class LLMService:
             pipeline_type=PipelineType.SUGGEST_TERM_DEFINITION,
             context_data=context_data
         )
-        
-        # Execute using generic method
-        generic_response = await self.execute_pipeline_flavor(generic_request)
-        
+
+        # Execute using generic method with timeout handling
+        timeout = int(os.getenv("LLM_TIMEOUT", "30"))
+        try:
+            generic_response = await asyncio.wait_for(
+                self.execute_pipeline_flavor(generic_request),
+                timeout=timeout
+            )
+        except asyncio.TimeoutError:
+            self.logger.warning(f"Request timed out after {timeout} seconds for term: '{request.term}'")
+            raise LLMTimeoutError(f"Term definition request timed out after {timeout} seconds")
+
         # Parse the response using the existing parser
         parsed_response = self._parse_definition_response(generic_response.response_content)
         
