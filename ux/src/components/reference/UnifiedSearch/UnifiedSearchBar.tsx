@@ -7,7 +7,7 @@
 import React, { useState, useCallback, useEffect } from 'react';
 import { TextInput, Button, Spinner, Select } from 'flowbite-react';
 import { Search, X } from 'lucide-react';
-import { debounce } from 'lodash';
+import { useDebounce } from '@/hooks/useDebounce';
 import { useUnifiedSearch } from '@/api/hooks/unifiedReference/useUnifiedReference';
 import { useReferenceStore, useSearchState } from '@/store/referenceSlice';
 import { UnifiedSearchRequest } from '@/api/types/unified';
@@ -67,28 +67,27 @@ export const UnifiedSearchBar: React.FC<UnifiedSearchBarProps> = ({
   });
 
   // Debounced search function
-  const debouncedSearch = useCallback(
-    debounce((searchQuery: string) => {
-      if (searchQuery.trim().length >= minQueryLength && selectedSources.length > 0) {
-        const request: UnifiedSearchRequest = {
-          query: searchQuery,
-          search_type: searchType,
-          sources: selectedSources,
-          limit: 20,
-          offset: 0,
-        };
+  const searchFunction = useCallback((searchQuery: string) => {
+    if (searchQuery.trim().length >= minQueryLength && selectedSources.length > 0) {
+      const request: UnifiedSearchRequest = {
+        query: searchQuery,
+        search_type: searchType,
+        sources: selectedSources,
+        limit: 20,
+        offset: 0,
+      };
 
-        setIsSearching(true);
-        onSearchStart?.();
-        search(request);
-      } else if (searchQuery.trim().length === 0) {
-        // Clear results if query is empty
-        setSearchResults([], 0);
-        setSourceErrors({});
-      }
-    }, debounceMs),
-    [searchType, selectedSources, minQueryLength, search, setIsSearching, setSearchResults, setSourceErrors, onSearchStart]
-  );
+      setIsSearching(true);
+      onSearchStart?.();
+      search(request);
+    } else if (searchQuery.trim().length === 0) {
+      // Clear results if query is empty
+      setSearchResults([], 0);
+      setSourceErrors({});
+    }
+  }, [searchType, selectedSources, minQueryLength, search, setIsSearching, setSearchResults, setSourceErrors, onSearchStart]);
+
+  const debouncedSearch = useDebounce(searchFunction, debounceMs);
 
   // Trigger search when local query changes
   useEffect(() => {
