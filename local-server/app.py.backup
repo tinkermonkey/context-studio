@@ -92,38 +92,17 @@ def create_app(dataset_id=None, engine=None, session_local=None, service_factory
             else:
                 logger.warning("No active dataset found after initialization.")
 
-            # Initialize event processor with version management support
+            # Initialize event processor with current dataset
             if active_dataset:
                 # Get the database URL instead of passing the engine
                 current_engine = get_current_engine()
                 database_url = str(current_engine.url)
-                
-                # Create version manager and working tree manager for event processor
-                try:
-                    from services.version_manager import VersionManager
-                    from services.working_tree_manager import WorkingTreeManager
-                    
-                    db_session = next(get_db())
-                    version_manager = VersionManager(db_session)
-                    working_tree_manager = WorkingTreeManager(db_session, version_manager)
-                    logger.info("VersionManager and WorkingTreeManager created for EventProcessor")
-                    
-                    # Initialize Event Processor with full version management
-                    app.state.event_processor = create_event_processor(
-                        database_url=database_url,
-                        version_manager=version_manager,
-                        working_tree_manager=working_tree_manager
-                    )
-                    app.state.event_processor.start()
-                    logger.info(f"Event processor started with full version management for dataset: {active_dataset.title}")
-                except Exception as e:
-                    logger.error(f"Failed to initialize version management services: {e}")
-                    # Fall back to event processor without version management
-                    app.state.event_processor = create_event_processor(
-                        database_url=database_url
-                    )
-                    app.state.event_processor.start()
-                    logger.warning(f"Event processor started without version management for dataset: {active_dataset.title}")
+                # Initialize Event Processor with Phase 3 optimizations
+                app.state.event_processor = create_event_processor(
+                    database_url=database_url
+                )
+                app.state.event_processor.start()
+                logger.info(f"Event processor started for dataset: {active_dataset.title}")
             
             # Preload NLP pipeline to reduce API response times
             logger.info("Preloading NLP pipeline...")

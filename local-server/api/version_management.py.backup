@@ -419,15 +419,8 @@ def get_version_management_stats(
         for state, count in state_results:
             versions_by_state[state] = count
         
-        # Get working tree status and convert to API model
-        working_tree_status_raw = working_tree_manager.get_working_tree_status()
-        working_tree_status = WorkingTreeStatusOut(
-            total_entities=working_tree_status_raw.total_entities,
-            modified_entities=working_tree_status_raw.modified_entities,
-            staged_entities=working_tree_status_raw.staged_entities,
-            unstaged_entities=working_tree_status_raw.unstaged_entities,
-            entries=[_working_tree_entry_to_out(entry) for entry in working_tree_status_raw.entries]
-        )
+        # Get working tree status
+        working_tree_status = working_tree_manager.get_working_tree_status()
         
         # Get recent activity (last 10 versions created)
         recent_activity = []
