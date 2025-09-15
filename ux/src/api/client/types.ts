@@ -1916,6 +1916,60 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/llm/execute_pipeline": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Execute Pipeline
+         * @description Execute a generic pipeline with arbitrary context data.
+         *
+         *     This endpoint provides a unified interface for executing any pipeline type
+         *     with flexible context data. It supports all pipeline types and flavors
+         *     while maintaining full execution tracking.
+         *
+         *     Use this endpoint for custom pipeline implementations or when you need
+         *     fine-grained control over context data.
+         */
+        post: operations["execute_pipeline_api_llm_execute_pipeline_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/llm/execute_pipeline/stream": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Execute Pipeline Stream
+         * @description Execute a generic pipeline with streaming response.
+         *
+         *     This endpoint provides streaming execution for any pipeline type with
+         *     flexible context data. The response is streamed as Server-Sent Events (SSE)
+         *     with execution tracking.
+         *
+         *     Use this endpoint when you need real-time streaming responses for
+         *     custom pipeline implementations.
+         */
+        post: operations["execute_pipeline_stream_api_llm_execute_pipeline_stream_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/llm/health": {
         parameters: {
             query?: never;
@@ -2320,6 +2374,222 @@ export interface paths {
          * @description Check health status of all reference API sources
          */
         get: operations["health_check_api_nlp_analysis_reference_health_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/reference/unified/search": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Search Get
+         * @description Unified search via GET request
+         *
+         *     Alternative GET endpoint for unified search with query parameters.
+         */
+        get: operations["search_get_api_reference_unified_search_get"];
+        put?: never;
+        /**
+         * Search
+         * @description Unified search across all reference sources
+         *
+         *     Searches across multiple reference sources (ConceptNet, DBpedia, Wikidata,
+         *     Schema.org, WordNet) and returns deduplicated, ranked results.
+         *
+         *     Args:
+         *         request: Search request with query and parameters
+         *
+         *     Returns:
+         *         Unified search response with ranked results
+         */
+        post: operations["search_api_reference_unified_search_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/reference/unified/node/{node_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Node
+         * @description Get details for a specific node
+         *
+         *     Args:
+         *         node_id: Unified node identifier
+         *
+         *     Returns:
+         *         Node details
+         *
+         *     Raises:
+         *         404: If node not found
+         */
+        get: operations["get_node_api_reference_unified_node__node_id__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/reference/unified/links": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Links Get
+         * @description Get links via GET request
+         *
+         *     Alternative GET endpoint for retrieving node links with query parameters.
+         */
+        get: operations["get_links_get_api_reference_unified_links_get"];
+        put?: never;
+        /**
+         * Get Links
+         * @description Get links for a specific node
+         *
+         *     Retrieves semantic relationships and links for a given node across
+         *     all available reference sources.
+         *
+         *     Args:
+         *         request: Links request with node ID and parameters
+         *
+         *     Returns:
+         *         Links response with related nodes and relationships
+         */
+        post: operations["get_links_api_reference_unified_links_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/reference/unified/sources": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Available Sources
+         * @description Get list of available reference sources
+         *
+         *     Returns:
+         *         List of source identifiers and their availability status
+         */
+        get: operations["get_available_sources_api_reference_unified_sources_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/reference/unified/health": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Health Check
+         * @description Check health status of unified reference service
+         *
+         *     Returns:
+         *         Health status including source availability and circuit breaker states
+         */
+        get: operations["health_check_api_reference_unified_health_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/reference/unified/stats": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Stats
+         * @description Get service statistics
+         *
+         *     Returns:
+         *         Service statistics including cache performance and circuit breaker states
+         */
+        get: operations["get_stats_api_reference_unified_stats_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/reference/unified/cache/clear": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Clear Cache
+         * @description Clear the unified reference cache
+         *
+         *     Clears both memory and database cache tiers.
+         *
+         *     Returns:
+         *         Success status
+         */
+        post: operations["clear_cache_api_reference_unified_cache_clear_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/reference/unified/cache/stats": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Cache Stats
+         * @description Get cache statistics
+         *
+         *     Returns:
+         *         Cache performance metrics and statistics
+         */
+        get: operations["get_cache_stats_api_reference_unified_cache_stats_get"];
         put?: never;
         post?: never;
         delete?: never;
@@ -6096,6 +6366,59 @@ export interface components {
              */
             time_range_days: number;
         };
+        /**
+         * GenericPipelineExecutionRequest
+         * @description Generic request model for pipeline execution with arbitrary context data
+         */
+        GenericPipelineExecutionRequest: {
+            /**
+             * Flavor Id
+             * @description ID of the pipeline flavor to use
+             */
+            flavor_id: string;
+            /** @description Type of pipeline to execute */
+            pipeline_type: components["schemas"]["PipelineType"];
+            /**
+             * Context Data
+             * @description Arbitrary context data for template rendering
+             */
+            context_data: {
+                [key: string]: unknown;
+            };
+        };
+        /**
+         * GenericPipelineExecutionResponse
+         * @description Generic response model for pipeline execution
+         */
+        GenericPipelineExecutionResponse: {
+            /**
+             * Response Content
+             * @description Raw LLM response content
+             */
+            response_content: string;
+            /**
+             * Execution Id
+             * @description Unique execution ID for tracing
+             */
+            execution_id: string;
+            /**
+             * Flavor Id
+             * @description ID of the flavor that generated this response
+             */
+            flavor_id: string;
+            /**
+             * Pipeline Type
+             * @description Type of pipeline that was executed
+             */
+            pipeline_type: string;
+            /**
+             * Token Usage
+             * @description Token usage statistics if available
+             */
+            token_usage?: {
+                [key: string]: number;
+            } | null;
+        };
         /** HTTPValidationError */
         HTTPValidationError: {
             /** Detail */
@@ -7067,6 +7390,12 @@ export interface components {
             selected_content: string;
         };
         /**
+         * ReferenceSource
+         * @description Supported reference sources in the unified facade
+         * @enum {string}
+         */
+        ReferenceSource: "conceptnet" | "wordnet" | "dbpedia" | "wikidata" | "schema_org";
+        /**
          * RegisterUserRequest
          * @description Request model for user registration.
          */
@@ -7504,7 +7833,7 @@ export interface components {
          * SourceType
          * @enum {string}
          */
-        SourceType: "dbpedia" | "conceptnet" | "wikidata" | "schema_org";
+        SourceType: "dbpedia" | "conceptnet" | "wikidata" | "schema_org" | "wordnet";
         /**
          * StageRequest
          * @description Model for staging/unstaging entities.
@@ -7906,6 +8235,252 @@ export interface components {
             trustee_user_id: string;
             /** Trusted User Id */
             trusted_user_id: string;
+        };
+        /**
+         * UnifiedLink
+         * @description Unified link representation across all reference sources
+         */
+        UnifiedLink: {
+            /**
+             * Id
+             * @description Unique identifier for the link
+             */
+            id: string;
+            /** @description Original source of the link */
+            source: components["schemas"]["ReferenceSource"];
+            /**
+             * Subject
+             * @description Subject node ID or URL
+             */
+            subject: string;
+            /**
+             * Predicate
+             * @description Relationship type or predicate
+             */
+            predicate: string;
+            /**
+             * Object
+             * @description Object node ID or URL
+             */
+            object: string;
+            /**
+             * Weight
+             * @description Relationship strength
+             * @default 1
+             */
+            weight: number;
+            /**
+             * Attributes
+             * @description Source-specific attributes
+             */
+            attributes?: {
+                [key: string]: unknown;
+            };
+        };
+        /**
+         * UnifiedLinksRequest
+         * @description Request model for retrieving links for a node
+         */
+        UnifiedLinksRequest: {
+            /**
+             * Node Id
+             * @description Node ID to get links for
+             */
+            node_id: string;
+            /**
+             * Direction
+             * @description Link direction
+             * @default both
+             */
+            direction: string;
+            /**
+             * Sources
+             * @description Specific sources to search
+             */
+            sources?: components["schemas"]["ReferenceSource"][] | null;
+            /**
+             * Limit
+             * @description Maximum number of links
+             * @default 50
+             */
+            limit: number;
+        };
+        /**
+         * UnifiedLinksResponse
+         * @description Response model for node links
+         */
+        UnifiedLinksResponse: {
+            /**
+             * Node Id
+             * @description Node ID that was queried
+             */
+            node_id: string;
+            /**
+             * Links
+             * @description Links found for the node
+             */
+            links: components["schemas"]["UnifiedLink"][];
+            /**
+             * Total Links
+             * @description Total number of links available
+             */
+            total_links: number;
+            /**
+             * Sources Queried
+             * @description Sources that were queried
+             */
+            sources_queried: string[];
+            /**
+             * Source Errors
+             * @description Errors encountered per source
+             */
+            source_errors?: {
+                [key: string]: string;
+            };
+        };
+        /**
+         * UnifiedNode
+         * @description Unified node representation across all reference sources
+         */
+        UnifiedNode: {
+            /**
+             * Id
+             * @description Unique identifier for cross-source deduplication
+             */
+            id: string;
+            /** @description Original source of the node */
+            source: components["schemas"]["ReferenceSource"];
+            /**
+             * Source Id
+             * @description Original ID in source system
+             */
+            source_id: string;
+            /**
+             * Title
+             * @description Primary label or title
+             */
+            title: string;
+            /**
+             * Definition
+             * @description Definition or description
+             */
+            definition?: string | null;
+            /**
+             * Attributes
+             * @description Source-specific attributes
+             */
+            attributes?: {
+                [key: string]: unknown;
+            };
+            /**
+             * Source Url
+             * @description URL to original resource
+             */
+            source_url?: string | null;
+            /**
+             * Confidence Score
+             * @description Confidence in data quality
+             * @default 1
+             */
+            confidence_score: number;
+            /**
+             * Merged From
+             * @description Track deduplication sources
+             */
+            merged_from?: string[] | null;
+        };
+        /**
+         * UnifiedSearchRequest
+         * @description Search request model for unified facade
+         */
+        UnifiedSearchRequest: {
+            /**
+             * Query
+             * @description Search query string
+             */
+            query: string;
+            /**
+             * Search Type
+             * @description Type of search to perform
+             * @default title
+             */
+            search_type: string;
+            /**
+             * Sources
+             * @description Specific sources to search (default: all)
+             */
+            sources?: components["schemas"]["ReferenceSource"][] | null;
+            /**
+             * Node Id
+             * @description Node ID for link searches
+             */
+            node_id?: string | null;
+            /**
+             * Direction
+             * @description Link direction for searches
+             * @default both
+             */
+            direction: string | null;
+            /**
+             * Limit
+             * @description Maximum number of results
+             * @default 20
+             */
+            limit: number;
+            /**
+             * Offset
+             * @description Result offset for pagination
+             * @default 0
+             */
+            offset: number;
+        };
+        /**
+         * UnifiedSearchResponse
+         * @description Search response model for unified facade
+         */
+        UnifiedSearchResponse: {
+            /**
+             * Query
+             * @description Original search query
+             */
+            query: string;
+            /**
+             * Results
+             * @description Search results
+             */
+            results: components["schemas"]["UnifiedNode"][];
+            /**
+             * Total Results
+             * @description Total number of results available
+             */
+            total_results: number;
+            /**
+             * Sources Queried
+             * @description Sources that were queried
+             */
+            sources_queried: string[];
+            /**
+             * Source Errors
+             * @description Errors encountered per source
+             */
+            source_errors?: {
+                [key: string]: string;
+            };
+            /**
+             * Offset
+             * @description Result offset used
+             */
+            offset: number;
+            /**
+             * Limit
+             * @description Result limit used
+             */
+            limit: number;
+            /**
+             * Search Time Ms
+             * @description Total search time in milliseconds
+             */
+            search_time_ms: number;
         };
         /**
          * UpdateChangesetRequest
@@ -11675,6 +12250,108 @@ export interface operations {
             };
         };
     };
+    execute_pipeline_api_llm_execute_pipeline_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["GenericPipelineExecutionRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GenericPipelineExecutionResponse"];
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LLMErrorResponse"];
+                };
+            };
+            /** @description Request validation failure */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LLMErrorResponse"];
+                };
+            };
+            /** @description Too Many Requests */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LLMErrorResponse"];
+                };
+            };
+            /** @description Internal Server Error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LLMErrorResponse"];
+                };
+            };
+            /** @description Gateway Timeout */
+            504: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LLMErrorResponse"];
+                };
+            };
+        };
+    };
+    execute_pipeline_stream_api_llm_execute_pipeline_stream_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["GenericPipelineExecutionRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     traceability_health_api_llm_health_get: {
         parameters: {
             query?: never;
@@ -12426,6 +13103,282 @@ export interface operations {
         };
     };
     health_check_api_nlp_analysis_reference_health_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+        };
+    };
+    search_get_api_reference_unified_search_get: {
+        parameters: {
+            query: {
+                /** @description Search query */
+                query: string;
+                /** @description Search type */
+                search_type?: string;
+                /** @description Comma-separated list of sources */
+                sources?: string | null;
+                /** @description Maximum results */
+                limit?: number;
+                /** @description Result offset */
+                offset?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UnifiedSearchResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    search_api_reference_unified_search_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UnifiedSearchRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UnifiedSearchResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_node_api_reference_unified_node__node_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Unified node ID */
+                node_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UnifiedNode"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_links_get_api_reference_unified_links_get: {
+        parameters: {
+            query: {
+                /** @description Node ID to get links for */
+                node_id: string;
+                /** @description Link direction */
+                direction?: string;
+                /** @description Comma-separated list of sources */
+                sources?: string | null;
+                /** @description Maximum links */
+                limit?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UnifiedLinksResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_links_api_reference_unified_links_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UnifiedLinksRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UnifiedLinksResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_available_sources_api_reference_unified_sources_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+        };
+    };
+    health_check_api_reference_unified_health_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+        };
+    };
+    get_stats_api_reference_unified_stats_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+        };
+    };
+    clear_cache_api_reference_unified_cache_clear_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+        };
+    };
+    get_cache_stats_api_reference_unified_cache_stats_get: {
         parameters: {
             query?: never;
             header?: never;

@@ -57,6 +57,12 @@ export function CsNavbar() {
               <DropdownItem href="/app/terms">Terms</DropdownItem>
               <DropdownItem href="/app/predicates">Predicates</DropdownItem>
             </Dropdown>
+            <NavbarLink
+              href="/app/reference"
+              active={!!matchRoute({ to: "/app/reference", fuzzy: false })}
+            >
+              Reference
+            </NavbarLink>
             <Dropdown label="Data" className="hidden lg:block" inline={true}>
               <DropdownItem href="/app/data/sources">Sources</DropdownItem>
               <DropdownItem href="/app/data/transformations">

@@ -27,13 +27,16 @@
     "@testing-library/react": "^16.3.0",
     "@testing-library/user-event": "^14.6.0",
     "@types/jest": "^30.0.0",
+    "@types/lodash": "^4.17.20",
     "@types/node": "^24.1.0",
     "@types/react": "^19.1.2",
     "@types/react-dom": "^19.1.2",
+    "@types/react-window": "^1.8.8",
     "@types/testing-library__react": "^10.0.1",
     "@vitejs/plugin-react": "^4.3.4",
     "@vitest/coverage-istanbul": "^3.2.4",
     "@vitest/coverage-v8": "^1.6.1",
+    "c8": "^8.0.0",
     "eslint-plugin-tailwindcss": "^3.18.2",
     "jsdom": "^26.1.0",
     "msw": "^1.3.1",
@@ -43,8 +46,7 @@
     "tailwindcss": "^4.1.4",
     "typescript": "^5.8.3",
     "vite": "^6.2.6",
-    "vitest": "^1.6.1",
-    "c8": "^8.0.0"
+    "vitest": "^1.6.1"
   },
   "vitest": {
     "environment": "jsdom",
@@ -60,9 +62,12 @@
     "@tanstack/react-table": "^8.21.3",
     "axios": "^1.10.0",
     "flowbite-react": "^0.11.7",
+    "lodash": "^4.17.21",
     "lucide-react": "^0.525.0",
     "react": "^19.1.0",
     "react-contenteditable": "^3.3.7",
-    "react-dom": "^19.1.0"
+    "react-dom": "^19.1.0",
+    "react-window": "^2.1.0",
+    "zustand": "^5.0.8"
   }
 }
