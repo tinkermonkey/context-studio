@@ -89,6 +89,7 @@ pyparsing==3.2.3
 pyphen==0.17.2
 pyrate-limiter==3.7.1
 pytest==8.4.1
+rapidfuzz>=3.5.0
 pytest-subtests==0.14.2
 python-dateutil==2.9.0.post0
 python-dotenv==1.1.1

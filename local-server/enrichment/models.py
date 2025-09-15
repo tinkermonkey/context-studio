@@ -15,6 +15,7 @@ class SourceType(str, Enum):
     CONCEPTNET = "conceptnet"
     WIKIDATA = "wikidata"
     SCHEMA_ORG = "schema_org"
+    WORDNET = "wordnet"
 
 
 class ResponseFormat(str, Enum):
@@ -284,3 +285,44 @@ class SchemaOrgSearchResponse(BaseSourceResponse):
     search_type: Optional[str] = None
     total_results: Optional[int] = None
     results: List[SchemaOrgSearchResult] = Field(default_factory=list)
+
+
+# ------------------ WordNet Models ------------------
+class WordNetSearchRequest(BaseModel):
+    """Request model for WordNet search"""
+    word: str = Field(..., min_length=1, description="Word to search for")
+    pos: Optional[Literal["noun", "verb", "adj", "adv"]] = Field(None, description="Part of speech filter")
+    lang: str = Field("eng", description="Language (default: English)")
+    limit: int = Field(20, ge=1, le=100, description="Maximum number of synsets")
+
+class WordNetSynset(BaseModel):
+    """WordNet synset representation"""
+    id: str = Field(..., description="Synset ID")
+    name: str = Field(..., description="Synset name")
+    pos: str = Field(..., description="Part of speech")
+    definition: str = Field(..., description="Definition")
+    examples: List[str] = Field(default_factory=list, description="Usage examples")
+    lemmas: List[str] = Field(default_factory=list, description="Lemma names")
+    lexfile: Optional[str] = Field(None, description="Lexical file")
+    offset: Optional[int] = Field(None, description="WordNet offset")
+
+class WordNetSearchResponse(BaseSourceResponse):
+    """Response model for WordNet search"""
+    word: Optional[str] = None
+    pos: Optional[str] = None
+    synsets: List[WordNetSynset] = Field(default_factory=list)
+
+class WordNetRelationsRequest(BaseModel):
+    """Request model for WordNet relations"""
+    synset_id: str = Field(..., description="Synset ID to get relations for")
+    relation_types: Optional[List[str]] = Field(None, description="Specific relation types")
+
+class WordNetRelation(BaseModel):
+    """WordNet semantic relation"""
+    relation_type: str = Field(..., description="Type of relation")
+    target_synset: WordNetSynset = Field(..., description="Target synset")
+
+class WordNetRelationsResponse(BaseSourceResponse):
+    """Response model for WordNet relations"""
+    synset_id: Optional[str] = None
+    relations: List[WordNetRelation] = Field(default_factory=list)
