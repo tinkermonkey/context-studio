@@ -326,3 +326,42 @@ class WordNetRelationsResponse(BaseSourceResponse):
     """Response model for WordNet relations"""
     synset_id: Optional[str] = None
     relations: List[WordNetRelation] = Field(default_factory=list)
+
+
+# ------------------ Multi-Source Search Models ------------------
+class SearchNode(BaseModel):
+    """Simplified node representation for multi-source search results"""
+    id: str = Field(..., description="Unique identifier from source")
+    source: SourceType = Field(..., description="Original source of the node")
+    title: str = Field(..., min_length=1, description="Primary label or title")
+    definition: Optional[str] = Field(None, description="Definition or description")
+    attributes: Dict[str, Any] = Field(default_factory=dict, description="Source-specific attributes")
+    source_url: Optional[str] = Field(None, description="URL to original resource")
+    relevance_score: float = Field(default=1.0, ge=0, le=1, description="Source relevance score")
+
+    @field_validator('source_url')
+    @classmethod
+    def validate_url(cls, v):
+        if v and not v.startswith(('http://', 'https://')):
+            raise ValueError('Invalid URL format')
+        return v
+
+
+class MultiSourceSearchRequest(BaseModel):
+    """Request model for multi-source search"""
+    query: str = Field(..., min_length=1, description="Search query string")
+    sources: Optional[List[SourceType]] = Field(None, description="Specific sources to search (default: all enabled)")
+    limit: int = Field(default=20, ge=1, le=100, description="Maximum number of results per source")
+    offset: int = Field(default=0, ge=0, description="Result offset for pagination")
+
+
+class MultiSourceSearchResponse(BaseModel):
+    """Response model for multi-source search"""
+    query: str = Field(..., description="Original search query")
+    results: List[SearchNode] = Field(..., description="Search results from all sources")
+    total_results: int = Field(..., description="Total number of results across all sources")
+    sources_queried: List[str] = Field(..., description="Sources that were queried")
+    source_errors: Dict[str, str] = Field(default_factory=dict, description="Errors encountered per source")
+    offset: int = Field(..., description="Result offset used")
+    limit: int = Field(..., description="Result limit used per source")
+    search_time_ms: float = Field(..., description="Total search time in milliseconds")

@@ -1,12 +1,23 @@
 import threading
 import spacy
 import spacy.tokens
+import concepcy
+import spacy_dbpedia_spotlight
+from spacy_wordnet.wordnet_annotator import WordnetAnnotator
+import sense2vec
 from typing import Optional
 from config import get_settings, get_config_manager
 from utils.logger import get_logger
 from nlp.proxy_manager import get_proxy_manager
 
 logger = get_logger(__name__)
+
+## DO NOT REMOVE THESE - needed to register custom pipeline components
+_concepcy = concepcy
+_dbpedia_spotlight = spacy_dbpedia_spotlight
+_spacy_wordnet = WordnetAnnotator
+_sense2vec = sense2vec
+## DO NOT REMOVE THESE - needed to register custom pipeline components
 
 class NLPPipeline:
     """
