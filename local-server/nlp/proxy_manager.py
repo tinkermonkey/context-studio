@@ -210,6 +210,34 @@ class ReferenceAPIProxyManager:
             logger.warning(f"Error getting stats from {stats_method.__name__}: {e}")
             return {"error": str(e), "available": False}
 
+    def get_debug_config(self) -> Optional[Dict[str, Any]]:
+        """Get debug configuration information from the proxy's /admin/config endpoint"""
+        if not self.is_running:
+            return {"error": "Proxy is not running", "available": False}
+
+        try:
+            import requests
+            settings = get_settings()
+            config = settings.get_reference_api_buddy_config()
+            host = config["server"]["host"]
+            port = config["server"]["port"]
+            config_url = f"http://{host}:{port}/admin/config"
+
+            response = requests.get(config_url, timeout=5)
+            if response.status_code == 200:
+                return response.json()
+            else:
+                return {
+                    "error": f"Config endpoint returned status {response.status_code}",
+                    "available": False
+                }
+
+        except ImportError:
+            return {"error": "Requests library not available", "available": False}
+        except Exception as e:
+            logger.error(f"Error getting debug config: {e}")
+            return {"error": str(e), "available": False}
+
 
 # Global instance
 _proxy_manager: Optional[ReferenceAPIProxyManager] = None

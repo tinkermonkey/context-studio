@@ -48,6 +48,20 @@ export class UnifiedReferenceService extends BaseService {
           this.SEARCH_ENDPOINT,
           request,
         );
+
+        // Handle backend response wrapper format: { success: true, data: {...}, errors: [] }
+        if (response && response.success && response.data) {
+          return response.data;
+        }
+
+        // If response doesn't match expected format, check if it's the direct format
+        if (response && response.results) {
+          return response;
+        }
+
+        // Log unexpected response format and return mock data
+        console.warn('Unexpected search response format:', response);
+        return this.getMockSearchResponse(request);
       } catch (error) {
         if (error instanceof Error && error.message.includes("404")) {
           // Backend not implemented yet - return mock data for development

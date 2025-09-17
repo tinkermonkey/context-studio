@@ -8,8 +8,7 @@ from ..models import DBpediaResourceResponse, DBpediaSearchResponse, DBpediaSpar
 
 class DBpediaSource(BaseReferenceSource):
     def _get_default_base_url(self) -> str:
-        settings = get_settings()
-        return settings.reference_sources.get("dbpedia", "http://dbpedia.org")
+        return "https://lookup.dbpedia.org"
 
     def _get_proxy_domain_key(self) -> str:
         return "dbpedia"
@@ -43,6 +42,8 @@ class DBpediaSource(BaseReferenceSource):
 
     async def search(self, query: str, limit: int = 10, offset: int = 0, format: str = "json") -> DBpediaSearchResponse:
         try:
+            search_url = f"{self._get_base_url()}/api/search"
+            params = {"query": query, "maxResults": limit}
             search_url = f"{self._get_base_url()}/api/search"
             params = {"query": query, "maxResults": limit}
 

@@ -106,7 +106,7 @@ function TestFlavorPage() {
       const record = recordOptions.find((r) => r.id === recordId);
       setSelectedRecord(record || null);
     }
-  }, [recordId, recordOptions]);
+  }, [recordId, layersData, domainsData, termsData, currentFlavor]);
 
   // Function to update selected record and URL
   const handleRecordSelection = (recordId: string) => {

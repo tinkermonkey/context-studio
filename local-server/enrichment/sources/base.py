@@ -43,7 +43,7 @@ class BaseReferenceSource(ABC):
                         port = server_config.get('port', 18080)
                         return f"http://{host}:{port}/{domain_key}"
 
-        return self.config.base_url or self._get_default_base_url()
+        return self.config.upstream_url or self._get_default_base_url()
 
     @abstractmethod
     def _get_default_base_url(self) -> str:

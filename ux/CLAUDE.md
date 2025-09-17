@@ -27,6 +27,7 @@ Front-end code for the Context Studio app. This is front-end code only, the back
 - **CSS Framework**: Tailwind CSS
 - **Icons**: Lucide React Native
 - **API Client**: Type-safe API client built with Axios and OpenAPI
+- **UI State**: Zustand for complex ui state management
 - **Testing**: Jest, React Testing Library
 
 ## Best Practices

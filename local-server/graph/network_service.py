@@ -329,7 +329,7 @@ class NetworkService:
         # Build ancestor list with distances
         ancestors = []
         for structure_node in ancestor_nodes:
-            node_data = self.graph.structure_nodes[structure_node]
+            node_data = self.graph.nodes[structure_node]
             try:
                 distance = nx.shortest_path_length(self.graph, term_node, structure_node)
                 ancestors.append({
@@ -341,11 +341,11 @@ class NetworkService:
             except nx.NetworkXNoPath:
                 # This shouldn't happen since we got the structure_node from descendants
                 continue
-        
+
         # Build descendant list with distances
         descendants = []
         for structure_node in descendant_nodes:
-            node_data = self.graph.structure_nodes[structure_node]
+            node_data = self.graph.nodes[structure_node]
             try:
                 distance = nx.shortest_path_length(self.graph, structure_node, term_node)
                 descendants.append({
