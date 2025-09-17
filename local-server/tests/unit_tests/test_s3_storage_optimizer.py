@@ -14,7 +14,7 @@ sys.path.append(
 import pytest
 import pandas as pd
 from unittest.mock import Mock, patch
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 
 from services.s3_storage_optimizer import (
     S3StorageOptimizer,
