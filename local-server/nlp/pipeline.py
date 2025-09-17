@@ -1,12 +1,22 @@
 import threading
 import spacy
 import spacy.tokens
+import concepcy
+import spacy_dbpedia_spotlight
+from spacy_wordnet.wordnet_annotator import WordnetAnnotator
 from typing import Optional
 from config import get_settings, get_config_manager
 from utils.logger import get_logger
 from nlp.proxy_manager import get_proxy_manager
 
 logger = get_logger(__name__)
+
+# Prevent imports which are necessary from being optimized away
+_concepcy = concepcy
+_dbpedia_spotlight = spacy_dbpedia_spotlight
+_wordnet_annotator = WordnetAnnotator
+if False:  # pragma: no cover
+    print(F"Preventing optimization of imports: {_concepcy}, {_dbpedia_spotlight}, {_wordnet_annotator}")
 
 class NLPPipeline:
     """

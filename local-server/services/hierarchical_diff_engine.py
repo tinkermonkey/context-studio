@@ -47,55 +47,319 @@ class HierarchicalDiffEngine:
 
         logger.info("HierarchicalDiffEngine initialized with advanced diff capabilities")
         
-    def compute_hierarchical_diff(self, before: Dict[str, Any], 
+    def compute_hierarchical_diff(self, before: Dict[str, Any],
                                  after: Dict[str, Any]) -> Dict[str, Any]:
         """Compute hierarchical diff with structural awareness."""
-        
+
         start_time = time.time()
-        logger.info("Computing hierarchical diff with semantic analysis")
-        
-        diff_result = {
-            'added': {},
-            'removed': {},
-            'modified': {},
-            'moved': {},
-            'unchanged': {},
-            'metadata': {
-                'total_changes': 0,
-                'change_depth': 0,
-                'change_complexity': 0,
-                'computation_time_ms': 0
-            }
-        }
-        
-        # Compute structural diff
-        structural_diff = self._compute_structural_diff(before, after)
-        
-        # Detect moved elements
-        moved_elements = self._detect_moved_elements(before, after, structural_diff)
-        
-        # Compute semantic similarity for modified elements
-        semantic_changes = self._compute_semantic_changes(structural_diff)
-        
-        # Analyze change patterns
-        change_patterns = self._analyze_change_patterns(structural_diff, moved_elements)
-        
-        # Combine results
-        diff_result.update({
-            'structural': structural_diff,
-            'moved': moved_elements,
-            'semantic': semantic_changes,
-            'patterns': change_patterns
-        })
-        
+        logger.debug("Computing hierarchical diff with semantic analysis")
+
+        # Handle null/malformed data
+        if before is None:
+            before = {}
+        if after is None:
+            after = {}
+
+        # Convert to dict if not already
+        if not isinstance(before, dict):
+            before = {"__value__": before}
+        if not isinstance(after, dict):
+            after = {"__value__": after}
+
+        # Detect circular references
+        if self._has_circular_references(before) or self._has_circular_references(after):
+            # Break circular references for processing
+            before = self._break_circular_references(before)
+            after = self._break_circular_references(after)
+
+        # Generate operations
+        operations = []
+        max_depth = [0]  # Use list to allow modification in nested function
+
+        def process_diff(old_obj, new_obj, path="", current_depth=0):
+            max_depth[0] = max(max_depth[0], current_depth)
+
+            if old_obj is None and new_obj is not None:
+                operations.append({
+                    "path": path,
+                    "operation": "add",
+                    "old_value": None,
+                    "new_value": new_obj
+                })
+                return
+
+            if old_obj is not None and new_obj is None:
+                operations.append({
+                    "path": path,
+                    "operation": "remove",
+                    "old_value": old_obj,
+                    "new_value": None
+                })
+                return
+
+            if not isinstance(old_obj, dict) or not isinstance(new_obj, dict):
+                if old_obj != new_obj:
+                    operations.append({
+                        "path": path,
+                        "operation": "modify",
+                        "old_value": old_obj,
+                        "new_value": new_obj
+                    })
+                return
+
+            # Handle dictionary diffs
+            old_keys = set(old_obj.keys()) if isinstance(old_obj, dict) else set()
+            new_keys = set(new_obj.keys()) if isinstance(new_obj, dict) else set()
+
+            # Added keys
+            for key in new_keys - old_keys:
+                new_path = f"{path}.{key}" if path else key
+                operations.append({
+                    "path": new_path,
+                    "operation": "add",
+                    "old_value": None,
+                    "new_value": new_obj[key]
+                })
+
+            # Removed keys
+            for key in old_keys - new_keys:
+                old_path = f"{path}.{key}" if path else key
+                operations.append({
+                    "path": old_path,
+                    "operation": "remove",
+                    "old_value": old_obj[key],
+                    "new_value": None
+                })
+
+            # Modified keys
+            for key in old_keys & new_keys:
+                key_path = f"{path}.{key}" if path else key
+                process_diff(old_obj[key], new_obj[key], key_path, current_depth + 1)
+
+        process_diff(before, after)
+
+        # Compute semantic analysis
+        semantic_analysis = self._compute_semantic_analysis_for_operations(operations, before, after)
+
         # Calculate metadata
-        diff_result['metadata'] = self._calculate_diff_metadata(diff_result)
-        diff_result['metadata']['computation_time_ms'] = (time.time() - start_time) * 1000
-        
-        logger.info(f"Hierarchical diff completed in {diff_result['metadata']['computation_time_ms']:.2f}ms")
-        
-        return diff_result
-    
+        processing_time_ms = (time.time() - start_time) * 1000
+        metadata = {
+            "operation_count": len(operations),
+            "depth_analyzed": max_depth[0],
+            "complexity_score": self._calculate_complexity_score(operations, max_depth[0]),
+            "processing_time_ms": processing_time_ms
+        }
+
+        # Record performance metrics
+        self._record_performance_metrics("compute_hierarchical_diff", processing_time_ms, operations, before, after)
+
+        logger.debug(f"Hierarchical diff completed in {processing_time_ms:.2f}ms with {len(operations)} operations")
+
+        return {
+            "operations": operations,
+            "metadata": metadata,
+            "semantic_analysis": semantic_analysis
+        }
+
+    def _has_circular_references(self, obj: Any, visited: Optional[set] = None) -> bool:
+        """Detect circular references to prevent infinite recursion."""
+        if visited is None:
+            visited = set()
+
+        if not isinstance(obj, (dict, list)):
+            return False
+
+        obj_id = id(obj)
+        if obj_id in visited:
+            return True
+
+        visited.add(obj_id)
+
+        try:
+            if isinstance(obj, dict):
+                for value in obj.values():
+                    if self._has_circular_references(value, visited.copy()):
+                        return True
+            elif isinstance(obj, list):
+                for item in obj:
+                    if self._has_circular_references(item, visited.copy()):
+                        return True
+        except RecursionError:
+            return True
+
+        return False
+
+    def _break_circular_references(self, obj: Any, visited: Optional[set] = None) -> Any:
+        """Break circular references by replacing them with placeholders."""
+        if visited is None:
+            visited = set()
+
+        if not isinstance(obj, (dict, list)):
+            return obj
+
+        obj_id = id(obj)
+        if obj_id in visited:
+            return "<circular_reference>"
+
+        visited.add(obj_id)
+
+        if isinstance(obj, dict):
+            result = {}
+            for key, value in obj.items():
+                result[key] = self._break_circular_references(value, visited.copy())
+            return result
+        elif isinstance(obj, list):
+            return [self._break_circular_references(item, visited.copy()) for item in obj]
+
+        return obj
+
+    def _compute_semantic_analysis_for_operations(self, operations: List[Dict[str, Any]],
+                                                 before: Dict[str, Any], after: Dict[str, Any]) -> Dict[str, Any]:
+        """Compute semantic analysis for the operations."""
+        semantic_analysis = {
+            "content_similarity": 0.0,
+            "semantic_changes": {}
+        }
+
+        if not operations:
+            semantic_analysis["content_similarity"] = 1.0
+            return semantic_analysis
+
+        # Calculate overall content similarity
+        total_similarity = 0.0
+        similarity_count = 0
+
+        for op in operations:
+            if op["operation"] == "modify":
+                old_val = op.get("old_value")
+                new_val = op.get("new_value")
+                if old_val is not None and new_val is not None:
+                    similarity = self._calculate_semantic_similarity(old_val, new_val)
+                    total_similarity += similarity
+                    similarity_count += 1
+
+                    # Track significant semantic changes
+                    if similarity < 0.7:
+                        semantic_analysis["semantic_changes"][op["path"]] = {
+                            "similarity_score": similarity,
+                            "change_type": "significant_modification"
+                        }
+
+        if similarity_count > 0:
+            semantic_analysis["content_similarity"] = total_similarity / similarity_count
+        else:
+            # If no modifications, calculate similarity based on structure
+            semantic_analysis["content_similarity"] = self._calculate_semantic_similarity(before, after)
+
+        # Use NLP service if available
+        if self.nlp_service:
+            try:
+                # Extract entities from text content if available
+                text_changes = [op for op in operations if isinstance(op.get("old_value"), str) and isinstance(op.get("new_value"), str)]
+                for change in text_changes:
+                    self.nlp_service.extract_entities(change["new_value"])
+            except Exception as e:
+                logger.warning(f"NLP service error during semantic analysis: {e}")
+
+        return semantic_analysis
+
+    def _calculate_complexity_score(self, operations: List[Dict[str, Any]], max_depth: int) -> float:
+        """Calculate complexity score based on operations and depth."""
+        if not operations:
+            return 0.0
+
+        # Base complexity from operation count
+        operation_complexity = len(operations) * 0.1
+
+        # Add complexity for depth
+        depth_complexity = max_depth * 0.2
+
+        # Add complexity for different operation types
+        operation_types = set(op["operation"] for op in operations)
+        type_complexity = len(operation_types) * 0.1
+
+        total_complexity = operation_complexity + depth_complexity + type_complexity
+
+        # Normalize to 0-1 scale
+        return min(1.0, total_complexity)
+
+    def _record_performance_metrics(self, operation_type: str, execution_time_ms: float,
+                                   operations: List[Dict[str, Any]], before: Any, after: Any):
+        """Record performance metrics for the operation."""
+        import sys
+
+        data_size_bytes = sys.getsizeof(before) + sys.getsizeof(after)
+
+        metrics = {
+            "operation_type": operation_type,
+            "execution_time_ms": execution_time_ms,
+            "data_size_bytes": data_size_bytes,
+            "operations_count": len(operations)
+        }
+
+        self.performance_metrics.append(metrics)
+
+        # Keep only last 100 metrics to avoid memory issues
+        if len(self.performance_metrics) > 100:
+            self.performance_metrics = self.performance_metrics[-100:]
+
+    def _analyze_semantic_conflict(self, path: str, base_value: Any, local_value: Any, remote_value: Any) -> Dict[str, Any]:
+        """Analyze semantic conflicts between different values."""
+
+        # Calculate semantic similarities
+        base_local_similarity = self._calculate_semantic_similarity(base_value, local_value)
+        base_remote_similarity = self._calculate_semantic_similarity(base_value, remote_value)
+        local_remote_similarity = self._calculate_semantic_similarity(local_value, remote_value)
+
+        # Determine conflict type based on similarity scores
+        avg_similarity = (base_local_similarity + base_remote_similarity + local_remote_similarity) / 3
+
+        if avg_similarity > 0.8:
+            conflict_type = "semantic_conflict"
+        else:
+            conflict_type = "modification_conflict"
+
+        # Generate resolution suggestions based on similarity scores
+        resolution_suggestions = []
+
+        if base_local_similarity > base_remote_similarity:
+            resolution_suggestions.append({
+                "strategy": "take_local",
+                "description": "Local version is more similar to base",
+                "confidence": base_local_similarity
+            })
+        elif base_remote_similarity > base_local_similarity:
+            resolution_suggestions.append({
+                "strategy": "take_remote",
+                "description": "Remote version is more similar to base",
+                "confidence": base_remote_similarity
+            })
+
+        if local_remote_similarity > 0.6:
+            resolution_suggestions.append({
+                "strategy": "semantic_merge",
+                "description": "Local and remote values are semantically similar",
+                "confidence": local_remote_similarity
+            })
+
+        resolution_suggestions.append({
+            "strategy": "manual_review",
+            "description": "Manual review recommended for semantic conflicts",
+            "confidence": 0.5
+        })
+
+        return {
+            "type": conflict_type,
+            "path": path,
+            "semantic_similarity": {
+                "base_local": base_local_similarity,
+                "base_remote": base_remote_similarity,
+                "local_remote": local_remote_similarity,
+                "average": avg_similarity
+            },
+            "resolution_suggestions": resolution_suggestions
+        }
+
     def compute_three_way_diff(self, base: Dict[str, Any], 
                               local: Dict[str, Any], 
                               remote: Dict[str, Any]) -> Dict[str, Any]:
@@ -111,30 +375,49 @@ class HierarchicalDiffEngine:
         # Identify conflicts
         conflicts = self._identify_three_way_conflicts(local_diff, remote_diff)
         
-        # Generate merge result
-        merge_result = self._generate_merge_result(base, local_diff, remote_diff, conflicts)
-        
-        # Analyze conflict patterns
-        conflict_analysis = self._analyze_conflict_patterns(conflicts)
-        
-        # Generate resolution suggestions
-        resolution_suggestions = self._generate_resolution_suggestions(conflicts, conflict_analysis)
-        
         computation_time = (time.time() - start_time) * 1000
         
+        # Convert conflicts to dict format for tests
+        conflicts_dict = []
+        for conflict in conflicts:
+            conflicts_dict.append({
+                "path": conflict.path,
+                "type": conflict.conflict_type,
+                "local_value": conflict.local_value,
+                "remote_value": conflict.remote_value,
+                "base_value": conflict.base_value,
+                "resolution_suggestions": conflict.resolution_suggestions
+            })
+
+        # Identify mergeable changes (non-conflicting operations)
+        mergeable_changes = []
+        conflict_paths = set(c["path"] for c in conflicts_dict)
+
+        # Add non-conflicting local changes
+        for operation in local_diff["operations"]:
+            if operation["path"] not in conflict_paths:
+                mergeable_changes.append({
+                    "source": "local",
+                    "operation": operation
+                })
+
+        # Add non-conflicting remote changes
+        for operation in remote_diff["operations"]:
+            if operation["path"] not in conflict_paths:
+                mergeable_changes.append({
+                    "source": "remote",
+                    "operation": operation
+                })
+
         result = {
-            'local_changes': local_diff,
-            'remote_changes': remote_diff,
-            'conflicts': conflicts,
-            'suggested_merge': merge_result,
-            'auto_mergeable': len(conflicts) == 0,
-            'conflict_analysis': conflict_analysis,
-            'resolution_suggestions': resolution_suggestions,
-            'computation_time_ms': computation_time
+            'base_to_local': local_diff,
+            'base_to_remote': remote_diff,
+            'conflicts': conflicts_dict,
+            'mergeable_changes': mergeable_changes
         }
-        
+
         logger.info(f"Three-way diff completed: {len(conflicts)} conflicts found in {computation_time:.2f}ms")
-        
+
         return result
     
     def _compute_structural_diff(self, before: Dict[str, Any], 
@@ -156,7 +439,7 @@ class HierarchicalDiffEngine:
             
             if before_val != after_val:
                 # Check for type changes
-                if type(before_val) != type(after_val):
+                if type(before_val) is not type(after_val):
                     result['type_changes'][key] = {
                         'before_type': type(before_val).__name__,
                         'after_type': type(after_val).__name__,
@@ -285,10 +568,10 @@ class HierarchicalDiffEngine:
         
         return semantic_changes
     
-    def _identify_three_way_conflicts(self, local_diff: Dict[str, Any], 
+    def _identify_three_way_conflicts(self, local_diff: Dict[str, Any],
                                      remote_diff: Dict[str, Any]) -> List[ConflictDescriptor]:
-        """Identify conflicts in three-way merge."""
-        
+        """Identify conflicts in three-way merge using operations-based structure."""
+
         conflicts = []
         
         # Check for conflicts in structural changes
@@ -314,6 +597,7 @@ class HierarchicalDiffEngine:
                 conflict = ConflictDescriptor(
                     conflict_id=conflict_id,
                     conflict_type=conflict_type,
+
                     path=key,
                     local_value=local_value,
                     remote_value=remote_value,
@@ -322,11 +606,13 @@ class HierarchicalDiffEngine:
                     resolution_suggestions=self._generate_conflict_resolution_suggestions(
                         local_change, remote_change
                     ),
+
                     created_at=datetime.now(timezone.utc),
                     severity=self._calculate_conflict_severity(conflict_type, confidence_score, local_value, remote_value)
                 )
-                
+
                 conflicts.append(conflict)
+
         
         # Check for add/remove conflicts
         local_added = set(local_diff['structural'].get('added_keys', set()))
@@ -362,7 +648,7 @@ class HierarchicalDiffEngine:
             )
             
             conflicts.append(conflict)
-        
+
         return conflicts
     
     def _generate_merge_result(self, base: Dict[str, Any], 
@@ -606,8 +892,8 @@ class HierarchicalDiffEngine:
         
         if val1 == val2:
             return 1.0
-        
-        if type(val1) != type(val2):
+
+        if type(val1) is not type(val2):
             return 0.0
         
         if isinstance(val1, str) and isinstance(val2, str):
@@ -665,8 +951,8 @@ class HierarchicalDiffEngine:
         # Basic conflict type classification
         local_val = self._extract_change_value(local_change, 'after')
         remote_val = self._extract_change_value(remote_change, 'after')
-        
-        if type(local_val) != type(remote_val):
+
+        if type(local_val) is not type(remote_val):
             return 'type_conflict'
         elif isinstance(local_val, str) and isinstance(remote_val, str):
             return 'text_conflict'
@@ -689,31 +975,57 @@ class HierarchicalDiffEngine:
         # Less similar values = higher confidence it's a real conflict
         return 1.0 - similarity
     
-    def _generate_conflict_resolution_suggestions(self, local_change: Dict[str, Any], 
-                                                remote_change: Dict[str, Any]) -> List[Dict[str, Any]]:
+    def _generate_conflict_resolution_suggestions(self, conflict: Dict[str, Any]) -> List[Dict[str, Any]]:
         """Generate suggestions for resolving a specific conflict."""
-        
-        suggestions = [
-            {"type": "use_local", "description": "Keep the local version"},
-            {"type": "use_remote", "description": "Keep the remote version"},
-            {"type": "manual_merge", "description": "Manually combine both versions"}
-        ]
-        
-        # Add intelligent suggestions based on change type
-        local_val = self._extract_change_value(local_change, 'after')
-        remote_val = self._extract_change_value(remote_change, 'after')
-        
-        if isinstance(local_val, str) and isinstance(remote_val, str):
+
+        local_value = conflict.get("local_value")
+        remote_value = conflict.get("remote_value")
+        conflict_type = conflict.get("type", "modification_conflict")
+
+        suggestions = []
+
+        # Always include basic resolution strategies
+        suggestions.append({
+            "strategy": "take_local",
+            "description": "Keep the local version",
+            "confidence": 0.5
+        })
+
+        suggestions.append({
+            "strategy": "take_remote",
+            "description": "Keep the remote version",
+            "confidence": 0.5
+        })
+
+        # Add intelligent suggestions based on conflict type and value types
+        if isinstance(local_value, str) and isinstance(remote_value, str):
+            # Calculate similarity to determine best merge strategy
+            similarity = self._calculate_semantic_similarity(local_value, remote_value)
+
+            if similarity > 0.6:
+                suggestions.append({
+                    "strategy": "semantic_merge",
+                    "description": "Values are semantically similar, can merge intelligently",
+                    "confidence": similarity
+                })
+
             suggestions.append({
-                "type": "text_merge", 
-                "description": "Use text merging algorithms to combine content"
+                "strategy": "merge_text",
+                "description": "Use text merging algorithms to combine content",
+                "confidence": 0.7 if similarity > 0.4 else 0.3
             })
-        elif isinstance(local_val, (list, dict)) and isinstance(remote_val, (list, dict)):
-            suggestions.append({
-                "type": "structural_merge", 
-                "description": "Merge structures intelligently"
-            })
-        
+
+        # Add manual review for complex conflicts
+        confidence = 0.9 if conflict_type == "modification_conflict" else 0.6
+        suggestions.append({
+            "strategy": "manual_review",
+            "description": f"Manual review recommended for {conflict_type}",
+            "confidence": confidence
+        })
+
+        # Sort by confidence (highest first)
+        suggestions.sort(key=lambda x: x["confidence"], reverse=True)
+
         return suggestions
     
     def _calculate_diff_metadata(self, diff_result: Dict[str, Any]) -> Dict[str, Any]:
@@ -781,21 +1093,31 @@ class HierarchicalDiffEngine:
     
     def get_performance_statistics(self) -> Dict[str, Any]:
         """Get performance statistics for the diff engine."""
-        
+
         if not self.performance_metrics:
             return {
-                'total_diffs_computed': 0,
-                'average_computation_time_ms': 0,
-                'cache_hit_rate': 0
+                'total_operations': 0,
+                'avg_execution_time_ms': 0.0,
+                'total_data_processed_bytes': 0,
+                'operations_per_second': 0.0
             }
-        
-        total_diffs = len(self.performance_metrics)
-        avg_time = sum(self.performance_metrics) / total_diffs
-        cache_hits = len(self.diff_cache)
-        
+
+        # Aggregate statistics from recorded metrics
+        total_operations = sum(metric['operations_count'] for metric in self.performance_metrics)
+        total_execution_time = sum(metric['execution_time_ms'] for metric in self.performance_metrics)
+        total_data_bytes = sum(metric['data_size_bytes'] for metric in self.performance_metrics)
+
+        avg_execution_time_ms = total_execution_time / len(self.performance_metrics)
+
+        # Calculate operations per second (avoiding division by zero)
+        if total_execution_time > 0:
+            operations_per_second = (total_operations * 1000) / total_execution_time  # Convert ms to seconds
+        else:
+            operations_per_second = 0.0
+
         return {
-            'total_diffs_computed': total_diffs,
-            'average_computation_time_ms': avg_time,
-            'cache_entries': cache_hits,
-            'cache_hit_rate': cache_hits / max(1, total_diffs)
+            'total_operations': total_operations,
+            'avg_execution_time_ms': avg_execution_time_ms,
+            'total_data_processed_bytes': total_data_bytes,
+            'operations_per_second': operations_per_second
         }

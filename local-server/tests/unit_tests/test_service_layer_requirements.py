@@ -220,6 +220,7 @@ def test_structured_output():
         definition="Test definition here.",
         reasoning="Test reasoning here.",
         discrepancies="Test discrepancies here.",
+        execution_id="test-execution-id-123",
     )
 
     assert hasattr(response, "definition")
@@ -229,7 +230,9 @@ def test_structured_output():
 
     # Test optional discrepancies
     response2 = DefinitionSuggestionResponse(
-        definition="Test definition.", reasoning="Test reasoning."
+        definition="Test definition.",
+        reasoning="Test reasoning.",
+        execution_id="test-execution-id-456",
     )
     assert response2.discrepancies is None
     print("  ✓ Discrepancies field is optional")

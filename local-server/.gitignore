@@ -9,7 +9,7 @@ downloads/
 
 # Claude
 .claude/
-#PRPs/
+PRPs/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

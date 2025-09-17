@@ -16,7 +16,7 @@ export const Route = createFileRoute("/app/config/pipelines/$pipelineType/")({
 
 function PipelineTypeConfigPage() {
   const { pipelineType } = Route.useParams() as { pipelineType: PipelineType };
-  
+
   const {
     data: flavorsResponse,
     isLoading,
@@ -24,12 +24,13 @@ function PipelineTypeConfigPage() {
   } = usePipelineFlavors({ pipeline: pipelineType });
 
   const flavors = flavorsResponse?.flavors || [];
-  const pipelineConfig = PipelineTypes.find(p => p.value === pipelineType);
+  const pipelineConfig = PipelineTypes.find((p) => p.value === pipelineType);
 
   if (!pipelineConfig) {
     return (
       <Alert color="failure" className="m-4">
-        <span className="font-medium">Error!</span> Unknown pipeline type: {pipelineType}
+        <span className="font-medium">Error!</span> Unknown pipeline type:{" "}
+        {pipelineType}
       </Alert>
     );
   }
@@ -87,8 +88,8 @@ function PipelineTypeConfigPage() {
                 Manage configuration variants for this pipeline type
               </p>
             </div>
-            <Link 
-              to="/app/config/pipelines/$pipelineType/create" 
+            <Link
+              to="/app/config/pipelines/$pipelineType/create"
               params={{ pipelineType }}
             >
               <Button color="blue">
@@ -101,12 +102,14 @@ function PipelineTypeConfigPage() {
           {flavors.length === 0 ? (
             <div className="py-8 text-center text-gray-500 dark:text-gray-400">
               <Settings className="mx-auto mb-4 h-12 w-12 opacity-50" />
-              <h4 className="mb-2 text-lg font-medium">No flavors configured</h4>
+              <h4 className="mb-2 text-lg font-medium">
+                No flavors configured
+              </h4>
               <p className="mb-4 text-sm">
                 Create your first flavor configuration for this pipeline type
               </p>
-              <Link 
-                to="/app/config/pipelines/$pipelineType/create" 
+              <Link
+                to="/app/config/pipelines/$pipelineType/create"
                 params={{ pipelineType }}
               >
                 <Button color="blue" size="sm">

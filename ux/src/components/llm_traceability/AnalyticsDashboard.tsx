@@ -122,8 +122,10 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
 
   // Fetch analytics data with optional auto-refresh
   // Use flavor-specific hooks when flavorId is provided
-  const flavorAnalyticsFilters = flavorId ? { flavor_id: flavorId, days_back: selectedTimeRange } : null;
-  
+  const flavorAnalyticsFilters = flavorId
+    ? { flavor_id: flavorId, days_back: selectedTimeRange }
+    : null;
+
   const {
     data: flavorAnalyticsData,
     isLoading: flavorAnalyticsLoading,
@@ -140,7 +142,10 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
     refetch: refetchGeneralAnalytics,
   } = !flavorId && autoRefresh
     ? useAnalyticsWithRefresh(selectedTimeRange, refreshInterval)
-    : useAnalyticsForTimeRange(flavorId ? null : selectedTimeRange, pipelineTypeFilter);
+    : useAnalyticsForTimeRange(
+        flavorId ? null : selectedTimeRange,
+        pipelineTypeFilter,
+      );
 
   // Convert flavor analytics data to match the expected ExecutionAnalyticsResponse format
   const convertedFlavorData = useMemo(() => {
@@ -153,15 +158,21 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
       filters: {
         pipeline_type: "",
         days_back: flavorAnalyticsData.time_range_days,
-      }
+      },
     };
   }, [flavorAnalyticsData]);
 
   // Use flavor-specific data when available, otherwise use general data
   const analyticsData = flavorId ? convertedFlavorData : generalAnalyticsData;
-  const analyticsLoading = flavorId ? flavorAnalyticsLoading : generalAnalyticsLoading;
-  const analyticsError = flavorId ? flavorAnalyticsError : generalAnalyticsError;
-  const refetchAnalytics = flavorId ? refetchFlavorAnalytics : refetchGeneralAnalytics;
+  const analyticsLoading = flavorId
+    ? flavorAnalyticsLoading
+    : generalAnalyticsLoading;
+  const analyticsError = flavorId
+    ? flavorAnalyticsError
+    : generalAnalyticsError;
+  const refetchAnalytics = flavorId
+    ? refetchFlavorAnalytics
+    : refetchGeneralAnalytics;
 
   // Health status
   const { data: healthData, isLoading: healthLoading } =
@@ -221,13 +232,14 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
       <div className="mb-6 flex items-center justify-between">
         <div>
           <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
-            {flavorId ? "Flavor Analytics Dashboard" : "LLM Analytics Dashboard"}
+            {flavorId
+              ? "Flavor Analytics Dashboard"
+              : "LLM Analytics Dashboard"}
           </h2>
           <p className="mt-1 text-gray-600 dark:text-gray-400">
-            {flavorId 
+            {flavorId
               ? `Analytics for flavor ${flavorId.substring(0, 8)}...`
-              : "Track AI suggestion usage and performance metrics"
-            }
+              : "Track AI suggestion usage and performance metrics"}
           </p>
         </div>
 
@@ -329,7 +341,12 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
             title="Success Rate"
             value={metrics.successRate}
             subtitle="Successful completions"
-            trend={analyticsData?.data?.success_rate && analyticsData.data.success_rate > 0.9 ? "up" : "neutral"}
+            trend={
+              analyticsData?.data?.success_rate &&
+              analyticsData.data.success_rate > 0.9
+                ? "up"
+                : "neutral"
+            }
             icon={
               <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-green-100">
                 <span className="text-green-600">✅</span>
@@ -342,7 +359,10 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
             value={metrics.avgExecutionTime}
             subtitle="Per execution"
             trend={
-              analyticsData?.data?.avg_execution_time && analyticsData.data.avg_execution_time < 1000 ? "up" : "down"
+              analyticsData?.data?.avg_execution_time &&
+              analyticsData.data.avg_execution_time < 1000
+                ? "up"
+                : "down"
             }
             icon={
               <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-purple-100">
@@ -366,7 +386,12 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
             title="Selection Rate"
             value={metrics.selectionRate}
             subtitle="% of suggestions used"
-            trend={analyticsData?.data?.selection_rate && analyticsData.data.selection_rate > 0.5 ? "up" : "neutral"}
+            trend={
+              analyticsData?.data?.selection_rate &&
+              analyticsData.data.selection_rate > 0.5
+                ? "up"
+                : "neutral"
+            }
             icon={
               <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-teal-100">
                 <span className="text-teal-600">📊</span>

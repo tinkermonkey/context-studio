@@ -8,24 +8,26 @@ import { usePipelineFlavor } from "@/api/hooks/pipelineFlavors";
 import type { PipelineType } from "@/api/services/pipelineFlavors";
 import { PipelineTypes } from "@/components/llm_pipelines/flavors/pipelineTypes";
 
-export const Route = createFileRoute("/app/config/pipelines/$pipelineType/edit/$flavorId")({
+export const Route = createFileRoute(
+  "/app/config/pipelines/$pipelineType/edit/$flavorId",
+)({
   component: EditFlavorPage,
 });
 
 function EditFlavorPage() {
-  const { pipelineType, flavorId } = Route.useParams() as { 
-    pipelineType: PipelineType; 
-    flavorId: string; 
+  const { pipelineType, flavorId } = Route.useParams() as {
+    pipelineType: PipelineType;
+    flavorId: string;
   };
   const navigate = Route.useNavigate();
-  
+
   const { data: flavor, isLoading, error } = usePipelineFlavor(flavorId);
-  const pipelineConfig = PipelineTypes.find(p => p.value === pipelineType);
+  const pipelineConfig = PipelineTypes.find((p) => p.value === pipelineType);
 
   const handleClose = () => {
-    navigate({ 
-      to: "/app/config/pipelines/$pipelineType", 
-      params: { pipelineType } 
+    navigate({
+      to: "/app/config/pipelines/$pipelineType",
+      params: { pipelineType },
     });
   };
 
@@ -41,7 +43,8 @@ function EditFlavorPage() {
   if (error || !flavor) {
     return (
       <Alert color="failure" className="m-4">
-        <span className="font-medium">Error!</span> Unable to load flavor with ID: {flavorId}
+        <span className="font-medium">Error!</span> Unable to load flavor with
+        ID: {flavorId}
       </Alert>
     );
   }
@@ -50,8 +53,8 @@ function EditFlavorPage() {
     <>
       <CsMainTitle icon={Settings}>
         <div className="flex items-center gap-3">
-          <Link 
-            to="/app/config/pipelines/$pipelineType" 
+          <Link
+            to="/app/config/pipelines/$pipelineType"
             params={{ pipelineType }}
             className="hover:text-blue-600"
           >

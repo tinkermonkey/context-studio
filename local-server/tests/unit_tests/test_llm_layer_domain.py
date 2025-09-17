@@ -278,15 +278,20 @@ class TestLLMResponseModels:
             definition="Test definition",
             purpose="Test purpose",
             rationale="Test rationale",
+            execution_id="test-execution-id-123",
         )
         assert layer_def.definition == "Test definition"
         assert layer_def.purpose == "Test purpose"
         assert layer_def.rationale == "Test rationale"
+        assert layer_def.execution_id == "test-execution-id-123"
 
         # Test LayerLLMSuccessResponse
-        success_response = LayerLLMSuccessResponse(success=True, data=layer_def)
+        success_response = LayerLLMSuccessResponse(
+            success=True, data=layer_def, execution_id="test-execution-id-123"
+        )
         assert success_response.success is True
         assert success_response.data == layer_def
+        assert success_response.execution_id == "test-execution-id-123"
 
     def test_domain_response_models(self):
         """Test domain response model creation"""
@@ -294,13 +299,20 @@ class TestLLMResponseModels:
 
         # Test DomainDefinitionResponse
         domain_def = DomainDefinitionResponse(
-            definition="Test definition", purpose="Test purpose", scope="Test scope"
+            definition="Test definition",
+            purpose="Test purpose",
+            scope="Test scope",
+            execution_id="test-execution-id-456",
         )
         assert domain_def.definition == "Test definition"
         assert domain_def.purpose == "Test purpose"
         assert domain_def.scope == "Test scope"
+        assert domain_def.execution_id == "test-execution-id-456"
 
         # Test DomainLLMSuccessResponse
-        success_response = DomainLLMSuccessResponse(success=True, data=domain_def)
+        success_response = DomainLLMSuccessResponse(
+            success=True, data=domain_def, execution_id="test-execution-id-456"
+        )
         assert success_response.success is True
         assert success_response.data == domain_def
+        assert success_response.execution_id == "test-execution-id-456"

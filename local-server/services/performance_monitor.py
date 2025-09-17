@@ -66,12 +66,12 @@ class PerformanceMonitor:
         
         # Performance thresholds
         self.performance_thresholds = {
-            'query_time_ms': 5000,
+            'query_metrics.avg_execution_time_ms': 5000,
             'sync_time_ms': 10000,
-            'memory_usage_mb': 1000,
-            'error_rate_percent': 1.0,
+            'system_metrics.memory_usage_mb': 1000,
+            'system_metrics.error_rate_percent': 1.0,
             'throughput_per_second': 10,
-            'cache_hit_rate': 0.8,
+            'cache_metrics.hit_rate': 0.8,
             'storage_growth_rate_mb_per_hour': 100
         }
         
@@ -611,11 +611,11 @@ class PerformanceMonitor:
                     # Determine alert condition based on metric type
                     should_alert = False
                     
-                    if 'rate' in metric_path or 'hit_rate' in metric_path:
-                        # For rates, alert if below threshold
+                    if 'hit_rate' in metric_path or 'cache_rate' in metric_path:
+                        # For hit rates and cache rates, alert if below threshold
                         should_alert = current_value < threshold_value
                     else:
-                        # For other metrics, alert if above threshold
+                        # For other metrics (including error rates), alert if above threshold
                         should_alert = current_value > threshold_value
                     
                     if should_alert:
@@ -626,7 +626,7 @@ class PerformanceMonitor:
                             metric_name=metric_path,
                             current_value=current_value,
                             threshold_value=threshold_value,
-                            description=f"{metric_path} is {'below' if 'rate' in metric_path else 'above'} threshold: {current_value:.2f} vs {threshold_value:.2f}",
+                            description=f"{metric_path} is {'below' if 'hit_rate' in metric_path or 'cache_rate' in metric_path else 'above'} threshold: {current_value:.2f} vs {threshold_value:.2f}",
                             created_at=datetime.now(timezone.utc)
                         )
                         
@@ -657,11 +657,11 @@ class PerformanceMonitor:
     def _determine_alert_severity(self, metric_path: str, current_value: float, threshold_value: float) -> str:
         """Determine alert severity based on how far from threshold."""
         
-        if 'rate' in metric_path or 'hit_rate' in metric_path:
-            # For rates, calculate how far below threshold
+        if 'hit_rate' in metric_path or 'cache_rate' in metric_path:
+            # For hit rates and cache rates, calculate how far below threshold
             deviation = (threshold_value - current_value) / threshold_value
         else:
-            # For other metrics, calculate how far above threshold
+            # For other metrics (including error rates), calculate how far above threshold
             deviation = (current_value - threshold_value) / threshold_value
         
         if deviation > 0.5:  # 50% deviation

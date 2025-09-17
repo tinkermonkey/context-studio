@@ -27,7 +27,9 @@ export const PipelineFlavorTester: React.FC<PipelineFlavorTesterProps> = ({
   onClose,
 }) => {
   const [selectedRecord, setSelectedRecord] = useState<TestRecord | null>(null);
-  const [activeView, setActiveView] = useState<"analytics" | "history">("analytics");
+  const [activeView, setActiveView] = useState<"analytics" | "history">(
+    "analytics",
+  );
   // Fetch data based on pipeline type - only fetch what we need
   const { data: layersData, isLoading: layersLoading } = useLayerNodes();
   const { data: domainsData, isLoading: domainsLoading } = useDomainNodes();
@@ -99,13 +101,13 @@ export const PipelineFlavorTester: React.FC<PipelineFlavorTesterProps> = ({
             <h3 className="mt-4 mb-2 text-lg font-semibold text-gray-900 dark:text-white">
               System Prompt
             </h3>
-            <pre className="text-sm text-gray-500 dark:text-gray-400 whitespace-pre-wrap">
+            <pre className="text-sm whitespace-pre-wrap text-gray-500 dark:text-gray-400">
               {flavor.system_prompt}
             </pre>
             <h3 className="mt-4 mb-2 text-lg font-semibold text-gray-900 dark:text-white">
               User Prompt
             </h3>
-            <pre className="text-sm text-gray-500 dark:text-gray-400 whitespace-pre-wrap">
+            <pre className="text-sm whitespace-pre-wrap text-gray-500 dark:text-gray-400">
               {flavor.user_prompt}
             </pre>
           </div>

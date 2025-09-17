@@ -5,13 +5,16 @@ import { CsMainTitle } from "@/components/layout/cs_main";
 import { PipelineFlavorEditor } from "@/components/llm_pipelines/flavors/PipelineFlavorEditor";
 import type { PipelineType } from "@/api/services/pipelineFlavors";
 
-const PIPELINE_TYPES: Record<PipelineType, { label: string; description: string }> = {
+const PIPELINE_TYPES: Record<
+  PipelineType,
+  { label: string; description: string }
+> = {
   suggest_layer_definition: {
     label: "Layer Definitions",
     description: "Generate definitions for knowledge layers",
   },
   suggest_domain_definition: {
-    label: "Domain Definitions", 
+    label: "Domain Definitions",
     description: "Generate definitions for knowledge domains",
   },
   suggest_term_definition: {
@@ -20,7 +23,9 @@ const PIPELINE_TYPES: Record<PipelineType, { label: string; description: string 
   },
 };
 
-export const Route = createFileRoute("/app/config/pipelines/$pipelineType/create")({
+export const Route = createFileRoute(
+  "/app/config/pipelines/$pipelineType/create",
+)({
   component: CreateFlavorPage,
 });
 
@@ -30,9 +35,9 @@ function CreateFlavorPage() {
   const pipelineConfig = PIPELINE_TYPES[pipelineType];
 
   const handleClose = () => {
-    navigate({ 
-      to: "/app/config/pipelines/$pipelineType", 
-      params: { pipelineType } 
+    navigate({
+      to: "/app/config/pipelines/$pipelineType",
+      params: { pipelineType },
     });
   };
 
@@ -40,8 +45,8 @@ function CreateFlavorPage() {
     <>
       <CsMainTitle icon={Settings}>
         <div className="flex items-center gap-3">
-          <Link 
-            to="/app/config/pipelines/$pipelineType" 
+          <Link
+            to="/app/config/pipelines/$pipelineType"
             params={{ pipelineType }}
             className="hover:text-blue-600"
           >

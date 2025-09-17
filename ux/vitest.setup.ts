@@ -2,6 +2,45 @@ import "@testing-library/jest-dom";
 import { vi, beforeEach, afterEach } from "vitest";
 import { cleanup } from "@testing-library/react";
 
+// Mock Axios to prevent real HTTP requests during tests
+vi.mock("axios", () => {
+  return {
+    default: {
+      create: vi.fn(() => ({
+        interceptors: {
+          request: { use: vi.fn() },
+          response: { use: vi.fn() }
+        },
+        request: vi.fn(() => Promise.resolve({ data: {} })),
+        get: vi.fn(() => Promise.resolve({ data: {} })),
+        post: vi.fn(() => Promise.resolve({ data: {} })),
+        put: vi.fn(() => Promise.resolve({ data: {} })),
+        delete: vi.fn(() => Promise.resolve({ data: {} }))
+      }))
+    }
+  };
+});
+
+// Mock the API client directly to ensure no HTTP requests are made
+vi.mock("@/api/client/axios", () => ({
+  apiClient: {
+    request: vi.fn(() => Promise.resolve({ data: {} })),
+    get: vi.fn(() => Promise.resolve({ data: {} })),
+    post: vi.fn(() => Promise.resolve({ data: {} })),
+    put: vi.fn(() => Promise.resolve({ data: {} })),
+    delete: vi.fn(() => Promise.resolve({ data: {} })),
+    interceptors: {
+      request: { use: vi.fn() },
+      response: { use: vi.fn() }
+    },
+    defaults: {
+      headers: { common: {} }
+    }
+  },
+  updateBaseURL: vi.fn(),
+  setAuthToken: vi.fn()
+}));
+
 // Clean up after each test
 afterEach(() => {
   cleanup();
@@ -31,7 +70,7 @@ if (typeof document !== "undefined") {
 // DOM compatibility fixes for appendChild issues
 if (typeof Node !== "undefined") {
   const originalAppendChild = Node.prototype.appendChild;
-  Node.prototype.appendChild = function(child) {
+  Node.prototype.appendChild = function (child) {
     if (!child || typeof child !== "object") {
       // Create a text node for primitive values
       child = document.createTextNode(String(child));
@@ -43,7 +82,7 @@ if (typeof Node !== "undefined") {
   };
 
   const originalInsertBefore = Node.prototype.insertBefore;
-  Node.prototype.insertBefore = function(newNode, referenceNode) {
+  Node.prototype.insertBefore = function (newNode, referenceNode) {
     if (!newNode || typeof newNode !== "object") {
       newNode = document.createTextNode(String(newNode));
     }
@@ -57,7 +96,8 @@ if (typeof Node !== "undefined") {
 // Enhanced JSDOM setup for better React compatibility
 Object.defineProperty(window, "matchMedia", {
   writable: true,
-  value: vi.fn().mockImplementation(query => ({
+  value: vi.fn().mockImplementation((query) => ({
+
     matches: false,
     media: query,
     onchange: null,

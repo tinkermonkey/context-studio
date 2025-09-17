@@ -343,7 +343,12 @@ describe("LLM Traceability Integration", () => {
           <div>
             <button
               onClick={() =>
-                trackSelection("exec-123", "node-456", "definition", "Selected content")
+                trackSelection(
+                  "exec-123",
+                  "node-456",
+                  "definition",
+                  "Selected content",
+                )
               }
               data-testid="track-button"
             >

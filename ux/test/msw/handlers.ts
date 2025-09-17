@@ -266,4 +266,168 @@ export const handlers = [
   rest.get("http://localhost:8001/api/relationships", (req, res, ctx) => {
     return res(ctx.status(200), ctx.json({ data: [] }));
   }),
+
+  // Structure Nodes - core handlers for unified node management
+  rest.get("/api/structure_nodes", (req, res, ctx) => {
+    return res(
+      ctx.status(200),
+      ctx.json({
+        data: [{ id: "node-1", title: "Node 1", node_type: "domain" }],
+      }),
+    );
+  }),
+  rest.get("http://localhost:8000/api/structure_nodes", (req, res, ctx) => {
+    return res(
+      ctx.status(200),
+      ctx.json({
+        data: [{ id: "node-1", title: "Node 1", node_type: "domain" }],
+      }),
+    );
+  }),
+  rest.get("http://localhost:8001/api/structure_nodes", (req, res, ctx) => {
+    return res(
+      ctx.status(200),
+      ctx.json({
+        data: [{ id: "node-1", title: "Node 1", node_type: "domain" }],
+      }),
+    );
+  }),
+  rest.get("/api/structure_nodes/", (req, res, ctx) => {
+    return res(
+      ctx.status(200),
+      ctx.json({
+        data: [{ id: "node-1", title: "Node 1", node_type: "domain" }],
+      }),
+    );
+  }),
+  rest.get("http://localhost:8000/api/structure_nodes/", (req, res, ctx) => {
+    return res(
+      ctx.status(200),
+      ctx.json({
+        data: [{ id: "node-1", title: "Node 1", node_type: "domain" }],
+      }),
+    );
+  }),
+  rest.get("http://localhost:8001/api/structure_nodes/", (req, res, ctx) => {
+    return res(
+      ctx.status(200),
+      ctx.json({
+        data: [{ id: "node-1", title: "Node 1", node_type: "domain" }],
+      }),
+    );
+  }),
+  rest.get("/api/structure_nodes/:id", (req, res, ctx) => {
+    const { id } = req.params as { id: string };
+    return res(
+      ctx.status(200),
+      ctx.json({ data: { id, title: `Node ${id}`, node_type: "domain" } }),
+    );
+  }),
+  rest.get("http://localhost:8000/api/structure_nodes/:id", (req, res, ctx) => {
+    const { id } = req.params as { id: string };
+    return res(
+      ctx.status(200),
+      ctx.json({ data: { id, title: `Node ${id}`, node_type: "domain" } }),
+    );
+  }),
+  rest.get("http://localhost:8001/api/structure_nodes/:id", (req, res, ctx) => {
+    const { id } = req.params as { id: string };
+    return res(
+      ctx.status(200),
+      ctx.json({ data: { id, title: `Node ${id}`, node_type: "domain" } }),
+    );
+  }),
+  rest.put("/api/structure_nodes/:id", async (req, res, ctx) => {
+    const { id } = req.params as { id: string };
+    const body = await req.json();
+
+    // Minimal validation for tests: require a title
+    if (!body || typeof body.title !== "string" || body.title.trim() === "") {
+      return res(
+        ctx.status(400),
+        ctx.json({ message: "Validation failed: title is required" }),
+      );
+    }
+
+    // Return updated node with merged data
+    const response = {
+      data: {
+        id,
+        title: String(body.title),
+        definition: body.definition || null,
+        node_type: body.node_type || "domain",
+        parent_node_id:
+          body.parent_node_id || "00000000-0000-0000-0000-000000000000",
+        created_at: body.created_at || new Date().toISOString(),
+        last_modified: new Date().toISOString(),
+        version: (body.version || 1) + 1,
+      },
+    };
+
+    return res(ctx.status(200), ctx.json(response));
+  }),
+  rest.put(
+    "http://localhost:8000/api/structure_nodes/:id",
+    async (req, res, ctx) => {
+      const { id } = req.params as { id: string };
+      const body = await req.json();
+      return res(ctx.status(200), ctx.json({ data: { ...body, id } }));
+    },
+  ),
+  rest.put(
+    "http://localhost:8001/api/structure_nodes/:id",
+    async (req, res, ctx) => {
+      const { id } = req.params as { id: string };
+      const body = await req.json();
+      return res(ctx.status(200), ctx.json({ data: { ...body, id } }));
+    },
+  ),
+  rest.put("/api/structure_nodes/:id/", async (req, res, ctx) => {
+    const { id } = req.params as { id: string };
+    const body = await req.json();
+    return res(ctx.status(200), ctx.json({ data: { ...body, id } }));
+  }),
+  rest.put(
+    "http://localhost:8000/api/structure_nodes/:id/",
+    async (req, res, ctx) => {
+      const { id } = req.params as { id: string };
+      const body = await req.json();
+      return res(ctx.status(200), ctx.json({ data: { ...body, id } }));
+    },
+  ),
+  rest.put(
+    "http://localhost:8001/api/structure_nodes/:id/",
+    async (req, res, ctx) => {
+      const { id } = req.params as { id: string };
+      const body = await req.json();
+      return res(ctx.status(200), ctx.json({ data: { ...body, id } }));
+    },
+  ),
+  rest.post("/api/structure_nodes", async (req, res, ctx) => {
+    const body = await req.json();
+    return res(
+      ctx.status(201),
+      ctx.json({ data: { ...body, id: "new-node" } }),
+    );
+  }),
+  rest.post(
+    "http://localhost:8000/api/structure_nodes",
+    async (req, res, ctx) => {
+      const body = await req.json();
+      return res(
+        ctx.status(201),
+        ctx.json({ data: { ...body, id: "new-node" } }),
+      );
+    },
+  ),
+  rest.post(
+    "http://localhost:8001/api/structure_nodes",
+    async (req, res, ctx) => {
+      const body = await req.json();
+      return res(
+        ctx.status(201),
+        ctx.json({ data: { ...body, id: "new-node" } }),
+      );
+    },
+  ),
 ];

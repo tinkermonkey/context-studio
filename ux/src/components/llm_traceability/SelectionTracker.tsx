@@ -160,7 +160,9 @@ export const SelectionTracker: React.FC<SelectionTrackerProps> = ({
     const enhancedProps: any = {};
 
     // Check if this is a DOM element (lowercase tag name) vs React component (uppercase or function)
-    const isDOMElement = typeof child.type === 'string' && child.type[0] === child.type[0].toLowerCase();
+    const isDOMElement =
+      typeof child.type === "string" &&
+      child.type[0] === child.type[0].toLowerCase();
 
     if (hasMultipleChildren) {
       // Multiple children scenario: use event-level deduplication (1 call per click)
@@ -222,13 +224,20 @@ export const SelectionTracker: React.FC<SelectionTrackerProps> = ({
     }
 
     // For DOM elements without custom handlers, try to hook into onClick
-    if (isDOMElement && (originalOnSelect || originalOnAccept || originalOnApply)) {
+    if (
+      isDOMElement &&
+      (originalOnSelect || originalOnAccept || originalOnApply)
+    ) {
       // If the DOM element had these handlers, we need to preserve them via onClick
       const existingOnClick = originalOnClick;
       enhancedProps.onClick = (event: React.MouseEvent) => {
         // Try to extract content from various sources
         const target = event.currentTarget as HTMLElement;
-        const content = dataContent || target.textContent || target.innerText || "Selected content";
+        const content =
+          dataContent ||
+          target.textContent ||
+          target.innerText ||
+          "Selected content";
 
         // Call original handlers if they exist
         if (originalOnSelect) originalOnSelect(content);

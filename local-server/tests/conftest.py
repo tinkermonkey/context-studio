@@ -24,7 +24,7 @@ from services.service_factory import (
 from sqlalchemy import text
 
 # Import test configuration utilities
-from tests.test_config import TestConfigurationManager as TestConfigManager
+from tests.test_config import TestConfigurationManager
 from pathlib import Path
 
 
@@ -67,7 +67,7 @@ def global_test_isolation():
     temp_dir = Path(tempfile.mkdtemp(prefix="test_session_"))
     
     # Create test configuration manager
-    config_manager = TestConfigManager(str(temp_dir))
+    config_manager = TestConfigurationManager(str(temp_dir))
     test_settings = config_manager.get_test_settings()
     
     # Comprehensive monkey-patching to prevent config.json pollution
@@ -238,7 +238,7 @@ def test_settings(tmp_path):
         Settings: Isolated settings instance for the test
     """
     # Create test configuration manager
-    config_manager = TestConfigManager(str(tmp_path))
+    config_manager = TestConfigurationManager(str(tmp_path))
     
     try:
         # Get isolated test settings
@@ -272,7 +272,7 @@ def isolated_test_settings(tmp_path):
         Function that creates settings with overrides
     """
     def _create_settings_with_overrides(overrides=None):
-        config_manager = TestConfigManager(str(tmp_path))
+        config_manager = TestConfigurationManager(str(tmp_path))
         return config_manager.get_test_settings(overrides)
     
     return _create_settings_with_overrides
