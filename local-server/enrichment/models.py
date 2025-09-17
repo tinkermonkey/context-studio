@@ -284,3 +284,83 @@ class SchemaOrgSearchResponse(BaseSourceResponse):
     search_type: Optional[str] = None
     total_results: Optional[int] = None
     results: List[SchemaOrgSearchResult] = Field(default_factory=list)
+
+
+# ------------------ WordNet Models ------------------
+class WordNetSearchRequest(BaseModel):
+    """Request model for WordNet search"""
+    word: str = Field(..., min_length=1, description="Word to search for")
+    pos: Optional[Literal["noun", "verb", "adj", "adv"]] = Field(None, description="Part of speech filter")
+    lang: str = Field("eng", description="Language (default: English)")
+    limit: int = Field(20, ge=1, le=100, description="Maximum number of synsets")
+
+class WordNetSynset(BaseModel):
+    """WordNet synset representation"""
+    id: str = Field(..., description="Synset ID")
+    name: str = Field(..., description="Synset name")
+    pos: str = Field(..., description="Part of speech")
+    definition: str = Field(..., description="Definition")
+    examples: List[str] = Field(default_factory=list, description="Usage examples")
+    lemmas: List[str] = Field(default_factory=list, description="Lemma names")
+    lexfile: Optional[str] = Field(None, description="Lexical file")
+    offset: Optional[int] = Field(None, description="WordNet offset")
+
+class WordNetSearchResponse(BaseSourceResponse):
+    """Response model for WordNet search"""
+    word: Optional[str] = None
+    pos: Optional[str] = None
+    synsets: List[WordNetSynset] = Field(default_factory=list)
+
+class WordNetRelationsRequest(BaseModel):
+    """Request model for WordNet relations"""
+    synset_id: str = Field(..., description="Synset ID to get relations for")
+    relation_types: Optional[List[str]] = Field(None, description="Specific relation types")
+
+class WordNetRelation(BaseModel):
+    """WordNet semantic relation"""
+    relation_type: str = Field(..., description="Type of relation")
+    target_synset: WordNetSynset = Field(..., description="Target synset")
+
+class WordNetRelationsResponse(BaseSourceResponse):
+    """Response model for WordNet relations"""
+    synset_id: Optional[str] = None
+    relations: List[WordNetRelation] = Field(default_factory=list)
+
+
+# ------------------ Multi-Source Search Models ------------------
+class SearchNode(BaseModel):
+    """Simplified node representation for multi-source search results"""
+    id: str = Field(..., description="Unique identifier from source")
+    source: SourceType = Field(..., description="Original source of the node")
+    title: str = Field(..., min_length=1, description="Primary label or title")
+    definition: Optional[str] = Field(None, description="Definition or description")
+    attributes: Dict[str, Any] = Field(default_factory=dict, description="Source-specific attributes")
+    source_url: Optional[str] = Field(None, description="URL to original resource")
+    relevance_score: float = Field(default=1.0, ge=0, le=1, description="Source relevance score")
+
+    @field_validator('source_url')
+    @classmethod
+    def validate_url(cls, v):
+        if v and not v.startswith(('http://', 'https://')):
+            raise ValueError('Invalid URL format')
+        return v
+
+
+class MultiSourceSearchRequest(BaseModel):
+    """Request model for multi-source search"""
+    query: str = Field(..., min_length=1, description="Search query string")
+    sources: Optional[List[SourceType]] = Field(None, description="Specific sources to search (default: all enabled)")
+    limit: int = Field(default=20, ge=1, le=100, description="Maximum number of results per source")
+    offset: int = Field(default=0, ge=0, description="Result offset for pagination")
+
+
+class MultiSourceSearchResponse(BaseModel):
+    """Response model for multi-source search"""
+    query: str = Field(..., description="Original search query")
+    results: List[SearchNode] = Field(..., description="Search results from all sources")
+    total_results: int = Field(..., description="Total number of results across all sources")
+    sources_queried: List[str] = Field(..., description="Sources that were queried")
+    source_errors: Dict[str, str] = Field(default_factory=dict, description="Errors encountered per source")
+    offset: int = Field(..., description="Result offset used")
+    limit: int = Field(..., description="Result limit used per source")
+    search_time_ms: float = Field(..., description="Total search time in milliseconds")

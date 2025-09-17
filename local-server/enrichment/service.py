@@ -8,6 +8,7 @@ from datetime import datetime, UTC
 from config import get_config_manager, ConfigurationManager
 from .exceptions import EnrichmentError
 from .models import *
+import time
 from .sources import DBpediaSource, ConceptNetSource, WikidataSource, SchemaOrgSource
 from utils.logger import get_logger
 
@@ -123,6 +124,213 @@ class EnrichmentService:
                 similarity_threshold=request.similarity_threshold,
             )
 
+    # Multi-source search method
+    async def search(self, request: MultiSourceSearchRequest) -> MultiSourceSearchResponse:
+        """
+        Search across multiple reference sources
+
+        Args:
+            request: Multi-source search request
+
+        Returns:
+            Aggregated search results from all requested sources
+        """
+        start_time = time.time()
+        logger.info(f"Starting multi-source search for query: '{request.query}'")
+
+        # Determine which sources to query
+        sources_to_query = request.sources or [
+            SourceType.DBPEDIA,
+            SourceType.CONCEPTNET,
+            SourceType.WIKIDATA,
+            SourceType.SCHEMA_ORG
+        ]
+
+        # Filter to only enabled sources
+        enabled_sources = []
+        for source_type in sources_to_query:
+            try:
+                # Check if source is enabled in configuration
+                source_config = self.settings.get_source_config(source_type.value)
+                if source_config.enabled:
+                    enabled_sources.append(source_type)
+                else:
+                    logger.debug(f"Skipping disabled source: {source_type.value}")
+            except Exception as e:
+                logger.warning(f"Error checking source {source_type.value}: {e}")
+
+        logger.info(f"Querying {len(enabled_sources)} enabled sources: {[s.value for s in enabled_sources]}")
+
+        # Search each source in parallel
+        search_tasks = []
+        for source_type in enabled_sources:
+            task = self._search_single_source(source_type, request.query, request.limit, request.offset)
+            search_tasks.append((source_type, task))
+
+        # Execute all searches in parallel
+        results = await self._gather_search_results(search_tasks)
+
+        # Aggregate results
+        all_nodes = []
+        source_errors = {}
+        sources_queried = []
+
+        for source_type, result in results:
+            sources_queried.append(source_type.value)
+
+            if isinstance(result, Exception):
+                source_errors[source_type.value] = str(result)
+                logger.warning(f"Search failed for {source_type.value}: {result}")
+            elif result:
+                all_nodes.extend(result)
+                logger.info(f"Source {source_type.value}: added {len(result)} results")
+            else:
+                logger.info(f"Source {source_type.value}: no results")
+
+        # Simple result aggregation (no deduplication or ranking)
+        total_results = len(all_nodes)
+
+        # Create response
+        search_time_ms = (time.time() - start_time) * 1000
+        response = MultiSourceSearchResponse(
+            query=request.query,
+            results=all_nodes,
+            total_results=total_results,
+            sources_queried=sources_queried,
+            source_errors=source_errors,
+            offset=request.offset,
+            limit=request.limit,
+            search_time_ms=search_time_ms
+        )
+
+        logger.info(f"Multi-source search completed: '{request.query}' returned {total_results} results in {search_time_ms:.2f}ms")
+        return response
+
+    async def _search_single_source(self, source_type: SourceType, query: str, limit: int, offset: int) -> List[SearchNode]:
+        """Search a single source and convert results to SearchNode format"""
+        try:
+            logger.debug(f"Searching {source_type.value} for '{query}'")
+
+            if source_type == SourceType.DBPEDIA:
+                request = DBpediaSearchRequest(query=query, limit=limit, offset=offset)
+                response = await self.dbpedia_search(request)
+                return [
+                    SearchNode(
+                        id=f"dbpedia:{result.uri}",
+                        source=SourceType.DBPEDIA,
+                        title=result.label,
+                        definition=result.description,
+                        attributes={"types": result.types, "uri": result.uri},
+                        source_url=result.uri,
+                        relevance_score=result.score
+                    )
+                    for result in response.results
+                ]
+
+            elif source_type == SourceType.CONCEPTNET:
+                request = ConceptNetQueryRequest(node=f"/c/en/{query.lower().replace(' ', '_')}", limit=limit, offset=offset)
+                response = await self.conceptnet_query(request)
+                nodes = []
+                for edge in response.edges:
+                    # Create nodes for both start and end concepts
+                    if edge.start and edge.start.get('@id'):
+                        nodes.append(SearchNode(
+                            id=f"conceptnet:{edge.start['@id']}",
+                            source=SourceType.CONCEPTNET,
+                            title=edge.start.get('label', edge.start['@id'].split('/')[-1]),
+                            definition=f"Related via {edge.rel.get('label', '')}",
+                            attributes={"weight": edge.weight, "relation": edge.rel},
+                            source_url=f"http://conceptnet.io{edge.start['@id']}",
+                            relevance_score=min(edge.weight, 1.0)
+                        ))
+                return nodes
+
+            elif source_type == SourceType.WIKIDATA:
+                # For Wikidata, we'll use a simple label search via SPARQL
+                sparql_query = f"""
+                SELECT ?item ?itemLabel ?itemDescription WHERE {{
+                  ?item rdfs:label ?label .
+                  FILTER(CONTAINS(LCASE(?label), LCASE("{query}")))
+                  SERVICE wikibase:label {{ bd:serviceParam wikibase:language "en" }}
+                }}
+                LIMIT {limit}
+                OFFSET {offset}
+                """
+                request = WikidataSparqlRequest(query=sparql_query)
+                response = await self.wikidata_sparql(request)
+                nodes = []
+                if response.results and 'bindings' in response.results:
+                    for binding in response.results['bindings']:
+                        if 'item' in binding:
+                            item_uri = binding['item'].get('value', '')
+                            label = binding.get('itemLabel', {}).get('value', item_uri.split('/')[-1])
+                            description = binding.get('itemDescription', {}).get('value', '')
+                            nodes.append(SearchNode(
+                                id=f"wikidata:{item_uri}",
+                                source=SourceType.WIKIDATA,
+                                title=label,
+                                definition=description,
+                                attributes={"uri": item_uri},
+                                source_url=item_uri,
+                                relevance_score=1.0
+                            ))
+                return nodes
+
+            elif source_type == SourceType.SCHEMA_ORG:
+                request = SchemaOrgSearchRequest(query=query, limit=limit, offset=offset)
+                response = await self.schema_org_search(request)
+                return [
+                    SearchNode(
+                        id=f"schema_org:{result.identifier}",
+                        source=SourceType.SCHEMA_ORG,
+                        title=result.title,
+                        definition=result.definition,
+                        attributes={"type": result.type, "identifier": result.identifier},
+                        source_url=f"https://schema.org/{result.identifier}",
+                        relevance_score=result.relevance_score
+                    )
+                    for result in response.results
+                ]
+
+            else:
+                logger.warning(f"Unknown source type: {source_type}")
+                return []
+
+        except Exception as e:
+            logger.error(f"Error searching {source_type.value}: {e}")
+            raise e
+
+    async def _gather_search_results(self, search_tasks: List[tuple]) -> List[tuple]:
+        """Execute search tasks in parallel and gather results"""
+        results = []
+
+        # Extract tasks for parallel execution
+        task_coroutines = [task for _, task in search_tasks]
+        sources = [source for source, _ in search_tasks]
+
+        try:
+            # Run all tasks in parallel with a timeout
+            completed_results = await asyncio.wait_for(
+                asyncio.gather(*task_coroutines, return_exceptions=True),
+                timeout=10.0
+            )
+
+            # Pair results back with sources
+            for source, result in zip(sources, completed_results):
+                results.append((source, result))
+
+        except asyncio.TimeoutError:
+            # Handle timeout - some sources may not have responded
+            logger.warning("Some sources timed out during search")
+            for source in sources:
+                results.append((source, TimeoutError("Search timeout")))
+        except Exception as e:
+            logger.error(f"Error in parallel search execution: {e}")
+            for source in sources:
+                results.append((source, e))
+
+        return results
+
     async def health_check(self) -> Dict[str, Any]:
         """Check health of all configured sources"""
         health_status = {"overall": "healthy", "sources": {}, "timestamp": datetime.now(UTC)}
@@ -159,73 +367,6 @@ class EnrichmentService:
                 health_status["sources"][source_type.value] = "disabled"
 
         return health_status
-
-    async def enrich_with_source(self, source_name: str, query: str) -> Dict[str, Any]:
-        """Enrich using a specific reference source with centralized configuration"""
-        try:
-            # Get source configuration
-            source_config = None
-            if source_name == "conceptnet":
-                source_config = self.settings.reference_sources.conceptnet
-            elif source_name == "dbpedia":
-                source_config = self.settings.reference_sources.dbpedia
-            elif source_name == "dbpedia_spotlight":
-                source_config = self.settings.reference_sources.dbpedia_spotlight
-            elif source_name == "wikidata":
-                source_config = self.settings.reference_sources.wikidata
-            elif source_name == "schema_org":
-                source_config = self.settings.reference_sources.schema_org
-            else:
-                raise ValueError(f"Unknown source name: {source_name}")
-            
-            if not source_config.enabled:
-                raise ValueError(f"Reference source {source_name} is disabled")
-            
-            # Determine the endpoint URL
-            if source_config.use_proxy and self.settings.proxy_server.enabled:
-                proxy_host = self.settings.proxy_server.host
-                proxy_port = self.settings.proxy_server.port
-                base_url = f"http://{proxy_host}:{proxy_port}/{source_name}"
-            else:
-                base_url = source_config.upstream_url
-            
-            # Create request configuration
-            request_config = {
-                "timeout": source_config.timeout,
-                "max_retries": source_config.max_retries,
-                "headers": source_config.custom_headers,
-                "params": source_config.custom_params.copy()
-            }
-            
-            # Add query to params
-            request_config["params"]["q"] = query
-            
-            # Make the request with retry logic
-            for attempt in range(source_config.max_retries + 1):
-                try:
-                    async with aiohttp.ClientSession(
-                        timeout=aiohttp.ClientTimeout(total=source_config.timeout)
-                    ) as session:
-                        async with session.get(
-                            base_url,
-                            headers=request_config["headers"],
-                            params=request_config["params"]
-                        ) as response:
-                            if response.status == 200:
-                                result = await response.json()
-                                return result
-                            else:
-                                response.raise_for_status()
-                                
-                except Exception as e:
-                    if attempt == source_config.max_retries:
-                        raise
-                    logger.warning(f"Attempt {attempt + 1} failed for {source_name}: {e}")
-                    await asyncio.sleep(2 ** attempt)  # Exponential backoff
-                    
-        except Exception as e:
-            logger.error(f"Error enriching with {source_name}: {e}")
-            raise
 
     def get_enabled_sources(self) -> List[str]:
         """Get list of enabled enrichment sources"""

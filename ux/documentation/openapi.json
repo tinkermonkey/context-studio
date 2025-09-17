@@ -4871,6 +4871,128 @@
         }
       }
     },
+    "/api/llm/execute_pipeline": {
+      "post": {
+        "tags": [
+          "llm"
+        ],
+        "summary": "Execute Pipeline",
+        "description": "Execute a generic pipeline with arbitrary context data.\n\nThis endpoint provides a unified interface for executing any pipeline type\nwith flexible context data. It supports all pipeline types and flavors\nwhile maintaining full execution tracking.\n\nUse this endpoint for custom pipeline implementations or when you need\nfine-grained control over context data.",
+        "operationId": "execute_pipeline_api_llm_execute_pipeline_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GenericPipelineExecutionRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GenericPipelineExecutionResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LLMErrorResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Request validation failure",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LLMErrorResponse"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too Many Requests",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LLMErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LLMErrorResponse"
+                }
+              }
+            }
+          },
+          "504": {
+            "description": "Gateway Timeout",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LLMErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/llm/execute_pipeline/stream": {
+      "post": {
+        "tags": [
+          "llm"
+        ],
+        "summary": "Execute Pipeline Stream",
+        "description": "Execute a generic pipeline with streaming response.\n\nThis endpoint provides streaming execution for any pipeline type with\nflexible context data. The response is streamed as Server-Sent Events (SSE)\nwith execution tracking.\n\nUse this endpoint when you need real-time streaming responses for\ncustom pipeline implementations.",
+        "operationId": "execute_pipeline_stream_api_llm_execute_pipeline_stream_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GenericPipelineExecutionRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/llm/health": {
       "get": {
         "tags": ["llm-traceability", "LLM Traceability"],
@@ -6110,6 +6232,139 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/SchemaOrgSearchResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/nlp_analysis/reference/search": {
+      "post": {
+        "tags": [
+          "nlp-reference",
+          "enrichment"
+        ],
+        "summary": "Multi Source Search",
+        "description": "Search across multiple reference sources\n\nSearches across specified sources (or all enabled sources if none specified)\nand returns aggregated results without deduplication or ranking.",
+        "operationId": "multi_source_search_api_nlp_analysis_reference_search_post",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MultiSourceSearchRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MultiSourceSearchResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "nlp-reference",
+          "enrichment"
+        ],
+        "summary": "Multi Source Search Get",
+        "description": "Search across multiple reference sources via GET request\n\nAlternative GET endpoint for multi-source search with query parameters.",
+        "operationId": "multi_source_search_get_api_nlp_analysis_reference_search_get",
+        "parameters": [
+          {
+            "name": "query",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "description": "Search query",
+              "title": "Query"
+            },
+            "description": "Search query"
+          },
+          {
+            "name": "sources",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Comma-separated list of source types",
+              "title": "Sources"
+            },
+            "description": "Comma-separated list of source types"
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 100,
+              "minimum": 1,
+              "description": "Maximum results per source",
+              "default": 20,
+              "title": "Limit"
+            },
+            "description": "Maximum results per source"
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "description": "Result offset",
+              "default": 0,
+              "title": "Offset"
+            },
+            "description": "Result offset"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MultiSourceSearchResponse"
                 }
               }
             }
@@ -14173,6 +14428,81 @@
         "title": "FlavorAnalyticsResponse",
         "description": "Response model for flavor-specific analytics"
       },
+      "GenericPipelineExecutionRequest": {
+        "properties": {
+          "flavor_id": {
+            "type": "string",
+            "title": "Flavor Id",
+            "description": "ID of the pipeline flavor to use"
+          },
+          "pipeline_type": {
+            "$ref": "#/components/schemas/PipelineType",
+            "description": "Type of pipeline to execute"
+          },
+          "context_data": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Context Data",
+            "description": "Arbitrary context data for template rendering"
+          }
+        },
+        "type": "object",
+        "required": [
+          "flavor_id",
+          "pipeline_type",
+          "context_data"
+        ],
+        "title": "GenericPipelineExecutionRequest",
+        "description": "Generic request model for pipeline execution with arbitrary context data"
+      },
+      "GenericPipelineExecutionResponse": {
+        "properties": {
+          "response_content": {
+            "type": "string",
+            "title": "Response Content",
+            "description": "Raw LLM response content"
+          },
+          "execution_id": {
+            "type": "string",
+            "title": "Execution Id",
+            "description": "Unique execution ID for tracing"
+          },
+          "flavor_id": {
+            "type": "string",
+            "title": "Flavor Id",
+            "description": "ID of the flavor that generated this response"
+          },
+          "pipeline_type": {
+            "type": "string",
+            "title": "Pipeline Type",
+            "description": "Type of pipeline that was executed"
+          },
+          "token_usage": {
+            "anyOf": [
+              {
+                "additionalProperties": {
+                  "type": "integer"
+                },
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Token Usage",
+            "description": "Token usage statistics if available"
+          }
+        },
+        "type": "object",
+        "required": [
+          "response_content",
+          "execution_id",
+          "flavor_id",
+          "pipeline_type"
+        ],
+        "title": "GenericPipelineExecutionResponse",
+        "description": "Generic response model for pipeline execution"
+      },
       "HTTPValidationError": {
         "properties": {
           "detail": {
@@ -14705,6 +15035,117 @@
         "required": ["moved_nodes", "updated_children", "warnings", "errors"],
         "title": "MoveNodesResponse",
         "description": "Model for move operation results."
+      },
+      "MultiSourceSearchRequest": {
+        "properties": {
+          "query": {
+            "type": "string",
+            "minLength": 1,
+            "title": "Query",
+            "description": "Search query string"
+          },
+          "sources": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/SourceType"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sources",
+            "description": "Specific sources to search (default: all enabled)"
+          },
+          "limit": {
+            "type": "integer",
+            "maximum": 100.0,
+            "minimum": 1.0,
+            "title": "Limit",
+            "description": "Maximum number of results per source",
+            "default": 20
+          },
+          "offset": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Offset",
+            "description": "Result offset for pagination",
+            "default": 0
+          }
+        },
+        "type": "object",
+        "required": [
+          "query"
+        ],
+        "title": "MultiSourceSearchRequest",
+        "description": "Request model for multi-source search"
+      },
+      "MultiSourceSearchResponse": {
+        "properties": {
+          "query": {
+            "type": "string",
+            "title": "Query",
+            "description": "Original search query"
+          },
+          "results": {
+            "items": {
+              "$ref": "#/components/schemas/SearchNode"
+            },
+            "type": "array",
+            "title": "Results",
+            "description": "Search results from all sources"
+          },
+          "total_results": {
+            "type": "integer",
+            "title": "Total Results",
+            "description": "Total number of results across all sources"
+          },
+          "sources_queried": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Sources Queried",
+            "description": "Sources that were queried"
+          },
+          "source_errors": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "type": "object",
+            "title": "Source Errors",
+            "description": "Errors encountered per source"
+          },
+          "offset": {
+            "type": "integer",
+            "title": "Offset",
+            "description": "Result offset used"
+          },
+          "limit": {
+            "type": "integer",
+            "title": "Limit",
+            "description": "Result limit used per source"
+          },
+          "search_time_ms": {
+            "type": "number",
+            "title": "Search Time Ms",
+            "description": "Total search time in milliseconds"
+          }
+        },
+        "type": "object",
+        "required": [
+          "query",
+          "results",
+          "total_results",
+          "sources_queried",
+          "offset",
+          "limit",
+          "search_time_ms"
+        ],
+        "title": "MultiSourceSearchResponse",
+        "description": "Response model for multi-source search"
       },
       "NLPAnalysisResponse": {
         "properties": {
@@ -16913,6 +17354,71 @@
           "database_size"
         ],
         "title": "SchemaOrgStatus"
+      },
+      "SearchNode": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id",
+            "description": "Unique identifier from source"
+          },
+          "source": {
+            "$ref": "#/components/schemas/SourceType",
+            "description": "Original source of the node"
+          },
+          "title": {
+            "type": "string",
+            "minLength": 1,
+            "title": "Title",
+            "description": "Primary label or title"
+          },
+          "definition": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Definition",
+            "description": "Definition or description"
+          },
+          "attributes": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Attributes",
+            "description": "Source-specific attributes"
+          },
+          "source_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Source Url",
+            "description": "URL to original resource"
+          },
+          "relevance_score": {
+            "type": "number",
+            "maximum": 1.0,
+            "minimum": 0.0,
+            "title": "Relevance Score",
+            "description": "Source relevance score",
+            "default": 1.0
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "source",
+          "title"
+        ],
+        "title": "SearchNode",
+        "description": "Simplified node representation for multi-source search results"
       },
       "SearchRequest": {
         "properties": {

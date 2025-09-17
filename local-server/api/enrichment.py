@@ -2,12 +2,19 @@
 
 from fastapi import APIRouter, HTTPException, Depends, Query, Path
 from fastapi.responses import JSONResponse
-from typing import Optional
+from typing import Optional, Literal
 import logging
 
 from api.dependencies.enrichment_services import get_enrichment_service
 from enrichment.service import EnrichmentService
-from enrichment.models import *
+from enrichment.models import (
+    DBpediaResourceRequest, DBpediaResourceResponse, DBpediaSearchRequest, DBpediaSearchResponse,
+    DBpediaSparqlRequest, DBpediaSparqlResponse, ConceptNetQueryRequest, ConceptNetQueryResponse,
+    ConceptNetConceptResponse, ConceptNetRelatedResponse, WikidataSparqlRequest, WikidataSparqlResponse,
+    WikidataEntityRequest, WikidataEntityResponse, SchemaOrgEntityRequest, SchemaOrgEntityResponse,
+    SchemaOrgPropertyRequest, SchemaOrgPropertyResponse, SchemaOrgSearchRequest, SchemaOrgSearchResponse,
+    ResponseFormat, SourceType, MultiSourceSearchRequest, MultiSourceSearchResponse
+)
 from enrichment.exceptions import EnrichmentError, SourceError, SourceTimeoutError
 
 logger = logging.getLogger(__name__)
@@ -207,6 +214,64 @@ async def schema_org_search(
             similarity_threshold=similarity_threshold
         )
         return await service.schema_org_search(request)
+    except Exception as e:
+        raise handle_service_error(e)
+
+
+# Multi-source search endpoint
+@router.post("/search", response_model=MultiSourceSearchResponse)
+async def multi_source_search(
+    request: MultiSourceSearchRequest,
+    service: EnrichmentService = Depends(get_enrichment_service)
+):
+    """
+    Search across multiple reference sources
+
+    Searches across specified sources (or all enabled sources if none specified)
+    and returns aggregated results without deduplication or ranking.
+    """
+    try:
+        return await service.search(request)
+    except Exception as e:
+        raise handle_service_error(e)
+
+
+@router.get("/search", response_model=MultiSourceSearchResponse)
+async def multi_source_search_get(
+    query: str = Query(..., description="Search query", min_length=1),
+    sources: Optional[str] = Query(None, description="Comma-separated list of source types"),
+    limit: int = Query(20, description="Maximum results per source", ge=1, le=100),
+    offset: int = Query(0, description="Result offset", ge=0),
+    service: EnrichmentService = Depends(get_enrichment_service)
+):
+    """
+    Search across multiple reference sources via GET request
+
+    Alternative GET endpoint for multi-source search with query parameters.
+    """
+    try:
+        # Parse sources parameter
+        source_list = None
+        if sources:
+            source_names = [s.strip() for s in sources.split(',')]
+            source_list = []
+            for name in source_names:
+                try:
+                    source_list.append(SourceType(name))
+                except ValueError:
+                    raise HTTPException(status_code=400, detail=f"Invalid source: {name}")
+
+        # Create request object
+        request = MultiSourceSearchRequest(
+            query=query,
+            sources=source_list,
+            limit=limit,
+            offset=offset
+        )
+
+        return await service.search(request)
+    except HTTPException:
+        raise
     except Exception as e:
         raise handle_service_error(e)
 

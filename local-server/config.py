@@ -107,7 +107,8 @@ class ReferenceSourcesConfig(BaseModel):
     ))
     
     dbpedia: ReferenceSourceConfig = Field(default_factory=lambda: ReferenceSourceConfig(
-        upstream_url="https://dbpedia.org",
+        upstream_url="https://lookup.dbpedia.org",
+        use_proxy=False,  # Temporarily disable proxy for testing
         rate_limit=ReferenceSourceRateLimitConfig(requests_per_hour=3600)
     ))
     
