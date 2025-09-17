@@ -44,8 +44,6 @@ class DBpediaSource(BaseReferenceSource):
         try:
             search_url = f"{self._get_base_url()}/api/search"
             params = {"query": query, "maxResults": limit}
-            search_url = f"{self._get_base_url()}/api/search"
-            params = {"query": query, "maxResults": limit}
 
             # DBpedia Lookup returns XML by default, but we can request JSON format
             params["format"] = "JSON"

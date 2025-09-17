@@ -214,15 +214,17 @@ class EnrichmentService:
             if source_type == SourceType.DBPEDIA:
                 request = DBpediaSearchRequest(query=query, limit=limit, offset=offset)
                 response = await self.dbpedia_search(request)
+                # Normalize DBpedia scores to 0-1 range
+                max_score = max((result.score for result in response.results), default=1.0)
                 return [
                     SearchNode(
                         id=f"dbpedia:{result.uri}",
                         source=SourceType.DBPEDIA,
                         title=result.label,
                         definition=result.description,
-                        attributes={"types": result.types, "uri": result.uri},
+                        attributes={"types": result.types, "uri": result.uri, "raw_score": result.score},
                         source_url=result.uri,
-                        relevance_score=result.score
+                        relevance_score=min(result.score / max_score, 1.0)
                     )
                     for result in response.results
                 ]
@@ -246,11 +248,12 @@ class EnrichmentService:
                 return nodes
 
             elif source_type == SourceType.WIKIDATA:
-                # For Wikidata, we'll use a simple label search via SPARQL
+                # For Wikidata, use a simpler search approach that's more efficient
+                # Escape query string to prevent SPARQL injection
+                escaped_query = query.replace('"', '\\"').replace('\n', ' ').replace('\r', ' ')
                 sparql_query = f"""
                 SELECT ?item ?itemLabel ?itemDescription WHERE {{
-                  ?item rdfs:label ?label .
-                  FILTER(CONTAINS(LCASE(?label), LCASE("{query}")))
+                  ?item rdfs:label "{escaped_query}"@en .
                   SERVICE wikibase:label {{ bd:serviceParam wikibase:language "en" }}
                 }}
                 LIMIT {limit}
@@ -259,8 +262,8 @@ class EnrichmentService:
                 request = WikidataSparqlRequest(query=sparql_query)
                 response = await self.wikidata_sparql(request)
                 nodes = []
-                if response.results and 'bindings' in response.results:
-                    for binding in response.results['bindings']:
+                if response.success and response.results and 'results' in response.results and 'bindings' in response.results['results']:
+                    for binding in response.results['results']['bindings']:
                         if 'item' in binding:
                             item_uri = binding['item'].get('value', '')
                             label = binding.get('itemLabel', {}).get('value', item_uri.split('/')[-1])

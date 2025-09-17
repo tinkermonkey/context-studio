@@ -63,7 +63,7 @@ class BaseReferenceSource(ABC):
                 logger.debug(f"Making {method} request to {url} (attempt {attempt + 1})")
                 async with self.session.request(method, url, **kwargs) as response:
                     if response.status == 200:
-                        if response.content_type and response.content_type.startswith('application/json'):
+                        if response.content_type and ('application/json' in response.content_type or 'sparql-results+json' in response.content_type):
                             return await response.json()
                         else:
                             text_data = await response.text()

@@ -67,7 +67,7 @@ class DBpediaSearchResult(BaseModel):
     uri: str
     label: str
     description: Optional[str] = None
-    score: float = Field(..., ge=0.0, le=1.0)
+    score: float = Field(..., ge=0.0)
     types: List[str] = Field(default_factory=list)
 
 
