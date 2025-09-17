@@ -7,7 +7,7 @@ import json
 import threading
 import asyncio
 from typing import Dict, Any, Optional, List, Callable
-from pydantic import BaseModel, Field, ValidationError
+from pydantic import BaseModel, Field, ValidationError, ConfigDict
 from enum import Enum
 from dataclasses import dataclass
 from dotenv import load_dotenv
@@ -204,7 +204,9 @@ class EnrichmentConfig(BaseModel):
 
 class Settings(BaseModel):
     """Centralized configuration settings"""
-    
+
+    model_config = ConfigDict(env_file='.env', env_file_encoding='utf-8', extra='ignore')
+
     # Configuration sections
     server: ServerConfig = Field(default_factory=ServerConfig)
     database: DatabaseConfig = Field(default_factory=DatabaseConfig)
@@ -214,17 +216,45 @@ class Settings(BaseModel):
     proxy_server: ProxyServerConfig = Field(default_factory=ProxyServerConfig)
     logging: LoggingConfig = Field(default_factory=LoggingConfig)
     security: SecurityConfig = Field(default_factory=SecurityConfig)
-    
+
     # S3 Configuration
-    s3_bucket: Optional[str] = Field(None, env="S3_BUCKET")
-    s3_region: str = Field("us-east-1", env="S3_REGION")
-    s3_access_key: Optional[str] = Field(None, env="S3_ACCESS_KEY")
-    s3_secret_key: Optional[str] = Field(None, env="S3_SECRET_KEY") 
-    s3_endpoint: Optional[str] = Field(None, env="S3_ENDPOINT")
-    
+    S3_BUCKET: Optional[str] = None
+    S3_REGION: str = "us-east-1"
+    S3_ACCESS_KEY: Optional[str] = None
+    S3_SECRET_KEY: Optional[str] = None
+    S3_ENDPOINT: Optional[str] = None
+
     # DuckDB Configuration
-    duckdb_memory_limit: str = Field("2GB", env="DUCKDB_MEMORY_LIMIT")
-    duckdb_threads: int = Field(4, env="DUCKDB_THREADS")
+    DUCKDB_MEMORY_LIMIT: str = "2GB"
+    DUCKDB_THREADS: int = 4
+
+    @property
+    def s3_bucket(self) -> Optional[str]:
+        return self.S3_BUCKET
+
+    @property
+    def s3_region(self) -> str:
+        return self.S3_REGION
+
+    @property
+    def s3_access_key(self) -> Optional[str]:
+        return self.S3_ACCESS_KEY
+
+    @property
+    def s3_secret_key(self) -> Optional[str]:
+        return self.S3_SECRET_KEY
+
+    @property
+    def s3_endpoint(self) -> Optional[str]:
+        return self.S3_ENDPOINT
+
+    @property
+    def duckdb_memory_limit(self) -> str:
+        return self.DUCKDB_MEMORY_LIMIT
+
+    @property
+    def duckdb_threads(self) -> int:
+        return self.DUCKDB_THREADS
     
     def get_s3_config(self) -> Optional[S3Config]:
         if not self.s3_bucket:
@@ -634,6 +664,29 @@ def get_settings() -> Settings:
     # Return settings from the configuration manager
     config_manager = get_config_manager()
     return config_manager.settings
+
+
+def get_test_settings() -> Settings:
+    """
+    Get settings instance for testing with dependency injection support.
+    
+    This function is designed to be overridden in tests using FastAPI's
+    dependency injection system (app.dependency_overrides) or pytest fixtures.
+    
+    By default, it returns the same settings as get_settings(), but tests
+    can override this to provide isolated test configurations.
+    
+    Example usage in tests:
+        @pytest.fixture
+        def test_settings():
+            return create_test_settings(temp_dir, overrides)
+            
+        app.dependency_overrides[get_test_settings] = lambda: test_settings
+        
+    Returns:
+        Settings instance (can be overridden for testing)
+    """
+    return get_settings()
 
 
 class ConfigurationNotifier:

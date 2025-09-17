@@ -152,9 +152,9 @@ def test_api_layer_requirements():
 
     # Test success response
     test_response = DefinitionSuggestionResponse(
-        definition="Test definition", reasoning="Test reasoning"
+        definition="Test definition", reasoning="Test reasoning", execution_id="test_exec_simple"
     )
-    success_wrapper = LLMSuccessResponse(data=test_response)
+    success_wrapper = LLMSuccessResponse(data=test_response, execution_id="test_exec_simple")
     success_dict = success_wrapper.model_dump()
     assert success_dict["success"] is True
     print("  ✓ Success response model works")

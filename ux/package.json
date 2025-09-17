@@ -4,11 +4,12 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "test": "vitest",
+    "test": "vitest run",
     "test:run": "vitest run --no-coverage",
     "test:ci": "vitest run --reporter verbose --coverage",
     "test:coverage": "vitest run --coverage",
     "test:coverage:c8": "c8 --reporter=lcov --reporter=text npx vitest run",
+    "test:msw": "vitest run --config vitest.msw.config.ts",
     "typecheck": "tsc --noEmit",
     "dev": "vite --port=3001",
     "build": "vite build",

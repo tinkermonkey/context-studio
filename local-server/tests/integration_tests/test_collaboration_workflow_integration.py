@@ -17,7 +17,8 @@ from sqlalchemy import text
 from unittest.mock import patch
 
 from services.service_factory import ServiceFactory
-from services.collaboration_models import ChangesetState, ProposalStatus, MergeStrategy
+from services.collaboration_models import ChangesetState, ProposalStatus
+from services.crdt_merge_engine import MergeStrategy
 
 
 @pytest.fixture

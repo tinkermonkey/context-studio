@@ -46,6 +46,7 @@ def mock_llm_service():
                 mock_suggest.return_value = DefinitionSuggestionResponse(
                     definition="Test definition from mock",
                     reasoning="Test reasoning from mock",
+                    execution_id="test-execution-id-123",
                 )
                 yield
 
@@ -217,9 +218,10 @@ def test_response_models():
         definition="Test definition here.",
         reasoning="Test reasoning here.",
         discrepancies="Test discrepancies here.",
+        execution_id="test-response-execution-id",
     )
 
-    success_wrapper = LLMSuccessResponse(data=response)
+    success_wrapper = LLMSuccessResponse(data=response, execution_id="test-wrapper-execution-id")
     success_dict = success_wrapper.model_dump()
 
     assert success_dict["success"] is True

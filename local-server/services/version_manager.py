@@ -28,6 +28,7 @@ class ChangeState(Enum):
     APPROVED = "APPROVED"
     MERGED = "MERGED"
     REJECTED = "REJECTED"
+    ACTIVE = "ACTIVE"
 
 
 @dataclass

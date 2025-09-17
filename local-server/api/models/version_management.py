@@ -146,7 +146,7 @@ class StageRequest(BaseModel):
 
 class BatchStageRequest(BaseModel):
     """Model for batch staging operations."""
-    entities: List[StageRequest] = Field(..., min_items=1)
+    entities: List[StageRequest] = Field(..., min_length=1)
 
 
 class BatchOperationResult(BaseModel):

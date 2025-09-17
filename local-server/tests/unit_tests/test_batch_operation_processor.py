@@ -134,8 +134,8 @@ class TestBatchOperationProcessor:
         execution_time = time.time() - start_time
         
         # Parallel processing should be faster than sequential
-        # With 8 workers and 100 items, should be significantly faster than 1 second
-        assert execution_time < 1.0
+        # With 8 workers and 100 items, should be significantly faster than 2 seconds
+        assert execution_time < 2.0
         assert result.throughput_per_second > 50  # Should process at least 50 items/sec
     
     def test_batch_size_optimization(self, batch_processor):

@@ -30,18 +30,23 @@ import {
 } from "@/test/utils/renderWithProviders";
 import { DomainDetails } from "@/components/node_details/domain_details";
 import { QUERY_KEYS } from "@/api/config";
-// Using a service-level mock for deterministic integration test; MSW imports removed
-// import { rest } from 'msw';
-// import { server } from '../../test/msw/server';
-import { domainService } from "@/api/services/domains";
+// Using service-level mocks for deterministic integration test
+import { structureNodeService } from "@/api/services/structureNodes";
+import { NodeType } from "@/api/types/structureNodes";
+import { setupMocks } from "../msw/setupTests";
+
+// Setup MSW for any uncaught network calls
+setupMocks();
 
 const domain = {
   id: "1",
   title: "Domain 1",
   definition: "A test domain",
-  layer_id: "00000000-0000-0000-0000-000000000000",
+  node_type: NodeType.DOMAIN,
+  parent_node_id: "00000000-0000-0000-0000-000000000000",
   created_at: new Date().toISOString(),
-  description: "Desc",
+  last_modified: new Date().toISOString(),
+  version: 1,
 };
 
 describe("DomainDetails edit flow", () => {
@@ -50,16 +55,24 @@ describe("DomainDetails edit flow", () => {
     const qc = makeTestQueryClient();
     const invalidateSpy = vi.spyOn(qc, "invalidateQueries");
 
-    // Service-level spy: avoid network calls and return updated domain directly.
-    const updatedDomain = { ...domain, title: "Domain 1 edited" };
+    // Service-level spies: mock the actual services being called
+    const updatedDomain = {
+      ...domain,
+      title: "Domain 1 edited",
+      version: 2,
+      last_modified: new Date().toISOString(),
+    };
+
+    // Mock structureNodeService methods that are actually called
+    const getSpy = vi
+      .spyOn(structureNodeService, "get")
+      .mockResolvedValue(domain as any);
     const updateSpy = vi
-      .spyOn(domainService, "update")
+      .spyOn(structureNodeService, "update")
       .mockResolvedValue(updatedDomain as any);
 
     // With Link, useLayer, and useTerms mocked above, we can render without RouterProvider
     render(<DomainDetails domain={domain} />, { queryClient: qc });
-
-    // no service-level mock in this test; MSW will handle network calls
 
     // Edit button should be present
     const edit = await screen.findByRole("button", { name: /edit/i });
@@ -70,7 +83,7 @@ describe("DomainDetails edit flow", () => {
     await userEvent.clear(titleInput);
     await userEvent.type(titleInput, "Domain 1 edited");
 
-    // Click save/submit button - MSW will handle the PUT and return the updated domain
+    // Click save/submit button - our service mocks will handle the update
     const save = screen.getByRole("button", {
       name: /save|save changes|create domain/i,
     });
@@ -87,10 +100,11 @@ describe("DomainDetails edit flow", () => {
       expect(invalidateSpy).toHaveBeenCalledWith({
         queryKey: [QUERY_KEYS.DOMAINS, domain.id],
       });
-      // MSW handled the update; we expect the query invalidation to have been triggered
+      // Service mocks handled the update; we expect the query invalidation to have been triggered
     });
 
-    // restore spy to avoid leaking into other tests
+    // restore spies to avoid leaking into other tests
+    getSpy.mockRestore();
     updateSpy.mockRestore();
   });
 });

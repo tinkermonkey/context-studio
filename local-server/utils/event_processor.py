@@ -46,7 +46,8 @@ class EventProcessor:
                  database_url: str, 
                  poll_interval: float = 1.0, 
                  max_events: int = 100,
-                 version_manager = None):
+                 version_manager = None,
+                 working_tree_manager = None):
         """
         Initialize the EventProcessor.
         
@@ -55,11 +56,13 @@ class EventProcessor:
             poll_interval: Polling interval in seconds for event checking
             max_events: Maximum number of events to process per batch
             version_manager: Optional VersionManager instance for version creation
+            working_tree_manager: Optional WorkingTreeManager instance for working tree management
         """
         self.database_url = database_url
         self.poll_interval = poll_interval
         self.max_events = max_events
         self.version_manager = version_manager  # Will be injected for version creation
+        self.working_tree_manager = working_tree_manager  # Will be injected for working tree management
         
         self._stop_event = threading.Event()
         self._thread = None
@@ -323,6 +326,28 @@ class EventProcessor:
                     # Link the change event to the created version
                     self._link_event_to_version(event.id, version.id, ChangeState.WORKING)
                     
+                    # Update working tree if working tree manager is available
+                    if self.working_tree_manager:
+                        try:
+                            if event.operation == 'create':
+                                # Initialize new entity in working tree
+                                self.working_tree_manager.initialize_entity_in_working_tree(
+                                    entity_type='structure_node',
+                                    entity_id=event.record_id,
+                                    initial_version_id=version.id
+                                )
+                                self.logger.debug(f"[EventProcessor] Initialized working tree for new structure_node {event.record_id}")
+                            else:
+                                # Update existing entity's current version
+                                self.working_tree_manager.update_current_version(
+                                    entity_type='structure_node',
+                                    entity_id=event.record_id,
+                                    new_version_id=version.id
+                                )
+                                self.logger.debug(f"[EventProcessor] Updated working tree for structure_node {event.record_id}")
+                        except Exception as wt_e:
+                            self.logger.error(f"[EventProcessor] Failed to manage working tree: {wt_e}")
+                    
                     self.logger.debug(f"[EventProcessor] Created version {version.version_number} for structure_node {event.record_id}")
                 
             except Exception as e:
@@ -363,6 +388,28 @@ class EventProcessor:
                     
                     # Link the change event to the created version
                     self._link_event_to_version(event.id, version.id, ChangeState.WORKING)
+                    
+                    # Update working tree if working tree manager is available
+                    if self.working_tree_manager:
+                        try:
+                            if event.operation == 'create':
+                                # Initialize new entity in working tree
+                                self.working_tree_manager.initialize_entity_in_working_tree(
+                                    entity_type='structure_node_link',
+                                    entity_id=event.record_id,
+                                    initial_version_id=version.id
+                                )
+                                self.logger.debug(f"[EventProcessor] Initialized working tree for new structure_node_link {event.record_id}")
+                            else:
+                                # Update existing entity's current version
+                                self.working_tree_manager.update_current_version(
+                                    entity_type='structure_node_link',
+                                    entity_id=event.record_id,
+                                    new_version_id=version.id
+                                )
+                                self.logger.debug(f"[EventProcessor] Updated working tree for structure_node_link {event.record_id}")
+                        except Exception as wt_e:
+                            self.logger.error(f"[EventProcessor] Failed to manage working tree: {wt_e}")
                     
                     self.logger.debug(f"[EventProcessor] Created version {version.version_number} for structure_node_link {event.record_id}")
                 
@@ -539,7 +586,7 @@ class EventProcessor:
             }
 
 
-def create_event_processor(database_url: str, 
+def create_event_processor(database_url: str, version_manager=None, working_tree_manager=None,
                           poll_interval: float = 1.0, 
                           max_events: int = 100) -> EventProcessor:
     """
@@ -553,7 +600,7 @@ def create_event_processor(database_url: str,
     Returns:
         EventProcessor instance with optimized connection pooling
     """
-    return EventProcessor(database_url, poll_interval, max_events)
+    return EventProcessor(database_url, poll_interval, max_events, version_manager, working_tree_manager)
 
 
 def EventProcessorFactory(database_url: str, **kwargs) -> EventProcessor:

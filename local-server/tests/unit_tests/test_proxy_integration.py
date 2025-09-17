@@ -11,10 +11,9 @@ sys.path.append(
 )
 
 from nlp.proxy_manager import get_proxy_manager
-from config import get_settings
 
 
-def test_proxy_basic_functionality():
+def test_proxy_basic_functionality(test_settings):
     """Test basic proxy functionality"""
     print("=== Testing Reference API Buddy Integration ===\n")
 
@@ -27,7 +26,7 @@ def test_proxy_basic_functionality():
 
     # Test 2: Test concepcy config with and without proxy
     print("\n2. Testing concepcy configuration...")
-    settings = get_settings()
+    settings = test_settings
 
     concepcy_config_direct = settings.get_concepcy_config(use_proxy=False)
     print(f"   Concepcy direct config has URL: {'url' in concepcy_config_direct}")
