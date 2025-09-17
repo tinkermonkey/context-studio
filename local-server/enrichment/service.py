@@ -143,8 +143,7 @@ class EnrichmentService:
             SourceType.DBPEDIA,
             SourceType.CONCEPTNET,
             SourceType.WIKIDATA,
-            SourceType.SCHEMA_ORG,
-            SourceType.WORDNET
+            SourceType.SCHEMA_ORG
         ]
 
         # Filter to only enabled sources
@@ -292,11 +291,6 @@ class EnrichmentService:
                     )
                     for result in response.results
                 ]
-
-            elif source_type == SourceType.WORDNET:
-                # WordNet search would need to be implemented if we have a WordNet source
-                logger.warning("WordNet search not yet implemented")
-                return []
 
             else:
                 logger.warning(f"Unknown source type: {source_type}")

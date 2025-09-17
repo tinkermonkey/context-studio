@@ -15,7 +15,6 @@ class SourceType(str, Enum):
     CONCEPTNET = "conceptnet"
     WIKIDATA = "wikidata"
     SCHEMA_ORG = "schema_org"
-    WORDNET = "wordnet"
 
 
 class ResponseFormat(str, Enum):
