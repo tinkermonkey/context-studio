@@ -47,24 +47,31 @@ class ChangesetManager:
                         include_staged: bool = True) -> Changeset:
         """
         Create a new changeset from staged or all working changes.
-        
+
         Args:
             title: Changeset title
             description: Detailed description
             author_id: Author identifier
             include_staged: If True, include only staged changes; if False, include all working changes
-            
+
         Returns:
             Created Changeset instance
-            
+
         Raises:
             ValueError: If no changes are available or validation fails
             RuntimeError: If database operation fails
         """
         logger.info(f"Creating changeset '{title}' by {author_id} (staged_only={include_staged})")
-        
+
+        # Validate input parameters
+        if not title or not description:
+            raise ValueError("Title and description are required")
+
+        if not author_id:
+            raise ValueError("Author ID is required")
+
         changeset_id = str(uuid.uuid4())
-        
+
         # Get changes to include
         if include_staged:
             changes = self.working_tree.get_staged_changes()
@@ -72,24 +79,33 @@ class ChangesetManager:
         else:
             changes = self.working_tree.get_working_changes()
             logger.info(f"Found {len(changes)} working changes")
-        
+
         if not changes:
-            raise ValueError("No changes available to create changeset")
-        
+            if include_staged:
+                raise ValueError("No staged changes found")
+            else:
+                raise ValueError("No changes available to create changeset")
+
+        # Generate branch name
+        branch_name = self._generate_branch_name()
+
         # Create changeset record
         changeset = Changeset(
             id=changeset_id,
             title=title,
             description=description,
             state=ChangesetState.DRAFT,
-            branch_name=None,
+            branch_name=branch_name,
             parent_changeset_id=None,
             author_id=author_id,
             created_at=datetime.now(timezone.utc),
             metadata={"changes_count": len(changes)}
         )
-        
+
         try:
+            # Capture version snapshot for reference
+            self.working_tree.capture_version_snapshot()
+
             # Store changeset locally
             self._store_changeset_locally(changeset, changes)
             
@@ -101,12 +117,7 @@ class ChangesetManager:
             
         except Exception as e:
             logger.error(f"Failed to create changeset: {e}")
-            # Attempt cleanup
-            try:
-                self.db.execute(text("DELETE FROM changesets WHERE id = ?"), (changeset_id,))
-                self.db.commit()
-            except:
-                pass
+            self.db.rollback()
             raise RuntimeError(f"Failed to create changeset: {e}")
     
     def get_changeset(self, changeset_id: str) -> Optional[Changeset]:
@@ -311,8 +322,8 @@ class ChangesetManager:
                 
             # Don't allow deletion of merged changesets
             if changeset.state == ChangesetState.MERGED:
-                logger.warning(f"Cannot delete merged changeset {changeset_id}")
-                raise ValueError("Cannot delete merged changeset")
+                logger.warning(f"Cannot delete changeset {changeset_id} in merged state")
+                raise ValueError("Cannot delete changeset in merged state")
             
             # Remove changeset association from versions
             self.db.execute(
@@ -335,6 +346,9 @@ class ChangesetManager:
             logger.info(f"Successfully deleted changeset {changeset_id}")
             return True
             
+        except ValueError:
+            # Re-raise validation errors directly
+            raise
         except Exception as e:
             logger.error(f"Failed to delete changeset {changeset_id}: {e}")
             self.db.rollback()
@@ -381,13 +395,19 @@ class ChangesetManager:
         try:
             # Update current versions of changed entities to associate with changeset
             for change in changes:
+                # Handle both dict format (from get_staged_changes) and object format (from get_working_changes)
+                if isinstance(change, dict):
+                    version_id = change['version_id']
+                else:
+                    version_id = change.current_version_id
+
                 self.db.execute(
                     text("""
-                        UPDATE entity_versions 
-                        SET changeset_id = ? 
+                        UPDATE entity_versions
+                        SET changeset_id = ?
                         WHERE id = ?
                     """),
-                    (changeset_id, change.current_version_id)
+                    (changeset_id, version_id)
                 )
             
             logger.debug(f"Successfully associated versions with changeset {changeset_id}")
@@ -432,3 +452,12 @@ class ChangesetManager:
         except Exception as e:
             logger.error(f"Failed to push changeset {changeset_id} to S3: {e}")
             return False
+
+    def _generate_branch_name(self) -> str:
+        """
+        Generate a unique branch name for the changeset.
+
+        Returns:
+            Branch name in format "changeset-{uuid[:8]}"
+        """
+        return f"changeset-{str(uuid.uuid4())[:8]}"

@@ -101,12 +101,7 @@ class ProposalManager:
             
         except Exception as e:
             logger.error(f"Failed to create proposal: {e}")
-            # Attempt cleanup
-            try:
-                self.db.execute(text("DELETE FROM proposals WHERE id = ?"), (proposal_id,))
-                self.db.commit()
-            except:
-                pass
+            self.db.rollback()
             raise RuntimeError(f"Failed to create proposal: {e}")
     
     def vote_on_proposal(self, proposal_id: str, user_id: str, vote: str,
@@ -343,7 +338,6 @@ class ProposalManager:
             if not proposal or proposal.status != ProposalStatus.OPEN:
                 return
             
-            votes = self.get_proposal_votes(proposal_id)
             vote_summary = self.get_vote_summary(proposal_id)
             
             approve_votes = vote_summary["approve_votes"]

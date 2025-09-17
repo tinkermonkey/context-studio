@@ -37,6 +37,10 @@ import {
 } from "@/components/layout/cs_sidebar";
 import { CsMain, CsMainTitle } from "@/components/layout/cs_main";
 import type { StructureNode } from "@/api/types/structureNodes";
+import type { components } from "@/api/types/openapi";
+
+type TermOut = components["schemas"]["TermOut"];
+type DomainOut = components["schemas"]["DomainOut"];
 
 interface DomainDetailsProps {
   domain: StructureNode;

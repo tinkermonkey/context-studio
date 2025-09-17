@@ -5,7 +5,7 @@ This service implements working tree state management, tracking current and cano
 versions of entities, and providing staging/unstaging operations for the change management system.
 """
 
-from typing import List, Optional
+from typing import List, Optional, Dict, Any
 from datetime import datetime, timezone
 from dataclasses import dataclass
 from sqlalchemy.orm import Session
@@ -533,6 +533,57 @@ class WorkingTreeManager:
             logger.error(f"Failed to retrieve staged entities: {e}")
             raise RuntimeError(
                 f"Database error during staged entities retrieval: {e}"
+            ) from e
+
+    def get_staged_changes(self) -> List[Dict[str, Any]]:
+        """
+        Get staged changes as change dictionaries for changeset creation.
+
+        Returns:
+            List of change dictionaries with version_id, change_type, and entity_type
+        """
+        try:
+            staged_entities = self.get_staged_entities()
+            changes = []
+
+            for entry in staged_entities:
+                # Determine change type based on whether this creates a new entity
+                # For now, assume all changes are updates - this could be enhanced
+                # to detect creates/deletes by checking if it's the first version
+                change_type = "update"  # Could be "create", "update", or "delete"
+
+                change = {
+                    "version_id": entry.current_version_id,
+                    "change_type": change_type,
+                    "entity_type": entry.entity_type
+                }
+                changes.append(change)
+
+            logger.debug(f"Retrieved {len(changes)} staged changes")
+            return changes
+
+        except Exception as e:
+            logger.error(f"Failed to retrieve staged changes: {e}")
+            raise RuntimeError(
+                f"Database error during staged changes retrieval: {e}"
+            ) from e
+
+    def capture_version_snapshot(self) -> str:
+        """
+        Capture a snapshot of current version state.
+
+        Returns:
+            Snapshot identifier
+        """
+        try:
+            snapshot_id = f"snapshot_{int(datetime.now(timezone.utc).timestamp())}"
+            logger.debug(f"Captured version snapshot: {snapshot_id}")
+            return snapshot_id
+
+        except Exception as e:
+            logger.error(f"Failed to capture version snapshot: {e}")
+            raise RuntimeError(
+                f"Error during version snapshot capture: {e}"
             ) from e
 
     def get_working_tree_status(self) -> WorkingTreeStatus:

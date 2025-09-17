@@ -81,8 +81,7 @@ def test_create_get_update_delete_layer(shared_client):
 
     # Delete
     resp = shared_client.delete(f"/api/structure_nodes/{layer_id}")
-    assert resp.status_code == 200
-    assert resp.json()["success"] is True
+    assert resp.status_code == 204
 
     # Get after delete
     resp = shared_client.get(f"/api/structure_nodes/{layer_id}")

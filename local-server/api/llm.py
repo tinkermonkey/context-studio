@@ -6,7 +6,8 @@ import json
 from api.dependencies.llm_services import get_default_llm_service
 from llm.service import LLMService
 from llm.models import (
-    DefinitionSuggestionRequest, 
+    DefinitionSuggestionRequest,
+    DefinitionSuggestionResponse,
     LayerDefinitionRequest,
     DomainDefinitionRequest,
     GenericPipelineExecutionRequest,

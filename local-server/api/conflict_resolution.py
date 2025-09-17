@@ -69,7 +69,7 @@ class DetectConflictsRequest(BaseModel):
 
 class BatchResolveRequest(BaseModel):
     """API model for batch conflict resolution."""
-    conflict_ids: List[str] = Field(..., min_items=1)
+    conflict_ids: List[str] = Field(..., min_length=1)
     resolved_by: str
     resolution_strategy: str = Field(..., description="Strategy: auto, manual, prefer_local, prefer_remote")
 

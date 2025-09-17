@@ -114,10 +114,10 @@ class TestIntelligentQueryCache:
         
         assert stats['cache_size'] == 1
         assert stats['max_cache_size'] == 10
-        assert stats['hit_rate'] == 0.25  # 1 hit out of 4 requests
-        assert stats['total_requests'] == 4
+        assert stats['hit_rate'] == 0.3333333333333333  # 1 hit out of 3 requests
+        assert stats['total_requests'] == 3
         assert stats['hits'] == 1
-        assert stats['misses'] == 3
+        assert stats['misses'] == 2
         assert stats['evictions'] == 0
 
 

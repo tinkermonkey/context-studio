@@ -25,6 +25,7 @@ from sqlalchemy import text
 
 # Import test configuration utilities
 from tests.test_config import TestConfigurationManager
+from pathlib import Path
 
 
 def create_test_database_with_migrations():
@@ -51,6 +52,140 @@ def create_test_database_with_migrations():
         if os.path.exists(db_path):
             os.unlink(db_path)
         raise
+
+
+@pytest.fixture(scope="session", autouse=True)
+def global_test_isolation():
+    """
+    Provide global test isolation for the entire test session.
+    
+    This fixture runs automatically for all tests and prevents any modification
+    of the global config.json file by monkey-patching the ConfigurationManager
+    to prevent file writes during testing.
+    """
+    # Create temporary directory for test session
+    temp_dir = Path(tempfile.mkdtemp(prefix="test_session_"))
+    
+    # Create test configuration manager
+    config_manager = TestConfigurationManager(str(temp_dir))
+    test_settings = config_manager.get_test_settings()
+    
+    # Comprehensive monkey-patching to prevent config.json pollution
+    import config
+    
+    # Store original methods
+    original_get_config_manager = config.get_config_manager
+    original_ConfigurationManager = config.ConfigurationManager
+    original_config_manager_instance = None
+    
+    # Create a mock ConfigurationManager class that prevents file writes
+    class TestConfigurationManager:
+        def __init__(self, config_file: str = "./config.json"):
+            self.config_file = config_file  # Store but don't use
+            self.settings = test_settings  # Use test settings instead
+            self._lock = None
+
+        def load(self):
+            return self.settings
+
+        def save(self):
+            # Prevent any file writes during tests
+            return True
+
+        def get(self, path: str):
+            # Delegate to our test configuration manager if needed
+            parts = path.split(".")
+            current = self.settings.model_dump()
+            for part in parts:
+                if isinstance(current, dict) and part in current:
+                    current = current[part]
+                else:
+                    raise KeyError(f"Configuration path not found: {path}")
+            return current
+
+        def set(self, path: str, value):
+            # Actually update the values in test settings for proper testing
+            try:
+                parts = path.split('.')
+                obj = self.settings
+
+                # Navigate to parent object
+                for part in parts[:-1]:
+                    if hasattr(obj, part):
+                        obj = getattr(obj, part)
+                    else:
+                        raise KeyError(f"Configuration path not found: {'.'.join(parts[:-1])}")
+
+                # Set the final value
+                final_key = parts[-1]
+                if hasattr(obj, final_key):
+                    setattr(obj, final_key, value)
+
+                    # Trigger notifications like the real ConfigurationManager does
+                    try:
+                        import asyncio
+                        loop = asyncio.get_event_loop()
+                        # Import the notification function from config
+                        from config import notify_configuration_change
+                        loop.create_task(notify_configuration_change(path))
+                    except RuntimeError:
+                        # No event loop available, skip notifications
+                        pass
+
+                    return True
+                else:
+                    raise KeyError(f"Configuration key not found: {final_key}")
+            except Exception:
+                return False
+
+        def validate(self):
+            # Add the validate method that the API endpoint needs
+            from pydantic import ValidationError
+            errors = []
+            try:
+                # Re-create settings object to trigger validation
+                from config import Settings
+                Settings(**self.settings.model_dump())
+            except ValidationError as e:
+                for error in e.errors():
+                    field = '.'.join(str(loc) for loc in error['loc'])
+                    errors.append(f"{field}: {error['msg']}")
+            return errors
+
+        def update(self, updates: dict):
+            # Prevent modifications during tests
+            return True
+    
+    # Mock the get_config_manager function
+    def get_test_config_manager():
+        nonlocal original_config_manager_instance
+        if original_config_manager_instance is None:
+            original_config_manager_instance = TestConfigurationManager()
+        return original_config_manager_instance
+    
+    # Apply monkey patches
+    config.get_config_manager = get_test_config_manager
+    config.ConfigurationManager = TestConfigurationManager
+    
+    # Also patch the global instance if it exists
+    if hasattr(config, '_config_manager'):
+        config._config_manager = None  # Force recreation with our mock
+    
+    try:
+        yield
+    finally:
+        # Restore original classes and functions
+        config.get_config_manager = original_get_config_manager
+        config.ConfigurationManager = original_ConfigurationManager
+        config._config_manager = None  # Reset global instance
+        
+        # Cleanup temporary directory
+        config_manager.cleanup()
+        try:
+            import shutil
+            shutil.rmtree(temp_dir)
+        except (OSError, PermissionError):
+            pass
 
 
 @pytest.fixture(scope="session")

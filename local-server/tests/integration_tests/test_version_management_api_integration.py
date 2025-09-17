@@ -8,10 +8,48 @@ working tree operations, diff generation, and rollback functionality.
 import sys
 import os
 from uuid import uuid4
+import pytest
+import time
 
 sys.path.insert(
     0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 )
+
+from utils.event_processor import get_global_event_processor, create_event_processor
+from services.version_manager import VersionManager
+from services.working_tree_manager import WorkingTreeManager
+
+
+@pytest.fixture(autouse=True, scope="function")
+def start_event_processor_for_version_tests(db_session, shared_app):
+    """Start EventProcessor for version management tests."""
+    app, engine, session_local = shared_app
+    database_url = str(engine.url)
+    
+    # Check if global event processor exists and is running
+    processor = get_global_event_processor()
+    if not processor or not processor.get_stats().get('is_running', False):
+        try:
+            # Create version management services
+            version_manager = VersionManager(db_session)
+            working_tree_manager = WorkingTreeManager(db_session, version_manager)
+            
+            # Create and start event processor
+            processor = create_event_processor(
+                database_url=database_url,
+                version_manager=version_manager,
+                working_tree_manager=working_tree_manager
+            )
+            processor.start()
+            
+            # Wait a moment for startup
+            time.sleep(0.1)
+            
+        except Exception as e:
+            print(f"Failed to start event processor for test: {e}")
+            processor = None
+    
+    yield processor
 
 
 class TestVersionManagementAPI:
@@ -49,7 +87,7 @@ class TestVersionManagementAPI:
         assert isinstance(stats["versions_by_state"], dict)
         assert isinstance(stats["recent_activity"], list)
 
-    def test_create_entity_and_get_versions(self, client):
+    def test_create_entity_and_get_versions(self, client, start_event_processor_for_version_tests):
         """Test creating entity versions and retrieving version history."""
         # First create a structure node to version
         unique_title = f"Test Node {uuid4()}"
@@ -63,6 +101,17 @@ class TestVersionManagementAPI:
         assert create_response.status_code == 201
         node = create_response.json()
         node_id = node["id"]
+
+        # Wait for event processing to complete
+        processor = start_event_processor_for_version_tests
+        if processor:
+            # Give the event processor time to process the creation event
+            time.sleep(1)
+            
+            # Manually trigger event processing if needed
+            processed = processor.process_events()
+            if processed > 0:
+                print(f"Manually processed {processed} events")
 
         # Get version history - should have 1 version created automatically
         response = client.get(

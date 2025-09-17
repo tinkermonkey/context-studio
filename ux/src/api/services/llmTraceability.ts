@@ -131,7 +131,7 @@ export class LLMTraceabilityService extends BaseService {
     // The current API endpoint requires flavor_id, so we cannot support general execution history
     if (!filters || !filters.flavor_id) {
       throw new Error(
-        "General execution history is not supported by the current API. Use getFlavorExecutionHistory with a specific flavor_id instead."
+        "General execution history is not supported by the current API. Use getFlavorExecutionHistory with a specific flavor_id instead.",
       );
     }
 
@@ -217,7 +217,7 @@ export class LLMTraceabilityService extends BaseService {
   ): Promise<ExecutionHistoryResponse[]> {
     if (!flavorId) {
       throw new Error(
-        "Recent executions requires a flavor_id. Use getFlavorExecutionHistory with a specific flavor_id instead."
+        "Recent executions requires a flavor_id. Use getFlavorExecutionHistory with a specific flavor_id instead.",
       );
     }
 
@@ -266,7 +266,10 @@ export class LLMTraceabilityService extends BaseService {
     filters: FlavorAnalyticsFilters,
   ): Promise<FlavorAnalyticsResponse> {
     this.validateRequired(filters.flavor_id, "flavor_id");
-    const sanitizedFlavorId = this.sanitizeString(filters.flavor_id, "flavor_id");
+    const sanitizedFlavorId = this.sanitizeString(
+      filters.flavor_id,
+      "flavor_id",
+    );
     const queryParams = filters.days_back
       ? {
           days_back:

@@ -23,9 +23,7 @@ export const CreateChildModal: React.FC<CreateChildModalProps> = ({
       aria-labelledby="modal-title"
       aria-modal="true"
     >
-      <ModalHeader>
-        <h2 id="modal-title">{title}</h2>
-      </ModalHeader>
+      <ModalHeader id="modal-title">{title}</ModalHeader>
       <ModalBody>{children}</ModalBody>
     </Modal>
   );

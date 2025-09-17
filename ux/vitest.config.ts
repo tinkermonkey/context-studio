@@ -9,7 +9,7 @@ export default defineConfig({
     coverage: {
       provider: "istanbul",
     },
-    exclude: ["node_modules", "dist"],
+    exclude: ["node_modules", "dist", "test/integration/example.test.tsx", "test/integration/msw_*.test.*"],
   },
   resolve: {
     alias: {

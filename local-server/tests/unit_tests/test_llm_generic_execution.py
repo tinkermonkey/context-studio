@@ -19,10 +19,8 @@ from llm.models import (
     StreamingLLMResponse
 )
 from llm.exceptions import (
-    LLMConfigurationError,
     LLMProcessingError,
-    LLMTimeoutError,
-    LLMQuotaExceededError
+    LLMTimeoutError
 )
 
 
@@ -168,8 +166,13 @@ class TestGenericPipelineExecution:
         async def async_chunks():
             for chunk in mock_chunks:
                 yield chunk
-        
-        mock_llm.astream.return_value = async_chunks()
+
+        # Make astream return the async generator when called
+        async def mock_astream(*args, **kwargs):
+            async for chunk in async_chunks():
+                yield chunk
+
+        mock_llm.astream = mock_astream
         
         with patch.object(mock_llm_service, '_create_llm_from_flavor', return_value=mock_llm):
             with patch.object(mock_llm_service, '_get_flavor', return_value=mock_flavor):
