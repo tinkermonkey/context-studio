@@ -1,25 +1,22 @@
 /**
  * SearchResults Component
  *
- * Displays unified search results with virtual scrolling for performance
+ * Displays unified search results
  */
 
-import React, { useMemo } from 'react';
-import { Card, Badge, Button, Alert, Spinner } from 'flowbite-react';
-import { ExternalLink, AlertCircle, Info } from 'lucide-react';
-// Virtual scrolling temporarily disabled due to react-window import issues
-// import * as ReactWindow from 'react-window';
-import { UnifiedNode } from '@/api/types/unified';
-import { SOURCE_METADATA } from '@/api/types/unified';
-import { DeduplicationIndicator } from './DeduplicationIndicator';
-import { useReferenceStore, useSearchState } from '@/store/referenceSlice';
+import React from "react";
+import { Card, Badge, Button, Alert, Spinner } from "flowbite-react";
+import { ExternalLink, AlertCircle, Info } from "lucide-react";
+import { UnifiedNode } from "@/api/types/unified";
+import { SOURCE_METADATA } from "@/api/types/unified";
 
 interface SearchResultsProps {
+  results: UnifiedNode[];
+  totalResults: number;
   onSelectNode?: (node: UnifiedNode) => void;
   onLoadMore?: () => void;
-  itemHeight?: number;
-  listHeight?: number;
-  showVirtualization?: boolean;
+  isSearching?: boolean;
+  sourceErrors?: Record<string, string>;
   compact?: boolean;
 }
 
@@ -34,31 +31,31 @@ const ResultCard: React.FC<ResultCardProps> = ({
   node,
   onSelect,
   style,
-  compact = false
+  compact = false,
 }) => {
   const sourceMetadata = SOURCE_METADATA[node.source] || {
     label: node.source,
-    color: 'gray',
-    description: '',
+    color: "gray",
+    description: "",
   };
 
-  const confidencePercent = Math.round(node.confidence_score * 100);
+  const confidencePercent = Math.round((node.confidence_score || 0) * 100);
 
   return (
     <div style={style} className="px-2 pb-4">
       <Card
-        className="hover:shadow-lg transition-shadow cursor-pointer h-full"
+        className="h-full cursor-pointer transition-shadow hover:shadow-lg"
         onClick={onSelect}
       >
-        <div className="space-y-3 h-full flex flex-col">
+        <div className="flex h-full flex-col space-y-3">
           {/* Content */}
           <div className="flex-1">
-            <h3 className="text-lg font-semibold line-clamp-2 mb-2">
+            <h3 className="mb-2 line-clamp-2 text-lg font-semibold">
               {node.title}
             </h3>
 
             {!compact && node.definition && (
-              <p className="text-gray-600 text-sm line-clamp-3 mb-3">
+              <p className="mb-3 line-clamp-3 text-sm text-gray-600">
                 {node.definition}
               </p>
             )}
@@ -70,24 +67,21 @@ const ResultCard: React.FC<ResultCardProps> = ({
               {sourceMetadata.label}
             </Badge>
 
-            {node.confidence_score < 1 && (
+            {(node.confidence_score || 0) < 1 && (
               <Badge color="gray" size="sm">
                 {confidencePercent}% match
               </Badge>
             )}
 
             {node.merged_from && node.merged_from.length > 0 && (
-              <DeduplicationIndicator
-                mergedSources={node.merged_from}
-                similarityScore={node.confidence_score}
-                primarySource={node.source}
-                size="sm"
-              />
+              <Badge color="purple" size="sm">
+                Merged from {node.merged_from.length} source{node.merged_from.length > 1 ? 's' : ''}
+              </Badge>
             )}
           </div>
 
           {/* Actions */}
-          <div className="flex justify-between items-center pt-2 border-t border-gray-100">
+          <div className="flex items-center justify-between border-t border-gray-100 pt-2">
             <Button
               size="xs"
               color="blue"
@@ -105,11 +99,11 @@ const ResultCard: React.FC<ResultCardProps> = ({
                 color="gray"
                 onClick={(e) => {
                   e.stopPropagation();
-                  window.open(node.source_url, '_blank');
+                  window.open(node.source_url, "_blank");
                 }}
                 className="flex items-center gap-1"
               >
-                <ExternalLink className="w-3 h-3" />
+                <ExternalLink className="h-3 w-3" />
                 Source
               </Button>
             )}
@@ -121,48 +115,28 @@ const ResultCard: React.FC<ResultCardProps> = ({
 };
 
 export const SearchResults: React.FC<SearchResultsProps> = ({
+  results,
+  totalResults,
   onSelectNode,
   onLoadMore,
-  itemHeight = 200,
-  listHeight = 600,
-  showVirtualization = true,
+  isSearching = false,
+  sourceErrors = {},
   compact = false,
 }) => {
-  const {
-    results,
-    total,
-    isSearching,
-    hasResults,
-    hasMore,
-    errors,
-    hasErrors,
-  } = useSearchState();
-
-  const { selectNode, addToRecentNodes } = useReferenceStore();
+  const hasResults = results.length > 0;
+  const hasErrors = Object.keys(sourceErrors).length > 0;
+  const hasMore = results.length < totalResults;
 
   const handleSelectNode = (node: UnifiedNode) => {
-    selectNode(node);
-    addToRecentNodes(node);
     onSelectNode?.(node);
   };
 
-  // Memoize the virtual list item renderer
-  const VirtualizedItem = useMemo(() => {
-    return ({ index, style }: { index: number; style: React.CSSProperties }) => (
-      <ResultCard
-        node={results[index]}
-        onSelect={() => handleSelectNode(results[index])}
-        style={style}
-        compact={compact}
-      />
-    );
-  }, [results, handleSelectNode, compact]);
 
   // Show loading state during search
   if (isSearching && !hasResults) {
     return (
       <div className="flex items-center justify-center py-12">
-        <div className="text-center space-y-4">
+        <div className="space-y-4 text-center">
           <Spinner size="lg" />
           <p className="text-gray-600">Searching across reference sources...</p>
         </div>
@@ -191,10 +165,11 @@ export const SearchResults: React.FC<SearchResultsProps> = ({
         <Alert color="warning" icon={AlertCircle}>
           <div className="space-y-2">
             <p className="font-medium">Some sources encountered errors:</p>
-            <ul className="list-disc list-inside text-sm space-y-1">
-              {Object.entries(errors).map(([source, error]) => (
+            <ul className="list-inside list-disc space-y-1 text-sm">
+              {Object.entries(sourceErrors).map(([source, error]) => (
                 <li key={source}>
-                  <strong>{SOURCE_METADATA[source]?.label || source}:</strong> {error}
+                  <strong>{SOURCE_METADATA[source]?.label || source}:</strong>{" "}
+                  {error}
                 </li>
               ))}
             </ul>
@@ -205,13 +180,14 @@ export const SearchResults: React.FC<SearchResultsProps> = ({
       {/* Results summary */}
       <div className="flex items-center justify-between text-sm text-gray-600">
         <span>
-          Showing {results.length} of {total} results
-          {isSearching && ' (searching...)'}
+          Showing {results.length} of {totalResults} results
+          {isSearching && " (searching...)"}
         </span>
 
         {hasErrors && (
           <span className="text-yellow-600">
-            {Object.keys(errors).length} source{Object.keys(errors).length > 1 ? 's' : ''} had errors
+            {Object.keys(sourceErrors).length} source
+            {Object.keys(sourceErrors).length > 1 ? "s" : ""} had errors
           </span>
         )}
       </div>
@@ -230,19 +206,15 @@ export const SearchResults: React.FC<SearchResultsProps> = ({
 
       {/* Load more */}
       {hasMore && onLoadMore && (
-        <div className="text-center pt-4">
-          <Button
-            onClick={onLoadMore}
-            disabled={isSearching}
-            color="gray"
-          >
+        <div className="pt-4 text-center">
+          <Button onClick={onLoadMore} disabled={isSearching} color="gray">
             {isSearching ? (
               <>
                 <Spinner size="sm" className="mr-2" />
                 Loading...
               </>
             ) : (
-              'Load More Results'
+              "Load More Results"
             )}
           </Button>
         </div>
@@ -250,9 +222,11 @@ export const SearchResults: React.FC<SearchResultsProps> = ({
 
       {/* Additional loading indicator at bottom */}
       {isSearching && hasResults && (
-        <div className="text-center py-4">
+        <div className="py-4 text-center">
           <Spinner size="sm" className="mr-2" />
-          <span className="text-sm text-gray-600">Loading additional results...</span>
+          <span className="text-sm text-gray-600">
+            Loading additional results...
+          </span>
         </div>
       )}
     </div>

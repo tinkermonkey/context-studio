@@ -4,8 +4,8 @@
  * Explores and displays relationships between reference nodes
  */
 
-import React, { useState, useMemo } from 'react';
-import { Card, Badge, Button, Alert, Spinner, Select } from 'flowbite-react';
+import React, { useState, useMemo } from "react";
+import { Card, Badge, Button, Alert, Spinner, Select } from "flowbite-react";
 import {
   ArrowRight,
   ArrowLeft,
@@ -14,10 +14,10 @@ import {
   Filter,
   RotateCcw,
   Info,
-} from 'lucide-react';
-import { UnifiedLink, UnifiedNode } from '@/api/types/unified';
-import { SOURCE_METADATA } from '@/api/types/unified';
-import { useNodeDetails } from '@/api/hooks/unifiedReference/useUnifiedReference';
+} from "lucide-react";
+import { UnifiedLink, UnifiedNode } from "@/api/types/unified";
+import { SOURCE_METADATA } from "@/api/types/unified";
+import { useNodeDetails } from "@/api/hooks/unifiedReference/useUnifiedReference";
 
 interface LinkExplorerProps {
   nodeId: string;
@@ -42,16 +42,12 @@ const LinkItem: React.FC<LinkItemProps> = ({
   const isOutgoing = link.source_node_id === currentNodeId;
   const targetNodeId = isOutgoing ? link.target_node_id : link.source_node_id;
 
-  const {
-    data: targetNode,
-    isLoading,
-    error,
-  } = useNodeDetails(targetNodeId);
+  const { data: targetNode, isLoading, error } = useNodeDetails(targetNodeId);
 
   const sourceMetadata = SOURCE_METADATA[link.source] || {
     label: link.source,
-    color: 'gray',
-    description: '',
+    color: "gray",
+    description: "",
   };
 
   const confidencePercent = Math.round(link.confidence_score * 100);
@@ -66,8 +62,8 @@ const LinkItem: React.FC<LinkItemProps> = ({
     return (
       <Card className="animate-pulse">
         <div className="flex items-center space-x-4">
-          <div className="h-4 bg-gray-200 rounded w-1/4"></div>
-          <div className="h-4 bg-gray-200 rounded w-1/2"></div>
+          <div className="h-4 w-1/4 rounded bg-gray-200"></div>
+          <div className="h-4 w-1/2 rounded bg-gray-200"></div>
         </div>
       </Card>
     );
@@ -77,16 +73,18 @@ const LinkItem: React.FC<LinkItemProps> = ({
     return (
       <Card>
         <div className="flex items-center gap-2 text-gray-500">
-          <Info className="w-4 h-4" />
+          <Info className="h-4 w-4" />
           <span>Node details unavailable</span>
-          <code className="text-xs bg-gray-100 px-1 rounded">{targetNodeId}</code>
+          <code className="rounded bg-gray-100 px-1 text-xs">
+            {targetNodeId}
+          </code>
         </div>
       </Card>
     );
   }
 
   return (
-    <Card className="hover:shadow-md transition-shadow">
+    <Card className="transition-shadow hover:shadow-md">
       <div className="space-y-3">
         {/* Link relationship */}
         <div className="flex items-center gap-2 text-sm">
@@ -97,12 +95,12 @@ const LinkItem: React.FC<LinkItemProps> = ({
           <div className="flex items-center gap-1 text-gray-600">
             {isOutgoing ? (
               <>
-                <ArrowRight className="w-3 h-3" />
+                <ArrowRight className="h-3 w-3" />
                 <span className="font-medium">{link.predicate}</span>
               </>
             ) : (
               <>
-                <ArrowLeft className="w-3 h-3" />
+                <ArrowLeft className="h-3 w-3" />
                 <span className="font-medium">{link.predicate}⁻¹</span>
               </>
             )}
@@ -117,14 +115,14 @@ const LinkItem: React.FC<LinkItemProps> = ({
 
         {/* Target node info */}
         <div className="space-y-2">
-          <h4 className="font-semibold text-blue-600 cursor-pointer hover:text-blue-800 transition-colors">
+          <h4 className="cursor-pointer font-semibold text-blue-600 transition-colors hover:text-blue-800">
             <button onClick={handleNodeClick} className="text-left">
               {targetNode.title}
             </button>
           </h4>
 
           {targetNode.definition && (
-            <p className="text-sm text-gray-600 line-clamp-2">
+            <p className="line-clamp-2 text-sm text-gray-600">
               {targetNode.definition}
             </p>
           )}
@@ -133,7 +131,7 @@ const LinkItem: React.FC<LinkItemProps> = ({
             <div className="flex items-center gap-2">
               <Badge
                 color={
-                  (SOURCE_METADATA[targetNode.source]?.color as any) || 'gray'
+                  (SOURCE_METADATA[targetNode.source]?.color as any) || "gray"
                 }
                 size="sm"
               >
@@ -142,11 +140,7 @@ const LinkItem: React.FC<LinkItemProps> = ({
             </div>
 
             <div className="flex gap-1">
-              <Button
-                size="xs"
-                color="blue"
-                onClick={handleNodeClick}
-              >
+              <Button size="xs" color="blue" onClick={handleNodeClick}>
                 View Details
               </Button>
 
@@ -154,9 +148,9 @@ const LinkItem: React.FC<LinkItemProps> = ({
                 <Button
                   size="xs"
                   color="gray"
-                  onClick={() => window.open(targetNode.source_url, '_blank')}
+                  onClick={() => window.open(targetNode.source_url, "_blank")}
                 >
-                  <ExternalLink className="w-3 h-3" />
+                  <ExternalLink className="h-3 w-3" />
                 </Button>
               )}
             </div>
@@ -175,16 +169,18 @@ export const LinkExplorer: React.FC<LinkExplorerProps> = ({
   onNodeSelect,
   showDirection = true,
 }) => {
-  const [sourceFilter, setSourceFilter] = useState<string>('all');
-  const [directionFilter, setDirectionFilter] = useState<'all' | 'outgoing' | 'incoming'>('all');
-  const [predicateFilter, setPredicateFilter] = useState<string>('all');
+  const [sourceFilter, setSourceFilter] = useState<string>("all");
+  const [directionFilter, setDirectionFilter] = useState<
+    "all" | "outgoing" | "incoming"
+  >("all");
+  const [predicateFilter, setPredicateFilter] = useState<string>("all");
 
   // Get unique values for filters
   const { sources, predicates, outgoingLinks, incomingLinks } = useMemo(() => {
-    const sources = [...new Set(links.map(link => link.source))];
-    const predicates = [...new Set(links.map(link => link.predicate))];
-    const outgoing = links.filter(link => link.source_node_id === nodeId);
-    const incoming = links.filter(link => link.target_node_id === nodeId);
+    const sources = [...new Set(links.map((link) => link.source))];
+    const predicates = [...new Set(links.map((link) => link.predicate))];
+    const outgoing = links.filter((link) => link.source_node_id === nodeId);
+    const incoming = links.filter((link) => link.target_node_id === nodeId);
 
     return {
       sources,
@@ -196,22 +192,22 @@ export const LinkExplorer: React.FC<LinkExplorerProps> = ({
 
   // Filter links based on current filters
   const filteredLinks = useMemo(() => {
-    return links.filter(link => {
+    return links.filter((link) => {
       // Source filter
-      if (sourceFilter !== 'all' && link.source !== sourceFilter) {
+      if (sourceFilter !== "all" && link.source !== sourceFilter) {
         return false;
       }
 
       // Direction filter
-      if (directionFilter === 'outgoing' && link.source_node_id !== nodeId) {
+      if (directionFilter === "outgoing" && link.source_node_id !== nodeId) {
         return false;
       }
-      if (directionFilter === 'incoming' && link.target_node_id !== nodeId) {
+      if (directionFilter === "incoming" && link.target_node_id !== nodeId) {
         return false;
       }
 
       // Predicate filter
-      if (predicateFilter !== 'all' && link.predicate !== predicateFilter) {
+      if (predicateFilter !== "all" && link.predicate !== predicateFilter) {
         return false;
       }
 
@@ -220,9 +216,9 @@ export const LinkExplorer: React.FC<LinkExplorerProps> = ({
   }, [links, sourceFilter, directionFilter, predicateFilter, nodeId]);
 
   const clearFilters = () => {
-    setSourceFilter('all');
-    setDirectionFilter('all');
-    setPredicateFilter('all');
+    setSourceFilter("all");
+    setDirectionFilter("all");
+    setPredicateFilter("all");
   };
 
   if (isLoading) {
@@ -260,8 +256,8 @@ export const LinkExplorer: React.FC<LinkExplorerProps> = ({
       <Card>
         <div className="space-y-4">
           <div className="flex items-center justify-between">
-            <h4 className="font-semibold flex items-center gap-2">
-              <Filter className="w-4 h-4" />
+            <h4 className="flex items-center gap-2 font-semibold">
+              <Filter className="h-4 w-4" />
               Filters
             </h4>
 
@@ -269,28 +265,34 @@ export const LinkExplorer: React.FC<LinkExplorerProps> = ({
               size="xs"
               color="gray"
               onClick={clearFilters}
-              disabled={sourceFilter === 'all' && directionFilter === 'all' && predicateFilter === 'all'}
+              disabled={
+                sourceFilter === "all" &&
+                directionFilter === "all" &&
+                predicateFilter === "all"
+              }
             >
-              <RotateCcw className="w-3 h-3 mr-1" />
+              <RotateCcw className="mr-1 h-3 w-3" />
               Clear
             </Button>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
             {/* Direction filter */}
             {showDirection && (
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="mb-1 block text-sm font-medium text-gray-700">
                   Direction
                 </label>
                 <Select
                   value={directionFilter}
-                  onChange={(e) => setDirectionFilter(e.target.value as 'all' | 'outgoing' | 'incoming')}
+                  onChange={(e) =>
+                    setDirectionFilter(
+                      e.target.value as "all" | "outgoing" | "incoming",
+                    )
+                  }
                   sizing="sm"
                 >
-                  <option value="all">
-                    All ({links.length})
-                  </option>
+                  <option value="all">All ({links.length})</option>
                   <option value="outgoing">
                     Outgoing ({outgoingLinks.length})
                   </option>
@@ -303,7 +305,7 @@ export const LinkExplorer: React.FC<LinkExplorerProps> = ({
 
             {/* Source filter */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="mb-1 block text-sm font-medium text-gray-700">
                 Source
               </label>
               <Select
@@ -312,7 +314,7 @@ export const LinkExplorer: React.FC<LinkExplorerProps> = ({
                 sizing="sm"
               >
                 <option value="all">All Sources</option>
-                {sources.map(source => (
+                {sources.map((source) => (
                   <option key={source} value={source}>
                     {SOURCE_METADATA[source]?.label || source}
                   </option>
@@ -322,7 +324,7 @@ export const LinkExplorer: React.FC<LinkExplorerProps> = ({
 
             {/* Predicate filter */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="mb-1 block text-sm font-medium text-gray-700">
                 Relationship
               </label>
               <Select
@@ -331,7 +333,7 @@ export const LinkExplorer: React.FC<LinkExplorerProps> = ({
                 sizing="sm"
               >
                 <option value="all">All Relationships</option>
-                {predicates.map(predicate => (
+                {predicates.map((predicate) => (
                   <option key={predicate} value={predicate}>
                     {predicate}
                   </option>
@@ -351,11 +353,11 @@ export const LinkExplorer: React.FC<LinkExplorerProps> = ({
         {showDirection && (
           <div className="flex items-center gap-4">
             <span className="flex items-center gap-1">
-              <ArrowRight className="w-3 h-3" />
+              <ArrowRight className="h-3 w-3" />
               {outgoingLinks.length} outgoing
             </span>
             <span className="flex items-center gap-1">
-              <ArrowLeft className="w-3 h-3" />
+              <ArrowLeft className="h-3 w-3" />
               {incomingLinks.length} incoming
             </span>
           </div>

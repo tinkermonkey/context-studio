@@ -19,10 +19,10 @@ export const API_CONFIG = {
 } as const;
 
 export const QUERY_KEYS = {
-  LAYERS: 'layers',
-  DOMAINS: 'domains',
-  TERMS: 'terms',
-  RELATIONSHIPS: 'relationships',
+  LAYERS: "layers",
+  DOMAINS: "domains",
+  TERMS: "terms",
+  RELATIONSHIPS: "relationships",
   PREDICATES: "predicates",
   GRAPH: "graph",
   FIND: "find",

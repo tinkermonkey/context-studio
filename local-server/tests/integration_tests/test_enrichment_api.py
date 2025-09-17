@@ -474,3 +474,173 @@ class TestEnrichmentAPIIntegration:
             params={"query": "person", "similarity_threshold": -0.1},
         )
         assert response.status_code == 422
+
+    def test_multi_source_search_endpoint_success(self, client):
+        """Test multi-source search endpoint with successful response"""
+        with patch("enrichment.service.EnrichmentService.search") as mock_search:
+            mock_search.return_value = {
+                "query": "apple",
+                "results": [
+                    {
+                        "id": "dbpedia:http://dbpedia.org/resource/Apple",
+                        "source": "dbpedia",
+                        "title": "Apple",
+                        "definition": "A fruit",
+                        "attributes": {"types": ["Food"]},
+                        "source_url": "http://dbpedia.org/resource/Apple",
+                        "relevance_score": 0.95
+                    },
+                    {
+                        "id": "conceptnet:/c/en/apple",
+                        "source": "conceptnet",
+                        "title": "apple",
+                        "definition": "Related via IsA",
+                        "attributes": {"weight": 0.8},
+                        "source_url": "http://conceptnet.io/c/en/apple",
+                        "relevance_score": 0.8
+                    }
+                ],
+                "total_results": 2,
+                "sources_queried": ["dbpedia", "conceptnet"],
+                "source_errors": {},
+                "offset": 0,
+                "limit": 20,
+                "search_time_ms": 150.5
+            }
+
+            response = client.post(
+                "/api/nlp_analysis/reference/search",
+                json={
+                    "query": "apple",
+                    "sources": ["dbpedia", "conceptnet"],
+                    "limit": 20,
+                    "offset": 0
+                }
+            )
+
+            assert response.status_code == 200
+            data = response.json()
+            assert data["query"] == "apple"
+            assert len(data["results"]) == 2
+            assert data["total_results"] == 2
+            assert "dbpedia" in data["sources_queried"]
+            assert "conceptnet" in data["sources_queried"]
+            assert data["search_time_ms"] == 150.5
+
+    def test_multi_source_search_get_endpoint_success(self, client):
+        """Test multi-source search GET endpoint with successful response"""
+        with patch("enrichment.service.EnrichmentService.search") as mock_search:
+            mock_search.return_value = {
+                "query": "apple",
+                "results": [
+                    {
+                        "id": "dbpedia:http://dbpedia.org/resource/Apple",
+                        "source": "dbpedia",
+                        "title": "Apple",
+                        "definition": "A fruit",
+                        "attributes": {"types": ["Food"]},
+                        "source_url": "http://dbpedia.org/resource/Apple",
+                        "relevance_score": 0.95
+                    }
+                ],
+                "total_results": 1,
+                "sources_queried": ["dbpedia"],
+                "source_errors": {},
+                "offset": 0,
+                "limit": 10,
+                "search_time_ms": 100.0
+            }
+
+            response = client.get(
+                "/api/nlp_analysis/reference/search",
+                params={
+                    "query": "apple",
+                    "sources": "dbpedia",
+                    "limit": 10,
+                    "offset": 0
+                }
+            )
+
+            assert response.status_code == 200
+            data = response.json()
+            assert data["query"] == "apple"
+            assert len(data["results"]) == 1
+            assert data["total_results"] == 1
+            assert "dbpedia" in data["sources_queried"]
+
+    def test_multi_source_search_with_source_errors(self, client):
+        """Test multi-source search with some source errors"""
+        with patch("enrichment.service.EnrichmentService.search") as mock_search:
+            mock_search.return_value = {
+                "query": "apple",
+                "results": [
+                    {
+                        "id": "dbpedia:http://dbpedia.org/resource/Apple",
+                        "source": "dbpedia",
+                        "title": "Apple",
+                        "definition": "A fruit",
+                        "attributes": {"types": ["Food"]},
+                        "source_url": "http://dbpedia.org/resource/Apple",
+                        "relevance_score": 0.95
+                    }
+                ],
+                "total_results": 1,
+                "sources_queried": ["dbpedia", "wikidata"],
+                "source_errors": {"wikidata": "Timeout error"},
+                "offset": 0,
+                "limit": 20,
+                "search_time_ms": 200.0
+            }
+
+            response = client.post(
+                "/api/nlp_analysis/reference/search",
+                json={
+                    "query": "apple",
+                    "sources": ["dbpedia", "wikidata"],
+                    "limit": 20
+                }
+            )
+
+            assert response.status_code == 200
+            data = response.json()
+            assert data["query"] == "apple"
+            assert len(data["results"]) == 1
+            assert "wikidata" in data["source_errors"]
+            assert data["source_errors"]["wikidata"] == "Timeout error"
+
+    def test_multi_source_search_invalid_source(self, client):
+        """Test multi-source search with invalid source"""
+        response = client.get(
+            "/api/nlp_analysis/reference/search",
+            params={
+                "query": "apple",
+                "sources": "invalid_source",
+                "limit": 10
+            }
+        )
+
+        assert response.status_code == 400
+        assert "Invalid source: invalid_source" in response.json()["detail"]
+
+    def test_multi_source_search_validation_errors(self, client):
+        """Test multi-source search parameter validation"""
+        # Test empty query
+        response = client.post(
+            "/api/nlp_analysis/reference/search",
+            json={"query": "", "limit": 10}
+        )
+        assert response.status_code == 422
+
+        # Test limit too high
+        response = client.post(
+            "/api/nlp_analysis/reference/search",
+            json={"query": "apple", "limit": 101}
+        )
+        assert response.status_code == 422
+
+        # Test negative offset
+        response = client.post(
+            "/api/nlp_analysis/reference/search",
+            json={"query": "apple", "offset": -1}
+        )
+        assert response.status_code == 422

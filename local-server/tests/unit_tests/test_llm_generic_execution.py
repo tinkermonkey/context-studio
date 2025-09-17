@@ -19,10 +19,8 @@ from llm.models import (
     StreamingLLMResponse
 )
 from llm.exceptions import (
-    LLMConfigurationError,
     LLMProcessingError,
-    LLMTimeoutError,
-    LLMQuotaExceededError
+    LLMTimeoutError
 )
 
 

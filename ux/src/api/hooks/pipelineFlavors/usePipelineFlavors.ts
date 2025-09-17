@@ -52,7 +52,9 @@ export const useDefaultPipelineFlavor = (
   options?: UseQueryOptions<PipelineFlavor, Error>,
 ) => {
   return useQuery({
-    queryKey: createQueryKey(QUERY_KEYS.PIPELINE_FLAVORS, "default", { pipelineType }),
+    queryKey: createQueryKey(QUERY_KEYS.PIPELINE_FLAVORS, "default", {
+      pipelineType,
+    }),
     queryFn: () => pipelineFlavorService.getDefault(pipelineType),
     enabled: !!pipelineType,
     ...options,

@@ -4,8 +4,8 @@
  * Detailed view of a unified reference node with links and metadata
  */
 
-import React, { useState } from 'react';
-import { Modal, Card, Badge, Button, Spinner, Alert } from 'flowbite-react';
+import React, { useState } from "react";
+import { Modal, Card, Badge, Button, Spinner, Alert } from "flowbite-react";
 import {
   ExternalLink,
   Copy,
@@ -15,13 +15,14 @@ import {
   Link as LinkIcon,
   Info,
   CheckCircle,
-} from 'lucide-react';
-import { UnifiedNode } from '@/api/types/unified';
-import { SOURCE_METADATA } from '@/api/types/unified';
-import { useNodeDetails, useNodeLinks } from '@/api/hooks/unifiedReference/useUnifiedReference';
-import { useReferenceStore, useSelectionState } from '@/store/referenceSlice';
-import { DeduplicationIndicator } from '../UnifiedSearch/DeduplicationIndicator';
-import { LinkExplorer } from './LinkExplorer';
+} from "lucide-react";
+import { UnifiedNode } from "@/api/types/unified";
+import { SOURCE_METADATA } from "@/api/types/unified";
+import {
+  useNodeDetails,
+  useNodeLinks,
+} from "@/api/hooks/unifiedReference/useUnifiedReference";
+import { LinkExplorer } from "./LinkExplorer";
 
 interface NodeDetailsProps {
   node?: UnifiedNode;
@@ -41,11 +42,8 @@ export const NodeDetails: React.FC<NodeDetailsProps> = ({
   const [copiedField, setCopiedField] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<number>(0);
 
-  const { selectedNode } = useSelectionState();
-  const { setShowNodeDetails } = useReferenceStore();
-
-  // Use either the prop node or the selected node from store
-  const targetNode = propNode || selectedNode;
+  // Use either the prop node or the node ID
+  const targetNode = propNode;
   const targetNodeId = propNodeId || targetNode?.id;
 
   // Fetch node details if we only have an ID
@@ -67,13 +65,12 @@ export const NodeDetails: React.FC<NodeDetailsProps> = ({
   const sourceMetadata = displayNode
     ? SOURCE_METADATA[displayNode.source] || {
         label: displayNode.source,
-        color: 'gray',
-        description: '',
+        color: "gray",
+        description: "",
       }
     : null;
 
   const handleClose = () => {
-    setShowNodeDetails(false);
     onClose();
   };
 
@@ -83,21 +80,24 @@ export const NodeDetails: React.FC<NodeDetailsProps> = ({
       setCopiedField(field);
       setTimeout(() => setCopiedField(null), 2000);
     } catch (error) {
-      console.error('Failed to copy to clipboard:', error);
+      console.error("Failed to copy to clipboard:", error);
     }
   };
 
-  const CopyButton: React.FC<{ text: string; field: string }> = ({ text, field }) => (
+  const CopyButton: React.FC<{ text: string; field: string }> = ({
+    text,
+    field,
+  }) => (
     <Button
       size="xs"
       color="gray"
       onClick={() => handleCopyToClipboard(text, field)}
-      className="opacity-60 hover:opacity-100 transition-opacity"
+      className="opacity-60 transition-opacity hover:opacity-100"
     >
       {copiedField === field ? (
-        <CheckCircle className="w-3 h-3 text-green-600" />
+        <CheckCircle className="h-3 w-3 text-green-600" />
       ) : (
-        <Copy className="w-3 h-3" />
+        <Copy className="h-3 w-3" />
       )}
     </Button>
   );
@@ -108,7 +108,7 @@ export const NodeDetails: React.FC<NodeDetailsProps> = ({
 
   return (
     <Modal show={isOpen} onClose={handleClose} size="4xl">
-      <div className="flex items-center justify-between p-6 border-b">
+      <div className="flex items-center justify-between border-b p-6">
         <h2 className="text-xl font-semibold">Node Details</h2>
         <Button
           color="gray"
@@ -116,7 +116,7 @@ export const NodeDetails: React.FC<NodeDetailsProps> = ({
           onClick={handleClose}
           className="ml-auto"
         >
-          <X className="w-4 h-4" />
+          <X className="h-4 w-4" />
         </Button>
       </div>
 
@@ -139,7 +139,7 @@ export const NodeDetails: React.FC<NodeDetailsProps> = ({
             <div className="space-y-4">
               <div className="flex items-start justify-between">
                 <div className="flex-1">
-                  <div className="flex items-center gap-2 mb-2">
+                  <div className="mb-2 flex items-center gap-2">
                     <h1 className="text-2xl font-bold">{displayNode.title}</h1>
                     <CopyButton text={displayNode.title} field="title" />
                   </div>
@@ -155,14 +155,12 @@ export const NodeDetails: React.FC<NodeDetailsProps> = ({
                       </Badge>
                     )}
 
-                    {displayNode.merged_from && displayNode.merged_from.length > 0 && (
-                      <DeduplicationIndicator
-                        mergedSources={displayNode.merged_from}
-                        similarityScore={displayNode.confidence_score}
-                        primarySource={displayNode.source}
-                        showDetails={false}
-                      />
-                    )}
+                    {displayNode.merged_from &&
+                      displayNode.merged_from.length > 0 && (
+                        <Badge color="purple" size="sm">
+                          Merged from {displayNode.merged_from.length} source{displayNode.merged_from.length > 1 ? 's' : ''}
+                        </Badge>
+                      )}
                   </div>
                 </div>
 
@@ -171,9 +169,11 @@ export const NodeDetails: React.FC<NodeDetailsProps> = ({
                     <Button
                       color="blue"
                       size="sm"
-                      onClick={() => window.open(displayNode.source_url, '_blank')}
+                      onClick={() =>
+                        window.open(displayNode.source_url, "_blank")
+                      }
                     >
-                      <ExternalLink className="w-4 h-4 mr-2" />
+                      <ExternalLink className="mr-2 h-4 w-4" />
                       View Source
                     </Button>
                   )}
@@ -185,9 +185,12 @@ export const NodeDetails: React.FC<NodeDetailsProps> = ({
                   <div className="space-y-2">
                     <div className="flex items-center justify-between">
                       <h3 className="font-semibold">Definition</h3>
-                      <CopyButton text={displayNode.definition} field="definition" />
+                      <CopyButton
+                        text={displayNode.definition}
+                        field="definition"
+                      />
                     </div>
-                    <p className="text-gray-700 leading-relaxed">
+                    <p className="leading-relaxed text-gray-700">
                       {displayNode.definition}
                     </p>
                   </div>
@@ -201,27 +204,27 @@ export const NodeDetails: React.FC<NodeDetailsProps> = ({
                 <nav className="-mb-px flex space-x-8">
                   <button
                     onClick={() => setActiveTab(0)}
-                    className={`py-2 px-1 border-b-2 font-medium text-sm ${
+                    className={`border-b-2 px-1 py-2 text-sm font-medium ${
                       activeTab === 0
-                        ? 'border-blue-500 text-blue-600'
-                        : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                        ? "border-blue-500 text-blue-600"
+                        : "border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700"
                     }`}
                   >
                     <div className="flex items-center gap-2">
-                      <LinkIcon className="w-4 h-4" />
+                      <LinkIcon className="h-4 w-4" />
                       Links ({nodeLinks.length})
                     </div>
                   </button>
                   <button
                     onClick={() => setActiveTab(1)}
-                    className={`py-2 px-1 border-b-2 font-medium text-sm ${
+                    className={`border-b-2 px-1 py-2 text-sm font-medium ${
                       activeTab === 1
-                        ? 'border-blue-500 text-blue-600'
-                        : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                        ? "border-blue-500 text-blue-600"
+                        : "border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700"
                     }`}
                   >
                     <div className="flex items-center gap-2">
-                      <Database className="w-4 h-4" />
+                      <Database className="h-4 w-4" />
                       Metadata
                     </div>
                   </button>
@@ -243,11 +246,11 @@ export const NodeDetails: React.FC<NodeDetailsProps> = ({
                 <div className="space-y-4">
                   {/* Basic metadata */}
                   <Card>
-                    <h4 className="font-semibold mb-3">Basic Information</h4>
+                    <h4 className="mb-3 font-semibold">Basic Information</h4>
                     <dl className="space-y-2">
                       <div className="flex justify-between">
                         <dt className="text-gray-600">ID:</dt>
-                        <dd className="font-mono text-sm flex items-center gap-2">
+                        <dd className="flex items-center gap-2 font-mono text-sm">
                           {displayNode.id}
                           <CopyButton text={displayNode.id} field="id" />
                         </dd>
@@ -260,15 +263,19 @@ export const NodeDetails: React.FC<NodeDetailsProps> = ({
 
                       <div className="flex justify-between">
                         <dt className="text-gray-600">Confidence:</dt>
-                        <dd>{Math.round(displayNode.confidence_score * 100)}%</dd>
+                        <dd>
+                          {Math.round(displayNode.confidence_score * 100)}%
+                        </dd>
                       </div>
 
                       {displayNode.created_at && (
                         <div className="flex justify-between">
                           <dt className="text-gray-600">Created:</dt>
                           <dd className="flex items-center gap-1">
-                            <Calendar className="w-4 h-4" />
-                            {new Date(displayNode.created_at).toLocaleDateString()}
+                            <Calendar className="h-4 w-4" />
+                            {new Date(
+                              displayNode.created_at,
+                            ).toLocaleDateString()}
                           </dd>
                         </div>
                       )}
@@ -277,8 +284,10 @@ export const NodeDetails: React.FC<NodeDetailsProps> = ({
                         <div className="flex justify-between">
                           <dt className="text-gray-600">Updated:</dt>
                           <dd className="flex items-center gap-1">
-                            <Calendar className="w-4 h-4" />
-                            {new Date(displayNode.updated_at).toLocaleDateString()}
+                            <Calendar className="h-4 w-4" />
+                            {new Date(
+                              displayNode.updated_at,
+                            ).toLocaleDateString()}
                           </dd>
                         </div>
                       )}
@@ -286,38 +295,50 @@ export const NodeDetails: React.FC<NodeDetailsProps> = ({
                   </Card>
 
                   {/* Deduplication info */}
-                  {displayNode.merged_from && displayNode.merged_from.length > 0 && (
-                    <Card>
-                      <h4 className="font-semibold mb-3">Merged Sources</h4>
-                      <DeduplicationIndicator
-                        mergedSources={displayNode.merged_from}
-                        similarityScore={displayNode.confidence_score}
-                        primarySource={displayNode.source}
-                        showDetails={true}
-                      />
-                    </Card>
-                  )}
+                  {displayNode.merged_from &&
+                    displayNode.merged_from.length > 0 && (
+                      <Card>
+                        <h4 className="mb-3 font-semibold">Merged Sources</h4>
+                        <div className="space-y-2">
+                          <p className="text-sm text-gray-600">
+                            This node was merged from {displayNode.merged_from.length} different sources:
+                          </p>
+                          <div className="flex flex-wrap gap-2">
+                            {displayNode.merged_from.map((source, index) => (
+                              <Badge key={index} color="gray" size="sm">
+                                {SOURCE_METADATA[source]?.label || source}
+                              </Badge>
+                            ))}
+                          </div>
+                        </div>
+                      </Card>
+                    )}
 
                   {/* Custom metadata */}
-                  {displayNode.metadata && Object.keys(displayNode.metadata).length > 0 && (
-                    <Card>
-                      <h4 className="font-semibold mb-3">Additional Metadata</h4>
-                      <dl className="space-y-2">
-                        {Object.entries(displayNode.metadata).map(([key, value]) => (
-                          <div key={key} className="flex justify-between">
-                            <dt className="text-gray-600 capitalize">
-                              {key.replace(/_/g, ' ')}:
-                            </dt>
-                            <dd className="text-right max-w-xs">
-                              {typeof value === 'object'
-                                ? JSON.stringify(value, null, 2)
-                                : String(value)}
-                            </dd>
-                          </div>
-                        ))}
-                      </dl>
-                    </Card>
-                  )}
+                  {displayNode.metadata &&
+                    Object.keys(displayNode.metadata).length > 0 && (
+                      <Card>
+                        <h4 className="mb-3 font-semibold">
+                          Additional Metadata
+                        </h4>
+                        <dl className="space-y-2">
+                          {Object.entries(displayNode.metadata).map(
+                            ([key, value]) => (
+                              <div key={key} className="flex justify-between">
+                                <dt className="text-gray-600 capitalize">
+                                  {key.replace(/_/g, " ")}:
+                                </dt>
+                                <dd className="max-w-xs text-right">
+                                  {typeof value === "object"
+                                    ? JSON.stringify(value, null, 2)
+                                    : String(value)}
+                                </dd>
+                              </div>
+                            ),
+                          )}
+                        </dl>
+                      </Card>
+                    )}
                 </div>
               )}
             </div>
