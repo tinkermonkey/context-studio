@@ -150,6 +150,14 @@ export const NodeDetails: React.FC<NodeDetailsProps> = ({
                     <CopyButton text={displayNode.title} field="title" />
                   </div>
 
+                  <div className="mb-3 flex items-center gap-2">
+                    <span className="text-sm text-gray-600">ID:</span>
+                    <code className="rounded bg-gray-100 px-2 py-1 text-sm font-mono text-gray-800">
+                      {displayNode.id}
+                    </code>
+                    <CopyButton text={displayNode.id} field="header-id" />
+                  </div>
+
                   <div className="flex flex-wrap gap-2">
                     <Badge color={sourceMetadata?.color as any} size="lg">
                       {sourceMetadata?.label}

@@ -10,9 +10,12 @@ import { Info, Play, Pause, RotateCcw, ZoomIn, ZoomOut, Maximize2 } from "lucide
 import { UnifiedNode, UnifiedSearchLink, SOURCE_METADATA } from "@/api/types/unified";
 import GraphNode from "./GraphNode";
 import GraphLink from "./GraphLink";
+import GraphPredicateNode from "./GraphPredicateNode";
+import GraphHierarchyLink from "./GraphHierarchyLink";
 import { D3LiveSimulation, NodePosition, GraphDimensions } from "./d3LiveLayout";
+import { D3TreeSimulation, HierarchyNode, HierarchyLink } from "./d3TreeLayout";
 
-// Consistent padding for zoom operations (matches d3LiveLayout.ts)
+// Consistent padding for zoom operations (matches d3TreeLayout.ts)
 const ZOOM_PADDING = 25;
 
 interface GraphViewProps {
@@ -22,6 +25,7 @@ interface GraphViewProps {
   isSearching?: boolean;
   width?: number;
   height?: number;
+  layoutType?: 'cluster' | 'tree';
 }
 
 export const GraphView: React.FC<GraphViewProps> = ({
@@ -31,12 +35,27 @@ export const GraphView: React.FC<GraphViewProps> = ({
   isSearching = false,
   width = 800,
   height = 600,
+  layoutType = 'tree',
 }) => {
   const svgRef = useRef<SVGSVGElement>(null);
   const containerGroupRef = useRef<SVGGElement>(null);
   const [hoveredNode, setHoveredNode] = useState<string | null>(null);
   const [hoveredLink, setHoveredLink] = useState<string | null>(null);
-  const [dimensions, setDimensions] = useState<GraphDimensions>({ width, height });
+  // State for simulations and dynamic sizing
+  const [nodePositions, setNodePositions] = useState<NodePosition[]>([]);
+  const [simulation, setSimulation] = useState<D3LiveSimulation | D3TreeSimulation | null>(null);
+  const [isSimulationRunning, setIsSimulationRunning] = useState(false);
+  const [simulationAlpha, setSimulationAlpha] = useState(1);
+  const [allNodes, setAllNodes] = useState<HierarchyNode[]>([]);
+  const [allLinks, setAllLinks] = useState<HierarchyLink[]>([]);
+  const [dynamicHeight, setDynamicHeight] = useState<number>(height);
+  const [isResizing, setIsResizing] = useState(false);
+  const [dimensions, setDimensions] = useState<GraphDimensions>({ width, height: dynamicHeight });
+
+  // Reset dynamic height when results change
+  useEffect(() => {
+    setDynamicHeight(height);
+  }, [results, height]);
 
   // Update dimensions based on container
   useEffect(() => {
@@ -45,7 +64,7 @@ export const GraphView: React.FC<GraphViewProps> = ({
         const rect = svgRef.current.getBoundingClientRect();
         setDimensions({
           width: rect.width || width,
-          height: rect.height || height,
+          height: dynamicHeight,
         });
       }
     };
@@ -53,18 +72,76 @@ export const GraphView: React.FC<GraphViewProps> = ({
     updateDimensions();
     window.addEventListener('resize', updateDimensions);
     return () => window.removeEventListener('resize', updateDimensions);
-  }, [width, height]);
+  }, [width, dynamicHeight]);
 
-  // State for live simulation
-  const [nodePositions, setNodePositions] = useState<NodePosition[]>([]);
-  const [simulation, setSimulation] = useState<D3LiveSimulation | null>(null);
-  const [isSimulationRunning, setIsSimulationRunning] = useState(false);
-  const [simulationAlpha, setSimulationAlpha] = useState(1);
+  // Calculate optimal height based on node bounding box width
+  const calculateOptimalHeight = useCallback((positions: NodePosition[]) => {
+    if (positions.length === 0) return height;
 
-  // Create and manage live D3 simulation
+    // Get all node positions and calculate bounding box
+    const nodeRadius = 25; // Approximate max node radius
+    const minX = Math.min(...positions.map(pos => pos.x)) - nodeRadius;
+    const maxX = Math.max(...positions.map(pos => pos.x)) + nodeRadius;
+    const minY = Math.min(...positions.map(pos => pos.y)) - nodeRadius;
+    const maxY = Math.max(...positions.map(pos => pos.y)) + nodeRadius;
+
+    const contentWidth = maxX - minX;
+    const contentHeight = maxY - minY;
+
+    // Calculate what height would make the content width fill the container width
+    const containerWidth = dimensions.width;
+    const widthRatio = containerWidth / contentWidth;
+    const optimalHeight = contentHeight * widthRatio;
+
+    // Add some padding and ensure reasonable bounds
+    const paddedHeight = optimalHeight + ZOOM_PADDING * 2;
+    const minHeight = 300; // Minimum height
+    const maxHeight = 1200; // Maximum height
+
+    return Math.max(minHeight, Math.min(maxHeight, paddedHeight));
+  }, [dimensions.width, height]);
+
+  // Use refs to avoid dependency loops
+  const simulationRef = useRef(simulation);
+  const dimensionsRef = useRef(dimensions);
+  const dynamicHeightRef = useRef(dynamicHeight);
+
+  useEffect(() => {
+    simulationRef.current = simulation;
+    dimensionsRef.current = dimensions;
+    dynamicHeightRef.current = dynamicHeight;
+  });
+
+  // Handle simulation end with container resize - simplified algorithm
+  const handleSimulationEnd = useCallback((positions: NodePosition[]) => {
+    // Step 1: Simulation has stopped, update state
+    setNodePositions(positions);
+    setIsSimulationRunning(false);
+    setSimulationAlpha(0);
+
+    // Step 2: Measure the fit width of the nodes and calculate new height
+    const newHeight = calculateOptimalHeight(positions);
+
+    // Step 3: Resize the graph container (svg) with new height
+    setIsResizing(true);
+    setDynamicHeight(newHeight);
+
+    // Step 4: Fit the graph to the nodes once resize animation is complete
+    setTimeout(() => {
+      setIsResizing(false);
+      const currentSim = simulationRef.current;
+      if (currentSim) {
+        currentSim.zoomToFit(positions, ZOOM_PADDING, true);
+      }
+    }, 500); // Match CSS transition duration
+  }, [calculateOptimalHeight]);
+
+  // Create and manage D3 simulation based on layout type
   useEffect(() => {
     if (results.length === 0) {
       setNodePositions([]);
+      setAllNodes([]);
+      setAllLinks([]);
       if (simulation) {
         simulation.destroy();
         setSimulation(null);
@@ -77,31 +154,68 @@ export const GraphView: React.FC<GraphViewProps> = ({
       simulation.destroy();
     }
 
-    // Create new live simulation
-    const newSimulation = new D3LiveSimulation(
-      results,
-      searchLinks,
-      dimensions,
-      {
-        linkDistance: 150,
-        linkStrength: 0.5,
-        chargeStrength: -1500,
-        collisionRadius: 100,
-        clusterStrength: 0.08,
-        alphaDecay: 0.008,
-        velocityDecay: 0.7,
-        onTick: (positions) => {
-          setNodePositions(positions);
-          setSimulationAlpha(newSimulation.getAlpha());
-          setIsSimulationRunning(newSimulation.isRunning());
-        },
-        onEnd: (positions) => {
-          setNodePositions(positions);
-          setIsSimulationRunning(false);
-          setSimulationAlpha(0);
+    let newSimulation: D3LiveSimulation | D3TreeSimulation;
+
+    if (layoutType === 'tree') {
+      // Create tree simulation with predicate grouping
+      newSimulation = new D3TreeSimulation(
+        results,
+        searchLinks,
+        dimensions,
+        {
+          linkDistance: 80,
+          linkStrength: 1,
+          chargeStrength: -300,
+          collisionRadius: 50,
+          alphaDecay: 0.02,
+          velocityDecay: 0.4,
+          onTick: (positions) => {
+            setNodePositions(positions);
+            setSimulationAlpha(newSimulation.getAlpha());
+            setIsSimulationRunning(newSimulation.isRunning());
+            // Update tree-specific data
+            if (newSimulation instanceof D3TreeSimulation) {
+              setAllNodes(newSimulation.getAllNodes());
+              setAllLinks(newSimulation.getAllLinks());
+            }
+          },
+          onEnd: (positions) => {
+            // Update tree-specific data
+            if (newSimulation instanceof D3TreeSimulation) {
+              setAllNodes(newSimulation.getAllNodes());
+              setAllLinks(newSimulation.getAllLinks());
+            }
+            handleSimulationEnd(positions);
+          }
         }
-      }
-    );
+      );
+    } else {
+      // Create cluster simulation
+      newSimulation = new D3LiveSimulation(
+        results,
+        searchLinks,
+        dimensions,
+        {
+          linkDistance: 150,
+          linkStrength: 0.5,
+          chargeStrength: -1500,
+          collisionRadius: 100,
+          clusterStrength: 0.08,
+          alphaDecay: 0.008,
+          velocityDecay: 0.7,
+          onTick: (positions) => {
+            setNodePositions(positions);
+            setSimulationAlpha(newSimulation.getAlpha());
+            setIsSimulationRunning(newSimulation.isRunning());
+          },
+          onEnd: (positions) => {
+            handleSimulationEnd(positions);
+          }
+        }
+      );
+      setAllNodes([]);
+      setAllLinks([]);
+    }
 
     setSimulation(newSimulation);
     setIsSimulationRunning(true);
@@ -111,14 +225,14 @@ export const GraphView: React.FC<GraphViewProps> = ({
     return () => {
       newSimulation.destroy();
     };
-  }, [results, searchLinks, dimensions]);
+  }, [results, searchLinks, dimensions.width, layoutType, handleSimulationEnd]);
 
-  // Update simulation dimensions when component resizes
+  // Update simulation dimensions when component resizes (width only, height is managed by resize algorithm)
   useEffect(() => {
     if (simulation) {
-      simulation.updateDimensions(dimensions);
+      simulation.updateDimensions({ width: dimensions.width, height: dimensions.height });
     }
-  }, [simulation, dimensions]);
+  }, [simulation, dimensions.width]);
 
   // Enable zoom when simulation and refs are ready
   useEffect(() => {
@@ -137,13 +251,7 @@ export const GraphView: React.FC<GraphViewProps> = ({
     }
   }, [simulation]);
 
-  // Initial fit when zoom is first enabled
-  useEffect(() => {
-    if (simulation && nodePositions.length > 0 && !isSimulationRunning) {
-      // Only fit once when simulation has ended
-      simulation.zoomToFit(nodePositions, ZOOM_PADDING, true);
-    }
-  }, [simulation, nodePositions, isSimulationRunning]);
+  // Initial fit when zoom is first enabled - removed to avoid conflicts with resize logic
 
   // Create position lookup map
   const positionMap = useMemo(() => {
@@ -154,11 +262,16 @@ export const GraphView: React.FC<GraphViewProps> = ({
 
   // Filter links to only show those between visible nodes
   const visibleLinks = useMemo(() => {
+    if (layoutType === 'tree' && allLinks.length > 0) {
+      // For tree layout, use the hierarchy links
+      return allLinks;
+    }
+    // For cluster layout, use original search links
     const nodeIds = new Set(results.map(node => node.id));
     return searchLinks.filter(link =>
       nodeIds.has(link.subject) && nodeIds.has(link.object)
     );
-  }, [results, searchLinks]);
+  }, [results, searchLinks, layoutType, allLinks]);
 
   // Group nodes by source for cluster visualization
   const nodesBySource = useMemo(() => {
@@ -172,35 +285,6 @@ export const GraphView: React.FC<GraphViewProps> = ({
     return groups;
   }, [results]);
 
-  // Calculate dynamic viewBox based on node positions
-  const dynamicViewBox = useMemo(() => {
-    if (nodePositions.length === 0) {
-      return `0 0 ${dimensions.width} ${dimensions.height}`;
-    }
-
-    // Find the bounding box of all nodes
-    const padding = 100; // Extra space around nodes
-    const minX = Math.min(...nodePositions.map(pos => pos.x)) - padding;
-    const maxX = Math.max(...nodePositions.map(pos => pos.x)) + padding;
-    const minY = Math.min(...nodePositions.map(pos => pos.y)) - padding;
-    const maxY = Math.max(...nodePositions.map(pos => pos.y)) + padding;
-
-    const width = maxX - minX;
-    const height = maxY - minY;
-
-    // Ensure minimum size
-    const minWidth = dimensions.width;
-    const minHeight = dimensions.height;
-
-    const finalWidth = Math.max(width, minWidth);
-    const finalHeight = Math.max(height, minHeight);
-
-    // Center the content if it's smaller than the container
-    const offsetX = width < minWidth ? (minWidth - width) / 2 : 0;
-    const offsetY = height < minHeight ? (minHeight - height) / 2 : 0;
-
-    return `${minX - offsetX} ${minY - offsetY} ${finalWidth} ${finalHeight}`;
-  }, [nodePositions, dimensions]);
 
   const handleNodeClick = (node: UnifiedNode) => {
     onSelectNode?.(node);
@@ -296,7 +380,7 @@ export const GraphView: React.FC<GraphViewProps> = ({
       {/* Graph stats and controls */}
       <div className="flex items-center justify-between text-sm text-gray-600">
         <span>
-          {results.length} node{results.length !== 1 ? 's' : ''}, {visibleLinks.length} link{visibleLinks.length !== 1 ? 's' : ''}
+          {results.length} node{results.length !== 1 ? 's' : ''}, {layoutType === 'tree' ? allLinks.length : visibleLinks.length} link{(layoutType === 'tree' ? allLinks.length : visibleLinks.length) !== 1 ? 's' : ''}
           {simulation && (
             <span className="ml-4">
               Simulation: {isSimulationRunning ? 'Running' : 'Paused'}
@@ -366,29 +450,17 @@ export const GraphView: React.FC<GraphViewProps> = ({
         <svg
           ref={svgRef}
           width="100%"
-          height={height}
-          viewBox={`0 0 ${dimensions.width} ${dimensions.height}`}
+          height={dynamicHeight}
+          viewBox={`0 0 ${dimensions.width} ${dynamicHeight}`}
           className="block"
+          style={{
+            transition: isResizing ? 'height 500ms ease-in-out' : undefined,
+          }}
         >
           {/* Arrow markers for links */}
           <defs>
             <marker
               id="arrowhead"
-              markerWidth="8"
-              markerHeight="6"
-              refX="7"
-              refY="3"
-              orient="auto"
-              markerUnits="userSpaceOnUse"
-            >
-              <polygon
-                points="0 0, 8 3, 0 6"
-                fill="#6B7280"
-                opacity="0.7"
-              />
-            </marker>
-            <marker
-              id="arrowhead-highlighted"
               markerWidth="10"
               markerHeight="8"
               refX="9"
@@ -398,16 +470,62 @@ export const GraphView: React.FC<GraphViewProps> = ({
             >
               <polygon
                 points="0 0, 10 4, 0 8"
+                fill="#6B7280"
+                opacity="0.8"
+              />
+            </marker>
+            <marker
+              id="arrowhead-highlighted"
+              markerWidth="12"
+              markerHeight="10"
+              refX="11"
+              refY="5"
+              orient="auto"
+              markerUnits="userSpaceOnUse"
+            >
+              <polygon
+                points="0 0, 12 5, 0 10"
                 fill="#374151"
                 opacity="1"
+              />
+            </marker>
+            {/* Specific arrows for different link types */}
+            <marker
+              id="arrowhead-subject-predicate"
+              markerWidth="10"
+              markerHeight="8"
+              refX="9"
+              refY="4"
+              orient="auto"
+              markerUnits="userSpaceOnUse"
+            >
+              <polygon
+                points="0 0, 10 4, 0 8"
+                fill="#8B5CF6"
+                opacity="0.9"
+              />
+            </marker>
+            <marker
+              id="arrowhead-predicate-object"
+              markerWidth="10"
+              markerHeight="8"
+              refX="9"
+              refY="4"
+              orient="auto"
+              markerUnits="userSpaceOnUse"
+            >
+              <polygon
+                points="0 0, 10 4, 0 8"
+                fill="#06B6D4"
+                opacity="0.9"
               />
             </marker>
           </defs>
 
           {/* Container group for zoom/pan transforms */}
           <g ref={containerGroupRef}>
-            {/* Render cluster backgrounds */}
-          {Array.from(nodesBySource.entries()).map(([source, nodes]) => {
+            {/* Render cluster backgrounds - hidden by default */}
+          {false && Array.from(nodesBySource.entries()).map(([source, nodes]) => {
             if (nodes.length < 2) return null; // Don't show cluster for single nodes
 
             // Calculate cluster center and radius
@@ -451,55 +569,128 @@ export const GraphView: React.FC<GraphViewProps> = ({
           })}
 
           {/* Render links first (so they appear behind nodes) */}
-          {visibleLinks.map(link => {
-            const sourcePos = positionMap.get(link.subject);
-            const targetPos = positionMap.get(link.object);
+          {layoutType === 'tree' && allLinks.length > 0 ? (
+            // Render hierarchy links for tree layout
+            allLinks.map((link, index) => {
+              const sourcePos = positionMap.get(link.source.id);
+              const targetPos = positionMap.get(link.target.id);
 
-            if (!sourcePos || !targetPos) return null;
+              if (!sourcePos || !targetPos) return null;
 
-            return (
-              <GraphLink
-                key={link.id}
-                link={link}
-                sourceX={sourcePos.x}
-                sourceY={sourcePos.y}
-                targetX={targetPos.x}
-                targetY={targetPos.y}
-                onMouseEnter={handleLinkMouseEnter}
-                onMouseLeave={handleLinkMouseLeave}
-                isHighlighted={hoveredLink === link.id}
-              />
-            );
-          })}
+              return (
+                <GraphHierarchyLink
+                  key={`hierarchy-${index}`}
+                  link={link}
+                  sourceX={sourcePos.x}
+                  sourceY={sourcePos.y}
+                  targetX={targetPos.x}
+                  targetY={targetPos.y}
+                  onMouseEnter={() => {/* TODO: implement hierarchy link hover */}}
+                  onMouseLeave={() => {/* TODO: implement hierarchy link hover */}}
+                  isHighlighted={false}
+                />
+              );
+            })
+          ) : (
+            // Render regular search links for cluster layout
+            visibleLinks.map(link => {
+              // Type guard to ensure we're working with UnifiedSearchLink
+              if ('subject' in link && 'object' in link && 'id' in link) {
+                const sourcePos = positionMap.get(link.subject);
+                const targetPos = positionMap.get(link.object);
+
+                if (!sourcePos || !targetPos) return null;
+
+                return (
+                  <GraphLink
+                    key={link.id}
+                    link={link}
+                    sourceX={sourcePos.x}
+                    sourceY={sourcePos.y}
+                    targetX={targetPos.x}
+                    targetY={targetPos.y}
+                    onMouseEnter={handleLinkMouseEnter}
+                    onMouseLeave={handleLinkMouseLeave}
+                    isHighlighted={hoveredLink === link.id}
+                  />
+                );
+              }
+              return null;
+            })
+          )}
 
           {/* Render nodes */}
-          {results.map(node => {
-            const position = positionMap.get(node.id);
-            if (!position) return null;
+          {layoutType === 'tree' && allNodes.length > 0 ? (
+            // Render all nodes (data + predicate) for tree layout
+            allNodes.map(node => {
+              const position = positionMap.get(node.id);
+              if (!position) return null;
 
-            // Calculate node size based on confidence and connections
-            const connectionCount = visibleLinks.filter(link =>
-              link.subject === node.id || link.object === node.id
-            ).length;
-            const confidenceScore = node.confidence_score || 0.5;
+              if (node.type === 'predicate') {
+                return (
+                  <GraphPredicateNode
+                    key={node.id}
+                    node={node}
+                    x={position.x}
+                    y={position.y}
+                    radius={node.radius}
+                    onMouseEnter={() => {/* TODO: implement predicate node hover */}}
+                    onMouseLeave={() => {/* TODO: implement predicate node hover */}}
+                    isHighlighted={false}
+                  />
+                );
+              } else if (node.originalNode) {
+                // Render data nodes
+                const confidenceScore = node.originalNode.confidence_score || 0.5;
+                const baseRadius = 15 + (confidenceScore * 5);
 
-            // Base radius varies from 15-30 based on connections and confidence
-            const baseRadius = 15 + Math.min(10, connectionCount * 2) + (confidenceScore * 5);
+                return (
+                  <GraphNode
+                    key={node.id}
+                    node={node.originalNode}
+                    x={position.x}
+                    y={position.y}
+                    radius={baseRadius}
+                    onClick={handleNodeClick}
+                    onMouseEnter={handleNodeMouseEnter}
+                    onMouseLeave={handleNodeMouseLeave}
+                    isHighlighted={hoveredNode === node.id}
+                  />
+                );
+              }
+              return null;
+            })
+          ) : (
+            // Render original nodes for cluster layout
+            results.map(node => {
+              const position = positionMap.get(node.id);
+              if (!position) return null;
 
-            return (
-              <GraphNode
-                key={node.id}
-                node={node}
-                x={position.x}
-                y={position.y}
-                radius={baseRadius}
-                onClick={handleNodeClick}
-                onMouseEnter={handleNodeMouseEnter}
-                onMouseLeave={handleNodeMouseLeave}
-                isHighlighted={hoveredNode === node.id}
-              />
-            );
-          })}
+              // Calculate node size based on confidence and connections for cluster layout
+              const connectionCount = layoutType === 'cluster'
+                ? visibleLinks.filter(link =>
+                    'subject' in link && 'object' in link &&
+                    (link.subject === node.id || link.object === node.id)
+                  ).length
+                : 0;
+              const confidenceScore = node.confidence_score || 0.5;
+              const baseRadius = 15 + Math.min(10, connectionCount * 2) + (confidenceScore * 5);
+
+              return (
+                <GraphNode
+                  key={node.id}
+                  node={node}
+                  x={position.x}
+                  y={position.y}
+                  radius={baseRadius}
+                  onClick={handleNodeClick}
+                  onMouseEnter={handleNodeMouseEnter}
+                  onMouseLeave={handleNodeMouseLeave}
+                  isHighlighted={hoveredNode === node.id}
+                />
+              );
+            })
+          )}
           </g>
         </svg>
       </div>

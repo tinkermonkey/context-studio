@@ -8,6 +8,7 @@ from ..models import DBpediaResourceResponse, DBpediaSearchResponse, DBpediaSpar
 
 class DBpediaSource(BaseReferenceSource):
     def _get_default_base_url(self) -> str:
+        # Use English DBpedia lookup service for consistent language results
         return "https://lookup.dbpedia.org"
 
     def _get_proxy_domain_key(self) -> str:
@@ -46,6 +47,7 @@ class DBpediaSource(BaseReferenceSource):
             params = {"query": query, "maxResults": limit}
 
             # DBpedia Lookup returns XML by default, but we can request JSON format
+            # lookup.dbpedia.org provides English results by default
             params["format"] = "JSON"
             response_data = await self._make_request("GET", search_url, params=params)
 

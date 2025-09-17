@@ -99,7 +99,13 @@ class ReferenceSourceConfig(BaseModel):
 
 class ReferenceSourcesConfig(BaseModel):
     """Central configuration for all reference sources"""
-    
+
+    # Global language setting for all reference sources
+    default_language: str = Field(default="en", description="Default language code for all reference source queries")
+
+    # Global search timeout for multi-source search operations
+    search_timeout: int = Field(default=30, ge=5, le=300, description="Timeout in seconds for multi-source search operations")
+
     # Individual source configurations
     conceptnet: ReferenceSourceConfig = Field(default_factory=lambda: ReferenceSourceConfig(
         upstream_url="https://api.conceptnet.io",

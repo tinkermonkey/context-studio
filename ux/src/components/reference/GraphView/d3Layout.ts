@@ -4,7 +4,7 @@
  * Uses D3's force simulation for better graph layout
  */
 
-import { UnifiedNode, UnifiedSearchLink, SOURCE_METADATA } from "@/api/types/unified";
+import { UnifiedNode, UnifiedSearchLink } from "@/api/types/unified";
 
 // Declare d3 as available globally from CDN
 declare const d3: any;

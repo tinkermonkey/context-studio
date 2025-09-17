@@ -10,7 +10,7 @@ import { UnifiedNode, UnifiedSearchLink } from "@/api/types/unified";
 declare const d3: any;
 
 // Consistent padding for all zoom operations
-const ZOOM_PADDING = 75;
+const ZOOM_PADDING = 25;
 
 export interface NodePosition {
   id: string;
