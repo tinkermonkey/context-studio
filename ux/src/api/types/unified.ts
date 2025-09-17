@@ -23,10 +23,22 @@ export interface SearchNode {
   merged_from?: string[];
 }
 
+export interface SearchLink {
+  id: string;
+  source: SourceType;
+  subject: string;
+  predicate: string;
+  object: string;
+  weight?: number | null;
+  attributes?: Record<string, unknown>;
+}
+
 export interface MultiSourceSearchResponse {
   query: string;
   results: SearchNode[];
+  links?: SearchLink[];
   total_results: number;
+  total_links: number;
   sources_searched: SourceType[];
   source_errors?: Record<string, string>;
   execution_time_ms?: number;
@@ -48,6 +60,8 @@ export interface UnifiedSearchRequest extends MultiSourceSearchRequest {}
 export interface UnifiedNode extends SearchNode {}
 
 export interface UnifiedSearchResponse extends MultiSourceSearchResponse {}
+
+export interface UnifiedSearchLink extends SearchLink {}
 
 export interface UnifiedLink {
   id: string;

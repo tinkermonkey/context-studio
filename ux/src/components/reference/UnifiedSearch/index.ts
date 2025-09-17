@@ -6,6 +6,7 @@
 
 export { default as UnifiedSearchBar } from "./UnifiedSearchBar";
 export { default as SourceDropdown } from "./SourceDropdown";
+export { default as SourceSelector } from "./SourceSelector";
 export { default as SearchResults } from "./SearchResults";
 
 // Component types are available as interfaces in their respective files

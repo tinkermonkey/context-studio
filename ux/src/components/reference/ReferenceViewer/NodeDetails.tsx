@@ -16,11 +16,10 @@ import {
   Info,
   CheckCircle,
 } from "lucide-react";
-import { UnifiedNode } from "@/api/types/unified";
+import { UnifiedNode, UnifiedSearchLink } from "@/api/types/unified";
 import { SOURCE_METADATA } from "@/api/types/unified";
 import {
   useNodeDetails,
-  useNodeLinks,
 } from "@/api/hooks/unifiedReference/useUnifiedReference";
 import { LinkExplorer } from "./LinkExplorer";
 
@@ -30,6 +29,8 @@ interface NodeDetailsProps {
   isOpen: boolean;
   onClose: () => void;
   onNodeSelect?: (node: UnifiedNode) => void;
+  searchLinks?: UnifiedSearchLink[];
+  searchResults?: UnifiedNode[];
 }
 
 export const NodeDetails: React.FC<NodeDetailsProps> = ({
@@ -38,6 +39,8 @@ export const NodeDetails: React.FC<NodeDetailsProps> = ({
   isOpen,
   onClose,
   onNodeSelect,
+  searchLinks = [],
+  searchResults = [],
 }) => {
   const [copiedField, setCopiedField] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<number>(0);
@@ -53,12 +56,15 @@ export const NodeDetails: React.FC<NodeDetailsProps> = ({
     error: nodeError,
   } = useNodeDetails(targetNodeId && !targetNode ? targetNodeId : null);
 
-  // Fetch node links
-  const {
-    data: nodeLinks = [],
-    isLoading: linksLoading,
-    error: linksError,
-  } = useNodeLinks(targetNodeId || null);
+  // Filter search links for the current node (either as subject or object)
+  const nodeLinks = targetNodeId || targetNode?.id
+    ? searchLinks.filter(link =>
+        link.subject === (targetNodeId || targetNode?.id) ||
+        link.object === (targetNodeId || targetNode?.id)
+      )
+    : [];
+  const linksLoading = false; // No async loading needed for search links
+  const linksError = null;
 
   const displayNode = targetNode || fetchedNode;
 
@@ -149,7 +155,7 @@ export const NodeDetails: React.FC<NodeDetailsProps> = ({
                       {sourceMetadata?.label}
                     </Badge>
 
-                    {displayNode.confidence_score < 1 && (
+                    {displayNode.confidence_score !== undefined && displayNode.confidence_score < 1 && (
                       <Badge color="gray">
                         {Math.round(displayNode.confidence_score * 100)}% match
                       </Badge>
@@ -180,22 +186,26 @@ export const NodeDetails: React.FC<NodeDetailsProps> = ({
                 </div>
               </div>
 
-              {displayNode.definition && (
-                <Card>
-                  <div className="space-y-2">
-                    <div className="flex items-center justify-between">
-                      <h3 className="font-semibold">Definition</h3>
+              <Card>
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <h3 className="font-semibold">Definition</h3>
+                    {displayNode.definition && (
                       <CopyButton
                         text={displayNode.definition}
                         field="definition"
                       />
-                    </div>
-                    <p className="leading-relaxed text-gray-700">
-                      {displayNode.definition}
-                    </p>
+                    )}
                   </div>
-                </Card>
-              )}
+                  <p className="leading-relaxed text-gray-700">
+                    {displayNode.definition || (
+                      <span className="italic text-gray-500">
+                        No definition available for this node.
+                      </span>
+                    )}
+                  </p>
+                </div>
+              </Card>
             </div>
 
             {/* Simple Tab Navigation */}
@@ -236,6 +246,7 @@ export const NodeDetails: React.FC<NodeDetailsProps> = ({
                 <LinkExplorer
                   nodeId={displayNode.id}
                   links={nodeLinks}
+                  searchResults={searchResults}
                   isLoading={linksLoading}
                   error={linksError}
                   onNodeSelect={onNodeSelect}
@@ -261,12 +272,14 @@ export const NodeDetails: React.FC<NodeDetailsProps> = ({
                         <dd>{sourceMetadata?.label}</dd>
                       </div>
 
-                      <div className="flex justify-between">
-                        <dt className="text-gray-600">Confidence:</dt>
-                        <dd>
-                          {Math.round(displayNode.confidence_score * 100)}%
-                        </dd>
-                      </div>
+                      {displayNode.confidence_score !== undefined && (
+                        <div className="flex justify-between">
+                          <dt className="text-gray-600">Confidence:</dt>
+                          <dd>
+                            {Math.round(displayNode.confidence_score * 100)}%
+                          </dd>
+                        </div>
+                      )}
 
                       {displayNode.created_at && (
                         <div className="flex justify-between">

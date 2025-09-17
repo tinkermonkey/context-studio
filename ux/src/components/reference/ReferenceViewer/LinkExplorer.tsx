@@ -15,13 +15,25 @@ import {
   RotateCcw,
   Info,
 } from "lucide-react";
-import { UnifiedLink, UnifiedNode } from "@/api/types/unified";
+import { UnifiedLink, UnifiedNode, UnifiedSearchLink } from "@/api/types/unified";
 import { SOURCE_METADATA } from "@/api/types/unified";
 import { useNodeDetails } from "@/api/hooks/unifiedReference/useUnifiedReference";
 
+// Adapter function to convert SearchLink to UnifiedLink format
+const convertSearchLinkToUnifiedLink = (searchLink: UnifiedSearchLink): UnifiedLink => ({
+  id: searchLink.id,
+  source_node_id: searchLink.subject,
+  target_node_id: searchLink.object,
+  predicate: searchLink.predicate,
+  source: searchLink.source,
+  confidence_score: searchLink.weight || 1.0,
+  metadata: searchLink.attributes || {},
+});
+
 interface LinkExplorerProps {
   nodeId: string;
-  links: UnifiedLink[];
+  links: UnifiedLink[] | UnifiedSearchLink[];
+  searchResults?: UnifiedNode[]; // Add search results to resolve linked nodes
   isLoading?: boolean;
   error?: Error | null;
   onNodeSelect?: (node: UnifiedNode) => void;
@@ -31,18 +43,29 @@ interface LinkExplorerProps {
 interface LinkItemProps {
   link: UnifiedLink;
   currentNodeId: string;
+  searchResults?: UnifiedNode[]; // Add search results to resolve linked nodes
   onNodeSelect?: (node: UnifiedNode) => void;
 }
 
 const LinkItem: React.FC<LinkItemProps> = ({
   link,
   currentNodeId,
+  searchResults = [],
   onNodeSelect,
 }) => {
   const isOutgoing = link.source_node_id === currentNodeId;
   const targetNodeId = isOutgoing ? link.target_node_id : link.source_node_id;
 
-  const { data: targetNode, isLoading, error } = useNodeDetails(targetNodeId);
+  // Try to find the target node in search results first, fallback to API call
+  const targetNodeFromSearch = searchResults.find(node => node.id === targetNodeId);
+
+  const { data: targetNodeFromAPI, isLoading: apiLoading, error: apiError } = useNodeDetails(
+    targetNodeFromSearch ? null : targetNodeId // Only call API if not found in search results
+  );
+
+  const targetNode = targetNodeFromSearch || targetNodeFromAPI;
+  const isLoading = !targetNodeFromSearch && apiLoading;
+  const error = !targetNodeFromSearch ? apiError : null;
 
   const sourceMetadata = SOURCE_METADATA[link.source] || {
     label: link.source,
@@ -163,7 +186,8 @@ const LinkItem: React.FC<LinkItemProps> = ({
 
 export const LinkExplorer: React.FC<LinkExplorerProps> = ({
   nodeId,
-  links,
+  links: rawLinks,
+  searchResults = [],
   isLoading = false,
   error = null,
   onNodeSelect,
@@ -174,6 +198,18 @@ export const LinkExplorer: React.FC<LinkExplorerProps> = ({
     "all" | "outgoing" | "incoming"
   >("all");
   const [predicateFilter, setPredicateFilter] = useState<string>("all");
+
+  // Convert SearchLinks to UnifiedLinks if needed
+  const links: UnifiedLink[] = useMemo(() => {
+    return rawLinks.map(link => {
+      // Check if it's a SearchLink (has 'subject' property)
+      if ('subject' in link) {
+        return convertSearchLinkToUnifiedLink(link as UnifiedSearchLink);
+      }
+      // It's already a UnifiedLink
+      return link as UnifiedLink;
+    });
+  }, [rawLinks]);
 
   // Get unique values for filters
   const { sources, predicates, outgoingLinks, incomingLinks } = useMemo(() => {
@@ -376,6 +412,7 @@ export const LinkExplorer: React.FC<LinkExplorerProps> = ({
               key={link.id}
               link={link}
               currentNodeId={nodeId}
+              searchResults={searchResults}
               onNodeSelect={onNodeSelect}
             />
           ))}

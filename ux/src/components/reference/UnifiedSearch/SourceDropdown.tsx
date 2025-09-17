@@ -14,7 +14,7 @@ interface SourceDropdownProps {
   onSourcesChange?: (sources: SourceType[]) => void;
 }
 
-const DEFAULT_SOURCES = [
+const DEFAULT_SOURCES: SourceType[] = [
   "conceptnet",
   "dbpedia",
   "wikidata",

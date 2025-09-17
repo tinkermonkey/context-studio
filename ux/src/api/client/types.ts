@@ -1449,6 +1449,70 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/config/reference-sources/status": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Reference Sources Status
+         * @description Get status of all reference sources
+         */
+        get: operations["get_reference_sources_status_api_config_reference_sources_status_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/config/reference-sources": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Reference Sources Config
+         * @description Get reference sources configuration
+         */
+        get: operations["get_reference_sources_config_api_config_reference_sources_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/config/reference-sources/{source_name}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Reference Source Config
+         * @description Get configuration for a specific reference source
+         */
+        get: operations["get_reference_source_config_api_config_reference_sources__source_name__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /**
+         * Update Reference Source Config
+         * @description Update configuration for a specific reference source
+         */
+        patch: operations["update_reference_source_config_api_config_reference_sources__source_name__patch"];
+        trace?: never;
+    };
     "/api/config/{path}": {
         parameters: {
             query?: never;
@@ -1503,70 +1567,6 @@ export interface paths {
          * @description Reset configuration to defaults
          */
         post: operations["reset_configuration_api_config_reset_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/config/reference-sources": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Get Reference Sources Config
-         * @description Get reference sources configuration
-         */
-        get: operations["get_reference_sources_config_api_config_reference_sources_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/config/reference-sources/{source_name}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Get Reference Source Config
-         * @description Get configuration for a specific reference source
-         */
-        get: operations["get_reference_source_config_api_config_reference_sources__source_name__get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        /**
-         * Update Reference Source Config
-         * @description Update configuration for a specific reference source
-         */
-        patch: operations["update_reference_source_config_api_config_reference_sources__source_name__patch"];
-        trace?: never;
-    };
-    "/api/config/reference-sources/status": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Get Reference Sources Status
-         * @description Get status of all reference sources
-         */
-        get: operations["get_reference_sources_status_api_config_reference_sources_status_get"];
-        put?: never;
-        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -1773,6 +1773,30 @@ export interface paths {
          *     and throttling information when the proxy is running.
          */
         get: operations["get_proxy_monitoring_api_nlp_analysis_proxy_monitor_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/nlp_analysis/proxy/debug": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Proxy Debug Config
+         * @description Get debug configuration information from the reference API buddy proxy.
+         *
+         *     Returns the actual configuration that was sent to the proxy, including
+         *     sanitized fields for security. This is useful for debugging configuration
+         *     issues and verifying that settings are applied correctly.
+         */
+        get: operations["get_proxy_debug_config_api_nlp_analysis_proxy_debug_get"];
         put?: never;
         post?: never;
         delete?: never;
@@ -6611,14 +6635,25 @@ export interface components {
             query: string;
             /**
              * Results
-             * @description Search results from all sources
+             * @description Search node results from all sources
              */
             results: components["schemas"]["SearchNode"][];
+            /**
+             * Links
+             * @description Search link results from all sources
+             */
+            links?: components["schemas"]["SearchLink"][];
             /**
              * Total Results
              * @description Total number of results across all sources
              */
             total_results: number;
+            /**
+             * Total Links
+             * @description Total number of links across all sources
+             * @default 0
+             */
+            total_links: number;
             /**
              * Sources Queried
              * @description Sources that were queried
@@ -7602,6 +7637,46 @@ export interface components {
             last_updated: number | null;
             /** Database Size */
             database_size: number | null;
+        };
+        /**
+         * SearchLink
+         * @description Simplified link representation for multi-source search results
+         */
+        SearchLink: {
+            /**
+             * Id
+             * @description Unique identifier
+             */
+            id: string;
+            /** @description Source system enum */
+            source: components["schemas"]["SourceType"];
+            /**
+             * Subject
+             * @description Subject node ID or URL
+             */
+            subject: string;
+            /**
+             * Predicate
+             * @description Relationship type
+             */
+            predicate: string;
+            /**
+             * Object
+             * @description Object node ID or URL
+             */
+            object: string;
+            /**
+             * Weight
+             * @description Link weight (0.0+)
+             */
+            weight?: number | null;
+            /**
+             * Attributes
+             * @description Source-specific metadata
+             */
+            attributes?: {
+                [key: string]: unknown;
+            };
         };
         /**
          * SearchNode
@@ -11120,13 +11195,11 @@ export interface operations {
             };
         };
     };
-    get_configuration_value_api_config__path__get: {
+    get_reference_sources_status_api_config_reference_sources_status_get: {
         parameters: {
             query?: never;
             header?: never;
-            path: {
-                path: string;
-            };
+            path?: never;
             cookie?: never;
         };
         requestBody?: never;
@@ -11138,55 +11211,6 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ConfigResponse"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    reload_configuration_api_config_reload_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": unknown;
-                };
-            };
-        };
-    };
-    reset_configuration_api_config_reset_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": unknown;
                 };
             };
         };
@@ -11277,7 +11301,38 @@ export interface operations {
             };
         };
     };
-    get_reference_sources_status_api_config_reference_sources_status_get: {
+    get_configuration_value_api_config__path__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                path: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ConfigResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    reload_configuration_api_config_reload_post: {
         parameters: {
             query?: never;
             header?: never;
@@ -11292,7 +11347,27 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["ConfigResponse"];
+                    "application/json": unknown;
+                };
+            };
+        };
+    };
+    reset_configuration_api_config_reset_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
                 };
             };
         };
@@ -11603,6 +11678,26 @@ export interface operations {
         };
     };
     get_proxy_monitoring_api_nlp_analysis_proxy_monitor_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+        };
+    };
+    get_proxy_debug_config_api_nlp_analysis_proxy_debug_get: {
         parameters: {
             query?: never;
             header?: never;

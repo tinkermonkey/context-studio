@@ -1,6 +1,6 @@
 """Core enrichment service coordinating all reference API sources"""
 
-from typing import Dict, Any, Optional, List
+from typing import Dict, Any, Optional, List, Tuple
 import asyncio
 import aiohttp
 from datetime import datetime, UTC
@@ -172,6 +172,7 @@ class EnrichmentService:
 
         # Aggregate results
         all_nodes = []
+        all_links = []
         source_errors = {}
         sources_queried = []
 
@@ -182,20 +183,25 @@ class EnrichmentService:
                 source_errors[source_type.value] = str(result)
                 logger.warning(f"Search failed for {source_type.value}: {result}")
             elif result:
-                all_nodes.extend(result)
-                logger.info(f"Source {source_type.value}: added {len(result)} results")
+                nodes, links = result
+                all_nodes.extend(nodes)
+                all_links.extend(links)
+                logger.info(f"Source {source_type.value}: added {len(nodes)} nodes and {len(links)} links")
             else:
                 logger.info(f"Source {source_type.value}: no results")
 
         # Simple result aggregation (no deduplication or ranking)
         total_results = len(all_nodes)
+        total_links = len(all_links)
 
         # Create response
         search_time_ms = (time.time() - start_time) * 1000
         response = MultiSourceSearchResponse(
             query=request.query,
             results=all_nodes,
+            links=all_links,
             total_results=total_results,
+            total_links=total_links,
             sources_queried=sources_queried,
             source_errors=source_errors,
             offset=request.offset,
@@ -203,11 +209,11 @@ class EnrichmentService:
             search_time_ms=search_time_ms
         )
 
-        logger.info(f"Multi-source search completed: '{request.query}' returned {total_results} results in {search_time_ms:.2f}ms")
+        logger.info(f"Multi-source search completed: '{request.query}' returned {total_results} nodes and {total_links} links in {search_time_ms:.2f}ms")
         return response
 
-    async def _search_single_source(self, source_type: SourceType, query: str, limit: int, offset: int) -> List[SearchNode]:
-        """Search a single source and convert results to SearchNode format"""
+    async def _search_single_source(self, source_type: SourceType, query: str, limit: int, offset: int) -> Tuple[List[SearchNode], List[SearchLink]]:
+        """Search a single source and convert results to SearchNode and SearchLink format"""
         try:
             logger.debug(f"Searching {source_type.value} for '{query}'")
 
@@ -216,7 +222,7 @@ class EnrichmentService:
                 response = await self.dbpedia_search(request)
                 # Normalize DBpedia scores to 0-1 range
                 max_score = max((result.score for result in response.results), default=1.0)
-                return [
+                nodes = [
                     SearchNode(
                         id=f"dbpedia:{result.uri}",
                         source=SourceType.DBPEDIA,
@@ -228,30 +234,78 @@ class EnrichmentService:
                     )
                     for result in response.results
                 ]
+                # DBpedia search doesn't inherently provide relationship data, return empty links
+                return nodes, []
 
             elif source_type == SourceType.CONCEPTNET:
                 request = ConceptNetQueryRequest(node=f"/c/en/{query.lower().replace(' ', '_')}", limit=limit, offset=offset)
                 response = await self.conceptnet_query(request)
                 nodes = []
+                links = []
+                seen_nodes = set()
+
                 for edge in response.edges:
-                    # Create nodes for both start and end concepts
+                    # Extract start node
                     if edge.start and edge.start.get('@id'):
-                        nodes.append(SearchNode(
-                            id=f"conceptnet:{edge.start['@id']}",
+                        start_id = edge.start['@id']
+                        if start_id not in seen_nodes:
+                            seen_nodes.add(start_id)
+                            nodes.append(SearchNode(
+                                id=f"conceptnet:{start_id}",
+                                source=SourceType.CONCEPTNET,
+                                title=edge.start.get('label', start_id.split('/')[-1]),
+                                definition=None,  # ConceptNet doesn't provide definitions
+                                attributes={
+                                    "language": start_id.split('/')[2] if len(start_id.split('/')) > 2 else "en",
+                                    "concept_uri": start_id
+                                },
+                                source_url=f"http://conceptnet.io{start_id}",
+                                relevance_score=min(edge.weight, 1.0)
+                            ))
+
+                    # Extract end node
+                    if edge.end and edge.end.get('@id'):
+                        end_id = edge.end['@id']
+                        if end_id not in seen_nodes:
+                            seen_nodes.add(end_id)
+                            nodes.append(SearchNode(
+                                id=f"conceptnet:{end_id}",
+                                source=SourceType.CONCEPTNET,
+                                title=edge.end.get('label', end_id.split('/')[-1]),
+                                definition=None,  # ConceptNet doesn't provide definitions
+                                attributes={
+                                    "language": end_id.split('/')[2] if len(end_id.split('/')) > 2 else "en",
+                                    "concept_uri": end_id
+                                },
+                                source_url=f"http://conceptnet.io{end_id}",
+                                relevance_score=min(edge.weight, 1.0)
+                            ))
+
+                    # Create link
+                    if edge.start and edge.end and edge.rel:
+                        links.append(SearchLink(
+                            id=f"conceptnet:{edge.id}",
                             source=SourceType.CONCEPTNET,
-                            title=edge.start.get('label', edge.start['@id'].split('/')[-1]),
-                            definition=f"Related via {edge.rel.get('label', '')}",
-                            attributes={"weight": edge.weight, "relation": edge.rel},
-                            source_url=f"http://conceptnet.io{edge.start['@id']}",
-                            relevance_score=min(edge.weight, 1.0)
+                            subject=f"conceptnet:{edge.start['@id']}",
+                            predicate=edge.rel.get('label', edge.rel.get('@id', '')),
+                            object=f"conceptnet:{edge.end['@id']}",
+                            weight=edge.weight,
+                            attributes={
+                                "edge_uri": edge.id,
+                                "relation_uri": edge.rel.get('@id', ''),
+                                "sources": edge.sources or []
+                            }
                         ))
-                return nodes
+
+                return nodes, links
 
             elif source_type == SourceType.WIKIDATA:
-                # For Wikidata, use a simpler search approach that's more efficient
+                # Enhanced Wikidata search to include both entities and their statements as links
                 # Escape query string to prevent SPARQL injection
                 escaped_query = query.replace('"', '\\"').replace('\n', ' ').replace('\r', ' ')
-                sparql_query = f"""
+
+                # First query: Find entities matching the search term
+                entity_sparql = f"""
                 SELECT ?item ?itemLabel ?itemDescription WHERE {{
                   ?item rdfs:label "{escaped_query}"@en .
                   SERVICE wikibase:label {{ bd:serviceParam wikibase:language "en" }}
@@ -259,13 +313,20 @@ class EnrichmentService:
                 LIMIT {limit}
                 OFFSET {offset}
                 """
-                request = WikidataSparqlRequest(query=sparql_query)
-                response = await self.wikidata_sparql(request)
+
+                entity_request = WikidataSparqlRequest(query=entity_sparql)
+                entity_response = await self.wikidata_sparql(entity_request)
+
                 nodes = []
-                if response.success and response.results and 'results' in response.results and 'bindings' in response.results['results']:
-                    for binding in response.results['results']['bindings']:
+                links = []
+                entity_uris = []
+
+                # Process found entities
+                if entity_response.success and entity_response.results and 'results' in entity_response.results and 'bindings' in entity_response.results['results']:
+                    for binding in entity_response.results['results']['bindings']:
                         if 'item' in binding:
                             item_uri = binding['item'].get('value', '')
+                            entity_uris.append(item_uri)
                             label = binding.get('itemLabel', {}).get('value', item_uri.split('/')[-1])
                             description = binding.get('itemDescription', {}).get('value', '')
                             nodes.append(SearchNode(
@@ -277,12 +338,109 @@ class EnrichmentService:
                                 source_url=item_uri,
                                 relevance_score=1.0
                             ))
-                return nodes
+
+                # Second query: Get statements for the found entities (limit to avoid huge results)
+                if entity_uris:
+                    # Limit to first few entities to avoid query timeout
+                    limited_uris = entity_uris[:3]
+                    values_clause = " ".join([f"<{uri}>" for uri in limited_uris])
+
+                    statements_sparql = f"""
+                    SELECT ?subject ?subjectLabel ?property ?propertyEntity ?propertyLabel ?object ?objectLabel WHERE {{
+                      VALUES ?subject {{ {values_clause} }}
+                      ?subject ?property ?object .
+                      # Filter to actual properties (not schema/system properties)
+                      FILTER(STRSTARTS(STR(?property), "http://www.wikidata.org/prop/direct/"))
+                      # Only include object entities (not literals) to create meaningful links
+                      FILTER(ISIRI(?object))
+                      # Convert direct property URI to property entity URI for label resolution
+                      BIND(IRI(REPLACE(STR(?property), "http://www.wikidata.org/prop/direct/", "http://www.wikidata.org/entity/")) AS ?propertyEntity)
+                      SERVICE wikibase:label {{
+                        bd:serviceParam wikibase:language "en" .
+                        ?subject rdfs:label ?subjectLabel .
+                        ?propertyEntity rdfs:label ?propertyLabel .
+                        ?object rdfs:label ?objectLabel .
+                      }}
+                    }}
+                    LIMIT 10
+                    """
+
+                    statements_request = WikidataSparqlRequest(query=statements_sparql)
+                    statements_response = await self.wikidata_sparql(statements_request)
+
+                    if statements_response.success and statements_response.results and 'results' in statements_response.results:
+                        for binding in statements_response.results['results']['bindings']:
+                            if all(key in binding for key in ['subject', 'property', 'object']):
+                                subject_uri = binding['subject'].get('value', '')
+                                property_uri = binding['property'].get('value', '')
+                                object_uri = binding['object'].get('value', '')
+
+                                # Extract property ID from URI for cleaner predicate
+                                property_id = property_uri.split('/')[-1] if property_uri else ''
+                                property_label = binding.get('propertyLabel', {}).get('value', property_id)
+
+                                # Add object entity as a node if not already present
+                                object_label = binding.get('objectLabel', {}).get('value', object_uri.split('/')[-1])
+                                object_node_id = f"wikidata:{object_uri}"
+
+                                # Check if object node already exists in our nodes list
+                                if not any(node.id == object_node_id for node in nodes):
+                                    # Detect and handle file URLs (images, documents, etc.)
+                                    title = object_label
+                                    attributes = {"uri": object_uri}
+
+                                    if object_uri and any(domain in object_uri for domain in ['commons.wikimedia.org', 'upload.wikimedia.org']):
+                                        # This is likely a file URL
+                                        file_path = object_uri.split('/')[-1] if '/' in object_uri else object_uri
+
+                                        # Determine file type from extension or path
+                                        if any(ext in file_path.lower() for ext in ['.jpg', '.jpeg', '.png', '.gif', '.svg', '.webp']):
+                                            title = "image file"
+                                            attributes["file_type"] = "image"
+                                        elif any(ext in file_path.lower() for ext in ['.pdf', '.doc', '.docx', '.txt']):
+                                            title = "document file"
+                                            attributes["file_type"] = "document"
+                                        elif any(ext in file_path.lower() for ext in ['.mp3', '.wav', '.ogg', '.mp4', '.avi']):
+                                            title = "media file"
+                                            attributes["file_type"] = "media"
+                                        else:
+                                            title = "file"
+                                            attributes["file_type"] = "unknown"
+
+                                        attributes["file_url"] = object_uri
+                                        attributes["file_name"] = file_path
+
+                                    nodes.append(SearchNode(
+                                        id=object_node_id,
+                                        source=SourceType.WIKIDATA,
+                                        title=title,
+                                        definition=None,  # Would need additional query for description
+                                        attributes=attributes,
+                                        source_url=object_uri,
+                                        relevance_score=0.8  # Lower relevance for inferred objects
+                                    ))
+
+                                # Create the link
+                                links.append(SearchLink(
+                                    id=f"wikidata:{subject_uri}#{property_id}#{object_uri}",
+                                    source=SourceType.WIKIDATA,
+                                    subject=f"wikidata:{subject_uri}",
+                                    predicate=property_label or property_id,
+                                    object=object_node_id,
+                                    weight=1.0,  # Wikidata statements are factual
+                                    attributes={
+                                        "property_uri": property_uri,
+                                        "property_id": property_id,
+                                        "statement_type": "direct"
+                                    }
+                                ))
+
+                return nodes, links
 
             elif source_type == SourceType.SCHEMA_ORG:
                 request = SchemaOrgSearchRequest(query=query, limit=limit, offset=offset)
                 response = await self.schema_org_search(request)
-                return [
+                nodes = [
                     SearchNode(
                         id=f"schema_org:{result.identifier}",
                         source=SourceType.SCHEMA_ORG,
@@ -294,10 +452,12 @@ class EnrichmentService:
                     )
                     for result in response.results
                 ]
+                # Schema.org search doesn't inherently provide relationship data, return empty links
+                return nodes, []
 
             else:
                 logger.warning(f"Unknown source type: {source_type}")
-                return []
+                return [], []
 
         except Exception as e:
             logger.error(f"Error searching {source_type.value}: {e}")

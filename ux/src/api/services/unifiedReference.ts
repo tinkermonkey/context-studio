@@ -44,27 +44,33 @@ export class UnifiedReferenceService extends BaseService {
       }
 
       try {
-        return await this.postResource<UnifiedSearchResponse>(
+        // Convert to backend-compatible request format
+        const backendRequest: MultiSourceSearchRequest = {
+          query: request.query,
+          sources: request.sources,
+          limit: request.limit || 20,
+          offset: request.offset || 0,
+        };
+
+        const response = await this.postResource<MultiSourceSearchResponse>(
           this.SEARCH_ENDPOINT,
-          request,
+          backendRequest,
         );
 
-        // Handle backend response wrapper format: { success: true, data: {...}, errors: [] }
-        if (response && response.success && response.data) {
-          return response.data;
-        }
-
-        // If response doesn't match expected format, check if it's the direct format
-        if (response && response.results) {
-          return response;
-        }
-
-        // Log unexpected response format and return mock data
-        console.warn('Unexpected search response format:', response);
-        return this.getMockSearchResponse(request);
+        // Convert backend response to frontend format
+        return {
+          query: response.query,
+          results: response.results.map(this.convertSearchNodeToUnifiedNode),
+          links: response.links || [],
+          total_results: response.total_results,
+          total_links: response.total_links || 0,
+          sources_searched: response.sources_searched,
+          source_errors: response.source_errors,
+          execution_time_ms: response.execution_time_ms,
+        };
       } catch (error) {
         if (error instanceof Error && error.message.includes("404")) {
-          // Backend not implemented yet - return mock data for development
+          console.warn("Multi-source search endpoint not found, using mock data");
           return this.getMockSearchResponse(request);
         }
         throw error;
@@ -74,28 +80,22 @@ export class UnifiedReferenceService extends BaseService {
 
   /**
    * Get detailed information about a specific node
+   * Note: This endpoint doesn't exist in the backend yet, returns mock data
    */
   async getNode(nodeId: string): Promise<UnifiedNode> {
     return this.withErrorContext(async () => {
       this.validateRequired(nodeId, "Node ID");
       this.sanitizeString(nodeId, "Node ID", 255);
 
-      try {
-        return await this.getResource<UnifiedNode>(
-          `${ENDPOINTS.NLP_REFERENCE}/unified/node/${nodeId}`,
-        );
-      } catch (error) {
-        if (error instanceof Error && error.message.includes("404")) {
-          // Backend not implemented yet - return mock data for development
-          return this.getMockNode(nodeId);
-        }
-        throw error;
-      }
+      // Backend endpoint not implemented yet - return mock data
+      console.warn("Node details endpoint not implemented, using mock data");
+      return this.getMockNode(nodeId);
     }, "get unified node");
   }
 
   /**
    * Get links for a specific node
+   * Note: This endpoint doesn't exist in the backend yet, returns mock data
    */
   async getLinks(
     nodeId: string,
@@ -105,20 +105,9 @@ export class UnifiedReferenceService extends BaseService {
       this.validateRequired(nodeId, "Node ID");
       this.sanitizeString(nodeId, "Node ID", 255);
 
-      const params = { node_id: nodeId, direction };
-
-      try {
-        return await this.getResource<UnifiedLink[]>(
-          `${ENDPOINTS.NLP_REFERENCE}/unified/links`,
-          params,
-        );
-      } catch (error) {
-        if (error instanceof Error && error.message.includes("404")) {
-          // Backend not implemented yet - return mock data for development
-          return this.getMockLinks(nodeId);
-        }
-        throw error;
-      }
+      // Backend endpoint not implemented yet - return mock data
+      console.warn("Node links endpoint not implemented, using mock data");
+      return this.getMockLinks(nodeId);
     }, "get node links");
   }
 
@@ -137,6 +126,24 @@ export class UnifiedReferenceService extends BaseService {
     };
 
     return this.search(paginatedRequest);
+  }
+
+  /**
+   * Convert SearchNode from backend to UnifiedNode for frontend
+   */
+  private convertSearchNodeToUnifiedNode(node: SearchNode): UnifiedNode {
+    return {
+      id: node.id,
+      title: node.title,
+      definition: node.definition,
+      source: node.source,
+      confidence_score: node.confidence_score || 1.0,
+      source_url: node.source_url,
+      metadata: node.metadata,
+      created_at: node.created_at,
+      updated_at: node.updated_at,
+      merged_from: node.merged_from,
+    };
   }
 
   // Mock data methods for development (when backend is not ready)
@@ -166,7 +173,9 @@ export class UnifiedReferenceService extends BaseService {
     return {
       query: request.query,
       results: mockResults,
+      links: [], // No mock links for now
       total_results: mockResults.length,
+      total_links: 0,
       sources_searched: request.sources || ["conceptnet", "dbpedia"],
       execution_time_ms: 150,
       source_errors: {

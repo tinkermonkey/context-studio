@@ -346,6 +346,17 @@ class SearchNode(BaseModel):
         return v
 
 
+class SearchLink(BaseModel):
+    """Simplified link representation for multi-source search results"""
+    id: str = Field(..., description="Unique identifier")
+    source: SourceType = Field(..., description="Source system enum")
+    subject: str = Field(..., description="Subject node ID or URL")
+    predicate: str = Field(..., description="Relationship type")
+    object: str = Field(..., description="Object node ID or URL")
+    weight: Optional[float] = Field(None, ge=0, description="Link weight (0.0+)")
+    attributes: Dict[str, Any] = Field(default_factory=dict, description="Source-specific metadata")
+
+
 class MultiSourceSearchRequest(BaseModel):
     """Request model for multi-source search"""
     query: str = Field(..., min_length=1, description="Search query string")
@@ -357,8 +368,10 @@ class MultiSourceSearchRequest(BaseModel):
 class MultiSourceSearchResponse(BaseModel):
     """Response model for multi-source search"""
     query: str = Field(..., description="Original search query")
-    results: List[SearchNode] = Field(..., description="Search results from all sources")
+    results: List[SearchNode] = Field(..., description="Search node results from all sources")
+    links: List[SearchLink] = Field(default_factory=list, description="Search link results from all sources")
     total_results: int = Field(..., description="Total number of results across all sources")
+    total_links: int = Field(default=0, description="Total number of links across all sources")
     sources_queried: List[str] = Field(..., description="Sources that were queried")
     source_errors: Dict[str, str] = Field(default_factory=dict, description="Errors encountered per source")
     offset: int = Field(..., description="Result offset used")
