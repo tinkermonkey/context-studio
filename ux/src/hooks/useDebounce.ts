@@ -4,7 +4,7 @@
  * Provides debouncing functionality without external dependencies
  */
 
-import { useCallback, useRef } from 'react';
+import { useCallback, useRef } from "react";
 
 /**
  * Creates a debounced version of a callback function
@@ -14,7 +14,7 @@ import { useCallback, useRef } from 'react';
  */
 export const useDebounce = <T extends (...args: any[]) => any>(
   callback: T,
-  delay: number
+  delay: number,
 ): T & { cancel: () => void } => {
   const timeoutRef = useRef<NodeJS.Timeout | undefined>();
 
@@ -23,7 +23,7 @@ export const useDebounce = <T extends (...args: any[]) => any>(
       clearTimeout(timeoutRef.current);
       timeoutRef.current = setTimeout(() => callback(...args), delay);
     },
-    [callback, delay]
+    [callback, delay],
   ) as T & { cancel: () => void };
 
   // Add cancel method to clear pending timeout

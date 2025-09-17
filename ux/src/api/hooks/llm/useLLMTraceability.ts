@@ -48,7 +48,7 @@ export const useExecutionAnalytics = (
     queryKey: createQueryKey(
       QUERY_KEYS.LLM_TRACEABILITY,
       "analytics",
-      filters as Record<string, unknown> || {},
+      (filters as Record<string, unknown>) || {},
     ),
     queryFn: () =>
       llmTraceabilityService.getExecutionAnalytics(filters || undefined),
@@ -150,7 +150,7 @@ export const useExecutionHistories = (
     queryKey: createQueryKey(
       QUERY_KEYS.LLM_TRACEABILITY,
       "execution-histories",
-      filters as Record<string, unknown> || {},
+      (filters as Record<string, unknown>) || {},
     ),
     queryFn: () =>
       llmTraceabilityService.getExecutionHistories(filters || undefined),
@@ -180,7 +180,7 @@ export const useRecentExecutions = (
     queryFn: () => {
       if (!flavorId) {
         throw new Error(
-          "Recent executions requires a flavor_id. Use useFlavorExecutionHistory with a specific flavor_id instead."
+          "Recent executions requires a flavor_id. Use useFlavorExecutionHistory with a specific flavor_id instead.",
         );
       }
       return llmTraceabilityService.getRecentExecutions(
@@ -247,7 +247,7 @@ export const useExecutionHistoriesWithRefresh = (
     queryKey: createQueryKey(
       QUERY_KEYS.LLM_TRACEABILITY,
       "histories-refresh",
-      filters as Record<string, unknown> || {},
+      (filters as Record<string, unknown>) || {},
     ),
     queryFn: () =>
       llmTraceabilityService.getExecutionHistories(filters || undefined),

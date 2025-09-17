@@ -98,16 +98,16 @@ const ExecutionDetailModal: React.FC<{
 }> = ({ execution, selections, isOpen, onClose }) => {
   return (
     <Modal show={isOpen} onClose={onClose} size="6xl">
-      <div className="flex items-center justify-between p-4 md:p-5 border-b rounded-t dark:border-gray-600">
+      <div className="flex items-center justify-between rounded-t border-b p-4 md:p-5 dark:border-gray-600">
         <h3 className="text-xl font-semibold text-gray-900 dark:text-white">
           Execution Details: {execution.execution_id}
         </h3>
         <button
           type="button"
-          className="text-gray-400 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm w-8 h-8 ms-auto inline-flex justify-center items-center dark:hover:bg-gray-600 dark:hover:text-white"
+          className="ms-auto inline-flex h-8 w-8 items-center justify-center rounded-lg bg-transparent text-sm text-gray-400 hover:bg-gray-200 hover:text-gray-900 dark:hover:bg-gray-600 dark:hover:text-white"
           onClick={onClose}
         >
-          <svg className="w-3 h-3" fill="none" viewBox="0 0 14 14">
+          <svg className="h-3 w-3" fill="none" viewBox="0 0 14 14">
             <path
               stroke="currentColor"
               strokeLinecap="round"
@@ -118,7 +118,7 @@ const ExecutionDetailModal: React.FC<{
           </svg>
         </button>
       </div>
-      <div className="p-4 md:p-5 space-y-4 max-h-[80vh] overflow-y-auto">
+      <div className="max-h-[80vh] space-y-4 overflow-y-auto p-4 md:p-5">
         <div className="space-y-6">
           {/* Execution Overview */}
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
@@ -150,7 +150,9 @@ const ExecutionDetailModal: React.FC<{
           {execution.error_details && (
             <Alert color="failure">
               <div>
-                <h4 className="mb-2 text-lg font-medium text-red-800 dark:text-red-400">Error Details</h4>
+                <h4 className="mb-2 text-lg font-medium text-red-800 dark:text-red-400">
+                  Error Details
+                </h4>
                 <pre className="text-sm whitespace-pre-wrap">
                   {execution.error_details}
                 </pre>
@@ -162,7 +164,7 @@ const ExecutionDetailModal: React.FC<{
             <AccordionPanel>
               <AccordionTitle>User Prompt</AccordionTitle>
               <AccordionContent>
-                <div className="max-h-64 overflow-auto rounded bg-gray-100 dark:bg-gray-700 p-4 text-sm font-mono">
+                <div className="max-h-64 overflow-auto rounded bg-gray-100 p-4 font-mono text-sm dark:bg-gray-700">
                   <pre className="whitespace-pre-wrap text-gray-800 dark:text-gray-200">
                     {execution.user_prompt || "No user prompt available"}
                   </pre>
@@ -173,9 +175,10 @@ const ExecutionDetailModal: React.FC<{
             <AccordionPanel>
               <AccordionTitle>LLM Response</AccordionTitle>
               <AccordionContent>
-                <div className="max-h-64 overflow-auto rounded bg-gray-100 dark:bg-gray-700 p-4 text-sm font-mono">
+                <div className="max-h-64 overflow-auto rounded bg-gray-100 p-4 font-mono text-sm dark:bg-gray-700">
                   <pre className="whitespace-pre-wrap text-gray-800 dark:text-gray-200">
-                    {execution.response_message || "No response message available"}
+                    {execution.response_message ||
+                      "No response message available"}
                   </pre>
                 </div>
               </AccordionContent>
@@ -184,7 +187,7 @@ const ExecutionDetailModal: React.FC<{
             <AccordionPanel>
               <AccordionTitle>Input Data</AccordionTitle>
               <AccordionContent>
-                <div className="max-h-64 overflow-auto rounded bg-gray-100 dark:bg-gray-700 p-4 text-sm font-mono">
+                <div className="max-h-64 overflow-auto rounded bg-gray-100 p-4 font-mono text-sm dark:bg-gray-700">
                   <pre className="text-gray-800 dark:text-gray-200">
                     {JSON.stringify(execution.input_data, null, 2)}
                   </pre>
@@ -195,7 +198,7 @@ const ExecutionDetailModal: React.FC<{
             <AccordionPanel>
               <AccordionTitle>Output Data</AccordionTitle>
               <AccordionContent>
-                <div className="max-h-64 overflow-auto rounded bg-gray-100 dark:bg-gray-700 p-4 text-sm font-mono">
+                <div className="max-h-64 overflow-auto rounded bg-gray-100 p-4 font-mono text-sm dark:bg-gray-700">
                   <pre className="text-gray-800 dark:text-gray-200">
                     {JSON.stringify(execution.output_data, null, 2)}
                   </pre>
@@ -204,23 +207,38 @@ const ExecutionDetailModal: React.FC<{
             </AccordionPanel>
 
             <AccordionPanel>
-              <AccordionTitle>Selection History ({selections.length})</AccordionTitle>
+              <AccordionTitle>
+                Selection History ({selections.length})
+              </AccordionTitle>
               <AccordionContent>
                 {selections.length > 0 ? (
                   <div className="relative overflow-x-auto">
-                    <table className="w-full text-sm text-left rtl:text-right text-gray-500 dark:text-gray-400">
-                      <thead className="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
+                    <table className="w-full text-left text-sm text-gray-500 rtl:text-right dark:text-gray-400">
+                      <thead className="bg-gray-50 text-xs text-gray-700 uppercase dark:bg-gray-700 dark:text-gray-400">
                         <tr>
-                          <th scope="col" className="px-6 py-3">Selection ID</th>
-                          <th scope="col" className="px-6 py-3">Record ID</th>
-                          <th scope="col" className="px-6 py-3">Field</th>
-                          <th scope="col" className="px-6 py-3">Content Preview</th>
-                          <th scope="col" className="px-6 py-3">Timestamp</th>
+                          <th scope="col" className="px-6 py-3">
+                            Selection ID
+                          </th>
+                          <th scope="col" className="px-6 py-3">
+                            Record ID
+                          </th>
+                          <th scope="col" className="px-6 py-3">
+                            Field
+                          </th>
+                          <th scope="col" className="px-6 py-3">
+                            Content Preview
+                          </th>
+                          <th scope="col" className="px-6 py-3">
+                            Timestamp
+                          </th>
                         </tr>
                       </thead>
                       <tbody>
                         {selections.map((selection) => (
-                          <tr key={selection.selection_id} className="bg-white border-b dark:bg-gray-800 dark:border-gray-700">
+                          <tr
+                            key={selection.selection_id}
+                            className="border-b bg-white dark:border-gray-700 dark:bg-gray-800"
+                          >
                             <td className="px-6 py-4 font-mono text-xs">
                               {selection.selection_id.substring(0, 8)}...
                             </td>
@@ -232,7 +250,7 @@ const ExecutionDetailModal: React.FC<{
                                 {selection.suggestion_field}
                               </Badge>
                             </td>
-                            <td className="px-6 py-4 max-w-xs">
+                            <td className="max-w-xs px-6 py-4">
                               <div
                                 className="truncate"
                                 title={selection.selected_content}
@@ -249,14 +267,16 @@ const ExecutionDetailModal: React.FC<{
                     </table>
                   </div>
                 ) : (
-                  <p className="text-gray-600 dark:text-gray-400">No selection history available for this execution.</p>
+                  <p className="text-gray-600 dark:text-gray-400">
+                    No selection history available for this execution.
+                  </p>
                 )}
               </AccordionContent>
             </AccordionPanel>
           </Accordion>
         </div>
       </div>
-      <div className="flex items-center p-4 md:p-5 border-t border-gray-200 rounded-b dark:border-gray-600">
+      <div className="flex items-center rounded-b border-t border-gray-200 p-4 md:p-5 dark:border-gray-600">
         <Button color="gray" onClick={onClose}>
           Close
         </Button>
@@ -299,7 +319,10 @@ export const ExecutionHistory: React.FC<ExecutionHistoryProps> = ({
   } = useExecutionHistory(executionId || null);
 
   // Flavor-specific execution history
-  const flavorHistoryFilters = flavorId && !executionId ? { flavor_id: flavorId, limit: filters.limit } : null;
+  const flavorHistoryFilters =
+    flavorId && !executionId
+      ? { flavor_id: flavorId, limit: filters.limit }
+      : null;
   const {
     data: flavorExecutionData,
     isLoading: flavorExecutionLoading,
@@ -318,7 +341,7 @@ export const ExecutionHistory: React.FC<ExecutionHistoryProps> = ({
   // Convert flavor execution data to match expected format
   const flavorExecutions = useMemo(() => {
     if (!flavorExecutionData?.executions) return [];
-    
+
     // Convert flavor execution data to ExecutionHistoryResponse format
     // Map database fields to what the UI component expects
     return flavorExecutionData.executions.map((exec: any) => ({
@@ -333,34 +356,38 @@ export const ExecutionHistory: React.FC<ExecutionHistoryProps> = ({
           timestamp: exec.started_at,
           input_data: (() => {
             try {
-              return exec.request_context ? JSON.parse(exec.request_context) : {};
+              return exec.request_context
+                ? JSON.parse(exec.request_context)
+                : {};
             } catch (e) {
               return { raw: exec.request_context };
             }
           })(),
-          output_data: exec.response_message ? { message: exec.response_message } : {},
+          output_data: exec.response_message
+            ? { message: exec.response_message }
+            : {},
           error_details: exec.error_message || undefined,
           user_prompt: exec.user_prompt || undefined,
           response_message: exec.response_message || undefined,
         },
         selections: [], // Will be populated separately if needed
-      }
+      },
     })) as ExecutionHistoryResponse[];
   }, [flavorExecutionData]);
 
   // Computed values
   const isLoading = executionId
     ? singleExecutionLoading
-    : flavorId 
+    : flavorId
       ? flavorExecutionLoading
       : multiExecutionLoading;
-  
-  const error = executionId 
-    ? singleExecutionError 
+
+  const error = executionId
+    ? singleExecutionError
     : flavorId
       ? flavorExecutionError
       : multiExecutionError;
-  
+
   const executions = executionId
     ? singleExecutionData
       ? [singleExecutionData]
@@ -368,8 +395,10 @@ export const ExecutionHistory: React.FC<ExecutionHistoryProps> = ({
     : flavorId
       ? flavorExecutions
       : multiExecutionData || [];
-  
-  const refetchExecutions = flavorId ? refetchFlavorExecutions : refetchGeneralExecutions;
+
+  const refetchExecutions = flavorId
+    ? refetchFlavorExecutions
+    : refetchGeneralExecutions;
 
   // Filtered executions for search
   const filteredExecutions = useMemo(() => {
@@ -425,9 +454,9 @@ export const ExecutionHistory: React.FC<ExecutionHistoryProps> = ({
       <div className="mb-6 flex items-center justify-between">
         <div>
           <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
-            {executionId 
-              ? "Execution Details" 
-              : flavorId 
+            {executionId
+              ? "Execution Details"
+              : flavorId
                 ? "Flavor Execution History"
                 : "Execution History"}
           </h2>
@@ -502,8 +531,9 @@ export const ExecutionHistory: React.FC<ExecutionHistoryProps> = ({
       {/* Missing Flavor ID Alert */}
       {!executionId && !flavorId && (
         <Alert color="warning" className="mb-6">
-          <span className="font-medium">Flavor ID Required:</span>{" "}
-          Please provide a flavor ID to view execution history. General execution history is not currently supported by the API.
+          <span className="font-medium">Flavor ID Required:</span> Please
+          provide a flavor ID to view execution history. General execution
+          history is not currently supported by the API.
         </Alert>
       )}
 
@@ -524,70 +554,86 @@ export const ExecutionHistory: React.FC<ExecutionHistoryProps> = ({
         <Card>
           <div className="overflow-x-auto">
             <div className="relative overflow-x-auto">
-              <table className="w-full text-sm text-left rtl:text-right text-gray-500 dark:text-gray-400">
-                <thead className="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
+              <table className="w-full text-left text-sm text-gray-500 rtl:text-right dark:text-gray-400">
+                <thead className="bg-gray-50 text-xs text-gray-700 uppercase dark:bg-gray-700 dark:text-gray-400">
                   <tr>
-                    <th scope="col" className="px-6 py-3">Execution ID</th>
-                    <th scope="col" className="px-6 py-3">Status</th>
-                    <th scope="col" className="px-6 py-3">Pipeline</th>
-                    <th scope="col" className="px-6 py-3">Execution Time</th>
-                    <th scope="col" className="px-6 py-3">Tokens</th>
-                    <th scope="col" className="px-6 py-3">Selections</th>
-                    <th scope="col" className="px-6 py-3">Timestamp</th>
-                    <th scope="col" className="px-6 py-3">Actions</th>
+                    <th scope="col" className="px-6 py-3">
+                      Execution ID
+                    </th>
+                    <th scope="col" className="px-6 py-3">
+                      Status
+                    </th>
+                    <th scope="col" className="px-6 py-3">
+                      Pipeline
+                    </th>
+                    <th scope="col" className="px-6 py-3">
+                      Execution Time
+                    </th>
+                    <th scope="col" className="px-6 py-3">
+                      Tokens
+                    </th>
+                    <th scope="col" className="px-6 py-3">
+                      Selections
+                    </th>
+                    <th scope="col" className="px-6 py-3">
+                      Timestamp
+                    </th>
+                    <th scope="col" className="px-6 py-3">
+                      Actions
+                    </th>
                   </tr>
                 </thead>
                 <tbody>
-                {filteredExecutions.map((executionResponse) => {
-                  const execution = executionResponse.data.execution;
-                  const selections = executionResponse.data.selections;
+                  {filteredExecutions.map((executionResponse) => {
+                    const execution = executionResponse.data.execution;
+                    const selections = executionResponse.data.selections;
 
-                  return (
-                    <tr
-                      key={execution.execution_id}
-                      className="bg-white border-b dark:bg-gray-800 dark:border-gray-700 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800"
-                      onClick={() => handleExecutionClick(executionResponse)}
-                    >
-                      <td className="px-6 py-4 font-mono text-sm">
-                        {execution.execution_id.substring(0, 12)}...
-                      </td>
-                      <td className="px-6 py-4">
-                        <StatusBadge status={execution.status} />
-                      </td>
-                      <td className="px-6 py-4">
-                        <Badge color="info" size="sm">
-                          {execution.pipeline_type}
-                        </Badge>
-                      </td>
-                      <td className="px-6 py-4 font-mono">
-                        {execution.execution_time}ms
-                      </td>
-                      <td className="px-6 py-4 font-mono">
-                        {execution.tokens_used.toLocaleString()}
-                      </td>
-                      <td className="px-6 py-4">
-                        <Badge color="purple" size="sm">
-                          {selections.length}
-                        </Badge>
-                      </td>
-                      <td className="px-6 py-4 text-sm text-gray-500">
-                        {new Date(execution.timestamp).toLocaleString()}
-                      </td>
-                      <td className="px-6 py-4">
-                        <Button
-                          size="xs"
-                          color="light"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleExecutionClick(executionResponse);
-                          }}
-                        >
-                          View Details
-                        </Button>
-                      </td>
-                    </tr>
-                  );
-                })}
+                    return (
+                      <tr
+                        key={execution.execution_id}
+                        className="cursor-pointer border-b bg-white hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:hover:bg-gray-800"
+                        onClick={() => handleExecutionClick(executionResponse)}
+                      >
+                        <td className="px-6 py-4 font-mono text-sm">
+                          {execution.execution_id.substring(0, 12)}...
+                        </td>
+                        <td className="px-6 py-4">
+                          <StatusBadge status={execution.status} />
+                        </td>
+                        <td className="px-6 py-4">
+                          <Badge color="info" size="sm">
+                            {execution.pipeline_type}
+                          </Badge>
+                        </td>
+                        <td className="px-6 py-4 font-mono">
+                          {execution.execution_time}ms
+                        </td>
+                        <td className="px-6 py-4 font-mono">
+                          {execution.tokens_used.toLocaleString()}
+                        </td>
+                        <td className="px-6 py-4">
+                          <Badge color="purple" size="sm">
+                            {selections.length}
+                          </Badge>
+                        </td>
+                        <td className="px-6 py-4 text-sm text-gray-500">
+                          {new Date(execution.timestamp).toLocaleString()}
+                        </td>
+                        <td className="px-6 py-4">
+                          <Button
+                            size="xs"
+                            color="light"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleExecutionClick(executionResponse);
+                            }}
+                          >
+                            View Details
+                          </Button>
+                        </td>
+                      </tr>
+                    );
+                  })}
                 </tbody>
               </table>
             </div>

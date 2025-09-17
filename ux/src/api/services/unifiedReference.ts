@@ -12,14 +12,17 @@ import {
   UnifiedSearchResponse,
   UnifiedNode,
   UnifiedLink,
-  SourceStatus,
+  SourceType,
+  MultiSourceSearchRequest,
+  MultiSourceSearchResponse,
+  SearchNode,
   UnifiedReferenceError,
   SourceUnavailableError,
   SearchTimeoutError,
 } from "../types/unified";
 
 export class UnifiedReferenceService extends BaseService {
-  private readonly UNIFIED_ENDPOINT = `${ENDPOINTS.NLP_REFERENCE}/unified`;
+  private readonly SEARCH_ENDPOINT = `/api/nlp_analysis/reference/search`;
 
   /**
    * Search across all unified reference sources
@@ -31,7 +34,9 @@ export class UnifiedReferenceService extends BaseService {
       this.sanitizeString(request.query, "Search query", 1000);
 
       if (request.query.trim().length < 2) {
-        throw new UnifiedReferenceError("Search query must be at least 2 characters");
+        throw new UnifiedReferenceError(
+          "Search query must be at least 2 characters",
+        );
       }
 
       if (request.sources && request.sources.length === 0) {
@@ -40,8 +45,8 @@ export class UnifiedReferenceService extends BaseService {
 
       try {
         return await this.postResource<UnifiedSearchResponse>(
-          `${this.UNIFIED_ENDPOINT}/search`,
-          request
+          this.SEARCH_ENDPOINT,
+          request,
         );
       } catch (error) {
         if (error instanceof Error && error.message.includes("404")) {
@@ -63,7 +68,7 @@ export class UnifiedReferenceService extends BaseService {
 
       try {
         return await this.getResource<UnifiedNode>(
-          `${this.UNIFIED_ENDPOINT}/node/${nodeId}`
+          `${ENDPOINTS.NLP_REFERENCE}/unified/node/${nodeId}`,
         );
       } catch (error) {
         if (error instanceof Error && error.message.includes("404")) {
@@ -80,7 +85,7 @@ export class UnifiedReferenceService extends BaseService {
    */
   async getLinks(
     nodeId: string,
-    direction: "from" | "to" | "both" = "both"
+    direction: "from" | "to" | "both" = "both",
   ): Promise<UnifiedLink[]> {
     return this.withErrorContext(async () => {
       this.validateRequired(nodeId, "Node ID");
@@ -90,8 +95,8 @@ export class UnifiedReferenceService extends BaseService {
 
       try {
         return await this.getResource<UnifiedLink[]>(
-          `${this.UNIFIED_ENDPOINT}/links`,
-          params
+          `${ENDPOINTS.NLP_REFERENCE}/unified/links`,
+          params,
         );
       } catch (error) {
         if (error instanceof Error && error.message.includes("404")) {
@@ -103,50 +108,14 @@ export class UnifiedReferenceService extends BaseService {
     }, "get node links");
   }
 
-  /**
-   * Get available reference sources
-   */
-  async getSources(): Promise<string[]> {
-    return this.withErrorContext(async () => {
-      try {
-        return await this.getResource<string[]>(
-          `${this.UNIFIED_ENDPOINT}/sources`
-        );
-      } catch (error) {
-        if (error instanceof Error && error.message.includes("404")) {
-          // Backend not implemented yet - return default sources
-          return ["conceptnet", "wordnet", "dbpedia", "wikidata", "schema_org"];
-        }
-        throw error;
-      }
-    }, "get available sources");
-  }
 
-  /**
-   * Get source status information
-   */
-  async getSourceStatus(): Promise<SourceStatus[]> {
-    return this.withErrorContext(async () => {
-      try {
-        return await this.getResource<SourceStatus[]>(
-          `${this.UNIFIED_ENDPOINT}/sources/status`
-        );
-      } catch (error) {
-        if (error instanceof Error && error.message.includes("404")) {
-          // Backend not implemented yet - return mock status
-          return this.getMockSourceStatus();
-        }
-        throw error;
-      }
-    }, "get source status");
-  }
 
   /**
    * Paginated search with load more functionality
    */
   async searchPaginated(
     request: UnifiedSearchRequest,
-    cursor?: string
+    cursor?: string,
   ): Promise<UnifiedSearchResponse> {
     const paginatedRequest = {
       ...request,
@@ -157,7 +126,9 @@ export class UnifiedReferenceService extends BaseService {
   }
 
   // Mock data methods for development (when backend is not ready)
-  private getMockSearchResponse(request: UnifiedSearchRequest): UnifiedSearchResponse {
+  private getMockSearchResponse(
+    request: UnifiedSearchRequest,
+  ): UnifiedSearchResponse {
     const mockResults: UnifiedNode[] = [
       {
         id: "mock-1",
@@ -182,8 +153,7 @@ export class UnifiedReferenceService extends BaseService {
       query: request.query,
       results: mockResults,
       total_results: mockResults.length,
-      search_type: request.search_type,
-      sources: request.sources || ["conceptnet", "dbpedia"],
+      sources_searched: request.sources || ["conceptnet", "dbpedia"],
       execution_time_ms: 150,
       source_errors: {
         schema_org: "Mock error: Service temporarily unavailable",
@@ -227,41 +197,6 @@ export class UnifiedReferenceService extends BaseService {
     ];
   }
 
-  private getMockSourceStatus(): SourceStatus[] {
-    return [
-      {
-        name: "conceptnet",
-        available: true,
-        last_check: new Date().toISOString(),
-        response_time_ms: 120,
-      },
-      {
-        name: "wordnet",
-        available: true,
-        last_check: new Date().toISOString(),
-        response_time_ms: 95,
-      },
-      {
-        name: "dbpedia",
-        available: true,
-        last_check: new Date().toISOString(),
-        response_time_ms: 200,
-      },
-      {
-        name: "wikidata",
-        available: false,
-        last_check: new Date().toISOString(),
-        error_message: "Connection timeout",
-        response_time_ms: 5000,
-      },
-      {
-        name: "schema_org",
-        available: true,
-        last_check: new Date().toISOString(),
-        response_time_ms: 150,
-      },
-    ];
-  }
 
   /**
    * Validate search request parameters
@@ -275,12 +210,6 @@ export class UnifiedReferenceService extends BaseService {
       throw new UnifiedReferenceError("Offset must be non-negative");
     }
 
-    const validSearchTypes = ["title", "definition"];
-    if (!validSearchTypes.includes(request.search_type)) {
-      throw new UnifiedReferenceError(
-        `Search type must be one of: ${validSearchTypes.join(", ")}`
-      );
-    }
   }
 
   /**

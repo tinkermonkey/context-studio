@@ -4,14 +4,19 @@
  * React Query hooks for unified reference search across multiple sources
  */
 
-import { useQuery, useMutation, useQueryClient, UseQueryOptions, UseMutationOptions } from "@tanstack/react-query";
+import {
+  useQuery,
+  useMutation,
+  useQueryClient,
+  UseQueryOptions,
+  UseMutationOptions,
+} from "@tanstack/react-query";
 import { unifiedReferenceService } from "../../services/unifiedReference";
 import {
   UnifiedSearchRequest,
   UnifiedSearchResponse,
   UnifiedNode,
   UnifiedLink,
-  SourceStatus,
   UnifiedReferenceError,
 } from "../../types/unified";
 import { QUERY_KEYS } from "../../config";
@@ -28,7 +33,11 @@ const UNIFIED_QUERY_KEYS = {
  * Uses mutation pattern for immediate search execution
  */
 export const useUnifiedSearch = (
-  options?: UseMutationOptions<UnifiedSearchResponse, Error, UnifiedSearchRequest>
+  options?: UseMutationOptions<
+    UnifiedSearchResponse,
+    Error,
+    UnifiedSearchRequest
+  >,
 ) => {
   const queryClient = useQueryClient();
 
@@ -38,15 +47,21 @@ export const useUnifiedSearch = (
     onSuccess: (data, variables) => {
       // Cache the search results
       queryClient.setQueryData(
-        createQueryKey(UNIFIED_QUERY_KEYS.UNIFIED_REFERENCE, "search", variables as unknown as Record<string, unknown>),
-        data
+        createQueryKey(
+          UNIFIED_QUERY_KEYS.UNIFIED_REFERENCE,
+          "search",
+          variables as unknown as Record<string, unknown>,
+        ),
+        data,
       );
 
       // Cache individual nodes for faster access
-      data.results.forEach(node => {
+      data.results.forEach((node) => {
         queryClient.setQueryData(
-          createQueryKey(UNIFIED_QUERY_KEYS.UNIFIED_REFERENCE, "node", { nodeId: node.id }),
-          node
+          createQueryKey(UNIFIED_QUERY_KEYS.UNIFIED_REFERENCE, "node", {
+            nodeId: node.id,
+          }),
+          node,
         );
       });
     },
@@ -62,12 +77,16 @@ export const useUnifiedSearch = (
  */
 export const useUnifiedSearchResults = (
   request: UnifiedSearchRequest | null,
-  options?: UseQueryOptions<UnifiedSearchResponse, Error>
+  options?: UseQueryOptions<UnifiedSearchResponse, Error>,
 ) => {
   return useQuery({
-    queryKey: createQueryKey(UNIFIED_QUERY_KEYS.UNIFIED_REFERENCE, "search", request as unknown as Record<string, unknown>),
+    queryKey: createQueryKey(
+      UNIFIED_QUERY_KEYS.UNIFIED_REFERENCE,
+      "search",
+      request as unknown as Record<string, unknown>,
+    ),
     queryFn: () => {
-      if (!request) throw new Error('Request is required');
+      if (!request) throw new Error("Request is required");
       return unifiedReferenceService.search(request);
     },
     enabled: !!request && !!request.query?.trim(),
@@ -81,12 +100,14 @@ export const useUnifiedSearchResults = (
  */
 export const useNodeDetails = (
   nodeId: string | null,
-  options?: UseQueryOptions<UnifiedNode, Error>
+  options?: UseQueryOptions<UnifiedNode, Error>,
 ) => {
   return useQuery({
-    queryKey: createQueryKey(UNIFIED_QUERY_KEYS.UNIFIED_REFERENCE, "node", { nodeId }),
+    queryKey: createQueryKey(UNIFIED_QUERY_KEYS.UNIFIED_REFERENCE, "node", {
+      nodeId,
+    }),
     queryFn: () => {
-      if (!nodeId) throw new Error('Node ID is required');
+      if (!nodeId) throw new Error("Node ID is required");
       return unifiedReferenceService.getNode(nodeId);
     },
     enabled: !!nodeId,
@@ -101,49 +122,22 @@ export const useNodeDetails = (
 export const useNodeLinks = (
   nodeId: string | null,
   direction: "from" | "to" | "both" = "both",
-  options?: UseQueryOptions<UnifiedLink[], Error>
+  options?: UseQueryOptions<UnifiedLink[], Error>,
 ) => {
   return useQuery({
     queryKey: createQueryKey(UNIFIED_QUERY_KEYS.UNIFIED_REFERENCE, "links", {
       nodeId,
-      direction
+      direction,
     }),
-    queryFn: () => nodeId ? unifiedReferenceService.getLinks(nodeId, direction) : [],
+    queryFn: () =>
+      nodeId ? unifiedReferenceService.getLinks(nodeId, direction) : [],
     enabled: !!nodeId,
     staleTime: 5 * 60 * 1000, // 5 minutes
     ...options,
   });
 };
 
-/**
- * Hook to get available reference sources
- */
-export const useAvailableSources = (
-  options?: UseQueryOptions<string[], Error>
-) => {
-  return useQuery({
-    queryKey: createQueryKey(UNIFIED_QUERY_KEYS.UNIFIED_REFERENCE, "sources"),
-    queryFn: () => unifiedReferenceService.getSources(),
-    staleTime: Infinity, // Sources don't change often
-    gcTime: Infinity, // Keep in cache
-    ...options,
-  });
-};
 
-/**
- * Hook to get source status information
- */
-export const useSourceStatus = (
-  options?: UseQueryOptions<SourceStatus[], Error>
-) => {
-  return useQuery({
-    queryKey: createQueryKey(UNIFIED_QUERY_KEYS.UNIFIED_REFERENCE, "source-status"),
-    queryFn: () => unifiedReferenceService.getSourceStatus(),
-    staleTime: 30 * 1000, // 30 seconds - status changes frequently
-    refetchInterval: 60 * 1000, // Refetch every minute
-    ...options,
-  });
-};
 
 /**
  * Hook for paginated search with load more functionality
@@ -152,28 +146,36 @@ export const usePaginatedSearch = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ request, cursor }: { request: UnifiedSearchRequest; cursor?: string }) =>
-      unifiedReferenceService.searchPaginated(request, cursor),
+    mutationFn: ({
+      request,
+      cursor,
+    }: {
+      request: UnifiedSearchRequest;
+      cursor?: string;
+    }) => unifiedReferenceService.searchPaginated(request, cursor),
     onSuccess: (data, variables) => {
       // Update the search results in cache
       const queryKey = createQueryKey(
         UNIFIED_QUERY_KEYS.UNIFIED_REFERENCE,
         "search",
-        variables.request as unknown as Record<string, unknown>
+        variables.request as unknown as Record<string, unknown>,
       );
 
-      queryClient.setQueryData(queryKey, (oldData: UnifiedSearchResponse | undefined) => {
-        if (!oldData || !variables.cursor) {
-          // First page or reset
-          return data;
-        }
+      queryClient.setQueryData(
+        queryKey,
+        (oldData: UnifiedSearchResponse | undefined) => {
+          if (!oldData || !variables.cursor) {
+            // First page or reset
+            return data;
+          }
 
-        // Append new results to existing ones
-        return {
-          ...data,
-          results: [...oldData.results, ...data.results],
-        };
-      });
+          // Append new results to existing ones
+          return {
+            ...data,
+            results: [...oldData.results, ...data.results],
+          };
+        },
+      );
     },
   });
 };
@@ -185,9 +187,11 @@ export const usePrefetchNodeDetails = () => {
   const queryClient = useQueryClient();
 
   return (nodeIds: string[]) => {
-    nodeIds.forEach(nodeId => {
+    nodeIds.forEach((nodeId) => {
       queryClient.prefetchQuery({
-        queryKey: createQueryKey(UNIFIED_QUERY_KEYS.UNIFIED_REFERENCE, "node", { nodeId }),
+        queryKey: createQueryKey(UNIFIED_QUERY_KEYS.UNIFIED_REFERENCE, "node", {
+          nodeId,
+        }),
         queryFn: () => unifiedReferenceService.getNode(nodeId),
         staleTime: 10 * 60 * 1000, // 10 minutes
       });
@@ -210,22 +214,26 @@ export const useInvalidateUnifiedReference = () => {
     invalidateSearch: (request?: UnifiedSearchRequest) => {
       if (request) {
         queryClient.invalidateQueries({
-          queryKey: createQueryKey(UNIFIED_QUERY_KEYS.UNIFIED_REFERENCE, "search", request as unknown as Record<string, unknown>),
+          queryKey: createQueryKey(
+            UNIFIED_QUERY_KEYS.UNIFIED_REFERENCE,
+            "search",
+            request as unknown as Record<string, unknown>,
+          ),
         });
       } else {
         queryClient.invalidateQueries({
-          queryKey: createQueryKey(UNIFIED_QUERY_KEYS.UNIFIED_REFERENCE, "search"),
+          queryKey: createQueryKey(
+            UNIFIED_QUERY_KEYS.UNIFIED_REFERENCE,
+            "search",
+          ),
         });
       }
     },
     invalidateNode: (nodeId: string) => {
       queryClient.invalidateQueries({
-        queryKey: createQueryKey(UNIFIED_QUERY_KEYS.UNIFIED_REFERENCE, "node", { nodeId }),
-      });
-    },
-    invalidateSources: () => {
-      queryClient.invalidateQueries({
-        queryKey: createQueryKey(UNIFIED_QUERY_KEYS.UNIFIED_REFERENCE, "sources"),
+        queryKey: createQueryKey(UNIFIED_QUERY_KEYS.UNIFIED_REFERENCE, "node", {
+          nodeId,
+        }),
       });
     },
   };
@@ -236,12 +244,16 @@ export const useInvalidateUnifiedReference = () => {
  */
 export const useSearchSuggestions = (
   query: string,
-  options?: UseQueryOptions<string[], Error>
+  options?: UseQueryOptions<string[], Error>,
 ) => {
   const queryClient = useQueryClient();
 
   return useQuery({
-    queryKey: createQueryKey(UNIFIED_QUERY_KEYS.UNIFIED_REFERENCE, "suggestions", { query }),
+    queryKey: createQueryKey(
+      UNIFIED_QUERY_KEYS.UNIFIED_REFERENCE,
+      "suggestions",
+      { query },
+    ),
     queryFn: async () => {
       // For now, return empty array since suggestions endpoint doesn't exist
       // This could be implemented to use cached search results for suggestions
@@ -251,9 +263,9 @@ export const useSearchSuggestions = (
 
       const suggestions: string[] = [];
       cachedQueries.forEach(([, data]) => {
-        if (data && typeof data === 'object' && 'results' in data) {
+        if (data && typeof data === "object" && "results" in data) {
           const searchData = data as UnifiedSearchResponse;
-          searchData.results.forEach(result => {
+          searchData.results.forEach((result) => {
             if (result.title.toLowerCase().includes(query.toLowerCase())) {
               suggestions.push(result.title);
             }
