@@ -17,11 +17,6 @@ Front-end code for the Context Studio app. This is front-end code only, the back
 - Avoid building functionality on speculation
 - Implement features only when they are needed, not when you anticipate they might be useful in the future
 
-### Open/Closed Principle
-
-- Software entities should be open for extension but closed for modification
-- Design systems so that new functionality can be added with minimal changes to existing code
-
 ## Technology Stack
 
 - **Language**: TypeScript
@@ -32,9 +27,12 @@ Front-end code for the Context Studio app. This is front-end code only, the back
 - **CSS Framework**: Tailwind CSS
 - **Icons**: Lucide React Native
 - **API Client**: Type-safe API client built with Axios and OpenAPI
+- **UI State**: Zustand for complex ui state management
 - **Testing**: Jest, React Testing Library
 
 ## Best Practices
+
+
 
 ### Code Style
 
@@ -42,12 +40,6 @@ Front-end code for the Context Studio app. This is front-end code only, the back
 - All markdown reports and summaries other than README.md should be placed in the `documentation/task_reports` directory
 - use absolute imports for components and hooks
 - Use `@/` as the base path for imports
-
-## Task Management
-
-Utilize Archon for all todo task management via the archon MCP server.
-
-Archon project ID: e0d2283c-831e-43a9-b713-9db26305aabf
 
 ### API Client Architecture
 

@@ -3,6 +3,7 @@ import spacy
 import spacy.tokens
 import concepcy
 import spacy_dbpedia_spotlight
+import sense2vec
 from spacy_wordnet.wordnet_annotator import WordnetAnnotator
 from typing import Optional
 from config import get_settings, get_config_manager
@@ -11,12 +12,12 @@ from nlp.proxy_manager import get_proxy_manager
 
 logger = get_logger(__name__)
 
-# Prevent imports which are necessary from being optimized away
+## DO NOT REMOVE THESE - needed to register custom pipeline components
 _concepcy = concepcy
 _dbpedia_spotlight = spacy_dbpedia_spotlight
-_wordnet_annotator = WordnetAnnotator
-if False:  # pragma: no cover
-    print(F"Preventing optimization of imports: {_concepcy}, {_dbpedia_spotlight}, {_wordnet_annotator}")
+_spacy_wordnet = WordnetAnnotator
+_sense2vec = sense2vec
+## DO NOT REMOVE THESE - needed to register custom pipeline components
 
 class NLPPipeline:
     """

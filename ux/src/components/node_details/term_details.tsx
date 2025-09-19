@@ -45,7 +45,8 @@ import { NlpAnalysisPanel } from "@/components/nlp/NlpAnalysisPanel";
 import { TreeChartPanel } from "@/components/panels/TreeChartPanel";
 
 import type { StructureNode } from "@/api/types/structureNodes";
-type TermRelationshipOut = components["schemas"]["TermRelationshipOut"];
+type NodeOut = components["schemas"]["NodeOut"];
+type NodeLinkOut = components["schemas"]["NodeLinkOut"];
 
 interface TermPageProps {
   term: StructureNode;
@@ -87,7 +88,7 @@ export const TermDetails: React.FC<TermPageProps> = ({ term }) => {
 
     const grouped: Record<
       string,
-      { asSource: TermRelationshipOut[]; asTarget: TermRelationshipOut[] }
+      { asSource: NodeLinkOut[]; asTarget: NodeLinkOut[] }
     > = {};
 
     relationships.forEach((rel: any) => {
@@ -109,7 +110,7 @@ export const TermDetails: React.FC<TermPageProps> = ({ term }) => {
   const termLineage = React.useMemo(() => {
     if (!termHierarchy || hierarchyLoading) {
       // Fallback to simple parent-child if hierarchy is not available
-      const lineage: TermOut[] = [];
+      const lineage: NodeOut[] = [];
       if (parentTerm) {
         lineage.push(parentTerm);
       }
@@ -131,8 +132,8 @@ export const TermDetails: React.FC<TermPageProps> = ({ term }) => {
       .filter((ancestor) => ancestor.type === "term")
       .sort((a, b) => b.distance - a.distance); // Sort by distance descending (farthest first)
 
-    // Create TermOut-like objects for ancestors
-    const ancestorTerms: TermOut[] = termAncestors.map((ancestor) => ({
+    // Create NodeOut-like objects for ancestors
+    const ancestorTerms: NodeOut[] = termAncestors.map((ancestor) => ({
       id: ancestor.id,
       title: ancestor.title,
       node_type: NodeType.TERM,
@@ -567,7 +568,7 @@ export const TermDetails: React.FC<TermPageProps> = ({ term }) => {
 
 // Edit Modal for Term
 const TermEditModal: React.FC<{
-  term: TermOut;
+  term: StructureNode;
   isOpen: boolean;
   onClose: () => void;
 }> = ({ term, isOpen, onClose }) => {

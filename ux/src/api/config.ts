@@ -56,7 +56,7 @@ export const ENDPOINTS = {
     HEALTH: "/api/llm/health",
   },
   PIPELINE_FLAVORS: "/api/pipeline-flavors",
-  NLP_REFERENCE: "/api/nlp_analysis/reference",
+  NLP_REFERENCE: "/api/reference",
   STRUCTURE_NODES: "/api/structure_nodes",
   NODE_LINKS: "/api/structure_nodes/links",
   CHANGE_EVENTS: "/api/change_events",

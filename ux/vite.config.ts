@@ -9,6 +9,10 @@ import path from "path";
 const isTest = !!process.env.VITEST;
 
 export default defineConfig({
+  server: {
+    host: true, // Listen on all network interfaces
+    port: 3001,
+  },
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "src"),

@@ -187,9 +187,53 @@ async def get_proxy_monitoring():
             "proxy_running": True,
             "stats": stats
         })
-        
+
     except Exception as e:
         logger.error(f"Error getting proxy monitoring data: {e}")
+        return JSONResponse(
+            status_code=500,
+            content={"success": False, "error": str(e)}
+        )
+
+
+@router.get("/nlp_analysis/proxy/debug")
+async def get_proxy_debug_config():
+    """
+    Get debug configuration information from the reference API buddy proxy.
+
+    Returns the actual configuration that was sent to the proxy, including
+    sanitized fields for security. This is useful for debugging configuration
+    issues and verifying that settings are applied correctly.
+    """
+    try:
+        proxy_manager = get_proxy_manager()
+
+        if not proxy_manager.is_running:
+            return JSONResponse(content={
+                "success": True,
+                "proxy_running": False,
+                "message": "Proxy is not currently running",
+                "debug_config": None
+            })
+
+        debug_config = proxy_manager.get_debug_config()
+
+        if debug_config is None:
+            return JSONResponse(content={
+                "success": True,
+                "proxy_running": True,
+                "message": "Debug configuration not available",
+                "debug_config": None
+            })
+
+        return JSONResponse(content={
+            "success": True,
+            "proxy_running": True,
+            "debug_config": debug_config
+        })
+
+    except Exception as e:
+        logger.error(f"Error getting proxy debug configuration: {e}")
         return JSONResponse(
             status_code=500,
             content={"success": False, "error": str(e)}

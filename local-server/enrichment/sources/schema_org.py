@@ -3,6 +3,7 @@
 from .base import BaseReferenceSource
 from ..models import SchemaOrgEntityResponse, SchemaOrgPropertyResponse, SchemaOrgSearchResponse
 from schema_org.manager import SchemaOrgManager
+from sqlalchemy import text
 
 
 class SchemaOrgSource(BaseReferenceSource):
@@ -26,7 +27,7 @@ class SchemaOrgSource(BaseReferenceSource):
                 session = sess_maker()
                 try:
                     # Minimal query that returns raw JSON columns; implementation may vary
-                    row = session.execute("SELECT raw FROM schema_org_entities WHERE identifier = :id", {"id": identifier}).fetchone()
+                    row = session.execute(text("SELECT raw FROM schema_org_entities WHERE identifier = :id"), {"id": identifier}).fetchone()
                     if not row:
                         return None
                     return row[0]
@@ -47,7 +48,7 @@ class SchemaOrgSource(BaseReferenceSource):
                 sess_maker = self.manager.get_session_local()
                 session = sess_maker()
                 try:
-                    row = session.execute("SELECT raw FROM schema_org_properties WHERE identifier = :id", {"id": identifier}).fetchone()
+                    row = session.execute(text("SELECT raw FROM schema_org_properties WHERE identifier = :id"), {"id": identifier}).fetchone()
                     if not row:
                         return None
                     return row[0]
@@ -72,11 +73,21 @@ class SchemaOrgSource(BaseReferenceSource):
                     sql = []
                     results = []
                     if search_type in ("entities", "both"):
-                        q = session.execute("SELECT identifier, title, definition FROM schema_org_entities_fts WHERE schema_org_entities_fts MATCH :q LIMIT :lim", {"q": query, "lim": limit}).fetchall() if session.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='schema_org_entities_fts'").fetchone() else []
+                        # Check if FTS table exists
+                        table_exists = session.execute(text("SELECT name FROM sqlite_master WHERE type='table' AND name='schema_org_entities_fts'")).fetchone()
+                        if table_exists:
+                            q = session.execute(text("SELECT identifier, title, definition FROM schema_org_entities_fts WHERE schema_org_entities_fts MATCH :q LIMIT :lim"), {"q": query, "lim": limit}).fetchall()
+                        else:
+                            q = []
                         for r in q:
                             results.append({"type": "entity", "identifier": r[0], "title": r[1], "definition": r[2], "relevance_score": 1.0})
                     if search_type in ("properties", "both"):
-                        q = session.execute("SELECT identifier, title, definition FROM schema_org_properties_fts WHERE schema_org_properties_fts MATCH :q LIMIT :lim", {"q": query, "lim": limit}).fetchall() if session.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='schema_org_properties_fts'").fetchone() else []
+                        # Check if FTS table exists
+                        table_exists = session.execute(text("SELECT name FROM sqlite_master WHERE type='table' AND name='schema_org_properties_fts'")).fetchone()
+                        if table_exists:
+                            q = session.execute(text("SELECT identifier, title, definition FROM schema_org_properties_fts WHERE schema_org_properties_fts MATCH :q LIMIT :lim"), {"q": query, "lim": limit}).fetchall()
+                        else:
+                            q = []
                         for r in q:
                             results.append({"type": "property", "identifier": r[0], "title": r[1], "definition": r[2], "relevance_score": 1.0})
                     return results

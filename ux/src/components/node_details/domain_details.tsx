@@ -37,10 +37,9 @@ import {
 } from "@/components/layout/cs_sidebar";
 import { CsMain, CsMainTitle } from "@/components/layout/cs_main";
 import type { StructureNode } from "@/api/types/structureNodes";
-import type { components } from "@/api/types/openapi";
+import type { components } from "@/api/client/types";
 
-type TermOut = components["schemas"]["TermOut"];
-type DomainOut = components["schemas"]["DomainOut"];
+type NodeOut = components["schemas"]["NodeOut"];
 
 interface DomainDetailsProps {
   domain: StructureNode;
@@ -58,11 +57,11 @@ export const DomainDetails: React.FC<DomainDetailsProps> = ({ domain }) => {
   const { parentTerms, childTerms, rootTerms } = React.useMemo(() => {
     if (!terms) return { parentTerms: [], childTerms: [], rootTerms: [] };
 
-    const parentTerms: TermOut[] = [];
-    const childTerms: TermOut[] = [];
-    const rootTerms: TermOut[] = [];
+    const parentTerms: NodeOut[] = [];
+    const childTerms: NodeOut[] = [];
+    const rootTerms: NodeOut[] = [];
 
-    terms.forEach((term: TermOut) => {
+    terms.forEach((term: NodeOut) => {
       if (term.parent_node_id && term.parent_node_id !== domain.id) {
         // This term has a parent term (not the domain), so it's a child term
         childTerms.push(term);
@@ -426,7 +425,7 @@ export const DomainDetails: React.FC<DomainDetailsProps> = ({ domain }) => {
 
 // Edit Modal for Domain
 const DomainEditModal: React.FC<{
-  domain: DomainOut;
+  domain: StructureNode;
   isOpen: boolean;
   onClose: () => void;
 }> = ({ domain, isOpen, onClose }) => {

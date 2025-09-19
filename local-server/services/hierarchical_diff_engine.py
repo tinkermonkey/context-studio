@@ -630,20 +630,62 @@ class HierarchicalDiffEngine:
                     "base_value": base_value
                 }
 
+
                 conflict = ConflictDescriptor(
                     conflict_id=conflict_id,
                     conflict_type=conflict_type,
-                    path=path,
+
+
+                    path=key,
                     local_value=local_value,
                     remote_value=remote_value,
-                    base_value=base_value,
+                    base_value=self._extract_change_value(local_change, 'before'),
                     confidence_score=confidence_score,
-                    resolution_suggestions=self._generate_conflict_resolution_suggestions(conflict_dict),
+                    resolution_suggestions=self._generate_conflict_resolution_suggestions(
+                        local_change, remote_change
+                    ),
+
                     created_at=datetime.now(timezone.utc),
                     severity=self._calculate_conflict_severity(conflict_type, confidence_score, local_value, remote_value)
                 )
 
                 conflicts.append(conflict)
+
+
+        # Check for add/remove conflicts
+        local_added = set(local_diff['structural'].get('added_keys', set()))
+        remote_removed = set(remote_diff['structural'].get('removed_keys', set()))
+        local_removed = set(local_diff['structural'].get('removed_keys', set()))
+        remote_added = set(remote_diff['structural'].get('added_keys', set()))
+        
+        # Key added locally but removed remotely
+        add_remove_conflicts = (local_added & remote_removed) | (remote_added & local_removed)
+        
+        for key in add_remove_conflicts:
+            conflict_id = hashlib.sha256(f"add_remove_conflict_{key}_{time.time()}".encode()).hexdigest()[:16]
+            
+            conflict_type = "add_remove_conflict"
+            confidence_score = 0.9  # High confidence for add/remove conflicts
+            local_value = "ADDED" if key in local_added else "REMOVED"
+            remote_value = "REMOVED" if key in remote_removed else "ADDED"
+
+            conflict = ConflictDescriptor(
+                conflict_id=conflict_id,
+                conflict_type=conflict_type,
+                path=key,
+                local_value=local_value,
+                remote_value=remote_value,
+                base_value=None,
+                confidence_score=confidence_score,
+                resolution_suggestions=[
+                    {"type": "keep_addition", "description": "Keep the added value"},
+                    {"type": "accept_removal", "description": "Accept the removal"}
+                ],
+                created_at=datetime.now(timezone.utc),
+                severity=self._calculate_conflict_severity(conflict_type, confidence_score, local_value, remote_value)
+            )
+            
+            conflicts.append(conflict)
 
         return conflicts
     

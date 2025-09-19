@@ -20,7 +20,7 @@ class WikidataSource(BaseReferenceSource):
             headers = {"Accept": "application/json" if format == "json" else "application/xml"}
             # Wikimedia requires a User-Agent identifying the application
             headers.setdefault("User-Agent", "ContextStudio/LocalServer (contact: devnull@example.com)")
-            data = {"query": query}
+            data = {"query": query, "format": format}
             response_data = await self._make_request("POST", sparql_url, data=data, headers=headers)
             return WikidataSparqlResponse(**self._create_base_response(), results=response_data)
         except Exception as e:

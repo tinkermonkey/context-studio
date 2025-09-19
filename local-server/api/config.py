@@ -83,6 +83,94 @@ async def get_configuration_schema():
         raise HTTPException(status_code=500, detail=str(e))
 
 
+# Reference Sources Configuration Endpoints
+
+
+@router.get("/reference-sources/status", response_model=ConfigResponse)
+async def get_reference_sources_status():
+    """Get status of all reference sources"""
+    try:
+        config_manager = get_config_manager()
+        enrichment_service = EnrichmentService(config_manager)
+        status = await enrichment_service.get_source_status()
+
+        # Add proxy server status
+        proxy_running = await check_proxy_running()
+        status["proxy_server"] = {
+            "enabled": config_manager.settings.proxy_server.enabled,
+            "host": config_manager.settings.proxy_server.host,
+            "port": config_manager.settings.proxy_server.port,
+            "running": proxy_running,
+        }
+
+        return ConfigResponse(success=True, data=status)
+    except Exception as e:
+        logger.error(f"Error getting reference sources status: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.get("/reference-sources", response_model=ConfigResponse)
+async def get_reference_sources_config():
+    """Get reference sources configuration"""
+    try:
+        config_manager = get_config_manager()
+        return ConfigResponse(success=True, data=config_manager.settings.reference_sources.model_dump())
+    except Exception as e:
+        logger.error(f"Error getting reference sources config: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.get("/reference-sources/{source_name}", response_model=ConfigResponse)
+async def get_reference_source_config(source_name: str):
+    """Get configuration for a specific reference source"""
+    try:
+        config_manager = get_config_manager()
+
+        # Validate source name and get configuration
+        valid_sources = ["conceptnet", "dbpedia", "dbpedia_spotlight", "wikidata", "schema_org"]
+        if source_name not in valid_sources:
+            raise HTTPException(status_code=404, detail=f"Unknown reference source: {source_name}")
+
+        source_config = getattr(config_manager.settings.reference_sources, source_name)
+        return ConfigResponse(success=True, data=source_config.model_dump())
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error getting reference source config for {source_name}: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.patch("/reference-sources/{source_name}", response_model=ConfigResponse)
+async def update_reference_source_config(source_name: str, request: ConfigUpdateRequest):
+    """Update configuration for a specific reference source"""
+    try:
+        config_manager = get_config_manager()
+
+        # Validate source name
+        valid_sources = ["conceptnet", "dbpedia", "dbpedia_spotlight", "wikidata", "schema_org"]
+        if source_name not in valid_sources:
+            raise HTTPException(status_code=404, detail=f"Unknown reference source: {source_name}")
+
+        # Update the configuration
+        path = f"reference_sources.{source_name}.{request.path}"
+        success = config_manager.set(path, request.value)
+
+        if not success:
+            raise HTTPException(status_code=500, detail="Failed to save configuration")
+
+        # Notify relevant services of the change
+        await notify_reference_source_change(source_name, request.path, request.value)
+
+        return ConfigResponse(success=True, data=request.value)
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error updating reference source config for {source_name}: {e}")
+        raise HTTPException(status_code=400, detail=str(e))
+
+
 @router.get("/{path:path}", response_model=ConfigResponse)
 async def get_configuration_value(path: str):
     """Get specific configuration value by path"""
@@ -194,91 +282,6 @@ async def reset_configuration():
         raise HTTPException(status_code=500, detail=str(e))
 
 
-# Reference Sources Configuration Endpoints
-
-
-@router.get("/reference-sources", response_model=ConfigResponse)
-async def get_reference_sources_config():
-    """Get reference sources configuration"""
-    try:
-        config_manager = get_config_manager()
-        return ConfigResponse(success=True, data=config_manager.settings.reference_sources.model_dump())
-    except Exception as e:
-        logger.error(f"Error getting reference sources config: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
-
-
-@router.get("/reference-sources/{source_name}", response_model=ConfigResponse)
-async def get_reference_source_config(source_name: str):
-    """Get configuration for a specific reference source"""
-    try:
-        config_manager = get_config_manager()
-
-        # Validate source name and get configuration
-        valid_sources = ["conceptnet", "dbpedia", "dbpedia_spotlight", "wikidata", "schema_org"]
-        if source_name not in valid_sources:
-            raise HTTPException(status_code=404, detail=f"Unknown reference source: {source_name}")
-
-        source_config = getattr(config_manager.settings.reference_sources, source_name)
-        return ConfigResponse(success=True, data=source_config.model_dump())
-
-    except HTTPException:
-        raise
-    except Exception as e:
-        logger.error(f"Error getting reference source config for {source_name}: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
-
-
-@router.patch("/reference-sources/{source_name}", response_model=ConfigResponse)
-async def update_reference_source_config(source_name: str, request: ConfigUpdateRequest):
-    """Update configuration for a specific reference source"""
-    try:
-        config_manager = get_config_manager()
-
-        # Validate source name
-        valid_sources = ["conceptnet", "dbpedia", "dbpedia_spotlight", "wikidata", "schema_org"]
-        if source_name not in valid_sources:
-            raise HTTPException(status_code=404, detail=f"Unknown reference source: {source_name}")
-
-        # Update the configuration
-        path = f"reference_sources.{source_name}.{request.path}"
-        success = config_manager.set(path, request.value)
-
-        if not success:
-            raise HTTPException(status_code=500, detail="Failed to save configuration")
-
-        # Notify relevant services of the change
-        await notify_reference_source_change(source_name, request.path, request.value)
-
-        return ConfigResponse(success=True, data=request.value)
-
-    except HTTPException:
-        raise
-    except Exception as e:
-        logger.error(f"Error updating reference source config for {source_name}: {e}")
-        raise HTTPException(status_code=400, detail=str(e))
-
-
-@router.get("/reference-sources/status", response_model=ConfigResponse)
-async def get_reference_sources_status():
-    """Get status of all reference sources"""
-    try:
-        config_manager = get_config_manager()
-        enrichment_service = EnrichmentService(config_manager)
-        status = enrichment_service.get_source_status()
-
-        # Add proxy server status
-        status["proxy_server"] = {
-            "enabled": config_manager.settings.proxy_server.enabled,
-            "host": config_manager.settings.proxy_server.host,
-            "port": config_manager.settings.proxy_server.port,
-            "running": await check_proxy_running(),  # Implementation dependent
-        }
-
-        return ConfigResponse(success=True, data=status)
-    except Exception as e:
-        logger.error(f"Error getting reference sources status: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
 
 
 # Service-specific notification handlers for reference sources
