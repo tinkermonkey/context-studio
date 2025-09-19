@@ -8,8 +8,8 @@ from ..models import DBpediaResourceResponse, DBpediaSearchResponse, DBpediaSpar
 
 class DBpediaSource(BaseReferenceSource):
     def _get_default_base_url(self) -> str:
-        settings = get_settings()
-        return settings.reference_sources.get("dbpedia", "http://dbpedia.org")
+        # Use English DBpedia lookup service for consistent language results
+        return "https://lookup.dbpedia.org"
 
     def _get_proxy_domain_key(self) -> str:
         return "dbpedia"
@@ -43,23 +43,36 @@ class DBpediaSource(BaseReferenceSource):
 
     async def search(self, query: str, limit: int = 10, offset: int = 0, format: str = "json") -> DBpediaSearchResponse:
         try:
-            search_url = f"{self._get_base_url()}/search.json"
-            params = {"q": query, "maxResults": limit, "start": offset, "format": format}
+            search_url = f"{self._get_base_url()}/api/search"
+            params = {"query": query, "maxResults": limit}
 
+            # DBpedia Lookup returns XML by default, but we can request JSON format
+            # lookup.dbpedia.org provides English results by default
+            params["format"] = "JSON"
             response_data = await self._make_request("GET", search_url, params=params)
 
             results = []
-            if isinstance(response_data, dict) and "results" in response_data:
-                for item in response_data.get("results", []):
+            # DBpedia Lookup API returns a dict with "docs" key containing a list
+            if isinstance(response_data, dict) and "docs" in response_data:
+                for item in response_data.get("docs", []):
+                    # Parse DBpedia Lookup response format
+                    # Labels come with HTML markup like <B>Apple</B>, clean them
+                    label = item.get("label", [""])[0] if item.get("label") else ""
+                    label = label.replace("<B>", "").replace("</B>", "") if label else ""
+
+                    # Comments contain descriptions
+                    description = item.get("comment", [""])[0] if item.get("comment") else ""
+                    description = description.replace("<B>", "").replace("</B>", "") if description else ""
+
                     results.append({
-                        "uri": item.get("uri", ""),
-                        "label": item.get("label", ""),
-                        "description": item.get("description"),
-                        "score": float(item.get("score", 0.0)),
-                        "types": item.get("types", []),
+                        "uri": item.get("resource", [""])[0] if item.get("resource") else "",
+                        "label": label,
+                        "description": description,
+                        "score": float(item.get("score", ["1.0"])[0]) if item.get("score") else 1.0,
+                        "types": item.get("type", []),
                     })
 
-            return DBpediaSearchResponse(**self._create_base_response(), query=query, total_results=response_data.get("totalResults", len(results)), results=results)
+            return DBpediaSearchResponse(**self._create_base_response(), query=query, total_results=len(results), results=results)
 
         except Exception as e:
             return DBpediaSearchResponse(**self._create_base_response(success=False, error=str(e)))

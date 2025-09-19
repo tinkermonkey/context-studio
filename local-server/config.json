@@ -56,7 +56,7 @@
     },
     "dbpedia": {
       "enabled": true,
-      "upstream_url": "https://dbpedia.org",
+      "upstream_url": "https://lookup.dbpedia.org",
       "use_proxy": true,
       "timeout": 30,
       "max_retries": 3,

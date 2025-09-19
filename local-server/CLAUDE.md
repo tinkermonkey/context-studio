@@ -17,10 +17,11 @@ Python server for the Context Studio (a React app built using Flowbite-React). T
 - Avoid building functionality on speculation
 - Implement features only when they are needed, not when you anticipate they might be useful in the future
 
-### Open/Closed Principle
+## Developing and debugging
 
-- Software entities should be open for extension but closed for modification
-- Design systems so that new functionality can be added with minimal changes to existing code
+- The server is typically already running locally on port 8001 and is set to reload when files are changed, it take about 10 seconds to reload. Generally you don't need to launch the server unless you've confirmed none is running
+- Server logs are available for debugging in ./logs/context_studio.log
+- This is a desktop app so configuration should not rely on environment variables and should instead be managed through the config.json file
 
 ## Technology Stack
 

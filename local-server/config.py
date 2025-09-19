@@ -99,7 +99,13 @@ class ReferenceSourceConfig(BaseModel):
 
 class ReferenceSourcesConfig(BaseModel):
     """Central configuration for all reference sources"""
-    
+
+    # Global language setting for all reference sources
+    default_language: str = Field(default="en", description="Default language code for all reference source queries")
+
+    # Global search timeout for multi-source search operations
+    search_timeout: int = Field(default=30, ge=5, le=300, description="Timeout in seconds for multi-source search operations")
+
     # Individual source configurations
     conceptnet: ReferenceSourceConfig = Field(default_factory=lambda: ReferenceSourceConfig(
         upstream_url="https://api.conceptnet.io",
@@ -107,7 +113,8 @@ class ReferenceSourcesConfig(BaseModel):
     ))
     
     dbpedia: ReferenceSourceConfig = Field(default_factory=lambda: ReferenceSourceConfig(
-        upstream_url="https://dbpedia.org",
+        upstream_url="https://lookup.dbpedia.org",
+        use_proxy=False,  # Temporarily disable proxy for testing
         rate_limit=ReferenceSourceRateLimitConfig(requests_per_hour=3600)
     ))
     
@@ -174,6 +181,7 @@ class SourceType(str, Enum):
     CONCEPTNET = "conceptnet"
     WIKIDATA = "wikidata"
     SCHEMA_ORG = "schema_org"
+    WORDNET = "wordnet"
 
 
 class SourceConfig(BaseModel):

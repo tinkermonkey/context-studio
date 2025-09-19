@@ -40,18 +40,20 @@ export function buildHierarchicalTree(input: TreeBuilderInput): HierarchyNode {
       depth: 0,
     };
 
-    // Group domains by layer_id for efficient lookup
+    // Group domains by parent_node_id (which is the layer_id for domains) for efficient lookup
     const domainsByLayer = new Map<string, any[]>();
     domains.forEach((domain: any) => {
-      if (domain.layer_id == null) {
-        console.warn("Domain missing layer_id:", domain);
+      // For domains, parent_node_id contains the layer ID
+      const layerId = domain.parent_node_id || domain.layer_id;
+      if (layerId == null) {
+        console.warn("Domain missing parent_node_id (layer_id):", domain);
         return;
       }
-      const layerId = String(domain.layer_id);
-      if (!domainsByLayer.has(layerId)) {
-        domainsByLayer.set(layerId, []);
+      const layerIdStr = String(layerId);
+      if (!domainsByLayer.has(layerIdStr)) {
+        domainsByLayer.set(layerIdStr, []);
       }
-      domainsByLayer.get(layerId)!.push(domain);
+      domainsByLayer.get(layerIdStr)!.push(domain);
     });
 
     // Build layer nodes with their domains
@@ -82,7 +84,11 @@ export function buildHierarchicalTree(input: TreeBuilderInput): HierarchyNode {
           .filter((domain: any) => domain.id != null)
           .map((domain: any) => {
             const domainTerms = terms.filter(
-              (term: any) => String(term.domain_id) === String(domain.id),
+              (term: any) => {
+                // For terms at domain level, parent_node_id should be the domain ID
+                const termParentId = term.parent_node_id || term.domain_id;
+                return String(termParentId) === String(domain.id);
+              }
             );
 
             const domainNode: HierarchyNode = {
@@ -147,9 +153,11 @@ function buildTermHierarchy(terms: any[]): {
     const termNode = termMap.get(term.id);
     if (!termNode) return;
 
-    if (term.parent_term_id && termMap.has(term.parent_term_id)) {
+    // Check if this term has a parent term (parent_node_id points to another term in this set)
+    const parentTermId = term.parent_term_id || (termMap.has(term.parent_node_id) ? term.parent_node_id : null);
+    if (parentTermId && termMap.has(parentTermId)) {
       // This term has a parent - add it to parent's children
-      const parentNode = termMap.get(term.parent_term_id)!;
+      const parentNode = termMap.get(parentTermId)!
       if (parentNode.children) {
         parentNode.children.push(termNode);
       }

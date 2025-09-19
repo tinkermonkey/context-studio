@@ -1,0 +1,57 @@
+{
+  "timestamp": "2025-09-16T18:17:56.875560+00:00Z",
+  "proxy_version": "1.0.0",
+  "security_enabled": false,
+  "configuration": {
+    "server": {
+      "host": "127.0.0.1",
+      "port": 18080
+    },
+    "cache": {
+      "database_path": "./reference_api_cache.db",
+      "max_cache_response_size": 10485760,
+      "max_cache_entries": 10000
+    },
+    "domain_mappings": {
+      "conceptnet": {
+        "upstream": "https://api.conceptnet.io"
+      },
+      "dbpedia": {
+        "upstream": "https://lookup.dbpedia.org"
+      },
+      "dbpedia_spotlight": {
+        "upstream": "https://api.dbpedia-spotlight.org/en/"
+      },
+      "wikidata": {
+        "upstream": "https://query.wikidata.org"
+      }
+    },
+    "throttling": {
+      "default_requests_per_hour": 1000,
+      "progressive_max_delay": 300,
+      "domain_limits": {
+        "conceptnet": 3600,
+        "dbpedia": 3600,
+        "dbpedia_spotlight": 3600,
+        "wikidata": 1000
+      }
+    },
+    "security": {
+      "require_secure_key": "[REDACTED]",
+      "log_security_events": false
+    },
+    "logging": {
+      "level": "INFO",
+      "enable_console": false,
+      "enable_file": true,
+      "file_path": "./logs/context_studio.log",
+      "format": "%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+      "date_format": "%Y-%m-%d %H:%M:%S",
+      "max_file_size": 10485760
+    },
+    "callbacks": {}
+  },
+  "sanitized_fields": [
+    "security.require_secure_key"
+  ]
+}

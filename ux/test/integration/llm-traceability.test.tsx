@@ -278,7 +278,10 @@ describe("LLM Traceability Integration", () => {
         };
 
         return (
-          <button onClick={handleClick} data-testid="suggestion-button">
+          <button
+            onClick={handleClick}
+            data-testid="suggestion-button"
+          >
             Accept Suggestion
           </button>
         );
