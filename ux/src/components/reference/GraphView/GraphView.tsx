@@ -1,22 +1,19 @@
 /**
  * GraphView Component
  *
- * Main graph visualization component for search results
+ * Main graph visualization component for search results using Reagraph
  */
 
-import React, { useMemo, useState, useRef, useEffect, useCallback } from "react";
-import { Alert, Spinner, Button } from "flowbite-react";
-import { Info, Play, Pause, RotateCcw, ZoomIn, ZoomOut, Maximize2 } from "lucide-react";
+import React, { useMemo, useState, useEffect, useRef } from "react";
+import { Alert, Spinner } from "flowbite-react";
+import { Info, AlertTriangle } from "lucide-react";
+import { GraphCanvas, lightTheme } from "reagraph";
 import { UnifiedNode, UnifiedSearchLink, SOURCE_METADATA } from "@/api/types/unified";
-import GraphNode from "./GraphNode";
-import GraphLink from "./GraphLink";
-import GraphPredicateNode from "./GraphPredicateNode";
-import GraphHierarchyLink from "./GraphHierarchyLink";
-import { D3LiveSimulation, NodePosition, GraphDimensions } from "./d3LiveLayout";
-import { D3TreeSimulation, HierarchyNode, HierarchyLink } from "./d3TreeLayout";
-
-// Consistent padding for zoom operations (matches d3TreeLayout.ts)
-const ZOOM_PADDING = 25;
+import {
+  buildGroupedTreeStructure,
+  convertToReagraphFormat,
+  analyzeGraphStructure
+} from "./graphUtils";
 
 interface GraphViewProps {
   results: UnifiedNode[];
@@ -25,7 +22,7 @@ interface GraphViewProps {
   isSearching?: boolean;
   width?: number;
   height?: number;
-  layoutType?: 'cluster' | 'tree';
+  layoutType?: 'cluster' | 'tree' | 'galaxy';
 }
 
 export const GraphView: React.FC<GraphViewProps> = ({
@@ -33,321 +30,219 @@ export const GraphView: React.FC<GraphViewProps> = ({
   searchLinks,
   onSelectNode,
   isSearching = false,
-  width = 800,
-  height = 600,
   layoutType = 'tree',
 }) => {
-  const svgRef = useRef<SVGSVGElement>(null);
-  const containerGroupRef = useRef<SVGGElement>(null);
-  const [hoveredNode, setHoveredNode] = useState<string | null>(null);
-  const [hoveredLink, setHoveredLink] = useState<string | null>(null);
-  // State for simulations and dynamic sizing
-  const [nodePositions, setNodePositions] = useState<NodePosition[]>([]);
-  const [simulation, setSimulation] = useState<D3LiveSimulation | D3TreeSimulation | null>(null);
-  const [isSimulationRunning, setIsSimulationRunning] = useState(false);
-  const [simulationAlpha, setSimulationAlpha] = useState(1);
-  const [allNodes, setAllNodes] = useState<HierarchyNode[]>([]);
-  const [allLinks, setAllLinks] = useState<HierarchyLink[]>([]);
-  const [dynamicHeight, setDynamicHeight] = useState<number>(height);
-  const [isResizing, setIsResizing] = useState(false);
-  const [dimensions, setDimensions] = useState<GraphDimensions>({ width, height: dynamicHeight });
+  const [layoutError, setLayoutError] = useState<string | null>(null);
+  const [currentLayoutType, setCurrentLayoutType] = useState<string>('forceDirected2d');
+  const [hoveredNode, setHoveredNode] = useState<UnifiedNode | null>(null);
+  const [tooltipPosition, setTooltipPosition] = useState<{ x: number; y: number } | null>(null);
+  const [pinnedNode, setPinnedNode] = useState<UnifiedNode | null>(null);
+  const [pinnedPosition, setPinnedPosition] = useState<{ x: number; y: number } | null>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
 
-  // Reset dynamic height when results change
-  useEffect(() => {
-    setDynamicHeight(height);
-  }, [results, height]);
-
-  // Update dimensions based on container
-  useEffect(() => {
-    const updateDimensions = () => {
-      if (svgRef.current) {
-        const rect = svgRef.current.getBoundingClientRect();
-        setDimensions({
-          width: rect.width || width,
-          height: dynamicHeight,
-        });
-      }
-    };
-
-    updateDimensions();
-    window.addEventListener('resize', updateDimensions);
-    return () => window.removeEventListener('resize', updateDimensions);
-  }, [width, dynamicHeight]);
-
-  // Calculate optimal height based on node bounding box width
-  const calculateOptimalHeight = useCallback((positions: NodePosition[]) => {
-    if (positions.length === 0) return height;
-
-    // Get all node positions and calculate bounding box
-    const nodeRadius = 25; // Approximate max node radius
-    const minX = Math.min(...positions.map(pos => pos.x)) - nodeRadius;
-    const maxX = Math.max(...positions.map(pos => pos.x)) + nodeRadius;
-    const minY = Math.min(...positions.map(pos => pos.y)) - nodeRadius;
-    const maxY = Math.max(...positions.map(pos => pos.y)) + nodeRadius;
-
-    const contentWidth = maxX - minX;
-    const contentHeight = maxY - minY;
-
-    // Calculate what height would make the content width fill the container width
-    const containerWidth = dimensions.width;
-    const widthRatio = containerWidth / contentWidth;
-    const optimalHeight = contentHeight * widthRatio;
-
-    // Add some padding and ensure reasonable bounds
-    const paddedHeight = optimalHeight + ZOOM_PADDING * 2;
-    const minHeight = 300; // Minimum height
-    const maxHeight = 1200; // Maximum height
-
-    return Math.max(minHeight, Math.min(maxHeight, paddedHeight));
-  }, [dimensions.width, height]);
-
-  // Use refs to avoid dependency loops
-  const simulationRef = useRef(simulation);
-  const dimensionsRef = useRef(dimensions);
-  const dynamicHeightRef = useRef(dynamicHeight);
-
-  useEffect(() => {
-    simulationRef.current = simulation;
-    dimensionsRef.current = dimensions;
-    dynamicHeightRef.current = dynamicHeight;
-  });
-
-  // Handle simulation end with container resize - simplified algorithm
-  const handleSimulationEnd = useCallback((positions: NodePosition[]) => {
-    // Step 1: Simulation has stopped, update state
-    setNodePositions(positions);
-    setIsSimulationRunning(false);
-    setSimulationAlpha(0);
-
-    // Step 2: Measure the fit width of the nodes and calculate new height
-    const newHeight = calculateOptimalHeight(positions);
-
-    // Step 3: Resize the graph container (svg) with new height
-    setIsResizing(true);
-    setDynamicHeight(newHeight);
-
-    // Step 4: Fit the graph to the nodes once resize animation is complete
-    setTimeout(() => {
-      setIsResizing(false);
-      const currentSim = simulationRef.current;
-      if (currentSim) {
-        currentSim.zoomToFit(positions, ZOOM_PADDING, true);
-      }
-    }, 500); // Match CSS transition duration
-  }, [calculateOptimalHeight]);
-
-  // Create and manage D3 simulation based on layout type
-  useEffect(() => {
-    if (results.length === 0) {
-      setNodePositions([]);
-      setAllNodes([]);
-      setAllLinks([]);
-      if (simulation) {
-        simulation.destroy();
-        setSimulation(null);
-      }
-      return;
-    }
-
-    // Clean up previous simulation
-    if (simulation) {
-      simulation.destroy();
-    }
-
-    let newSimulation: D3LiveSimulation | D3TreeSimulation;
-
-    if (layoutType === 'tree') {
-      // Create tree simulation with predicate grouping
-      newSimulation = new D3TreeSimulation(
-        results,
-        searchLinks,
-        dimensions,
-        {
-          linkDistance: 80,
-          linkStrength: 1,
-          chargeStrength: -300,
-          collisionRadius: 50,
-          alphaDecay: 0.02,
-          velocityDecay: 0.4,
-          onTick: (positions) => {
-            setNodePositions(positions);
-            setSimulationAlpha(newSimulation.getAlpha());
-            setIsSimulationRunning(newSimulation.isRunning());
-            // Update tree-specific data
-            if (newSimulation instanceof D3TreeSimulation) {
-              setAllNodes(newSimulation.getAllNodes());
-              setAllLinks(newSimulation.getAllLinks());
-            }
-          },
-          onEnd: (positions) => {
-            // Update tree-specific data
-            if (newSimulation instanceof D3TreeSimulation) {
-              setAllNodes(newSimulation.getAllNodes());
-              setAllLinks(newSimulation.getAllLinks());
-            }
-            handleSimulationEnd(positions);
-          }
-        }
-      );
+  // Convert data based on layout type - use grouping for tree layout
+  const { nodes, edges } = useMemo(() => {
+    if (layoutType === 'tree' && searchLinks.length > 0) {
+      // Use predicate grouping for tree layout
+      const groupedStructure = buildGroupedTreeStructure(results, searchLinks);
+      return convertToReagraphFormat(groupedStructure, SOURCE_METADATA);
     } else {
-      // Create cluster simulation
-      newSimulation = new D3LiveSimulation(
-        results,
-        searchLinks,
-        dimensions,
-        {
-          linkDistance: 150,
-          linkStrength: 0.5,
-          chargeStrength: -1500,
-          collisionRadius: 100,
-          clusterStrength: 0.08,
-          alphaDecay: 0.008,
-          velocityDecay: 0.7,
-          onTick: (positions) => {
-            setNodePositions(positions);
-            setSimulationAlpha(newSimulation.getAlpha());
-            setIsSimulationRunning(newSimulation.isRunning());
-          },
-          onEnd: (positions) => {
-            handleSimulationEnd(positions);
-          }
-        }
-      );
-      setAllNodes([]);
-      setAllLinks([]);
-    }
+      // Use simple node/edge structure for cluster and galaxy layouts
+      const simpleNodes = results.map(node => {
+        const sourceMetadata = SOURCE_METADATA[node.source] || { color: "gray" };
+        const colorMap: Record<string, string> = {
+          blue: "#3B82F6",
+          orange: "#F97316",
+          purple: "#8B5CF6",
+          red: "#EF4444",
+          gray: "#6B7280",
+        };
 
-    setSimulation(newSimulation);
-    setIsSimulationRunning(true);
-    newSimulation.start();
-
-    // Cleanup on unmount
-    return () => {
-      newSimulation.destroy();
-    };
-  }, [results, searchLinks, dimensions.width, layoutType, handleSimulationEnd]);
-
-  // Update simulation dimensions when component resizes (width only, height is managed by resize algorithm)
-  useEffect(() => {
-    if (simulation) {
-      simulation.updateDimensions({ width: dimensions.width, height: dimensions.height });
-    }
-  }, [simulation, dimensions.width]);
-
-  // Enable zoom when simulation and refs are ready
-  useEffect(() => {
-    if (simulation && svgRef.current && containerGroupRef.current) {
-      // Add a delay to ensure D3 is fully loaded and DOM is ready
-      setTimeout(() => {
-        simulation.enableZoom(svgRef.current, containerGroupRef.current);
-
-        // Initial fit to bounds
-        if (nodePositions.length > 0) {
-          setTimeout(() => {
-            simulation.zoomToFit(nodePositions, ZOOM_PADDING, false);
-          }, 200);
-        }
-      }, 100);
-    }
-  }, [simulation]);
-
-  // Initial fit when zoom is first enabled - removed to avoid conflicts with resize logic
-
-  // Create position lookup map
-  const positionMap = useMemo(() => {
-    const map = new Map<string, NodePosition>();
-    nodePositions.forEach(pos => map.set(pos.id, pos));
-    return map;
-  }, [nodePositions]);
-
-  // Filter links to only show those between visible nodes
-  const visibleLinks = useMemo(() => {
-    if (layoutType === 'tree' && allLinks.length > 0) {
-      // For tree layout, use the hierarchy links
-      return allLinks;
-    }
-    // For cluster layout, use original search links
-    const nodeIds = new Set(results.map(node => node.id));
-    return searchLinks.filter(link =>
-      nodeIds.has(link.subject) && nodeIds.has(link.object)
-    );
-  }, [results, searchLinks, layoutType, allLinks]);
-
-  // Group nodes by source for cluster visualization
-  const nodesBySource = useMemo(() => {
-    const groups = new Map<string, UnifiedNode[]>();
-    results.forEach(node => {
-      if (!groups.has(node.source)) {
-        groups.set(node.source, []);
-      }
-      groups.get(node.source)?.push(node);
-    });
-    return groups;
-  }, [results]);
-
-
-  const handleNodeClick = (node: UnifiedNode) => {
-    onSelectNode?.(node);
-  };
-
-  const handleNodeMouseEnter = (node: UnifiedNode) => {
-    setHoveredNode(node.id);
-  };
-
-  const handleNodeMouseLeave = () => {
-    setHoveredNode(null);
-  };
-
-  const handleLinkMouseEnter = (link: UnifiedSearchLink) => {
-    setHoveredLink(link.id);
-  };
-
-  const handleLinkMouseLeave = () => {
-    setHoveredLink(null);
-  };
-
-  // Simulation control functions
-  const handlePlayPause = useCallback(() => {
-    if (!simulation) return;
-
-    if (isSimulationRunning) {
-      simulation.pause();
-      setIsSimulationRunning(false);
-    } else {
-      simulation.resume();
-      setIsSimulationRunning(true);
-    }
-  }, [simulation, isSimulationRunning]);
-
-  const handleRestart = useCallback(() => {
-    if (!simulation) return;
-
-    simulation.restart();
-    setIsSimulationRunning(true);
-    setSimulationAlpha(1);
-  }, [simulation]);
-
-  // Zoom control functions
-  const handleZoomToFit = useCallback(() => {
-    if (simulation && nodePositions.length > 0) {
-      console.log('Fit button clicked, calling zoomToFit with', nodePositions.length, 'positions');
-      simulation.zoomToFit(nodePositions, ZOOM_PADDING, true); // Animated fit
-    } else {
-      console.warn('Fit button clicked but conditions not met:', {
-        simulation: !!simulation,
-        positionsLength: nodePositions.length
+        return {
+          id: node.id,
+          label: node.title || node.id,
+          fill: colorMap[sourceMetadata.color] || colorMap.gray,
+          size: 10 + (node.confidence_score || 0.5) * 10,
+          data: node // Store original node data
+        };
       });
-    }
-  }, [simulation, nodePositions]);
 
-  const handleResetZoom = useCallback(() => {
-    if (simulation) {
-      console.log('Reset zoom button clicked');
-      simulation.resetZoom();
-    } else {
-      console.warn('Reset zoom clicked but no simulation');
+      const simpleEdges = searchLinks
+        .filter(link => {
+          const nodeIds = new Set(results.map(node => node.id));
+          return nodeIds.has(link.subject) && nodeIds.has(link.object);
+        })
+        .map(link => ({
+          id: link.id,
+          source: link.subject,
+          target: link.object,
+          label: link.predicate,
+          data: link // Store original link data
+        }));
+
+      return { nodes: simpleNodes, edges: simpleEdges };
     }
-  }, [simulation]);
+  }, [results, searchLinks, layoutType]);
+
+  // Analyze graph structure to determine if hierarchical layout is suitable
+  const graphAnalysis = useMemo(() => {
+    return analyzeGraphStructure(nodes, edges);
+  }, [nodes, edges]);
+
+  // Handle node selection
+  const handleNodeClick = (node: any) => {
+    if (node.data) {
+      // For grouped structure, only handle clicks on data nodes (not predicate nodes)
+      if (layoutType === 'tree' && 'type' in node.data && node.data.type === 'predicate') {
+        // Don't handle clicks on predicate nodes
+        return;
+      }
+
+      // For grouped structure, extract the original node
+      const originalNode = layoutType === 'tree' && 'originalNode' in node.data && node.data.originalNode
+        ? node.data.originalNode
+        : node.data;
+
+      // Pin the hover card at current position
+      setPinnedNode(originalNode);
+      setPinnedPosition(tooltipPosition);
+
+      // Clear hover state since we're now pinned
+      setHoveredNode(null);
+
+      // Don't call onSelectNode immediately - only when "View Details" is clicked
+    }
+  };
+
+  // Handle mouse move for tooltips
+  const handleMouseMove = (event: React.MouseEvent) => {
+    // Get the position relative to the container
+    const rect = event.currentTarget.getBoundingClientRect();
+    const x = event.clientX - rect.left;
+    const y = event.clientY - rect.top;
+
+    // Store both viewport coordinates and container-relative coordinates
+    setTooltipPosition({
+      x: x, // Container-relative X
+      y: y, // Container-relative Y
+    });
+  };
+
+  // Smart positioning function for tooltip
+  const getTooltipStyle = (position: { x: number; y: number }) => {
+    if (!position || !containerRef.current) return {};
+
+    const containerRect = containerRef.current.getBoundingClientRect();
+    const containerWidth = containerRect.width;
+    const containerHeight = containerRect.height;
+    const tooltipWidth = 320; // w-80 = 20rem = 320px
+    const tooltipHeight = 200; // Estimated tooltip height
+    const offset = 15;
+
+    let x = position.x;
+    let y = position.y;
+    let transform = '';
+
+    // Determine horizontal positioning
+    const isNearRightEdge = x > containerWidth - tooltipWidth - offset;
+    const isNearLeftEdge = x < tooltipWidth / 2;
+
+    if (isNearRightEdge) {
+      // Position to the left of cursor
+      x = position.x - offset;
+      transform = 'translateX(-100%)';
+    } else if (isNearLeftEdge) {
+      // Position to the right of cursor
+      x = position.x + offset;
+      transform = 'translateX(0%)';
+    } else {
+      // Position centered horizontally on cursor (default)
+      x = position.x;
+      transform = 'translateX(-50%)';
+    }
+
+    // Determine vertical positioning
+    const isNearBottomEdge = y > containerHeight - tooltipHeight - offset;
+    const isNearTopEdge = y < tooltipHeight / 2;
+
+    if (isNearBottomEdge) {
+      // Position above cursor when near bottom edge
+      y = position.y - offset;
+      transform += ' translateY(-100%)';
+    } else if (isNearTopEdge) {
+      // Position below cursor when near top edge
+      y = position.y + offset;
+      transform += ' translateY(0%)';
+    } else {
+      // Default: Position below cursor (don't cover the node)
+      y = position.y + offset;
+      transform += ' translateY(0%)';
+    }
+
+    return {
+      left: x,
+      top: y,
+      transform,
+    };
+  };
+
+  // Determine layout type for Reagraph with fallback logic
+  const getLayoutType = () => {
+    switch (layoutType) {
+      case 'tree':
+        // Only use hierarchical layout if the graph structure supports it
+        if (graphAnalysis.isTreeLike && nodes.length > 1) {
+          return 'hierarchicalTd';
+        }
+        // Fallback to force-directed for non-tree structures
+        console.warn('Graph structure not suitable for tree layout, falling back to force-directed:', {
+          hasMultipleRoots: graphAnalysis.hasMultipleRoots,
+          hasCycles: graphAnalysis.hasCycles,
+          hasNoRoot: graphAnalysis.hasNoRoot,
+          nodeCount: nodes.length,
+          edgeCount: edges.length
+        });
+        return 'forceDirected2d';
+      case 'galaxy':
+        return 'radialOut2d';
+      case 'cluster':
+      default:
+        return 'forceDirected2d';
+    }
+  };
+
+  // Update layout type and clear errors when dependencies change
+  useEffect(() => {
+    setLayoutError(null);
+    const newLayoutType = getLayoutType();
+    setCurrentLayoutType(newLayoutType);
+  }, [layoutType, nodes.length, edges.length, graphAnalysis.isTreeLike, graphAnalysis.hasMultipleRoots, graphAnalysis.hasCycles, graphAnalysis.hasNoRoot]);
+
+  // Handle escape key to unpin hover card
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape' && pinnedNode) {
+        setPinnedNode(null);
+        setPinnedPosition(null);
+        setHoveredNode(null);
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [pinnedNode]);
+
+  // Error boundary for graph rendering
+  const handleGraphError = (error: Error) => {
+    console.error('Graph rendering error:', error);
+    setLayoutError(error.message);
+    // Fallback to force-directed layout
+    if (currentLayoutType !== 'forceDirected2d') {
+      setCurrentLayoutType('forceDirected2d');
+    }
+  };
 
   // Show loading state
   if (isSearching && results.length === 0) {
@@ -377,322 +272,229 @@ export const GraphView: React.FC<GraphViewProps> = ({
 
   return (
     <div className="space-y-4">
-      {/* Graph stats and controls */}
+      {/* Graph stats */}
       <div className="flex items-center justify-between text-sm text-gray-600">
         <span>
-          {results.length} node{results.length !== 1 ? 's' : ''}, {layoutType === 'tree' ? allLinks.length : visibleLinks.length} link{(layoutType === 'tree' ? allLinks.length : visibleLinks.length) !== 1 ? 's' : ''}
-          {simulation && (
-            <span className="ml-4">
-              Simulation: {isSimulationRunning ? 'Running' : 'Paused'}
-              {simulationAlpha > 0.15 && ` (${Math.round(simulationAlpha * 100)}% energy)`}
-            </span>
+          {layoutType === 'tree' && searchLinks.length > 0 ? (
+            <>
+              {results.length} data node{results.length !== 1 ? 's' : ''}, {
+                nodes.filter(n => n.data && 'type' in n.data && n.data.type === 'predicate').length
+              } predicate{nodes.filter(n => n.data && 'type' in n.data && n.data.type === 'predicate').length !== 1 ? 's' : ''}, {
+                edges.length
+              } link{edges.length !== 1 ? 's' : ''}
+            </>
+          ) : (
+            <>
+              {results.length} node{results.length !== 1 ? 's' : ''}, {edges.length} link{edges.length !== 1 ? 's' : ''}
+            </>
           )}
         </span>
 
-        <div className="flex items-center gap-2">
-          {isSearching && (
-            <span className="flex items-center gap-2">
-              <Spinner size="sm" />
-              Updating...
-            </span>
-          )}
+        {isSearching && (
+          <span className="flex items-center gap-2">
+            <Spinner size="sm" />
+            Updating...
+          </span>
+        )}
+      </div>
 
-          {simulation && (
-            <div className="flex items-center gap-1">
-              <Button
-                size="xs"
-                color="gray"
-                onClick={handlePlayPause}
-                className="flex items-center gap-1"
-              >
-                {isSimulationRunning ? <Pause className="h-3 w-3" /> : <Play className="h-3 w-3" />}
-                {isSimulationRunning ? 'Pause' : 'Play'}
-              </Button>
+      {/* Error message */}
+      {layoutError && (
+        <Alert color="warning" icon={AlertTriangle}>
+          <div className="space-y-2">
+            <p className="font-medium">Graph Layout Error</p>
+            <p className="text-sm">
+              {layoutError}. Falling back to force-directed layout.
+            </p>
+          </div>
+        </Alert>
+      )}
 
-              <Button
-                size="xs"
-                color="gray"
-                onClick={handleRestart}
-                className="flex items-center gap-1"
-              >
-                <RotateCcw className="h-3 w-3" />
-                Restart
-              </Button>
+      {/* Graph visualization */}
+      <div className="border border-gray-200 rounded-lg bg-white">
+        <div
+          ref={containerRef}
+          className="w-full aspect-square relative"
+          onMouseMove={handleMouseMove}
+          onMouseLeave={() => {
+            if (!pinnedNode) {
+              setHoveredNode(null);
+            }
+          }}
+          onClick={(e) => {
+            // Unpin if clicking on background (not on a node)
+            if (e.target === e.currentTarget) {
+              setPinnedNode(null);
+              setPinnedPosition(null);
+              setHoveredNode(null);
+            }
+          }}
+        >
+          <ErrorBoundary onError={handleGraphError}>
+            <GraphCanvas
+              nodes={nodes}
+              edges={edges}
+              theme={lightTheme}
+              layoutType={currentLayoutType as any}
+              onNodeClick={handleNodeClick}
+              onCanvasClick={() => {
+                // Unpin hover card when clicking on canvas background
+                setPinnedNode(null);
+                setPinnedPosition(null);
+                setHoveredNode(null);
+              }}
+              onNodePointerOver={(node: any) => {
+                if (node && node.data) {
+                  // For grouped structure, only show tooltips for data nodes
+                  if (layoutType === 'tree' && 'type' in node.data && node.data.type === 'predicate') {
+                    return;
+                  }
 
-              <div className="border-l border-gray-300 mx-1 h-6"></div>
+                  // For grouped structure, extract the original node
+                  const originalNode = layoutType === 'tree' && 'originalNode' in node.data && node.data.originalNode
+                    ? node.data.originalNode
+                    : node.data;
 
-              <Button
-                size="xs"
-                color="gray"
-                onClick={handleZoomToFit}
-                className="flex items-center gap-1"
-              >
-                <Maximize2 className="h-3 w-3" />
-                Fit
-              </Button>
+                  // If hovering over a different node than the pinned one, unpin and show hover
+                  if (pinnedNode && pinnedNode.id !== originalNode.id) {
+                    setPinnedNode(null);
+                    setPinnedPosition(null);
+                  }
 
-              <Button
-                size="xs"
-                color="gray"
-                onClick={handleResetZoom}
-                className="flex items-center gap-1"
-              >
-                <ZoomOut className="h-3 w-3" />
-                Reset
-              </Button>
+                  // Only show hover tooltip if not hovering over the same pinned node
+                  if (!pinnedNode || pinnedNode.id !== originalNode.id) {
+                    setHoveredNode(originalNode);
+                  }
+                }
+              }}
+              onNodePointerOut={() => {
+                // Only clear hover if there's no pinned card
+                if (!pinnedNode) {
+                  setHoveredNode(null);
+                }
+              }}
+              animated={false}
+              edgeArrowPosition="end"
+              edgeLabelPosition="above"
+              labelType="all"
+              draggable
+            />
+          </ErrorBoundary>
+
+          {/* Node Info Tooltip */}
+          {((hoveredNode && tooltipPosition) || (pinnedNode && pinnedPosition)) && (
+            <div
+              className={`absolute z-50 bg-white border border-gray-300 rounded-lg shadow-lg p-4 w-80 animate-in fade-in duration-200 ${pinnedNode ? 'pointer-events-auto' : 'pointer-events-none'}`}
+              style={getTooltipStyle((pinnedNode && pinnedPosition) || tooltipPosition!)}
+            >
+              <div className="space-y-3">
+                {(() => {
+                  const currentNode = pinnedNode || hoveredNode;
+                  if (!currentNode) return null;
+
+                  return (
+                    <>
+                      {/* Title */}
+                      <div className="font-semibold text-base text-gray-900">
+                        {currentNode.title}
+                      </div>
+
+                      {/* Image Display */}
+                      {(() => {
+                        // Check for image URL in common fields
+                        const imageUrl =
+                          currentNode.metadata?.image ||
+                          currentNode.metadata?.image_url ||
+                          currentNode.metadata?.thumbnail ||
+                          currentNode.metadata?.depiction ||
+                          currentNode.metadata?.picture ||
+                          currentNode.metadata?.photo;
+
+                        if (imageUrl && typeof imageUrl === 'string') {
+                          return (
+                            <div className="border rounded-lg overflow-hidden bg-gray-50">
+                              <img
+                                src={imageUrl}
+                                alt={currentNode.title}
+                                className="w-full h-32 object-cover"
+                                onError={(e) => {
+                                  // Hide image if it fails to load
+                                  (e.target as HTMLElement).style.display = 'none';
+                                }}
+                                loading="lazy"
+                              />
+                            </div>
+                          );
+                        }
+                        return null;
+                      })()}
+
+                      {/* Basic Info */}
+                      <div className="grid grid-cols-1 gap-1 text-xs text-gray-600">
+                        <div><span className="font-medium">ID:</span> <span className="font-mono text-xs">{currentNode.id}</span></div>
+                        <div><span className="font-medium">Source:</span> <span className="capitalize">{currentNode.source.replace('_', ' ')}</span></div>
+                        {currentNode.confidence_score && (
+                          <div><span className="font-medium">Confidence:</span> {(currentNode.confidence_score * 100).toFixed(1)}%</div>
+                        )}
+                      </div>
+
+                      {/* Definition */}
+                      {currentNode.definition && (
+                        <div className="text-xs text-gray-700 border-t pt-2">
+                          <div className="font-medium mb-1">Definition:</div>
+                          <div className="line-clamp-3">{currentNode.definition}</div>
+                        </div>
+                      )}
+
+                      {/* Action Links */}
+                      <div className="border-t pt-2 flex gap-3">
+                        {/* View Details Button */}
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            if (onSelectNode) {
+                              onSelectNode(currentNode);
+                            }
+                          }}
+                          className="inline-flex items-center gap-1 text-xs text-blue-600 hover:text-blue-800 underline font-medium"
+                        >
+                          View Details
+                          <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                          </svg>
+                        </button>
+
+                        {/* Source Link */}
+                        {currentNode.source_url && (
+                          <a
+                            href={currentNode.source_url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center gap-1 text-xs text-blue-600 hover:text-blue-800 underline font-medium"
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                            View Source
+                            <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                            </svg>
+                          </a>
+                        )}
+                      </div>
+
+                      {/* Pin indicator for pinned cards */}
+                      {pinnedNode && (
+                        <div className="text-xs text-gray-500 border-t pt-2 italic">
+                          Card pinned - Click elsewhere or press Escape to close
+                        </div>
+                      )}
+                    </>
+                  );
+                })()}
+
+              </div>
             </div>
           )}
         </div>
-      </div>
-
-      {/* Graph visualization */}
-      <div className="border border-gray-200 rounded-lg bg-white overflow-hidden">
-        <svg
-          ref={svgRef}
-          width="100%"
-          height={dynamicHeight}
-          viewBox={`0 0 ${dimensions.width} ${dynamicHeight}`}
-          className="block"
-          style={{
-            transition: isResizing ? 'height 500ms ease-in-out' : undefined,
-          }}
-        >
-          {/* Arrow markers for links */}
-          <defs>
-            <marker
-              id="arrowhead"
-              markerWidth="10"
-              markerHeight="8"
-              refX="9"
-              refY="4"
-              orient="auto"
-              markerUnits="userSpaceOnUse"
-            >
-              <polygon
-                points="0 0, 10 4, 0 8"
-                fill="#6B7280"
-                opacity="0.8"
-              />
-            </marker>
-            <marker
-              id="arrowhead-highlighted"
-              markerWidth="12"
-              markerHeight="10"
-              refX="11"
-              refY="5"
-              orient="auto"
-              markerUnits="userSpaceOnUse"
-            >
-              <polygon
-                points="0 0, 12 5, 0 10"
-                fill="#374151"
-                opacity="1"
-              />
-            </marker>
-            {/* Specific arrows for different link types */}
-            <marker
-              id="arrowhead-subject-predicate"
-              markerWidth="10"
-              markerHeight="8"
-              refX="9"
-              refY="4"
-              orient="auto"
-              markerUnits="userSpaceOnUse"
-            >
-              <polygon
-                points="0 0, 10 4, 0 8"
-                fill="#8B5CF6"
-                opacity="0.9"
-              />
-            </marker>
-            <marker
-              id="arrowhead-predicate-object"
-              markerWidth="10"
-              markerHeight="8"
-              refX="9"
-              refY="4"
-              orient="auto"
-              markerUnits="userSpaceOnUse"
-            >
-              <polygon
-                points="0 0, 10 4, 0 8"
-                fill="#06B6D4"
-                opacity="0.9"
-              />
-            </marker>
-          </defs>
-
-          {/* Container group for zoom/pan transforms */}
-          <g ref={containerGroupRef}>
-            {/* Render cluster backgrounds - hidden by default */}
-          {false && Array.from(nodesBySource.entries()).map(([source, nodes]) => {
-            if (nodes.length < 2) return null; // Don't show cluster for single nodes
-
-            // Calculate cluster center and radius
-            const positions = nodes.map(node => positionMap.get(node.id)).filter(Boolean) as NodePosition[];
-            if (positions.length === 0) return null;
-
-            const centerX = positions.reduce((sum, pos) => sum + pos.x, 0) / positions.length;
-            const centerY = positions.reduce((sum, pos) => sum + pos.y, 0) / positions.length;
-
-            // Calculate radius to encompass all nodes
-            const maxDistance = Math.max(
-              ...positions.map(pos => Math.sqrt((pos.x - centerX) ** 2 + (pos.y - centerY) ** 2))
-            );
-            const clusterRadius = maxDistance + 60; // Extra padding
-
-            const sourceMetadata = SOURCE_METADATA[source] || { color: "gray" };
-            const colorMap: Record<string, string> = {
-              blue: "#3B82F6",
-              orange: "#F97316",
-              purple: "#8B5CF6",
-              red: "#EF4444",
-              gray: "#6B7280",
-            };
-            const clusterColor = colorMap[sourceMetadata.color] || colorMap.gray;
-
-            return (
-              <circle
-                key={`cluster-${source}`}
-                cx={centerX}
-                cy={centerY}
-                r={clusterRadius}
-                fill={clusterColor}
-                fillOpacity={0.05}
-                stroke={clusterColor}
-                strokeOpacity={0.2}
-                strokeWidth={2}
-                strokeDasharray="5,5"
-                className="pointer-events-none"
-              />
-            );
-          })}
-
-          {/* Render links first (so they appear behind nodes) */}
-          {layoutType === 'tree' && allLinks.length > 0 ? (
-            // Render hierarchy links for tree layout
-            allLinks.map((link, index) => {
-              const sourcePos = positionMap.get(link.source.id);
-              const targetPos = positionMap.get(link.target.id);
-
-              if (!sourcePos || !targetPos) return null;
-
-              return (
-                <GraphHierarchyLink
-                  key={`hierarchy-${index}`}
-                  link={link}
-                  sourceX={sourcePos.x}
-                  sourceY={sourcePos.y}
-                  targetX={targetPos.x}
-                  targetY={targetPos.y}
-                  onMouseEnter={() => {/* TODO: implement hierarchy link hover */}}
-                  onMouseLeave={() => {/* TODO: implement hierarchy link hover */}}
-                  isHighlighted={false}
-                />
-              );
-            })
-          ) : (
-            // Render regular search links for cluster layout
-            visibleLinks.map(link => {
-              // Type guard to ensure we're working with UnifiedSearchLink
-              if ('subject' in link && 'object' in link && 'id' in link) {
-                const sourcePos = positionMap.get(link.subject);
-                const targetPos = positionMap.get(link.object);
-
-                if (!sourcePos || !targetPos) return null;
-
-                return (
-                  <GraphLink
-                    key={link.id}
-                    link={link}
-                    sourceX={sourcePos.x}
-                    sourceY={sourcePos.y}
-                    targetX={targetPos.x}
-                    targetY={targetPos.y}
-                    onMouseEnter={handleLinkMouseEnter}
-                    onMouseLeave={handleLinkMouseLeave}
-                    isHighlighted={hoveredLink === link.id}
-                  />
-                );
-              }
-              return null;
-            })
-          )}
-
-          {/* Render nodes */}
-          {layoutType === 'tree' && allNodes.length > 0 ? (
-            // Render all nodes (data + predicate) for tree layout
-            allNodes.map(node => {
-              const position = positionMap.get(node.id);
-              if (!position) return null;
-
-              if (node.type === 'predicate') {
-                return (
-                  <GraphPredicateNode
-                    key={node.id}
-                    node={node}
-                    x={position.x}
-                    y={position.y}
-                    radius={node.radius}
-                    onMouseEnter={() => {/* TODO: implement predicate node hover */}}
-                    onMouseLeave={() => {/* TODO: implement predicate node hover */}}
-                    isHighlighted={false}
-                  />
-                );
-              } else if (node.originalNode) {
-                // Render data nodes
-                const confidenceScore = node.originalNode.confidence_score || 0.5;
-                const baseRadius = 15 + (confidenceScore * 5);
-
-                return (
-                  <GraphNode
-                    key={node.id}
-                    node={node.originalNode}
-                    x={position.x}
-                    y={position.y}
-                    radius={baseRadius}
-                    onClick={handleNodeClick}
-                    onMouseEnter={handleNodeMouseEnter}
-                    onMouseLeave={handleNodeMouseLeave}
-                    isHighlighted={hoveredNode === node.id}
-                  />
-                );
-              }
-              return null;
-            })
-          ) : (
-            // Render original nodes for cluster layout
-            results.map(node => {
-              const position = positionMap.get(node.id);
-              if (!position) return null;
-
-              // Calculate node size based on confidence and connections for cluster layout
-              const connectionCount = layoutType === 'cluster'
-                ? visibleLinks.filter(link =>
-                    'subject' in link && 'object' in link &&
-                    (link.subject === node.id || link.object === node.id)
-                  ).length
-                : 0;
-              const confidenceScore = node.confidence_score || 0.5;
-              const baseRadius = 15 + Math.min(10, connectionCount * 2) + (confidenceScore * 5);
-
-              return (
-                <GraphNode
-                  key={node.id}
-                  node={node}
-                  x={position.x}
-                  y={position.y}
-                  radius={baseRadius}
-                  onClick={handleNodeClick}
-                  onMouseEnter={handleNodeMouseEnter}
-                  onMouseLeave={handleNodeMouseLeave}
-                  isHighlighted={hoveredNode === node.id}
-                />
-              );
-            })
-          )}
-          </g>
-        </svg>
       </div>
 
       {/* Legend */}
@@ -717,5 +519,57 @@ export const GraphView: React.FC<GraphViewProps> = ({
     </div>
   );
 };
+
+// Error Boundary Component for GraphCanvas
+interface ErrorBoundaryProps {
+  children: React.ReactNode;
+  onError: (error: Error) => void;
+}
+
+interface ErrorBoundaryState {
+  hasError: boolean;
+}
+
+class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoundaryState> {
+  constructor(props: ErrorBoundaryProps) {
+    super(props);
+    this.state = { hasError: false };
+  }
+
+  static getDerivedStateFromError(_: Error): ErrorBoundaryState {
+    return { hasError: true };
+  }
+
+  componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
+    console.error('ErrorBoundary caught an error:', error, errorInfo);
+    this.props.onError(error);
+  }
+
+  componentDidUpdate(prevProps: ErrorBoundaryProps) {
+    // Reset error state when children change (new data)
+    if (prevProps.children !== this.props.children && this.state.hasError) {
+      this.setState({ hasError: false });
+    }
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div className="flex items-center justify-center h-full">
+          <Alert color="failure" icon={AlertTriangle}>
+            <div className="space-y-2">
+              <p className="font-medium">Graph rendering failed</p>
+              <p className="text-sm">
+                An error occurred while rendering the graph. Trying fallback layout...
+              </p>
+            </div>
+          </Alert>
+        </div>
+      );
+    }
+
+    return this.props.children;
+  }
+}
 
 export default GraphView;

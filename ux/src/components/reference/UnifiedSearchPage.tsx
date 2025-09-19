@@ -5,7 +5,7 @@
  */
 
 import React, { useState } from "react";
-import { TextInput, Button, Alert, Spinner, Tabs } from "flowbite-react";
+import { TextInput, Button, Alert, Spinner, Tabs, TabItem } from "flowbite-react";
 import { Search, Info, List, Network } from "lucide-react";
 import { SearchResults } from "./UnifiedSearch";
 import { SourceSelector } from "./UnifiedSearch/SourceSelector";
@@ -138,22 +138,27 @@ export const UnifiedSearchPage: React.FC<UnifiedSearchPageProps> = ({
         {/* Results */}
         {hasSearched && (
           <Tabs aria-label="Search Results" className="mt-4 border-b border-gray-200">
-            <Tabs.Item active title="Graph View" icon={Network}>
-              <GraphView
-                results={searchResults}
-                searchLinks={searchLinks}
-                onSelectNode={handleNodeSelect}
-                isSearching={isSearching}
-              />
-            </Tabs.Item>
-            <Tabs.Item title="List View" icon={List}>
+            <TabItem active title="Graph View" icon={Network}>
+              {/* Break out of container for full-width graph */}
+              <div className="-mx-4 sm:-mx-6 lg:-mx-8 xl:-mx-12 2xl:-mx-16">
+                <div className="w-screen relative left-1/2 right-1/2 -ml-[50vw] -mr-[50vw] px-8">
+                  <GraphView
+                    results={searchResults}
+                    searchLinks={searchLinks}
+                    onSelectNode={handleNodeSelect}
+                    isSearching={isSearching}
+                  />
+                </div>
+              </div>
+            </TabItem>
+            <TabItem title="List View" icon={List}>
               <SearchResults
                 results={searchResults}
                 totalResults={totalResults}
                 onSelectNode={handleNodeSelect}
                 isSearching={isSearching}
               />
-            </Tabs.Item>
+            </TabItem>
           </Tabs>
         )}
 
