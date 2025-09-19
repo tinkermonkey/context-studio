@@ -3,12 +3,8 @@ import spacy
 import spacy.tokens
 import concepcy
 import spacy_dbpedia_spotlight
-from spacy_wordnet.wordnet_annotator import WordnetAnnotator
 import sense2vec
-import concepcy
-import spacy_dbpedia_spotlight
 from spacy_wordnet.wordnet_annotator import WordnetAnnotator
-import sense2vec
 from typing import Optional
 from config import get_settings, get_config_manager
 from utils.logger import get_logger

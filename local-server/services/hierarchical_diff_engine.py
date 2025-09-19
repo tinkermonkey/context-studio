@@ -573,30 +573,68 @@ class HierarchicalDiffEngine:
         """Identify conflicts in three-way merge using operations-based structure."""
 
         conflicts = []
-        
-        # Check for conflicts in structural changes
-        local_modified = set(local_diff['structural'].get('modified_values', {}).keys())
-        remote_modified = set(remote_diff['structural'].get('modified_values', {}).keys())
-        
-        # Same key modified in both branches
-        conflicting_keys = local_modified & remote_modified
-        
-        for key in conflicting_keys:
-            local_change = local_diff['structural']['modified_values'][key]
-            remote_change = remote_diff['structural']['modified_values'][key]
-            
-            # Check if the changes are actually different
-            if not self._changes_are_equivalent(local_change, remote_change):
-                conflict_id = hashlib.sha256(f"conflict_{key}_{time.time()}".encode()).hexdigest()[:16]
-                
-                conflict_type = self._classify_conflict_type(local_change, remote_change)
-                confidence_score = self._calculate_conflict_confidence(local_change, remote_change)
-                local_value = self._extract_change_value(local_change, 'after')
-                remote_value = self._extract_change_value(remote_change, 'after')
+
+        # Create dictionaries to map paths to operations for easier comparison
+        local_ops_by_path = {}
+        for op in local_diff.get('operations', []):
+            local_ops_by_path[op['path']] = op
+
+        remote_ops_by_path = {}
+        for op in remote_diff.get('operations', []):
+            remote_ops_by_path[op['path']] = op
+
+        # Find paths that have operations in both local and remote
+        common_paths = set(local_ops_by_path.keys()) & set(remote_ops_by_path.keys())
+
+        for path in common_paths:
+            local_op = local_ops_by_path[path]
+            remote_op = remote_ops_by_path[path]
+
+            # Check if operations conflict
+            is_conflict = False
+
+            if local_op['operation'] != remote_op['operation']:
+                # Different operations on same path is always a conflict
+                is_conflict = True
+            elif local_op['operation'] == 'modify':
+                # Same modify operation but different values
+                if local_op.get('new_value') != remote_op.get('new_value'):
+                    is_conflict = True
+            elif local_op['operation'] == 'add':
+                # Both adding but different values
+                if local_op.get('new_value') != remote_op.get('new_value'):
+                    is_conflict = True
+
+            if is_conflict:
+                conflict_id = hashlib.sha256(f"conflict_{path}_{time.time()}".encode()).hexdigest()[:16]
+
+                # Determine conflict type
+                if local_op['operation'] != remote_op['operation']:
+                    conflict_type = "operation_conflict"
+                else:
+                    conflict_type = "modification_conflict"
+
+                # Calculate confidence (higher when operations differ)
+                confidence_score = 0.95 if local_op['operation'] != remote_op['operation'] else 0.8
+
+                local_value = local_op.get('new_value', local_op.get('old_value'))
+                remote_value = remote_op.get('new_value', remote_op.get('old_value'))
+                base_value = local_op.get('old_value')  # Assuming same base for both
+
+                # Create conflict dict for resolution suggestions
+                conflict_dict = {
+                    "path": path,
+                    "type": conflict_type,
+                    "local_value": local_value,
+                    "remote_value": remote_value,
+                    "base_value": base_value
+                }
+
 
                 conflict = ConflictDescriptor(
                     conflict_id=conflict_id,
                     conflict_type=conflict_type,
+
 
                     path=key,
                     local_value=local_value,
@@ -613,7 +651,7 @@ class HierarchicalDiffEngine:
 
                 conflicts.append(conflict)
 
-        
+
         # Check for add/remove conflicts
         local_added = set(local_diff['structural'].get('added_keys', set()))
         remote_removed = set(remote_diff['structural'].get('removed_keys', set()))

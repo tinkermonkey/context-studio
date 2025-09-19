@@ -7,10 +7,7 @@
   "paths": {
     "/api/structure_nodes/": {
       "post": {
-        "tags": [
-          "structure_nodes",
-          "structure_nodes"
-        ],
+        "tags": ["structure_nodes", "structure_nodes"],
         "summary": "Create Node",
         "description": "Create a new structure_node.\n\nThis endpoint handles creation of layers, domains, and terms through\nthe unified structure_nodes interface. Type-specific validation is enforced:\n- Layers cannot have parent structure_nodes\n- Domains must have a layer parent\n- Terms must have a domain parent",
         "operationId": "create_node_api_structure_nodes__post",
@@ -58,10 +55,7 @@
         }
       },
       "get": {
-        "tags": [
-          "structure_nodes",
-          "structure_nodes"
-        ],
+        "tags": ["structure_nodes", "structure_nodes"],
         "summary": "List Nodes",
         "description": "List structure_nodes with filtering and pagination.\n\nSupports filtering by structure_node type and parent, with configurable pagination\nand sorting. This replaces the separate endpoints for layers, domains, and terms.",
         "operationId": "list_nodes_api_structure_nodes__get",
@@ -178,10 +172,7 @@
     },
     "/api/structure_nodes/find": {
       "post": {
-        "tags": [
-          "structure_nodes",
-          "structure_nodes"
-        ],
+        "tags": ["structure_nodes", "structure_nodes"],
         "summary": "Search Nodes",
         "description": "Vector search across structure_nodes.\n\nThis endpoint replaces the separate find endpoints for layers, domains, and terms.\nSupports semantic search across structure_node titles and definitions with optional\ntype filtering and configurable similarity thresholds.\n\nNote: Implementation depends on vector search infrastructure being available.",
         "operationId": "search_nodes_api_structure_nodes_find_post",
@@ -235,10 +226,7 @@
     },
     "/api/structure_nodes/links": {
       "post": {
-        "tags": [
-          "structure_nodes",
-          "structure_nodes"
-        ],
+        "tags": ["structure_nodes", "structure_nodes"],
         "summary": "Create Node Link",
         "description": "Create a new structure_node link.\n\nLinks can only be created between structure_nodes of the same type (layers to layers,\ndomains to domains, terms to terms) as per the Great Normalization requirements.",
         "operationId": "create_node_link_api_structure_nodes_links_post",
@@ -286,10 +274,7 @@
         }
       },
       "get": {
-        "tags": [
-          "structure_nodes",
-          "structure_nodes"
-        ],
+        "tags": ["structure_nodes", "structure_nodes"],
         "summary": "List Node Links",
         "description": "List structure_node links with filtering.\n\nSupports filtering by source structure_node, target structure_node, and predicate.\nReturns all relationships in the unified structure_node graph.",
         "operationId": "list_node_links_api_structure_nodes_links_get",
@@ -416,10 +401,7 @@
     },
     "/api/structure_nodes/links/{link_id}": {
       "put": {
-        "tags": [
-          "structure_nodes",
-          "structure_nodes"
-        ],
+        "tags": ["structure_nodes", "structure_nodes"],
         "summary": "Update Node Link",
         "description": "Update a structure_node link.\n\nAllows updating the predicate and predicate_id of an existing link.\nSource and target structure_nodes can also be updated if the new configuration is valid.",
         "operationId": "update_node_link_api_structure_nodes_links__link_id__put",
@@ -479,10 +461,7 @@
         }
       },
       "delete": {
-        "tags": [
-          "structure_nodes",
-          "structure_nodes"
-        ],
+        "tags": ["structure_nodes", "structure_nodes"],
         "summary": "Delete Node Link",
         "description": "Delete a structure_node link.\n\nRemoves the relationship between two structure_nodes. This operation cannot be undone.",
         "operationId": "delete_node_link_api_structure_nodes_links__link_id__delete",
@@ -527,10 +506,7 @@
     },
     "/api/structure_nodes/{node_id}": {
       "get": {
-        "tags": [
-          "structure_nodes",
-          "structure_nodes"
-        ],
+        "tags": ["structure_nodes", "structure_nodes"],
         "summary": "Get Node",
         "description": "Get a specific structure_node by ID.\n\nReturns the complete structure_node information including embeddings,\nhierarchy information, and metadata.",
         "operationId": "get_node_api_structure_nodes__node_id__get",
@@ -580,10 +556,7 @@
         }
       },
       "put": {
-        "tags": [
-          "structure_nodes",
-          "structure_nodes"
-        ],
+        "tags": ["structure_nodes", "structure_nodes"],
         "summary": "Update Node",
         "description": "Update a structure_node.\n\nSupports updating title, definition, parent relationships, and structural predicates.\nCircular reference validation is automatically enforced.",
         "operationId": "update_node_api_structure_nodes__node_id__put",
@@ -643,10 +616,7 @@
         }
       },
       "delete": {
-        "tags": [
-          "structure_nodes",
-          "structure_nodes"
-        ],
+        "tags": ["structure_nodes", "structure_nodes"],
         "summary": "Delete Node",
         "description": "Delete a structure_node and its children.\n\nThis operation cascades to all child structure_nodes and their relationships.\nUse with caution as this operation cannot be undone.",
         "operationId": "delete_node_api_structure_nodes__node_id__delete",
@@ -691,10 +661,7 @@
     },
     "/api/structure_nodes/move": {
       "post": {
-        "tags": [
-          "structure_nodes",
-          "structure_nodes"
-        ],
+        "tags": ["structure_nodes", "structure_nodes"],
         "summary": "Move Nodes",
         "description": "Move structure_nodes to a new parent location.\n\nThis endpoint supports moving multiple structure_nodes at once, with options for:\n- Moving all child structure_nodes along with parents\n- Handling title conflicts through warnings, renaming, or errors\n- Maintaining referential integrity throughout the move operation\n\nThe move operation is atomic - either all structure_nodes are moved successfully,\nor the entire operation is rolled back.",
         "operationId": "move_nodes_api_structure_nodes_move_post",
@@ -744,10 +711,7 @@
     },
     "/api/structure_nodes/{node_id}/children": {
       "get": {
-        "tags": [
-          "structure_nodes",
-          "structure_nodes"
-        ],
+        "tags": ["structure_nodes", "structure_nodes"],
         "summary": "Get Node Children",
         "description": "Get all direct children of a structure_node.\n\nUseful for building hierarchical views of the structure_node structure.",
         "operationId": "get_node_children_api_structure_nodes__node_id__children_get",
@@ -803,10 +767,7 @@
     },
     "/api/structure_nodes/{node_id}/ancestors": {
       "get": {
-        "tags": [
-          "structure_nodes",
-          "structure_nodes"
-        ],
+        "tags": ["structure_nodes", "structure_nodes"],
         "summary": "Get Node Ancestors",
         "description": "Get all ancestors of a structure_node up to the root.\n\nReturns the path from the root layer down to the specified structure_node's parent.\nUseful for breadcrumb navigation and understanding structure_node context.",
         "operationId": "get_node_ancestors_api_structure_nodes__node_id__ancestors_get",
@@ -862,9 +823,7 @@
     },
     "/api/predicates/": {
       "post": {
-        "tags": [
-          "predicates"
-        ],
+        "tags": ["predicates"],
         "summary": "Create Predicate",
         "description": "Create a new predicate.",
         "operationId": "create_predicate_api_predicates__post",
@@ -912,9 +871,7 @@
         }
       },
       "get": {
-        "tags": [
-          "predicates"
-        ],
+        "tags": ["predicates"],
         "summary": "List Predicates",
         "description": "List predicates with pagination and sorting.",
         "operationId": "list_predicates_api_predicates__get",
@@ -988,9 +945,7 @@
     },
     "/api/predicates/{id}": {
       "get": {
-        "tags": [
-          "predicates"
-        ],
+        "tags": ["predicates"],
         "summary": "Get Predicate",
         "description": "Get a predicate by ID.",
         "operationId": "get_predicate_api_predicates__id__get",
@@ -1040,9 +995,7 @@
         }
       },
       "put": {
-        "tags": [
-          "predicates"
-        ],
+        "tags": ["predicates"],
         "summary": "Update Predicate",
         "description": "Update an existing predicate.",
         "operationId": "update_predicate_api_predicates__id__put",
@@ -1102,9 +1055,7 @@
         }
       },
       "delete": {
-        "tags": [
-          "predicates"
-        ],
+        "tags": ["predicates"],
         "summary": "Delete Predicate",
         "description": "Delete a predicate.",
         "operationId": "delete_predicate_api_predicates__id__delete",
@@ -1154,9 +1105,7 @@
     },
     "/api/predicates/by-identifier/{identifier}": {
       "get": {
-        "tags": [
-          "predicates"
-        ],
+        "tags": ["predicates"],
         "summary": "Get Predicate By Identifier",
         "description": "Get a predicate by its identifier.",
         "operationId": "get_predicate_by_identifier_api_predicates_by_identifier__identifier__get",
@@ -1208,9 +1157,7 @@
     },
     "/api/predicates/conceptnet-relations": {
       "get": {
-        "tags": [
-          "predicates"
-        ],
+        "tags": ["predicates"],
         "summary": "Get Conceptnet Relations",
         "description": "Get the list of ConceptNet relations configured in the system.",
         "operationId": "get_conceptnet_relations_api_predicates_conceptnet_relations_get",
@@ -1234,9 +1181,7 @@
     },
     "/api/predicates/import-from-conceptnet": {
       "post": {
-        "tags": [
-          "predicates"
-        ],
+        "tags": ["predicates"],
         "summary": "Import Predicates From Conceptnet",
         "description": "Import predicates from ConceptNet relations.",
         "operationId": "import_predicates_from_conceptnet_api_predicates_import_from_conceptnet_post",
@@ -1300,9 +1245,7 @@
     },
     "/api/predicates/{id}/conceptnet-relation": {
       "get": {
-        "tags": [
-          "predicates"
-        ],
+        "tags": ["predicates"],
         "summary": "Get Predicate Conceptnet Relation",
         "description": "Get the ConceptNet relation for a specific predicate.",
         "operationId": "get_predicate_conceptnet_relation_api_predicates__id__conceptnet_relation_get",
@@ -1359,9 +1302,7 @@
     },
     "/api/predicates/conceptnet-mapping": {
       "get": {
-        "tags": [
-          "predicates"
-        ],
+        "tags": ["predicates"],
         "summary": "Get Conceptnet Mapping",
         "description": "Get a mapping of all predicate identifiers to their ConceptNet relations.",
         "operationId": "get_conceptnet_mapping_api_predicates_conceptnet_mapping_get",
@@ -1405,10 +1346,7 @@
     },
     "/api/versions/entities/{entity_type}/{entity_id}/versions": {
       "get": {
-        "tags": [
-          "version_management",
-          "version_management"
-        ],
+        "tags": ["version_management", "version_management"],
         "summary": "Get Entity Versions",
         "description": "Get version history for an entity.\n\nReturns all versions of the specified entity ordered by version number.",
         "operationId": "get_entity_versions_api_versions_entities__entity_type___entity_id__versions_get",
@@ -1474,10 +1412,7 @@
     },
     "/api/versions/entities/{entity_type}/{entity_id}/versions/{version_number}": {
       "get": {
-        "tags": [
-          "version_management",
-          "version_management"
-        ],
+        "tags": ["version_management", "version_management"],
         "summary": "Get Entity Version",
         "description": "Get specific version of an entity.\n\nReturns the full content and metadata for the specified version.",
         "operationId": "get_entity_version_api_versions_entities__entity_type___entity_id__versions__version_number__get",
@@ -1551,10 +1486,7 @@
     },
     "/api/versions/entities/{entity_type}/{entity_id}/rollback": {
       "post": {
-        "tags": [
-          "version_management",
-          "version_management"
-        ],
+        "tags": ["version_management", "version_management"],
         "summary": "Rollback Entity",
         "description": "Rollback entity to specific version.\n\nCreates a new version with the content from the target version.",
         "operationId": "rollback_entity_api_versions_entities__entity_type___entity_id__rollback_post",
@@ -1626,10 +1558,7 @@
     },
     "/api/versions/entities/{entity_type}/{entity_id}/diff": {
       "get": {
-        "tags": [
-          "version_management",
-          "version_management"
-        ],
+        "tags": ["version_management", "version_management"],
         "summary": "Get Working Diff",
         "description": "Get diff between working and canonical versions.\n\nShows what changes exist in the working version compared to the last committed version.",
         "operationId": "get_working_diff_api_versions_entities__entity_type___entity_id__diff_get",
@@ -1702,10 +1631,7 @@
     },
     "/api/versions/working-tree/status": {
       "get": {
-        "tags": [
-          "version_management",
-          "version_management"
-        ],
+        "tags": ["version_management", "version_management"],
         "summary": "Get Working Tree Status",
         "description": "Get working tree status.\n\nReturns summary of all entities in the working tree including staged/unstaged counts.",
         "operationId": "get_working_tree_status_api_versions_working_tree_status_get",
@@ -1745,10 +1671,7 @@
     },
     "/api/versions/working-tree/changes": {
       "get": {
-        "tags": [
-          "version_management",
-          "version_management"
-        ],
+        "tags": ["version_management", "version_management"],
         "summary": "Get Working Changes",
         "description": "Get all entities with working changes.\n\nReturns entities where the working version differs from the canonical version.",
         "operationId": "get_working_changes_api_versions_working_tree_changes_get",
@@ -1792,10 +1715,7 @@
     },
     "/api/versions/working-tree/stage": {
       "post": {
-        "tags": [
-          "version_management",
-          "version_management"
-        ],
+        "tags": ["version_management", "version_management"],
         "summary": "Stage Entity",
         "description": "Stage an entity for commit.\n\nMarks the entity as staged, meaning its changes will be included in the next commit.",
         "operationId": "stage_entity_api_versions_working_tree_stage_post",
@@ -1843,10 +1763,7 @@
     },
     "/api/versions/working-tree/unstage": {
       "post": {
-        "tags": [
-          "version_management",
-          "version_management"
-        ],
+        "tags": ["version_management", "version_management"],
         "summary": "Unstage Entity",
         "description": "Unstage an entity.\n\nRemoves the entity from the staged list, but keeps working changes.",
         "operationId": "unstage_entity_api_versions_working_tree_unstage_post",
@@ -1894,10 +1811,7 @@
     },
     "/api/versions/working-tree/commit": {
       "post": {
-        "tags": [
-          "version_management",
-          "version_management"
-        ],
+        "tags": ["version_management", "version_management"],
         "summary": "Commit Staged Changes",
         "description": "Commit all staged changes.\n\nUpdates canonical versions for all staged entities and marks them as merged.",
         "operationId": "commit_staged_changes_api_versions_working_tree_commit_post",
@@ -1951,10 +1865,7 @@
     },
     "/api/versions/working-tree/preview": {
       "get": {
-        "tags": [
-          "version_management",
-          "version_management"
-        ],
+        "tags": ["version_management", "version_management"],
         "summary": "Get Commit Preview",
         "description": "Preview what would be committed.\n\nReturns diffs for all staged entities showing what changes would be committed.",
         "operationId": "get_commit_preview_api_versions_working_tree_preview_get",
@@ -1998,10 +1909,7 @@
     },
     "/api/versions/diffs/working": {
       "get": {
-        "tags": [
-          "version_management",
-          "version_management"
-        ],
+        "tags": ["version_management", "version_management"],
         "summary": "Get All Working Diffs",
         "description": "Get diffs for all entities with working changes.\n\nReturns structured diffs showing what has changed in the working versions.",
         "operationId": "get_all_working_diffs_api_versions_diffs_working_get",
@@ -2045,10 +1953,7 @@
     },
     "/api/versions/diffs/compare": {
       "post": {
-        "tags": [
-          "version_management",
-          "version_management"
-        ],
+        "tags": ["version_management", "version_management"],
         "summary": "Compare Versions",
         "description": "Compare two specific versions of an entity.\n\nGenerates a structured diff between the specified before and after versions.",
         "operationId": "compare_versions_api_versions_diffs_compare_post",
@@ -2098,10 +2003,7 @@
     },
     "/api/versions/health": {
       "get": {
-        "tags": [
-          "version_management",
-          "version_management"
-        ],
+        "tags": ["version_management", "version_management"],
         "summary": "Get Version Management Health",
         "description": "Get version management system health status.\n\nReturns overall health, counts, and any issues detected.",
         "operationId": "get_version_management_health_api_versions_health_get",
@@ -2141,10 +2043,7 @@
     },
     "/api/versions/stats": {
       "get": {
-        "tags": [
-          "version_management",
-          "version_management"
-        ],
+        "tags": ["version_management", "version_management"],
         "summary": "Get Version Management Stats",
         "description": "Get version management system statistics.\n\nReturns detailed statistics including version counts by type and state,\nworking tree summary, recent activity, and performance metrics.",
         "operationId": "get_version_management_stats_api_versions_stats_get",
@@ -2184,10 +2083,7 @@
     },
     "/api/graph/stats": {
       "get": {
-        "tags": [
-          "graph",
-          "Graph"
-        ],
+        "tags": ["graph", "Graph"],
         "summary": "Get Graph Stats",
         "description": "Get comprehensive graph statistics from both SPARQL and NetworkX services.",
         "operationId": "get_graph_stats_api_graph_stats_get",
@@ -2229,10 +2125,7 @@
     },
     "/api/graph/refresh": {
       "post": {
-        "tags": [
-          "graph",
-          "Graph"
-        ],
+        "tags": ["graph", "Graph"],
         "summary": "Refresh Graphs",
         "description": "Refresh both SPARQL and NetworkX graphs from the database.",
         "operationId": "refresh_graphs_api_graph_refresh_post",
@@ -2276,10 +2169,7 @@
     },
     "/api/graph/sparql/query": {
       "post": {
-        "tags": [
-          "graph",
-          "Graph"
-        ],
+        "tags": ["graph", "Graph"],
         "summary": "Execute Sparql Query",
         "description": "Execute a SPARQL query against the RDF graph.",
         "operationId": "execute_sparql_query_api_graph_sparql_query_post",
@@ -2334,10 +2224,7 @@
     },
     "/api/graph/sparql/export": {
       "get": {
-        "tags": [
-          "graph",
-          "Graph"
-        ],
+        "tags": ["graph", "Graph"],
         "summary": "Export Rdf",
         "description": "Export the RDF graph in various formats.",
         "operationId": "export_rdf_api_graph_sparql_export_get",
@@ -2390,10 +2277,7 @@
     },
     "/api/graph/search/terms": {
       "get": {
-        "tags": [
-          "graph",
-          "Graph"
-        ],
+        "tags": ["graph", "Graph"],
         "summary": "Search Terms",
         "description": "Search for terms by title using SPARQL.",
         "operationId": "search_terms_api_graph_search_terms_get",
@@ -2461,10 +2345,7 @@
     },
     "/api/graph/search/analyze": {
       "post": {
-        "tags": [
-          "graph",
-          "Graph"
-        ],
+        "tags": ["graph", "Graph"],
         "summary": "Search And Analyze",
         "description": "Search for terms and provide comprehensive analysis.",
         "operationId": "search_and_analyze_api_graph_search_analyze_post",
@@ -2516,10 +2397,7 @@
     },
     "/api/graph/analytics/centrality": {
       "post": {
-        "tags": [
-          "graph",
-          "Graph"
-        ],
+        "tags": ["graph", "Graph"],
         "summary": "Calculate Centrality",
         "description": "Calculate node centrality using NetworkX algorithms.",
         "operationId": "calculate_centrality_api_graph_analytics_centrality_post",
@@ -2573,10 +2451,7 @@
     },
     "/api/graph/analytics/communities": {
       "get": {
-        "tags": [
-          "graph",
-          "Graph"
-        ],
+        "tags": ["graph", "Graph"],
         "summary": "Detect Communities",
         "description": "Detect communities in the graph using NetworkX algorithms.",
         "operationId": "detect_communities_api_graph_analytics_communities_get",
@@ -2635,10 +2510,7 @@
     },
     "/api/graph/path/shortest": {
       "post": {
-        "tags": [
-          "graph",
-          "Graph"
-        ],
+        "tags": ["graph", "Graph"],
         "summary": "Find Shortest Path",
         "description": "Find the shortest path between two structure_nodes.",
         "operationId": "find_shortest_path_api_graph_path_shortest_post",
@@ -2699,10 +2571,7 @@
     },
     "/api/graph/neighbors": {
       "post": {
-        "tags": [
-          "graph",
-          "Graph"
-        ],
+        "tags": ["graph", "Graph"],
         "summary": "Get Neighbors",
         "description": "Get neighbors of a node at specified depth.",
         "operationId": "get_neighbors_api_graph_neighbors_post",
@@ -2759,10 +2628,7 @@
     },
     "/api/graph/terms/{term_id}/related": {
       "get": {
-        "tags": [
-          "graph",
-          "Graph"
-        ],
+        "tags": ["graph", "Graph"],
         "summary": "Find Related Terms",
         "description": "Find related terms using both SPARQL and NetworkX for comprehensive results.",
         "operationId": "find_related_terms_api_graph_terms__term_id__related_get",
@@ -2825,10 +2691,7 @@
     },
     "/api/graph/terms/{term_id}/hierarchy": {
       "get": {
-        "tags": [
-          "graph",
-          "Graph"
-        ],
+        "tags": ["graph", "Graph"],
         "summary": "Get Term Hierarchy",
         "description": "Get the full hierarchy for a term (ancestors and descendants).",
         "operationId": "get_term_hierarchy_api_graph_terms__term_id__hierarchy_get",
@@ -2879,10 +2742,7 @@
     },
     "/api/graph/terms/{term_id}/info": {
       "get": {
-        "tags": [
-          "graph",
-          "Graph"
-        ],
+        "tags": ["graph", "Graph"],
         "summary": "Get Term Info",
         "description": "Get detailed information about a specific term.",
         "operationId": "get_term_info_api_graph_terms__term_id__info_get",
@@ -2940,10 +2800,7 @@
     },
     "/api/graph/domains/{domain_id}/analyze": {
       "get": {
-        "tags": [
-          "graph",
-          "Graph"
-        ],
+        "tags": ["graph", "Graph"],
         "summary": "Analyze Domain",
         "description": "Comprehensive analysis of a domain's structure.",
         "operationId": "analyze_domain_api_graph_domains__domain_id__analyze_get",
@@ -2994,10 +2851,7 @@
     },
     "/api/graph/domains/hierarchy": {
       "get": {
-        "tags": [
-          "graph",
-          "Graph"
-        ],
+        "tags": ["graph", "Graph"],
         "summary": "Get Domain Hierarchy",
         "description": "Get the domain hierarchy for a layer or all layers.",
         "operationId": "get_domain_hierarchy_api_graph_domains_hierarchy_get",
@@ -3060,10 +2914,7 @@
     },
     "/api/graph/layers/analytics": {
       "get": {
-        "tags": [
-          "graph",
-          "Graph"
-        ],
+        "tags": ["graph", "Graph"],
         "summary": "Get Layer Analytics",
         "description": "Get comprehensive analytics for a layer or all layers.",
         "operationId": "get_layer_analytics_api_graph_layers_analytics_get",
@@ -3123,10 +2974,7 @@
     },
     "/api/graph/layers/{layer_id}/info": {
       "get": {
-        "tags": [
-          "graph",
-          "Graph"
-        ],
+        "tags": ["graph", "Graph"],
         "summary": "Get Layer Info",
         "description": "Get detailed information about a specific layer.",
         "operationId": "get_layer_info_api_graph_layers__layer_id__info_get",
@@ -3184,10 +3032,7 @@
     },
     "/api/graph/domains/{domain_id}/info": {
       "get": {
-        "tags": [
-          "graph",
-          "Graph"
-        ],
+        "tags": ["graph", "Graph"],
         "summary": "Get Domain Info",
         "description": "Get detailed information about a specific domain.",
         "operationId": "get_domain_info_api_graph_domains__domain_id__info_get",
@@ -3245,10 +3090,7 @@
     },
     "/api/graph/export": {
       "get": {
-        "tags": [
-          "graph",
-          "Graph"
-        ],
+        "tags": ["graph", "Graph"],
         "summary": "Export Graph Data",
         "description": "Export comprehensive graph data in various formats.",
         "operationId": "export_graph_data_api_graph_export_get",
@@ -3300,10 +3142,7 @@
     },
     "/api/graph/examples/sparql": {
       "get": {
-        "tags": [
-          "graph",
-          "Graph"
-        ],
+        "tags": ["graph", "Graph"],
         "summary": "Get Sparql Examples",
         "description": "Get example SPARQL queries for the Context Studio graph.",
         "operationId": "get_sparql_examples_api_graph_examples_sparql_get",
@@ -3327,9 +3166,7 @@
     },
     "/api/datasets": {
       "get": {
-        "tags": [
-          "datasets"
-        ],
+        "tags": ["datasets"],
         "summary": "List Datasets",
         "description": "List all known datasets with metrics.",
         "operationId": "list_datasets_api_datasets_get",
@@ -3351,9 +3188,7 @@
         }
       },
       "post": {
-        "tags": [
-          "datasets"
-        ],
+        "tags": ["datasets"],
         "summary": "Create Dataset",
         "description": "Create a new dataset.",
         "operationId": "create_dataset_api_datasets_post",
@@ -3393,9 +3228,7 @@
     },
     "/api/datasets/active": {
       "get": {
-        "tags": [
-          "datasets"
-        ],
+        "tags": ["datasets"],
         "summary": "Get Active Dataset",
         "description": "Get currently active dataset information.",
         "operationId": "get_active_dataset_api_datasets_active_get",
@@ -3415,9 +3248,7 @@
     },
     "/api/datasets/directory": {
       "get": {
-        "tags": [
-          "datasets"
-        ],
+        "tags": ["datasets"],
         "summary": "Get Datasets Directory",
         "description": "Get the current datasets directory path.",
         "operationId": "get_datasets_directory_api_datasets_directory_get",
@@ -3433,9 +3264,7 @@
         }
       },
       "post": {
-        "tags": [
-          "datasets"
-        ],
+        "tags": ["datasets"],
         "summary": "Update Datasets Directory",
         "description": "Update the datasets directory path.",
         "operationId": "update_datasets_directory_api_datasets_directory_post",
@@ -3473,9 +3302,7 @@
     },
     "/api/datasets/startup-info": {
       "get": {
-        "tags": [
-          "datasets"
-        ],
+        "tags": ["datasets"],
         "summary": "Get Startup Info",
         "description": "Get information about which dataset will be loaded on server startup.",
         "operationId": "get_startup_info_api_datasets_startup_info_get",
@@ -3493,9 +3320,7 @@
     },
     "/api/datasets/add-existing": {
       "post": {
-        "tags": [
-          "datasets"
-        ],
+        "tags": ["datasets"],
         "summary": "Add Existing Dataset",
         "description": "Add an existing dataset file to the inventory.",
         "operationId": "add_existing_dataset_api_datasets_add_existing_post",
@@ -3535,9 +3360,7 @@
     },
     "/api/datasets/action-log": {
       "get": {
-        "tags": [
-          "datasets"
-        ],
+        "tags": ["datasets"],
         "summary": "Get Action Log",
         "description": "Get dataset action log for the specified number of days.",
         "operationId": "get_action_log_api_datasets_action_log_get",
@@ -3579,9 +3402,7 @@
     },
     "/api/datasets/{dataset_id}": {
       "get": {
-        "tags": [
-          "datasets"
-        ],
+        "tags": ["datasets"],
         "summary": "Get Dataset",
         "description": "Get dataset details and metrics.",
         "operationId": "get_dataset_api_datasets__dataset_id__get",
@@ -3620,9 +3441,7 @@
         }
       },
       "delete": {
-        "tags": [
-          "datasets"
-        ],
+        "tags": ["datasets"],
         "summary": "Delete Dataset",
         "description": "Delete a dataset.",
         "operationId": "delete_dataset_api_datasets__dataset_id__delete",
@@ -3661,9 +3480,7 @@
     },
     "/api/datasets/{dataset_id}/activate": {
       "post": {
-        "tags": [
-          "datasets"
-        ],
+        "tags": ["datasets"],
         "summary": "Activate Dataset",
         "description": "Switch to the specified dataset.",
         "operationId": "activate_dataset_api_datasets__dataset_id__activate_post",
@@ -3702,9 +3519,7 @@
     },
     "/api/datasets/{dataset_id}/forget": {
       "post": {
-        "tags": [
-          "datasets"
-        ],
+        "tags": ["datasets"],
         "summary": "Forget Dataset",
         "description": "Remove a dataset from inventory but leave the file intact.",
         "operationId": "forget_dataset_api_datasets__dataset_id__forget_post",
@@ -3743,9 +3558,7 @@
     },
     "/api/schema/status": {
       "get": {
-        "tags": [
-          "schema"
-        ],
+        "tags": ["schema"],
         "summary": "Get Schema Status",
         "description": "Get current schema version and migration status.",
         "operationId": "get_schema_status_api_schema_status_get",
@@ -3765,9 +3578,7 @@
     },
     "/api/schema/migrate": {
       "post": {
-        "tags": [
-          "schema"
-        ],
+        "tags": ["schema"],
         "summary": "Migrate Schema",
         "description": "Apply pending migrations to current dataset.",
         "operationId": "migrate_schema_api_schema_migrate_post",
@@ -3807,9 +3618,7 @@
     },
     "/api/schema/history": {
       "get": {
-        "tags": [
-          "schema"
-        ],
+        "tags": ["schema"],
         "summary": "Get Migration History",
         "description": "Get migration history for current dataset.",
         "operationId": "get_migration_history_api_schema_history_get",
@@ -3827,9 +3636,7 @@
     },
     "/api/schema/rollback/{target_version}": {
       "post": {
-        "tags": [
-          "schema"
-        ],
+        "tags": ["schema"],
         "summary": "Rollback Schema",
         "description": "Rollback schema to a specific version.",
         "operationId": "rollback_schema_api_schema_rollback__target_version__post",
@@ -3868,9 +3675,7 @@
     },
     "/api/schema/generate-migration": {
       "post": {
-        "tags": [
-          "schema"
-        ],
+        "tags": ["schema"],
         "summary": "Generate Migration",
         "description": "Generate a new migration file template.",
         "operationId": "generate_migration_api_schema_generate_migration_post",
@@ -3909,9 +3714,7 @@
     },
     "/api/config/": {
       "get": {
-        "tags": [
-          "configuration"
-        ],
+        "tags": ["configuration"],
         "summary": "Get Full Configuration",
         "description": "Get complete configuration",
         "operationId": "get_full_configuration_api_config__get",
@@ -3929,9 +3732,7 @@
         }
       },
       "patch": {
-        "tags": [
-          "configuration"
-        ],
+        "tags": ["configuration"],
         "summary": "Update Configuration",
         "description": "Update specific configuration value",
         "operationId": "update_configuration_api_config__patch",
@@ -3971,9 +3772,7 @@
     },
     "/api/config/validate": {
       "get": {
-        "tags": [
-          "configuration"
-        ],
+        "tags": ["configuration"],
         "summary": "Validate Configuration",
         "description": "Validate current configuration",
         "operationId": "validate_configuration_api_config_validate_get",
@@ -3993,9 +3792,7 @@
     },
     "/api/config/schema/": {
       "get": {
-        "tags": [
-          "configuration"
-        ],
+        "tags": ["configuration"],
         "summary": "Get Configuration Schema",
         "description": "Get configuration schema with field descriptions",
         "operationId": "get_configuration_schema_api_config_schema__get",
@@ -4015,12 +3812,22 @@
     },
     "/api/config/reference-sources/status": {
       "get": {
-        "tags": [
-          "configuration"
+        "tags": ["configuration"],
+        "summary": "Get Configuration Value",
+        "description": "Get specific configuration value by path",
+        "operationId": "get_configuration_value_api_config__path__get",
+        "parameters": [
+          {
+            "name": "path",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Path"
+            }
+          }
         ],
-        "summary": "Get Reference Sources Status",
-        "description": "Get status of all reference sources",
-        "operationId": "get_reference_sources_status_api_config_reference_sources_status_get",
+
         "responses": {
           "200": {
             "description": "Successful Response",
@@ -4031,15 +3838,59 @@
                 }
               }
             }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/config/reload": {
+      "post": {
+        "tags": ["configuration"],
+        "summary": "Reload Configuration",
+        "description": "Reload configuration from file",
+        "operationId": "reload_configuration_api_config_reload_post",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/config/reset": {
+      "post": {
+        "tags": ["configuration"],
+        "summary": "Reset Configuration",
+        "description": "Reset configuration to defaults",
+        "operationId": "reset_configuration_api_config_reset_post",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
           }
         }
       }
     },
     "/api/config/reference-sources": {
       "get": {
-        "tags": [
-          "configuration"
-        ],
+        "tags": ["configuration"],
         "summary": "Get Reference Sources Config",
         "description": "Get reference sources configuration",
         "operationId": "get_reference_sources_config_api_config_reference_sources_get",
@@ -4059,9 +3910,7 @@
     },
     "/api/config/reference-sources/{source_name}": {
       "get": {
-        "tags": [
-          "configuration"
-        ],
+        "tags": ["configuration"],
         "summary": "Get Reference Source Config",
         "description": "Get configuration for a specific reference source",
         "operationId": "get_reference_source_config_api_config_reference_sources__source_name__get",
@@ -4100,9 +3949,7 @@
         }
       },
       "patch": {
-        "tags": [
-          "configuration"
-        ],
+        "tags": ["configuration"],
         "summary": "Update Reference Source Config",
         "description": "Update configuration for a specific reference source",
         "operationId": "update_reference_source_config_api_config_reference_sources__source_name__patch",
@@ -4236,9 +4083,7 @@
     },
     "/api/schema-org/status": {
       "get": {
-        "tags": [
-          "schema-org"
-        ],
+        "tags": ["schema-org"],
         "summary": "Get Status",
         "description": "Return schema.org database status.",
         "operationId": "get_status_api_schema_org_status_get",
@@ -4258,9 +4103,7 @@
     },
     "/api/schema-org/refresh": {
       "post": {
-        "tags": [
-          "schema-org"
-        ],
+        "tags": ["schema-org"],
         "summary": "Refresh Schema Org",
         "description": "Trigger a refresh of the schema.org database.",
         "operationId": "refresh_schema_org_api_schema_org_refresh_post",
@@ -4304,9 +4147,7 @@
     },
     "/api/schema-org/entities": {
       "get": {
-        "tags": [
-          "schema-org"
-        ],
+        "tags": ["schema-org"],
         "summary": "List Entities",
         "operationId": "list_entities_api_schema_org_entities_get",
         "parameters": [
@@ -4389,9 +4230,7 @@
     },
     "/api/schema-org/entities/{identifier}": {
       "get": {
-        "tags": [
-          "schema-org"
-        ],
+        "tags": ["schema-org"],
         "summary": "Get Entity",
         "operationId": "get_entity_api_schema_org_entities__identifier__get",
         "parameters": [
@@ -4431,9 +4270,7 @@
     },
     "/api/schema-org/properties": {
       "get": {
-        "tags": [
-          "schema-org"
-        ],
+        "tags": ["schema-org"],
         "summary": "List Properties",
         "operationId": "list_properties_api_schema_org_properties_get",
         "parameters": [
@@ -4532,9 +4369,7 @@
     },
     "/api/schema-org/properties/{identifier}": {
       "get": {
-        "tags": [
-          "schema-org"
-        ],
+        "tags": ["schema-org"],
         "summary": "Get Property",
         "operationId": "get_property_api_schema_org_properties__identifier__get",
         "parameters": [
@@ -4574,9 +4409,7 @@
     },
     "/api/schema-org/search": {
       "get": {
-        "tags": [
-          "schema-org"
-        ],
+        "tags": ["schema-org"],
         "summary": "Semantic Search",
         "operationId": "semantic_search_api_schema_org_search_get",
         "parameters": [
@@ -4646,9 +4479,7 @@
     },
     "/api/nlp_analysis": {
       "post": {
-        "tags": [
-          "nlp"
-        ],
+        "tags": ["nlp"],
         "summary": "Nlp Analysis",
         "description": "Analyze text using NLP pipeline and return structured response.",
         "operationId": "nlp_analysis_api_nlp_analysis_post",
@@ -4698,9 +4529,7 @@
     },
     "/api/nlp_analysis/proxy/configure": {
       "post": {
-        "tags": [
-          "nlp"
-        ],
+        "tags": ["nlp"],
         "summary": "Configure Proxy",
         "description": "Update reference API proxy configuration and reload pipeline.",
         "operationId": "configure_proxy_api_nlp_analysis_proxy_configure_post",
@@ -4718,9 +4547,7 @@
     },
     "/api/nlp_analysis/proxy/status": {
       "get": {
-        "tags": [
-          "nlp"
-        ],
+        "tags": ["nlp"],
         "summary": "Get Proxy Status",
         "description": "Get current proxy configuration and status.",
         "operationId": "get_proxy_status_api_nlp_analysis_proxy_status_get",
@@ -4738,9 +4565,7 @@
     },
     "/api/nlp_analysis/proxy/monitor": {
       "get": {
-        "tags": [
-          "nlp"
-        ],
+        "tags": ["nlp"],
         "summary": "Get Proxy Monitoring",
         "description": "Get comprehensive monitoring statistics from the reference API buddy proxy.\n\nReturns cache stats, upstream performance, database health, proxy health,\nand throttling information when the proxy is running.",
         "operationId": "get_proxy_monitoring_api_nlp_analysis_proxy_monitor_get",
@@ -4778,9 +4603,7 @@
     },
     "/api/llm/suggest_term_definition/stream": {
       "post": {
-        "tags": [
-          "llm"
-        ],
+        "tags": ["llm"],
         "summary": "Suggest Term Definition Stream",
         "description": "Stream term definition suggestion using specified flavor with Server-Side Events",
         "operationId": "suggest_term_definition_stream_api_llm_suggest_term_definition_stream_post",
@@ -4818,9 +4641,7 @@
     },
     "/api/llm/suggest_layer_definition/stream": {
       "post": {
-        "tags": [
-          "llm"
-        ],
+        "tags": ["llm"],
         "summary": "Suggest Layer Definition Stream",
         "description": "Stream layer definition suggestion using specified flavor with Server-Side Events",
         "operationId": "suggest_layer_definition_stream_api_llm_suggest_layer_definition_stream_post",
@@ -4858,9 +4679,7 @@
     },
     "/api/llm/suggest_domain_definition/stream": {
       "post": {
-        "tags": [
-          "llm"
-        ],
+        "tags": ["llm"],
         "summary": "Suggest Domain Definition Stream",
         "description": "Stream domain definition suggestion using specified flavor with Server-Side Events",
         "operationId": "suggest_domain_definition_stream_api_llm_suggest_domain_definition_stream_post",
@@ -4898,9 +4717,7 @@
     },
     "/api/llm/suggest_term_definition": {
       "post": {
-        "tags": [
-          "llm"
-        ],
+        "tags": ["llm"],
         "summary": "Suggest Term Definition",
         "description": "Generate a term definition suggestion based on provided context using LLM.\n\nThis endpoint uses a Langchain pipeline with OpenAI GPT models to generate\ncontextually-aware term definitions based on domain context, hierarchical\nrelationships, component terms, and reference source information.\nSupports optional flavor parameter to use different LLM configurations.",
         "operationId": "suggest_term_definition_api_llm_suggest_term_definition_post",
@@ -4980,9 +4797,7 @@
     },
     "/api/llm/suggest_layer_definition": {
       "post": {
-        "tags": [
-          "llm"
-        ],
+        "tags": ["llm"],
         "summary": "Suggest Layer Definition",
         "description": "Generate a layer definition suggestion based on provided context using LLM.\n\nThis endpoint uses a Langchain pipeline with OpenAI GPT models to generate\ncontextually-aware layer definitions based on organizational context, hierarchical\nrelationships, contained domains, and layer purpose information.\nSupports optional flavor parameter to use different LLM configurations.",
         "operationId": "suggest_layer_definition_api_llm_suggest_layer_definition_post",
@@ -5062,9 +4877,7 @@
     },
     "/api/llm/suggest_domain_definition": {
       "post": {
-        "tags": [
-          "llm"
-        ],
+        "tags": ["llm"],
         "summary": "Suggest Domain Definition",
         "description": "Generate a domain definition suggestion based on provided context using LLM.\n\nThis endpoint uses a Langchain pipeline with OpenAI GPT models to generate\ncontextually-aware domain definitions based on thematic scope, hierarchical\nrelationships, contained terms, and domain boundaries information.\nSupports optional flavor parameter to use different LLM configurations.",
         "operationId": "suggest_domain_definition_api_llm_suggest_domain_definition_post",
@@ -5266,10 +5079,7 @@
     },
     "/api/llm/health": {
       "get": {
-        "tags": [
-          "llm-traceability",
-          "LLM Traceability"
-        ],
+        "tags": ["llm-traceability", "LLM Traceability"],
         "summary": "Traceability Health",
         "description": "Health check endpoint for LLM traceability service.",
         "operationId": "traceability_health_api_llm_health_get",
@@ -5291,10 +5101,7 @@
     },
     "/api/llm/record-selection": {
       "post": {
-        "tags": [
-          "llm-traceability",
-          "LLM Traceability"
-        ],
+        "tags": ["llm-traceability", "LLM Traceability"],
         "summary": "Record Selection",
         "description": "Record when a user selects an LLM suggestion.",
         "operationId": "record_selection_api_llm_record_selection_post",
@@ -5334,10 +5141,7 @@
     },
     "/api/llm/execution-analytics": {
       "get": {
-        "tags": [
-          "llm-traceability",
-          "LLM Traceability"
-        ],
+        "tags": ["llm-traceability", "LLM Traceability"],
         "summary": "Get Execution Analytics",
         "description": "Get analytics for LLM executions.",
         "operationId": "get_execution_analytics_api_llm_execution_analytics_get",
@@ -5397,10 +5201,7 @@
     },
     "/api/llm/execution-details/{execution_id}": {
       "get": {
-        "tags": [
-          "llm-traceability",
-          "LLM Traceability"
-        ],
+        "tags": ["llm-traceability", "LLM Traceability"],
         "summary": "Get Execution Details",
         "description": "Get detailed information about a specific execution.",
         "operationId": "get_execution_details_api_llm_execution_details__execution_id__get",
@@ -5443,10 +5244,7 @@
     },
     "/api/llm/execution-history": {
       "get": {
-        "tags": [
-          "llm-traceability",
-          "LLM Traceability"
-        ],
+        "tags": ["llm-traceability", "LLM Traceability"],
         "summary": "Get Execution History",
         "description": "Get execution history for a specific flavor.",
         "operationId": "get_execution_history_api_llm_execution_history_get",
@@ -5501,10 +5299,7 @@
     },
     "/api/llm/flavor-analytics/{flavor_id}": {
       "get": {
-        "tags": [
-          "llm-traceability",
-          "LLM Traceability"
-        ],
+        "tags": ["llm-traceability", "LLM Traceability"],
         "summary": "Get Flavor Analytics",
         "description": "Get analytics for a specific flavor.",
         "operationId": "get_flavor_analytics_api_llm_flavor_analytics__flavor_id__get",
@@ -5557,10 +5352,7 @@
     },
     "/api/pipeline-flavors": {
       "post": {
-        "tags": [
-          "pipeline-flavors",
-          "Pipeline Flavors"
-        ],
+        "tags": ["pipeline-flavors", "Pipeline Flavors"],
         "summary": "Create Flavor",
         "description": "Create a new pipeline flavor",
         "operationId": "create_flavor_api_pipeline_flavors_post",
@@ -5598,10 +5390,7 @@
         }
       },
       "get": {
-        "tags": [
-          "pipeline-flavors",
-          "Pipeline Flavors"
-        ],
+        "tags": ["pipeline-flavors", "Pipeline Flavors"],
         "summary": "List Flavors",
         "description": "List all flavors, optionally filtered by pipeline",
         "operationId": "list_flavors_api_pipeline_flavors_get",
@@ -5651,10 +5440,7 @@
     },
     "/api/pipeline-flavors/{flavor_id}": {
       "get": {
-        "tags": [
-          "pipeline-flavors",
-          "Pipeline Flavors"
-        ],
+        "tags": ["pipeline-flavors", "Pipeline Flavors"],
         "summary": "Get Flavor",
         "description": "Get a specific flavor by ID",
         "operationId": "get_flavor_api_pipeline_flavors__flavor_id__get",
@@ -5711,10 +5497,7 @@
         }
       },
       "put": {
-        "tags": [
-          "pipeline-flavors",
-          "Pipeline Flavors"
-        ],
+        "tags": ["pipeline-flavors", "Pipeline Flavors"],
         "summary": "Update Flavor",
         "description": "Update an existing flavor",
         "operationId": "update_flavor_api_pipeline_flavors__flavor_id__put",
@@ -5763,10 +5546,7 @@
         }
       },
       "delete": {
-        "tags": [
-          "pipeline-flavors",
-          "Pipeline Flavors"
-        ],
+        "tags": ["pipeline-flavors", "Pipeline Flavors"],
         "summary": "Delete Flavor",
         "description": "Delete a flavor",
         "operationId": "delete_flavor_api_pipeline_flavors__flavor_id__delete",
@@ -5800,10 +5580,7 @@
     },
     "/api/nlp_analysis/reference/dbpedia/resource": {
       "get": {
-        "tags": [
-          "nlp-reference",
-          "enrichment"
-        ],
+        "tags": ["nlp-reference", "enrichment"],
         "summary": "Dbpedia Get Resource",
         "description": "Retrieve structured data from a DBpedia resource URL",
         "operationId": "dbpedia_get_resource_api_nlp_analysis_reference_dbpedia_resource_get",
@@ -5857,10 +5634,7 @@
     },
     "/api/nlp_analysis/reference/dbpedia/search": {
       "get": {
-        "tags": [
-          "nlp-reference",
-          "enrichment"
-        ],
+        "tags": ["nlp-reference", "enrichment"],
         "summary": "Dbpedia Search",
         "description": "Search DBpedia using the search API",
         "operationId": "dbpedia_search_api_nlp_analysis_reference_dbpedia_search_get",
@@ -5941,10 +5715,7 @@
     },
     "/api/nlp_analysis/reference/dbpedia/sparql": {
       "post": {
-        "tags": [
-          "nlp-reference",
-          "enrichment"
-        ],
+        "tags": ["nlp-reference", "enrichment"],
         "summary": "Dbpedia Sparql",
         "description": "Execute SPARQL query against DBpedia",
         "operationId": "dbpedia_sparql_api_nlp_analysis_reference_dbpedia_sparql_post",
@@ -5984,10 +5755,7 @@
     },
     "/api/nlp_analysis/reference/conceptnet/query": {
       "get": {
-        "tags": [
-          "nlp-reference",
-          "enrichment"
-        ],
+        "tags": ["nlp-reference", "enrichment"],
         "summary": "Conceptnet Query",
         "description": "Query ConceptNet with various parameters",
         "operationId": "conceptnet_query_api_nlp_analysis_reference_conceptnet_query_get",
@@ -6118,10 +5886,7 @@
     },
     "/api/nlp_analysis/reference/conceptnet/concept/{concept_path}": {
       "get": {
-        "tags": [
-          "nlp-reference",
-          "enrichment"
-        ],
+        "tags": ["nlp-reference", "enrichment"],
         "summary": "Conceptnet Get Concept",
         "description": "Get data for a specific ConceptNet concept",
         "operationId": "conceptnet_get_concept_api_nlp_analysis_reference_conceptnet_concept__concept_path__get",
@@ -6164,10 +5929,7 @@
     },
     "/api/nlp_analysis/reference/conceptnet/related/{concept_path}": {
       "get": {
-        "tags": [
-          "nlp-reference",
-          "enrichment"
-        ],
+        "tags": ["nlp-reference", "enrichment"],
         "summary": "Conceptnet Get Related",
         "description": "Get related concepts from ConceptNet",
         "operationId": "conceptnet_get_related_api_nlp_analysis_reference_conceptnet_related__concept_path__get",
@@ -6242,10 +6004,7 @@
     },
     "/api/nlp_analysis/reference/wikidata/sparql": {
       "post": {
-        "tags": [
-          "nlp-reference",
-          "enrichment"
-        ],
+        "tags": ["nlp-reference", "enrichment"],
         "summary": "Wikidata Sparql",
         "description": "Execute SPARQL query against Wikidata",
         "operationId": "wikidata_sparql_api_nlp_analysis_reference_wikidata_sparql_post",
@@ -6285,10 +6044,7 @@
     },
     "/api/nlp_analysis/reference/wikidata/entity": {
       "get": {
-        "tags": [
-          "nlp-reference",
-          "enrichment"
-        ],
+        "tags": ["nlp-reference", "enrichment"],
         "summary": "Wikidata Get Entity",
         "description": "Get structured data for a Wikidata entity",
         "operationId": "wikidata_get_entity_api_nlp_analysis_reference_wikidata_entity_get",
@@ -6360,10 +6116,7 @@
     },
     "/api/nlp_analysis/reference/schema-org/entity/{identifier}": {
       "get": {
-        "tags": [
-          "nlp-reference",
-          "enrichment"
-        ],
+        "tags": ["nlp-reference", "enrichment"],
         "summary": "Schema Org Get Entity",
         "description": "Get Schema.org entity with properties and inheritance",
         "operationId": "schema_org_get_entity_api_nlp_analysis_reference_schema_org_entity__identifier__get",
@@ -6430,10 +6183,7 @@
     },
     "/api/nlp_analysis/reference/schema-org/property/{identifier}": {
       "get": {
-        "tags": [
-          "nlp-reference",
-          "enrichment"
-        ],
+        "tags": ["nlp-reference", "enrichment"],
         "summary": "Schema Org Get Property",
         "description": "Get Schema.org property definition and usage",
         "operationId": "schema_org_get_property_api_nlp_analysis_reference_schema_org_property__identifier__get",
@@ -6488,10 +6238,7 @@
     },
     "/api/nlp_analysis/reference/schema-org/search": {
       "get": {
-        "tags": [
-          "nlp-reference",
-          "enrichment"
-        ],
+        "tags": ["nlp-reference", "enrichment"],
         "summary": "Schema Org Search",
         "description": "Search Schema.org entities and properties",
         "operationId": "schema_org_search_api_nlp_analysis_reference_schema_org_search_get",
@@ -6725,10 +6472,7 @@
     },
     "/api/nlp_analysis/reference/health": {
       "get": {
-        "tags": [
-          "nlp-reference",
-          "enrichment"
-        ],
+        "tags": ["nlp-reference", "enrichment"],
         "summary": "Health Check",
         "description": "Check health status of all reference API sources",
         "operationId": "health_check_api_nlp_analysis_reference_health_get",
@@ -6746,10 +6490,7 @@
     },
     "/api/sync/push": {
       "post": {
-        "tags": [
-          "sync",
-          "sync"
-        ],
+        "tags": ["sync", "sync"],
         "summary": "Push Changes",
         "description": "Push local changes to S3.",
         "operationId": "push_changes_api_sync_push_post",
@@ -6799,10 +6540,7 @@
     },
     "/api/sync/pull": {
       "post": {
-        "tags": [
-          "sync",
-          "sync"
-        ],
+        "tags": ["sync", "sync"],
         "summary": "Pull Changes",
         "description": "Pull remote changes from S3.",
         "operationId": "pull_changes_api_sync_pull_post",
@@ -6852,10 +6590,7 @@
     },
     "/api/sync/status": {
       "get": {
-        "tags": [
-          "incremental-sync",
-          "incremental_sync"
-        ],
+        "tags": ["incremental-sync", "incremental_sync"],
         "summary": "Get Sync Status",
         "description": "Get current sync system status and activity.",
         "operationId": "get_sync_status_api_sync_status_get",
@@ -6895,10 +6630,7 @@
     },
     "/api/sync/test": {
       "get": {
-        "tags": [
-          "sync",
-          "sync"
-        ],
+        "tags": ["sync", "sync"],
         "summary": "Test S3 Connection",
         "description": "Test S3 connectivity.",
         "operationId": "test_s3_connection_api_sync_test_get",
@@ -6938,10 +6670,7 @@
     },
     "/admin/services/stats": {
       "get": {
-        "tags": [
-          "service-monitoring",
-          "Service Administration"
-        ],
+        "tags": ["service-monitoring", "Service Administration"],
         "summary": "Get comprehensive service factory statistics",
         "description": "Get comprehensive statistics about the service factory including:\n- Cache hit rates\n- Service creation metrics\n- Performance data\n- Cache entry details",
         "operationId": "get_service_factory_stats_admin_services_stats_get",
@@ -6963,10 +6692,7 @@
     },
     "/admin/services/performance": {
       "get": {
-        "tags": [
-          "service-monitoring",
-          "Service Administration"
-        ],
+        "tags": ["service-monitoring", "Service Administration"],
         "summary": "Get performance summary",
         "description": "Get a concise performance summary for quick monitoring:\n- Overall cache hit rate\n- Best and worst performing services\n- Total services created",
         "operationId": "get_service_factory_performance_admin_services_performance_get",
@@ -6988,10 +6714,7 @@
     },
     "/admin/services/health": {
       "get": {
-        "tags": [
-          "service-monitoring",
-          "Service Administration"
-        ],
+        "tags": ["service-monitoring", "Service Administration"],
         "summary": "Get service factory health status",
         "description": "Get health status of the service factory:\n- Overall health status\n- Identified issues\n- System metrics",
         "operationId": "get_service_factory_health_admin_services_health_get",
@@ -7013,10 +6736,7 @@
     },
     "/admin/services/cache/clear": {
       "post": {
-        "tags": [
-          "service-monitoring",
-          "Service Administration"
-        ],
+        "tags": ["service-monitoring", "Service Administration"],
         "summary": "Clear service factory cache",
         "description": "Clear all cached service entries and reset metrics.\nUse with caution - this will force recreation of all services.",
         "operationId": "clear_service_factory_cache_admin_services_cache_clear_post",
@@ -7038,10 +6758,7 @@
     },
     "/admin/services/cache/cleanup": {
       "post": {
-        "tags": [
-          "service-monitoring",
-          "Service Administration"
-        ],
+        "tags": ["service-monitoring", "Service Administration"],
         "summary": "Force cleanup of expired cache entries",
         "description": "Force cleanup of expired cache entries.\nThis is normally done automatically but can be triggered manually.",
         "operationId": "cleanup_service_factory_cache_admin_services_cache_cleanup_post",
@@ -7063,10 +6780,7 @@
     },
     "/admin/services/metrics/{service_type}": {
       "get": {
-        "tags": [
-          "service-monitoring",
-          "Service Administration"
-        ],
+        "tags": ["service-monitoring", "Service Administration"],
         "summary": "Get metrics for specific service type",
         "description": "Get detailed metrics for a specific service type.\n\nArgs:\n    service_type: The service type to get metrics for (e.g., 'node_service', 'llm_service')",
         "operationId": "get_service_type_metrics_admin_services_metrics__service_type__get",
@@ -7109,10 +6823,7 @@
     },
     "/admin/services/dashboard": {
       "get": {
-        "tags": [
-          "service-monitoring",
-          "Service Administration"
-        ],
+        "tags": ["service-monitoring", "Service Administration"],
         "summary": "Get monitoring dashboard data",
         "description": "Get comprehensive dashboard data combining stats, performance, and health.\nPerfect for monitoring dashboards and operational visibility.",
         "operationId": "get_service_factory_dashboard_admin_services_dashboard_get",
@@ -7134,10 +6845,7 @@
     },
     "/api/changesets": {
       "post": {
-        "tags": [
-          "changeset-management",
-          "changeset_management"
-        ],
+        "tags": ["changeset-management", "changeset_management"],
         "summary": "Create Changeset",
         "description": "Create a new changeset from staged or working changes.\n\nArgs:\n    request: Changeset creation request\n    changeset_manager: ChangesetManager dependency\n    \nReturns:\n    Created changeset details\n    \nRaises:\n    HTTPException: If no changes available or creation fails",
         "operationId": "create_changeset_api_changesets_post",
@@ -7205,10 +6913,7 @@
         }
       },
       "get": {
-        "tags": [
-          "changeset-management",
-          "changeset_management"
-        ],
+        "tags": ["changeset-management", "changeset_management"],
         "summary": "List Changesets",
         "description": "List changesets with optional filtering.\n\nArgs:\n    author_id: Optional author ID filter\n    state: Optional changeset state filter\n    limit: Maximum number of results\n    changeset_manager: ChangesetManager dependency\n    \nReturns:\n    List of changesets matching filters\n    \nRaises:\n    HTTPException: If invalid state provided",
         "operationId": "list_changesets_api_changesets_get",
@@ -7317,10 +7022,7 @@
     },
     "/api/changesets/{changeset_id}": {
       "get": {
-        "tags": [
-          "changeset-management",
-          "changeset_management"
-        ],
+        "tags": ["changeset-management", "changeset_management"],
         "summary": "Get Changeset",
         "description": "Get changeset details by ID.\n\nArgs:\n    changeset_id: Changeset identifier\n    changeset_manager: ChangesetManager dependency\n    \nReturns:\n    Changeset details\n    \nRaises:\n    HTTPException: If changeset not found",
         "operationId": "get_changeset_api_changesets__changeset_id__get",
@@ -7389,10 +7091,7 @@
         }
       },
       "put": {
-        "tags": [
-          "changeset-management",
-          "changeset_management"
-        ],
+        "tags": ["changeset-management", "changeset_management"],
         "summary": "Update Changeset",
         "description": "Update changeset metadata.\n\nArgs:\n    changeset_id: Changeset identifier\n    request: Update request with new values\n    changeset_manager: ChangesetManager dependency\n    \nReturns:\n    Updated changeset details\n    \nRaises:\n    HTTPException: If changeset not found or update fails",
         "operationId": "update_changeset_api_changesets__changeset_id__put",
@@ -7471,10 +7170,7 @@
         }
       },
       "delete": {
-        "tags": [
-          "changeset-management",
-          "changeset_management"
-        ],
+        "tags": ["changeset-management", "changeset_management"],
         "summary": "Delete Changeset",
         "description": "Delete a changeset.\n\nArgs:\n    changeset_id: Changeset identifier\n    changeset_manager: ChangesetManager dependency\n    \nReturns:\n    Success message\n    \nRaises:\n    HTTPException: If changeset not found or deletion fails",
         "operationId": "delete_changeset_api_changesets__changeset_id__delete",
@@ -7543,10 +7239,7 @@
     },
     "/api/changesets/{changeset_id}/push": {
       "post": {
-        "tags": [
-          "changeset-management",
-          "changeset_management"
-        ],
+        "tags": ["changeset-management", "changeset_management"],
         "summary": "Push Changeset To S3",
         "description": "Push changeset to S3 for collaboration.\n\nArgs:\n    changeset_id: Changeset identifier\n    changeset_manager: ChangesetManager dependency\n    \nReturns:\n    Success message\n    \nRaises:\n    HTTPException: If changeset not found or push fails",
         "operationId": "push_changeset_to_s3_api_changesets__changeset_id__push_post",
@@ -7615,10 +7308,7 @@
     },
     "/api/changesets/{changeset_id}/versions": {
       "get": {
-        "tags": [
-          "changeset-management",
-          "changeset_management"
-        ],
+        "tags": ["changeset-management", "changeset_management"],
         "summary": "Get Changeset Versions",
         "description": "Get version details for a changeset.\n\nArgs:\n    changeset_id: Changeset identifier\n    changeset_manager: ChangesetManager dependency\n    \nReturns:\n    Changeset version details\n    \nRaises:\n    HTTPException: If changeset not found",
         "operationId": "get_changeset_versions_api_changesets__changeset_id__versions_get",
@@ -7689,10 +7379,7 @@
     },
     "/api/proposals": {
       "post": {
-        "tags": [
-          "proposal-management",
-          "proposal_management"
-        ],
+        "tags": ["proposal-management", "proposal_management"],
         "summary": "Create Proposal",
         "description": "Create a new proposal for changeset review.\n\nArgs:\n    request: Proposal creation request\n    proposal_manager: ProposalManager dependency\n    \nReturns:\n    Created proposal details\n    \nRaises:\n    HTTPException: If validation fails or creation fails",
         "operationId": "create_proposal_api_proposals_post",
@@ -7760,10 +7447,7 @@
         }
       },
       "get": {
-        "tags": [
-          "proposal-management",
-          "proposal_management"
-        ],
+        "tags": ["proposal-management", "proposal_management"],
         "summary": "List Proposals",
         "description": "List proposals with optional filtering.\n\nArgs:\n    status: Optional proposal status filter\n    created_by: Optional creator ID filter\n    changeset_id: Optional changeset ID filter\n    limit: Maximum number of results\n    proposal_manager: ProposalManager dependency\n    \nReturns:\n    List of proposals matching filters\n    \nRaises:\n    HTTPException: If invalid status provided",
         "operationId": "list_proposals_api_proposals_get",
@@ -7890,10 +7574,7 @@
     },
     "/api/proposals/{proposal_id}": {
       "get": {
-        "tags": [
-          "proposal-management",
-          "proposal_management"
-        ],
+        "tags": ["proposal-management", "proposal_management"],
         "summary": "Get Proposal",
         "description": "Get proposal details by ID.\n\nArgs:\n    proposal_id: Proposal identifier\n    proposal_manager: ProposalManager dependency\n    \nReturns:\n    Proposal details\n    \nRaises:\n    HTTPException: If proposal not found",
         "operationId": "get_proposal_api_proposals__proposal_id__get",
@@ -7964,10 +7645,7 @@
     },
     "/api/proposals/{proposal_id}/vote": {
       "post": {
-        "tags": [
-          "proposal-management",
-          "proposal_management"
-        ],
+        "tags": ["proposal-management", "proposal_management"],
         "summary": "Vote On Proposal",
         "description": "Cast vote on a proposal.\n\nArgs:\n    proposal_id: Proposal identifier\n    request: Vote request with vote and optional comment\n    user_id: User ID of the voter\n    proposal_manager: ProposalManager dependency\n    \nReturns:\n    Vote details\n    \nRaises:\n    HTTPException: If proposal not found or vote invalid",
         "operationId": "vote_on_proposal_api_proposals__proposal_id__vote_post",
@@ -8059,10 +7737,7 @@
     },
     "/api/proposals/{proposal_id}/votes": {
       "get": {
-        "tags": [
-          "proposal-management",
-          "proposal_management"
-        ],
+        "tags": ["proposal-management", "proposal_management"],
         "summary": "Get Proposal Votes",
         "description": "Get all votes for a proposal.\n\nArgs:\n    proposal_id: Proposal identifier\n    proposal_manager: ProposalManager dependency\n    \nReturns:\n    List of votes for the proposal\n    \nRaises:\n    HTTPException: If proposal not found",
         "operationId": "get_proposal_votes_api_proposals__proposal_id__votes_get",
@@ -8133,10 +7808,7 @@
     },
     "/api/proposals/{proposal_id}/summary": {
       "get": {
-        "tags": [
-          "proposal-management",
-          "proposal_management"
-        ],
+        "tags": ["proposal-management", "proposal_management"],
         "summary": "Get Vote Summary",
         "description": "Get vote summary for a proposal.\n\nArgs:\n    proposal_id: Proposal identifier\n    proposal_manager: ProposalManager dependency\n    \nReturns:\n    Vote summary with counts\n    \nRaises:\n    HTTPException: If proposal not found",
         "operationId": "get_vote_summary_api_proposals__proposal_id__summary_get",
@@ -8207,10 +7879,7 @@
     },
     "/api/identity/register": {
       "post": {
-        "tags": [
-          "identity-management",
-          "identity_management"
-        ],
+        "tags": ["identity-management", "identity_management"],
         "summary": "Register User",
         "description": "Register a new user with email-based identity.\n\nArgs:\n    request: User registration request\n    identity_manager: IdentityManager dependency\n    \nReturns:\n    User identity and verification code\n    \nRaises:\n    HTTPException: If validation fails or registration fails",
         "operationId": "register_user_api_identity_register_post",
@@ -8280,10 +7949,7 @@
     },
     "/api/identity/verify": {
       "post": {
-        "tags": [
-          "identity-management",
-          "identity_management"
-        ],
+        "tags": ["identity-management", "identity_management"],
         "summary": "Verify Email",
         "description": "Verify user email with verification code.\n\nArgs:\n    request: Email verification request\n    identity_manager: IdentityManager dependency\n    \nReturns:\n    Success message\n    \nRaises:\n    HTTPException: If verification fails",
         "operationId": "verify_email_api_identity_verify_post",
@@ -8351,10 +8017,7 @@
     },
     "/api/identity/trust": {
       "post": {
-        "tags": [
-          "identity-management",
-          "identity_management"
-        ],
+        "tags": ["identity-management", "identity_management"],
         "summary": "Trust User",
         "description": "Establish trust relationship between users.\n\nArgs:\n    request: Trust relationship request\n    identity_manager: IdentityManager dependency\n    \nReturns:\n    Success message\n    \nRaises:\n    HTTPException: If trust establishment fails",
         "operationId": "trust_user_api_identity_trust_post",
@@ -8422,10 +8085,7 @@
     },
     "/api/identity/users/{user_id}": {
       "get": {
-        "tags": [
-          "identity-management",
-          "identity_management"
-        ],
+        "tags": ["identity-management", "identity_management"],
         "summary": "Get User",
         "description": "Get user identity by ID.\n\nArgs:\n    user_id: User identifier\n    identity_manager: IdentityManager dependency\n    \nReturns:\n    User identity details\n    \nRaises:\n    HTTPException: If user not found",
         "operationId": "get_user_api_identity_users__user_id__get",
@@ -8496,10 +8156,7 @@
     },
     "/api/identity/users/email/{email}": {
       "get": {
-        "tags": [
-          "identity-management",
-          "identity_management"
-        ],
+        "tags": ["identity-management", "identity_management"],
         "summary": "Get User By Email",
         "description": "Get user identity by email address.\n\nArgs:\n    email: Email address\n    identity_manager: IdentityManager dependency\n    \nReturns:\n    User identity details\n    \nRaises:\n    HTTPException: If user not found",
         "operationId": "get_user_by_email_api_identity_users_email__email__get",
@@ -8570,10 +8227,7 @@
     },
     "/api/identity/users": {
       "get": {
-        "tags": [
-          "identity-management",
-          "identity_management"
-        ],
+        "tags": ["identity-management", "identity_management"],
         "summary": "List Users",
         "description": "List users with optional filtering.\n\nArgs:\n    verified_only: Only return verified users\n    min_trust_level: Minimum trust level filter\n    limit: Maximum number of results\n    identity_manager: IdentityManager dependency\n    \nReturns:\n    List of user identities",
         "operationId": "list_users_api_identity_users_get",
@@ -8672,10 +8326,7 @@
     },
     "/api/identity/users/{user_id}/trust-network": {
       "get": {
-        "tags": [
-          "identity-management",
-          "identity_management"
-        ],
+        "tags": ["identity-management", "identity_management"],
         "summary": "Get Trust Network",
         "description": "Get trust network information for a user.\n\nArgs:\n    user_id: User identifier\n    identity_manager: IdentityManager dependency\n    \nReturns:\n    Trust network details\n    \nRaises:\n    HTTPException: If user not found",
         "operationId": "get_trust_network_api_identity_users__user_id__trust_network_get",
@@ -8746,9 +8397,7 @@
     },
     "/admin/database/health": {
       "get": {
-        "tags": [
-          "database-monitoring"
-        ],
+        "tags": ["database-monitoring"],
         "summary": "Enhanced Database Health Check",
         "description": "Get comprehensive health status of the enhanced database manager.",
         "operationId": "get_database_health_admin_database_health_get",
@@ -8770,9 +8419,7 @@
     },
     "/admin/database/performance": {
       "get": {
-        "tags": [
-          "database-monitoring"
-        ],
+        "tags": ["database-monitoring"],
         "summary": "Database Performance Metrics",
         "description": "Get detailed performance metrics from the enhanced database manager.",
         "operationId": "get_database_performance_metrics_admin_database_performance_get",
@@ -8794,9 +8441,7 @@
     },
     "/admin/database/engines": {
       "get": {
-        "tags": [
-          "database-monitoring"
-        ],
+        "tags": ["database-monitoring"],
         "summary": "Database Engines Status",
         "description": "Get status information for all database engines.",
         "operationId": "get_database_engines_status_admin_database_engines_get",
@@ -8818,9 +8463,7 @@
     },
     "/admin/database/metrics": {
       "get": {
-        "tags": [
-          "database-monitoring"
-        ],
+        "tags": ["database-monitoring"],
         "summary": "Connection Metrics Summary",
         "description": "Get detailed connection metrics and statistics.",
         "operationId": "get_connection_metrics_admin_database_metrics_get",
@@ -8842,9 +8485,7 @@
     },
     "/admin/database/optimize": {
       "post": {
-        "tags": [
-          "database-monitoring"
-        ],
+        "tags": ["database-monitoring"],
         "summary": "Optimize Database for Workload",
         "description": "Optimize database configuration for specific workload types.\n\nSupported workload types:\n- mixed: General purpose workload\n- read_heavy: Optimized for read operations\n- write_heavy: Optimized for write operations  \n- analytics: Optimized for analytical queries",
         "operationId": "optimize_database_for_workload_admin_database_optimize_post",
@@ -8888,9 +8529,7 @@
     },
     "/admin/database/recommendations": {
       "get": {
-        "tags": [
-          "database-monitoring"
-        ],
+        "tags": ["database-monitoring"],
         "summary": "Performance Recommendations",
         "description": "Get AI-generated performance recommendations based on current metrics.",
         "operationId": "get_performance_recommendations_admin_database_recommendations_get",
@@ -8912,9 +8551,7 @@
     },
     "/admin/database/reset-metrics": {
       "post": {
-        "tags": [
-          "database-monitoring"
-        ],
+        "tags": ["database-monitoring"],
         "summary": "Reset Performance Metrics",
         "description": "Reset all performance metrics counters.",
         "operationId": "reset_performance_metrics_admin_database_reset_metrics_post",
@@ -8936,9 +8573,7 @@
     },
     "/admin/database/environment": {
       "get": {
-        "tags": [
-          "database-monitoring"
-        ],
+        "tags": ["database-monitoring"],
         "summary": "Database Environment Configuration",
         "description": "Get current database environment configuration and optimizations.",
         "operationId": "get_environment_configuration_admin_database_environment_get",
@@ -8960,9 +8595,7 @@
     },
     "/admin/database/create-engine": {
       "post": {
-        "tags": [
-          "database-monitoring"
-        ],
+        "tags": ["database-monitoring"],
         "summary": "Create Optimized Engine",
         "description": "Create a new optimized database engine with specified configuration.",
         "operationId": "create_optimized_database_engine_admin_database_create_engine_post",
@@ -9021,9 +8654,7 @@
     },
     "/admin/database/cleanup": {
       "delete": {
-        "tags": [
-          "database-monitoring"
-        ],
+        "tags": ["database-monitoring"],
         "summary": "Cleanup Database Resources",
         "description": "Clean up all database resources and reset the manager.",
         "operationId": "cleanup_database_resources_admin_database_cleanup_delete",
@@ -9045,9 +8676,7 @@
     },
     "/admin/database/dashboard": {
       "get": {
-        "tags": [
-          "database-monitoring"
-        ],
+        "tags": ["database-monitoring"],
         "summary": "Enhanced Database Dashboard",
         "description": "Get comprehensive dashboard data for the enhanced database manager.",
         "operationId": "get_database_dashboard_admin_database_dashboard_get",
@@ -9069,9 +8698,7 @@
     },
     "/admin/events/health": {
       "get": {
-        "tags": [
-          "event-processor-monitoring"
-        ],
+        "tags": ["event-processor-monitoring"],
         "summary": "Event Processor Health Check",
         "description": "Get comprehensive health status of the event processor.",
         "operationId": "get_event_processor_health_admin_events_health_get",
@@ -9093,9 +8720,7 @@
     },
     "/admin/events/stats": {
       "get": {
-        "tags": [
-          "event-processor-monitoring"
-        ],
+        "tags": ["event-processor-monitoring"],
         "summary": "Event Processor Statistics",
         "description": "Get detailed statistics from the event processor.",
         "operationId": "get_event_processor_stats_admin_events_stats_get",
@@ -9117,9 +8742,7 @@
     },
     "/admin/events/performance": {
       "get": {
-        "tags": [
-          "event-processor-monitoring"
-        ],
+        "tags": ["event-processor-monitoring"],
         "summary": "Event Processing Performance Metrics",
         "description": "Get detailed performance metrics for event processing.",
         "operationId": "get_event_processing_performance_admin_events_performance_get",
@@ -9141,9 +8764,7 @@
     },
     "/admin/events/database": {
       "get": {
-        "tags": [
-          "event-processor-monitoring"
-        ],
+        "tags": ["event-processor-monitoring"],
         "summary": "Event Processor Database Status",
         "description": "Get database connection status for the event processor.",
         "operationId": "get_event_processor_database_status_admin_events_database_get",
@@ -9165,9 +8786,7 @@
     },
     "/admin/events/restart": {
       "post": {
-        "tags": [
-          "event-processor-monitoring"
-        ],
+        "tags": ["event-processor-monitoring"],
         "summary": "Restart Event Processor",
         "description": "Restart the event processor.",
         "operationId": "restart_event_processor_admin_events_restart_post",
@@ -9189,9 +8808,7 @@
     },
     "/admin/events/recommendations": {
       "get": {
-        "tags": [
-          "event-processor-monitoring"
-        ],
+        "tags": ["event-processor-monitoring"],
         "summary": "Event Processor Performance Recommendations",
         "description": "Get performance recommendations for the event processor.",
         "operationId": "get_event_processor_recommendations_admin_events_recommendations_get",
@@ -9213,9 +8830,7 @@
     },
     "/admin/events/dashboard": {
       "get": {
-        "tags": [
-          "event-processor-monitoring"
-        ],
+        "tags": ["event-processor-monitoring"],
         "summary": "Event Processor Dashboard",
         "description": "Get comprehensive dashboard data for event processor monitoring.",
         "operationId": "get_event_processor_dashboard_admin_events_dashboard_get",
@@ -9237,10 +8852,7 @@
     },
     "/api/conflicts/": {
       "get": {
-        "tags": [
-          "conflict-resolution",
-          "conflict_resolution"
-        ],
+        "tags": ["conflict-resolution", "conflict_resolution"],
         "summary": "List Conflicts",
         "description": "List conflicts with comprehensive filtering options.",
         "operationId": "list_conflicts_api_conflicts__get",
@@ -9419,10 +9031,7 @@
     },
     "/api/conflicts/{conflict_id}": {
       "get": {
-        "tags": [
-          "conflict-resolution",
-          "conflict_resolution"
-        ],
+        "tags": ["conflict-resolution", "conflict_resolution"],
         "summary": "Get Conflict",
         "description": "Get detailed information about a specific conflict.",
         "operationId": "get_conflict_api_conflicts__conflict_id__get",
@@ -9473,10 +9082,7 @@
     },
     "/api/conflicts/{conflict_id}/resolve": {
       "post": {
-        "tags": [
-          "conflict-resolution",
-          "conflict_resolution"
-        ],
+        "tags": ["conflict-resolution", "conflict_resolution"],
         "summary": "Resolve Conflict Manually",
         "description": "Manually resolve a specific conflict with custom resolution choice.",
         "operationId": "resolve_conflict_manually_api_conflicts__conflict_id__resolve_post",
@@ -9535,10 +9141,7 @@
     },
     "/api/conflicts/{conflict_id}/auto-resolve": {
       "post": {
-        "tags": [
-          "conflict-resolution",
-          "conflict_resolution"
-        ],
+        "tags": ["conflict-resolution", "conflict_resolution"],
         "summary": "Auto Resolve Conflict",
         "description": "Attempt automatic resolution of a conflict using intelligent algorithms.",
         "operationId": "auto_resolve_conflict_api_conflicts__conflict_id__auto_resolve_post",
@@ -9608,10 +9211,7 @@
     },
     "/api/conflicts/entity/{entity_type}/{entity_id}": {
       "get": {
-        "tags": [
-          "conflict-resolution",
-          "conflict_resolution"
-        ],
+        "tags": ["conflict-resolution", "conflict_resolution"],
         "summary": "Get Entity Conflicts",
         "description": "Get all conflicts associated with a specific entity.",
         "operationId": "get_entity_conflicts_api_conflicts_entity__entity_type___entity_id__get",
@@ -9695,10 +9295,7 @@
     },
     "/api/conflicts/detect": {
       "post": {
-        "tags": [
-          "conflict-resolution",
-          "conflict_resolution"
-        ],
+        "tags": ["conflict-resolution", "conflict_resolution"],
         "summary": "Detect Conflicts",
         "description": "Detect conflicts between local and remote entity versions.",
         "operationId": "detect_conflicts_api_conflicts_detect_post",
@@ -9752,10 +9349,7 @@
     },
     "/api/conflicts/batch-resolve": {
       "post": {
-        "tags": [
-          "conflict-resolution",
-          "conflict_resolution"
-        ],
+        "tags": ["conflict-resolution", "conflict_resolution"],
         "summary": "Batch Resolve Conflicts",
         "description": "Resolve multiple conflicts using a specified strategy.",
         "operationId": "batch_resolve_conflicts_api_conflicts_batch_resolve_post",
@@ -9803,10 +9397,7 @@
     },
     "/api/conflicts/resolution-suggestions/{conflict_id}": {
       "get": {
-        "tags": [
-          "conflict-resolution",
-          "conflict_resolution"
-        ],
+        "tags": ["conflict-resolution", "conflict_resolution"],
         "summary": "Get Resolution Suggestions",
         "description": "Get intelligent resolution suggestions for a specific conflict.",
         "operationId": "get_resolution_suggestions_api_conflicts_resolution_suggestions__conflict_id__get",
@@ -9875,10 +9466,7 @@
     },
     "/api/conflicts/analytics": {
       "get": {
-        "tags": [
-          "conflict-resolution",
-          "conflict_resolution"
-        ],
+        "tags": ["conflict-resolution", "conflict_resolution"],
         "summary": "Get Conflict Analytics",
         "description": "Get comprehensive conflict resolution analytics.",
         "operationId": "get_conflict_analytics_api_conflicts_analytics_get",
@@ -9950,10 +9538,7 @@
     },
     "/api/conflicts/health": {
       "get": {
-        "tags": [
-          "conflict-resolution",
-          "conflict_resolution"
-        ],
+        "tags": ["conflict-resolution", "conflict_resolution"],
         "summary": "Get Conflict Resolution Health",
         "description": "Get conflict resolution system health and performance metrics.",
         "operationId": "get_conflict_resolution_health_api_conflicts_health_get",
@@ -9993,10 +9578,7 @@
     },
     "/api/conflicts/resolve-strategy/prefer-local": {
       "post": {
-        "tags": [
-          "conflict-resolution",
-          "conflict_resolution"
-        ],
+        "tags": ["conflict-resolution", "conflict_resolution"],
         "summary": "Resolve Conflicts Prefer Local",
         "description": "Resolve conflicts by preferring local versions.",
         "operationId": "resolve_conflicts_prefer_local_api_conflicts_resolve_strategy_prefer_local_post",
@@ -10059,10 +9641,7 @@
     },
     "/api/conflicts/resolve-strategy/prefer-remote": {
       "post": {
-        "tags": [
-          "conflict-resolution",
-          "conflict_resolution"
-        ],
+        "tags": ["conflict-resolution", "conflict_resolution"],
         "summary": "Resolve Conflicts Prefer Remote",
         "description": "Resolve conflicts by preferring remote versions.",
         "operationId": "resolve_conflicts_prefer_remote_api_conflicts_resolve_strategy_prefer_remote_post",
@@ -10125,10 +9704,7 @@
     },
     "/api/conflicts/resolve-strategy/merge-intelligent": {
       "post": {
-        "tags": [
-          "conflict-resolution",
-          "conflict_resolution"
-        ],
+        "tags": ["conflict-resolution", "conflict_resolution"],
         "summary": "Resolve Conflicts Intelligent Merge",
         "description": "Resolve conflicts using intelligent CRDT-based merging.",
         "operationId": "resolve_conflicts_intelligent_merge_api_conflicts_resolve_strategy_merge_intelligent_post",
@@ -10205,10 +9781,7 @@
     },
     "/api/conflicts/risk-analysis/{entity_type}/{entity_id}": {
       "get": {
-        "tags": [
-          "conflict-resolution",
-          "conflict_resolution"
-        ],
+        "tags": ["conflict-resolution", "conflict_resolution"],
         "summary": "Get Conflict Risk Analysis",
         "description": "Get conflict risk analysis for an entity before modification.",
         "operationId": "get_conflict_risk_analysis_api_conflicts_risk_analysis__entity_type___entity_id__get",
@@ -10268,10 +9841,7 @@
     },
     "/api/conflicts/hotspots": {
       "get": {
-        "tags": [
-          "conflict-resolution",
-          "conflict_resolution"
-        ],
+        "tags": ["conflict-resolution", "conflict_resolution"],
         "summary": "Get Conflict Hotspots",
         "description": "Get entities with highest conflict rates (hotspots).",
         "operationId": "get_conflict_hotspots_api_conflicts_hotspots_get",
@@ -10337,10 +9907,7 @@
     },
     "/api/analytics/summary": {
       "get": {
-        "tags": [
-          "analytics",
-          "analytics"
-        ],
+        "tags": ["analytics", "analytics"],
         "summary": "Get Change Summary",
         "description": "Get comprehensive change summary for specified period.",
         "operationId": "get_change_summary_api_analytics_summary_get",
@@ -10386,10 +9953,7 @@
     },
     "/api/analytics/user-activity": {
       "get": {
-        "tags": [
-          "analytics",
-          "analytics"
-        ],
+        "tags": ["analytics", "analytics"],
         "summary": "Get User Activity Report",
         "description": "Get comprehensive user activity reports.",
         "operationId": "get_user_activity_report_api_analytics_user_activity_get",
@@ -10471,10 +10035,7 @@
     },
     "/api/analytics/entity-hotspots": {
       "get": {
-        "tags": [
-          "analytics",
-          "analytics"
-        ],
+        "tags": ["analytics", "analytics"],
         "summary": "Get Entity Hotspots",
         "description": "Get entities with highest modification frequency (hotspots).",
         "operationId": "get_entity_hotspots_api_analytics_entity_hotspots_get",
@@ -10524,10 +10085,7 @@
     },
     "/api/analytics/collaboration-metrics": {
       "get": {
-        "tags": [
-          "analytics",
-          "analytics"
-        ],
+        "tags": ["analytics", "analytics"],
         "summary": "Get Collaboration Metrics",
         "description": "Get collaboration effectiveness metrics.",
         "operationId": "get_collaboration_metrics_api_analytics_collaboration_metrics_get",
@@ -10573,10 +10131,7 @@
     },
     "/api/analytics/change-impact/{changeset_id}": {
       "get": {
-        "tags": [
-          "analytics",
-          "analytics"
-        ],
+        "tags": ["analytics", "analytics"],
         "summary": "Get Change Impact Analysis",
         "description": "Get comprehensive impact analysis for a specific changeset.",
         "operationId": "get_change_impact_analysis_api_analytics_change_impact__changeset_id__get",
@@ -10619,10 +10174,7 @@
     },
     "/api/analytics/trends": {
       "get": {
-        "tags": [
-          "analytics",
-          "analytics"
-        ],
+        "tags": ["analytics", "analytics"],
         "summary": "Get Change Trends",
         "description": "Get comprehensive change trends and patterns over time.",
         "operationId": "get_change_trends_api_analytics_trends_get",
@@ -10668,10 +10220,7 @@
     },
     "/api/analytics/performance": {
       "get": {
-        "tags": [
-          "analytics",
-          "analytics"
-        ],
+        "tags": ["analytics", "analytics"],
         "summary": "Get System Performance Metrics",
         "description": "Get system performance and health metrics.",
         "operationId": "get_system_performance_metrics_api_analytics_performance_get",
@@ -10691,10 +10240,7 @@
     },
     "/api/analytics/collaboration-insights": {
       "get": {
-        "tags": [
-          "analytics",
-          "analytics"
-        ],
+        "tags": ["analytics", "analytics"],
         "summary": "Get Collaboration Insights",
         "description": "Get advanced insights into collaboration patterns and team productivity.",
         "operationId": "get_collaboration_insights_api_analytics_collaboration_insights_get",
@@ -10740,10 +10286,7 @@
     },
     "/api/analytics/executive-summary": {
       "get": {
-        "tags": [
-          "analytics",
-          "analytics"
-        ],
+        "tags": ["analytics", "analytics"],
         "summary": "Get Executive Summary",
         "description": "Generate executive summary of system activity and health.",
         "operationId": "get_executive_summary_api_analytics_executive_summary_get",
@@ -10789,10 +10332,7 @@
     },
     "/api/analytics/conflict-metrics": {
       "get": {
-        "tags": [
-          "analytics",
-          "analytics"
-        ],
+        "tags": ["analytics", "analytics"],
         "summary": "Get Conflict Resolution Metrics",
         "description": "Get comprehensive conflict resolution analytics.",
         "operationId": "get_conflict_resolution_metrics_api_analytics_conflict_metrics_get",
@@ -10810,10 +10350,7 @@
     },
     "/api/analytics/health": {
       "get": {
-        "tags": [
-          "analytics",
-          "analytics"
-        ],
+        "tags": ["analytics", "analytics"],
         "summary": "Get Analytics Health",
         "description": "Get analytics system health and performance status.",
         "operationId": "get_analytics_health_api_analytics_health_get",
@@ -10833,10 +10370,7 @@
     },
     "/api/analytics/export/csv/{report_type}": {
       "get": {
-        "tags": [
-          "analytics",
-          "analytics"
-        ],
+        "tags": ["analytics", "analytics"],
         "summary": "Export Analytics Csv",
         "description": "Export analytics data as CSV format.",
         "operationId": "export_analytics_csv_api_analytics_export_csv__report_type__get",
@@ -10891,10 +10425,7 @@
     },
     "/api/analytics/dashboard/metrics": {
       "get": {
-        "tags": [
-          "analytics",
-          "analytics"
-        ],
+        "tags": ["analytics", "analytics"],
         "summary": "Get Dashboard Metrics",
         "description": "Get real-time metrics suitable for dashboard display.",
         "operationId": "get_dashboard_metrics_api_analytics_dashboard_metrics_get",
@@ -10938,10 +10469,7 @@
     },
     "/api/sync/incremental": {
       "post": {
-        "tags": [
-          "incremental-sync",
-          "incremental_sync"
-        ],
+        "tags": ["incremental-sync", "incremental_sync"],
         "summary": "Start Incremental Sync",
         "description": "Start a new incremental synchronization operation.",
         "operationId": "start_incremental_sync_api_sync_incremental_post",
@@ -10991,10 +10519,7 @@
     },
     "/api/sync/operations": {
       "get": {
-        "tags": [
-          "incremental-sync",
-          "incremental_sync"
-        ],
+        "tags": ["incremental-sync", "incremental_sync"],
         "summary": "List Sync Operations",
         "description": "List sync operations with optional filtering.",
         "operationId": "list_sync_operations_api_sync_operations_get",
@@ -11120,10 +10645,7 @@
     },
     "/api/sync/operations/{operation_id}": {
       "get": {
-        "tags": [
-          "incremental-sync",
-          "incremental_sync"
-        ],
+        "tags": ["incremental-sync", "incremental_sync"],
         "summary": "Get Sync Operation",
         "description": "Get detailed information about a specific sync operation.",
         "operationId": "get_sync_operation_api_sync_operations__operation_id__get",
@@ -11174,10 +10696,7 @@
     },
     "/api/sync/operations/{operation_id}/cancel": {
       "post": {
-        "tags": [
-          "incremental-sync",
-          "incremental_sync"
-        ],
+        "tags": ["incremental-sync", "incremental_sync"],
         "summary": "Cancel Sync Operation",
         "description": "Cancel a running sync operation.",
         "operationId": "cancel_sync_operation_api_sync_operations__operation_id__cancel_post",
@@ -11226,10 +10745,7 @@
     },
     "/api/sync/performance": {
       "get": {
-        "tags": [
-          "incremental-sync",
-          "incremental_sync"
-        ],
+        "tags": ["incremental-sync", "incremental_sync"],
         "summary": "Get Sync Performance Metrics",
         "description": "Get comprehensive sync performance metrics.",
         "operationId": "get_sync_performance_metrics_api_sync_performance_get",
@@ -11283,10 +10799,7 @@
     },
     "/api/sync/health": {
       "get": {
-        "tags": [
-          "incremental-sync",
-          "incremental_sync"
-        ],
+        "tags": ["incremental-sync", "incremental_sync"],
         "summary": "Get Sync Health",
         "description": "Get sync system health and diagnostics.",
         "operationId": "get_sync_health_api_sync_health_get",
@@ -11326,10 +10839,7 @@
     },
     "/api/sync/optimize": {
       "post": {
-        "tags": [
-          "incremental-sync",
-          "incremental_sync"
-        ],
+        "tags": ["incremental-sync", "incremental_sync"],
         "summary": "Optimize Sync Configuration",
         "description": "Optimize sync configuration for better performance.",
         "operationId": "optimize_sync_configuration_api_sync_optimize_post",
@@ -11379,10 +10889,7 @@
     },
     "/api/sync/recommendations": {
       "get": {
-        "tags": [
-          "incremental-sync",
-          "incremental_sync"
-        ],
+        "tags": ["incremental-sync", "incremental_sync"],
         "summary": "Get Sync Recommendations",
         "description": "Get performance recommendations for sync operations.",
         "operationId": "get_sync_recommendations_api_sync_recommendations_get",
@@ -11420,10 +10927,7 @@
     },
     "/api/sync/full-resync": {
       "post": {
-        "tags": [
-          "incremental-sync",
-          "incremental_sync"
-        ],
+        "tags": ["incremental-sync", "incremental_sync"],
         "summary": "Trigger Full Resync",
         "description": "Trigger a full data resynchronization.",
         "operationId": "trigger_full_resync_api_sync_full_resync_post",
@@ -11494,10 +10998,7 @@
     },
     "/api/sync/validate-data": {
       "post": {
-        "tags": [
-          "incremental-sync",
-          "incremental_sync"
-        ],
+        "tags": ["incremental-sync", "incremental_sync"],
         "summary": "Validate Sync Data Integrity",
         "description": "Validate data integrity between local and remote sources.",
         "operationId": "validate_sync_data_integrity_api_sync_validate_data_post",
@@ -11549,10 +11050,7 @@
     },
     "/api/sync/partition-analytics": {
       "get": {
-        "tags": [
-          "incremental-sync",
-          "incremental_sync"
-        ],
+        "tags": ["incremental-sync", "incremental_sync"],
         "summary": "Get Partition Analytics",
         "description": "Get analytics about data partition performance.",
         "operationId": "get_partition_analytics_api_sync_partition_analytics_get",
@@ -11604,10 +11102,7 @@
     },
     "/api/sync/schedule-sync": {
       "post": {
-        "tags": [
-          "incremental-sync",
-          "incremental_sync"
-        ],
+        "tags": ["incremental-sync", "incremental_sync"],
         "summary": "Schedule Recurring Sync",
         "description": "Schedule recurring incremental sync operations.",
         "operationId": "schedule_recurring_sync_api_sync_schedule_sync_post",
@@ -11666,10 +11161,7 @@
     },
     "/api/sync/schedules": {
       "get": {
-        "tags": [
-          "incremental-sync",
-          "incremental_sync"
-        ],
+        "tags": ["incremental-sync", "incremental_sync"],
         "summary": "List Sync Schedules",
         "description": "List all scheduled sync operations.",
         "operationId": "list_sync_schedules_api_sync_schedules_get",
@@ -11719,10 +11211,7 @@
     },
     "/api/sync/schedules/{schedule_id}": {
       "delete": {
-        "tags": [
-          "incremental-sync",
-          "incremental_sync"
-        ],
+        "tags": ["incremental-sync", "incremental_sync"],
         "summary": "Cancel Sync Schedule",
         "description": "Cancel a scheduled sync operation.",
         "operationId": "cancel_sync_schedule_api_sync_schedules__schedule_id__delete",
@@ -11771,10 +11260,7 @@
     },
     "/api/sync/emergency-stop": {
       "post": {
-        "tags": [
-          "incremental-sync",
-          "incremental_sync"
-        ],
+        "tags": ["incremental-sync", "incremental_sync"],
         "summary": "Emergency Stop All Sync",
         "description": "Emergency stop all running sync operations.",
         "operationId": "emergency_stop_all_sync_api_sync_emergency_stop_post",
@@ -11823,10 +11309,7 @@
     },
     "/api/sync/recovery/resume-failed": {
       "post": {
-        "tags": [
-          "incremental-sync",
-          "incremental_sync"
-        ],
+        "tags": ["incremental-sync", "incremental_sync"],
         "summary": "Resume Failed Operations",
         "description": "Resume failed sync operations with retry logic.",
         "operationId": "resume_failed_operations_api_sync_recovery_resume_failed_post",
@@ -11878,10 +11361,7 @@
     },
     "/api/sync/metrics/export": {
       "get": {
-        "tags": [
-          "incremental-sync",
-          "incremental_sync"
-        ],
+        "tags": ["incremental-sync", "incremental_sync"],
         "summary": "Export Sync Metrics",
         "description": "Export sync metrics for external analysis.",
         "operationId": "export_sync_metrics_api_sync_metrics_export_get",
@@ -11945,10 +11425,7 @@
     },
     "/api/optimization/health": {
       "get": {
-        "tags": [
-          "optimization",
-          "optimization"
-        ],
+        "tags": ["optimization", "optimization"],
         "summary": "Get Optimization System Health",
         "description": "Get comprehensive optimization system health status.",
         "operationId": "get_optimization_system_health_api_optimization_health_get",
@@ -11968,10 +11445,7 @@
     },
     "/api/optimization/performance/dashboard": {
       "get": {
-        "tags": [
-          "optimization",
-          "optimization"
-        ],
+        "tags": ["optimization", "optimization"],
         "summary": "Get Performance Dashboard",
         "description": "Get comprehensive performance dashboard data.",
         "operationId": "get_performance_dashboard_api_optimization_performance_dashboard_get",
@@ -11989,10 +11463,7 @@
     },
     "/api/optimization/performance/metrics": {
       "get": {
-        "tags": [
-          "optimization",
-          "optimization"
-        ],
+        "tags": ["optimization", "optimization"],
         "summary": "Get Performance Metrics",
         "description": "Get current comprehensive performance metrics.",
         "operationId": "get_performance_metrics_api_optimization_performance_metrics_get",
@@ -12012,10 +11483,7 @@
     },
     "/api/optimization/performance/trends": {
       "get": {
-        "tags": [
-          "optimization",
-          "optimization"
-        ],
+        "tags": ["optimization", "optimization"],
         "summary": "Get Performance Trends",
         "description": "Get performance trend analysis and optimization recommendations.",
         "operationId": "get_performance_trends_api_optimization_performance_trends_get",
@@ -12061,10 +11529,7 @@
     },
     "/api/optimization/performance/auto-optimize": {
       "post": {
-        "tags": [
-          "optimization",
-          "optimization"
-        ],
+        "tags": ["optimization", "optimization"],
         "summary": "Trigger Auto Optimization",
         "description": "Trigger automated optimization based on current performance metrics.",
         "operationId": "trigger_auto_optimization_api_optimization_performance_auto_optimize_post",
@@ -12082,10 +11547,7 @@
     },
     "/api/optimization/query/stats": {
       "get": {
-        "tags": [
-          "optimization",
-          "optimization"
-        ],
+        "tags": ["optimization", "optimization"],
         "summary": "Get Query Optimization Stats",
         "description": "Get query optimization statistics and performance metrics.",
         "operationId": "get_query_optimization_stats_api_optimization_query_stats_get",
@@ -12103,10 +11565,7 @@
     },
     "/api/optimization/query/optimize": {
       "post": {
-        "tags": [
-          "optimization",
-          "optimization"
-        ],
+        "tags": ["optimization", "optimization"],
         "summary": "Optimize Query",
         "description": "Optimize a specific query using advanced optimization techniques.",
         "operationId": "optimize_query_api_optimization_query_optimize_post",
@@ -12146,10 +11605,7 @@
     },
     "/api/optimization/query/materialized-view": {
       "post": {
-        "tags": [
-          "optimization",
-          "optimization"
-        ],
+        "tags": ["optimization", "optimization"],
         "summary": "Create Materialized View",
         "description": "Create a materialized view for frequently accessed queries.",
         "operationId": "create_materialized_view_api_optimization_query_materialized_view_post",
@@ -12187,10 +11643,7 @@
     },
     "/api/optimization/storage/stats": {
       "get": {
-        "tags": [
-          "optimization",
-          "optimization"
-        ],
+        "tags": ["optimization", "optimization"],
         "summary": "Get Storage Optimization Stats",
         "description": "Get storage optimization statistics and cost metrics.",
         "operationId": "get_storage_optimization_stats_api_optimization_storage_stats_get",
@@ -12208,10 +11661,7 @@
     },
     "/api/optimization/storage/optimize": {
       "post": {
-        "tags": [
-          "optimization",
-          "optimization"
-        ],
+        "tags": ["optimization", "optimization"],
         "summary": "Optimize Storage",
         "description": "Trigger comprehensive storage optimization including compression and lifecycle policies.",
         "operationId": "optimize_storage_api_optimization_storage_optimize_post",
@@ -12231,10 +11681,7 @@
     },
     "/api/optimization/storage/lifecycle-policies": {
       "post": {
-        "tags": [
-          "optimization",
-          "optimization"
-        ],
+        "tags": ["optimization", "optimization"],
         "summary": "Setup Lifecycle Policies",
         "description": "Setup intelligent S3 lifecycle policies for cost optimization.",
         "operationId": "setup_lifecycle_policies_api_optimization_storage_lifecycle_policies_post",
@@ -12252,10 +11699,7 @@
     },
     "/api/optimization/diff/stats": {
       "get": {
-        "tags": [
-          "optimization",
-          "optimization"
-        ],
+        "tags": ["optimization", "optimization"],
         "summary": "Get Diff Engine Stats",
         "description": "Get hierarchical diff engine performance statistics.",
         "operationId": "get_diff_engine_stats_api_optimization_diff_stats_get",
@@ -12293,10 +11737,7 @@
     },
     "/api/optimization/diff/three-way": {
       "post": {
-        "tags": [
-          "optimization",
-          "optimization"
-        ],
+        "tags": ["optimization", "optimization"],
         "summary": "Perform Three Way Diff",
         "description": "Perform advanced three-way diff with intelligent conflict detection.",
         "operationId": "perform_three_way_diff_api_optimization_diff_three_way_post",
@@ -12346,10 +11787,7 @@
     },
     "/api/optimization/batch/stats": {
       "get": {
-        "tags": [
-          "optimization",
-          "optimization"
-        ],
+        "tags": ["optimization", "optimization"],
         "summary": "Get Batch Processing Stats",
         "description": "Get batch operation processing statistics and performance metrics.",
         "operationId": "get_batch_processing_stats_api_optimization_batch_stats_get",
@@ -12387,10 +11825,7 @@
     },
     "/api/optimization/batch/process": {
       "post": {
-        "tags": [
-          "optimization",
-          "optimization"
-        ],
+        "tags": ["optimization", "optimization"],
         "summary": "Execute Batch Operation",
         "description": "Execute optimized batch operation with parallel processing.",
         "operationId": "execute_batch_operation_api_optimization_batch_process_post",
@@ -12440,10 +11875,7 @@
     },
     "/api/optimization/config": {
       "get": {
-        "tags": [
-          "optimization",
-          "optimization"
-        ],
+        "tags": ["optimization", "optimization"],
         "summary": "Get Optimization Configuration",
         "description": "Get current optimization system configuration.",
         "operationId": "get_optimization_configuration_api_optimization_config_get",
@@ -12459,10 +11891,7 @@
         }
       },
       "put": {
-        "tags": [
-          "optimization",
-          "optimization"
-        ],
+        "tags": ["optimization", "optimization"],
         "summary": "Update Optimization Configuration",
         "description": "Update optimization system configuration.",
         "operationId": "update_optimization_configuration_api_optimization_config_put",
@@ -12561,10 +11990,7 @@
           }
         },
         "type": "object",
-        "required": [
-          "entries",
-          "total_count"
-        ],
+        "required": ["entries", "total_count"],
         "title": "ActionLogResponse",
         "description": "Response model for action log."
       },
@@ -12580,10 +12006,7 @@
           }
         },
         "type": "object",
-        "required": [
-          "title",
-          "file_path"
-        ],
+        "required": ["title", "file_path"],
         "title": "AddExistingDatasetRequest",
         "description": "Request to add an existing dataset file."
       },
@@ -12750,11 +12173,7 @@
           }
         },
         "type": "object",
-        "required": [
-          "operation_type",
-          "entity_data",
-          "author_id"
-        ],
+        "required": ["operation_type", "entity_data", "author_id"],
         "title": "BatchOperationRequest",
         "description": "API model for batch operation request."
       },
@@ -12779,11 +12198,7 @@
           }
         },
         "type": "object",
-        "required": [
-          "conflict_ids",
-          "resolved_by",
-          "resolution_strategy"
-        ],
+        "required": ["conflict_ids", "resolved_by", "resolution_strategy"],
         "title": "BatchResolveRequest",
         "description": "API model for batch conflict resolution."
       },
@@ -12977,10 +12392,7 @@
           }
         },
         "type": "object",
-        "required": [
-          "changesets",
-          "total_count"
-        ],
+        "required": ["changesets", "total_count"],
         "title": "ChangesetListResponse",
         "description": "Response model for changeset list."
       },
@@ -13093,11 +12505,7 @@
           }
         },
         "type": "object",
-        "required": [
-          "changeset_id",
-          "version_ids",
-          "version_count"
-        ],
+        "required": ["changeset_id", "version_ids", "version_count"],
         "title": "ChangesetVersionsResponse",
         "description": "Response model for changeset version details."
       },
@@ -13190,9 +12598,7 @@
           }
         },
         "type": "object",
-        "required": [
-          "author_id"
-        ],
+        "required": ["author_id"],
         "title": "CommitRequest",
         "description": "Model for committing staged changes."
       },
@@ -13221,9 +12627,7 @@
           }
         },
         "type": "object",
-        "required": [
-          "text"
-        ],
+        "required": ["text"],
         "title": "ComponentTerm",
         "description": "A component term with its selected definitions and relations"
       },
@@ -13273,12 +12677,7 @@
           }
         },
         "type": "object",
-        "required": [
-          "id",
-          "label",
-          "language",
-          "term"
-        ],
+        "required": ["id", "label", "language", "term"],
         "title": "ConcepcyNode",
         "description": "Represents a node in the Concepcy graph."
       },
@@ -13323,9 +12722,7 @@
           }
         },
         "type": "object",
-        "required": [
-          "relation"
-        ],
+        "required": ["relation"],
         "title": "ConcepcyRelation",
         "description": "Represents a single relation in Concepcy."
       },
@@ -13383,11 +12780,7 @@
           }
         },
         "type": "object",
-        "required": [
-          "success",
-          "source",
-          "retrieved_at"
-        ],
+        "required": ["success", "source", "retrieved_at"],
         "title": "ConceptNetConceptResponse",
         "description": "Response model for ConceptNet concept lookup"
       },
@@ -13441,13 +12834,7 @@
           }
         },
         "type": "object",
-        "required": [
-          "@id",
-          "start",
-          "rel",
-          "end",
-          "weight"
-        ],
+        "required": ["@id", "start", "rel", "end", "weight"],
         "title": "ConceptNetEdge",
         "description": "ConceptNet edge representation"
       },
@@ -13503,11 +12890,7 @@
           }
         },
         "type": "object",
-        "required": [
-          "success",
-          "source",
-          "retrieved_at"
-        ],
+        "required": ["success", "source", "retrieved_at"],
         "title": "ConceptNetQueryResponse",
         "description": "Response model for ConceptNet query"
       },
@@ -13527,11 +12910,7 @@
           }
         },
         "type": "object",
-        "required": [
-          "@id",
-          "label",
-          "weight"
-        ],
+        "required": ["@id", "label", "weight"],
         "title": "ConceptNetRelatedConcept",
         "description": "Related concept from ConceptNet"
       },
@@ -13595,11 +12974,7 @@
           }
         },
         "type": "object",
-        "required": [
-          "success",
-          "source",
-          "retrieved_at"
-        ],
+        "required": ["success", "source", "retrieved_at"],
         "title": "ConceptNetRelatedResponse",
         "description": "Response model for ConceptNet related concepts"
       },
@@ -13622,9 +12997,7 @@
           }
         },
         "type": "object",
-        "required": [
-          "success"
-        ],
+        "required": ["success"],
         "title": "ConfigResponse",
         "description": "Response model for configuration operations"
       },
@@ -13641,10 +13014,7 @@
           }
         },
         "type": "object",
-        "required": [
-          "path",
-          "value"
-        ],
+        "required": ["path", "value"],
         "title": "ConfigUpdateRequest",
         "description": "Request model for updating configuration values"
       },
@@ -13805,11 +13175,7 @@
       },
       "ConflictSeverityEnum": {
         "type": "string",
-        "enum": [
-          "low",
-          "medium",
-          "high"
-        ],
+        "enum": ["low", "medium", "high"],
         "title": "ConflictSeverityEnum",
         "description": "Enumeration of conflict severity levels."
       },
@@ -13845,11 +13211,7 @@
           }
         },
         "type": "object",
-        "required": [
-          "title",
-          "description",
-          "author_id"
-        ],
+        "required": ["title", "description", "author_id"],
         "title": "CreateChangesetRequest",
         "description": "Request model for creating a changeset."
       },
@@ -13865,10 +13227,7 @@
           }
         },
         "type": "object",
-        "required": [
-          "title",
-          "filename"
-        ],
+        "required": ["title", "filename"],
         "title": "CreateDatasetRequest",
         "description": "Request to create a new dataset."
       },
@@ -13955,12 +13314,7 @@
           }
         },
         "type": "object",
-        "required": [
-          "changeset_id",
-          "title",
-          "description",
-          "created_by"
-        ],
+        "required": ["changeset_id", "title", "description", "created_by"],
         "title": "CreateProposalRequest",
         "description": "Request model for creating a proposal."
       },
@@ -14082,11 +13436,7 @@
           }
         },
         "type": "object",
-        "required": [
-          "success",
-          "source",
-          "retrieved_at"
-        ],
+        "required": ["success", "source", "retrieved_at"],
         "title": "DBpediaResourceResponse",
         "description": "Response model for DBpedia resource data"
       },
@@ -14150,11 +13500,7 @@
           }
         },
         "type": "object",
-        "required": [
-          "success",
-          "source",
-          "retrieved_at"
-        ],
+        "required": ["success", "source", "retrieved_at"],
         "title": "DBpediaSearchResponse",
         "description": "Response model for DBpedia search"
       },
@@ -14193,11 +13539,7 @@
           }
         },
         "type": "object",
-        "required": [
-          "uri",
-          "label",
-          "score"
-        ],
+        "required": ["uri", "label", "score"],
         "title": "DBpediaSearchResult",
         "description": "Individual DBpedia search result"
       },
@@ -14216,9 +13558,7 @@
           }
         },
         "type": "object",
-        "required": [
-          "query"
-        ],
+        "required": ["query"],
         "title": "DBpediaSparqlRequest",
         "description": "Request model for DBpedia SPARQL query"
       },
@@ -14270,11 +13610,7 @@
           }
         },
         "type": "object",
-        "required": [
-          "success",
-          "source",
-          "retrieved_at"
-        ],
+        "required": ["success", "source", "retrieved_at"],
         "title": "DBpediaSparqlResponse",
         "description": "Response model for DBpedia SPARQL query"
       },
@@ -14470,9 +13806,7 @@
           }
         },
         "type": "object",
-        "required": [
-          "term"
-        ],
+        "required": ["term"],
         "title": "DefinitionSuggestionRequest",
         "description": "Request model for term definition suggestion endpoint"
       },
@@ -14507,11 +13841,7 @@
           }
         },
         "type": "object",
-        "required": [
-          "definition",
-          "reasoning",
-          "execution_id"
-        ],
+        "required": ["definition", "reasoning", "execution_id"],
         "title": "DefinitionSuggestionResponse",
         "description": "Response model for definition suggestion"
       },
@@ -14539,21 +13869,13 @@
           }
         },
         "type": "object",
-        "required": [
-          "local_versions",
-          "remote_versions",
-          "entity_type"
-        ],
+        "required": ["local_versions", "remote_versions", "entity_type"],
         "title": "DetectConflictsRequest",
         "description": "API model for conflict detection request."
       },
       "DiffFormatEnum": {
         "type": "string",
-        "enum": [
-          "summary",
-          "detailed",
-          "json"
-        ],
+        "enum": ["summary", "detailed", "json"],
         "title": "DiffFormatEnum",
         "description": "Enum for diff format options."
       },
@@ -14590,11 +13912,7 @@
           }
         },
         "type": "object",
-        "required": [
-          "entity_type",
-          "entity_id",
-          "after_version_number"
-        ],
+        "required": ["entity_type", "entity_id", "after_version_number"],
         "title": "DiffRequest",
         "description": "Model for requesting diffs."
       },
@@ -14738,9 +14056,7 @@
           }
         },
         "type": "object",
-        "required": [
-          "domain_title"
-        ],
+        "required": ["domain_title"],
         "title": "DomainDefinitionRequest",
         "description": "Request model for domain definition suggestion endpoint"
       },
@@ -14768,12 +14084,7 @@
           }
         },
         "type": "object",
-        "required": [
-          "definition",
-          "purpose",
-          "scope",
-          "execution_id"
-        ],
+        "required": ["definition", "purpose", "scope", "execution_id"],
         "title": "DomainDefinitionResponse",
         "description": "Response model for domain definition suggestion"
       },
@@ -14796,10 +14107,7 @@
           }
         },
         "type": "object",
-        "required": [
-          "data",
-          "execution_id"
-        ],
+        "required": ["data", "execution_id"],
         "title": "DomainLLMSuccessResponse",
         "description": "Success response wrapper for domain LLM endpoints"
       },
@@ -14847,9 +14155,7 @@
           }
         },
         "type": "object",
-        "required": [
-          "text"
-        ],
+        "required": ["text"],
         "title": "EntityData",
         "description": "Data for a named entity in the analyzed text."
       },
@@ -14949,10 +14255,7 @@
       },
       "EntityTypeEnum": {
         "type": "string",
-        "enum": [
-          "structure_node",
-          "structure_node_link"
-        ],
+        "enum": ["structure_node", "structure_node_link"],
         "title": "EntityTypeEnum",
         "description": "API enum for entity types that support versioning."
       },
@@ -15138,11 +14441,7 @@
           }
         },
         "type": "object",
-        "required": [
-          "executions",
-          "total_count",
-          "flavor_id"
-        ],
+        "required": ["executions", "total_count", "flavor_id"],
         "title": "ExecutionHistoryResponse",
         "description": "Response model for execution history by flavor"
       },
@@ -15212,11 +14511,7 @@
           }
         },
         "type": "object",
-        "required": [
-          "flavor_id",
-          "analytics",
-          "time_range_days"
-        ],
+        "required": ["flavor_id", "analytics", "time_range_days"],
         "title": "FlavorAnalyticsResponse",
         "description": "Response model for flavor-specific analytics"
       },
@@ -15368,9 +14663,7 @@
           }
         },
         "type": "object",
-        "required": [
-          "since"
-        ],
+        "required": ["since"],
         "title": "IncrementalSyncRequest",
         "description": "API model for incremental sync request."
       },
@@ -15489,10 +14782,7 @@
           }
         },
         "type": "object",
-        "required": [
-          "error",
-          "error_type"
-        ],
+        "required": ["error", "error_type"],
         "title": "LLMErrorResponse",
         "description": "Error response for LLM endpoints"
       },
@@ -15516,11 +14806,7 @@
           }
         },
         "type": "object",
-        "required": [
-          "status",
-          "model_info",
-          "timestamp"
-        ],
+        "required": ["status", "model_info", "timestamp"],
         "title": "LLMHealthResponse",
         "description": "Health check response for LLM service"
       },
@@ -15543,10 +14829,7 @@
           }
         },
         "type": "object",
-        "required": [
-          "data",
-          "execution_id"
-        ],
+        "required": ["data", "execution_id"],
         "title": "LLMSuccessResponse",
         "description": "Success response wrapper for LLM endpoints"
       },
@@ -15645,9 +14928,7 @@
           }
         },
         "type": "object",
-        "required": [
-          "layer_title"
-        ],
+        "required": ["layer_title"],
         "title": "LayerDefinitionRequest",
         "description": "Request model for layer definition suggestion endpoint"
       },
@@ -15675,12 +14956,7 @@
           }
         },
         "type": "object",
-        "required": [
-          "definition",
-          "purpose",
-          "rationale",
-          "execution_id"
-        ],
+        "required": ["definition", "purpose", "rationale", "execution_id"],
         "title": "LayerDefinitionResponse",
         "description": "Response model for layer definition suggestion"
       },
@@ -15703,10 +14979,7 @@
           }
         },
         "type": "object",
-        "required": [
-          "data",
-          "execution_id"
-        ],
+        "required": ["data", "execution_id"],
         "title": "LayerLLMSuccessResponse",
         "description": "Success response wrapper for layer LLM endpoints"
       },
@@ -15730,10 +15003,7 @@
           }
         },
         "type": "object",
-        "required": [
-          "view_name",
-          "query"
-        ],
+        "required": ["view_name", "query"],
         "title": "MaterializedViewRequest",
         "description": "API model for materialized view creation request."
       },
@@ -15809,9 +15079,7 @@
           }
         },
         "type": "object",
-        "required": [
-          "node_ids"
-        ],
+        "required": ["node_ids"],
         "title": "MoveNodesRequest",
         "description": "Model for moving structure_nodes to a new parent."
       },
@@ -15851,12 +15119,7 @@
           }
         },
         "type": "object",
-        "required": [
-          "moved_nodes",
-          "updated_children",
-          "warnings",
-          "errors"
-        ],
+        "required": ["moved_nodes", "updated_children", "warnings", "errors"],
         "title": "MoveNodesResponse",
         "description": "Model for move operation results."
       },
@@ -16010,9 +15273,7 @@
           }
         },
         "type": "object",
-        "required": [
-          "text"
-        ],
+        "required": ["text"],
         "title": "NLPAnalysisResponse",
         "description": "Response model for NLP analysis API."
       },
@@ -16031,9 +15292,7 @@
           }
         },
         "type": "object",
-        "required": [
-          "error"
-        ],
+        "required": ["error"],
         "title": "NLPErrorResponse",
         "description": "Error response wrapper for NLP API."
       },
@@ -16050,9 +15309,7 @@
           }
         },
         "type": "object",
-        "required": [
-          "data"
-        ],
+        "required": ["data"],
         "title": "NLPSuccessResponse",
         "description": "Success response wrapper for NLP API."
       },
@@ -16100,9 +15357,7 @@
           }
         },
         "type": "object",
-        "required": [
-          "entity_id"
-        ],
+        "required": ["entity_id"],
         "title": "NeighborsRequest"
       },
       "NodeCreate": {
@@ -16153,10 +15408,7 @@
           }
         },
         "type": "object",
-        "required": [
-          "node_type",
-          "title"
-        ],
+        "required": ["node_type", "title"],
         "title": "NodeCreate",
         "description": "Model for creating a new structure_node."
       },
@@ -16190,11 +15442,7 @@
           }
         },
         "type": "object",
-        "required": [
-          "source_node_id",
-          "target_node_id",
-          "predicate"
-        ],
+        "required": ["source_node_id", "target_node_id", "predicate"],
         "title": "NodeLinkCreate",
         "description": "Model for creating a new structure_node link."
       },
@@ -16557,11 +15805,7 @@
       },
       "NodeTypeEnum": {
         "type": "string",
-        "enum": [
-          "layer",
-          "domain",
-          "term"
-        ],
+        "enum": ["layer", "domain", "term"],
         "title": "NodeTypeEnum",
         "description": "API enum for structure_node types."
       },
@@ -16720,12 +15964,7 @@
           }
         },
         "type": "object",
-        "required": [
-          "data",
-          "total",
-          "skip",
-          "limit"
-        ],
+        "required": ["data", "total", "skip", "limit"],
         "title": "PaginatedNodesResponse",
         "description": "Model for paginated structure_node responses."
       },
@@ -16752,12 +15991,7 @@
           }
         },
         "type": "object",
-        "required": [
-          "data",
-          "total",
-          "skip",
-          "limit"
-        ],
+        "required": ["data", "total", "skip", "limit"],
         "title": "PaginatedPredicatesResponse"
       },
       "PathRequest": {
@@ -16796,10 +16030,7 @@
           }
         },
         "type": "object",
-        "required": [
-          "source_id",
-          "target_id"
-        ],
+        "required": ["source_id", "target_id"],
         "title": "PathRequest"
       },
       "PerformanceTrendsOut": {
@@ -16953,10 +16184,7 @@
           }
         },
         "type": "object",
-        "required": [
-          "flavors",
-          "total_count"
-        ],
+        "required": ["flavors", "total_count"],
         "title": "PipelineFlavorListResponse",
         "description": "Response model for listing pipeline flavors"
       },
@@ -17014,9 +16242,7 @@
           }
         },
         "type": "object",
-        "required": [
-          "title"
-        ],
+        "required": ["title"],
         "title": "PredicateCreate"
       },
       "PredicateOut": {
@@ -17143,10 +16369,7 @@
           }
         },
         "type": "object",
-        "required": [
-          "proposals",
-          "total_count"
-        ],
+        "required": ["proposals", "total_count"],
         "title": "ProposalListResponse",
         "description": "Response model for proposal list."
       },
@@ -17270,13 +16493,7 @@
           }
         },
         "type": "object",
-        "required": [
-          "proposal_id",
-          "user_id",
-          "vote",
-          "comment",
-          "voted_at"
-        ],
+        "required": ["proposal_id", "user_id", "vote", "comment", "voted_at"],
         "title": "ProposalVoteResponse",
         "description": "Response model for proposal vote data."
       },
@@ -17299,11 +16516,7 @@
           }
         },
         "type": "object",
-        "required": [
-          "proposal_id",
-          "votes",
-          "total_votes"
-        ],
+        "required": ["proposal_id", "votes", "total_votes"],
         "title": "ProposalVotesResponse",
         "description": "Response model for proposal votes list."
       },
@@ -17390,9 +16603,7 @@
           }
         },
         "type": "object",
-        "required": [
-          "query"
-        ],
+        "required": ["query"],
         "title": "QueryOptimizationRequest",
         "description": "API model for query optimization request."
       },
@@ -17448,10 +16659,7 @@
           }
         },
         "type": "object",
-        "required": [
-          "email",
-          "display_name"
-        ],
+        "required": ["email", "display_name"],
         "title": "RegisterUserRequest",
         "description": "Request model for user registration."
       },
@@ -17470,11 +16678,7 @@
           }
         },
         "type": "object",
-        "required": [
-          "user_identity",
-          "verification_code",
-          "message"
-        ],
+        "required": ["user_identity", "verification_code", "message"],
         "title": "RegisterUserResponse",
         "description": "Response model for user registration."
       },
@@ -17531,20 +16735,13 @@
           }
         },
         "type": "object",
-        "required": [
-          "resolution_choice",
-          "resolved_by"
-        ],
+        "required": ["resolution_choice", "resolved_by"],
         "title": "ResolveConflictRequest",
         "description": "API model for conflict resolution request."
       },
       "ResponseFormat": {
         "type": "string",
-        "enum": [
-          "json",
-          "xml",
-          "rdf"
-        ],
+        "enum": ["json", "xml", "rdf"],
         "title": "ResponseFormat"
       },
       "RollbackRequest": {
@@ -17563,10 +16760,7 @@
           }
         },
         "type": "object",
-        "required": [
-          "target_version_number",
-          "author_id"
-        ],
+        "required": ["target_version_number", "author_id"],
         "title": "RollbackRequest",
         "description": "Model for rollback operation request."
       },
@@ -17590,9 +16784,7 @@
           }
         },
         "type": "object",
-        "required": [
-          "query"
-        ],
+        "required": ["query"],
         "title": "SPARQLQuery"
       },
       "SchemaOrgChildEntity": {
@@ -17607,10 +16799,7 @@
           }
         },
         "type": "object",
-        "required": [
-          "identifier",
-          "title"
-        ],
+        "required": ["identifier", "title"],
         "title": "SchemaOrgChildEntity",
         "description": "Schema.org child entity representation"
       },
@@ -17666,11 +16855,7 @@
           }
         },
         "type": "object",
-        "required": [
-          "id",
-          "identifier",
-          "title"
-        ],
+        "required": ["id", "identifier", "title"],
         "title": "SchemaOrgEntity",
         "description": "Schema.org entity representation"
       },
@@ -17821,11 +17006,7 @@
           }
         },
         "type": "object",
-        "required": [
-          "success",
-          "source",
-          "retrieved_at"
-        ],
+        "required": ["success", "source", "retrieved_at"],
         "title": "SchemaOrgEntityResponse",
         "description": "Response model for Schema.org entity retrieval"
       },
@@ -17875,10 +17056,7 @@
           }
         },
         "type": "object",
-        "required": [
-          "identifier",
-          "title"
-        ],
+        "required": ["identifier", "title"],
         "title": "SchemaOrgProperty",
         "description": "Schema.org property representation"
       },
@@ -17940,11 +17118,7 @@
           }
         },
         "type": "object",
-        "required": [
-          "id",
-          "identifier",
-          "title"
-        ],
+        "required": ["id", "identifier", "title"],
         "title": "SchemaOrgPropertyData",
         "description": "Schema.org property data representation"
       },
@@ -18120,11 +17294,7 @@
           }
         },
         "type": "object",
-        "required": [
-          "success",
-          "source",
-          "retrieved_at"
-        ],
+        "required": ["success", "source", "retrieved_at"],
         "title": "SchemaOrgPropertyResponse",
         "description": "Response model for Schema.org property retrieval"
       },
@@ -18199,11 +17369,7 @@
           }
         },
         "type": "object",
-        "required": [
-          "success",
-          "source",
-          "retrieved_at"
-        ],
+        "required": ["success", "source", "retrieved_at"],
         "title": "SchemaOrgSearchResponse",
         "description": "Response model for Schema.org search"
       },
@@ -18211,10 +17377,7 @@
         "properties": {
           "type": {
             "type": "string",
-            "enum": [
-              "entity",
-              "property"
-            ],
+            "enum": ["entity", "property"],
             "title": "Type"
           },
           "identifier": {
@@ -18242,12 +17405,7 @@
           }
         },
         "type": "object",
-        "required": [
-          "type",
-          "identifier",
-          "title",
-          "relevance_score"
-        ],
+        "required": ["type", "identifier", "title", "relevance_score"],
         "title": "SchemaOrgSearchResult",
         "description": "Schema.org search result"
       },
@@ -18452,9 +17610,7 @@
           }
         },
         "type": "object",
-        "required": [
-          "term"
-        ],
+        "required": ["term"],
         "title": "SearchRequest"
       },
       "SearchResult": {
@@ -18498,13 +17654,7 @@
           }
         },
         "type": "object",
-        "required": [
-          "items",
-          "total_count",
-          "limit",
-          "offset",
-          "query"
-        ],
+        "required": ["items", "total_count", "limit", "offset", "query"],
         "title": "SearchResult"
       },
       "SelectedRelation": {
@@ -18538,11 +17688,7 @@
           }
         },
         "type": "object",
-        "required": [
-          "predicate",
-          "object",
-          "weight"
-        ],
+        "required": ["predicate", "object", "weight"],
         "title": "SelectedRelation",
         "description": "A selected ConceptNet relation for a component term"
       },
@@ -18565,11 +17711,7 @@
           }
         },
         "type": "object",
-        "required": [
-          "success",
-          "selection_id",
-          "message"
-        ],
+        "required": ["success", "selection_id", "message"],
         "title": "SelectionResponse",
         "description": "Response model for selection recording."
       },
@@ -18629,12 +17771,7 @@
       },
       "SourceType": {
         "type": "string",
-        "enum": [
-          "dbpedia",
-          "conceptnet",
-          "wikidata",
-          "schema_org"
-        ],
+        "enum": ["dbpedia", "conceptnet", "wikidata", "schema_org"],
         "title": "SourceType"
       },
       "StageRequest": {
@@ -18649,10 +17786,7 @@
           }
         },
         "type": "object",
-        "required": [
-          "entity_type",
-          "entity_id"
-        ],
+        "required": ["entity_type", "entity_id"],
         "title": "StageRequest",
         "description": "Model for staging/unstaging entities."
       },
@@ -18923,10 +18057,7 @@
           }
         },
         "type": "object",
-        "required": [
-          "status",
-          "message"
-        ],
+        "required": ["status", "message"],
         "title": "SyncResponse"
       },
       "SyncStatusOut": {
@@ -19110,11 +18241,7 @@
           }
         },
         "type": "object",
-        "required": [
-          "base",
-          "local",
-          "remote"
-        ],
+        "required": ["base", "local", "remote"],
         "title": "ThreeWayDiffRequest",
         "description": "API model for three-way diff request."
       },
@@ -19488,11 +18615,7 @@
           }
         },
         "type": "object",
-        "required": [
-          "daily_trends",
-          "peak_hours",
-          "analysis_period_days"
-        ],
+        "required": ["daily_trends", "peak_hours", "analysis_period_days"],
         "title": "TrendAnalysisOut",
         "description": "API model for trend analysis output."
       },
@@ -19524,12 +18647,7 @@
           }
         },
         "type": "object",
-        "required": [
-          "user_id",
-          "trustees",
-          "trusted",
-          "trust_count"
-        ],
+        "required": ["user_id", "trustees", "trusted", "trust_count"],
         "title": "TrustNetworkResponse",
         "description": "Response model for trust network."
       },
@@ -19545,10 +18663,7 @@
           }
         },
         "type": "object",
-        "required": [
-          "trustee_user_id",
-          "trusted_user_id"
-        ],
+        "required": ["trustee_user_id", "trusted_user_id"],
         "title": "TrustUserRequest",
         "description": "Request model for establishing trust relationship."
       },
@@ -19589,9 +18704,7 @@
           }
         },
         "type": "object",
-        "required": [
-          "datasets_directory"
-        ],
+        "required": ["datasets_directory"],
         "title": "UpdateDatasetDirectoryRequest",
         "description": "Request to update the datasets directory."
       },
@@ -19808,10 +18921,7 @@
           }
         },
         "type": "object",
-        "required": [
-          "users",
-          "total_count"
-        ],
+        "required": ["users", "total_count"],
         "title": "UserListResponse",
         "description": "Response model for user list."
       },
@@ -19841,11 +18951,7 @@
           }
         },
         "type": "object",
-        "required": [
-          "loc",
-          "msg",
-          "type"
-        ],
+        "required": ["loc", "msg", "type"],
         "title": "ValidationError"
       },
       "VerifyEmailRequest": {
@@ -19860,10 +18966,7 @@
           }
         },
         "type": "object",
-        "required": [
-          "user_id",
-          "verification_code"
-        ],
+        "required": ["user_id", "verification_code"],
         "title": "VerifyEmailRequest",
         "description": "Request model for email verification."
       },
@@ -19989,9 +19092,7 @@
           }
         },
         "type": "object",
-        "required": [
-          "vote"
-        ],
+        "required": ["vote"],
         "title": "VoteRequest",
         "description": "Request model for voting on a proposal."
       },
@@ -20102,11 +19203,7 @@
           }
         },
         "type": "object",
-        "required": [
-          "success",
-          "source",
-          "retrieved_at"
-        ],
+        "required": ["success", "source", "retrieved_at"],
         "title": "WikidataEntityResponse",
         "description": "Response model for Wikidata entity data"
       },
@@ -20125,9 +19222,7 @@
           }
         },
         "type": "object",
-        "required": [
-          "query"
-        ],
+        "required": ["query"],
         "title": "WikidataSparqlRequest",
         "description": "Request model for Wikidata SPARQL query"
       },
@@ -20179,11 +19274,7 @@
           }
         },
         "type": "object",
-        "required": [
-          "success",
-          "source",
-          "retrieved_at"
-        ],
+        "required": ["success", "source", "retrieved_at"],
         "title": "WikidataSparqlResponse",
         "description": "Response model for Wikidata SPARQL query"
       },
@@ -20343,10 +19434,7 @@
           }
         },
         "type": "object",
-        "required": [
-          "sync_performance",
-          "system_load"
-        ],
+        "required": ["sync_performance", "system_load"],
         "title": "PerformanceMetricsOut",
         "description": "API model for performance metrics output."
       },
