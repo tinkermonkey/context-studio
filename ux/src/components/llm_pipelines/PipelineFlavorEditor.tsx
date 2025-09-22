@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
   Button,
   Card,
@@ -75,6 +75,15 @@ export const PipelineFlavorEditor: React.FC<PipelineFlavorEditorProps> = ({
   });
 
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const systemPromptRef = useRef<HTMLTextAreaElement>(null);
+  const userPromptRef = useRef<HTMLTextAreaElement>(null);
+
+  const adjustTextAreaHeight = (textAreaRef: React.RefObject<HTMLTextAreaElement>) => {
+    if (textAreaRef.current) {
+      textAreaRef.current.style.height = 'auto';
+      textAreaRef.current.style.height = `${textAreaRef.current.scrollHeight}px`;
+    }
+  };
 
   // Fetch existing flavors for this pipeline type to get default values
   const shouldFetchDefaults = !flavor; // Only fetch when creating a new flavor
@@ -150,6 +159,12 @@ export const PipelineFlavorEditor: React.FC<PipelineFlavorEditorProps> = ({
       }));
     }
   }, [flavor, existingFlavorsResponse]);
+
+  // Adjust textarea heights when content changes
+  useEffect(() => {
+    adjustTextAreaHeight(systemPromptRef);
+    adjustTextAreaHeight(userPromptRef);
+  }, [formData.system_prompt, formData.user_prompt]);
 
   const getAvailableModels = () => {
     switch (formData.llm_provider) {
@@ -239,15 +254,6 @@ export const PipelineFlavorEditor: React.FC<PipelineFlavorEditorProps> = ({
 
   return (
     <Card>
-      <div className="mb-6 flex items-center gap-3">
-        <Button color="gray" size="sm" onClick={onClose}>
-          <ArrowLeft className="h-4 w-4" />
-        </Button>
-        <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
-          {flavor ? "Edit" : "Create"} Pipeline Flavor -{" "}
-          {pipeline.replace(/_/g, " ").replace(/\b\w/g, (l) => l.toUpperCase())}
-        </h2>
-      </div>
 
       {errors.submit && (
         <Alert color="failure" className="mb-4">
@@ -459,14 +465,16 @@ export const PipelineFlavorEditor: React.FC<PipelineFlavorEditorProps> = ({
             <Label htmlFor="system_prompt">System Prompt</Label>
             <Textarea
               id="system_prompt"
+              ref={systemPromptRef}
               value={formData.system_prompt}
-              onChange={(e) =>
-                setFormData({ ...formData, system_prompt: e.target.value })
-              }
-              rows={4}
+              onChange={(e) => {
+                setFormData({ ...formData, system_prompt: e.target.value });
+                setTimeout(() => adjustTextAreaHeight(systemPromptRef), 0);
+              }}
               color={errors.system_prompt ? "failure" : undefined}
               placeholder="Define the role and context for the AI assistant..."
               disabled={isDefaultFlavor}
+              style={{ minHeight: '100px', resize: 'none' }}
             />
             {errors.system_prompt && (
               <p className="mt-1 text-sm text-red-600 dark:text-red-400">
@@ -479,14 +487,16 @@ export const PipelineFlavorEditor: React.FC<PipelineFlavorEditorProps> = ({
             <Label htmlFor="user_prompt">User Prompt Template</Label>
             <Textarea
               id="user_prompt"
+              ref={userPromptRef}
               value={formData.user_prompt}
-              onChange={(e) =>
-                setFormData({ ...formData, user_prompt: e.target.value })
-              }
-              rows={4}
+              onChange={(e) => {
+                setFormData({ ...formData, user_prompt: e.target.value });
+                setTimeout(() => adjustTextAreaHeight(userPromptRef), 0);
+              }}
               color={errors.user_prompt ? "failure" : undefined}
               placeholder="Template for user requests (use variables like {title}, {context}, etc.)..."
               disabled={isDefaultFlavor}
+              style={{ minHeight: '100px', resize: 'none' }}
             />
             {errors.user_prompt && (
               <p className="mt-1 text-sm text-red-600 dark:text-red-400">
@@ -497,7 +507,7 @@ export const PipelineFlavorEditor: React.FC<PipelineFlavorEditorProps> = ({
         </div>
 
         {/* Actions */}
-        <div className="flex gap-3 border-t border-gray-200 pt-4 dark:border-gray-700">
+        <div className="flex gap-3 border-t border-gray-200 pt-4 dark:border-gray-700 justify-end">
           {!isDefaultFlavor ? (
             <>
               <Button type="submit" color="blue" disabled={isLoading}>

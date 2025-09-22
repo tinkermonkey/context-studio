@@ -2,7 +2,7 @@ import React from "react";
 import { render, screen, waitFor } from "@testing-library/react";
 import { vi } from "vitest";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { PipelineFlavorEditor } from "@/components/llm_pipelines/flavors/PipelineFlavorEditor";
+import { PipelineFlavorEditor } from "@/components/llm_pipelines/PipelineFlavorEditor";
 
 // Mock the pipeline flavors hooks - use simpler approach
 vi.mock("@/api/hooks/pipelineFlavors");

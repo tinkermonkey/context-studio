@@ -1,12 +1,12 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { ArrowLeft, Settings } from "lucide-react";
+import { ArrowLeft, Home, Settings } from "lucide-react";
 import { Link } from "@tanstack/react-router";
-import { Spinner, Alert } from "flowbite-react";
+import { Spinner, Alert, Breadcrumb } from "flowbite-react";
 import { CsMainTitle } from "@/components/layout/cs_main";
-import { PipelineFlavorEditor } from "@/components/llm_pipelines/flavors/PipelineFlavorEditor";
+import { PipelineFlavorEditor } from "@/components/llm_pipelines/PipelineFlavorEditor";
 import { usePipelineFlavor } from "@/api/hooks/pipelineFlavors";
 import type { PipelineType } from "@/api/services/pipelineFlavors";
-import { PipelineTypes } from "@/components/llm_pipelines/flavors/pipelineTypes";
+import { PipelineTypes } from "@/components/llm_pipelines/pipelineTypes";
 
 export const Route = createFileRoute(
   "/app/config/pipelines/$pipelineType/edit/$flavorId",
@@ -51,18 +51,37 @@ function EditFlavorPage() {
 
   return (
     <>
-      <CsMainTitle icon={Settings}>
-        <div className="flex items-center gap-3">
+      <Breadcrumb className="mb-4">
+        <div className="flex items-center space-x-2 text-sm text-gray-500">
+          <Link
+            to="/app"
+            className="flex items-center gap-1 hover:text-blue-600"
+          >
+            <Home className="h-4 w-4" />
+            Home
+          </Link>
+          <span>/</span>
+          <Link to="/app/config" className="hover:text-blue-600">
+            Configuration
+          </Link>
+          <span>/</span>
+          <Link to="/app/config/pipelines" className="hover:text-blue-600">
+            Pipeline Flavors
+          </Link>
+          <span>/</span>
           <Link
             to="/app/config/pipelines/$pipelineType"
             params={{ pipelineType }}
             className="hover:text-blue-600"
           >
-            <ArrowLeft className="h-5 w-5" />
+            {pipelineConfig?.label}
           </Link>
-          Edit {pipelineConfig?.label} Flavor: {flavor.title}
+          <span>/</span>
+          <span className="text-gray-900 dark:text-white">{flavor.title}</span>
         </div>
-      </CsMainTitle>
+      </Breadcrumb>
+
+      <CsMainTitle >Edit Flavor</CsMainTitle>
 
       <div className="mt-6">
         <PipelineFlavorEditor

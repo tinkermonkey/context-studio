@@ -1,7 +1,7 @@
 import React, { useState, useCallback, ReactNode } from "react";
 import { Button, Card, Alert, Spinner, Badge } from "flowbite-react";
 import { Play, Zap, CheckCircle, XCircle, Clock } from "lucide-react";
-import { usePipelineFlavors } from "@/api/hooks/pipelineFlavors";
+import { usePipelineFlavors, usePipelineFlavor } from "@/api/hooks/pipelineFlavors";
 import {
   useSuggestTermDefinitionMutation,
   useSuggestDomainDefinitionMutation,
@@ -38,6 +38,9 @@ interface LlmPipelineRunProps {
   /** JSON blob of context properties for the pipeline */
   context: Record<string, any>;
 
+  /** Optional list of specific flavor IDs to use instead of enabled flavors */
+  flavorList?: string[] | null;
+
   /** Optional custom template to render pipeline results */
   resultTemplate?: (result: PipelineResult) => ReactNode;
 
@@ -63,6 +66,7 @@ interface LlmPipelineRunProps {
 export const LlmPipelineRun: React.FC<LlmPipelineRunProps> = ({
   pipelineType,
   context,
+  flavorList = null,
   resultTemplate,
   onExecutionStart,
   onExecutionComplete,
@@ -75,21 +79,43 @@ export const LlmPipelineRun: React.FC<LlmPipelineRunProps> = ({
   const [isExecuting, setIsExecuting] = useState(false);
   const [executionError, setExecutionError] = useState<string | null>(null);
 
-  // Fetch enabled flavors for the specified pipeline type
+  // Fetch all flavors for pipeline type (always fetch this)
   const {
     data: flavorsResponse,
     isLoading: flavorsLoading,
     error: flavorsError,
   } = usePipelineFlavors({ pipeline: pipelineType });
 
+  // Conditionally fetch specific flavor when we have exactly one in the list
+  const specificFlavorId = flavorList && flavorList.length === 1 ? flavorList[0] : "";
+  const {
+    data: specificFlavor,
+    isLoading: specificFlavorLoading,
+    error: specificFlavorError,
+  } = usePipelineFlavor(specificFlavorId);
+
   // Pipeline mutation hooks
   const termMutation = useSuggestTermDefinitionMutation();
   const domainMutation = useSuggestDomainDefinitionMutation();
   const layerMutation = useSuggestLayerDefinitionMutation();
 
-  // Get enabled flavors
-  const enabledFlavors =
-    flavorsResponse?.flavors?.filter((flavor) => flavor.enabled) || [];
+  // Get enabled flavors or use provided flavorList
+  const enabledFlavors = React.useMemo(() => {
+    if (flavorList && flavorList.length > 0) {
+      if (flavorList.length === 1 && specificFlavor) {
+        // Use the specific flavor we fetched directly by ID
+        return [specificFlavor];
+      } else {
+        // Use provided flavorList - filter from all available flavors
+        const allFlavors = flavorsResponse?.flavors || [];
+        const filtered = allFlavors.filter((flavor) => flavorList.includes(flavor.id));
+        return filtered;
+      }
+    }
+    // Fall back to enabled flavors when no flavorList is provided
+    const enabledOnly = flavorsResponse?.flavors?.filter((flavor) => flavor.enabled) || [];
+    return enabledOnly;
+  }, [flavorList, flavorsResponse?.flavors, specificFlavor]);
 
   // Function to execute a specific pipeline for a flavor
   const executePipelineForFlavor = useCallback(
@@ -147,7 +173,10 @@ export const LlmPipelineRun: React.FC<LlmPipelineRunProps> = ({
   // Function to execute all enabled flavors in parallel
   const executePipelines = useCallback(async () => {
     if (enabledFlavors.length === 0) {
-      setExecutionError("No enabled flavors found for this pipeline type");
+      const errorMessage = flavorList && flavorList.length > 0
+        ? "No flavors found matching the provided flavor list for this pipeline type"
+        : "No enabled flavors found for this pipeline type";
+      setExecutionError(errorMessage);
       return;
     }
 
@@ -201,6 +230,7 @@ export const LlmPipelineRun: React.FC<LlmPipelineRunProps> = ({
     onExecutionStart,
     onExecutionComplete,
     onFlavorComplete,
+    flavorList,
   ]);
 
   // Auto-execute on mount if requested
@@ -316,7 +346,10 @@ export const LlmPipelineRun: React.FC<LlmPipelineRunProps> = ({
     );
   };
 
-  if (flavorsLoading) {
+  const isLoading = flavorsLoading || (specificFlavorId && specificFlavorLoading);
+  const loadingError = flavorsError || (specificFlavorId && specificFlavorError);
+
+  if (isLoading) {
     return (
       <div className={"w-full" + className}>
         <div className="flex items-center gap-3 p-4">
@@ -329,7 +362,7 @@ export const LlmPipelineRun: React.FC<LlmPipelineRunProps> = ({
     );
   }
 
-  if (flavorsError) {
+  if (loadingError) {
     return (
       <div className={"w-full" + className}>
         <Alert color="failure">
@@ -338,8 +371,8 @@ export const LlmPipelineRun: React.FC<LlmPipelineRunProps> = ({
               Failed to Load Pipeline Flavors
             </h4>
             <p>
-              {flavorsError instanceof Error
-                ? flavorsError.message
+              {loadingError instanceof Error
+                ? loadingError.message
                 : "Unknown error"}
             </p>
           </div>
@@ -349,12 +382,18 @@ export const LlmPipelineRun: React.FC<LlmPipelineRunProps> = ({
   }
 
   if (enabledFlavors.length === 0) {
+    const warningMessage = flavorList && flavorList.length > 0
+      ? `No flavors found matching the provided flavor list for pipeline type: ${pipelineType}`
+      : `No enabled flavors found for pipeline type: ${pipelineType}`;
+
     return (
       <div className={"w-full" + className}>
         <Alert color="warning">
           <div>
-            <h4 className="mb-2 font-medium">No Enabled Flavors</h4>
-            <p>No enabled flavors found for pipeline type: {pipelineType}</p>
+            <h4 className="mb-2 font-medium">
+              {flavorList && flavorList.length > 0 ? "No Matching Flavors" : "No Enabled Flavors"}
+            </h4>
+            <p>{warningMessage}</p>
           </div>
         </Alert>
       </div>
@@ -373,7 +412,7 @@ export const LlmPipelineRun: React.FC<LlmPipelineRunProps> = ({
                 .replace(/\b\w/g, (l) => l.toUpperCase())}
             </h3>
             <p className="text-sm text-gray-500 dark:text-gray-400">
-              {enabledFlavors.length} enabled flavor
+              {enabledFlavors.length} {flavorList && flavorList.length > 0 ? "selected" : "enabled"} flavor
               {enabledFlavors.length !== 1 ? "s" : ""}
             </p>
           </div>
@@ -407,7 +446,7 @@ export const LlmPipelineRun: React.FC<LlmPipelineRunProps> = ({
       {/* Results Grid */}
       {results.length > 0 && (
         <div className="grid grid-cols-1 gap-4 lg:grid-cols-2 xl:grid-cols-3">
-          {results.map((result, index) => (
+          {results.map((result) => (
             <div
               key={result.flavorId}
               className="flex flex-col rounded-lg border border-gray-200 bg-white p-2 shadow-md dark:border-gray-700 dark:bg-gray-800"

@@ -2,26 +2,9 @@ import { createFileRoute } from "@tanstack/react-router";
 import { ArrowLeft, Settings } from "lucide-react";
 import { Link } from "@tanstack/react-router";
 import { CsMainTitle } from "@/components/layout/cs_main";
-import { PipelineFlavorEditor } from "@/components/llm_pipelines/flavors/PipelineFlavorEditor";
+import { PipelineFlavorEditor } from "@/components/llm_pipelines/PipelineFlavorEditor";
+import { PipelineTypes } from "@/components/llm_pipelines/pipelineTypes";
 import type { PipelineType } from "@/api/services/pipelineFlavors";
-
-const PIPELINE_TYPES: Record<
-  PipelineType,
-  { label: string; description: string }
-> = {
-  suggest_layer_definition: {
-    label: "Layer Definitions",
-    description: "Generate definitions for knowledge layers",
-  },
-  suggest_domain_definition: {
-    label: "Domain Definitions",
-    description: "Generate definitions for knowledge domains",
-  },
-  suggest_term_definition: {
-    label: "Term Definitions",
-    description: "Generate definitions for knowledge terms",
-  },
-};
 
 export const Route = createFileRoute(
   "/app/config/pipelines/$pipelineType/create",
@@ -32,7 +15,7 @@ export const Route = createFileRoute(
 function CreateFlavorPage() {
   const { pipelineType } = Route.useParams() as { pipelineType: PipelineType };
   const navigate = Route.useNavigate();
-  const pipelineConfig = PIPELINE_TYPES[pipelineType];
+  const pipelineConfig = PipelineTypes.find((p) => p.value === pipelineType);
 
   const handleClose = () => {
     navigate({

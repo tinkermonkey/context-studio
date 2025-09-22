@@ -1,12 +1,22 @@
 import React, { useState, useEffect } from "react";
 import { createFileRoute } from "@tanstack/react-router";
-import { Button, Card, Select, Label, Spinner, Alert } from "flowbite-react";
-import { ArrowLeft, BarChart3, Clock } from "lucide-react";
+import {
+  Button,
+  Card,
+  Select,
+  Label,
+  Spinner,
+  Alert,
+  Breadcrumb,
+  Modal,
+} from "flowbite-react";
+import { ArrowLeft, BarChart3, Clock, Home, Edit } from "lucide-react";
 import { Link } from "@tanstack/react-router";
 import { CsMainTitle } from "@/components/layout/cs_main";
 import { NlpAnalysisPanel } from "@/components/nlp/NlpAnalysisPanel";
 import { AnalyticsDashboard } from "@/components/llm_traceability/AnalyticsDashboard";
 import { ExecutionHistory } from "@/components/llm_traceability/ExecutionHistory";
+import { PipelineFlavorEditor } from "@/components/llm_pipelines/PipelineFlavorEditor";
 import {
   usePipelineFlavor,
   useDefaultPipelineFlavor,
@@ -17,7 +27,7 @@ import {
   useTermNodes,
 } from "@/api/hooks/structure_nodes/useStructureNodes";
 import type { PipelineType } from "@/api/services/pipelineFlavors";
-import { PipelineTypes } from "@/components/llm_pipelines/flavors/pipelineTypes";
+import { PipelineTypes } from "@/components/llm_pipelines/pipelineTypes";
 
 interface TestRecord {
   id: string;
@@ -50,6 +60,7 @@ function TestFlavorPage() {
   const navigate = Route.useNavigate();
 
   const [selectedRecord, setSelectedRecord] = useState<TestRecord | null>(null);
+  const [showEditModal, setShowEditModal] = useState(false);
 
   const isDefault = flavorId === "default";
   const {
@@ -170,24 +181,48 @@ function TestFlavorPage() {
 
   return (
     <>
-      <CsMainTitle icon={BarChart3}>
-        <div className="flex items-center gap-3">
+      {/* Breadcrumbs */}
+      <Breadcrumb className="mb-4">
+        <div className="flex items-center space-x-2 text-sm text-gray-500">
+          <Link
+            to="/app"
+            className="flex items-center gap-1 hover:text-blue-600"
+          >
+            <Home className="h-4 w-4" />
+            Home
+          </Link>
+          <span>/</span>
+          <Link to="/app/config" className="hover:text-blue-600">
+            Configuration
+          </Link>
+          <span>/</span>
+          <Link to="/app/config/pipelines" className="hover:text-blue-600">
+            Pipeline Flavors
+          </Link>
+          <span>/</span>
           <Link
             to="/app/config/pipelines/$pipelineType"
             params={{ pipelineType }}
             className="hover:text-blue-600"
           >
-            <ArrowLeft className="h-5 w-5" />
+            {pipelineConfig?.label}
           </Link>
-          Test Flavor: {currentFlavor.title}
+          <span>/</span>
+          <span className="text-gray-900 dark:text-white">
+            Test "{currentFlavor.title}"
+          </span>
         </div>
+      </Breadcrumb>
+
+      <CsMainTitle>
+        <div className="flex items-center gap-3">Flavor Tester</div>
       </CsMainTitle>
 
       <div className="mt-6 space-y-6">
         {/* Header */}
         <Card>
-          <div className="mb-4 flex items-start gap-3">
-            <div>
+          <div className="mb-4 flex items-start justify-between">
+            <div className="flex-1">
               <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
                 {currentFlavor.title}
               </h2>
@@ -208,16 +243,26 @@ function TestFlavorPage() {
                 {currentFlavor.user_prompt}
               </pre>
             </div>
+            <div className="ml-4">
+              <Button
+                color="blue"
+                size="sm"
+                onClick={() => setShowEditModal(true)}
+              >
+                <Edit className="mr-2 h-4 w-4" />
+                Edit Flavor
+              </Button>
+            </div>
           </div>
         </Card>
 
         {/* NLP Analysis Panel */}
         <Card>
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+            Test Execution
+          </h3>
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
             <div>
-              <Label htmlFor="test-record">
-                Select {getRecordTypeDisplayName()} to Test
-              </Label>
               {isLoading ? (
                 <div className="flex items-center gap-2 rounded-lg border p-3">
                   <Spinner size="sm" />
@@ -253,6 +298,7 @@ function TestFlavorPage() {
               <NlpAnalysisPanel
                 text={selectedRecord.title}
                 textTitle={selectedRecord.title}
+                flavorList={[currentFlavor.id]}
                 {...(selectedRecord.type === "layer" && {
                   layerId: selectedRecord.id,
                 })}
@@ -318,6 +364,26 @@ function TestFlavorPage() {
           )}
         </Card>
       </div>
+
+      {/* Edit Flavor Modal */}
+      <Modal
+        show={showEditModal}
+        onClose={() => setShowEditModal(false)}
+        size="7xl"
+      >
+        <div className="p-6">
+          <div className="mb-4 flex items-center justify-between border-b border-gray-200 pb-4 dark:border-gray-700">
+            <h3 className="text-xl font-semibold text-gray-900 dark:text-white">
+              Edit Flavor: {currentFlavor.title}
+            </h3>
+          </div>
+          <PipelineFlavorEditor
+            pipeline={currentFlavor.pipeline}
+            flavor={currentFlavor}
+            onClose={() => setShowEditModal(false)}
+          />
+        </div>
+      </Modal>
     </>
   );
 }

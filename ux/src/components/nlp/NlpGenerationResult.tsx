@@ -29,6 +29,8 @@ interface NlpGenerationResultProps {
   termId?: string | null;
   domainId?: string | null;
   layerId?: string | null;
+  // Optional list of pipeline flavor IDs to use instead of enabled flavors
+  flavorList?: string[] | null;
 }
 
 export const NlpGenerationResult: React.FC<NlpGenerationResultProps> = ({
@@ -41,6 +43,7 @@ export const NlpGenerationResult: React.FC<NlpGenerationResultProps> = ({
   termId = null,
   domainId = null,
   layerId = null,
+  flavorList = null,
 }) => {
   const [apiContext, setApiContext] = React.useState<Record<
     string,
@@ -401,6 +404,7 @@ export const NlpGenerationResult: React.FC<NlpGenerationResultProps> = ({
               <LlmPipelineRun
                 pipelineType={pipelineType}
                 context={apiContext || {}}
+                flavorList={flavorList}
                 // Render each result with its own saving state
                 resultTemplate={(result: any) => (
                   <PipelineResultView

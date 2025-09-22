@@ -35,6 +35,8 @@ interface NlpAnalysisPanelProps {
   termId?: string | null;
   domainId?: string | null;
   layerId?: string | null;
+  // Optional list of pipeline flavor IDs to use instead of enabled flavors
+  flavorList?: string[] | null;
 }
 
 export const NlpAnalysisPanel: React.FC<NlpAnalysisPanelProps> = ({
@@ -46,6 +48,7 @@ export const NlpAnalysisPanel: React.FC<NlpAnalysisPanelProps> = ({
   termId = null,
   domainId = null,
   layerId = null,
+  flavorList = null,
 }) => {
   const [pendingText, setPendingText] = useState(text);
   const [debouncedText, setDebouncedText] = useState(text);
@@ -376,6 +379,7 @@ export const NlpAnalysisPanel: React.FC<NlpAnalysisPanelProps> = ({
               termId={termId}
               domainId={domainId}
               layerId={layerId}
+              flavorList={flavorList}
               className="w-full rounded-lg border border-gray-200 bg-white"
             />
           </div>
