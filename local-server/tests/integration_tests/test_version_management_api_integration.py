@@ -20,6 +20,32 @@ from services.version_manager import VersionManager
 from services.working_tree_manager import WorkingTreeManager
 
 
+def create_layer_and_domain(client, layer_title=None, domain_title=None, domain_definition=None):
+    """Helper function to create a layer and domain with proper hierarchy."""
+    # Create layer first
+    layer_data = {
+        "node_type": "layer",
+        "title": layer_title or f"Test Layer {uuid4()}",
+        "definition": "Test layer for version management",
+    }
+    layer_response = client.post("/api/structure_nodes/", json=layer_data)
+    assert layer_response.status_code == 201
+    layer_id = layer_response.json()["id"]
+
+    # Create domain
+    domain_data = {
+        "node_type": "domain",
+        "title": domain_title or f"Test Domain {uuid4()}",
+        "definition": domain_definition or "Test domain for version management",
+        "parent_node_id": layer_id,
+    }
+    domain_response = client.post("/api/structure_nodes/", json=domain_data)
+    assert domain_response.status_code == 201
+    domain = domain_response.json()
+
+    return layer_id, domain["id"], domain
+
+
 @pytest.fixture(autouse=True, scope="function")
 def start_event_processor_for_version_tests(db_session, shared_app):
     """Start EventProcessor for version management tests."""
@@ -135,18 +161,12 @@ class TestVersionManagementAPI:
 
     def test_get_specific_version(self, client):
         """Test getting a specific version by number."""
-        # Create a structure node
-        unique_title = f"Test Node {uuid4()}"
-        node_data = {
-            "node_type": "domain",
-            "title": unique_title,
-            "definition": "Test domain for version retrieval",
-        }
-
-        create_response = client.post("/api/structure_nodes/", json=node_data)
-        assert create_response.status_code == 201
-        node = create_response.json()
-        node_id = node["id"]
+        # Create a layer and domain with proper hierarchy
+        layer_id, node_id, node = create_layer_and_domain(
+            client,
+            domain_title=f"Test Node {uuid4()}",
+            domain_definition="Test domain for version retrieval"
+        )
 
         # Get specific version (version 1)
         response = client.get(

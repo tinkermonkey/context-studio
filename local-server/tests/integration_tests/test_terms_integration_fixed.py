@@ -186,7 +186,7 @@ def test_delete_term(client):
 
     # Delete the term
     resp = client.delete(f"/api/structure_nodes/{term['id']}")
-    assert resp.status_code == 200
+    assert resp.status_code == 204
 
     # Confirm term is gone
     resp = client.get(f"/api/structure_nodes/{term['id']}")

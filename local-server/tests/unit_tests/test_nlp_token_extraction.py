@@ -10,9 +10,7 @@ from nlp.processors import extract_token_data
 @pytest.fixture(scope="function")
 def nlp():
     """Get NLP pipeline with proper cleanup between tests"""
-    from unittest.mock import patch, MagicMock
-    import tempfile
-    import os
+    from unittest.mock import patch
 
     # Mock the proxy manager and config to avoid external dependencies
     with patch('nlp.pipeline.get_proxy_manager') as mock_proxy_mgr, \

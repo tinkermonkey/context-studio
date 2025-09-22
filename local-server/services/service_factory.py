@@ -571,7 +571,7 @@ class ServiceFactory:
                 
             if duckdb_conn is None:
                 duckdb_service = self.create_duckdb_service(s3_conf)
-                duckdb_connection = duckdb_service.duckdb_conn
+                duckdb_connection = duckdb_service.connection
             else:
                 duckdb_connection = duckdb_conn
                 
@@ -597,7 +597,17 @@ class ServiceFactory:
                 s3_conf = settings.get_s3_config()
             else:
                 s3_conf = s3_config
-            return S3StorageOptimizer(s3_conf)
+
+            # Create S3 client and extract bucket name from config
+            import boto3
+            s3_client = boto3.client('s3',
+                aws_access_key_id=s3_conf.get('aws_access_key_id'),
+                aws_secret_access_key=s3_conf.get('aws_secret_access_key'),
+                region_name=s3_conf.get('region', 'us-east-1')
+            )
+            bucket_name = s3_conf.get('bucket_name', 'context-studio-default')
+
+            return S3StorageOptimizer(s3_client, bucket_name)
         
         return self._create_service_with_factory(ServiceType.S3_STORAGE_OPTIMIZER, create_service)
 

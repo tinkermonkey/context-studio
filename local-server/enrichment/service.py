@@ -2,7 +2,6 @@
 
 from typing import Dict, Any, Optional, List, Tuple
 import asyncio
-import aiohttp
 from datetime import datetime, UTC
 
 from config import get_config_manager, ConfigurationManager
@@ -713,7 +712,7 @@ class EnrichmentService:
                 async with source:
                     # Use the direct ConceptNet API to get external URLs
                     import aiohttp
-                    url = f"https://api.conceptnet.io/query"
+                    url = "https://api.conceptnet.io/query"
                     params = {
                         "rel": "/r/ExternalURL",
                         "start": concept_id,
