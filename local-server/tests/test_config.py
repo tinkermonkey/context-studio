@@ -72,8 +72,10 @@ class TestConfigurationManager:
     def _get_test_defaults(self) -> Dict[str, Any]:
         """Get test-specific configuration defaults that isolate file paths only."""
         test_logs_dir = self.temp_dir / "logs"
+        test_datasets_dir = self.temp_dir / "test_datasets"
         test_logs_dir.mkdir(exist_ok=True)
-        
+        test_datasets_dir.mkdir(exist_ok=True)
+
         return {
             # Only override file paths to prevent pollution - don't change database connections
             "logging": {
@@ -88,6 +90,10 @@ class TestConfigurationManager:
             "server": {
                 "reload": False,  # Disable auto-reload in tests
                 "access_log": False  # Reduce noise in tests
+            },
+            "dataset": {
+                "config_path": str(self.temp_dir / "test_datasets.json"),
+                "datasets_directory": str(test_datasets_dir)
             }
             # Note: Database URLs are NOT overridden to maintain shared database performance
             # Tests that need database isolation should use utilities from test_db_utils.py
