@@ -12,6 +12,9 @@ from database.utils import get_current_engine
 from sqlalchemy import text
 from datetime import datetime, timezone, timedelta
 
+# Mark all tests in this file for separate execution
+pytestmark = pytest.mark.event_processor
+
 
 def insert_event_via_sqlalchemy(
     event_type, record_type, processed=0, ts=None, record_id=None, test_session_id=None
@@ -124,6 +127,8 @@ def cleanup_events(test_session_id=None):
 @pytest.fixture(autouse=True)
 def test_session_isolation(shared_app, request):
     """Provide test session isolation with unique ID and comprehensive cleanup"""
+    app, engine, session_local = shared_app
+
     # Generate unique test session ID
     test_session_id = f"session-{str(uuid.uuid4())[:8]}"
 
@@ -132,6 +137,14 @@ def test_session_isolation(shared_app, request):
 
     # Clean up any existing test data before test
     cleanup_events()
+
+    # CRITICAL: Stop any existing event processor from the shared app to prevent conflicts
+    if hasattr(app.state, 'event_processor') and app.state.event_processor:
+        try:
+            app.state.event_processor.stop()
+            print(f"[ISOLATION] Stopped shared app event processor for test {request.node.name}")
+        except Exception as e:
+            print(f"[ISOLATION] Warning: Could not stop shared app event processor: {e}")
 
     yield test_session_id
 
@@ -150,7 +163,7 @@ def test_event_processor_processes_events(shared_app, test_session_isolation, re
     for record_type in ["structure_node", "structure_node_link", "predicate"]:
         insert_event_via_sqlalchemy("create", record_type, test_session_id=test_session_id)
 
-    print("[TEST] Starting test_event_processor_processes_events")
+    print(f"[TEST] Starting test_event_processor_processes_events")
 
     # Get the database URL from the current engine
     from database.utils import get_current_engine
@@ -158,12 +171,15 @@ def test_event_processor_processes_events(shared_app, test_session_isolation, re
     engine = get_current_engine()
     database_url = str(engine.url)
 
+    # Create isolated EventProcessor with unique connection
     processor = EventProcessor(
-        database_url=database_url, poll_interval=0.01, max_events=10  # Faster polling for tests
+        database_url=database_url,
+        poll_interval=0.01,
+        max_events=10  # Faster polling for tests
     )
     try:
         processor.start()
-        print("[TEST] EventProcessor started")
+        print(f"[TEST] EventProcessor started for session {test_session_id}")
 
         # Wait for processing with deterministic check instead of fixed sleep
         max_wait_time = 2.0  # Maximum wait time in seconds
@@ -182,8 +198,14 @@ def test_event_processor_processes_events(shared_app, test_session_isolation, re
             print(f"[TEST] Timeout after {max_wait_time}s, some events may be unprocessed")
 
     finally:
-        processor.stop()
-        print("[TEST] EventProcessor stopped")
+        try:
+            processor.stop()
+            print(f"[TEST] EventProcessor stopped for session {test_session_id}")
+        except Exception as e:
+            print(f"[TEST] Warning: Error stopping EventProcessor: {e}")
+
+        # Give a moment for cleanup
+        time.sleep(0.01)
 
     # All events should be marked processed
     unprocessed_count = get_event_count_via_sqlalchemy(processed=0)
