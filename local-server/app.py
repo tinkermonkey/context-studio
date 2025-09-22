@@ -96,34 +96,45 @@ def create_app(dataset_id=None, engine=None, session_local=None, service_factory
             if active_dataset:
                 # Get the database URL instead of passing the engine
                 current_engine = get_current_engine()
-                database_url = str(current_engine.url)
-                
-                # Create version manager and working tree manager for event processor
-                try:
-                    from services.version_manager import VersionManager
-                    from services.working_tree_manager import WorkingTreeManager
-                    
-                    db_session = next(get_db())
-                    version_manager = VersionManager(db_session)
-                    working_tree_manager = WorkingTreeManager(db_session, version_manager)
-                    logger.info("VersionManager and WorkingTreeManager created for EventProcessor")
-                    
-                    # Initialize Event Processor with full version management
-                    app.state.event_processor = create_event_processor(
-                        database_url=database_url,
-                        version_manager=version_manager,
-                        working_tree_manager=working_tree_manager
-                    )
-                    app.state.event_processor.start()
-                    logger.info(f"Event processor started with full version management for dataset: {active_dataset.title}")
-                except Exception as e:
-                    logger.error(f"Failed to initialize version management services: {e}")
-                    # Fall back to event processor without version management
-                    app.state.event_processor = create_event_processor(
-                        database_url=database_url
-                    )
-                    app.state.event_processor.start()
-                    logger.warning(f"Event processor started without version management for dataset: {active_dataset.title}")
+                if current_engine is None:
+                    logger.warning("No current engine available, skipping event processor initialization")
+                    app.state.event_processor = None
+                else:
+                    database_url = str(current_engine.url)
+
+                    # Create version manager and working tree manager for event processor
+                    try:
+                        from services.version_manager import VersionManager
+                        from services.working_tree_manager import WorkingTreeManager
+
+                        # Use the session_local that was provided to create_app, not the global one
+                        session_maker = session_local or get_current_session_local()
+                        if session_maker is None:
+                            raise RuntimeError("No session local available for version manager")
+
+                        db_session = session_maker()
+                        version_manager = VersionManager(db_session)
+                        working_tree_manager = WorkingTreeManager(db_session, version_manager)
+                        logger.info("VersionManager and WorkingTreeManager created for EventProcessor")
+
+                        # Initialize Event Processor with full version management
+                        app.state.event_processor = create_event_processor(
+                            database_url=database_url,
+                            version_manager=version_manager,
+                            working_tree_manager=working_tree_manager
+                        )
+                        app.state.event_processor.start()
+                        logger.info(f"Event processor started with full version management for dataset: {active_dataset.title}")
+                    except Exception as e:
+                        logger.error(f"Failed to initialize version management services: {e}")
+                        # Fall back to event processor without version management
+                        app.state.event_processor = create_event_processor(
+                            database_url=database_url
+                        )
+                        app.state.event_processor.start()
+                        logger.warning(f"Event processor started without version management for dataset: {active_dataset.title}")
+            else:
+                app.state.event_processor = None
             
             # Preload NLP pipeline to reduce API response times
             logger.info("Preloading NLP pipeline...")
