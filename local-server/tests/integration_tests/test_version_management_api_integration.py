@@ -51,30 +51,39 @@ def start_event_processor_for_version_tests(db_session, shared_app):
     """Start EventProcessor for version management tests."""
     app, engine, session_local = shared_app
     database_url = str(engine.url)
-    
-    # Check if global event processor exists and is running
+
+    # Always ensure we have a fresh event processor for version tests
     processor = get_global_event_processor()
-    if not processor or not processor.get_stats().get('is_running', False):
+    if processor:
         try:
-            # Create version management services
-            version_manager = VersionManager(db_session)
-            working_tree_manager = WorkingTreeManager(db_session, version_manager)
-            
-            # Create and start event processor
-            processor = create_event_processor(
-                database_url=database_url,
-                version_manager=version_manager,
-                working_tree_manager=working_tree_manager
-            )
-            processor.start()
-            
-            # Wait a moment for startup
-            time.sleep(0.1)
-            
-        except Exception as e:
-            print(f"Failed to start event processor for test: {e}")
-            processor = None
-    
+            processor.stop()
+        except:
+            pass
+
+    try:
+        # Create version management services with the test database session
+        version_manager = VersionManager(db_session)
+        working_tree_manager = WorkingTreeManager(db_session, version_manager)
+
+        # Create and start event processor with the test database URL
+        processor = create_event_processor(
+            database_url=database_url,
+            version_manager=version_manager,
+            working_tree_manager=working_tree_manager
+        )
+        processor.start()
+
+        # Give the event processor a moment to start and process any existing events
+        time.sleep(0.2)
+
+        print(f"✅ Event processor started for version tests: {processor.get_stats()}")
+
+    except Exception as e:
+        print(f"❌ Failed to start event processor for test: {e}")
+        import traceback
+        traceback.print_exc()
+        processor = None
+
     yield processor
 
 
@@ -168,10 +177,23 @@ class TestVersionManagementAPI:
             domain_definition="Test domain for version retrieval"
         )
 
+        print(f"Created domain: {node_id}")
+
+        # Give the event processor time to process the creation events
+        import time
+        time.sleep(1.0)
+
+        print(f"Checking for version 1 of domain: {node_id}")
+
         # Get specific version (version 1)
         response = client.get(
             f"/api/versions/entities/structure_node/{node_id}/versions/1"
         )
+
+        print(f"Version API response: {response.status_code}")
+        if response.status_code != 200:
+            print(f"Response body: {response.text}")
+
         assert response.status_code == 200
 
         version = response.json()
