@@ -634,15 +634,13 @@ class HierarchicalDiffEngine:
                 conflict = ConflictDescriptor(
                     conflict_id=conflict_id,
                     conflict_type=conflict_type,
-
-
-                    path=key,
+                    path=path,
                     local_value=local_value,
                     remote_value=remote_value,
-                    base_value=self._extract_change_value(local_change, 'before'),
+                    base_value=base_value,
                     confidence_score=confidence_score,
                     resolution_suggestions=self._generate_conflict_resolution_suggestions(
-                        local_change, remote_change
+                        conflict_dict
                     ),
 
                     created_at=datetime.now(timezone.utc),
@@ -652,11 +650,23 @@ class HierarchicalDiffEngine:
                 conflicts.append(conflict)
 
 
-        # Check for add/remove conflicts
-        local_added = set(local_diff['structural'].get('added_keys', set()))
-        remote_removed = set(remote_diff['structural'].get('removed_keys', set()))
-        local_removed = set(local_diff['structural'].get('removed_keys', set()))
-        remote_added = set(remote_diff['structural'].get('added_keys', set()))
+        # Check for add/remove conflicts by extracting from operations
+        local_added = set()
+        local_removed = set()
+        remote_added = set()
+        remote_removed = set()
+
+        for op in local_diff.get('operations', []):
+            if op['operation'] == 'add':
+                local_added.add(op['path'])
+            elif op['operation'] == 'remove':
+                local_removed.add(op['path'])
+
+        for op in remote_diff.get('operations', []):
+            if op['operation'] == 'add':
+                remote_added.add(op['path'])
+            elif op['operation'] == 'remove':
+                remote_removed.add(op['path'])
         
         # Key added locally but removed remotely
         add_remove_conflicts = (local_added & remote_removed) | (remote_added & local_removed)
