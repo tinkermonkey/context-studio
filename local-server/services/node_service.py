@@ -14,6 +14,8 @@ from database.enums import NodeType
 from graph.graph_service import GraphService
 from embeddings.generate_embeddings import generate_embedding
 from services.change_event_handler import ChangeEventHandler
+from services.version_manager import VersionManager, ChangeState
+from services.working_tree_manager import WorkingTreeManager
 from utils.logger import get_logger
 
 logger = get_logger(__name__)
@@ -22,18 +24,24 @@ logger = get_logger(__name__)
 class NodeService:
     """Centralized business logic for structure_node operations"""
 
-    def __init__(self, db: Session, graph_service: Optional[GraphService] = None):
+    def __init__(self, db: Session, graph_service: Optional[GraphService] = None,
+                 version_manager: Optional[VersionManager] = None,
+                 working_tree_manager: Optional[WorkingTreeManager] = None):
         """
         Initialize the NodeService.
 
         Args:
             db: SQLAlchemy database session
             graph_service: Optional graph service for graph operations
+            version_manager: Optional version manager for versioning
+            working_tree_manager: Optional working tree manager for state tracking
         """
         self.db = db
         self.graph_service = (
             graph_service  # Keep optional for now since GraphService needs updating
         )
+        self.version_manager = version_manager
+        self.working_tree_manager = working_tree_manager
         self.event_handler = ChangeEventHandler(db)
         logger.debug("NodeService initialized")
 
@@ -105,6 +113,34 @@ class NodeService:
             logger.info(
                 f"Successfully created structure_node: {structure_node.id} ({structure_node.node_type})"
             )
+
+            # Initialize version management and working tree state immediately
+            if self.version_manager and self.working_tree_manager:
+                try:
+                    # Convert entity to dict for version content
+                    node_dict = self._node_to_dict(structure_node)
+
+                    # Create initial version
+                    version = self.version_manager.create_version(
+                        entity_type='structure_node',
+                        entity_id=str(structure_node.id),
+                        content=node_dict,
+                        author_id='system',  # TODO: Get from request context
+                        state=ChangeState.WORKING
+                    )
+
+                    # Initialize entity in working tree
+                    self.working_tree_manager.initialize_entity_in_working_tree(
+                        entity_type='structure_node',
+                        entity_id=str(structure_node.id),
+                        initial_version_id=version.id
+                    )
+
+                    logger.info(f"Initialized version management for structure_node: {structure_node.id}")
+
+                except Exception as e:
+                    logger.warning(f"Failed to initialize version management for {structure_node.id}: {e}")
+                    # Don't fail the entity creation if version management fails
 
             # Fire structure_node created event using new ChangeEventHandler
             node_dict = self._node_to_dict(structure_node)

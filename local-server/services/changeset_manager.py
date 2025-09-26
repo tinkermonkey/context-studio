@@ -134,8 +134,8 @@ class ChangesetManager:
         
         try:
             result = self.db.execute(
-                text("SELECT * FROM changesets WHERE id = ?"),
-                (changeset_id,)
+                text("SELECT * FROM changesets WHERE id = :changeset_id"),
+                {"changeset_id": changeset_id}
             ).fetchone()
             
             if not result:
@@ -166,19 +166,20 @@ class ChangesetManager:
         
         try:
             query = "SELECT * FROM changesets WHERE 1=1"
-            params = []
             
+            params = {}
+
             if author_id:
-                query += " AND author_id = ?"
-                params.append(author_id)
-                
+                query += " AND author_id = :author_id"
+                params["author_id"] = author_id
+
             if state:
-                query += " AND state = ?"
-                params.append(state.value)
-                
-            query += " ORDER BY created_at DESC LIMIT ?"
-            params.append(limit)
-            
+                query += " AND state = :state"
+                params["state"] = state.value
+
+            query += " ORDER BY created_at DESC LIMIT :limit"
+            params["limit"] = limit
+
             results = self.db.execute(text(query), params).fetchall()
             changesets = [row_to_changeset(row) for row in results]
             
@@ -210,19 +211,18 @@ class ChangesetManager:
             
         try:
             updates = []
-            params = []
-            
+            params = {"changeset_id": changeset_id}
+
             if title:
-                updates.append("title = ?")
-                params.append(title)
-                
+                updates.append("title = :title")
+                params["title"] = title
+
             if description:
-                updates.append("description = ?")
-                params.append(description)
-                
-            params.append(changeset_id)
-            query = f"UPDATE changesets SET {', '.join(updates)} WHERE id = ?"
-            
+                updates.append("description = :description")
+                params["description"] = description
+
+            query = f"UPDATE changesets SET {', '.join(updates)} WHERE id = :changeset_id"
+
             cursor = self.db.execute(text(query), params)
             self.db.commit()
             
@@ -254,12 +254,16 @@ class ChangesetManager:
         try:
             # If transitioning to MERGED, record merge timestamp
             if new_state == ChangesetState.MERGED:
-                query = "UPDATE changesets SET state = ?, merged_at = ? WHERE id = ?"
-                params = (new_state.value, datetime.now(timezone.utc).isoformat(), changeset_id)
+                query = "UPDATE changesets SET state = :state, merged_at = :merged_at WHERE id = :changeset_id"
+                params = {
+                    "state": new_state.value,
+                    "merged_at": datetime.now(timezone.utc).isoformat(),
+                    "changeset_id": changeset_id
+                }
             else:
-                query = "UPDATE changesets SET state = ? WHERE id = ?"
-                params = (new_state.value, changeset_id)
-            
+                query = "UPDATE changesets SET state = :state WHERE id = :changeset_id"
+                params = {"state": new_state.value, "changeset_id": changeset_id}
+
             cursor = self.db.execute(text(query), params)
             self.db.commit()
             
@@ -289,8 +293,8 @@ class ChangesetManager:
         
         try:
             results = self.db.execute(
-                text("SELECT id FROM entity_versions WHERE changeset_id = ?"),
-                (changeset_id,)
+                text("SELECT id FROM entity_versions WHERE changeset_id = :changeset_id"),
+                {"changeset_id": changeset_id}
             ).fetchall()
             
             version_ids = [row[0] for row in results]
@@ -327,14 +331,14 @@ class ChangesetManager:
             
             # Remove changeset association from versions
             self.db.execute(
-                text("UPDATE entity_versions SET changeset_id = NULL WHERE changeset_id = ?"),
-                (changeset_id,)
+                text("UPDATE entity_versions SET changeset_id = NULL WHERE changeset_id = :changeset_id"),
+                {"changeset_id": changeset_id}
             )
-            
+
             # Delete the changeset
             cursor = self.db.execute(
-                text("DELETE FROM changesets WHERE id = ?"),
-                (changeset_id,)
+                text("DELETE FROM changesets WHERE id = :changeset_id"),
+                {"changeset_id": changeset_id}
             )
             
             self.db.commit()
@@ -368,17 +372,23 @@ class ChangesetManager:
         INSERT INTO changesets (
             id, title, description, state, branch_name, parent_changeset_id,
             author_id, created_at, merged_at, metadata
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        ) VALUES (:id, :title, :description, :state, :branch_name, :parent_changeset_id,
+                  :author_id, :created_at, :merged_at, :metadata)
         """
-        
-        params = (
-            changeset.id, changeset.title, changeset.description,
-            changeset.state.value, changeset.branch_name, changeset.parent_changeset_id,
-            changeset.author_id, changeset.created_at.isoformat(),
-            changeset.merged_at.isoformat() if changeset.merged_at else None,
-            json.dumps(changeset.metadata) if changeset.metadata else None
-        )
-        
+
+        params = {
+            "id": changeset.id,
+            "title": changeset.title,
+            "description": changeset.description,
+            "state": changeset.state.value,
+            "branch_name": changeset.branch_name,
+            "parent_changeset_id": changeset.parent_changeset_id,
+            "author_id": changeset.author_id,
+            "created_at": changeset.created_at.isoformat(),
+            "merged_at": changeset.merged_at.isoformat() if changeset.merged_at else None,
+            "metadata": json.dumps(changeset.metadata) if changeset.metadata else None
+        }
+
         self.db.execute(text(query), params)
         logger.debug(f"Stored changeset {changeset.id} in database")
     
@@ -404,10 +414,10 @@ class ChangesetManager:
                 self.db.execute(
                     text("""
                         UPDATE entity_versions
-                        SET changeset_id = ?
-                        WHERE id = ?
+                        SET changeset_id = :changeset_id
+                        WHERE id = :version_id
                     """),
-                    (changeset_id, version_id)
+                    {"changeset_id": changeset_id, "version_id": version_id}
                 )
             
             logger.debug(f"Successfully associated versions with changeset {changeset_id}")

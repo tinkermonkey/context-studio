@@ -221,39 +221,64 @@ class TestLLMStreamingEndpoints:
 
     @pytest.fixture
     def sample_term_request(self):
-        """Sample term definition request"""
+        """Sample term definition request with all required template variables"""
         return {
             "term": "machine learning",
             "domain_title": "Artificial Intelligence",
             "domain_definition": "The field of computer science that focuses on creating intelligent systems",
-            "component_terms": [],
+            "parent_term_title": "Artificial Intelligence",
+            "parent_term_definition": "Intelligence demonstrated by machines",
+            "parent_relationship_predicate": "is_a",
+            "component_terms": "algorithm, data, model",
+            "current_definition": "Current definition of machine learning",
+            "conceptnet_relations": "Test conceptnet relations",
+            "wikidata_context": "Test wikidata context",
+            "dbpedia_context": "Test dbpedia context",
             "flavor": "default",
         }
 
     @pytest.fixture
     def sample_layer_request(self):
-        """Sample layer definition request"""
+        """Sample layer definition request with all required template variables"""
         return {
             "layer_title": "Technology Layer",
             "layer_description": "Layer containing technology-related domains",
-            "contained_domains": ["Software", "Hardware", "AI"],
+            "contained_domains": "Software, Hardware, AI",
+            "layer_purpose": "Organize technology-related knowledge",
+            "parent_layer_title": "Root Layer",
+            "parent_layer_definition": "Root layer definition",
+            "current_definition": "Current definition",
+            "reference_context": "Test reference context",
             "flavor": "default",
         }
 
     @pytest.fixture
     def sample_domain_request(self):
-        """Sample domain definition request"""
+        """Sample domain definition request with all required template variables"""
         return {
             "domain_title": "Machine Learning",
             "layer_title": "Technology",
-            "contained_terms": ["neural network", "algorithm", "training"],
+            "contained_terms": "neural network, algorithm, training",
+            "domain_description": "Domain focused on machine learning",
+            "domain_scope": "Machine learning algorithms and techniques",
+            "layer_definition": "Technology layer definition",
+            "related_domains": "AI, Data Science",
+            "current_definition": "Current definition",
+            "reference_context": "Test reference context",
             "flavor": "default",
         }
 
     def test_streaming_term_definition_endpoint(self, client, sample_term_request):
-        """Test streaming term definition endpoint"""
+        """Test streaming term definition endpoint using generic pipeline API"""
+        # Convert legacy request format to generic pipeline format
+        pipeline_request = {
+            "flavor_id": "default",
+            "pipeline_type": "suggest_term_definition",
+            "context_data": sample_term_request
+        }
+
         response = client.post(
-            "/api/llm/suggest_term_definition/stream", json=sample_term_request
+            "/api/llm/execute_pipeline/stream", json=pipeline_request
         )
 
         # Check response status and headers
@@ -285,8 +310,15 @@ class TestLLMStreamingEndpoints:
         """Test streaming endpoint with invalid request"""
         invalid_request = {"term": "", "domain_title": "Test Domain"}  # Empty term
 
+        # Convert to generic pipeline format
+        pipeline_request = {
+            "flavor_id": "default",
+            "pipeline_type": "suggest_term_definition",
+            "context_data": invalid_request
+        }
+
         response = client.post(
-            "/api/llm/suggest_term_definition/stream", json=invalid_request
+            "/api/llm/execute_pipeline/stream", json=pipeline_request
         )
 
         # Should still return 200 but with error in stream
@@ -299,9 +331,16 @@ class TestLLMStreamingEndpoints:
         assert "error" in content.lower()
 
     def test_streaming_layer_definition_endpoint(self, client, sample_layer_request):
-        """Test streaming layer definition endpoint"""
+        """Test streaming layer definition endpoint using generic pipeline API"""
+        # Convert legacy request format to generic pipeline format
+        pipeline_request = {
+            "flavor_id": "default",
+            "pipeline_type": "suggest_layer_definition",
+            "context_data": sample_layer_request
+        }
+
         response = client.post(
-            "/api/llm/suggest_layer_definition/stream", json=sample_layer_request
+            "/api/llm/execute_pipeline/stream", json=pipeline_request
         )
 
         # Check response
@@ -313,9 +352,16 @@ class TestLLMStreamingEndpoints:
         assert "data:" in content
 
     def test_streaming_domain_definition_endpoint(self, client, sample_domain_request):
-        """Test streaming domain definition endpoint"""
+        """Test streaming domain definition endpoint using generic pipeline API"""
+        # Convert legacy request format to generic pipeline format
+        pipeline_request = {
+            "flavor_id": "default",
+            "pipeline_type": "suggest_domain_definition",
+            "context_data": sample_domain_request
+        }
+
         response = client.post(
-            "/api/llm/suggest_domain_definition/stream", json=sample_domain_request
+            "/api/llm/execute_pipeline/stream", json=pipeline_request
         )
 
         # Check response
@@ -328,8 +374,14 @@ class TestLLMStreamingEndpoints:
 
     def test_regular_llm_endpoints_with_flavor(self, client, sample_term_request):
         """Test regular LLM endpoints with flavor parameter"""
+        # Convert legacy request format to generic pipeline format
+        pipeline_request = {
+            "flavor_id": "default",
+            "pipeline_type": "suggest_term_definition",
+            "context_data": sample_term_request
+        }
         response = client.post(
-            "/api/llm/suggest_term_definition", json=sample_term_request
+            "/api/llm/suggest_term_definition", json=pipeline_request
         )
 
         # Note: This might fail without valid OpenAI API key, but should validate request format
@@ -341,7 +393,9 @@ class TestLLMStreamingEndpoints:
 
         if response.status_code == 200:
             result = response.json()
-            assert "data" in result
+            assert "response_content" in result  # Updated field name
+            assert "execution_id" in result
+            assert result["pipeline_type"] == "suggest_term_definition"
 
     def test_llm_health_endpoint(self, client):
         """Test LLM health check endpoint"""

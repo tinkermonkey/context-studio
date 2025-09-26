@@ -104,8 +104,7 @@ def test_delete_domain(client):
     layer_id = create_layer(client)
     domain_id = create_domain(client, layer_id, title=f"Biology_{uuid4()}")
     del_resp = client.delete(f"/api/structure_nodes/{domain_id}")
-    assert del_resp.status_code == 200
-    assert del_resp.json()["success"] is True
+    assert del_resp.status_code == 204
     # Confirm deletion
     get_resp = client.get(f"/api/structure_nodes/{domain_id}")
     assert get_resp.status_code == 404

@@ -94,93 +94,11 @@ class ComponentTerm(BaseModel):
     selected_definitions: List[str] = Field(default_factory=list, description="Selected sense definitions")
     selected_relations: List[SelectedRelation] = Field(default_factory=list, description="Selected ConceptNet relations")
 
-class DefinitionSuggestionRequest(BaseModel):
-    """Request model for term definition suggestion endpoint"""
-    term: str = Field(..., description="Term to be analyzed")
-    domain_title: Optional[str] = Field(None, description="Title of the domain")
-    domain_definition: Optional[str] = Field(None, description="Definition of the domain")
-    parent_term_title: Optional[str] = Field(None, description="Title of the parent term")
-    parent_term_definition: Optional[str] = Field(None, description="Definition of the parent term")
-    parent_relationship_predicate: Optional[str] = Field(None, description="Relationship predicate to parent")
-    component_terms: List[ComponentTerm] = Field(default_factory=list, description="Component terms with their context")
-    current_definition: Optional[str] = Field(None, alias="current definition", description="Current definition if any")
-    dbpedia_context: Dict[str, Any] = Field(default_factory=dict, description="DBpedia context information")
-    wikidata_context: Dict[str, Any] = Field(default_factory=dict, description="Wikidata context information")
-    flavor: Optional[str] = Field(None, description="Flavor ID or title to use for this request")
 
-class LayerDefinitionRequest(BaseModel):
-    """Request model for layer definition suggestion endpoint"""
-    layer_title: str = Field(..., description="Title of the layer to be analyzed")
-    layer_description: Optional[str] = Field(None, description="Current description of the layer")
-    parent_layer_title: Optional[str] = Field(None, description="Title of the parent layer")
-    parent_layer_definition: Optional[str] = Field(None, description="Definition of the parent layer")
-    contained_domains: List[str] = Field(default_factory=list, description="List of domain titles contained in this layer")
-    layer_purpose: Optional[str] = Field(None, description="Purpose or role of this layer")
-    current_definition: Optional[str] = Field(None, description="Current definition if any")
-    reference_context: Dict[str, Any] = Field(default_factory=dict, description="Additional reference context")
-    flavor: Optional[str] = Field(None, description="Flavor ID or title to use for this request")
 
-    @field_validator('layer_title')
-    @classmethod
-    def validate_layer_title(cls, v):
-        if not v or v.strip() == "":
-            raise ValueError("Layer title cannot be empty")
-        return v
 
-    @field_validator('contained_domains')
-    @classmethod
-    def validate_contained_domains(cls, v):
-        if not v:  # Empty list
-            raise ValueError("Contained domains cannot be empty")
-        return v
 
-class DomainDefinitionRequest(BaseModel):
-    """Request model for domain definition suggestion endpoint"""
-    domain_title: str = Field(..., description="Title of the domain to be analyzed")
-    domain_description: Optional[str] = Field(None, description="Current description of the domain")
-    layer_title: Optional[str] = Field(None, description="Title of the containing layer")
-    layer_definition: Optional[str] = Field(None, description="Definition of the containing layer")
-    contained_terms: List[str] = Field(default_factory=list, description="List of term titles contained in this domain")
-    domain_scope: Optional[str] = Field(None, description="Scope or boundaries of this domain")
-    related_domains: List[str] = Field(default_factory=list, description="List of related domain titles")
-    current_definition: Optional[str] = Field(None, description="Current definition if any")
-    reference_context: Dict[str, Any] = Field(default_factory=dict, description="Additional reference context")
-    flavor: Optional[str] = Field(None, description="Flavor ID or title to use for this request")
 
-    @field_validator('domain_title')
-    @classmethod
-    def validate_domain_title(cls, v):
-        if not v or v.strip() == "":
-            raise ValueError("Domain title cannot be empty")
-        return v
-
-    @field_validator('contained_terms')
-    @classmethod
-    def validate_contained_terms(cls, v):
-        if not v:  # Empty list
-            raise ValueError("Contained terms cannot be empty")
-        return v
-
-class DefinitionSuggestionResponse(BaseModel):
-    """Response model for definition suggestion"""
-    definition: str = Field(..., description="The suggested 2-3 sentence definition")
-    reasoning: str = Field(..., description="Brief reasoning for the definitional choices")
-    discrepancies: Optional[str] = Field(None, description="Notable discrepancies between sources")
-    execution_id: str = Field(..., description="Unique execution ID for tracing")
-
-class LayerDefinitionResponse(BaseModel):
-    """Response model for layer definition suggestion"""
-    definition: str = Field(..., description="The suggested 2-3 sentence layer definition")
-    purpose: str = Field(..., description="Purpose of the layer in the knowledge structure")
-    rationale: str = Field(..., description="Brief rationale for the definitional choices")
-    execution_id: str = Field(..., description="Unique execution ID for tracing")
-
-class DomainDefinitionResponse(BaseModel):
-    """Response model for domain definition suggestion"""
-    definition: str = Field(..., description="The suggested 2-3 sentence domain definition")
-    purpose: str = Field(..., description="Purpose of the domain in the knowledge structure")
-    scope: str = Field(..., description="Scope and boundaries of the domain")
-    execution_id: str = Field(..., description="Unique execution ID for tracing")
 
 class LLMHealthResponse(BaseModel):
     """Health check response for LLM service"""
@@ -196,23 +114,8 @@ class LLMErrorResponse(BaseModel):
     error_type: str = Field(..., description="Type of error")
     details: Optional[str] = Field(None, description="Additional error details")
 
-class LLMSuccessResponse(BaseModel):
-    """Success response wrapper for LLM endpoints"""
-    success: bool = Field(True, description="Always true for success responses")
-    data: DefinitionSuggestionResponse = Field(..., description="The response data")
-    execution_id: str = Field(..., description="Unique execution ID for tracing")
 
-class LayerLLMSuccessResponse(BaseModel):
-    """Success response wrapper for layer LLM endpoints"""
-    success: bool = Field(True, description="Always true for success responses")
-    data: LayerDefinitionResponse = Field(..., description="The response data")
-    execution_id: str = Field(..., description="Unique execution ID for tracing")
 
-class DomainLLMSuccessResponse(BaseModel):
-    """Success response wrapper for domain LLM endpoints"""
-    success: bool = Field(True, description="Always true for success responses")
-    data: DomainDefinitionResponse = Field(..., description="The response data")
-    execution_id: str = Field(..., description="Unique execution ID for tracing")
 
 
 class RecordSelectionRequest(BaseModel):

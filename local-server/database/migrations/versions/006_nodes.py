@@ -373,8 +373,12 @@ class Migration006(Migration):
                 try:
                     connection.execute(text("""
                         INSERT INTO structure_nodes_vec (node_id, title_embedding, definition_embedding)
-                        VALUES (?, ?, ?)
-                    """), (structure_node[0], structure_node[1], structure_node[2]))
+                        VALUES (:node_id, :title_embedding, :definition_embedding)
+                    """), {
+                        "node_id": structure_node[0],
+                        "title_embedding": structure_node[1],
+                        "definition_embedding": structure_node[2]
+                    })
                 except Exception as e:
                     logger.warning(f"Could not insert vector embedding for structure_node {structure_node[0]}: {e}")
                     

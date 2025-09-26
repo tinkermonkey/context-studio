@@ -303,7 +303,7 @@ class TestIdentityManager:
 
         # Verify the email was converted to lowercase
         call_args = mock_db_session.execute.call_args
-        assert call_args[0][1][0] == "test@example.com"
+        assert call_args[0][1]["email"] == "test@example.com"
 
     def test_list_users_with_filters(self, identity_manager, mock_db_session):
         """Test listing users with filters."""

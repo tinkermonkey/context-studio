@@ -253,20 +253,23 @@ class DatabaseManager:
                     self.metrics.avg_query_time_ms = total_time / self.metrics.total_queries_executed
     
     @contextmanager
-    def get_optimized_session(self, 
-                            engine_id: str = "default", 
+    def get_optimized_session(self,
+                            engine_id: str = "default",
                             database_url: Optional[str] = None) -> Generator[Session, None, None]:
         """
         Get an optimized database session with automatic lifecycle management.
-        
+
         This context manager ensures proper session cleanup and provides monitoring.
         """
         if engine_id not in self._session_locals:
             if database_url is None:
                 raise ValueError(f"Engine '{engine_id}' not found and no database_url provided")
             self.create_optimized_engine(database_url, engine_id)
-        
-        session_local = self._session_locals[engine_id]
+
+        session_local = self._session_locals.get(engine_id)
+        if session_local is None:
+            raise ValueError(f"No session factory available for engine '{engine_id}'")
+
         session = session_local()
         
         try:

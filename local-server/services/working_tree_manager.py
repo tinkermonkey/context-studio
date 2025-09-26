@@ -111,6 +111,7 @@ class WorkingTreeManager:
 
         try:
             # Insert working tree entry
+            # Newly initialized entities start unstaged - they need explicit staging
             self.db.execute(
                 text(
                     """
@@ -125,8 +126,8 @@ class WorkingTreeManager:
                     "entity_type": entity_type,
                     "entity_id": entity_id,
                     "current_version_id": initial_version_id,
-                    "canonical_version_id": initial_version_id,
-                    "staged": False,
+                    "canonical_version_id": initial_version_id,  # Same as current initially
+                    "staged": False,  # Start unstaged - require explicit staging
                     "modified_at": modified_at.isoformat(),
                 },
             )
@@ -140,7 +141,7 @@ class WorkingTreeManager:
                 entity_id=entity_id,
                 current_version_id=initial_version_id,
                 canonical_version_id=initial_version_id,
-                staged=False,
+                staged=False,  # Start unstaged - require explicit staging
                 modified_at=modified_at,
             )
 
@@ -265,14 +266,15 @@ class WorkingTreeManager:
                 f"Entity {entity_type}:{entity_id} not found in working tree"
             )
 
+        # Check if already staged (including auto-staged newly created entities)
+        if entry.staged:
+            logger.info(f"Entity {entity_type}:{entity_id} is already staged")
+            return True
+
         # Check if there are changes to stage
         if not entry.has_changes():
             logger.info(f"No changes to stage for {entity_type}:{entity_id}")
             return False
-
-        if entry.staged:
-            logger.info(f"Entity {entity_type}:{entity_id} is already staged")
-            return True
 
         try:
             # Update staged status

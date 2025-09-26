@@ -137,11 +137,11 @@ class IdentityManager:
             # Update user verification status
             cursor = self.db.execute(
                 text("""
-                    UPDATE user_identities 
-                    SET verified = 1, trust_level = 1, verified_at = ?
-                    WHERE user_id = ?
+                    UPDATE user_identities
+                    SET verified = 1, trust_level = 1, verified_at = :verified_at
+                    WHERE user_id = :user_id
                 """),
-                (datetime.now(timezone.utc).isoformat(), user_id)
+                {"verified_at": datetime.now(timezone.utc).isoformat(), "user_id": user_id}
             )
             
             if cursor.rowcount == 0:
@@ -196,11 +196,11 @@ class IdentityManager:
             # Record trust relationship (INSERT OR REPLACE for updates)
             self.db.execute(
                 text("""
-                    INSERT OR REPLACE INTO user_trust_relationships 
+                    INSERT OR REPLACE INTO user_trust_relationships
                     (trustee_user_id, trusted_user_id, created_at)
-                    VALUES (?, ?, ?)
+                    VALUES (:trustee_user_id, :trusted_user_id, :created_at)
                 """),
-                (trustee_user_id, trusted_user_id, datetime.now(timezone.utc).isoformat())
+                {"trustee_user_id": trustee_user_id, "trusted_user_id": trusted_user_id, "created_at": datetime.now(timezone.utc).isoformat()}
             )
             
             # Check if user now has enough trust to be team-verified
@@ -210,8 +210,8 @@ class IdentityManager:
             if trust_count >= 2:  # Require 2 team members to vouch
                 logger.info(f"Promoting user {trusted_user_id} to team-verified (trust_level=2)")
                 self.db.execute(
-                    text("UPDATE user_identities SET trust_level = 2 WHERE user_id = ?"),
-                    (trusted_user_id,)
+                    text("UPDATE user_identities SET trust_level = 2 WHERE user_id = :user_id"),
+                    {"user_id": trusted_user_id}
                 )
             
             self.db.commit()
@@ -238,8 +238,8 @@ class IdentityManager:
         
         try:
             result = self.db.execute(
-                text("SELECT * FROM user_identities WHERE user_id = ?"),
-                (user_id,)
+                text("SELECT * FROM user_identities WHERE user_id = :user_id"),
+                {"user_id": user_id}
             ).fetchone()
             
             if not result:
@@ -266,8 +266,8 @@ class IdentityManager:
         
         try:
             result = self.db.execute(
-                text("SELECT * FROM user_identities WHERE email = ?"),
-                (email.lower().strip(),)
+                text("SELECT * FROM user_identities WHERE email = :email"),
+                {"email": email.lower().strip()}
             ).fetchone()
             
             if not result:
@@ -297,18 +297,18 @@ class IdentityManager:
         
         try:
             query = "SELECT * FROM user_identities WHERE 1=1"
-            params = []
-            
+            params = {}
+
             if verified_only:
                 query += " AND verified = 1"
-                
+
             if min_trust_level > 0:
-                query += " AND trust_level >= ?"
-                params.append(min_trust_level)
-                
-            query += " ORDER BY created_at DESC LIMIT ?"
-            params.append(limit)
-            
+                query += " AND trust_level >= :min_trust_level"
+                params["min_trust_level"] = min_trust_level
+
+            query += " ORDER BY created_at DESC LIMIT :limit"
+            params["limit"] = limit
+
             results = self.db.execute(text(query), params).fetchall()
             users = [row_to_identity(row) for row in results]
             
@@ -335,21 +335,21 @@ class IdentityManager:
             # Get users who trust this user
             trustees = self.db.execute(
                 text("""
-                    SELECT trustee_user_id, created_at FROM user_trust_relationships 
-                    WHERE trusted_user_id = ?
+                    SELECT trustee_user_id, created_at FROM user_trust_relationships
+                    WHERE trusted_user_id = :user_id
                     ORDER BY created_at
                 """),
-                (user_id,)
+                {"user_id": user_id}
             ).fetchall()
             
             # Get users this user trusts
             trusted = self.db.execute(
                 text("""
-                    SELECT trusted_user_id, created_at FROM user_trust_relationships 
-                    WHERE trustee_user_id = ?
+                    SELECT trusted_user_id, created_at FROM user_trust_relationships
+                    WHERE trustee_user_id = :user_id
                     ORDER BY created_at
                 """),
-                (user_id,)
+                {"user_id": user_id}
             ).fetchall()
             
             return {
@@ -380,10 +380,10 @@ class IdentityManager:
         try:
             cursor = self.db.execute(
                 text("""
-                    DELETE FROM user_trust_relationships 
-                    WHERE trustee_user_id = ? AND trusted_user_id = ?
+                    DELETE FROM user_trust_relationships
+                    WHERE trustee_user_id = :trustee_user_id AND trusted_user_id = :trusted_user_id
                 """),
-                (trustee_user_id, trusted_user_id)
+                {"trustee_user_id": trustee_user_id, "trusted_user_id": trusted_user_id}
             )
             
             if cursor.rowcount == 0:
@@ -402,8 +402,8 @@ class IdentityManager:
                 final_trust_level = 0  # Unverified users stay at 0
                 
             self.db.execute(
-                text("UPDATE user_identities SET trust_level = ? WHERE user_id = ?"),
-                (final_trust_level, trusted_user_id)
+                text("UPDATE user_identities SET trust_level = :trust_level WHERE user_id = :user_id"),
+                {"trust_level": final_trust_level, "user_id": trusted_user_id}
             )
             
             self.db.commit()
@@ -448,18 +448,22 @@ class IdentityManager:
         
         query = """
         INSERT INTO user_identities (
-            user_id, email, display_name, public_key, verified, trust_level, 
+            user_id, email, display_name, public_key, verified, trust_level,
             created_at, verified_at
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+        ) VALUES (:user_id, :email, :display_name, :public_key, :verified, :trust_level, :created_at, :verified_at)
         """
-        
-        params = (
-            identity.user_id, identity.email, identity.display_name, 
-            identity.public_key, identity.verified, identity.trust_level,
-            identity.created_at.isoformat(),
-            identity.verified_at.isoformat() if identity.verified_at else None
-        )
-        
+
+        params = {
+            "user_id": identity.user_id,
+            "email": identity.email,
+            "display_name": identity.display_name,
+            "public_key": identity.public_key,
+            "verified": identity.verified,
+            "trust_level": identity.trust_level,
+            "created_at": identity.created_at.isoformat(),
+            "verified_at": identity.verified_at.isoformat() if identity.verified_at else None
+        }
+
         self.db.execute(text(query), params)
         logger.debug(f"Stored identity {identity.user_id} in database")
     
@@ -480,15 +484,16 @@ class IdentityManager:
         query = """
         INSERT OR REPLACE INTO verification_codes (
             user_id, code, created_at, expires_at
-        ) VALUES (?, ?, ?, ?)
+        ) VALUES (:user_id, :code, :created_at, :expires_at)
         """
-        
-        params = (
-            user_id, code, 
-            datetime.now(timezone.utc).isoformat(),
-            expires_at.isoformat()
-        )
-        
+
+        params = {
+            "user_id": user_id,
+            "code": code,
+            "created_at": datetime.now(timezone.utc).isoformat(),
+            "expires_at": expires_at.isoformat()
+        }
+
         self.db.execute(text(query), params)
         logger.debug(f"Stored verification code for user {user_id}")
     
@@ -507,10 +512,10 @@ class IdentityManager:
         try:
             result = self.db.execute(
                 text("""
-                    SELECT code, expires_at FROM verification_codes 
-                    WHERE user_id = ?
+                    SELECT code, expires_at FROM verification_codes
+                    WHERE user_id = :user_id
                 """),
-                (user_id,)
+                {"user_id": user_id}
             ).fetchone()
             
             if not result:
@@ -543,8 +548,8 @@ class IdentityManager:
         logger.debug(f"Deleting verification code for user {user_id}")
         
         self.db.execute(
-            text("DELETE FROM verification_codes WHERE user_id = ?"),
-            (user_id,)
+            text("DELETE FROM verification_codes WHERE user_id = :user_id"),
+            {"user_id": user_id}
         )
     
     def _count_trust_relationships(self, trusted_user_id: str) -> int:
@@ -560,10 +565,10 @@ class IdentityManager:
         try:
             result = self.db.execute(
                 text("""
-                    SELECT COUNT(*) FROM user_trust_relationships 
-                    WHERE trusted_user_id = ?
+                    SELECT COUNT(*) FROM user_trust_relationships
+                    WHERE trusted_user_id = :trusted_user_id
                 """),
-                (trusted_user_id,)
+                {"trusted_user_id": trusted_user_id}
             ).fetchone()
             
             return result[0] if result else 0
@@ -584,10 +589,10 @@ class IdentityManager:
         try:
             cursor = self.db.execute(
                 text("""
-                    DELETE FROM verification_codes 
-                    WHERE expires_at < ?
+                    DELETE FROM verification_codes
+                    WHERE expires_at < :current_time
                 """),
-                (datetime.now(timezone.utc).isoformat(),)
+                {"current_time": datetime.now(timezone.utc).isoformat()}
             )
             
             cleaned_count = cursor.rowcount

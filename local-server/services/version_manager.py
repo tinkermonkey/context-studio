@@ -92,7 +92,7 @@ class VersionManager:
             ValueError: If validation fails
             RuntimeError: If database operation fails
         """
-        logger.info(f"Creating version for {entity_type}:{entity_id} by {author_id}")
+        logger.debug(f"Creating version for {entity_type}:{entity_id} by {author_id}")
 
         # Validate inputs
         if entity_type not in ("structure_node", "structure_node_link"):
@@ -156,7 +156,7 @@ class VersionManager:
 
             self.db.commit()
 
-            logger.info(
+            logger.debug(
                 f"Created version {next_version} for {entity_type}:{entity_id} (id: {version_id})"
             )
 

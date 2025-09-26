@@ -5,7 +5,7 @@ This module contains the Pydantic models for the version management system,
 supporting entity versioning, working tree state, and diff operations.
 """
 
-from pydantic import BaseModel, Field, ConfigDict
+from pydantic import BaseModel, Field, ConfigDict, validator
 from typing import Optional, List, Dict, Any
 from uuid import UUID
 from enum import Enum
@@ -120,8 +120,10 @@ class EntityDiffOut(BaseModel):
 
 class RollbackRequest(BaseModel):
     """Model for rollback operation request."""
-    target_version_number: int = Field(..., ge=1, description="Version number to rollback to")
+    target_version_number: int = Field(..., ge=1, description="Version number to rollback to", alias="target_version")
     author_id: str = Field(..., min_length=1, max_length=255)
+
+    model_config = ConfigDict(populate_by_name=True)
 
 
 class StateUpdateRequest(BaseModel):
@@ -181,9 +183,18 @@ class DiffRequest(BaseModel):
     """Model for requesting diffs."""
     entity_type: EntityTypeEnum
     entity_id: UUID
-    before_version_number: Optional[int] = Field(None, ge=1)
-    after_version_number: int = Field(..., ge=1)
+    before_version_number: Optional[int] = Field(None, ge=0, alias="before_version")  # Allow 0
+    after_version_number: int = Field(..., ge=1, alias="after_version")
     format: DiffFormatEnum = DiffFormatEnum.SUMMARY
+
+    model_config = ConfigDict(populate_by_name=True)
+
+    @validator('before_version_number')
+    def validate_before_version(cls, v, values):
+        if v is not None and 'after_version_number' in values:
+            if v >= values['after_version_number']:
+                raise ValueError('before_version must be less than after_version')
+        return v
 
 
 # Health and Status Models

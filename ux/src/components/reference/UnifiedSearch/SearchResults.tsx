@@ -6,9 +6,11 @@
 
 import React from "react";
 import { Card, Badge, Button, Alert, Spinner } from "flowbite-react";
-import { ExternalLink, AlertCircle, Info } from "lucide-react";
-import { UnifiedNode } from "@/api/types/unified";
+import { ExternalLink, AlertCircle, Info, Clock, CheckCircle, XCircle } from "lucide-react";
+import { UnifiedNode, SourceType } from "@/api/types/unified";
 import { SOURCE_METADATA } from "@/api/types/unified";
+import { StreamingSearchState, SourceSearchUpdate } from "@/api/types/streamingReference";
+import { useSourceLoadingStates } from "@/api/hooks/unifiedReference/useStreamingReference";
 
 interface SearchResultsProps {
   results: UnifiedNode[];
@@ -18,6 +20,8 @@ interface SearchResultsProps {
   isSearching?: boolean;
   sourceErrors?: Record<string, string>;
   compact?: boolean;
+  streamingState?: StreamingSearchState | null;
+  showSourceProgress?: boolean;
 }
 
 interface ResultCardProps {
@@ -39,7 +43,7 @@ const ResultCard: React.FC<ResultCardProps> = ({
     description: "",
   };
 
-  const confidencePercent = Math.round((node.confidence_score || 0) * 100);
+  const relevancePercent = Math.round((node.relevance_score || 0) * 100);
 
   return (
     <div style={style} className="px-2 pb-4">
@@ -67,17 +71,12 @@ const ResultCard: React.FC<ResultCardProps> = ({
               {sourceMetadata.label}
             </Badge>
 
-            {(node.confidence_score || 0) < 1 && (
+            {(node.relevance_score || 0) < 1 && (
               <Badge color="gray" size="sm">
-                {confidencePercent}% match
+                {relevancePercent}% match
               </Badge>
             )}
 
-            {node.merged_from && node.merged_from.length > 0 && (
-              <Badge color="purple" size="sm">
-                Merged from {node.merged_from.length} source{node.merged_from.length > 1 ? 's' : ''}
-              </Badge>
-            )}
           </div>
 
           {/* Actions */}
@@ -99,7 +98,9 @@ const ResultCard: React.FC<ResultCardProps> = ({
                 color="gray"
                 onClick={(e) => {
                   e.stopPropagation();
-                  window.open(node.source_url, "_blank");
+                  if (node.source_url) {
+                    window.open(node.source_url, "_blank");
+                  }
                 }}
                 className="flex items-center gap-1"
               >
@@ -122,23 +123,91 @@ export const SearchResults: React.FC<SearchResultsProps> = ({
   isSearching = false,
   sourceErrors = {},
   compact = false,
+  streamingState = null,
+  showSourceProgress = true,
 }) => {
   const hasResults = results.length > 0;
   const hasErrors = Object.keys(sourceErrors).length > 0;
   const hasMore = results.length < totalResults;
 
+  const sourceLoadingStates = useSourceLoadingStates(streamingState);
+
   const handleSelectNode = (node: UnifiedNode) => {
     onSelectNode?.(node);
+  };
+
+  // Render source progress indicators
+  const renderSourceProgress = () => {
+    if (!showSourceProgress || !streamingState) return null;
+
+    return (
+      <div className="mb-4 space-y-2">
+        <h4 className="text-sm font-medium text-gray-700">Source Progress</h4>
+        <div className="flex flex-wrap gap-2">
+          {Object.entries(streamingState.sources).map(([source, sourceUpdate]) => {
+            const metadata = SOURCE_METADATA[source as SourceType];
+            const isLoading = sourceLoadingStates.isSourceLoading(source as SourceType);
+            const isComplete = sourceLoadingStates.isSourceComplete(source as SourceType);
+            const isError = sourceLoadingStates.isSourceError(source as SourceType);
+            const resultCount = sourceUpdate.results?.length || 0;
+            const executionTime = sourceLoadingStates.getSourceExecutionTime(source as SourceType);
+
+            let icon;
+            let color: "gray" | "blue" | "green" | "red" = "gray";
+            let statusText = "Pending";
+
+            if (isLoading) {
+              icon = <Clock className="h-3 w-3" />;
+              color = "blue";
+              statusText = "Loading...";
+            } else if (isComplete) {
+              icon = <CheckCircle className="h-3 w-3" />;
+              color = "green";
+              statusText = `${resultCount} results`;
+              if (executionTime) {
+                statusText += ` (${executionTime}ms)`;
+              }
+            } else if (isError) {
+              icon = <XCircle className="h-3 w-3" />;
+              color = "red";
+              statusText = "Error";
+            }
+
+            return (
+              <div
+                key={source}
+                className="flex items-center gap-2 rounded-lg border px-3 py-2 text-sm"
+              >
+                <div className={`flex items-center gap-1 text-${color}-600`}>
+                  {icon}
+                  {isLoading && <Spinner size="xs" />}
+                </div>
+                <span className="font-medium">{metadata?.label || source}</span>
+                <span className="text-gray-500">{statusText}</span>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    );
   };
 
 
   // Show loading state during search
   if (isSearching && !hasResults) {
     return (
-      <div className="flex items-center justify-center py-12">
-        <div className="space-y-4 text-center">
-          <Spinner size="lg" />
-          <p className="text-gray-600">Searching across reference sources...</p>
+      <div className="space-y-6">
+        {renderSourceProgress()}
+        <div className="flex items-center justify-center py-12">
+          <div className="space-y-4 text-center">
+            <Spinner size="lg" />
+            <p className="text-gray-600">Searching across reference sources...</p>
+            {streamingState && (
+              <p className="text-sm text-gray-500">
+                {streamingState.completedSources.length} of {Object.keys(streamingState.sources).length} sources complete
+              </p>
+            )}
+          </div>
         </div>
       </div>
     );
@@ -160,6 +229,9 @@ export const SearchResults: React.FC<SearchResultsProps> = ({
 
   return (
     <div className="space-y-4">
+      {/* Source Progress */}
+      {renderSourceProgress()}
+
       {/* Error alerts */}
       {hasErrors && (
         <Alert color="warning" icon={AlertCircle}>
@@ -177,26 +249,51 @@ export const SearchResults: React.FC<SearchResultsProps> = ({
         </Alert>
       )}
 
+      {/* Streaming errors from state */}
+      {streamingState && streamingState.errorSources.length > 0 && (
+        <Alert color="warning" icon={AlertCircle}>
+          <div className="space-y-2">
+            <p className="font-medium">Source errors during streaming search:</p>
+            <div className="text-sm">
+              {streamingState.errorSources.map(source => {
+                const error = sourceLoadingStates.getSourceError(source);
+                return (
+                  <div key={source}>
+                    <strong>{SOURCE_METADATA[source]?.label || source}:</strong>{" "}
+                    {error || "Unknown error"}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </Alert>
+      )}
+
       {/* Results summary */}
       <div className="flex items-center justify-between text-sm text-gray-600">
         <span>
           Showing {results.length} of {totalResults} results
           {isSearching && " (searching...)"}
+          {streamingState && !streamingState.isComplete && (
+            <span className="ml-2 text-blue-600">
+              • {streamingState.completedSources.length} of {Object.keys(streamingState.sources).length} sources complete
+            </span>
+          )}
         </span>
 
-        {hasErrors && (
+        {(hasErrors || (streamingState && streamingState.errorSources.length > 0)) && (
           <span className="text-yellow-600">
-            {Object.keys(sourceErrors).length} source
-            {Object.keys(sourceErrors).length > 1 ? "s" : ""} had errors
+            {(Object.keys(sourceErrors).length + (streamingState?.errorSources.length || 0))} source
+            {(Object.keys(sourceErrors).length + (streamingState?.errorSources.length || 0)) > 1 ? "s" : ""} had errors
           </span>
         )}
       </div>
 
       {/* Results list */}
       <div className="space-y-4">
-        {results.map((node) => (
+        {results.map((node, index) => (
           <ResultCard
-            key={node.id}
+            key={`${node.source}-${node.id}-${index}`}
             node={node}
             onSelect={() => handleSelectNode(node)}
             compact={compact}

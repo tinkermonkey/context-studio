@@ -176,7 +176,7 @@ class SecurityConfig(BaseModel):
 
 # Legacy compatibility classes for backward compatibility
 class SourceType(str, Enum):
-    """Reference API source types for enrichment service (legacy compatibility)"""
+    """Reference API source types for reference service (legacy compatibility)"""
     DBPEDIA = "dbpedia"
     CONCEPTNET = "conceptnet"
     WIKIDATA = "wikidata"
@@ -193,12 +193,12 @@ class SourceConfig(BaseModel):
     base_url: Optional[str] = Field(None, description="Override base URL for source")
 
 
-class EnrichmentConfig(BaseModel):
-    """Overall enrichment service configuration (legacy compatibility)"""
+class ReferenceConfig(BaseModel):
+    """Overall reference service configuration (legacy compatibility)"""
     sources: Dict[SourceType, SourceConfig] = Field(default_factory=dict)
     default_timeout: int = Field(30, ge=1, le=300, description="Default timeout for all sources")
     concurrent_requests: int = Field(5, ge=1, le=20, description="Maximum concurrent requests per source")
-    cache_results: bool = Field(True, description="Whether to cache enrichment results")
+    cache_results: bool = Field(True, description="Whether to cache reference results")
     cache_ttl: int = Field(3600, ge=60, description="Cache TTL in seconds")
     
     def get_source_config(self, source: SourceType) -> SourceConfig:
@@ -429,7 +429,7 @@ class Settings(BaseModel):
         return self.llm.timeout
     
     @property
-    def ENRICHMENT_CONFIG(self) -> Dict[str, Any]:
+    def REFERENCE_CONFIG(self) -> Dict[str, Any]:
         """Legacy compatibility property"""
         return {
             "sources": {

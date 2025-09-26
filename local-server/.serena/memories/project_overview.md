@@ -14,7 +14,7 @@ Python server for the Context Studio (a React app built using Flowbite-React). T
 
 ## Key Features
 - Graph data structure and utilities
-- NLP enrichment and processing
+- NLP reference and processing
 - Vector embedding generation and search
 - Change management system with distributed collaboration
 - SQLite-based local storage with DuckDB for synchronization

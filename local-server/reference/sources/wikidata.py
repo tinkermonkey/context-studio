@@ -3,7 +3,7 @@
 from typing import Optional, List
 from .base import BaseReferenceSource
 from config import get_settings
-from ..models import WikidataSparqlResponse, WikidataEntityResponse
+from ..models import WikidataSparqlResponse, WikidataEntityResponse, WikidataSearchResponse, WikidataSearchResult
 
 
 class WikidataSource(BaseReferenceSource):
@@ -52,3 +52,48 @@ class WikidataSource(BaseReferenceSource):
             return WikidataEntityResponse(**self._create_base_response(), entity_id=entity_id, entity_url=entity_url, data=response_data)
         except Exception as e:
             return WikidataEntityResponse(**self._create_base_response(success=False, error=str(e)))
+
+    async def search(self, query: str, limit: int = 20, offset: int = 0, format: str = "json") -> WikidataSearchResponse:
+        """Search Wikidata entities using the wbsearchentities API"""
+        try:
+            # Use the Wikidata action API for entity search
+            # Always use the main Wikidata API, not the query endpoint
+            search_url = "https://www.wikidata.org/w/api.php"
+            params = {
+                "action": "wbsearchentities",
+                "search": query,
+                "language": "en",
+                "format": "json",
+                "limit": min(limit, 50),  # Wikidata API has a max limit of 50
+                "continue": offset
+            }
+
+            headers = {"User-Agent": "ContextStudio/LocalServer (contact: devnull@example.com)"}
+            response_data = await self._make_request("GET", search_url, params=params, headers=headers)
+
+            results = []
+            if "search" in response_data:
+                for item in response_data["search"]:
+                    result = WikidataSearchResult(
+                        id=item.get("id", ""),
+                        label=item.get("label", ""),
+                        description=item.get("description", ""),
+                        url=item.get("concepturi", "")
+                    )
+                    results.append(result)
+
+            total_results = len(results)  # Wikidata API doesn't provide total count
+
+            return WikidataSearchResponse(
+                **self._create_base_response(),
+                query=query,
+                total_results=total_results,
+                results=results
+            )
+        except Exception as e:
+            return WikidataSearchResponse(
+                **self._create_base_response(success=False, error=str(e)),
+                query=query,
+                total_results=0,
+                results=[]
+            )

@@ -7,11 +7,10 @@ definition suggestions and other language model tasks.
 
 from .service import LLMService
 from .models import (
-    DefinitionSuggestionRequest,
-    DefinitionSuggestionResponse,
     LLMHealthResponse,
     LLMErrorResponse,
-    LLMSuccessResponse
+    GenericPipelineExecutionRequest,
+    GenericPipelineExecutionResponse
 )
 from .exceptions import (
     LLMError,
@@ -23,11 +22,10 @@ from .exceptions import (
 
 __all__ = [
     "LLMService",
-    "DefinitionSuggestionRequest",
-    "DefinitionSuggestionResponse",
     "LLMHealthResponse",
     "LLMErrorResponse",
-    "LLMSuccessResponse",
+    "GenericPipelineExecutionRequest",
+    "GenericPipelineExecutionResponse",
     "LLMError",
     "LLMConfigurationError",
     "LLMProcessingError",

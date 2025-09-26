@@ -225,8 +225,8 @@ def upgrade(connection):
         
         # Update schema version
         connection.execute(text(f"""
-        UPDATE schema_version SET version = {MIGRATION_VERSION}, updated_at = ?
-        """), (datetime.now().isoformat(),))
+        UPDATE schema_version SET version = {MIGRATION_VERSION}, updated_at = :updated_at
+        """), {"updated_at": datetime.now().isoformat()})
         
         connection.commit()
         logger.info(f"Migration {MIGRATION_VERSION} completed successfully")
@@ -255,8 +255,8 @@ def downgrade(connection):
         
         # Revert schema version
         connection.execute(text(f"""
-        UPDATE schema_version SET version = {MIGRATION_VERSION - 1}, updated_at = ?
-        """), (datetime.now().isoformat(),))
+        UPDATE schema_version SET version = {MIGRATION_VERSION - 1}, updated_at = :updated_at
+        """), {"updated_at": datetime.now().isoformat()})
         
         connection.commit()
         logger.info(f"Migration {MIGRATION_VERSION} rollback completed")

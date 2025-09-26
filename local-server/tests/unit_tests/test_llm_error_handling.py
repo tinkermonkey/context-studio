@@ -93,39 +93,42 @@ class TestLLMErrorHandling:
 
     @patch.dict(os.environ, {"OPENAI_API_KEY": "sk-test-key-for-testing"})
     def test_response_parsing_error_handling(self):
-        """Test that response parsing handles various error conditions"""
+        """Test that template rendering handles error conditions"""
         from llm.service import LLMService
+        from llm.exceptions import LLMProcessingError
 
         service = LLMService()
 
+        # Test the template rendering directly
         test_cases = [
-            ("", "Empty response"),
-            ("No structured format", "Unstructured response"),
-            ("Definition: Only definition", "Missing reasoning"),
-            ("Reasoning: Only reasoning", "Missing definition"),
-            ("Invalid\nFormat\nWithout\nStructure", "Malformed response"),
+            ({}, "Template with {missing_variable}", "Empty context data"),
+            ({"term": "test"}, "Template with {missing_var}", "Missing template variable"),
+            ({"incomplete": "data"}, "Template with {term} and {domain}", "Incomplete context data"),
         ]
 
-        for test_input, description in test_cases:
+        for context_data, template, description in test_cases:
             with pytest.raises(LLMProcessingError):
-                service._parse_definition_response(test_input)
+                service._render_user_prompt_generic(template, context_data)
 
     @patch.dict(os.environ, {"OPENAI_API_KEY": "sk-test-key-for-testing"})
-    def test_valid_response_parsing(self):
-        """Test that valid responses are parsed correctly"""
+    def test_valid_response_processing(self):
+        """Test that valid template rendering works correctly"""
         from llm.service import LLMService
 
         service = LLMService()
 
-        valid_response = """Definition: A test definition
-Reasoning: Test reasoning for the definition
-Discrepancies: None identified"""
+        # Test that template rendering works with valid context
+        valid_template = "Template for {term} in {domain_title}"
+        valid_context = {
+            "term": "test term",
+            "domain_title": "Test Domain"
+        }
 
-        result = service._parse_definition_response(valid_response)
+        result = service._render_user_prompt_generic(valid_template, valid_context)
 
-        assert result.definition == "A test definition"
-        assert result.reasoning == "Test reasoning for the definition"
-        assert "None identified" in result.discrepancies
+        assert "test term" in result
+        assert "Test Domain" in result
+        assert "Template for test term in Test Domain" == result
 
     def test_timeout_configuration_availability(self):
         """Test that timeout configuration is available"""
@@ -140,8 +143,8 @@ Discrepancies: None identified"""
         from llm.service import LLMService
         import inspect
 
-        # Check that suggest_term_definition method has timeout handling
-        source_code = inspect.getsource(LLMService.suggest_term_definition)
+        # Check that execute_pipeline_flavor method has timeout handling
+        source_code = inspect.getsource(LLMService.execute_pipeline_flavor)
         assert "timeout" in source_code.lower()
         assert "asyncio.wait_for" in source_code
 
@@ -149,17 +152,17 @@ Discrepancies: None identified"""
         """Test that API endpoints define proper error responses"""
         from api.llm import router
 
-        # Find suggest_definition endpoint
-        suggest_definition_route = None
+        # Find execute_pipeline endpoint
+        execute_pipeline_route = None
         for route in router.routes:
-            if hasattr(route, "path") and "/suggest_" in route.path:
-                suggest_definition_route = route
+            if hasattr(route, "path") and "/execute_pipeline" in route.path and not "/stream" in route.path:
+                execute_pipeline_route = route
                 break
 
-        assert suggest_definition_route is not None, "No LLM suggestion endpoints found"
+        assert execute_pipeline_route is not None, "No LLM execute_pipeline endpoint found"
 
         # Verify endpoint has proper type annotations
-        endpoint_func = suggest_definition_route.endpoint
+        endpoint_func = execute_pipeline_route.endpoint
         assert hasattr(endpoint_func, "__annotations__")
 
     def test_error_logging_integration(self):

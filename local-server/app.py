@@ -5,7 +5,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
 
 from api import graph, datasets, nlp_analysis, schema, predicates, llm, pipeline_flavors
-from api import enrichment, config, structure_nodes, version_management, sync, llm_traceability
+from api import reference, config, structure_nodes, version_management, sync, llm_traceability
 from api import changeset_management, proposal_management, identity_management
 from api import conflict_resolution, analytics, incremental_sync, optimization
 from api.admin import service_monitoring
@@ -14,7 +14,7 @@ from api.graph import get_cached_graph_service, invalidate_graph_cache
 from database.migrations.migration_manager import MigrationManager
 from database.utils import (
     init_db, get_db, get_dataset_manager, get_current_engine, cleanup_database_resources,
-    get_database_manager
+    get_database_manager, get_current_session_local
 )
 from services.service_factory import ServiceFactory, set_service_factory
 from pipeline.manager import get_pipeline_database_manager
@@ -200,7 +200,7 @@ def create_app(dataset_id=None, engine=None, session_local=None, service_factory
     app.include_router(llm.router, prefix="/api", tags=["llm"])
     app.include_router(llm_traceability.router, tags=["llm-traceability"])
     app.include_router(pipeline_flavors.router, tags=["pipeline-flavors"])
-    app.include_router(enrichment.router, prefix="", tags=["nlp-reference"])
+    app.include_router(reference.router, prefix="", tags=["nlp-reference"])
     app.include_router(sync.router, tags=["sync"])
     
     # Phase 2: Administrative monitoring endpoints for service factory

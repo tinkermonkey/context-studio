@@ -75,8 +75,8 @@ export const PipelineFlavorEditor: React.FC<PipelineFlavorEditorProps> = ({
   });
 
   const [errors, setErrors] = useState<Record<string, string>>({});
-  const systemPromptRef = useRef<HTMLTextAreaElement>(null);
-  const userPromptRef = useRef<HTMLTextAreaElement>(null);
+  const systemPromptRef = useRef<HTMLTextAreaElement>(null) as React.RefObject<HTMLTextAreaElement>;
+  const userPromptRef = useRef<HTMLTextAreaElement>(null) as React.RefObject<HTMLTextAreaElement>;
 
   const adjustTextAreaHeight = (textAreaRef: React.RefObject<HTMLTextAreaElement>) => {
     if (textAreaRef.current) {

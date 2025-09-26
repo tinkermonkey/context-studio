@@ -189,10 +189,10 @@ class DuckDBQueryOptimizer:
         # Check cache first
         cached_result = self.query_cache.get_cached_result(query_hash)
         if cached_result:
-            logger.info(f"Using cached result for query: {query_hash[:8]}...")
+            logger.debug(f"Using cached result for query: {query_hash[:8]}...")
             return cached_result['optimized_query'], cached_result['metrics']
         
-        logger.info(f"Optimizing query: {query_hash[:8]}...")
+        logger.debug(f"Optimizing query: {query_hash[:8]}...")
         
         # Apply optimization strategies
         optimized_query = self._apply_optimization_strategies(query, query_context)
@@ -341,7 +341,7 @@ class DuckDBQueryOptimizer:
             if len(self.performance_metrics) > 1000:
                 self.performance_metrics = self.performance_metrics[-1000:]
             
-            logger.info(f"Query executed in {execution_time:.2f}ms, {metrics.rows_processed} rows")
+            logger.debug(f"Query executed in {execution_time:.2f}ms, {metrics.rows_processed} rows")
             
             return metrics
             

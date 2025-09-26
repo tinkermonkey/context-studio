@@ -352,6 +352,18 @@ def shared_app(test_service_factory):
         )
         yield app, engine, session_local
     finally:
+        # Stop any running EventProcessor threads before database cleanup
+        from utils.event_processor import get_global_event_processor, set_global_event_processor
+
+        # Get and stop the global EventProcessor if it exists
+        global_processor = get_global_event_processor()
+        if global_processor:
+            try:
+                global_processor.stop()
+                set_global_event_processor(None)
+            except Exception as e:
+                print(f"Warning: Error stopping global EventProcessor during cleanup: {e}")
+
         # Always cleanup the temporary database
         if os.path.exists(db_path):
             os.unlink(db_path)
@@ -376,6 +388,18 @@ def db_session(shared_app):
     try:
         yield session
     finally:
+        # Stop any EventProcessor threads created during this test
+        from utils.event_processor import get_global_event_processor
+
+        global_processor = get_global_event_processor()
+        if global_processor:
+            try:
+                # Stop the processor but don't clear global reference
+                # (that's handled in session cleanup)
+                global_processor.stop()
+            except Exception as e:
+                print(f"Warning: Error stopping EventProcessor in test cleanup: {e}")
+
         # Always close the session first
         session.close()
 
