@@ -456,8 +456,8 @@ class TestPhase5OptimizationIntegration:
         }
         
         response = client.post("/api/optimization/query/materialized-view", json=invalid_view)
-        # Should handle validation errors
-        assert response.status_code in [200, 400]
+        # Should handle validation errors (422 is standard for Pydantic validation failures)
+        assert response.status_code in [200, 400, 422]
     
     def test_optimization_performance_under_load(self, shared_client):
         """Test optimization system performance under concurrent load."""

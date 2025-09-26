@@ -1,7 +1,7 @@
-"""Pydantic models for the enrichment service.
+"""Pydantic models for the reference service.
 
 This module implements the full set of request/response models described in
-the enrichment design (DBpedia, ConceptNet, Wikidata, Schema.org).
+the reference design (DBpedia, ConceptNet, Wikidata, Schema.org).
 """
 
 from pydantic import BaseModel, Field, field_validator
@@ -32,6 +32,8 @@ class BaseSourceResponse(BaseModel):
     error: Optional[str] = Field(None, description="Error message if success is false")
 
 
+
+
 # ------------------ DBpedia Models ------------------
 class DBpediaResourceRequest(BaseModel):
     """Request model for DBpedia resource retrieval"""
@@ -54,14 +56,6 @@ class DBpediaResourceResponse(BaseSourceResponse):
     data: Optional[Dict[str, Any]] = None
 
 
-class DBpediaSearchRequest(BaseModel):
-    """Request model for DBpedia search"""
-    query: str = Field(..., min_length=1, max_length=500, description="Search query")
-    limit: int = Field(10, ge=1, le=100, description="Maximum number of results")
-    offset: int = Field(0, ge=0, description="Result offset for pagination")
-    format: ResponseFormat = Field(ResponseFormat.JSON, description="Response format")
-
-
 class DBpediaSearchResult(BaseModel):
     """Individual DBpedia search result"""
     uri: str
@@ -76,6 +70,16 @@ class DBpediaSearchResponse(BaseSourceResponse):
     query: Optional[str] = None
     total_results: Optional[int] = None
     results: List[DBpediaSearchResult] = Field(default_factory=list)
+
+
+
+class DBpediaSearchRequest(BaseModel):
+    """Request model for DBpedia search"""
+    query: str = Field(..., min_length=1, max_length=500, description="Search query")
+    limit: int = Field(10, ge=1, le=100, description="Maximum number of results")
+    offset: int = Field(0, ge=0, description="Result offset for pagination")
+    format: ResponseFormat = Field(ResponseFormat.JSON, description="Response format")
+
 
 
 class DBpediaSparqlRequest(BaseModel):
@@ -97,6 +101,7 @@ class DBpediaSparqlResponse(BaseSourceResponse):
     """Response model for DBpedia SPARQL query"""
     query_type: str = "sparql"
     results: Optional[Dict[str, Any]] = None
+
 
 
 # ------------------ ConceptNet Models ------------------
@@ -160,6 +165,25 @@ class ConceptNetRelatedResponse(BaseSourceResponse):
     related: List[ConceptNetRelatedConcept] = Field(default_factory=list)
 
 
+class ConceptNetEdge(BaseModel):
+    """ConceptNet edge representation"""
+    id: str = Field(..., alias='@id')
+    start: Dict[str, str]
+    rel: Dict[str, str]
+    end: Dict[str, str]
+    weight: float
+    sources: Optional[List[Dict[str, str]]] = None
+
+
+
+class ConceptNetRelatedConcept(BaseModel):
+    """Related concept from ConceptNet"""
+    id: str = Field(..., alias='@id')
+    label: str
+    weight: float
+
+
+
 # ------------------ Wikidata Models ------------------
 class WikidataSparqlRequest(BaseModel):
     """Request model for Wikidata SPARQL query"""
@@ -171,6 +195,7 @@ class WikidataSparqlResponse(BaseSourceResponse):
     """Response model for Wikidata SPARQL query"""
     query_type: str = "sparql"
     results: Optional[Dict[str, Any]] = None
+
 
 
 class WikidataEntityRequest(BaseModel):
@@ -193,6 +218,31 @@ class WikidataEntityResponse(BaseSourceResponse):
     entity_id: Optional[str] = None
     entity_url: Optional[str] = None
     data: Optional[Dict[str, Any]] = None
+
+
+class WikidataSearchResult(BaseModel):
+    """Individual search result from Wikidata"""
+    id: str = Field(..., description="Wikidata entity ID")
+    label: Optional[str] = Field(None, description="Entity label")
+    description: Optional[str] = Field(None, description="Entity description")
+    url: Optional[str] = Field(None, description="Entity URL")
+
+
+class WikidataSearchResponse(BaseSourceResponse):
+    """Response model for Wikidata search"""
+    query: str
+    total_results: int
+    results: List[WikidataSearchResult] = Field(default_factory=list)
+
+
+
+class WikidataSearchRequest(BaseModel):
+    """Request model for Wikidata search"""
+    query: str = Field(..., min_length=1, description="Search query")
+    limit: int = Field(20, ge=1, le=100, description="Maximum results")
+    offset: int = Field(0, ge=0, description="Result offset")
+    format: ResponseFormat = Field(ResponseFormat.JSON, description="Response format")
+
 
 
 # ------------------ Schema.org Models ------------------
@@ -236,6 +286,7 @@ class SchemaOrgEntityResponse(BaseSourceResponse):
     entity: Optional[SchemaOrgEntity] = None
 
 
+
 class SchemaOrgPropertyRequest(BaseModel):
     """Request model for Schema.org property retrieval"""
     identifier: str = Field(..., description="Schema.org property identifier")
@@ -258,6 +309,7 @@ class SchemaOrgPropertyResponse(BaseSourceResponse):
     """Response model for Schema.org property retrieval"""
     identifier: Optional[str] = None
     property: Optional[SchemaOrgPropertyData] = None
+
 
 
 class SchemaOrgSearchRequest(BaseModel):
@@ -286,45 +338,6 @@ class SchemaOrgSearchResponse(BaseSourceResponse):
     results: List[SchemaOrgSearchResult] = Field(default_factory=list)
 
 
-# ------------------ WordNet Models ------------------
-class WordNetSearchRequest(BaseModel):
-    """Request model for WordNet search"""
-    word: str = Field(..., min_length=1, description="Word to search for")
-    pos: Optional[Literal["noun", "verb", "adj", "adv"]] = Field(None, description="Part of speech filter")
-    lang: str = Field("eng", description="Language (default: English)")
-    limit: int = Field(20, ge=1, le=100, description="Maximum number of synsets")
-
-class WordNetSynset(BaseModel):
-    """WordNet synset representation"""
-    id: str = Field(..., description="Synset ID")
-    name: str = Field(..., description="Synset name")
-    pos: str = Field(..., description="Part of speech")
-    definition: str = Field(..., description="Definition")
-    examples: List[str] = Field(default_factory=list, description="Usage examples")
-    lemmas: List[str] = Field(default_factory=list, description="Lemma names")
-    lexfile: Optional[str] = Field(None, description="Lexical file")
-    offset: Optional[int] = Field(None, description="WordNet offset")
-
-class WordNetSearchResponse(BaseSourceResponse):
-    """Response model for WordNet search"""
-    word: Optional[str] = None
-    pos: Optional[str] = None
-    synsets: List[WordNetSynset] = Field(default_factory=list)
-
-class WordNetRelationsRequest(BaseModel):
-    """Request model for WordNet relations"""
-    synset_id: str = Field(..., description="Synset ID to get relations for")
-    relation_types: Optional[List[str]] = Field(None, description="Specific relation types")
-
-class WordNetRelation(BaseModel):
-    """WordNet semantic relation"""
-    relation_type: str = Field(..., description="Type of relation")
-    target_synset: WordNetSynset = Field(..., description="Target synset")
-
-class WordNetRelationsResponse(BaseSourceResponse):
-    """Response model for WordNet relations"""
-    synset_id: Optional[str] = None
-    relations: List[WordNetRelation] = Field(default_factory=list)
 
 
 # ------------------ Multi-Source Search Models ------------------

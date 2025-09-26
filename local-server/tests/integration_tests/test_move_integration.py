@@ -186,7 +186,7 @@ def test_safe_deletion_with_move_integration(client):
 
     # Step 3: Delete the parent term (should succeed without errors)
     delete_resp = client.delete(f"/api/structure_nodes/{parent_term['id']}")
-    assert delete_resp.status_code == 200
+    assert delete_resp.status_code == 204
 
     # Step 4: Verify parent is gone but children survive
     parent_resp = client.get(f"/api/structure_nodes/{parent_term['id']}")

@@ -189,7 +189,7 @@ def test_integration_with_existing_config(test_settings):
 
     # Test that new LLM config doesn't break existing functionality
     try:
-        enrichment_config = settings.ENRICHMENT_CONFIG
+        reference_config = settings.REFERENCE_CONFIG
         reference_sources = settings.reference_sources
         print("  ✓ Existing configuration still accessible")
     except Exception as e:

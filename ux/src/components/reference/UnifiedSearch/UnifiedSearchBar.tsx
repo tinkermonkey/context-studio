@@ -5,10 +5,10 @@
  */
 
 import React, { useState, useCallback, useEffect } from "react";
-import { TextInput, Spinner, Button } from "flowbite-react";
-import { Search, X } from "lucide-react";
-import { useUnifiedSearch } from "@/api/hooks/unifiedReference/useUnifiedReference";
-import { UnifiedSearchRequest, SourceType, UnifiedNode } from "@/api/types/unified";
+import { TextInput, Spinner, Button, Badge } from "flowbite-react";
+import { Search, X, Clock, CheckCircle, XCircle } from "lucide-react";
+import { useStreamingUnifiedSearch, useSourceLoadingStates } from "@/api/hooks/unifiedReference/useStreamingReference";
+import { UnifiedSearchRequest, SourceType, UnifiedNode, SOURCE_METADATA } from "@/api/types/unified";
 import { SourceDropdown } from "./SourceDropdown";
 
 interface UnifiedSearchBarProps {
@@ -22,6 +22,7 @@ interface UnifiedSearchBarProps {
   onError?: (error: Error) => void;
   selectedSources?: SourceType[];
   onSourcesChange?: (sources: SourceType[]) => void;
+  showSourceStatus?: boolean;
 }
 
 export const UnifiedSearchBar: React.FC<UnifiedSearchBarProps> = ({
@@ -33,29 +34,37 @@ export const UnifiedSearchBar: React.FC<UnifiedSearchBarProps> = ({
   onSearchStart,
   onSearchComplete,
   onError,
-  selectedSources = ["conceptnet", "dbpedia", "wikidata", "schema_org"],
+  selectedSources = ["dbpedia", "schema_org", "conceptnet", "wikidata"],
   onSourcesChange,
+  showSourceStatus = true,
 }) => {
   const [localQuery, setLocalQuery] = useState("");
-  const [isSearching, setIsSearching] = useState(false);
-  const [sourceErrors, setSourceErrors] = useState<Record<string, string>>({});
 
   const {
-    mutate: search,
-    isPending,
-    reset,
-  } = useUnifiedSearch({
-    onSuccess: (data) => {
-      setSourceErrors(data.source_errors || {});
-      setIsSearching(false);
-      onSearchComplete?.(data.results, data.total_results);
+    search,
+    searchState,
+    isSearching,
+    hasResults,
+    results,
+    totalResults,
+    completedSources,
+    errorSources,
+  } = useStreamingUnifiedSearch({
+    onComplete: (state) => {
+      onSearchComplete?.(state.aggregatedResults, state.totalResults);
     },
-    onError: (error: Error) => {
-      setIsSearching(false);
-      console.error("Search failed:", error);
-      onError?.(error);
+    onSourceUpdate: (update) => {
+      // Call onSearchComplete with partial results as they arrive
+      if (update.status === "completed" && update.results) {
+        // Get current aggregated results from the search state
+        const currentResults = searchState?.aggregatedResults || [];
+        const currentTotal = searchState?.totalResults || 0;
+        onSearchComplete?.(currentResults, currentTotal);
+      }
     },
   });
+
+  const sourceLoadingStates = useSourceLoadingStates(searchState);
 
   // Manual search function (only called when user explicitly searches)
   const performSearch = useCallback(() => {
@@ -70,24 +79,26 @@ export const UnifiedSearchBar: React.FC<UnifiedSearchBarProps> = ({
         offset: 0,
       };
 
-      setIsSearching(true);
       onSearchStart?.();
-      search(request);
+      search(request).catch((error: Error) => {
+        console.error("Search failed:", error);
+        onError?.(error);
+      });
     }
   }, [
     localQuery,
     selectedSources,
     minQueryLength,
     search,
-    setIsSearching,
     onSearchStart,
+    onError,
   ]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setLocalQuery(e.target.value);
   };
 
-  const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter') {
       e.preventDefault();
       performSearch();
@@ -101,12 +112,9 @@ export const UnifiedSearchBar: React.FC<UnifiedSearchBarProps> = ({
   const handleClear = () => {
     setLocalQuery("");
     onSearchComplete?.([], 0);
-    setSourceErrors({});
-    reset();
   };
 
-
-  const showSpinner = isPending || isSearching;
+  const showSpinner = isSearching;
   const showClearButton = localQuery.length > 0;
   const hasNoSources = selectedSources.length === 0;
 
@@ -124,7 +132,7 @@ export const UnifiedSearchBar: React.FC<UnifiedSearchBarProps> = ({
             }
             value={localQuery}
             onChange={handleInputChange}
-            onKeyPress={handleKeyPress}
+            onKeyDown={handleKeyDown}
             disabled={disabled || hasNoSources}
             autoFocus={autoFocus}
             className="pr-10"
@@ -177,6 +185,42 @@ export const UnifiedSearchBar: React.FC<UnifiedSearchBarProps> = ({
       {localQuery.length > 0 && localQuery.length < minQueryLength && (
         <div className="rounded-md bg-yellow-50 p-2 text-sm text-yellow-600">
           Query must be at least {minQueryLength} characters long.
+        </div>
+      )}
+
+      {/* Source Status Indicators */}
+      {showSourceStatus && searchState && (
+        <div className="flex flex-wrap gap-2">
+          {Object.entries(searchState.sources).map(([source, sourceUpdate]) => {
+            const metadata = SOURCE_METADATA[source as SourceType];
+            const isLoading = sourceLoadingStates.isSourceLoading(source as SourceType);
+            const isComplete = sourceLoadingStates.isSourceComplete(source as SourceType);
+            const isError = sourceLoadingStates.isSourceError(source as SourceType);
+            const resultCount = sourceUpdate.results?.length || 0;
+
+            let icon;
+            let color: "gray" | "blue" | "green" | "red" = "gray";
+
+            if (isLoading) {
+              icon = <Clock className="h-3 w-3" />;
+              color = "blue";
+            } else if (isComplete) {
+              icon = <CheckCircle className="h-3 w-3" />;
+              color = "green";
+            } else if (isError) {
+              icon = <XCircle className="h-3 w-3" />;
+              color = "red";
+            }
+
+            return (
+              <Badge key={source} color={color} className="flex items-center gap-1 text-xs">
+                {icon}
+                {metadata?.label || source}
+                {isComplete && ` (${resultCount})`}
+                {isLoading && <Spinner size="xs" />}
+              </Badge>
+            );
+          })}
         </div>
       )}
     </div>

@@ -5,14 +5,14 @@
  */
 
 import React, { useState } from "react";
-import { TextInput, Button, Alert, Spinner, Tabs, TabItem } from "flowbite-react";
-import { Search, Info, List, Network } from "lucide-react";
+import { TextInput, Button, Alert, Spinner, Tabs, TabItem, Badge } from "flowbite-react";
+import { Search, Info, List, Network, Clock, CheckCircle, XCircle } from "lucide-react";
 import { SearchResults } from "./UnifiedSearch";
 import { SourceSelector } from "./UnifiedSearch/SourceSelector";
 import { NodeDetails } from "./ReferenceViewer";
 import { GraphView } from "./GraphView";
-import { UnifiedNode, SourceType, UnifiedSearchLink } from "@/api/types/unified";
-import { useUnifiedSearch } from "@/api/hooks/unifiedReference/useUnifiedReference";
+import { UnifiedNode, SourceType, UnifiedSearchLink, SOURCE_METADATA } from "@/api/types/unified";
+import { useStreamingUnifiedSearch, useSourceLoadingStates } from "@/api/hooks/unifiedReference/useStreamingReference";
 
 interface UnifiedSearchPageProps {
   title?: string;
@@ -25,47 +25,51 @@ export const UnifiedSearchPage: React.FC<UnifiedSearchPageProps> = ({
 }) => {
   const [query, setQuery] = useState("");
   const [selectedSources, setSelectedSources] = useState<SourceType[]>([
-    "conceptnet",
     "dbpedia",
-    "wikidata",
-    "schema_org"
+    "schema_org",
+    "conceptnet",
+    "wikidata"
   ]);
-  const [searchResults, setSearchResults] = useState<UnifiedNode[]>([]);
-  const [searchLinks, setSearchLinks] = useState<UnifiedSearchLink[]>([]);
-  const [totalResults, setTotalResults] = useState(0);
   const [selectedNode, setSelectedNode] = useState<UnifiedNode | null>(null);
   const [showDetails, setShowDetails] = useState(false);
+  const [searchError, setSearchError] = useState<Error | null>(null);
 
   const {
-    mutate: performSearch,
-    isPending: isSearching,
-    error: searchError,
-  } = useUnifiedSearch({
-    onSuccess: (data) => {
-      setSearchResults(data.results);
-      setSearchLinks(data.links || []);
-      setTotalResults(data.total_results);
+    search: performSearch,
+    searchState,
+    isSearching,
+    hasResults,
+    results: searchResults,
+    links: searchLinks,
+    totalResults,
+    completedSources,
+    errorSources,
+  } = useStreamingUnifiedSearch({
+    onComplete: (state) => {
+      console.log('Search completed:', state);
     },
-    onError: (error) => {
-      console.error("Search failed:", error);
-      setSearchResults([]);
-      setSearchLinks([]);
-      setTotalResults(0);
+    onSourceUpdate: (update) => {
+      console.log(`Source ${update.source} update:`, update);
     },
   });
 
+  const sourceLoadingStates = useSourceLoadingStates(searchState);
+
   const handleSearch = () => {
     if (query.trim().length >= 2 && selectedSources.length > 0) {
+      setSearchError(null);
       performSearch({
         query: query.trim(),
         sources: selectedSources,
         limit: 20,
         offset: 0,
+      }).catch((error: Error) => {
+        setSearchError(error);
       });
     }
   };
 
-  const handleKeyPress = (e: React.KeyboardEvent) => {
+  const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === "Enter") {
       handleSearch();
     }
@@ -77,7 +81,47 @@ export const UnifiedSearchPage: React.FC<UnifiedSearchPageProps> = ({
   };
 
   const canSearch = query.trim().length >= 2 && selectedSources.length > 0;
-  const hasSearched = searchResults.length > 0 || isSearching;
+  const hasSearched = hasResults || isSearching;
+
+  // Create source status indicators
+  const renderSourceStatus = () => {
+    if (!searchState) return null;
+
+    return (
+      <div className="flex flex-wrap gap-2 mb-4">
+        {Object.entries(searchState.sources).map(([source, sourceUpdate]) => {
+          const metadata = SOURCE_METADATA[source as SourceType];
+          const isLoading = sourceLoadingStates.isSourceLoading(source as SourceType);
+          const isComplete = sourceLoadingStates.isSourceComplete(source as SourceType);
+          const isError = sourceLoadingStates.isSourceError(source as SourceType);
+          const resultCount = sourceUpdate.results?.length || 0;
+
+          let icon;
+          let color: "gray" | "blue" | "green" | "red" = "gray";
+
+          if (isLoading) {
+            icon = <Clock className="h-3 w-3" />;
+            color = "blue";
+          } else if (isComplete) {
+            icon = <CheckCircle className="h-3 w-3" />;
+            color = "green";
+          } else if (isError) {
+            icon = <XCircle className="h-3 w-3" />;
+            color = "red";
+          }
+
+          return (
+            <Badge key={source} color={color} className="flex items-center gap-1">
+              {icon}
+              {metadata?.label || source}
+              {isComplete && ` (${resultCount})`}
+              {isLoading && <Spinner size="xs" />}
+            </Badge>
+          );
+        })}
+      </div>
+    );
+  };
 
   return (
     <div className="container mx-auto max-w-6xl space-y-6 px-4 py-8">
@@ -96,7 +140,7 @@ export const UnifiedSearchPage: React.FC<UnifiedSearchPageProps> = ({
             placeholder="Enter search term..."
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            onKeyPress={handleKeyPress}
+            onKeyDown={handleKeyDown}
             disabled={isSearching}
             className="flex-1"
           />
@@ -112,6 +156,9 @@ export const UnifiedSearchPage: React.FC<UnifiedSearchPageProps> = ({
             disabled={isSearching}
           />
         </div>
+
+        {/* Source Status Indicators */}
+        {renderSourceStatus()}
 
         {/* Validation Messages */}
         <div className="space-y-2">
@@ -133,9 +180,50 @@ export const UnifiedSearchPage: React.FC<UnifiedSearchPageProps> = ({
               Search failed: {searchError.message}
             </Alert>
           )}
+
+          {/* Source Errors */}
+          {errorSources.length > 0 && (
+            <Alert color="warning">
+              Some sources had errors: {errorSources.map(source => SOURCE_METADATA[source]?.label || source).join(", ")}
+            </Alert>
+          )}
+
+          {/* Progress Information */}
+          {isSearching && (
+            <Alert color="info">
+              <div className="flex items-center gap-2">
+                <Spinner size="sm" />
+                <span>
+                  Searching... ({completedSources.length} of {Object.keys(searchState?.sources || {}).length} sources complete)
+                  {hasResults && ` - ${totalResults} deduplicated results so far`}
+                  {searchState?.deduplicationStats && searchState.deduplicationStats.duplicatesRemoved > 0 &&
+                    ` (${searchState.deduplicationStats.duplicatesRemoved} duplicates removed)`
+                  }
+                </span>
+              </div>
+            </Alert>
+          )}
+
+          {/* Deduplication Summary */}
+          {searchState?.isComplete && searchState?.deduplicationStats && (
+            <Alert color="success">
+              <div className="text-sm">
+                <strong>Search Complete:</strong> Found {totalResults} unique results
+                {searchState.deduplicationStats.duplicatesRemoved > 0 && (
+                  <span> ({searchState.deduplicationStats.duplicatesRemoved} duplicates removed)</span>
+                )}
+                {searchState.deduplicationStats.crossReferences > 0 && (
+                  <span>, {searchState.deduplicationStats.crossReferences} cross-references discovered</span>
+                )}
+                {searchLinks.length > 0 && (
+                  <span>, {searchLinks.length} total relationships</span>
+                )}
+              </div>
+            </Alert>
+          )}
         </div>
 
-        {/* Results */}
+        {/* Results - searchResults and searchLinks are already deduplicated and normalized by the streaming service */}
         {hasSearched && (
           <Tabs aria-label="Search Results" className="mt-4 border-b border-gray-200">
             <TabItem active title="Graph View" icon={Network}>
@@ -157,6 +245,8 @@ export const UnifiedSearchPage: React.FC<UnifiedSearchPageProps> = ({
                 totalResults={totalResults}
                 onSelectNode={handleNodeSelect}
                 isSearching={isSearching}
+                streamingState={searchState}
+                showSourceProgress={true}
               />
             </TabItem>
           </Tabs>

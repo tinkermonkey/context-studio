@@ -162,8 +162,7 @@ def test_update_layer_not_found(client):
 def test_delete_layer(client):
     layer = create_layer(client)
     resp = client.delete(f"/api/structure_nodes/{layer['id']}")
-    assert resp.status_code == 200
-    assert resp.json()["success"] is True
+    assert resp.status_code == 204
     # Confirm deletion
     get_resp = client.get(f"/api/structure_nodes/{layer['id']}")
     assert get_resp.status_code == 404

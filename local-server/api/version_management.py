@@ -24,6 +24,9 @@ Endpoints:
 from fastapi import APIRouter, HTTPException, Query, Depends, Path
 from typing import List
 from uuid import UUID
+import logging
+
+logger = logging.getLogger(__name__)
 from services.version_manager import VersionManager, EntityVersion
 from services.working_tree_manager import WorkingTreeManager
 from services.diff_generator import DiffGenerator
@@ -86,7 +89,7 @@ def get_entity_version(
         raise HTTPException(status_code=500, detail=f"Failed to retrieve version: {str(e)}")
 
 
-@router.post("/entities/{entity_type}/{entity_id}/rollback", response_model=EntityVersionOut)
+@router.post("/entities/{entity_type}/{entity_id}/rollback")
 def rollback_entity(
     rollback_request: RollbackRequest,
     entity_type: EntityTypeEnum = Path(..., description="Entity type"),
@@ -95,26 +98,33 @@ def rollback_entity(
 ):
     """
     Rollback entity to specific version.
-    
+
     Creates a new version with the content from the target version.
+    Note: This currently only creates a version record. Entity content rollback
+    requires additional implementation.
     """
     try:
         rollback_version = version_manager.rollback_to_version(
-            entity_type.value, 
-            str(entity_id), 
+            entity_type.value,
+            str(entity_id),
             rollback_request.target_version_number,
             rollback_request.author_id
         )
-        
-        return _entity_version_to_out(rollback_version)
-        
+
+        return {"success": True, "version": _entity_version_to_out(rollback_version)}
+
     except ValueError as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        # Check if error message indicates entity/version not found
+        error_msg = str(e).lower()
+        if "not found" in error_msg or "does not exist" in error_msg:
+            raise HTTPException(status_code=404, detail=str(e))
+        else:
+            raise HTTPException(status_code=400, detail=str(e))
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Rollback failed: {str(e)}")
 
 
-@router.get("/entities/{entity_type}/{entity_id}/diff", response_model=EntityDiffOut)
+@router.get("/entities/{entity_type}/{entity_id}/diff")
 def get_working_diff(
     entity_type: EntityTypeEnum = Path(..., description="Entity type"),
     entity_id: UUID = Path(..., description="Entity ID"),
@@ -123,13 +133,17 @@ def get_working_diff(
 ):
     """
     Get diff between working and canonical versions.
-    
+
     Shows what changes exist in the working version compared to the last committed version.
     """
     try:
         diff = diff_generator.generate_working_diff(entity_type.value, str(entity_id))
-        return _entity_diff_to_out(diff)
-        
+        diff_out = _entity_diff_to_out(diff)
+        # Add diff field that tests expect (alias for changes)
+        response = diff_out.dict()
+        response["diff"] = response["changes"]
+        return response
+
     except ValueError as e:
         raise HTTPException(status_code=404, detail=str(e))
     except Exception as e:
@@ -195,7 +209,7 @@ def stage_entity(
         if not success:
             raise HTTPException(status_code=400, detail="No changes to stage")
         
-        return {"message": "Entity staged successfully"}
+        return {"success": True, "message": "Entity staged successfully"}
         
     except ValueError as e:
         raise HTTPException(status_code=404, detail=str(e))
@@ -221,7 +235,7 @@ def unstage_entity(
             str(stage_request.entity_id)
         )
         
-        return {"message": "Entity unstaged successfully"}
+        return {"success": True, "message": "Entity unstaged successfully"}
         
     except ValueError as e:
         raise HTTPException(status_code=404, detail=str(e))
@@ -229,7 +243,7 @@ def unstage_entity(
         raise HTTPException(status_code=500, detail=f"Failed to unstage entity: {str(e)}")
 
 
-@router.post("/working-tree/commit", response_model=List[EntityVersionSummary])
+@router.post("/working-tree/commit")
 def commit_staged_changes(
     commit_request: CommitRequest,
     working_tree_manager: WorkingTreeManager = Depends(get_working_tree_manager_via_factory)
@@ -245,7 +259,7 @@ def commit_staged_changes(
         if not committed_versions:
             raise HTTPException(status_code=400, detail="No staged changes to commit")
         
-        return [_entity_version_to_summary(version) for version in committed_versions]
+        return {"success": True, "committed_count": len(committed_versions), "versions": [_entity_version_to_summary(version) for version in committed_versions]}
         
     except HTTPException:
         raise
@@ -259,13 +273,13 @@ def get_commit_preview(
 ):
     """
     Preview what would be committed.
-    
+
     Returns diffs for all staged entities showing what changes would be committed.
     """
     try:
         diffs = diff_generator.generate_commit_preview()
         return [_entity_diff_to_out(diff) for diff in diffs]
-        
+
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to generate commit preview: {str(e)}")
 
@@ -287,7 +301,7 @@ def get_all_working_diffs(
         raise HTTPException(status_code=500, detail=f"Failed to generate working diffs: {str(e)}")
 
 
-@router.post("/diffs/compare", response_model=EntityDiffOut)
+@router.post("/diffs/compare")
 def compare_versions(
     diff_request: DiffRequest,
     diff_generator: DiffGenerator = Depends(get_diff_generator_via_factory)
@@ -304,8 +318,12 @@ def compare_versions(
             diff_request.before_version_number,
             diff_request.after_version_number
         )
-        
-        return _entity_diff_to_out(diff)
+
+        diff_out = _entity_diff_to_out(diff)
+        # Add diff field that tests expect (alias for changes)
+        response = diff_out.dict()
+        response["diff"] = response["changes"]
+        return response
         
     except ValueError as e:
         raise HTTPException(status_code=404, detail=str(e))

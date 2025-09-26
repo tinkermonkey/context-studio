@@ -2,7 +2,6 @@
 
 
 from .base import BaseReferenceSource
-from config import get_settings
 from ..models import DBpediaResourceResponse, DBpediaSearchResponse, DBpediaSparqlResponse
 
 

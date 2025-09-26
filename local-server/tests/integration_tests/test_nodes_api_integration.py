@@ -191,8 +191,7 @@ class TestNodesAPICRUD:
         # Delete the layer
         response = client.delete(f"/api/structure_nodes/{created_layer['id']}")
 
-        assert response.status_code == 200
-        assert response.json()["success"] is True
+        assert response.status_code == 204
 
         # Verify the layer is deleted
         get_response = client.get(f"/api/structure_nodes/{created_layer['id']}")
@@ -226,7 +225,7 @@ class TestNodesAPICRUD:
 
         # Delete the layer (should cascade to domain and term)
         delete_response = client.delete(f"/api/structure_nodes/{layer['id']}")
-        assert delete_response.status_code == 200
+        assert delete_response.status_code == 204
 
         # Verify all nodes are deleted
         assert client.get(f"/api/structure_nodes/{layer['id']}").status_code == 404
@@ -640,7 +639,7 @@ class TestNodesAPICompleteFlow:
 
         # 7. Test cascade delete
         response = client.delete(f"/api/structure_nodes/{layer['id']}")
-        assert response.status_code == 200
+        assert response.status_code == 204
 
         # Verify all nodes in hierarchy are deleted
         assert client.get(f"/api/structure_nodes/{layer['id']}").status_code == 404

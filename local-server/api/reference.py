@@ -1,32 +1,23 @@
-"""FastAPI router for enrichment endpoints"""
+"""FastAPI router for reference endpoints"""
 
 from fastapi import APIRouter, HTTPException, Depends, Query, Path
 from fastapi.responses import JSONResponse
 from typing import Optional, Literal
 import logging
 
-from api.dependencies.enrichment_services import get_enrichment_service
-from enrichment.service import EnrichmentService
-from enrichment.models import (
-    DBpediaResourceRequest, DBpediaResourceResponse, DBpediaSearchRequest, DBpediaSearchResponse,
-    DBpediaSparqlRequest, DBpediaSparqlResponse, ConceptNetQueryRequest, ConceptNetQueryResponse,
-    ConceptNetConceptResponse, ConceptNetRelatedResponse, WikidataSparqlRequest, WikidataSparqlResponse,
-    WikidataEntityRequest, WikidataEntityResponse, SchemaOrgEntityRequest, SchemaOrgEntityResponse,
-    SchemaOrgPropertyRequest, SchemaOrgPropertyResponse, SchemaOrgSearchRequest, SchemaOrgSearchResponse,
-    ResponseFormat, SourceType, MultiSourceSearchRequest, MultiSourceSearchResponse
+from api.dependencies.reference_services import get_reference_service
+from reference.service import ReferenceService
+from reference.models import (
+    DBpediaResourceRequest, DBpediaSearchRequest, DBpediaSparqlRequest, ConceptNetQueryRequest,
+    WikidataSparqlRequest, WikidataEntityRequest, WikidataSearchRequest, SchemaOrgEntityRequest,
+    SchemaOrgPropertyRequest, SchemaOrgSearchRequest, ResponseFormat, SourceType, MultiSourceSearchRequest,
+    MultiSourceSearchResponse
 )
-from enrichment.exceptions import EnrichmentError, SourceError, SourceTimeoutError
+from reference.exceptions import ReferenceError, SourceError, SourceTimeoutError
 
 logger = logging.getLogger(__name__)
 
-router = APIRouter(prefix="/api/nlp_analysis/reference", tags=["enrichment"])
-
-
-def get_enrichment_service_legacy() -> EnrichmentService:
-    """Legacy dependency to get enrichment service instance"""
-    from config import get_config_manager
-    config_manager = get_config_manager()
-    return EnrichmentService(config_manager)
+router = APIRouter(prefix="/api/reference", tags=["reference"])
 
 
 def handle_service_error(e: Exception) -> HTTPException:
@@ -35,7 +26,7 @@ def handle_service_error(e: Exception) -> HTTPException:
         return HTTPException(status_code=504, detail=str(e))
     elif isinstance(e, SourceError):
         return HTTPException(status_code=503, detail=str(e))
-    elif isinstance(e, EnrichmentError):
+    elif isinstance(e, ReferenceError):
         return HTTPException(status_code=400, detail=str(e))
     else:
         logger.error(f"Unexpected error: {e}")
@@ -43,11 +34,11 @@ def handle_service_error(e: Exception) -> HTTPException:
 
 
 # DBpedia endpoints
-@router.get("/dbpedia/resource", response_model=DBpediaResourceResponse)
+@router.get("/dbpedia/resource", response_model=MultiSourceSearchResponse)
 async def dbpedia_get_resource(
     resource_url: str = Query(..., description="DBpedia resource URL"),
     format: ResponseFormat = Query(ResponseFormat.JSON, description="Response format"),
-    service: EnrichmentService = Depends(get_enrichment_service)
+    service: ReferenceService = Depends(get_reference_service)
 ):
     """Retrieve structured data from a DBpedia resource URL"""
     try:
@@ -57,13 +48,13 @@ async def dbpedia_get_resource(
         raise handle_service_error(e)
 
 
-@router.get("/dbpedia/search", response_model=DBpediaSearchResponse)
+@router.get("/dbpedia/search", response_model=MultiSourceSearchResponse)
 async def dbpedia_search(
     query: str = Query(..., description="Search query"),
     limit: int = Query(10, ge=1, le=100, description="Maximum results"),
     offset: int = Query(0, ge=0, description="Result offset"),
     format: ResponseFormat = Query(ResponseFormat.JSON, description="Response format"),
-    service: EnrichmentService = Depends(get_enrichment_service)
+    service: ReferenceService = Depends(get_reference_service)
 ):
     """Search DBpedia using the search API"""
     try:
@@ -73,10 +64,10 @@ async def dbpedia_search(
         raise handle_service_error(e)
 
 
-@router.post("/dbpedia/sparql", response_model=DBpediaSparqlResponse)
+@router.post("/dbpedia/sparql", response_model=MultiSourceSearchResponse)
 async def dbpedia_sparql(
     request: DBpediaSparqlRequest,
-    service: EnrichmentService = Depends(get_enrichment_service)
+    service: ReferenceService = Depends(get_reference_service)
 ):
     """Execute SPARQL query against DBpedia"""
     try:
@@ -86,7 +77,29 @@ async def dbpedia_sparql(
 
 
 # ConceptNet endpoints
-@router.get("/conceptnet/query", response_model=ConceptNetQueryResponse)
+@router.get("/conceptnet/search", response_model=MultiSourceSearchResponse)
+async def conceptnet_search(
+    query: str = Query(..., description="Search query"),
+    limit: int = Query(20, ge=1, le=100, description="Result limit"),
+    offset: int = Query(0, ge=0, description="Result offset"),
+    service: ReferenceService = Depends(get_reference_service)
+):
+    """Search ConceptNet for concepts matching the query"""
+    try:
+        # Format the query as a ConceptNet concept path for English
+        # ConceptNet expects concepts in format /c/en/word
+        formatted_query = f"/c/en/{query.lower().replace(' ', '_')}"
+
+        # Use the node parameter to search for concepts containing the query
+        request = ConceptNetQueryRequest(
+            node=formatted_query, limit=limit, offset=offset
+        )
+        return await service.conceptnet_query(request)
+    except Exception as e:
+        raise handle_service_error(e)
+
+
+@router.get("/conceptnet/query", response_model=MultiSourceSearchResponse)
 async def conceptnet_query(
     start: Optional[str] = Query(None, description="Starting concept"),
     end: Optional[str] = Query(None, description="Ending concept"),
@@ -94,7 +107,7 @@ async def conceptnet_query(
     rel: Optional[str] = Query(None, description="Relation type"),
     limit: int = Query(20, ge=1, le=100, description="Result limit"),
     offset: int = Query(0, ge=0, description="Result offset"),
-    service: EnrichmentService = Depends(get_enrichment_service)
+    service: ReferenceService = Depends(get_reference_service)
 ):
     """Query ConceptNet with various parameters"""
     try:
@@ -106,10 +119,10 @@ async def conceptnet_query(
         raise handle_service_error(e)
 
 
-@router.get("/conceptnet/concept/{concept_path:path}", response_model=ConceptNetConceptResponse)
+@router.get("/conceptnet/concept/{concept_path:path}", response_model=MultiSourceSearchResponse)
 async def conceptnet_get_concept(
     concept_path: str = Path(..., description="ConceptNet concept path"),
-    service: EnrichmentService = Depends(get_enrichment_service)
+    service: ReferenceService = Depends(get_reference_service)
 ):
     """Get data for a specific ConceptNet concept"""
     try:
@@ -118,12 +131,12 @@ async def conceptnet_get_concept(
         raise handle_service_error(e)
 
 
-@router.get("/conceptnet/related/{concept_path:path}", response_model=ConceptNetRelatedResponse)
+@router.get("/conceptnet/related/{concept_path:path}", response_model=MultiSourceSearchResponse)
 async def conceptnet_get_related(
     concept_path: str = Path(..., description="ConceptNet concept path"),
     filter: Optional[str] = Query(None, description="Filter for related concepts"),
     limit: int = Query(20, ge=1, le=100, description="Result limit"),
-    service: EnrichmentService = Depends(get_enrichment_service)
+    service: ReferenceService = Depends(get_reference_service)
 ):
     """Get related concepts from ConceptNet"""
     try:
@@ -133,10 +146,25 @@ async def conceptnet_get_related(
 
 
 # Wikidata endpoints
-@router.post("/wikidata/sparql", response_model=WikidataSparqlResponse)
+@router.get("/wikidata/search", response_model=MultiSourceSearchResponse)
+async def wikidata_search(
+    query: str = Query(..., description="Search query"),
+    limit: int = Query(20, ge=1, le=50, description="Result limit (max 50)"),
+    offset: int = Query(0, ge=0, description="Result offset"),
+    service: ReferenceService = Depends(get_reference_service)
+):
+    """Search Wikidata entities"""
+    try:
+        request = WikidataSearchRequest(query=query, limit=limit, offset=offset)
+        return await service.wikidata_search(request)
+    except Exception as e:
+        raise handle_service_error(e)
+
+
+@router.post("/wikidata/sparql", response_model=MultiSourceSearchResponse)
 async def wikidata_sparql(
     request: WikidataSparqlRequest,
-    service: EnrichmentService = Depends(get_enrichment_service)
+    service: ReferenceService = Depends(get_reference_service)
 ):
     """Execute SPARQL query against Wikidata"""
     try:
@@ -145,12 +173,12 @@ async def wikidata_sparql(
         raise handle_service_error(e)
 
 
-@router.get("/wikidata/entity", response_model=WikidataEntityResponse)
+@router.get("/wikidata/entity", response_model=MultiSourceSearchResponse)
 async def wikidata_get_entity(
     entity_url: str = Query(..., description="Wikidata entity URL"),
     properties: Optional[str] = Query(None, description="Comma-separated property IDs"),
     format: ResponseFormat = Query(ResponseFormat.JSON, description="Response format"),
-    service: EnrichmentService = Depends(get_enrichment_service)
+    service: ReferenceService = Depends(get_reference_service)
 ):
     """Get structured data for a Wikidata entity"""
     try:
@@ -162,12 +190,12 @@ async def wikidata_get_entity(
 
 
 # Schema.org endpoints
-@router.get("/schema-org/entity/{identifier}", response_model=SchemaOrgEntityResponse)
+@router.get("/schema-org/entity/{identifier}", response_model=MultiSourceSearchResponse)
 async def schema_org_get_entity(
     identifier: str = Path(..., description="Schema.org entity identifier"),
     include_inherited: bool = Query(True, description="Include inherited properties"),
     include_children: bool = Query(False, description="Include child entities"),
-    service: EnrichmentService = Depends(get_enrichment_service)
+    service: ReferenceService = Depends(get_reference_service)
 ):
     """Get Schema.org entity with properties and inheritance"""
     try:
@@ -181,11 +209,11 @@ async def schema_org_get_entity(
         raise handle_service_error(e)
 
 
-@router.get("/schema-org/property/{identifier}", response_model=SchemaOrgPropertyResponse)
+@router.get("/schema-org/property/{identifier}", response_model=MultiSourceSearchResponse)
 async def schema_org_get_property(
     identifier: str = Path(..., description="Schema.org property identifier"),
     include_usage: bool = Query(True, description="Include entities using this property"),
-    service: EnrichmentService = Depends(get_enrichment_service)
+    service: ReferenceService = Depends(get_reference_service)
 ):
     """Get Schema.org property definition and usage"""
     try:
@@ -195,14 +223,14 @@ async def schema_org_get_property(
         raise handle_service_error(e)
 
 
-@router.get("/schema-org/search", response_model=SchemaOrgSearchResponse)
+@router.get("/schema-org/search", response_model=MultiSourceSearchResponse)
 async def schema_org_search(
     query: str = Query(..., description="Search query"),
     search_type: Literal["entities", "properties", "both"] = Query("both", description="Search type"),
     limit: int = Query(20, ge=1, le=100, description="Result limit"),
     offset: int = Query(0, ge=0, description="Result offset"),
     similarity_threshold: float = Query(0.7, ge=0.0, le=1.0, description="Similarity threshold"),
-    service: EnrichmentService = Depends(get_enrichment_service)
+    service: ReferenceService = Depends(get_reference_service)
 ):
     """Search Schema.org entities and properties"""
     try:
@@ -222,7 +250,7 @@ async def schema_org_search(
 @router.post("/search", response_model=MultiSourceSearchResponse)
 async def multi_source_search(
     request: MultiSourceSearchRequest,
-    service: EnrichmentService = Depends(get_enrichment_service)
+    service: ReferenceService = Depends(get_reference_service)
 ):
     """
     Search across multiple reference sources
@@ -242,7 +270,7 @@ async def multi_source_search_get(
     sources: Optional[str] = Query(None, description="Comma-separated list of source types"),
     limit: int = Query(20, description="Maximum results per source", ge=1, le=100),
     offset: int = Query(0, description="Result offset", ge=0),
-    service: EnrichmentService = Depends(get_enrichment_service)
+    service: ReferenceService = Depends(get_reference_service)
 ):
     """
     Search across multiple reference sources via GET request
@@ -278,7 +306,7 @@ async def multi_source_search_get(
 
 # Health and status endpoints
 @router.get("/health")
-async def health_check(service: EnrichmentService = Depends(get_enrichment_service)):
+async def health_check(service: ReferenceService = Depends(get_reference_service)):
     """Check health status of all reference API sources"""
     try:
         return await service.health_check()

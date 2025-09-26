@@ -158,7 +158,7 @@ def get_user_activity_report(
         
         # Apply limit
         limited_df = activity_df.head(limit)
-        return [UserActivityOut.model_validate(row) for _, row in limited_df.iterrows()]
+        return [UserActivityOut.model_validate(row.to_dict()) for _, row in limited_df.iterrows()]
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to get user activity: {str(e)}")
 
@@ -175,7 +175,7 @@ def get_entity_hotspots(
         if hotspots_df.empty:
             return []
         
-        return [EntityHotspotOut.model_validate(row) for _, row in hotspots_df.iterrows()]
+        return [EntityHotspotOut.model_validate(row.to_dict()) for _, row in hotspots_df.iterrows()]
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to get entity hotspots: {str(e)}")
 

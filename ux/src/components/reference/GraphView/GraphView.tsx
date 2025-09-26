@@ -62,7 +62,7 @@ export const GraphView: React.FC<GraphViewProps> = ({
           id: node.id,
           label: node.title || node.id,
           fill: colorMap[sourceMetadata.color] || colorMap.gray,
-          size: 10 + (node.confidence_score || 0.5) * 10,
+          size: 10 + (node.relevance_score || 0.5) * 10,
           data: node // Store original node data
         };
       });
@@ -76,8 +76,8 @@ export const GraphView: React.FC<GraphViewProps> = ({
           id: link.id,
           source: link.subject,
           target: link.object,
-          label: link.predicate,
-          data: link // Store original link data
+            label: link.predicate,
+            data: link // Store original link data
         }));
 
       return { nodes: simpleNodes, edges: simpleEdges };
@@ -401,14 +401,32 @@ export const GraphView: React.FC<GraphViewProps> = ({
 
                       {/* Image Display */}
                       {(() => {
-                        // Check for image URL in common fields
+                        // Check for file-based image content first (from normalized API)
+                        if (currentNode.attributes?.file_type === 'image' && currentNode.attributes?.file_url) {
+                          return (
+                            <div className="border rounded-lg overflow-hidden bg-gray-50">
+                              <img
+                                src={String(currentNode.attributes.file_url)}
+                                alt={String(currentNode.attributes.file_name) || currentNode.title}
+                                className="w-full h-32 object-cover"
+                                onError={(e) => {
+                                  // Hide image if it fails to load
+                                  (e.target as HTMLElement).style.display = 'none';
+                                }}
+                                loading="lazy"
+                              />
+                            </div>
+                          );
+                        }
+
+                        // Fallback: check for legacy image URLs in attributes
                         const imageUrl =
-                          currentNode.metadata?.image ||
-                          currentNode.metadata?.image_url ||
-                          currentNode.metadata?.thumbnail ||
-                          currentNode.metadata?.depiction ||
-                          currentNode.metadata?.picture ||
-                          currentNode.metadata?.photo;
+                          currentNode.attributes?.image ||
+                          currentNode.attributes?.image_url ||
+                          currentNode.attributes?.thumbnail ||
+                          currentNode.attributes?.depiction ||
+                          currentNode.attributes?.picture ||
+                          currentNode.attributes?.photo;
 
                         if (imageUrl && typeof imageUrl === 'string') {
                           return (
@@ -433,8 +451,8 @@ export const GraphView: React.FC<GraphViewProps> = ({
                       <div className="grid grid-cols-1 gap-1 text-xs text-gray-600">
                         <div><span className="font-medium">ID:</span> <span className="font-mono text-xs">{currentNode.id}</span></div>
                         <div><span className="font-medium">Source:</span> <span className="capitalize">{currentNode.source.replace('_', ' ')}</span></div>
-                        {currentNode.confidence_score && (
-                          <div><span className="font-medium">Confidence:</span> {(currentNode.confidence_score * 100).toFixed(1)}%</div>
+                        {currentNode.relevance_score && (
+                          <div><span className="font-medium">Relevance:</span> {(currentNode.relevance_score * 100).toFixed(1)}%</div>
                         )}
                       </div>
 

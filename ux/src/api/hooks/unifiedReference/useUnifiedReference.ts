@@ -18,6 +18,7 @@ import {
   UnifiedNode,
   UnifiedLink,
   UnifiedReferenceError,
+  SourceType,
 } from "../../types/unified";
 import { QUERY_KEYS } from "../../config";
 import { createQueryKey } from "../../utils/queryClient";
@@ -180,24 +181,6 @@ export const usePaginatedSearch = () => {
   });
 };
 
-/**
- * Hook to prefetch node details for better UX
- */
-export const usePrefetchNodeDetails = () => {
-  const queryClient = useQueryClient();
-
-  return (nodeIds: string[]) => {
-    nodeIds.forEach((nodeId) => {
-      queryClient.prefetchQuery({
-        queryKey: createQueryKey(UNIFIED_QUERY_KEYS.UNIFIED_REFERENCE, "node", {
-          nodeId,
-        }),
-        queryFn: () => unifiedReferenceService.getNode(nodeId),
-        staleTime: 10 * 60 * 1000, // 10 minutes
-      });
-    });
-  };
-};
 
 /**
  * Hook to invalidate unified reference cache
@@ -239,44 +222,106 @@ export const useInvalidateUnifiedReference = () => {
   };
 };
 
-/**
- * Hook to get optimistic search suggestions
- */
-export const useSearchSuggestions = (
-  query: string,
-  options?: UseQueryOptions<string[], Error>,
-) => {
-  const queryClient = useQueryClient();
 
+/**
+ * Hook for searching a specific reference source
+ */
+export const useSourceSearch = (
+  source: SourceType,
+  request: UnifiedSearchRequest | null,
+  options?: UseQueryOptions<UnifiedSearchResponse, Error>,
+) => {
   return useQuery({
     queryKey: createQueryKey(
       UNIFIED_QUERY_KEYS.UNIFIED_REFERENCE,
-      "suggestions",
-      { query },
+      "source-search",
+      { source, ...request } as unknown as Record<string, unknown>,
     ),
-    queryFn: async () => {
-      // For now, return empty array since suggestions endpoint doesn't exist
-      // This could be implemented to use cached search results for suggestions
-      const cachedQueries = queryClient.getQueriesData({
-        queryKey: [UNIFIED_QUERY_KEYS.UNIFIED_REFERENCE, "search"],
-      });
-
-      const suggestions: string[] = [];
-      cachedQueries.forEach(([, data]) => {
-        if (data && typeof data === "object" && "results" in data) {
-          const searchData = data as UnifiedSearchResponse;
-          searchData.results.forEach((result) => {
-            if (result.title.toLowerCase().includes(query.toLowerCase())) {
-              suggestions.push(result.title);
-            }
-          });
-        }
-      });
-
-      return [...new Set(suggestions)].slice(0, 5); // Unique suggestions, max 5
+    queryFn: () => {
+      if (!request) throw new Error("Request is required");
+      return unifiedReferenceService.searchSource(source, request);
     },
-    enabled: !!query && query.length >= 2,
+    enabled: !!request && !!request.query?.trim(),
     staleTime: 5 * 60 * 1000, // 5 minutes
     ...options,
   });
 };
+
+/**
+ * Hook for source search mutation (immediate execution)
+ */
+export const useSourceSearchMutation = (
+  source: SourceType,
+  options?: UseMutationOptions<
+    UnifiedSearchResponse,
+    Error,
+    UnifiedSearchRequest
+  >,
+) => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (request: UnifiedSearchRequest) =>
+      unifiedReferenceService.searchSource(source, request),
+    onSuccess: (data, variables) => {
+      // Cache the search results
+      queryClient.setQueryData(
+        createQueryKey(
+          UNIFIED_QUERY_KEYS.UNIFIED_REFERENCE,
+          "source-search",
+          { source, ...variables } as unknown as Record<string, unknown>,
+        ),
+        data,
+      );
+
+      // Cache individual nodes
+      data.results.forEach((node) => {
+        queryClient.setQueryData(
+          createQueryKey(UNIFIED_QUERY_KEYS.UNIFIED_REFERENCE, "node", {
+            nodeId: node.id,
+          }),
+          node,
+        );
+      });
+    },
+    onError: (error: Error) => {
+      console.error(`${source} search failed:`, error);
+    },
+    ...options,
+  });
+};
+
+/**
+ * Hook to get available sources and their status
+ */
+export const useAvailableSources = (
+  options?: UseQueryOptions<Record<SourceType, { enabled: boolean; endpoint: string }>, Error>,
+) => {
+  return useQuery({
+    queryKey: createQueryKey(UNIFIED_QUERY_KEYS.UNIFIED_REFERENCE, "sources"),
+    queryFn: () => unifiedReferenceService.getAvailableSources(),
+    staleTime: 10 * 60 * 1000, // 10 minutes - sources don't change frequently
+    ...options,
+  });
+};
+
+/**
+ * Hook to test connectivity to a specific source
+ */
+export const useSourceConnectivity = (
+  source: SourceType,
+  options?: UseQueryOptions<{
+    available: boolean;
+    responseTime?: number;
+    error?: string;
+  }, Error>,
+) => {
+  return useQuery({
+    queryKey: createQueryKey(UNIFIED_QUERY_KEYS.UNIFIED_REFERENCE, "connectivity", { source }),
+    queryFn: () => unifiedReferenceService.testSourceConnectivity(source),
+    staleTime: 2 * 60 * 1000, // 2 minutes - connectivity can change
+    retry: 2, // Retry failed connectivity tests
+    ...options,
+  });
+};
+

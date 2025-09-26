@@ -50,7 +50,7 @@ class ConfigurationValidator:
         # Integration validation
         self._validate_reference_sources_integration()
         self._validate_nlp_pipeline_integration()
-        self._validate_enrichment_service_integration()
+        self._validate_reference_service_integration()
         
         return self.results
     
@@ -286,31 +286,31 @@ class ConfigurationValidator:
         except Exception as e:
             self._add_result(False, category, "nlp_pipeline_integration", f"NLP integration validation failed: {e}")
     
-    def _validate_enrichment_service_integration(self):
-        """Validate enrichment service integration"""
-        category = "Enrichment Service Integration"
+    def _validate_reference_service_integration(self):
+        """Validate reference service integration"""
+        category = "Reference Service Integration"
         
         try:
-            # Test enrichment service imports
+            # Test reference service imports
             try:
-                from enrichment.service import EnrichmentService
-                from api.enrichment import get_enrichment_service
-                self._add_result(True, category, "enrichment_imports", "Enrichment service imports successfully")
+                from reference.service import ReferenceService
+                from api.reference import get_reference_service
+                self._add_result(True, category, "reference_imports", "Reference service imports successfully")
             except ImportError as e:
-                self._add_result(False, category, "enrichment_imports", f"Enrichment service import failed: {e}")
+                self._add_result(False, category, "reference_imports", f"Reference service import failed: {e}")
                 return
             
-            # Test enrichment service instantiation with config manager
+            # Test reference service instantiation with config manager
             try:
                 config_manager = get_config_manager()
-                enrichment_service = EnrichmentService(config_manager)
-                self._add_result(True, category, "enrichment_instantiation", "Enrichment service instantiates with ConfigurationManager")
+                reference_service = ReferenceService(config_manager)
+                self._add_result(True, category, "reference_instantiation", "Reference service instantiates with ConfigurationManager")
             except Exception as e:
-                self._add_result(False, category, "enrichment_instantiation", f"Enrichment service instantiation failed: {e}")
+                self._add_result(False, category, "reference_instantiation", f"Reference service instantiation failed: {e}")
             
-            # Test enrichment service methods
+            # Test reference service methods
             try:
-                enabled_sources = enrichment_service.get_enabled_sources()
+                enabled_sources = reference_service.get_enabled_sources()
                 if isinstance(enabled_sources, list):
                     self._add_result(True, category, "get_enabled_sources", 
                                   f"get_enabled_sources works ({len(enabled_sources)} sources)")
@@ -320,7 +320,7 @@ class ConfigurationValidator:
                 self._add_result(False, category, "get_enabled_sources", f"get_enabled_sources failed: {e}")
                 
         except Exception as e:
-            self._add_result(False, category, "enrichment_service_integration", f"Enrichment integration validation failed: {e}")
+            self._add_result(False, category, "reference_service_integration", f"Reference integration validation failed: {e}")
         
     def generate_report(self) -> str:
         """Generate validation report"""

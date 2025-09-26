@@ -11,7 +11,7 @@ from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field
 
 from config import get_config_manager, notify_global_configuration_reload
-from enrichment.service import EnrichmentService
+from reference.service import ReferenceService
 from utils.logger import get_logger
 
 logger = get_logger(__name__)
@@ -91,8 +91,8 @@ async def get_reference_sources_status():
     """Get status of all reference sources"""
     try:
         config_manager = get_config_manager()
-        enrichment_service = EnrichmentService(config_manager)
-        status = await enrichment_service.get_source_status()
+        reference_service = ReferenceService(config_manager)
+        status = await reference_service.get_source_status()
 
         # Add proxy server status
         proxy_running = await check_proxy_running()

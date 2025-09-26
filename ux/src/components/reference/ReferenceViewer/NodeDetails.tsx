@@ -163,18 +163,13 @@ export const NodeDetails: React.FC<NodeDetailsProps> = ({
                       {sourceMetadata?.label}
                     </Badge>
 
-                    {displayNode.confidence_score !== undefined && displayNode.confidence_score < 1 && (
+                    {displayNode.relevance_score !== undefined && displayNode.relevance_score < 1 && (
                       <Badge color="gray">
-                        {Math.round(displayNode.confidence_score * 100)}% match
+                        {Math.round(displayNode.relevance_score * 100)}% match
                       </Badge>
                     )}
 
-                    {displayNode.merged_from &&
-                      displayNode.merged_from.length > 0 && (
-                        <Badge color="purple" size="sm">
-                          Merged from {displayNode.merged_from.length} source{displayNode.merged_from.length > 1 ? 's' : ''}
-                        </Badge>
-                      )}
+                    {/* Merged sources badge removed in normalized API */}
                   </div>
                 </div>
 
@@ -280,34 +275,34 @@ export const NodeDetails: React.FC<NodeDetailsProps> = ({
                         <dd>{sourceMetadata?.label}</dd>
                       </div>
 
-                      {displayNode.confidence_score !== undefined && (
+                      {displayNode.relevance_score !== undefined && (
                         <div className="flex justify-between">
                           <dt className="text-gray-600">Confidence:</dt>
                           <dd>
-                            {Math.round(displayNode.confidence_score * 100)}%
+                            {Math.round(displayNode.relevance_score * 100)}%
                           </dd>
                         </div>
                       )}
 
-                      {displayNode.created_at && (
+                      {null && (
                         <div className="flex justify-between">
                           <dt className="text-gray-600">Created:</dt>
                           <dd className="flex items-center gap-1">
                             <Calendar className="h-4 w-4" />
                             {new Date(
-                              displayNode.created_at,
+                              null,
                             ).toLocaleDateString()}
                           </dd>
                         </div>
                       )}
 
-                      {displayNode.updated_at && (
+                      {null && (
                         <div className="flex justify-between">
                           <dt className="text-gray-600">Updated:</dt>
                           <dd className="flex items-center gap-1">
                             <Calendar className="h-4 w-4" />
                             {new Date(
-                              displayNode.updated_at,
+                              null,
                             ).toLocaleDateString()}
                           </dd>
                         </div>
@@ -315,35 +310,17 @@ export const NodeDetails: React.FC<NodeDetailsProps> = ({
                     </dl>
                   </Card>
 
-                  {/* Deduplication info */}
-                  {displayNode.merged_from &&
-                    displayNode.merged_from.length > 0 && (
-                      <Card>
-                        <h4 className="mb-3 font-semibold">Merged Sources</h4>
-                        <div className="space-y-2">
-                          <p className="text-sm text-gray-600">
-                            This node was merged from {displayNode.merged_from.length} different sources:
-                          </p>
-                          <div className="flex flex-wrap gap-2">
-                            {displayNode.merged_from.map((source, index) => (
-                              <Badge key={index} color="gray" size="sm">
-                                {SOURCE_METADATA[source]?.label || source}
-                              </Badge>
-                            ))}
-                          </div>
-                        </div>
-                      </Card>
-                    )}
+                  {/* Deduplication info removed in normalized API */}
 
                   {/* Custom metadata */}
-                  {displayNode.metadata &&
-                    Object.keys(displayNode.metadata).length > 0 && (
+                  {displayNode.attributes &&
+                    Object.keys(displayNode.attributes).length > 0 && (
                       <Card>
                         <h4 className="mb-3 font-semibold">
                           Additional Metadata
                         </h4>
                         <dl className="space-y-2">
-                          {Object.entries(displayNode.metadata).map(
+                          {Object.entries(displayNode.attributes).map(
                             ([key, value]) => (
                               <div key={key} className="flex justify-between">
                                 <dt className="text-gray-600 capitalize">

@@ -1,4 +1,4 @@
-"""Utility helpers for enrichment package"""
+"""Utility helpers for reference package"""
 
 from datetime import datetime, UTC
 

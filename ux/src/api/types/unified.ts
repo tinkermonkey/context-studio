@@ -1,6 +1,6 @@
 /**
  * Types for Unified Reference API
- * Updated to match the latest backend API at /api/nlp_analysis/reference/search
+ * Updated to match the latest backend API at /api/reference/search
  */
 
 export interface MultiSourceSearchRequest {
@@ -14,13 +14,10 @@ export interface SearchNode {
   id: string;
   source: SourceType;
   title: string;
-  definition?: string;
-  source_url?: string;
-  confidence_score?: number;
-  metadata?: Record<string, any>;
-  created_at?: string;
-  updated_at?: string;
-  merged_from?: string[];
+  definition?: string | null;
+  attributes?: Record<string, unknown>;
+  source_url?: string | null;
+  relevance_score: number;
 }
 
 export interface SearchLink {
@@ -39,9 +36,11 @@ export interface MultiSourceSearchResponse {
   links?: SearchLink[];
   total_results: number;
   total_links: number;
-  sources_searched: SourceType[];
+  sources_queried: SourceType[];
   source_errors?: Record<string, string>;
-  execution_time_ms?: number;
+  offset: number;
+  limit: number;
+  search_time_ms: number;
 }
 
 export type SourceType = "dbpedia" | "conceptnet" | "wikidata" | "schema_org";
@@ -139,4 +138,79 @@ export class SearchTimeoutError extends UnifiedReferenceError {
     super(`Search timed out after ${timeoutMs}ms`);
     this.name = "SearchTimeoutError";
   }
+}
+
+// Individual source endpoint response types (different from unified format)
+export interface DBpediaSourceResult {
+  uri: string;
+  label: string;
+  description?: string;
+  score: number;
+  types: string[];
+}
+
+export interface SchemaOrgSourceResult {
+  type: string;
+  identifier: string;
+  title: string;
+  definition?: string;
+  relevance_score: number;
+}
+
+export interface ConceptNetEdge {
+  "@id": string;
+  start: {
+    "@id": string;
+    "@type": string;
+    label: string;
+    language: string;
+    term: string;
+  };
+  rel: {
+    "@id": string;
+    "@type": string;
+    label: string;
+  };
+  end: {
+    "@id": string;
+    "@type": string;
+    label: string;
+    language: string;
+    term: string;
+  };
+  weight: number;
+  sources: Array<any>;
+}
+
+export interface ConceptNetSourceResult {
+  query_params: {
+    node: string;
+  };
+  edges: ConceptNetEdge[];
+}
+
+export interface WikidataSourceResult {
+  uri: string;
+  label: string;
+  description?: string;
+  score: number;
+  types: string[];
+}
+
+// Union type for all source result formats
+export type IndividualSourceResult =
+  | DBpediaSourceResult
+  | SchemaOrgSourceResult
+  | ConceptNetSourceResult
+  | WikidataSourceResult;
+
+export interface IndividualSourceResponse {
+  success: boolean;
+  source: string;
+  retrieved_at?: string;
+  error: string | null;
+  query: string;
+  search_type?: string;
+  total_results: number;
+  results: IndividualSourceResult[];
 }

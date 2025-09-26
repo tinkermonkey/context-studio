@@ -49,7 +49,7 @@ async def create_flavor(
 @router.get("", response_model=PipelineFlavorListResponse)
 async def list_flavors(
     pipeline: Optional[PipelineType] = Query(None, description="Filter by pipeline type"),
-    flavor_service: PipelineFlavorService = Depends(get_flavor_service)
+    flavor_service: PipelineFlavorService = Depends(get_pipeline_flavor_service)
 ):
     """List all flavors, optionally filtered by pipeline"""
     try:
@@ -59,7 +59,7 @@ async def list_flavors(
             flavors=flavors,
             total_count=len(flavors)
         )
-        
+
     except Exception as e:
         logger.error(f"Error listing flavors: {e}")
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Internal server error")

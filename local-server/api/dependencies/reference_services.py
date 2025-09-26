@@ -1,25 +1,25 @@
 """
-Dependency injection for Enrichment services
+Dependency injection for Reference services
 
-This module provides optimized dependency injection for enrichment-related services
+This module provides optimized dependency injection for reference-related services
 using the service factory pattern for better performance.
 """
 
 
 from services.service_factory import get_service_factory
-from enrichment.service import EnrichmentService
+from reference.service import ReferenceService
 from schema_org.service import SchemaOrgService
 
 
-def get_enrichment_service() -> EnrichmentService:
+def get_reference_service() -> ReferenceService:
     """
-    Optimized dependency injection for EnrichmentService using service factory.
+    Optimized dependency injection for ReferenceService using service factory.
     
     Returns:
-        EnrichmentService instance
+        ReferenceService instance
     """
     factory = get_service_factory()
-    return factory.create_enrichment_service()
+    return factory.create_reference_service()
 
 
 def get_schema_org_service() -> SchemaOrgService:
@@ -33,15 +33,15 @@ def get_schema_org_service() -> SchemaOrgService:
     return factory.create_schema_org_service()
 
 
-def get_all_enrichment_services() -> tuple[EnrichmentService, SchemaOrgService]:
+def get_all_reference_services() -> tuple[ReferenceService, SchemaOrgService]:
     """
-    Get all enrichment services in one dependency call for efficiency.
+    Get all reference services in one dependency call for efficiency.
     
     Returns:
-        Tuple of (EnrichmentService, SchemaOrgService) instances
+        Tuple of (ReferenceService, SchemaOrgService) instances
     """
     factory = get_service_factory()
     return (
-        factory.create_enrichment_service(),
+        factory.create_reference_service(),
         factory.create_schema_org_service()
     )

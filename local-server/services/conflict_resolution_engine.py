@@ -647,8 +647,8 @@ class ConflictResolutionEngine:
         """Get conflict by ID from database."""
         try:
             result = self.db.execute(
-                text("SELECT * FROM conflict_descriptors WHERE conflict_id = ?"),
-                (conflict_id,)
+                text("SELECT * FROM conflict_descriptors WHERE conflict_id = :conflict_id"),
+                {"conflict_id": conflict_id}
             ).fetchone()
 
             if result:
@@ -677,8 +677,8 @@ class ConflictResolutionEngine:
         """Internal method to get ConflictDescriptor object."""
         try:
             result = self.db.execute(
-                text("SELECT * FROM conflict_descriptors WHERE conflict_id = ?"),
-                (conflict_id,)
+                text("SELECT * FROM conflict_descriptors WHERE conflict_id = :conflict_id"),
+                {"conflict_id": conflict_id}
             ).fetchone()
 
             return row_to_conflict_descriptor(result) if result else None
@@ -693,16 +693,16 @@ class ConflictResolutionEngine:
         try:
             self.db.execute(
                 text("""
-                    UPDATE conflict_descriptors 
-                    SET resolved_at = ?, resolved_by = ?, resolution_choice = ?
-                    WHERE conflict_id = ?
+                    UPDATE conflict_descriptors
+                    SET resolved_at = :resolved_at, resolved_by = :resolved_by, resolution_choice = :resolution_choice
+                    WHERE conflict_id = :conflict_id
                 """),
-                (
-                    datetime.now(timezone.utc).isoformat(),
-                    resolution.get("resolved_by", "system"),
-                    json.dumps(resolution),
-                    conflict.conflict_id
-                )
+                {
+                    "resolved_at": datetime.now(timezone.utc).isoformat(),
+                    "resolved_by": resolution.get("resolved_by", "system"),
+                    "resolution_choice": json.dumps(resolution),
+                    "conflict_id": conflict.conflict_id
+                }
             )
             self.db.commit()
             

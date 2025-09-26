@@ -183,8 +183,8 @@ class ProposalManager:
         
         try:
             result = self.db.execute(
-                text("SELECT * FROM proposals WHERE id = ?"),
-                (proposal_id,)
+                text("SELECT * FROM proposals WHERE id = :proposal_id"),
+                {"proposal_id": proposal_id}
             ).fetchone()
             
             if not result:
@@ -217,23 +217,23 @@ class ProposalManager:
         
         try:
             query = "SELECT * FROM proposals WHERE 1=1"
-            params = []
-            
+            params = {}
+
             if status:
-                query += " AND status = ?"
-                params.append(status.value)
-                
+                query += " AND status = :status"
+                params["status"] = status.value
+
             if created_by:
-                query += " AND created_by = ?"
-                params.append(created_by)
-                
+                query += " AND created_by = :created_by"
+                params["created_by"] = created_by
+
             if changeset_id:
-                query += " AND changeset_id = ?"
-                params.append(changeset_id)
-                
-            query += " ORDER BY created_at DESC LIMIT ?"
-            params.append(limit)
-            
+                query += " AND changeset_id = :changeset_id"
+                params["changeset_id"] = changeset_id
+
+            query += " ORDER BY created_at DESC LIMIT :limit"
+            params["limit"] = limit
+
             results = self.db.execute(text(query), params).fetchall()
             proposals = [row_to_proposal(row) for row in results]
             
@@ -259,11 +259,11 @@ class ProposalManager:
         try:
             results = self.db.execute(
                 text("""
-                    SELECT * FROM proposal_votes 
-                    WHERE proposal_id = ? 
+                    SELECT * FROM proposal_votes
+                    WHERE proposal_id = :proposal_id
                     ORDER BY voted_at
                 """),
-                (proposal_id,)
+                {"proposal_id": proposal_id}
             ).fetchall()
             
             votes = [row_to_vote(row) for row in results]
@@ -287,8 +287,8 @@ class ProposalManager:
         """
         try:
             result = self.db.execute(
-                text("SELECT * FROM proposal_votes WHERE proposal_id = ? AND user_id = ?"),
-                (proposal_id, user_id)
+                text("SELECT * FROM proposal_votes WHERE proposal_id = :proposal_id AND user_id = :user_id"),
+                {"proposal_id": proposal_id, "user_id": user_id}
             ).fetchone()
             
             return row_to_vote(result) if result else None
@@ -375,12 +375,16 @@ class ProposalManager:
         try:
             # If closing proposal, record close timestamp
             if new_status in [ProposalStatus.APPROVED, ProposalStatus.REJECTED, ProposalStatus.MERGED]:
-                query = "UPDATE proposals SET status = ?, closed_at = ? WHERE id = ?"
-                params = (new_status.value, datetime.now(timezone.utc).isoformat(), proposal_id)
+                query = "UPDATE proposals SET status = :status, closed_at = :closed_at WHERE id = :proposal_id"
+                params = {
+                    "status": new_status.value,
+                    "closed_at": datetime.now(timezone.utc).isoformat(),
+                    "proposal_id": proposal_id
+                }
             else:
-                query = "UPDATE proposals SET status = ? WHERE id = ?"
-                params = (new_status.value, proposal_id)
-            
+                query = "UPDATE proposals SET status = :status WHERE id = :proposal_id"
+                params = {"status": new_status.value, "proposal_id": proposal_id}
+
             cursor = self.db.execute(text(query), params)
             self.db.commit()
             
@@ -435,18 +439,24 @@ class ProposalManager:
         INSERT INTO proposals (
             id, changeset_id, title, description, status, required_approvals,
             created_by, created_at, closed_at, merge_commit_id, metadata
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        ) VALUES (:id, :changeset_id, :title, :description, :status, :required_approvals,
+                  :created_by, :created_at, :closed_at, :merge_commit_id, :metadata)
         """
-        
-        params = (
-            proposal.id, proposal.changeset_id, proposal.title, proposal.description,
-            proposal.status.value, proposal.required_approvals, proposal.created_by,
-            proposal.created_at.isoformat(),
-            proposal.closed_at.isoformat() if proposal.closed_at else None,
-            proposal.merge_commit_id,
-            json.dumps(proposal.metadata) if proposal.metadata else None
-        )
-        
+
+        params = {
+            "id": proposal.id,
+            "changeset_id": proposal.changeset_id,
+            "title": proposal.title,
+            "description": proposal.description,
+            "status": proposal.status.value,
+            "required_approvals": proposal.required_approvals,
+            "created_by": proposal.created_by,
+            "created_at": proposal.created_at.isoformat(),
+            "closed_at": proposal.closed_at.isoformat() if proposal.closed_at else None,
+            "merge_commit_id": proposal.merge_commit_id,
+            "metadata": json.dumps(proposal.metadata) if proposal.metadata else None
+        }
+
         self.db.execute(text(query), params)
         self.db.commit()
         logger.debug(f"Stored proposal {proposal.id} in database")
@@ -464,14 +474,17 @@ class ProposalManager:
         query = """
         INSERT OR REPLACE INTO proposal_votes (
             proposal_id, user_id, vote, comment, voted_at
-        ) VALUES (?, ?, ?, ?, ?)
+        ) VALUES (:proposal_id, :user_id, :vote, :comment, :voted_at)
         """
-        
-        params = (
-            vote.proposal_id, vote.user_id, vote.vote, vote.comment,
-            vote.voted_at.isoformat()
-        )
-        
+
+        params = {
+            "proposal_id": vote.proposal_id,
+            "user_id": vote.user_id,
+            "vote": vote.vote,
+            "comment": vote.comment,
+            "voted_at": vote.voted_at.isoformat()
+        }
+
         self.db.execute(text(query), params)
         self.db.commit()
         logger.debug("Stored vote in database")

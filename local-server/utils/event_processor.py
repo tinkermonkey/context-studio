@@ -93,26 +93,36 @@ class EventProcessor:
         """Get an optimized database session using Database Manager."""
         # Ensure we have an optimized engine for event processing
         if self.engine_id not in self.db_manager._engines:
-            self.db_manager.create_optimized_engine(self.database_url, self.engine_id)
-        
-        return self.db_manager.get_optimized_session(self.engine_id, self.database_url)
+            try:
+                self.db_manager.create_optimized_engine(self.database_url, self.engine_id)
+            except Exception as e:
+                self.logger.error(f"Failed to create optimized engine '{self.engine_id}': {e}")
+                raise
+
+        try:
+            return self.db_manager.get_optimized_session(self.engine_id, self.database_url)
+        except Exception as e:
+            self.logger.error(f"Failed to get optimized session for '{self.engine_id}': {e}")
+            raise
     
     def _initialize_last_processed_id(self):
         """Initialize the last processed event ID from the database."""
         try:
             with self._get_optimized_session() as db:
                 result = db.execute(text("""
-                    SELECT id FROM change_events 
-                    WHERE processed = 1 
-                    ORDER BY id DESC 
+                    SELECT id FROM change_events
+                    WHERE processed = 1
+                    ORDER BY id DESC
                     LIMIT 1
                 """)).fetchone()
-                
+
                 if result:
                     self._last_processed_id = result[0]
-                    
+
         except Exception as e:
             self.logger.warning(f"Failed to initialize last processed ID: {e}")
+            # Start from 0 if we can't get the last processed ID
+            self._last_processed_id = 0
 
     def start(self):
         """Start the event processing loop in a background thread."""
@@ -293,7 +303,7 @@ class EventProcessor:
 
     def process_structure_node_event(self, event):
         """Process structure_node-related events with version management integration."""
-        self.logger.info(f"[EventProcessor] Processing structure_node event: {event.operation} id={event.id}")
+        self.logger.info(f"Processing structure_node event: {event.operation}")
         
         # Create version when entity is modified (only for create/update operations)
         if self.version_manager and event.operation in ['create', 'update'] and event.record_id:
@@ -356,7 +366,7 @@ class EventProcessor:
 
     def process_structure_node_link_event(self, event):
         """Process structure_node_link-related events with version management integration."""
-        self.logger.info(f"[EventProcessor] Processing structure_node_link event: {event.operation} id={event.id}")
+        self.logger.info(f"Processing structure_node_link event: {event.operation}")
         
         # Create version when entity is modified (only for create/update operations)
         if self.version_manager and event.operation in ['create', 'update'] and event.record_id:
@@ -419,8 +429,9 @@ class EventProcessor:
 
     def process_predicate_event(self, event):
         """Process predicate-related events."""
-        self.logger.info(f"[EventProcessor] Processing predicate event: {event.operation} id={event.id}")
+        self.logger.info(f"Processing predicate event: {event.operation} id={event.id}")
         # New predicate-specific processing logic here
+        # TODO: Implement predicate event handling as needed
     
     def _link_event_to_version(self, event_id: int, version_id: str, change_state):
         """Link a change event to its corresponding version."""
@@ -458,8 +469,13 @@ class EventProcessor:
             except Exception as e:
                 self.logger.error(f"[EventProcessor] Cleanup error: {e}")
                 
-            # Run once per day
-            time.sleep(24 * 60 * 60)
+            # Run once per day, but check stop event frequently
+            sleep_interval = 60  # Check every minute
+            total_sleep_time = 24 * 60 * 60  # 24 hours
+            for _ in range(total_sleep_time // sleep_interval):
+                if self._stop_event.is_set():
+                    break
+                time.sleep(sleep_interval)
             
         self.logger.debug("[EventProcessor] _cleanup_loop() exiting")
 

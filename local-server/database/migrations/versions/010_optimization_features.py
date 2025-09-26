@@ -336,15 +336,22 @@ def upgrade(connection):
         
         for config_key, category, value, config_type, description in default_configs:
             connection.execute(text("""
-            INSERT INTO optimization_configuration 
+            INSERT INTO optimization_configuration
             (config_key, config_category, config_value, config_type, description, last_updated_at, updated_by)
-            VALUES (?, ?, ?, ?, ?, ?, 'system')
-            """), (config_key, category, value, config_type, description, datetime.now().isoformat()))
+            VALUES (:config_key, :category, :value, :config_type, :description, :last_updated_at, 'system')
+            """), {
+                "config_key": config_key,
+                "category": category,
+                "value": value,
+                "config_type": config_type,
+                "description": description,
+                "last_updated_at": datetime.now().isoformat()
+            })
         
         # Update schema version
         connection.execute(text(f"""
-        UPDATE schema_version SET version = {MIGRATION_VERSION}, updated_at = ?
-        """), (datetime.now().isoformat(),))
+        UPDATE schema_version SET version = {MIGRATION_VERSION}, updated_at = :updated_at
+        """), {"updated_at": datetime.now().isoformat()})
         
         connection.commit()
         logger.info(f"Migration {MIGRATION_VERSION} completed successfully")
@@ -376,8 +383,8 @@ def downgrade(connection):
         
         # Revert schema version
         connection.execute(text(f"""
-        UPDATE schema_version SET version = {MIGRATION_VERSION - 1}, updated_at = ?
-        """), (datetime.now().isoformat(),))
+        UPDATE schema_version SET version = {MIGRATION_VERSION - 1}, updated_at = :updated_at
+        """), {"updated_at": datetime.now().isoformat()})
         
         connection.commit()
         logger.info(f"Migration {MIGRATION_VERSION} rollback completed")

@@ -1,8 +1,8 @@
-class EnrichmentError(Exception):
-    """Base exception for enrichment service errors"""
+class ReferenceError(Exception):
+    """Base exception for reference service errors"""
     pass
 
-class SourceError(EnrichmentError):
+class SourceError(ReferenceError):
     """General error from a reference API source"""
     pass
 
@@ -14,10 +14,10 @@ class SourceUnavailableError(SourceError):
     """Source is unavailable or unreachable"""
     pass
 
-class ConfigurationError(EnrichmentError):
+class ConfigurationError(ReferenceError):
     """Configuration error"""
     pass
 
-class ValidationError(EnrichmentError):
+class ValidationError(ReferenceError):
     """Request validation error"""
     pass

@@ -256,11 +256,11 @@ class CRDTMergeEngine:
                 text("""
                     SELECT id, entity_type, entity_id, version_number, content, state,
                            parent_version_id, changeset_id, author_id, created_at, metadata
-                    FROM entity_versions 
-                    WHERE changeset_id = ?
+                    FROM entity_versions
+                    WHERE changeset_id = :changeset_id
                     ORDER BY entity_type, entity_id, version_number
                 """),
-                (changeset_id,)
+                {"changeset_id": changeset_id}
             ).fetchall()
             
             versions = []
@@ -328,10 +328,10 @@ class CRDTMergeEngine:
             # Get canonical version ID from working tree
             result = self.db.execute(
                 text("""
-                    SELECT canonical_version_id FROM working_tree 
-                    WHERE entity_type = ? AND entity_id = ?
+                    SELECT canonical_version_id FROM working_tree
+                    WHERE entity_type = :entity_type AND entity_id = :entity_id
                 """),
-                (entity_type, entity_id)
+                {"entity_type": entity_type, "entity_id": entity_id}
             ).fetchone()
             
             if not result:
@@ -345,10 +345,10 @@ class CRDTMergeEngine:
                 text("""
                     SELECT id, entity_type, entity_id, version_number, content, state,
                            parent_version_id, changeset_id, author_id, created_at, metadata
-                    FROM entity_versions 
-                    WHERE id = ?
+                    FROM entity_versions
+                    WHERE id = :id
                 """),
-                (canonical_version_id,)
+                {"id": canonical_version_id}
             ).fetchone()
             
             if not version_result:
@@ -539,11 +539,17 @@ class CRDTMergeEngine:
         try:
             self.db.execute(
                 text("""
-                    UPDATE working_tree 
-                    SET canonical_version_id = ?, current_version_id = ?, modified_at = ?
-                    WHERE entity_type = ? AND entity_id = ?
+                    UPDATE working_tree
+                    SET canonical_version_id = :canonical_version_id, current_version_id = :current_version_id, modified_at = :modified_at
+                    WHERE entity_type = :entity_type AND entity_id = :entity_id
                 """),
-                (version_id, version_id, datetime.now(timezone.utc).isoformat(), entity_type, entity_id)
+                {
+                    "canonical_version_id": version_id,
+                    "current_version_id": version_id,
+                    "modified_at": datetime.now(timezone.utc).isoformat(),
+                    "entity_type": entity_type,
+                    "entity_id": entity_id
+                }
             )
             
             logger.debug(f"Updated canonical version for {entity_type}:{entity_id}")

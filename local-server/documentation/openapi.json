@@ -4776,372 +4776,6 @@
         }
       }
     },
-    "/api/llm/suggest_term_definition/stream": {
-      "post": {
-        "tags": [
-          "llm"
-        ],
-        "summary": "Suggest Term Definition Stream",
-        "description": "Stream term definition suggestion using specified flavor with Server-Side Events",
-        "operationId": "suggest_term_definition_stream_api_llm_suggest_term_definition_stream_post",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/DefinitionSuggestionRequest"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {}
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/llm/suggest_layer_definition/stream": {
-      "post": {
-        "tags": [
-          "llm"
-        ],
-        "summary": "Suggest Layer Definition Stream",
-        "description": "Stream layer definition suggestion using specified flavor with Server-Side Events",
-        "operationId": "suggest_layer_definition_stream_api_llm_suggest_layer_definition_stream_post",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/LayerDefinitionRequest"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {}
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/llm/suggest_domain_definition/stream": {
-      "post": {
-        "tags": [
-          "llm"
-        ],
-        "summary": "Suggest Domain Definition Stream",
-        "description": "Stream domain definition suggestion using specified flavor with Server-Side Events",
-        "operationId": "suggest_domain_definition_stream_api_llm_suggest_domain_definition_stream_post",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/DomainDefinitionRequest"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {}
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/llm/suggest_term_definition": {
-      "post": {
-        "tags": [
-          "llm"
-        ],
-        "summary": "Suggest Term Definition",
-        "description": "Generate a term definition suggestion based on provided context using LLM.\n\nThis endpoint uses a Langchain pipeline with OpenAI GPT models to generate\ncontextually-aware term definitions based on domain context, hierarchical\nrelationships, component terms, and reference source information.\nSupports optional flavor parameter to use different LLM configurations.",
-        "operationId": "suggest_term_definition_api_llm_suggest_term_definition_post",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/DefinitionSuggestionRequest"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/LLMSuccessResponse"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Bad Request",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/LLMErrorResponse"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Request validation failure",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/LLMErrorResponse"
-                }
-              }
-            }
-          },
-          "429": {
-            "description": "Too Many Requests",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/LLMErrorResponse"
-                }
-              }
-            }
-          },
-          "500": {
-            "description": "Internal Server Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/LLMErrorResponse"
-                }
-              }
-            }
-          },
-          "504": {
-            "description": "Gateway Timeout",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/LLMErrorResponse"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/llm/suggest_layer_definition": {
-      "post": {
-        "tags": [
-          "llm"
-        ],
-        "summary": "Suggest Layer Definition",
-        "description": "Generate a layer definition suggestion based on provided context using LLM.\n\nThis endpoint uses a Langchain pipeline with OpenAI GPT models to generate\ncontextually-aware layer definitions based on organizational context, hierarchical\nrelationships, contained domains, and layer purpose information.\nSupports optional flavor parameter to use different LLM configurations.",
-        "operationId": "suggest_layer_definition_api_llm_suggest_layer_definition_post",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/LayerDefinitionRequest"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/LayerLLMSuccessResponse"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Bad Request",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/LLMErrorResponse"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Request validation failure",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/LLMErrorResponse"
-                }
-              }
-            }
-          },
-          "429": {
-            "description": "Too Many Requests",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/LLMErrorResponse"
-                }
-              }
-            }
-          },
-          "500": {
-            "description": "Internal Server Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/LLMErrorResponse"
-                }
-              }
-            }
-          },
-          "504": {
-            "description": "Gateway Timeout",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/LLMErrorResponse"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/llm/suggest_domain_definition": {
-      "post": {
-        "tags": [
-          "llm"
-        ],
-        "summary": "Suggest Domain Definition",
-        "description": "Generate a domain definition suggestion based on provided context using LLM.\n\nThis endpoint uses a Langchain pipeline with OpenAI GPT models to generate\ncontextually-aware domain definitions based on thematic scope, hierarchical\nrelationships, contained terms, and domain boundaries information.\nSupports optional flavor parameter to use different LLM configurations.",
-        "operationId": "suggest_domain_definition_api_llm_suggest_domain_definition_post",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/DomainDefinitionRequest"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/DomainLLMSuccessResponse"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Bad Request",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/LLMErrorResponse"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Request validation failure",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/LLMErrorResponse"
-                }
-              }
-            }
-          },
-          "429": {
-            "description": "Too Many Requests",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/LLMErrorResponse"
-                }
-              }
-            }
-          },
-          "500": {
-            "description": "Internal Server Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/LLMErrorResponse"
-                }
-              }
-            }
-          },
-          "504": {
-            "description": "Gateway Timeout",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/LLMErrorResponse"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
     "/api/llm/execute_pipeline": {
       "post": {
         "tags": [
@@ -5798,7 +5432,7 @@
         }
       }
     },
-    "/api/nlp_analysis/reference/dbpedia/resource": {
+    "/api/reference/dbpedia/resource": {
       "get": {
         "tags": [
           "nlp-reference",
@@ -5806,7 +5440,7 @@
         ],
         "summary": "Dbpedia Get Resource",
         "description": "Retrieve structured data from a DBpedia resource URL",
-        "operationId": "dbpedia_get_resource_api_nlp_analysis_reference_dbpedia_resource_get",
+        "operationId": "dbpedia_get_resource_api_reference_dbpedia_resource_get",
         "parameters": [
           {
             "name": "resource_url",
@@ -5837,7 +5471,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/DBpediaResourceResponse"
+                  "$ref": "#/components/schemas/MultiSourceSearchResponse"
                 }
               }
             }
@@ -5855,7 +5489,7 @@
         }
       }
     },
-    "/api/nlp_analysis/reference/dbpedia/search": {
+    "/api/reference/dbpedia/search": {
       "get": {
         "tags": [
           "nlp-reference",
@@ -5863,7 +5497,7 @@
         ],
         "summary": "Dbpedia Search",
         "description": "Search DBpedia using the search API",
-        "operationId": "dbpedia_search_api_nlp_analysis_reference_dbpedia_search_get",
+        "operationId": "dbpedia_search_api_reference_dbpedia_search_get",
         "parameters": [
           {
             "name": "query",
@@ -5921,7 +5555,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/DBpediaSearchResponse"
+                  "$ref": "#/components/schemas/MultiSourceSearchResponse"
                 }
               }
             }
@@ -5939,7 +5573,7 @@
         }
       }
     },
-    "/api/nlp_analysis/reference/dbpedia/sparql": {
+    "/api/reference/dbpedia/sparql": {
       "post": {
         "tags": [
           "nlp-reference",
@@ -5947,7 +5581,7 @@
         ],
         "summary": "Dbpedia Sparql",
         "description": "Execute SPARQL query against DBpedia",
-        "operationId": "dbpedia_sparql_api_nlp_analysis_reference_dbpedia_sparql_post",
+        "operationId": "dbpedia_sparql_api_reference_dbpedia_sparql_post",
         "requestBody": {
           "content": {
             "application/json": {
@@ -5964,7 +5598,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/DBpediaSparqlResponse"
+                  "$ref": "#/components/schemas/MultiSourceSearchResponse"
                 }
               }
             }
@@ -5982,7 +5616,80 @@
         }
       }
     },
-    "/api/nlp_analysis/reference/conceptnet/query": {
+    "/api/reference/conceptnet/search": {
+      "get": {
+        "tags": [
+          "nlp-reference",
+          "enrichment"
+        ],
+        "summary": "Conceptnet Search",
+        "description": "Search ConceptNet for concepts matching the query",
+        "operationId": "conceptnet_search_api_reference_conceptnet_search_get",
+        "parameters": [
+          {
+            "name": "query",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Search query",
+              "title": "Query"
+            },
+            "description": "Search query"
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 100,
+              "minimum": 1,
+              "description": "Result limit",
+              "default": 20,
+              "title": "Limit"
+            },
+            "description": "Result limit"
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "description": "Result offset",
+              "default": 0,
+              "title": "Offset"
+            },
+            "description": "Result offset"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MultiSourceSearchResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/reference/conceptnet/query": {
       "get": {
         "tags": [
           "nlp-reference",
@@ -5990,7 +5697,7 @@
         ],
         "summary": "Conceptnet Query",
         "description": "Query ConceptNet with various parameters",
-        "operationId": "conceptnet_query_api_nlp_analysis_reference_conceptnet_query_get",
+        "operationId": "conceptnet_query_api_reference_conceptnet_query_get",
         "parameters": [
           {
             "name": "start",
@@ -6098,7 +5805,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ConceptNetQueryResponse"
+                  "$ref": "#/components/schemas/MultiSourceSearchResponse"
                 }
               }
             }
@@ -6116,7 +5823,7 @@
         }
       }
     },
-    "/api/nlp_analysis/reference/conceptnet/concept/{concept_path}": {
+    "/api/reference/conceptnet/concept/{concept_path}": {
       "get": {
         "tags": [
           "nlp-reference",
@@ -6124,7 +5831,7 @@
         ],
         "summary": "Conceptnet Get Concept",
         "description": "Get data for a specific ConceptNet concept",
-        "operationId": "conceptnet_get_concept_api_nlp_analysis_reference_conceptnet_concept__concept_path__get",
+        "operationId": "conceptnet_get_concept_api_reference_conceptnet_concept__concept_path__get",
         "parameters": [
           {
             "name": "concept_path",
@@ -6144,7 +5851,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ConceptNetConceptResponse"
+                  "$ref": "#/components/schemas/MultiSourceSearchResponse"
                 }
               }
             }
@@ -6162,7 +5869,7 @@
         }
       }
     },
-    "/api/nlp_analysis/reference/conceptnet/related/{concept_path}": {
+    "/api/reference/conceptnet/related/{concept_path}": {
       "get": {
         "tags": [
           "nlp-reference",
@@ -6170,7 +5877,7 @@
         ],
         "summary": "Conceptnet Get Related",
         "description": "Get related concepts from ConceptNet",
-        "operationId": "conceptnet_get_related_api_nlp_analysis_reference_conceptnet_related__concept_path__get",
+        "operationId": "conceptnet_get_related_api_reference_conceptnet_related__concept_path__get",
         "parameters": [
           {
             "name": "concept_path",
@@ -6222,7 +5929,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ConceptNetRelatedResponse"
+                  "$ref": "#/components/schemas/MultiSourceSearchResponse"
                 }
               }
             }
@@ -6240,7 +5947,80 @@
         }
       }
     },
-    "/api/nlp_analysis/reference/wikidata/sparql": {
+    "/api/reference/wikidata/search": {
+      "get": {
+        "tags": [
+          "nlp-reference",
+          "enrichment"
+        ],
+        "summary": "Wikidata Search",
+        "description": "Search Wikidata entities",
+        "operationId": "wikidata_search_api_reference_wikidata_search_get",
+        "parameters": [
+          {
+            "name": "query",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Search query",
+              "title": "Query"
+            },
+            "description": "Search query"
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 50,
+              "minimum": 1,
+              "description": "Result limit (max 50)",
+              "default": 20,
+              "title": "Limit"
+            },
+            "description": "Result limit (max 50)"
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "description": "Result offset",
+              "default": 0,
+              "title": "Offset"
+            },
+            "description": "Result offset"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MultiSourceSearchResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/reference/wikidata/sparql": {
       "post": {
         "tags": [
           "nlp-reference",
@@ -6248,7 +6028,7 @@
         ],
         "summary": "Wikidata Sparql",
         "description": "Execute SPARQL query against Wikidata",
-        "operationId": "wikidata_sparql_api_nlp_analysis_reference_wikidata_sparql_post",
+        "operationId": "wikidata_sparql_api_reference_wikidata_sparql_post",
         "requestBody": {
           "content": {
             "application/json": {
@@ -6265,7 +6045,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/WikidataSparqlResponse"
+                  "$ref": "#/components/schemas/MultiSourceSearchResponse"
                 }
               }
             }
@@ -6283,7 +6063,7 @@
         }
       }
     },
-    "/api/nlp_analysis/reference/wikidata/entity": {
+    "/api/reference/wikidata/entity": {
       "get": {
         "tags": [
           "nlp-reference",
@@ -6291,7 +6071,7 @@
         ],
         "summary": "Wikidata Get Entity",
         "description": "Get structured data for a Wikidata entity",
-        "operationId": "wikidata_get_entity_api_nlp_analysis_reference_wikidata_entity_get",
+        "operationId": "wikidata_get_entity_api_reference_wikidata_entity_get",
         "parameters": [
           {
             "name": "entity_url",
@@ -6340,7 +6120,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/WikidataEntityResponse"
+                  "$ref": "#/components/schemas/MultiSourceSearchResponse"
                 }
               }
             }
@@ -6358,7 +6138,7 @@
         }
       }
     },
-    "/api/nlp_analysis/reference/schema-org/entity/{identifier}": {
+    "/api/reference/schema-org/entity/{identifier}": {
       "get": {
         "tags": [
           "nlp-reference",
@@ -6366,7 +6146,7 @@
         ],
         "summary": "Schema Org Get Entity",
         "description": "Get Schema.org entity with properties and inheritance",
-        "operationId": "schema_org_get_entity_api_nlp_analysis_reference_schema_org_entity__identifier__get",
+        "operationId": "schema_org_get_entity_api_reference_schema_org_entity__identifier__get",
         "parameters": [
           {
             "name": "identifier",
@@ -6410,7 +6190,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/SchemaOrgEntityResponse"
+                  "$ref": "#/components/schemas/MultiSourceSearchResponse"
                 }
               }
             }
@@ -6428,7 +6208,7 @@
         }
       }
     },
-    "/api/nlp_analysis/reference/schema-org/property/{identifier}": {
+    "/api/reference/schema-org/property/{identifier}": {
       "get": {
         "tags": [
           "nlp-reference",
@@ -6436,7 +6216,7 @@
         ],
         "summary": "Schema Org Get Property",
         "description": "Get Schema.org property definition and usage",
-        "operationId": "schema_org_get_property_api_nlp_analysis_reference_schema_org_property__identifier__get",
+        "operationId": "schema_org_get_property_api_reference_schema_org_property__identifier__get",
         "parameters": [
           {
             "name": "identifier",
@@ -6468,7 +6248,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/SchemaOrgPropertyResponse"
+                  "$ref": "#/components/schemas/MultiSourceSearchResponse"
                 }
               }
             }
@@ -6486,7 +6266,7 @@
         }
       }
     },
-    "/api/nlp_analysis/reference/schema-org/search": {
+    "/api/reference/schema-org/search": {
       "get": {
         "tags": [
           "nlp-reference",
@@ -6494,7 +6274,7 @@
         ],
         "summary": "Schema Org Search",
         "description": "Search Schema.org entities and properties",
-        "operationId": "schema_org_search_api_nlp_analysis_reference_schema_org_search_get",
+        "operationId": "schema_org_search_api_reference_schema_org_search_get",
         "parameters": [
           {
             "name": "query",
@@ -6572,7 +6352,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/SchemaOrgSearchResponse"
+                  "$ref": "#/components/schemas/MultiSourceSearchResponse"
                 }
               }
             }
@@ -6590,7 +6370,7 @@
         }
       }
     },
-    "/api/nlp_analysis/reference/search": {
+    "/api/reference/search": {
       "post": {
         "tags": [
           "nlp-reference",
@@ -6598,7 +6378,7 @@
         ],
         "summary": "Multi Source Search",
         "description": "Search across multiple reference sources\n\nSearches across specified sources (or all enabled sources if none specified)\nand returns aggregated results without deduplication or ranking.",
-        "operationId": "multi_source_search_api_nlp_analysis_reference_search_post",
+        "operationId": "multi_source_search_api_reference_search_post",
         "requestBody": {
           "required": true,
           "content": {
@@ -6639,7 +6419,7 @@
         ],
         "summary": "Multi Source Search Get",
         "description": "Search across multiple reference sources via GET request\n\nAlternative GET endpoint for multi-source search with query parameters.",
-        "operationId": "multi_source_search_get_api_nlp_analysis_reference_search_get",
+        "operationId": "multi_source_search_get_api_reference_search_get",
         "parameters": [
           {
             "name": "query",
@@ -6723,7 +6503,7 @@
         }
       }
     },
-    "/api/nlp_analysis/reference/health": {
+    "/api/reference/health": {
       "get": {
         "tags": [
           "nlp-reference",
@@ -6731,7 +6511,7 @@
         ],
         "summary": "Health Check",
         "description": "Check health status of all reference API sources",
-        "operationId": "health_check_api_nlp_analysis_reference_health_get",
+        "operationId": "health_check_api_reference_health_get",
         "responses": {
           "200": {
             "description": "Successful Response",
@@ -13196,37 +12976,6 @@
         "title": "CommitRequest",
         "description": "Model for committing staged changes."
       },
-      "ComponentTerm": {
-        "properties": {
-          "text": {
-            "type": "string",
-            "title": "Text",
-            "description": "The term text"
-          },
-          "selected_definitions": {
-            "items": {
-              "type": "string"
-            },
-            "type": "array",
-            "title": "Selected Definitions",
-            "description": "Selected sense definitions"
-          },
-          "selected_relations": {
-            "items": {
-              "$ref": "#/components/schemas/SelectedRelation"
-            },
-            "type": "array",
-            "title": "Selected Relations",
-            "description": "Selected ConceptNet relations"
-          }
-        },
-        "type": "object",
-        "required": [
-          "text"
-        ],
-        "title": "ComponentTerm",
-        "description": "A component term with its selected definitions and relations"
-      },
       "ConcepcyData": {
         "properties": {
           "related_terms": {
@@ -13328,280 +13077,6 @@
         ],
         "title": "ConcepcyRelation",
         "description": "Represents a single relation in Concepcy."
-      },
-      "ConceptNetConceptResponse": {
-        "properties": {
-          "success": {
-            "type": "boolean",
-            "title": "Success",
-            "description": "Whether the request was successful"
-          },
-          "source": {
-            "$ref": "#/components/schemas/SourceType",
-            "description": "Source that provided the data"
-          },
-          "retrieved_at": {
-            "type": "string",
-            "format": "date-time",
-            "title": "Retrieved At",
-            "description": "Timestamp when data was retrieved"
-          },
-          "error": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Error",
-            "description": "Error message if success is false"
-          },
-          "concept": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Concept"
-          },
-          "data": {
-            "anyOf": [
-              {
-                "additionalProperties": true,
-                "type": "object"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Data"
-          }
-        },
-        "type": "object",
-        "required": [
-          "success",
-          "source",
-          "retrieved_at"
-        ],
-        "title": "ConceptNetConceptResponse",
-        "description": "Response model for ConceptNet concept lookup"
-      },
-      "ConceptNetEdge": {
-        "properties": {
-          "@id": {
-            "type": "string",
-            "title": "@Id"
-          },
-          "start": {
-            "additionalProperties": {
-              "type": "string"
-            },
-            "type": "object",
-            "title": "Start"
-          },
-          "rel": {
-            "additionalProperties": {
-              "type": "string"
-            },
-            "type": "object",
-            "title": "Rel"
-          },
-          "end": {
-            "additionalProperties": {
-              "type": "string"
-            },
-            "type": "object",
-            "title": "End"
-          },
-          "weight": {
-            "type": "number",
-            "title": "Weight"
-          },
-          "sources": {
-            "anyOf": [
-              {
-                "items": {
-                  "additionalProperties": {
-                    "type": "string"
-                  },
-                  "type": "object"
-                },
-                "type": "array"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Sources"
-          }
-        },
-        "type": "object",
-        "required": [
-          "@id",
-          "start",
-          "rel",
-          "end",
-          "weight"
-        ],
-        "title": "ConceptNetEdge",
-        "description": "ConceptNet edge representation"
-      },
-      "ConceptNetQueryResponse": {
-        "properties": {
-          "success": {
-            "type": "boolean",
-            "title": "Success",
-            "description": "Whether the request was successful"
-          },
-          "source": {
-            "$ref": "#/components/schemas/SourceType",
-            "description": "Source that provided the data"
-          },
-          "retrieved_at": {
-            "type": "string",
-            "format": "date-time",
-            "title": "Retrieved At",
-            "description": "Timestamp when data was retrieved"
-          },
-          "error": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Error",
-            "description": "Error message if success is false"
-          },
-          "query_params": {
-            "anyOf": [
-              {
-                "additionalProperties": {
-                  "type": "string"
-                },
-                "type": "object"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Query Params"
-          },
-          "edges": {
-            "items": {
-              "$ref": "#/components/schemas/ConceptNetEdge"
-            },
-            "type": "array",
-            "title": "Edges"
-          }
-        },
-        "type": "object",
-        "required": [
-          "success",
-          "source",
-          "retrieved_at"
-        ],
-        "title": "ConceptNetQueryResponse",
-        "description": "Response model for ConceptNet query"
-      },
-      "ConceptNetRelatedConcept": {
-        "properties": {
-          "@id": {
-            "type": "string",
-            "title": "@Id"
-          },
-          "label": {
-            "type": "string",
-            "title": "Label"
-          },
-          "weight": {
-            "type": "number",
-            "title": "Weight"
-          }
-        },
-        "type": "object",
-        "required": [
-          "@id",
-          "label",
-          "weight"
-        ],
-        "title": "ConceptNetRelatedConcept",
-        "description": "Related concept from ConceptNet"
-      },
-      "ConceptNetRelatedResponse": {
-        "properties": {
-          "success": {
-            "type": "boolean",
-            "title": "Success",
-            "description": "Whether the request was successful"
-          },
-          "source": {
-            "$ref": "#/components/schemas/SourceType",
-            "description": "Source that provided the data"
-          },
-          "retrieved_at": {
-            "type": "string",
-            "format": "date-time",
-            "title": "Retrieved At",
-            "description": "Timestamp when data was retrieved"
-          },
-          "error": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Error",
-            "description": "Error message if success is false"
-          },
-          "concept": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Concept"
-          },
-          "filter": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Filter"
-          },
-          "related": {
-            "items": {
-              "$ref": "#/components/schemas/ConceptNetRelatedConcept"
-            },
-            "type": "array",
-            "title": "Related"
-          }
-        },
-        "type": "object",
-        "required": [
-          "success",
-          "source",
-          "retrieved_at"
-        ],
-        "title": "ConceptNetRelatedResponse",
-        "description": "Response model for ConceptNet related concepts"
       },
       "ConfigResponse": {
         "properties": {
@@ -14017,190 +13492,6 @@
         "title": "DBpediaData",
         "description": "DBpedia data for an entity."
       },
-      "DBpediaResourceResponse": {
-        "properties": {
-          "success": {
-            "type": "boolean",
-            "title": "Success",
-            "description": "Whether the request was successful"
-          },
-          "source": {
-            "$ref": "#/components/schemas/SourceType",
-            "description": "Source that provided the data"
-          },
-          "retrieved_at": {
-            "type": "string",
-            "format": "date-time",
-            "title": "Retrieved At",
-            "description": "Timestamp when data was retrieved"
-          },
-          "error": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Error",
-            "description": "Error message if success is false"
-          },
-          "resource_uri": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Resource Uri"
-          },
-          "data_url": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Data Url"
-          },
-          "data": {
-            "anyOf": [
-              {
-                "additionalProperties": true,
-                "type": "object"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Data"
-          }
-        },
-        "type": "object",
-        "required": [
-          "success",
-          "source",
-          "retrieved_at"
-        ],
-        "title": "DBpediaResourceResponse",
-        "description": "Response model for DBpedia resource data"
-      },
-      "DBpediaSearchResponse": {
-        "properties": {
-          "success": {
-            "type": "boolean",
-            "title": "Success",
-            "description": "Whether the request was successful"
-          },
-          "source": {
-            "$ref": "#/components/schemas/SourceType",
-            "description": "Source that provided the data"
-          },
-          "retrieved_at": {
-            "type": "string",
-            "format": "date-time",
-            "title": "Retrieved At",
-            "description": "Timestamp when data was retrieved"
-          },
-          "error": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Error",
-            "description": "Error message if success is false"
-          },
-          "query": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Query"
-          },
-          "total_results": {
-            "anyOf": [
-              {
-                "type": "integer"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Total Results"
-          },
-          "results": {
-            "items": {
-              "$ref": "#/components/schemas/DBpediaSearchResult"
-            },
-            "type": "array",
-            "title": "Results"
-          }
-        },
-        "type": "object",
-        "required": [
-          "success",
-          "source",
-          "retrieved_at"
-        ],
-        "title": "DBpediaSearchResponse",
-        "description": "Response model for DBpedia search"
-      },
-      "DBpediaSearchResult": {
-        "properties": {
-          "uri": {
-            "type": "string",
-            "title": "Uri"
-          },
-          "label": {
-            "type": "string",
-            "title": "Label"
-          },
-          "description": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Description"
-          },
-          "score": {
-            "type": "number",
-            "minimum": 0.0,
-            "title": "Score"
-          },
-          "types": {
-            "items": {
-              "type": "string"
-            },
-            "type": "array",
-            "title": "Types"
-          }
-        },
-        "type": "object",
-        "required": [
-          "uri",
-          "label",
-          "score"
-        ],
-        "title": "DBpediaSearchResult",
-        "description": "Individual DBpedia search result"
-      },
       "DBpediaSparqlRequest": {
         "properties": {
           "query": {
@@ -14221,62 +13512,6 @@
         ],
         "title": "DBpediaSparqlRequest",
         "description": "Request model for DBpedia SPARQL query"
-      },
-      "DBpediaSparqlResponse": {
-        "properties": {
-          "success": {
-            "type": "boolean",
-            "title": "Success",
-            "description": "Whether the request was successful"
-          },
-          "source": {
-            "$ref": "#/components/schemas/SourceType",
-            "description": "Source that provided the data"
-          },
-          "retrieved_at": {
-            "type": "string",
-            "format": "date-time",
-            "title": "Retrieved At",
-            "description": "Timestamp when data was retrieved"
-          },
-          "error": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Error",
-            "description": "Error message if success is false"
-          },
-          "query_type": {
-            "type": "string",
-            "title": "Query Type",
-            "default": "sparql"
-          },
-          "results": {
-            "anyOf": [
-              {
-                "additionalProperties": true,
-                "type": "object"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Results"
-          }
-        },
-        "type": "object",
-        "required": [
-          "success",
-          "source",
-          "retrieved_at"
-        ],
-        "title": "DBpediaSparqlResponse",
-        "description": "Response model for DBpedia SPARQL query"
       },
       "DatasetMetrics": {
         "properties": {
@@ -14356,164 +13591,6 @@
         ],
         "title": "DatasetResponse",
         "description": "Response model for dataset operations."
-      },
-      "DefinitionSuggestionRequest": {
-        "properties": {
-          "term": {
-            "type": "string",
-            "title": "Term",
-            "description": "Term to be analyzed"
-          },
-          "domain_title": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Domain Title",
-            "description": "Title of the domain"
-          },
-          "domain_definition": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Domain Definition",
-            "description": "Definition of the domain"
-          },
-          "parent_term_title": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Parent Term Title",
-            "description": "Title of the parent term"
-          },
-          "parent_term_definition": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Parent Term Definition",
-            "description": "Definition of the parent term"
-          },
-          "parent_relationship_predicate": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Parent Relationship Predicate",
-            "description": "Relationship predicate to parent"
-          },
-          "component_terms": {
-            "items": {
-              "$ref": "#/components/schemas/ComponentTerm"
-            },
-            "type": "array",
-            "title": "Component Terms",
-            "description": "Component terms with their context"
-          },
-          "current definition": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Current Definition",
-            "description": "Current definition if any"
-          },
-          "dbpedia_context": {
-            "additionalProperties": true,
-            "type": "object",
-            "title": "Dbpedia Context",
-            "description": "DBpedia context information"
-          },
-          "wikidata_context": {
-            "additionalProperties": true,
-            "type": "object",
-            "title": "Wikidata Context",
-            "description": "Wikidata context information"
-          },
-          "flavor": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Flavor",
-            "description": "Flavor ID or title to use for this request"
-          }
-        },
-        "type": "object",
-        "required": [
-          "term"
-        ],
-        "title": "DefinitionSuggestionRequest",
-        "description": "Request model for term definition suggestion endpoint"
-      },
-      "DefinitionSuggestionResponse": {
-        "properties": {
-          "definition": {
-            "type": "string",
-            "title": "Definition",
-            "description": "The suggested 2-3 sentence definition"
-          },
-          "reasoning": {
-            "type": "string",
-            "title": "Reasoning",
-            "description": "Brief reasoning for the definitional choices"
-          },
-          "discrepancies": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Discrepancies",
-            "description": "Notable discrepancies between sources"
-          },
-          "execution_id": {
-            "type": "string",
-            "title": "Execution Id",
-            "description": "Unique execution ID for tracing"
-          }
-        },
-        "type": "object",
-        "required": [
-          "definition",
-          "reasoning",
-          "execution_id"
-        ],
-        "title": "DefinitionSuggestionResponse",
-        "description": "Response model for definition suggestion"
       },
       "DetectConflictsRequest": {
         "properties": {
@@ -14634,174 +13711,6 @@
         "type": "object",
         "title": "DiffSummaryOut",
         "description": "Model for diff summary output/response."
-      },
-      "DomainDefinitionRequest": {
-        "properties": {
-          "domain_title": {
-            "type": "string",
-            "title": "Domain Title",
-            "description": "Title of the domain to be analyzed"
-          },
-          "domain_description": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Domain Description",
-            "description": "Current description of the domain"
-          },
-          "layer_title": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Layer Title",
-            "description": "Title of the containing layer"
-          },
-          "layer_definition": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Layer Definition",
-            "description": "Definition of the containing layer"
-          },
-          "contained_terms": {
-            "items": {
-              "type": "string"
-            },
-            "type": "array",
-            "title": "Contained Terms",
-            "description": "List of term titles contained in this domain"
-          },
-          "domain_scope": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Domain Scope",
-            "description": "Scope or boundaries of this domain"
-          },
-          "related_domains": {
-            "items": {
-              "type": "string"
-            },
-            "type": "array",
-            "title": "Related Domains",
-            "description": "List of related domain titles"
-          },
-          "current_definition": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Current Definition",
-            "description": "Current definition if any"
-          },
-          "reference_context": {
-            "additionalProperties": true,
-            "type": "object",
-            "title": "Reference Context",
-            "description": "Additional reference context"
-          },
-          "flavor": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Flavor",
-            "description": "Flavor ID or title to use for this request"
-          }
-        },
-        "type": "object",
-        "required": [
-          "domain_title"
-        ],
-        "title": "DomainDefinitionRequest",
-        "description": "Request model for domain definition suggestion endpoint"
-      },
-      "DomainDefinitionResponse": {
-        "properties": {
-          "definition": {
-            "type": "string",
-            "title": "Definition",
-            "description": "The suggested 2-3 sentence domain definition"
-          },
-          "purpose": {
-            "type": "string",
-            "title": "Purpose",
-            "description": "Purpose of the domain in the knowledge structure"
-          },
-          "scope": {
-            "type": "string",
-            "title": "Scope",
-            "description": "Scope and boundaries of the domain"
-          },
-          "execution_id": {
-            "type": "string",
-            "title": "Execution Id",
-            "description": "Unique execution ID for tracing"
-          }
-        },
-        "type": "object",
-        "required": [
-          "definition",
-          "purpose",
-          "scope",
-          "execution_id"
-        ],
-        "title": "DomainDefinitionResponse",
-        "description": "Response model for domain definition suggestion"
-      },
-      "DomainLLMSuccessResponse": {
-        "properties": {
-          "success": {
-            "type": "boolean",
-            "title": "Success",
-            "description": "Always true for success responses",
-            "default": true
-          },
-          "data": {
-            "$ref": "#/components/schemas/DomainDefinitionResponse",
-            "description": "The response data"
-          },
-          "execution_id": {
-            "type": "string",
-            "title": "Execution Id",
-            "description": "Unique execution ID for tracing"
-          }
-        },
-        "type": "object",
-        "required": [
-          "data",
-          "execution_id"
-        ],
-        "title": "DomainLLMSuccessResponse",
-        "description": "Success response wrapper for domain LLM endpoints"
       },
       "EntityData": {
         "properties": {
@@ -15523,192 +14432,6 @@
         ],
         "title": "LLMHealthResponse",
         "description": "Health check response for LLM service"
-      },
-      "LLMSuccessResponse": {
-        "properties": {
-          "success": {
-            "type": "boolean",
-            "title": "Success",
-            "description": "Always true for success responses",
-            "default": true
-          },
-          "data": {
-            "$ref": "#/components/schemas/DefinitionSuggestionResponse",
-            "description": "The response data"
-          },
-          "execution_id": {
-            "type": "string",
-            "title": "Execution Id",
-            "description": "Unique execution ID for tracing"
-          }
-        },
-        "type": "object",
-        "required": [
-          "data",
-          "execution_id"
-        ],
-        "title": "LLMSuccessResponse",
-        "description": "Success response wrapper for LLM endpoints"
-      },
-      "LayerDefinitionRequest": {
-        "properties": {
-          "layer_title": {
-            "type": "string",
-            "title": "Layer Title",
-            "description": "Title of the layer to be analyzed"
-          },
-          "layer_description": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Layer Description",
-            "description": "Current description of the layer"
-          },
-          "parent_layer_title": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Parent Layer Title",
-            "description": "Title of the parent layer"
-          },
-          "parent_layer_definition": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Parent Layer Definition",
-            "description": "Definition of the parent layer"
-          },
-          "contained_domains": {
-            "items": {
-              "type": "string"
-            },
-            "type": "array",
-            "title": "Contained Domains",
-            "description": "List of domain titles contained in this layer"
-          },
-          "layer_purpose": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Layer Purpose",
-            "description": "Purpose or role of this layer"
-          },
-          "current_definition": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Current Definition",
-            "description": "Current definition if any"
-          },
-          "reference_context": {
-            "additionalProperties": true,
-            "type": "object",
-            "title": "Reference Context",
-            "description": "Additional reference context"
-          },
-          "flavor": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Flavor",
-            "description": "Flavor ID or title to use for this request"
-          }
-        },
-        "type": "object",
-        "required": [
-          "layer_title"
-        ],
-        "title": "LayerDefinitionRequest",
-        "description": "Request model for layer definition suggestion endpoint"
-      },
-      "LayerDefinitionResponse": {
-        "properties": {
-          "definition": {
-            "type": "string",
-            "title": "Definition",
-            "description": "The suggested 2-3 sentence layer definition"
-          },
-          "purpose": {
-            "type": "string",
-            "title": "Purpose",
-            "description": "Purpose of the layer in the knowledge structure"
-          },
-          "rationale": {
-            "type": "string",
-            "title": "Rationale",
-            "description": "Brief rationale for the definitional choices"
-          },
-          "execution_id": {
-            "type": "string",
-            "title": "Execution Id",
-            "description": "Unique execution ID for tracing"
-          }
-        },
-        "type": "object",
-        "required": [
-          "definition",
-          "purpose",
-          "rationale",
-          "execution_id"
-        ],
-        "title": "LayerDefinitionResponse",
-        "description": "Response model for layer definition suggestion"
-      },
-      "LayerLLMSuccessResponse": {
-        "properties": {
-          "success": {
-            "type": "boolean",
-            "title": "Success",
-            "description": "Always true for success responses",
-            "default": true
-          },
-          "data": {
-            "$ref": "#/components/schemas/LayerDefinitionResponse",
-            "description": "The response data"
-          },
-          "execution_id": {
-            "type": "string",
-            "title": "Execution Id",
-            "description": "Unique execution ID for tracing"
-          }
-        },
-        "type": "object",
-        "required": [
-          "data",
-          "execution_id"
-        ],
-        "title": "LayerLLMSuccessResponse",
-        "description": "Success response wrapper for layer LLM endpoints"
       },
       "MaterializedViewRequest": {
         "properties": {
@@ -17595,85 +16318,6 @@
         ],
         "title": "SPARQLQuery"
       },
-      "SchemaOrgChildEntity": {
-        "properties": {
-          "identifier": {
-            "type": "string",
-            "title": "Identifier"
-          },
-          "title": {
-            "type": "string",
-            "title": "Title"
-          }
-        },
-        "type": "object",
-        "required": [
-          "identifier",
-          "title"
-        ],
-        "title": "SchemaOrgChildEntity",
-        "description": "Schema.org child entity representation"
-      },
-      "SchemaOrgEntity": {
-        "properties": {
-          "id": {
-            "type": "string",
-            "title": "Id"
-          },
-          "identifier": {
-            "type": "string",
-            "title": "Identifier"
-          },
-          "title": {
-            "type": "string",
-            "title": "Title"
-          },
-          "definition": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Definition"
-          },
-          "parent_identifier": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Parent Identifier"
-          },
-          "properties": {
-            "items": {
-              "$ref": "#/components/schemas/SchemaOrgProperty"
-            },
-            "type": "array",
-            "title": "Properties"
-          },
-          "children": {
-            "items": {
-              "$ref": "#/components/schemas/SchemaOrgChildEntity"
-            },
-            "type": "array",
-            "title": "Children"
-          }
-        },
-        "type": "object",
-        "required": [
-          "id",
-          "identifier",
-          "title"
-        ],
-        "title": "SchemaOrgEntity",
-        "description": "Schema.org entity representation"
-      },
       "SchemaOrgEntityOut": {
         "properties": {
           "id": {
@@ -17768,185 +16412,6 @@
           "raw"
         ],
         "title": "SchemaOrgEntityOut"
-      },
-      "SchemaOrgEntityResponse": {
-        "properties": {
-          "success": {
-            "type": "boolean",
-            "title": "Success",
-            "description": "Whether the request was successful"
-          },
-          "source": {
-            "$ref": "#/components/schemas/SourceType",
-            "description": "Source that provided the data"
-          },
-          "retrieved_at": {
-            "type": "string",
-            "format": "date-time",
-            "title": "Retrieved At",
-            "description": "Timestamp when data was retrieved"
-          },
-          "error": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Error",
-            "description": "Error message if success is false"
-          },
-          "identifier": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Identifier"
-          },
-          "entity": {
-            "anyOf": [
-              {
-                "$ref": "#/components/schemas/SchemaOrgEntity"
-              },
-              {
-                "type": "null"
-              }
-            ]
-          }
-        },
-        "type": "object",
-        "required": [
-          "success",
-          "source",
-          "retrieved_at"
-        ],
-        "title": "SchemaOrgEntityResponse",
-        "description": "Response model for Schema.org entity retrieval"
-      },
-      "SchemaOrgProperty": {
-        "properties": {
-          "identifier": {
-            "type": "string",
-            "title": "Identifier"
-          },
-          "title": {
-            "type": "string",
-            "title": "Title"
-          },
-          "definition": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Definition"
-          },
-          "expected_types": {
-            "items": {
-              "type": "string"
-            },
-            "type": "array",
-            "title": "Expected Types"
-          },
-          "inherited": {
-            "type": "boolean",
-            "title": "Inherited",
-            "default": false
-          },
-          "inherited_from": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Inherited From"
-          }
-        },
-        "type": "object",
-        "required": [
-          "identifier",
-          "title"
-        ],
-        "title": "SchemaOrgProperty",
-        "description": "Schema.org property representation"
-      },
-      "SchemaOrgPropertyData": {
-        "properties": {
-          "id": {
-            "type": "string",
-            "title": "Id"
-          },
-          "identifier": {
-            "type": "string",
-            "title": "Identifier"
-          },
-          "title": {
-            "type": "string",
-            "title": "Title"
-          },
-          "definition": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Definition"
-          },
-          "domain_includes": {
-            "items": {
-              "type": "string"
-            },
-            "type": "array",
-            "title": "Domain Includes"
-          },
-          "range_includes": {
-            "items": {
-              "type": "string"
-            },
-            "type": "array",
-            "title": "Range Includes"
-          },
-          "inverse_of": {
-            "items": {
-              "type": "string"
-            },
-            "type": "array",
-            "title": "Inverse Of"
-          },
-          "used_by_entities": {
-            "items": {
-              "additionalProperties": {
-                "type": "string"
-              },
-              "type": "object"
-            },
-            "type": "array",
-            "title": "Used By Entities"
-          }
-        },
-        "type": "object",
-        "required": [
-          "id",
-          "identifier",
-          "title"
-        ],
-        "title": "SchemaOrgPropertyData",
-        "description": "Schema.org property data representation"
       },
       "SchemaOrgPropertyOut": {
         "properties": {
@@ -18067,189 +16532,6 @@
           "raw"
         ],
         "title": "SchemaOrgPropertyOut"
-      },
-      "SchemaOrgPropertyResponse": {
-        "properties": {
-          "success": {
-            "type": "boolean",
-            "title": "Success",
-            "description": "Whether the request was successful"
-          },
-          "source": {
-            "$ref": "#/components/schemas/SourceType",
-            "description": "Source that provided the data"
-          },
-          "retrieved_at": {
-            "type": "string",
-            "format": "date-time",
-            "title": "Retrieved At",
-            "description": "Timestamp when data was retrieved"
-          },
-          "error": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Error",
-            "description": "Error message if success is false"
-          },
-          "identifier": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Identifier"
-          },
-          "property": {
-            "anyOf": [
-              {
-                "$ref": "#/components/schemas/SchemaOrgPropertyData"
-              },
-              {
-                "type": "null"
-              }
-            ]
-          }
-        },
-        "type": "object",
-        "required": [
-          "success",
-          "source",
-          "retrieved_at"
-        ],
-        "title": "SchemaOrgPropertyResponse",
-        "description": "Response model for Schema.org property retrieval"
-      },
-      "SchemaOrgSearchResponse": {
-        "properties": {
-          "success": {
-            "type": "boolean",
-            "title": "Success",
-            "description": "Whether the request was successful"
-          },
-          "source": {
-            "$ref": "#/components/schemas/SourceType",
-            "description": "Source that provided the data"
-          },
-          "retrieved_at": {
-            "type": "string",
-            "format": "date-time",
-            "title": "Retrieved At",
-            "description": "Timestamp when data was retrieved"
-          },
-          "error": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Error",
-            "description": "Error message if success is false"
-          },
-          "query": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Query"
-          },
-          "search_type": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Search Type"
-          },
-          "total_results": {
-            "anyOf": [
-              {
-                "type": "integer"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Total Results"
-          },
-          "results": {
-            "items": {
-              "$ref": "#/components/schemas/SchemaOrgSearchResult"
-            },
-            "type": "array",
-            "title": "Results"
-          }
-        },
-        "type": "object",
-        "required": [
-          "success",
-          "source",
-          "retrieved_at"
-        ],
-        "title": "SchemaOrgSearchResponse",
-        "description": "Response model for Schema.org search"
-      },
-      "SchemaOrgSearchResult": {
-        "properties": {
-          "type": {
-            "type": "string",
-            "enum": [
-              "entity",
-              "property"
-            ],
-            "title": "Type"
-          },
-          "identifier": {
-            "type": "string",
-            "title": "Identifier"
-          },
-          "title": {
-            "type": "string",
-            "title": "Title"
-          },
-          "definition": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Definition"
-          },
-          "relevance_score": {
-            "type": "number",
-            "title": "Relevance Score"
-          }
-        },
-        "type": "object",
-        "required": [
-          "type",
-          "identifier",
-          "title",
-          "relevance_score"
-        ],
-        "title": "SchemaOrgSearchResult",
-        "description": "Schema.org search result"
       },
       "SchemaOrgStatus": {
         "properties": {
@@ -18506,45 +16788,6 @@
           "query"
         ],
         "title": "SearchResult"
-      },
-      "SelectedRelation": {
-        "properties": {
-          "predicate": {
-            "type": "string",
-            "title": "Predicate",
-            "description": "The relation predicate"
-          },
-          "object": {
-            "type": "string",
-            "title": "Object",
-            "description": "The target object of the relation"
-          },
-          "weight": {
-            "type": "number",
-            "title": "Weight",
-            "description": "The weight/confidence of the relation"
-          },
-          "text": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Text",
-            "description": "Text representation of the relation"
-          }
-        },
-        "type": "object",
-        "required": [
-          "predicate",
-          "object",
-          "weight"
-        ],
-        "title": "SelectedRelation",
-        "description": "A selected ConceptNet relation for a component term"
       },
       "SelectionResponse": {
         "properties": {
@@ -20037,79 +18280,6 @@
         "title": "VoteSummaryResponse",
         "description": "Response model for vote summary."
       },
-      "WikidataEntityResponse": {
-        "properties": {
-          "success": {
-            "type": "boolean",
-            "title": "Success",
-            "description": "Whether the request was successful"
-          },
-          "source": {
-            "$ref": "#/components/schemas/SourceType",
-            "description": "Source that provided the data"
-          },
-          "retrieved_at": {
-            "type": "string",
-            "format": "date-time",
-            "title": "Retrieved At",
-            "description": "Timestamp when data was retrieved"
-          },
-          "error": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Error",
-            "description": "Error message if success is false"
-          },
-          "entity_id": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Entity Id"
-          },
-          "entity_url": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Entity Url"
-          },
-          "data": {
-            "anyOf": [
-              {
-                "additionalProperties": true,
-                "type": "object"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Data"
-          }
-        },
-        "type": "object",
-        "required": [
-          "success",
-          "source",
-          "retrieved_at"
-        ],
-        "title": "WikidataEntityResponse",
-        "description": "Response model for Wikidata entity data"
-      },
       "WikidataSparqlRequest": {
         "properties": {
           "query": {
@@ -20130,62 +18300,6 @@
         ],
         "title": "WikidataSparqlRequest",
         "description": "Request model for Wikidata SPARQL query"
-      },
-      "WikidataSparqlResponse": {
-        "properties": {
-          "success": {
-            "type": "boolean",
-            "title": "Success",
-            "description": "Whether the request was successful"
-          },
-          "source": {
-            "$ref": "#/components/schemas/SourceType",
-            "description": "Source that provided the data"
-          },
-          "retrieved_at": {
-            "type": "string",
-            "format": "date-time",
-            "title": "Retrieved At",
-            "description": "Timestamp when data was retrieved"
-          },
-          "error": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Error",
-            "description": "Error message if success is false"
-          },
-          "query_type": {
-            "type": "string",
-            "title": "Query Type",
-            "default": "sparql"
-          },
-          "results": {
-            "anyOf": [
-              {
-                "additionalProperties": true,
-                "type": "object"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Results"
-          }
-        },
-        "type": "object",
-        "required": [
-          "success",
-          "source",
-          "retrieved_at"
-        ],
-        "title": "WikidataSparqlResponse",
-        "description": "Response model for Wikidata SPARQL query"
       },
       "WordNetData": {
         "properties": {

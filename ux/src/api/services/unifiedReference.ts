@@ -15,10 +15,15 @@ import {
   MultiSourceSearchResponse,
   SearchNode,
   UnifiedReferenceError,
+  SourceType,
 } from "../types/unified";
+import {
+  SOURCE_ENDPOINTS,
+  getEnabledSources,
+} from "../types/streamingReference";
 
 export class UnifiedReferenceService extends BaseService {
-  private readonly SEARCH_ENDPOINT = `/api/nlp_analysis/reference/search`;
+  private readonly SEARCH_ENDPOINT = `/api/reference/search`;
 
   /**
    * Search across all unified reference sources
@@ -53,16 +58,18 @@ export class UnifiedReferenceService extends BaseService {
           backendRequest,
         );
 
-        // Convert backend response to frontend format
+        // Backend now returns normalized data directly
         return {
           query: response.query,
-          results: response.results.map(this.convertSearchNodeToUnifiedNode),
+          results: response.results,
           links: response.links || [],
           total_results: response.total_results,
-          total_links: response.total_links || 0,
-          sources_searched: response.sources_searched,
+          total_links: response.total_links,
+          sources_queried: response.sources_queried,
           source_errors: response.source_errors,
-          execution_time_ms: response.execution_time_ms,
+          offset: response.offset,
+          limit: response.limit,
+          search_time_ms: response.search_time_ms,
         };
       } catch (error) {
         if (error instanceof Error && error.message.includes("404")) {
@@ -125,22 +132,133 @@ export class UnifiedReferenceService extends BaseService {
   }
 
   /**
-   * Convert SearchNode from backend to UnifiedNode for frontend
+   * Search a specific reference source directly
    */
-  private convertSearchNodeToUnifiedNode(node: SearchNode): UnifiedNode {
-    return {
-      id: node.id,
-      title: node.title,
-      definition: node.definition,
-      source: node.source,
-      confidence_score: node.confidence_score || 1.0,
-      source_url: node.source_url,
-      metadata: node.metadata,
-      created_at: node.created_at,
-      updated_at: node.updated_at,
-      merged_from: node.merged_from,
-    };
+  async searchSource(
+    source: SourceType,
+    request: UnifiedSearchRequest
+  ): Promise<UnifiedSearchResponse> {
+    return this.withErrorContext(async () => {
+      this.validateRequired(request, "Search request");
+      this.validateRequired(request.query, "Search query");
+      this.sanitizeString(request.query, "Search query", 1000);
+
+      if (request.query.trim().length < 2) {
+        throw new UnifiedReferenceError(
+          "Search query must be at least 2 characters"
+        );
+      }
+
+      const config = SOURCE_ENDPOINTS[source];
+      if (!config || !config.enabled) {
+        throw new UnifiedReferenceError(
+          `Source ${source} is not available or not enabled`
+        );
+      }
+
+      try {
+        const params = {
+          query: request.query,
+          limit: request.limit || 20,
+          offset: request.offset || 0,
+        };
+
+        const response = await this.getResource<MultiSourceSearchResponse>(
+          config.endpoint,
+          params
+        );
+
+        // Backend now returns normalized data directly
+        return {
+          query: response.query,
+          results: response.results,
+          links: response.links || [],
+          total_results: response.total_results,
+          total_links: response.total_links,
+          sources_queried: response.sources_queried,
+          source_errors: response.source_errors,
+          offset: response.offset,
+          limit: response.limit,
+          search_time_ms: response.search_time_ms,
+        };
+      } catch (error) {
+        if (error instanceof Error && error.message.includes("404")) {
+          throw new UnifiedReferenceError(
+            `${source} search endpoint not found. Please ensure the backend service supports this source.`,
+            { cause: error }
+          );
+        }
+        throw error;
+      }
+    }, `${source} search`);
   }
+
+
+  /**
+   * Get available sources and their status
+   */
+  async getAvailableSources(): Promise<Record<SourceType, { enabled: boolean; endpoint: string }>> {
+    return this.withErrorContext(async () => {
+      const sources: Record<SourceType, { enabled: boolean; endpoint: string }> = {} as Record<SourceType, { enabled: boolean; endpoint: string }>;
+
+      Object.entries(SOURCE_ENDPOINTS).forEach(([source, config]) => {
+        sources[source as SourceType] = {
+          enabled: config.enabled,
+          endpoint: config.endpoint,
+        };
+      });
+
+      return sources;
+    }, "get available sources");
+  }
+
+  /**
+   * Test connectivity to a specific source
+   */
+  async testSourceConnectivity(source: SourceType): Promise<{
+    available: boolean;
+    responseTime?: number;
+    error?: string;
+  }> {
+    return this.withErrorContext(async () => {
+      const config = SOURCE_ENDPOINTS[source];
+      if (!config) {
+        return {
+          available: false,
+          error: `Source ${source} is not configured`,
+        };
+      }
+
+      if (!config.enabled) {
+        return {
+          available: false,
+          error: `Source ${source} is disabled`,
+        };
+      }
+
+      const startTime = Date.now();
+
+      try {
+        // Try a minimal search to test connectivity
+        await this.getResource(config.endpoint, {
+          query: "test",
+          limit: 1,
+        });
+
+        return {
+          available: true,
+          responseTime: Date.now() - startTime,
+        };
+      } catch (error) {
+        return {
+          available: false,
+          responseTime: Date.now() - startTime,
+          error: error instanceof Error ? error.message : "Unknown error",
+        };
+      }
+    }, `test ${source} connectivity`);
+  }
+
 
 
 
