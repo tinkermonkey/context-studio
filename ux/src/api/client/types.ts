@@ -442,6 +442,8 @@ export interface paths {
          * @description Rollback entity to specific version.
          *
          *     Creates a new version with the content from the target version.
+         *     Note: This currently only creates a version record. Entity content rollback
+         *     requires additional implementation.
          */
         post: operations["rollback_entity_api_versions_entities__entity_type___entity_id__rollback_post"];
         delete?: never;
@@ -1859,6 +1861,29 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/llm/suggest_term_definition": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Suggest Term Definition
+         * @description Suggest a term definition using LLM pipeline.
+         *
+         *     This is a convenience endpoint that uses the generic execute_pipeline
+         *     but is specifically designed for term definition suggestions.
+         */
+        post: operations["suggest_term_definition_api_llm_suggest_term_definition_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/llm/health": {
         parameters: {
             query?: never;
@@ -2380,26 +2405,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/sync/status": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Get Sync Status
-         * @description Get current sync system status and activity.
-         */
-        get: operations["get_sync_status_api_sync_status_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
     "/api/sync/test": {
         parameters: {
             query?: never;
@@ -2414,6 +2419,66 @@ export interface paths {
         get: operations["test_s3_connection_api_sync_test_get"];
         put?: never;
         post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/sync/operations/{sync_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Sync Operation
+         * @description Get sync operation details.
+         */
+        get: operations["get_sync_operation_api_sync_operations__sync_id__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/sync/performance": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Sync Performance Metrics
+         * @description Get comprehensive sync performance metrics.
+         */
+        get: operations["get_sync_performance_metrics_api_sync_performance_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/sync/validate-data": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Validate Sync Data Integrity
+         * @description Validate data integrity between local and remote sources.
+         */
+        post: operations["validate_sync_data_integrity_api_sync_validate_data_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -4125,7 +4190,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/sync/performance": {
+    "/api/sync/status": {
         parameters: {
             query?: never;
             header?: never;
@@ -4133,10 +4198,10 @@ export interface paths {
             cookie?: never;
         };
         /**
-         * Get Sync Performance Metrics
-         * @description Get comprehensive sync performance metrics.
+         * Get Sync Status
+         * @description Get current sync system status and activity.
          */
-        get: operations["get_sync_performance_metrics_api_sync_performance_get"];
+        get: operations["get_sync_status_api_sync_status_get"];
         put?: never;
         post?: never;
         delete?: never;
@@ -4219,26 +4284,6 @@ export interface paths {
          * @description Trigger a full data resynchronization.
          */
         post: operations["trigger_full_resync_api_sync_full_resync_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/sync/validate-data": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Validate Sync Data Integrity
-         * @description Validate data integrity between local and remote sources.
-         */
-        post: operations["validate_sync_data_integrity_api_sync_validate_data_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -5389,10 +5434,10 @@ export interface components {
              * Format: uuid
              */
             entity_id: string;
-            /** Before Version Number */
-            before_version_number?: number | null;
-            /** After Version Number */
-            after_version_number: number;
+            /** Before Version */
+            before_version?: number | null;
+            /** After Version */
+            after_version: number;
             /** @default summary */
             format: components["schemas"]["DiffFormatEnum"];
         };
@@ -6714,10 +6759,10 @@ export interface components {
          */
         RollbackRequest: {
             /**
-             * Target Version Number
+             * Target Version
              * @description Version number to rollback to
              */
-            target_version_number: number;
+            target_version: number;
             /** Author Id */
             author_id: string;
         };
@@ -8631,7 +8676,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["EntityVersionOut"];
+                    "application/json": unknown;
                 };
             };
             /** @description Validation Error */
@@ -8669,7 +8714,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["EntityDiffOut"];
+                    "application/json": unknown;
                 };
             };
             /** @description Validation Error */
@@ -8836,7 +8881,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["EntityVersionSummary"][];
+                    "application/json": unknown;
                 };
             };
             /** @description Validation Error */
@@ -8933,7 +8978,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["EntityDiffOut"];
+                    "application/json": unknown;
                 };
             };
             /** @description Validation Error */
@@ -10882,6 +10927,75 @@ export interface operations {
             };
         };
     };
+    suggest_term_definition_api_llm_suggest_term_definition_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["GenericPipelineExecutionRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GenericPipelineExecutionResponse"];
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LLMErrorResponse"];
+                };
+            };
+            /** @description Request validation failure */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LLMErrorResponse"];
+                };
+            };
+            /** @description Too Many Requests */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LLMErrorResponse"];
+                };
+            };
+            /** @description Internal Server Error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LLMErrorResponse"];
+                };
+            };
+            /** @description Gateway Timeout */
+            504: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LLMErrorResponse"];
+                };
+            };
+        };
+    };
     traceability_health_api_llm_health_get: {
         parameters: {
             query?: never;
@@ -11865,37 +11979,6 @@ export interface operations {
             };
         };
     };
-    get_sync_status_api_sync_status_get: {
-        parameters: {
-            query?: {
-                SessionLocal?: unknown;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["SyncStatusOut"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
     test_s3_connection_api_sync_test_get: {
         parameters: {
             query?: {
@@ -11914,6 +11997,104 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["SyncResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_sync_operation_api_sync_operations__sync_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Sync operation ID */
+                sync_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_sync_performance_metrics_api_sync_performance_get: {
+        parameters: {
+            query?: {
+                /** @description Number of days to analyze */
+                days?: number;
+                SessionLocal?: unknown;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SyncPerformanceOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    validate_sync_data_integrity_api_sync_validate_data_post: {
+        parameters: {
+            query?: {
+                /** @description Number of records to sample */
+                sample_size?: number;
+                SessionLocal?: unknown;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
                 };
             };
             /** @description Validation Error */
@@ -14335,11 +14516,9 @@ export interface operations {
             };
         };
     };
-    get_sync_performance_metrics_api_sync_performance_get: {
+    get_sync_status_api_sync_status_get: {
         parameters: {
             query?: {
-                /** @description Number of days to analyze */
-                days?: number;
                 SessionLocal?: unknown;
             };
             header?: never;
@@ -14354,7 +14533,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["SyncPerformanceOut"];
+                    "application/json": components["schemas"]["SyncStatusOut"];
                 };
             };
             /** @description Validation Error */
@@ -14472,39 +14651,6 @@ export interface operations {
                 entity_types?: string[] | null;
                 /** @description Force resync even if recent sync exists */
                 force?: boolean;
-                SessionLocal?: unknown;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": unknown;
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    validate_sync_data_integrity_api_sync_validate_data_post: {
-        parameters: {
-            query?: {
-                /** @description Number of records to sample */
-                sample_size?: number;
                 SessionLocal?: unknown;
             };
             header?: never;

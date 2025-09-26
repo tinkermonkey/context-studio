@@ -172,7 +172,7 @@ Update `SOURCE_ENDPOINTS` in `src/api/types/streamingReference.ts`:
 ```typescript
 export const SOURCE_ENDPOINTS: Record<SourceType, SourceEndpointConfig> = {
   dbpedia: {
-    endpoint: "/api/nlp_analysis/reference/dbpedia/search",
+    endpoint: "/api/reference/dbpedia/search",
     enabled: true,  // Toggle availability
     timeout: 5000,
     priority: 1,
@@ -194,17 +194,17 @@ const { search } = useStreamingUnifiedSearch({
 ## Backward Compatibility
 
 - All existing hooks and services remain unchanged
-- Original unified search endpoint `/api/nlp_analysis/reference/search` still works
+- Original unified search endpoint `/api/reference/search` still works
 - New functionality is additive, not replacing existing patterns
 - Existing components can be gradually migrated to streaming approach
 
 ## Available Endpoints
 
 Currently configured endpoints:
-- `/api/nlp_analysis/reference/dbpedia/search` (enabled)
-- `/api/nlp_analysis/reference/schema-org/search` (enabled)
-- `/api/nlp_analysis/reference/conceptnet/search` (disabled - enable when available)
-- `/api/nlp_analysis/reference/wikidata/search` (disabled - enable when available)
+- `/api/reference/dbpedia/search` (enabled)
+- `/api/reference/schema-org/search` (enabled)
+- `/api/reference/conceptnet/search` (disabled - enable when available)
+- `/api/reference/wikidata/search` (disabled - enable when available)
 
 ## Performance Monitoring
 

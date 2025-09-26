@@ -10,6 +10,8 @@ downloads/
 # Claude
 .claude/
 PRPs/
+.serena/
+.ruff-cache/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

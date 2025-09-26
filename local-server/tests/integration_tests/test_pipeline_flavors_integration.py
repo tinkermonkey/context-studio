@@ -372,31 +372,6 @@ class TestLLMStreamingEndpoints:
         content = response.content.decode()
         assert "data:" in content
 
-    def test_regular_llm_endpoints_with_flavor(self, client, sample_term_request):
-        """Test regular LLM endpoints with flavor parameter"""
-        # Convert legacy request format to generic pipeline format
-        pipeline_request = {
-            "flavor_id": "default",
-            "pipeline_type": "suggest_term_definition",
-            "context_data": sample_term_request
-        }
-        response = client.post(
-            "/api/llm/suggest_term_definition", json=pipeline_request
-        )
-
-        # Note: This might fail without valid OpenAI API key, but should validate request format
-        # In a real test environment, we'd mock the LLM service
-        assert response.status_code in [
-            200,
-            500,
-        ]  # 500 for missing API key is acceptable
-
-        if response.status_code == 200:
-            result = response.json()
-            assert "response_content" in result  # Updated field name
-            assert "execution_id" in result
-            assert result["pipeline_type"] == "suggest_term_definition"
-
     def test_llm_health_endpoint(self, client):
         """Test LLM health check endpoint"""
         response = client.get("/api/llm/health")

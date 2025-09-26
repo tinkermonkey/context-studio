@@ -19,9 +19,14 @@ Python server for the Context Studio (a React app built using Flowbite-React). T
 
 ## Developing and debugging
 
-- The server is typically already running locally on port 8001 and is set to reload when files are changed, it take about 10 seconds to reload. Generally you don't need to launch the server unless you've confirmed none is running
+- Set up a Python virtual environment using `python -m venv .venv` and activate it with `source .venv/bin/activate`
+- Install dependencies with `pip install -r requirements.txt`
+- Run the server with `python app.py`
+- After making API signature changes, update the OpenAPI schema with `python utils/update_api_specs.py`
+  - The front-end engineer will need to run `npm run generate-types` in the React app to update the API client
 - Server logs are available for debugging in ./logs/context_studio.log
 - This is a desktop app so configuration should not rely on environment variables and should instead be managed through the config.json file
+- Use meaningful variable and function names, don't use terms like "enhanced", "improved", "optimized" in names
 
 ## Technology Stack
 

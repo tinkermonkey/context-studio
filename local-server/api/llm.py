@@ -216,29 +216,6 @@ async def execute_pipeline_stream(
         raise handle_llm_error(e)
 
 
-@router.post("/llm/suggest_term_definition",
-            response_model=GenericPipelineExecutionResponse,
-            responses={
-                400: {"model": LLMErrorResponse},
-                422: {"model": LLMErrorResponse, "description": "Request validation failure"},
-                429: {"model": LLMErrorResponse},
-                500: {"model": LLMErrorResponse},
-                504: {"model": LLMErrorResponse}
-            })
-async def suggest_term_definition(
-    request: GenericPipelineExecutionRequest,
-    llm_service: LLMService = Depends(get_default_llm_service)
-):
-    """
-    Suggest a term definition using LLM pipeline.
-
-    This is a convenience endpoint that uses the generic execute_pipeline
-    but is specifically designed for term definition suggestions.
-    """
-    # This delegates to the generic execute_pipeline endpoint
-    return await execute_pipeline(request, llm_service)
-
-
 @router.get("/llm/health", response_model=LLMHealthResponse)
 async def health_check(llm_service: LLMService = Depends(get_llm_service)):
     """

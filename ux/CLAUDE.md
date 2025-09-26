@@ -32,13 +32,14 @@ Front-end code for the Context Studio app. This is front-end code only, the back
 
 ## Best Practices
 
-
+- Write clean, readable, and maintainable code
+- Use meaningful variable and function names, don't use terms like "enhanced", "improved", "optimized" in names
+- When api signatures change, run the `npm run generate-types` command to regenerate the api types and then update the hooks and services as needed
 
 ### Code Style
 
 - Don't create documentation files unless explicitly requested
 - All markdown reports and summaries other than README.md should be placed in the `documentation/task_reports` directory
-- use absolute imports for components and hooks
 - Use `@/` as the base path for imports
 
 ### API Client Architecture
@@ -54,12 +55,6 @@ Front-end code for the Context Studio app. This is front-end code only, the back
 - Integration tests for React hooks and components
 - Mock external dependencies (APIs, native modules)
 - Separate test configs for different test types (API vs integration)
-
-### Documentation Standards
-
-- Technical reports should include implementation details, architecture decisions, and current status
-- Include code examples and usage patterns
-- Document known issues and workarounds
 
 ### Code Structure
 
@@ -94,15 +89,13 @@ Front-end code for the Context Studio app. This is front-end code only, the back
 
 1. **React**: All UX must be `react` components
 
-2. **Flowbite React**: Flowbite React components should be used for layout
+2. **Flowbite React**: Flowbite React components should be used for interface elements where possible
 
-3. **Responsive Layout**: A single UX will be used for desktop, tablet, and phones. Where possible, handle the responsiveness in the layout. Where needed, ensure the styling is responsive.
+3. **Promote User Focus**: UX should be clean and focused without extraneous elements and decoration
 
-4. **Promote User Focus**: UX should be clean and focused without extraneous elements and decoration
+4. **Error Handling**: Implement error catching within user workflows utilizing tools like useButterToast to communicate errors
 
-5. **Error Handling**: Implement error catching within user workflows utilizing tools like useButterToast to communicate errors
-
-6. **Asynchronous**: Where possible user interactions should be asynchronous to maintain performance and statelessness
+5. **Asynchronous**: Where possible user interactions should be asynchronous to maintain performance and statelessness
 
 ### Testing and Reliability
 

@@ -443,9 +443,6 @@ class TestGenericPipelineAPIIntegration:
         generic_error = generic_response.json()
         assert "Test processing error" in generic_error["detail"]
 
-        # Note: Legacy specific endpoints like /api/llm/suggest_term_definition have been
-        # intentionally consolidated into the generic /api/llm/execute_pipeline API for consistency
-
         # Cleanup dependency override
         del self.app.dependency_overrides[get_default_llm_service]
     

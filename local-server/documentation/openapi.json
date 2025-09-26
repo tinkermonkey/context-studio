@@ -1556,7 +1556,7 @@
           "version_management"
         ],
         "summary": "Rollback Entity",
-        "description": "Rollback entity to specific version.\n\nCreates a new version with the content from the target version.",
+        "description": "Rollback entity to specific version.\n\nCreates a new version with the content from the target version.\nNote: This currently only creates a version record. Entity content rollback\nrequires additional implementation.",
         "operationId": "rollback_entity_api_versions_entities__entity_type___entity_id__rollback_post",
         "parameters": [
           {
@@ -1605,9 +1605,7 @@
             "description": "Successful Response",
             "content": {
               "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/EntityVersionOut"
-                }
+                "schema": {}
               }
             }
           },
@@ -1681,9 +1679,7 @@
             "description": "Successful Response",
             "content": {
               "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/EntityDiffOut"
-                }
+                "schema": {}
               }
             }
           },
@@ -1926,13 +1922,7 @@
             "description": "Successful Response",
             "content": {
               "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/EntityVersionSummary"
-                  },
-                  "title": "Response Commit Staged Changes Api Versions Working Tree Commit Post"
-                }
+                "schema": {}
               }
             }
           },
@@ -2077,9 +2067,7 @@
             "description": "Successful Response",
             "content": {
               "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/EntityDiffOut"
-                }
+                "schema": {}
               }
             }
           },
@@ -5436,7 +5424,7 @@
       "get": {
         "tags": [
           "nlp-reference",
-          "enrichment"
+          "reference"
         ],
         "summary": "Dbpedia Get Resource",
         "description": "Retrieve structured data from a DBpedia resource URL",
@@ -5493,7 +5481,7 @@
       "get": {
         "tags": [
           "nlp-reference",
-          "enrichment"
+          "reference"
         ],
         "summary": "Dbpedia Search",
         "description": "Search DBpedia using the search API",
@@ -5577,7 +5565,7 @@
       "post": {
         "tags": [
           "nlp-reference",
-          "enrichment"
+          "reference"
         ],
         "summary": "Dbpedia Sparql",
         "description": "Execute SPARQL query against DBpedia",
@@ -5620,7 +5608,7 @@
       "get": {
         "tags": [
           "nlp-reference",
-          "enrichment"
+          "reference"
         ],
         "summary": "Conceptnet Search",
         "description": "Search ConceptNet for concepts matching the query",
@@ -5693,7 +5681,7 @@
       "get": {
         "tags": [
           "nlp-reference",
-          "enrichment"
+          "reference"
         ],
         "summary": "Conceptnet Query",
         "description": "Query ConceptNet with various parameters",
@@ -5827,7 +5815,7 @@
       "get": {
         "tags": [
           "nlp-reference",
-          "enrichment"
+          "reference"
         ],
         "summary": "Conceptnet Get Concept",
         "description": "Get data for a specific ConceptNet concept",
@@ -5873,7 +5861,7 @@
       "get": {
         "tags": [
           "nlp-reference",
-          "enrichment"
+          "reference"
         ],
         "summary": "Conceptnet Get Related",
         "description": "Get related concepts from ConceptNet",
@@ -5951,7 +5939,7 @@
       "get": {
         "tags": [
           "nlp-reference",
-          "enrichment"
+          "reference"
         ],
         "summary": "Wikidata Search",
         "description": "Search Wikidata entities",
@@ -6024,7 +6012,7 @@
       "post": {
         "tags": [
           "nlp-reference",
-          "enrichment"
+          "reference"
         ],
         "summary": "Wikidata Sparql",
         "description": "Execute SPARQL query against Wikidata",
@@ -6067,7 +6055,7 @@
       "get": {
         "tags": [
           "nlp-reference",
-          "enrichment"
+          "reference"
         ],
         "summary": "Wikidata Get Entity",
         "description": "Get structured data for a Wikidata entity",
@@ -6142,7 +6130,7 @@
       "get": {
         "tags": [
           "nlp-reference",
-          "enrichment"
+          "reference"
         ],
         "summary": "Schema Org Get Entity",
         "description": "Get Schema.org entity with properties and inheritance",
@@ -6212,7 +6200,7 @@
       "get": {
         "tags": [
           "nlp-reference",
-          "enrichment"
+          "reference"
         ],
         "summary": "Schema Org Get Property",
         "description": "Get Schema.org property definition and usage",
@@ -6270,7 +6258,7 @@
       "get": {
         "tags": [
           "nlp-reference",
-          "enrichment"
+          "reference"
         ],
         "summary": "Schema Org Search",
         "description": "Search Schema.org entities and properties",
@@ -6374,7 +6362,7 @@
       "post": {
         "tags": [
           "nlp-reference",
-          "enrichment"
+          "reference"
         ],
         "summary": "Multi Source Search",
         "description": "Search across multiple reference sources\n\nSearches across specified sources (or all enabled sources if none specified)\nand returns aggregated results without deduplication or ranking.",
@@ -6415,7 +6403,7 @@
       "get": {
         "tags": [
           "nlp-reference",
-          "enrichment"
+          "reference"
         ],
         "summary": "Multi Source Search Get",
         "description": "Search across multiple reference sources via GET request\n\nAlternative GET endpoint for multi-source search with query parameters.",
@@ -6507,7 +6495,7 @@
       "get": {
         "tags": [
           "nlp-reference",
-          "enrichment"
+          "reference"
         ],
         "summary": "Health Check",
         "description": "Check health status of all reference API sources",
@@ -6630,49 +6618,6 @@
         }
       }
     },
-    "/api/sync/status": {
-      "get": {
-        "tags": [
-          "incremental-sync",
-          "incremental_sync"
-        ],
-        "summary": "Get Sync Status",
-        "description": "Get current sync system status and activity.",
-        "operationId": "get_sync_status_api_sync_status_get",
-        "parameters": [
-          {
-            "name": "SessionLocal",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "title": "Sessionlocal"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/SyncStatusOut"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
     "/api/sync/test": {
       "get": {
         "tags": [
@@ -6700,6 +6645,162 @@
                 "schema": {
                   "$ref": "#/components/schemas/SyncResponse"
                 }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/sync/operations/{sync_id}": {
+      "get": {
+        "tags": [
+          "sync",
+          "sync"
+        ],
+        "summary": "Get Sync Operation",
+        "description": "Get sync operation details.",
+        "operationId": "get_sync_operation_api_sync_operations__sync_id__get",
+        "parameters": [
+          {
+            "name": "sync_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Sync operation ID",
+              "title": "Sync Id"
+            },
+            "description": "Sync operation ID"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/sync/performance": {
+      "get": {
+        "tags": [
+          "incremental-sync",
+          "incremental_sync"
+        ],
+        "summary": "Get Sync Performance Metrics",
+        "description": "Get comprehensive sync performance metrics.",
+        "operationId": "get_sync_performance_metrics_api_sync_performance_get",
+        "parameters": [
+          {
+            "name": "days",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 90,
+              "minimum": 1,
+              "description": "Number of days to analyze",
+              "default": 7,
+              "title": "Days"
+            },
+            "description": "Number of days to analyze"
+          },
+          {
+            "name": "SessionLocal",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "title": "Sessionlocal"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SyncPerformanceOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/sync/validate-data": {
+      "post": {
+        "tags": [
+          "incremental-sync",
+          "incremental_sync"
+        ],
+        "summary": "Validate Sync Data Integrity",
+        "description": "Validate data integrity between local and remote sources.",
+        "operationId": "validate_sync_data_integrity_api_sync_validate_data_post",
+        "parameters": [
+          {
+            "name": "sample_size",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 10000,
+              "minimum": 100,
+              "description": "Number of records to sample",
+              "default": 1000,
+              "title": "Sample Size"
+            },
+            "description": "Number of records to sample"
+          },
+          {
+            "name": "SessionLocal",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "title": "Sessionlocal"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
               }
             }
           },
@@ -11004,30 +11105,16 @@
         }
       }
     },
-    "/api/sync/performance": {
+    "/api/sync/status": {
       "get": {
         "tags": [
           "incremental-sync",
           "incremental_sync"
         ],
-        "summary": "Get Sync Performance Metrics",
-        "description": "Get comprehensive sync performance metrics.",
-        "operationId": "get_sync_performance_metrics_api_sync_performance_get",
+        "summary": "Get Sync Status",
+        "description": "Get current sync system status and activity.",
+        "operationId": "get_sync_status_api_sync_status_get",
         "parameters": [
-          {
-            "name": "days",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "integer",
-              "maximum": 90,
-              "minimum": 1,
-              "description": "Number of days to analyze",
-              "default": 7,
-              "title": "Days"
-            },
-            "description": "Number of days to analyze"
-          },
           {
             "name": "SessionLocal",
             "in": "query",
@@ -11043,7 +11130,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/SyncPerformanceOut"
+                  "$ref": "#/components/schemas/SyncStatusOut"
                 }
               }
             }
@@ -11240,61 +11327,6 @@
               "title": "Force"
             },
             "description": "Force resync even if recent sync exists"
-          },
-          {
-            "name": "SessionLocal",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "title": "Sessionlocal"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {}
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/sync/validate-data": {
-      "post": {
-        "tags": [
-          "incremental-sync",
-          "incremental_sync"
-        ],
-        "summary": "Validate Sync Data Integrity",
-        "description": "Validate data integrity between local and remote sources.",
-        "operationId": "validate_sync_data_integrity_api_sync_validate_data_post",
-        "parameters": [
-          {
-            "name": "sample_size",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "integer",
-              "maximum": 10000,
-              "minimum": 100,
-              "description": "Number of records to sample",
-              "default": 1000,
-              "title": "Sample Size"
-            },
-            "description": "Number of records to sample"
           },
           {
             "name": "SessionLocal",
@@ -13644,22 +13676,22 @@
             "format": "uuid",
             "title": "Entity Id"
           },
-          "before_version_number": {
+          "before_version": {
             "anyOf": [
               {
                 "type": "integer",
-                "minimum": 1.0
+                "minimum": 0.0
               },
               {
                 "type": "null"
               }
             ],
-            "title": "Before Version Number"
+            "title": "Before Version"
           },
-          "after_version_number": {
+          "after_version": {
             "type": "integer",
             "minimum": 1.0,
-            "title": "After Version Number"
+            "title": "After Version"
           },
           "format": {
             "$ref": "#/components/schemas/DiffFormatEnum",
@@ -13670,7 +13702,7 @@
         "required": [
           "entity_type",
           "entity_id",
-          "after_version_number"
+          "after_version"
         ],
         "title": "DiffRequest",
         "description": "Model for requesting diffs."
@@ -16272,10 +16304,10 @@
       },
       "RollbackRequest": {
         "properties": {
-          "target_version_number": {
+          "target_version": {
             "type": "integer",
             "minimum": 1.0,
-            "title": "Target Version Number",
+            "title": "Target Version",
             "description": "Version number to rollback to"
           },
           "author_id": {
@@ -16287,7 +16319,7 @@
         },
         "type": "object",
         "required": [
-          "target_version_number",
+          "target_version",
           "author_id"
         ],
         "title": "RollbackRequest",

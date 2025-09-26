@@ -26,24 +26,6 @@ class SyncResponse(BaseModel):
     data: Optional[Dict[str, Any]] = None
 
 
-class IncrementalSyncRequest(BaseModel):
-    since: str
-    until: Optional[str] = None
-    entity_types: Optional[List[str]] = None
-    sync_strategy: str = "auto"
-    batch_size: int = 1000
-    max_parallel_workers: int = 4
-
-
-class OptimizationRequest(BaseModel):
-    target_throughput: float
-    max_batch_size: int
-    optimize_for: str = "speed"
-    enable_auto_tuning: bool = True
-
-
-class DataValidationRequest(BaseModel):
-    sample_size: Optional[int] = 1000
 
 
 @router.post("/push", response_model=SyncResponse)
@@ -102,27 +84,6 @@ async def pull_changes(
         raise HTTPException(status_code=500, detail=f"Pull failed: {str(e)}")
 
 
-@router.get("/status")
-async def get_sync_status():
-    """Get synchronization status."""
-
-    try:
-        # Return sync system status without database dependencies for tests
-        status = {
-            "active_operations": 2,  # Mock data for tests
-            "queued_operations": 1,
-            "total_operations_today": 12,
-            "last_successful_sync": datetime.now().isoformat(),
-            "system_load_percent": 0.65,
-            "available_workers": 6,
-            "sync_health_score": 0.92
-        }
-
-        return status
-
-    except Exception as e:
-        logger.error(f"Get sync status error: {e}")
-        raise HTTPException(status_code=500, detail=f"Status check failed: {str(e)}")
 
 
 @router.get("/test", response_model=SyncResponse)
@@ -149,29 +110,6 @@ async def test_s3_connection(db: Session = Depends(get_db)) -> SyncResponse:
         raise HTTPException(status_code=500, detail=f"Connection test failed: {str(e)}")
 
 
-@router.post("/incremental")
-async def start_incremental_sync(request: IncrementalSyncRequest):
-    """Start incremental sync operation."""
-
-    try:
-        since = datetime.fromisoformat(request.since)
-        until = datetime.fromisoformat(request.until) if request.until else None
-
-        # Mock response for tests - in production would use actual sync engine
-        return {
-            "id": "sync-456",
-            "sync_type": "incremental",
-            "started_at": datetime.now().isoformat(),
-            "since_timestamp": since.isoformat(),
-            "synced_changes": 125,
-            "new_entities": 25,
-            "updated_entities": 100,
-            "errors": []
-        }
-
-    except Exception as e:
-        logger.error(f"Incremental sync error: {e}")
-        raise HTTPException(status_code=500, detail=f"Incremental sync failed: {str(e)}")
 
 
 @router.get("/operations/{sync_id}")
@@ -223,51 +161,8 @@ async def get_sync_performance(days: int = 7):
         raise HTTPException(status_code=500, detail=f"Failed to get sync performance: {str(e)}")
 
 
-@router.get("/recommendations")
-async def get_sync_recommendations():
-    """Get sync performance recommendations."""
-
-    try:
-        # Mock data for tests
-        return {
-            "recommendations": [
-                "Consider increasing batch size for better throughput",
-                "Enable parallel processing for large entity sets",
-                "Optimize S3 connection pooling for reduced latency",
-                "Schedule maintenance syncs during low-activity hours"
-            ]
-        }
-
-    except Exception as e:
-        logger.error(f"Get sync recommendations error: {e}")
-        raise HTTPException(status_code=500, detail=f"Failed to get sync recommendations: {str(e)}")
 
 
-@router.post("/optimize")
-async def optimize_sync_configuration(request: OptimizationRequest):
-    """Apply sync optimization configuration."""
-
-    try:
-        # Mock data for tests
-        return {
-            "optimized_parameters": {
-                "batch_size": 2000,
-                "parallel_workers": 6,
-                "connection_pool_size": 20,
-                "retry_attempts": 3
-            },
-            "expected_improvement_percent": 25.5,
-            "recommendation_summary": "Optimized for speed with increased parallelism and batch processing",
-            "applied_changes": [
-                "Increased batch size from 1000 to 2000",
-                "Increased parallel workers from 4 to 6",
-                "Enabled connection pooling optimization"
-            ]
-        }
-
-    except Exception as e:
-        logger.error(f"Optimize sync error: {e}")
-        raise HTTPException(status_code=500, detail=f"Failed to optimize sync: {str(e)}")
 
 
 @router.post("/validate-data")
