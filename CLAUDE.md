@@ -97,8 +97,3 @@ Context studio is local-first meaning its designed to be packaged as a desktop a
 
 - Avoid building functionality on speculation
 - Implement features only when they are needed, not when you anticipate they might be useful in the future
-
-### Open/Closed Principle
-
-- Software entities should be open for extension but closed for modification
-- Design systems so that new functionality can be added with minimal changes to existing code
