@@ -17,16 +17,27 @@ from graph.sparql_service import SPARQLService
 
 def get_graph_service(db: Session = Depends(get_db)) -> GraphService:
     """
-    Optimized dependency injection for GraphService using service factory.
-    
+    Get shared, cached GraphService instance for fast graph operations.
+
+    This uses a singleton pattern to share the same pre-loaded graph
+    across all requests, avoiding expensive rebuilding.
+
     Args:
-        db: Database session from dependency injection
-        
+        db: Database session from dependency injection (for compatibility)
+
     Returns:
-        GraphService instance configured with the request's database session
+        Shared GraphService instance with pre-loaded graph data
     """
-    factory = get_service_factory()
-    return factory.create_graph_service(db)
+    # Import here to avoid circular imports
+    from api.graph import get_cached_graph_service
+    from utils.logger import get_logger
+
+    logger = get_logger(__name__)
+    logger.debug("get_graph_service called - using cached service")
+
+    service = get_cached_graph_service()
+    logger.debug(f"get_graph_service returning cached service: {id(service)}")
+    return service
 
 
 def get_network_service(db: Session = Depends(get_db)) -> NetworkService:

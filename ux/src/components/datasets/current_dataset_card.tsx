@@ -1,5 +1,5 @@
-import React from "react";
-import { Card, Spinner, Badge, Button } from "flowbite-react";
+import React, { useEffect, useRef } from "react";
+import { Card, Spinner, Badge, Button, Progress } from "flowbite-react";
 import {
   Calendar,
   Database,
@@ -9,12 +9,13 @@ import {
   Settings,
   Clock,
   ChevronRight,
+  RefreshCw,
+  Square,
+  AlertCircle,
 } from "lucide-react";
 import { Link } from "@tanstack/react-router";
 import { useActiveDataset } from "@/api/hooks/datasets/useDatasets";
-import type { components } from "@/api/client/types";
-
-type DatasetResponse = components["schemas"]["DatasetResponse"];
+import { useEmbeddingRegeneration } from "@/api/hooks/embeddings/useEmbeddingRegeneration";
 
 interface CurrentDatasetCardProps {
   className?: string;
@@ -24,6 +25,16 @@ export const CurrentDatasetCard: React.FC<CurrentDatasetCardProps> = ({
   className = "",
 }) => {
   const { data: activeDataset, isLoading, error } = useActiveDataset();
+  const {
+    status: embeddingStatus,
+    progress: embeddingProgress,
+    error: embeddingError,
+    connect,
+    disconnect,
+    stopRegeneration
+  } = useEmbeddingRegeneration();
+
+  const previousDatasetId = useRef<string | null>(null);
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString("en-US", {
@@ -39,6 +50,31 @@ export const CurrentDatasetCard: React.FC<CurrentDatasetCardProps> = ({
     // This would ideally come from the API, but we can estimate or show filename for now
     return filename;
   };
+
+  const handleStartRegeneration = (force = false) => {
+    connect(force);
+  };
+
+  const handleStopRegeneration = async () => {
+    await stopRegeneration();
+  };
+
+  const isEmbeddingRunning = embeddingStatus === 'running';
+
+  // Reset embedding status when dataset actually changes
+  useEffect(() => {
+    const currentDatasetId = activeDataset?.id;
+
+    // If dataset actually changed (not just initial load)
+    if (previousDatasetId.current &&
+        previousDatasetId.current !== currentDatasetId &&
+        embeddingStatus !== 'disconnected') {
+      disconnect();
+    }
+
+    // Update the ref
+    previousDatasetId.current = currentDatasetId || null;
+  }, [activeDataset?.id, disconnect, embeddingStatus]);
 
   if (isLoading) {
     return (
@@ -171,6 +207,78 @@ export const CurrentDatasetCard: React.FC<CurrentDatasetCardProps> = ({
             {formatDate(activeDataset.last_accessed)}
           </span>
         </div>
+      </div>
+
+      {/* Embedding Regeneration */}
+      <div className="mt-6 space-y-3 border-t border-gray-200 pt-6 dark:border-gray-700">
+        <div className="flex items-center justify-between">
+          <h4 className="text-sm font-medium text-gray-900 dark:text-white">
+            Embedding Regeneration
+          </h4>
+          <div className="flex items-center space-x-2">
+            {isEmbeddingRunning ? (
+              <Button size="xs" color="failure" onClick={handleStopRegeneration}>
+                <Square className="mr-1 h-3 w-3" />
+                Stop
+              </Button>
+            ) : (
+              <Button
+                size="xs"
+                onClick={() => handleStartRegeneration(true)}
+                disabled={isEmbeddingRunning}
+              >
+                <RefreshCw className="mr-1 h-3 w-3" />
+                Regenerate Embeddings
+              </Button>
+            )}
+          </div>
+        </div>
+
+        {/* Status Display */}
+        {isEmbeddingRunning && embeddingProgress && (
+          <div className="space-y-2">
+            <div className="flex justify-between text-xs text-gray-600 dark:text-gray-400">
+              <span>{embeddingProgress.completion_percentage.toFixed(1)}% Complete</span>
+              <span>{embeddingProgress.completed_nodes} / {embeddingProgress.total_nodes} nodes</span>
+            </div>
+            <Progress
+              progress={embeddingProgress.completion_percentage}
+              size="sm"
+              color="blue"
+            />
+            <div className="flex justify-between text-xs text-gray-500 dark:text-gray-400">
+              <span>
+                {embeddingProgress.current_node_type}: {embeddingProgress.current_node_title}
+              </span>
+              <span>
+                ETA: {Math.round(embeddingProgress.estimated_remaining_seconds)}s
+              </span>
+            </div>
+            {embeddingProgress.error_count > 0 && (
+              <div className="flex items-center text-xs text-red-600 dark:text-red-400">
+                <AlertCircle className="mr-1 h-3 w-3" />
+                {embeddingProgress.error_count} errors
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Error Display */}
+        {embeddingError && (
+          <div className="flex items-center text-xs text-red-600 dark:text-red-400">
+            <AlertCircle className="mr-1 h-3 w-3" />
+            {embeddingError}
+          </div>
+        )}
+
+        {/* Status Badge */}
+        {embeddingStatus === 'completed' && (
+          <div className="text-center">
+            <Badge color="success" size="sm">
+              Embeddings Updated
+            </Badge>
+          </div>
+        )}
       </div>
 
       {/* Actions */}

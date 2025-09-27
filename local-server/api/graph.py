@@ -26,47 +26,53 @@ _graph_cache_dataset_id = None
 def get_cached_graph_service() -> GraphService:
     """Get a cached GraphService instance, creating it if necessary."""
     global _cached_graph_service, _cached_session, _graph_service_lock, _graph_cache_dataset_id
-    
+
     if _graph_service_lock is None:
         _graph_service_lock = threading.Lock()
-    
+
     # Get current dataset info
     dataset_manager = get_dataset_manager()
     active_dataset = dataset_manager.get_active_dataset()
-    
+
     if not active_dataset:
         raise RuntimeError("No active dataset available for graph service")
-    
+
     current_dataset_id = active_dataset.id
-    
+    logger.debug(f"get_cached_graph_service called for dataset: {current_dataset_id}")
+
     # Check if we need to create/recreate the graph service
-    if (_cached_graph_service is None or 
+    if (_cached_graph_service is None or
         _graph_cache_dataset_id != current_dataset_id):
-        
+
         with _graph_service_lock:
             # Double-check pattern
-            if (_cached_graph_service is None or 
+            if (_cached_graph_service is None or
                 _graph_cache_dataset_id != current_dataset_id):
-                
-                logger.info(f"Creating cached GraphService for dataset: {active_dataset.title}")
-                
+
+                logger.info(f"CACHE MISS: Creating new GraphService for dataset: {active_dataset.title}")
+                logger.debug(f"Previous cached dataset: {_graph_cache_dataset_id}, Current: {current_dataset_id}")
+
                 # Clean up old session if exists
                 if _cached_session:
                     try:
                         _cached_session.close()
                     except:
                         pass
-                
+
                 # Create new session for the current dataset
                 session_local = get_current_session_local()
                 if not session_local:
                     raise RuntimeError("No session available for current dataset")
-                
+
                 _cached_session = session_local()
                 _cached_graph_service = GraphService(_cached_session)
                 _graph_cache_dataset_id = current_dataset_id
-                logger.info("GraphService cached successfully")
-    
+                logger.info(f"GraphService cached successfully with ID: {id(_cached_graph_service)}")
+            else:
+                logger.debug(f"CACHE HIT: Race condition avoided, using existing service: {id(_cached_graph_service)}")
+    else:
+        logger.debug(f"CACHE HIT: Returning existing GraphService: {id(_cached_graph_service)}")
+
     return _cached_graph_service
 
 def invalidate_graph_cache():

@@ -1,6 +1,6 @@
 from sqlalchemy import Column, String, Text, Integer, DateTime, ForeignKey, UniqueConstraint
 from sqlalchemy.dialects.sqlite import BLOB
-from sqlalchemy.orm import declarative_base, relationship
+from sqlalchemy.orm import declarative_base, relationship, backref
 import uuid
 import datetime
 
@@ -69,8 +69,8 @@ class StructureNode(Base):
     title = Column(String, nullable=False)
     definition = Column(Text, nullable=True)
     structural_predicate_id = Column(String, ForeignKey("predicates.id"), nullable=True)
-    title_embedding = Column(BLOB, nullable=True)
-    definition_embedding = Column(BLOB, nullable=True)
+    title_embedding = Column(BLOB, nullable=True, default=None)
+    definition_embedding = Column(BLOB, nullable=True, default=None)
     created_at = Column(DateTime, default=lambda: datetime.datetime.now(datetime.UTC))
     version = Column(Integer, default=1)
     last_modified = Column(
@@ -80,10 +80,10 @@ class StructureNode(Base):
     )
 
     # Self-referential relationship for hierarchy
-    parent = relationship("StructureNode", remote_side=[id], backref="children")
+    parent = relationship("StructureNode", remote_side=[id], backref=backref("children", lazy="noload"))
 
     # Relationship to predicates
-    structural_predicate_ref = relationship("Predicate", back_populates="structure_nodes")
+    structural_predicate_ref = relationship("Predicate", back_populates="structure_nodes", lazy="select")
 
 
 class StructureNodeLink(Base):
@@ -99,9 +99,9 @@ class StructureNodeLink(Base):
     created_at = Column(DateTime, default=lambda: datetime.datetime.now(datetime.UTC))
 
     # Relationships
-    source_node = relationship("StructureNode", foreign_keys=[source_node_id])
-    target_node = relationship("StructureNode", foreign_keys=[target_node_id])
-    predicate_ref = relationship("Predicate", back_populates="structure_node_links")
+    source_node = relationship("StructureNode", foreign_keys=[source_node_id], lazy="select")
+    target_node = relationship("StructureNode", foreign_keys=[target_node_id], lazy="select")
+    predicate_ref = relationship("Predicate", back_populates="structure_node_links", lazy="select")
 
     __table_args__ = (UniqueConstraint("source_node_id", "target_node_id", "predicate", name="_node_link_uc"),)
 

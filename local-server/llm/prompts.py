@@ -2,13 +2,6 @@
 Prompt templates and management for LLM interactions.
 """
 
-from typing import List
-
-from .models import (
-    ComponentTerm,
-    SelectedRelation
-)
-
 
 class DefinitionPromptTemplate:
     """Manages prompt templates for term definition suggestion"""

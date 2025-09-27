@@ -390,35 +390,60 @@ class Migration006(Migration):
     def _migrate_layers_to_structure_nodes(self, connection: Connection) -> None:
         """Migrate layer records to structure_nodes table."""
         logger.info("Migrating layers to structure_nodes...")
-        
-        # Use raw SQL with parameter substitution to avoid SQLAlchemy Row issues
+
+        # Check if layers table exists first
+        layers_exist = connection.execute(text("""
+            SELECT name FROM sqlite_master WHERE type='table' AND name='layers'
+        """)).fetchone()
+
+        if not layers_exist:
+            logger.info("No layers table found, skipping layer migration")
+            return
+
+        # Use raw SQL with explicit column specification to override default ID generation
         connection.execute(text("""
-            INSERT INTO structure_nodes (
-                id, node_type, parent_node_id, title, definition, 
+            INSERT OR IGNORE INTO structure_nodes (
+                id, node_type, parent_node_id, title, definition,
                 structural_predicate_id,
                 title_embedding, definition_embedding,
                 created_at, version, last_modified
             )
-            SELECT 
-                id, 'layer', NULL, title, definition, 
+            SELECT
+                id, 'layer', NULL, title, definition,
                 NULL,
                 title_embedding, definition_embedding,
                 created_at, version, last_modified
             FROM layers
         """))
 
+        # Log migration results
+        migrated_count = connection.execute(text("""
+            SELECT COUNT(*) FROM structure_nodes WHERE node_type = 'layer'
+        """)).scalar()
+        logger.info(f"Migrated {migrated_count} layers to structure_nodes")
+
     def _migrate_domains_to_structure_nodes(self, connection: Connection) -> None:
         """Migrate domain records to structure_nodes table."""
         logger.info("Migrating domains to structure_nodes...")
-        
+
+        # Check if domains table exists first
+        domains_exist = connection.execute(text("""
+            SELECT name FROM sqlite_master WHERE type='table' AND name='domains'
+        """)).fetchone()
+
+        if not domains_exist:
+            logger.info("No domains table found, skipping domain migration")
+            return
+
+        # Use raw SQL with explicit column specification to override default ID generation
         connection.execute(text("""
-            INSERT INTO structure_nodes (
+            INSERT OR IGNORE INTO structure_nodes (
                 id, node_type, parent_node_id, title, definition,
                 structural_predicate_id,
                 title_embedding, definition_embedding,
                 created_at, version, last_modified
             )
-            SELECT 
+            SELECT
                 id, 'domain', layer_id, title, definition,
                 primary_predicate_id,
                 title_embedding, definition_embedding,
@@ -426,34 +451,56 @@ class Migration006(Migration):
             FROM domains
         """))
 
+        # Log migration results
+        migrated_count = connection.execute(text("""
+            SELECT COUNT(*) FROM structure_nodes WHERE node_type = 'domain'
+        """)).scalar()
+        logger.info(f"Migrated {migrated_count} domains to structure_nodes")
+
     def _migrate_terms_to_structure_nodes(self, connection: Connection) -> None:
         """Migrate term records to structure_nodes table."""
         logger.info("Migrating terms to structure_nodes...")
-        
+
+        # Check if terms table exists first
+        terms_exist = connection.execute(text("""
+            SELECT name FROM sqlite_master WHERE type='table' AND name='terms'
+        """)).fetchone()
+
+        if not terms_exist:
+            logger.info("No terms table found, skipping term migration")
+            return
+
+        # Use raw SQL with explicit column specification to override default ID generation
         connection.execute(text("""
-            INSERT INTO structure_nodes (
+            INSERT OR IGNORE INTO structure_nodes (
                 id, node_type, parent_node_id, title, definition,
                 structural_predicate_id,
                 title_embedding, definition_embedding,
                 created_at, version, last_modified
             )
-            SELECT 
-                id, 
-                'term', 
-                CASE 
-                    WHEN parent_term_id IS NOT NULL THEN parent_term_id 
-                    ELSE domain_id 
+            SELECT
+                id,
+                'term',
+                CASE
+                    WHEN parent_term_id IS NOT NULL THEN parent_term_id
+                    ELSE domain_id
                 END as parent_node_id,
-                title, 
+                title,
                 definition,
                 NULL,
-                title_embedding, 
+                title_embedding,
                 definition_embedding,
-                created_at, 
-                version, 
+                created_at,
+                version,
                 last_modified
             FROM terms
         """))
+
+        # Log migration results
+        migrated_count = connection.execute(text("""
+            SELECT COUNT(*) FROM structure_nodes WHERE node_type = 'term'
+        """)).scalar()
+        logger.info(f"Migrated {migrated_count} terms to structure_nodes")
 
     def _migrate_term_relationships_to_structure_node_links(self, connection: Connection) -> None:
         """Migrate term_relationships records to structure_node_links table."""

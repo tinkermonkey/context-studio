@@ -214,14 +214,23 @@ export const useComprehensiveDefinition = (
       request: JSON.stringify(request || {}),
     }),
     queryFn: () => {
-      if (!request || !request.term) {
+      if (!request) {
         throw new Error(
-          "Complete request with term is required for comprehensive definition generation",
+          "Complete request is required for comprehensive definition generation",
+        );
+      }
+      // Support both legacy and new request formats
+      const term = (request as any).term || request.context_data?.term;
+      if (!term) {
+        throw new Error(
+          "Request must contain term in either legacy format or context_data",
         );
       }
       return llmService.generateComprehensiveDefinition(request);
     },
-    enabled: !!request && !!request.term && request.term.trim().length > 0,
+    enabled: !!request && (!!((request as any).term) || !!(request.context_data?.term)) &&
+             (((request as any).term && (request as any).term.trim().length > 0) ||
+              (request.context_data?.term && (request.context_data.term as string).trim().length > 0)),
     staleTime: 10 * 60 * 1000,
     gcTime: 30 * 60 * 1000,
     ...options,

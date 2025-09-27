@@ -31,20 +31,24 @@ class GraphService:
     def __init__(self, db_session: Session):
         """
         Initialize the combined graph service.
-        
+
         Args:
             db_session: SQLAlchemy database session
         """
         self.db_session = db_session
-        # Initialize network service for graph analytics
+
+        # Initialize services only once with shared graph building
         self.network_service = NetworkService(db_session)
-        
-        # Initialize SPARQL service for semantic queries
         self.sparql_service = SPARQLService(db_session)
-        self.network_service = NetworkService(db_session)
         self.structure_nodes = {}
         self.edges = {}
+
+        # Build graph data once and share it between services
         self._build_graph()
+
+        # Force network service to build its graph now (shared timing)
+        self.network_service._ensure_graph_built()
+
         logger.info("GraphService initialized with both NetworkX and SPARQL capabilities")
     
     

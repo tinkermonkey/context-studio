@@ -13,8 +13,8 @@ sys.path.append(
 
 from llm.service import LLMService
 from llm.models import (
-    GenericPipelineExecutionRequest,
-    GenericPipelineExecutionResponse,
+    PipelineExecutionRequest,
+    PipelineExecutionResponse,
     PipelineType,
     StreamingLLMResponse
 )
@@ -40,7 +40,7 @@ class TestGenericPipelineExecution:
     @pytest.fixture
     def sample_request(self):
         """Sample generic pipeline execution request"""
-        return GenericPipelineExecutionRequest(
+        return PipelineExecutionRequest(
             flavor_id="test-flavor",
             pipeline_type=PipelineType.SUGGEST_TERM_DEFINITION,
             context_data={
@@ -89,7 +89,7 @@ class TestGenericPipelineExecution:
                 result = await mock_llm_service.execute_pipeline_flavor(sample_request)
         
         # Assertions
-        assert isinstance(result, GenericPipelineExecutionResponse)
+        assert isinstance(result, PipelineExecutionResponse)
         assert result.response_content == "Test response content"
         assert result.execution_id == "exec-123"
         assert result.flavor_id == "test-flavor-id"
@@ -293,7 +293,7 @@ class TestGenericPipelineExecution:
     def test_generic_pipeline_request_validation(self):
         """Test GenericPipelineExecutionRequest model validation"""
         # Valid request
-        request = GenericPipelineExecutionRequest(
+        request = PipelineExecutionRequest(
             flavor_id="test-flavor",
             pipeline_type=PipelineType.SUGGEST_TERM_DEFINITION,
             context_data={"term": "test"}
@@ -305,7 +305,7 @@ class TestGenericPipelineExecution:
     def test_generic_pipeline_request_empty_context_validation(self):
         """Test GenericPipelineExecutionRequest validation with empty context_data"""
         with pytest.raises(ValueError) as exc_info:
-            GenericPipelineExecutionRequest(
+            PipelineExecutionRequest(
                 flavor_id="test-flavor",
                 pipeline_type=PipelineType.SUGGEST_TERM_DEFINITION,
                 context_data={}
@@ -315,7 +315,7 @@ class TestGenericPipelineExecution:
 
     def test_generic_pipeline_response_creation(self):
         """Test GenericPipelineExecutionResponse model creation"""
-        response = GenericPipelineExecutionResponse(
+        response = PipelineExecutionResponse(
             response_content="Test response",
             execution_id="exec-123",
             flavor_id="flavor-456",

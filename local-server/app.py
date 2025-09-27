@@ -7,7 +7,7 @@ from contextlib import asynccontextmanager
 from api import graph, datasets, nlp_analysis, schema, predicates, llm, pipeline_flavors
 from api import reference, config, structure_nodes, version_management, sync, llm_traceability
 from api import changeset_management, proposal_management, identity_management
-from api import conflict_resolution, analytics, incremental_sync, optimization
+from api import conflict_resolution, analytics, incremental_sync, optimization, embeddings
 from api.admin import service_monitoring
 from schema_org import api as schema_org_api
 from api.graph import get_cached_graph_service, invalidate_graph_cache
@@ -226,6 +226,10 @@ def create_app(dataset_id=None, engine=None, session_local=None, service_factory
     
     # Phase 5: Enterprise-scale optimization features
     app.include_router(optimization.router, tags=["optimization"])
+
+    # Embeddings management
+    app.include_router(embeddings.router, tags=["embeddings"])
+
     return app
 
 # Default app for production

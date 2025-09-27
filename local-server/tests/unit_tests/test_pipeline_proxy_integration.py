@@ -24,9 +24,10 @@ class TestPipelineProxyIntegration:
 
     @patch("nlp.pipeline.get_settings")
     @patch("nlp.pipeline.get_proxy_manager")
+    @patch("nlp.pipeline.get_model_downloader")
     @patch("nlp.pipeline.spacy.load")
     def test_pipeline_init_with_proxy_disabled(
-        self, mock_spacy_load, mock_get_proxy_manager, mock_get_settings
+        self, mock_spacy_load, mock_get_model_downloader, mock_get_proxy_manager, mock_get_settings
     ):
         """Test pipeline initialization when proxy is disabled"""
         # Mock settings
@@ -35,13 +36,23 @@ class TestPipelineProxyIntegration:
             "concepcy": False,
             "spacy_dbpedia_spotlight": False,
         }
-        mock_settings.s2v_config = {"abs_path": "/test/path"}
+        # Mock nlp config properly
+        mock_nlp_config = Mock()
+        mock_nlp_config.sense2vec_path = "/test/path"
+        mock_nlp_config.auto_download_models = False
+        mock_settings.nlp = mock_nlp_config
         mock_get_settings.return_value = mock_settings
 
         # Mock proxy manager
         mock_proxy_manager = Mock()
         mock_proxy_manager.is_proxy_enabled.return_value = False
         mock_get_proxy_manager.return_value = mock_proxy_manager
+
+        # Mock model downloader
+        mock_model_downloader = Mock()
+        mock_model_downloader.ensure_spacy_model.return_value = (True, None)
+        mock_model_downloader.ensure_sense2vec_model.return_value = (True, None)
+        mock_get_model_downloader.return_value = mock_model_downloader
 
         # Mock spaCy
         mock_nlp = Mock()
@@ -56,9 +67,10 @@ class TestPipelineProxyIntegration:
 
     @patch("nlp.pipeline.get_settings")
     @patch("nlp.pipeline.get_proxy_manager")
+    @patch("nlp.pipeline.get_model_downloader")
     @patch("nlp.pipeline.spacy.load")
     def test_pipeline_init_with_proxy_enabled(
-        self, mock_spacy_load, mock_get_proxy_manager, mock_get_settings
+        self, mock_spacy_load, mock_get_model_downloader, mock_get_proxy_manager, mock_get_settings
     ):
         """Test pipeline initialization when proxy is enabled"""
         # Mock settings
@@ -67,7 +79,11 @@ class TestPipelineProxyIntegration:
             "concepcy": True,
             "spacy_dbpedia_spotlight": False,
         }
-        mock_settings.s2v_config = {"abs_path": "/test/path"}
+        # Mock nlp config properly
+        mock_nlp_config = Mock()
+        mock_nlp_config.sense2vec_path = "/test/path"
+        mock_nlp_config.auto_download_models = False
+        mock_settings.nlp = mock_nlp_config
         mock_settings.get_concepcy_config.return_value = {"test": "config"}
         mock_get_settings.return_value = mock_settings
 
@@ -76,6 +92,12 @@ class TestPipelineProxyIntegration:
         mock_proxy_manager.is_proxy_enabled.return_value = True
         mock_proxy_manager.start_proxy.return_value = True
         mock_get_proxy_manager.return_value = mock_proxy_manager
+
+        # Mock model downloader
+        mock_model_downloader = Mock()
+        mock_model_downloader.ensure_spacy_model.return_value = (True, None)
+        mock_model_downloader.ensure_sense2vec_model.return_value = (True, None)
+        mock_get_model_downloader.return_value = mock_model_downloader
 
         # Mock spaCy
         mock_nlp = Mock()
@@ -333,9 +355,10 @@ class TestPipelineProxyIntegration:
 
     @patch("nlp.pipeline.get_settings")
     @patch("nlp.pipeline.get_proxy_manager")
+    @patch("nlp.pipeline.get_model_downloader")
     @patch("nlp.pipeline.spacy.load")
     def test_reload_pipeline(
-        self, mock_spacy_load, mock_get_proxy_manager, mock_get_settings
+        self, mock_spacy_load, mock_get_model_downloader, mock_get_proxy_manager, mock_get_settings
     ):
         """Test pipeline reload functionality"""
         # Mock settings
@@ -344,7 +367,11 @@ class TestPipelineProxyIntegration:
             "concepcy": False,
             "spacy_dbpedia_spotlight": False,
         }
-        mock_settings.s2v_config = {"abs_path": "/test/path"}
+        # Mock nlp config properly
+        mock_nlp_config = Mock()
+        mock_nlp_config.sense2vec_path = "/test/path"
+        mock_nlp_config.auto_download_models = False
+        mock_settings.nlp = mock_nlp_config
         mock_settings.get_concepcy_config.return_value = {"test": "config"}
         mock_get_settings.return_value = mock_settings
 
@@ -352,6 +379,12 @@ class TestPipelineProxyIntegration:
         mock_proxy_manager = Mock()
         mock_proxy_manager.is_proxy_enabled.return_value = False
         mock_get_proxy_manager.return_value = mock_proxy_manager
+
+        # Mock model downloader
+        mock_model_downloader = Mock()
+        mock_model_downloader.ensure_spacy_model.return_value = (True, None)
+        mock_model_downloader.ensure_sense2vec_model.return_value = (True, None)
+        mock_get_model_downloader.return_value = mock_model_downloader
 
         # Mock spaCy
         mock_nlp = Mock()
@@ -368,8 +401,9 @@ class TestPipelineProxyIntegration:
 
     @patch("nlp.pipeline.get_settings")
     @patch("nlp.pipeline.get_proxy_manager")
+    @patch("nlp.pipeline.get_model_downloader")
     @patch("nlp.pipeline.spacy.load")
-    def test_shutdown(self, mock_spacy_load, mock_get_proxy_manager, mock_get_settings):
+    def test_shutdown(self, mock_spacy_load, mock_get_model_downloader, mock_get_proxy_manager, mock_get_settings):
         """Test pipeline shutdown functionality"""
         # Mock settings
         mock_settings = Mock()
@@ -377,7 +411,11 @@ class TestPipelineProxyIntegration:
             "concepcy": False,
             "spacy_dbpedia_spotlight": False,
         }
-        mock_settings.s2v_config = {"abs_path": "/test/path"}
+        # Mock nlp config properly
+        mock_nlp_config = Mock()
+        mock_nlp_config.sense2vec_path = "/test/path"
+        mock_nlp_config.auto_download_models = False
+        mock_settings.nlp = mock_nlp_config
         mock_settings.get_concepcy_config.return_value = {"test": "config"}
         mock_get_settings.return_value = mock_settings
 
@@ -385,6 +423,12 @@ class TestPipelineProxyIntegration:
         mock_proxy_manager = Mock()
         mock_proxy_manager.is_proxy_enabled.return_value = False
         mock_get_proxy_manager.return_value = mock_proxy_manager
+
+        # Mock model downloader
+        mock_model_downloader = Mock()
+        mock_model_downloader.ensure_spacy_model.return_value = (True, None)
+        mock_model_downloader.ensure_sense2vec_model.return_value = (True, None)
+        mock_get_model_downloader.return_value = mock_model_downloader
 
         # Mock spaCy
         mock_nlp = Mock()

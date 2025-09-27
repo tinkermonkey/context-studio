@@ -79,14 +79,14 @@ export const NlpAnalysisPanel: React.FC<NlpAnalysisPanelProps> = ({
 
   // Debounce text changes after analysis
   useEffect(() => {
-    if (!hasAnalyzed) return;
+    if (!hasAnalyzed || pendingText === debouncedText) return;
     const handler = setTimeout(() => {
       setDebouncedText(pendingText);
       refetch();
       apiLogger.info("NLP analysis re-triggered due to text change");
     }, 1000);
     return () => clearTimeout(handler);
-  }, [pendingText, hasAnalyzed, refetch]);
+  }, [pendingText, hasAnalyzed, debouncedText, refetch]);
 
   // Error handling
   useEffect(() => {

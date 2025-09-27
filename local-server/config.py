@@ -75,6 +75,10 @@ class NLPConfig(BaseModel):
     edge_weight_filter: float = Field(default=2.0, ge=0.0, description="Minimum edge weight for filtering")
     request_timeout: int = Field(default=30, ge=1, description="Request timeout in seconds")
 
+    # Model auto-download settings
+    auto_download_models: bool = Field(default=True, description="Automatically download missing NLP models on startup")
+    download_timeout: int = Field(default=600, ge=60, le=1800, description="Timeout for model downloads in seconds")
+
 
 class ReferenceSourceRateLimitConfig(BaseModel):
     """Rate limiting configuration for a specific reference source"""

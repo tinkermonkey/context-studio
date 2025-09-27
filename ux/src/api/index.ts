@@ -16,6 +16,7 @@ export * from "./services/nlpReference";
 export * from "./services/nlp";
 export * from "./services/llm";
 export * from "./services/llmTraceability";
+export * from "./services/pipelineExecution";
 
 // Hooks
 export * from "./hooks/predicates";
@@ -27,6 +28,7 @@ export * from "./hooks/pipelineFlavors";
 export * from "./hooks/nlpReference";
 export * from "./hooks/nlp";
 export * from "./hooks/llm";
+export * from "./hooks/pipelineExecution";
 
 // Traceability components
 export * from "../components/llm_traceability";

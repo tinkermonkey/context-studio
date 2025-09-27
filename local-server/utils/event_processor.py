@@ -213,7 +213,7 @@ class EventProcessor:
             # Get Database Manager metrics
             db_metrics = self.db_manager._get_metrics_summary()
             
-            self.logger.info(
+            self.logger.debug(
                 f"[EventProcessor] Performance: "
                 f"events_processed={self._events_processed}, "
                 f"db_queries={db_metrics.get('total_queries_executed', 0)}, "

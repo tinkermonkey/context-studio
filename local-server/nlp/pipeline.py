@@ -9,6 +9,7 @@ from typing import Optional
 from config import get_settings, get_config_manager
 from utils.logger import get_logger
 from nlp.proxy_manager import get_proxy_manager
+from nlp.model_downloader import get_model_downloader
 
 logger = get_logger(__name__)
 
@@ -49,6 +50,18 @@ class NLPPipeline:
                 logger.error(self._error)
                 return
         
+        # Ensure spaCy model is available (download if necessary)
+        model_downloader = get_model_downloader()
+        success, error = model_downloader.ensure_spacy_model(
+            self.model_name,
+            auto_download=self.settings.nlp.auto_download_models,
+            timeout=self.settings.nlp.download_timeout
+        )
+        if not success:
+            self._error = f"spaCy model {self.model_name} unavailable: {error}"
+            logger.error(self._error)
+            return
+
         try:
             logger.info("Loading spaCy model...")
             self.nlp = spacy.load(self.model_name)
@@ -147,12 +160,22 @@ class NLPPipeline:
         try:
             settings = get_settings()
             logger.info("Adding sense2vec component...")
-            
+
             # Check if the _s2v extension already exists
             if spacy.tokens.Doc.has_extension("_s2v") or "sense2vec" in self.nlp.pipe_names:
                 logger.debug("sense2vec component or _s2v extension already exists, skipping initialization")
                 return  # Skip initialization if already exists
-            
+
+            # Ensure sense2vec model is available (download if necessary)
+            model_downloader = get_model_downloader()
+            success, error = model_downloader.ensure_sense2vec_model(
+                settings.nlp.sense2vec_path,
+                auto_download=settings.nlp.auto_download_models
+            )
+            if not success:
+                logger.warning(f"sense2vec model unavailable, skipping component: {error}")
+                return  # Skip sense2vec component if model is not available
+
             self.s2v = self.nlp.add_pipe("sense2vec")
             # Load the S2V dataset
             logger.info(f"Loading sense2vec model from {settings.nlp.sense2vec_path}...")
@@ -244,7 +267,7 @@ def invalidate_pipeline():
         if _pipeline_instance:
             logger.info("Invalidating NLP pipeline due to configuration change")
             try:
-                _pipeline_instance.cleanup()
+                _pipeline_instance.shutdown()
             except Exception as e:
                 logger.warning(f"Error during pipeline cleanup: {e}")
             _pipeline_instance = None

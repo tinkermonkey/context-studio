@@ -32,7 +32,7 @@ from api.utils.node_conversion import (
     to_node_out, to_node_link_out, nodes_to_paginated_response,
     convert_api_node_type_to_db, uuid_to_str
 )
-from api.dependencies.structure_nodes import get_node_service, get_node_link_service
+from api.dependencies.structure_nodes import get_node_service, get_node_service_simple, get_node_link_service
 from api.api_errors import conflict_error_response
 
 router = APIRouter(prefix="/api/structure_nodes", tags=["structure_nodes"])
@@ -83,7 +83,7 @@ def list_nodes(
     skip: int = Query(0, ge=0, description="Number of structure_nodes to skip"),
     limit: int = Query(50, ge=1, le=100, description="Maximum number of structure_nodes to return"),
     sort_by: str = Query("title", pattern="^(title|created_at)$", description="Sort field"),
-    node_service: NodeService = Depends(get_node_service)
+    node_service: NodeService = Depends(get_node_service_simple)
 ):
     """
     List structure_nodes with filtering and pagination.
@@ -92,29 +92,58 @@ def list_nodes(
     and sorting. This replaces the separate endpoints for layers, domains, and terms.
     """
     try:
+        import time
+        from utils.logger import get_logger
+
+        logger = get_logger(__name__)
+        request_start = time.time()
+
         # Convert API node type to database node type
         db_node_type = None
         if node_type:
             db_node_type = convert_api_node_type_to_db(node_type.value)
-        
+
         # Convert UUID to string for parent_node_id
         parent_node_id_str = str(parent_node_id) if parent_node_id else None
-        
+
+        setup_time = time.time() - request_start
+        logger.debug(f"API setup time: {setup_time*1000:.2f}ms")
+
         # Get total count using NodeService
+        count_start = time.time()
         total = node_service.count_nodes(
             node_type=db_node_type,
             parent_node_id=parent_node_id_str
         )
-        
+        count_time = time.time() - count_start
+        logger.debug(f"Count query time: {count_time*1000:.2f}ms")
+
         # Get nodes using NodeService with pagination
+        list_start = time.time()
         structure_nodes = node_service.list_nodes(
             node_type=db_node_type,
             parent_node_id=parent_node_id_str,
             skip=skip,
             limit=limit
         )
-        
-        return PaginatedNodesResponse(**nodes_to_paginated_response(structure_nodes, total, skip, limit))
+        list_time = time.time() - list_start
+        logger.debug(f"List query time: {list_time*1000:.2f}ms")
+
+        # Convert to response format
+        serialization_start = time.time()
+        response_data = nodes_to_paginated_response(structure_nodes, total, skip, limit)
+        serialization_time = time.time() - serialization_start
+        logger.debug(f"Response serialization time: {serialization_time*1000:.2f}ms")
+
+        pydantic_start = time.time()
+        result = PaginatedNodesResponse(**response_data)
+        pydantic_time = time.time() - pydantic_start
+        logger.debug(f"Pydantic model time: {pydantic_time*1000:.2f}ms")
+
+        total_time = time.time() - request_start
+        logger.debug(f"Total API endpoint time: {total_time*1000:.2f}ms (skip={skip})")
+
+        return result
         
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Internal server error: {str(e)}")
@@ -266,7 +295,7 @@ def delete_node_link(
 @router.get("/{node_id}", response_model=NodeOut)
 def get_node(
     node_id: UUID = Path(..., description="The ID of the structure_node to retrieve"),
-    node_service: NodeService = Depends(get_node_service)
+    node_service: NodeService = Depends(get_node_service_simple)
 ):
     """
     Get a specific structure_node by ID.
@@ -416,7 +445,7 @@ def move_nodes(
 @router.get("/{node_id}/children", response_model=List[NodeOut])
 def get_node_children(
     node_id: UUID = Path(..., description="The ID of the parent structure_node"),
-    node_service: NodeService = Depends(get_node_service)
+    node_service: NodeService = Depends(get_node_service_simple)
 ):
     """
     Get all direct children of a structure_node.
@@ -436,7 +465,7 @@ def get_node_children(
 @router.get("/{node_id}/ancestors", response_model=List[NodeOut])
 def get_node_ancestors(
     node_id: UUID = Path(..., description="The ID of the structure_node"),
-    node_service: NodeService = Depends(get_node_service)
+    node_service: NodeService = Depends(get_node_service_simple)
 ):
     """
     Get all ancestors of a structure_node up to the root.

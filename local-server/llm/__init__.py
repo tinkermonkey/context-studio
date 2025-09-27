@@ -9,8 +9,8 @@ from .service import LLMService
 from .models import (
     LLMHealthResponse,
     LLMErrorResponse,
-    GenericPipelineExecutionRequest,
-    GenericPipelineExecutionResponse
+    PipelineExecutionRequest,
+    PipelineExecutionResponse
 )
 from .exceptions import (
     LLMError,
@@ -24,8 +24,8 @@ __all__ = [
     "LLMService",
     "LLMHealthResponse",
     "LLMErrorResponse",
-    "GenericPipelineExecutionRequest",
-    "GenericPipelineExecutionResponse",
+    "PipelineExecutionRequest",
+    "PipelineExecutionResponse",
     "LLMError",
     "LLMConfigurationError",
     "LLMProcessingError",

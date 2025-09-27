@@ -7,21 +7,33 @@
 import { BaseService } from "./base";
 import { ENDPOINTS } from "../config";
 import type { components } from "@/api/client/types";
+import {
+  pipelineExecutionService,
+  type LegacyTermDefinitionRequest,
+  type LegacyDomainDefinitionRequest,
+  type LegacyLayerDefinitionRequest,
+} from "./pipelineExecution";
 
 // Type aliases for better readability - using the latest OpenAPI schema
 export type DefinitionSuggestionRequest =
-  components["schemas"]["DefinitionSuggestionRequest"];
+  components["schemas"]["GenericPipelineExecutionRequest"];
 export type DefinitionSuggestionResponse =
-  components["schemas"]["DefinitionSuggestionResponse"];
+  components["schemas"]["GenericPipelineExecutionResponse"];
 export type DomainDefinitionRequest =
-  components["schemas"]["DomainDefinitionRequest"];
+  components["schemas"]["GenericPipelineExecutionRequest"];
 export type DomainDefinitionResponse =
-  components["schemas"]["DomainDefinitionResponse"];
+  components["schemas"]["GenericPipelineExecutionResponse"];
 export type LayerDefinitionRequest =
-  components["schemas"]["LayerDefinitionRequest"];
+  components["schemas"]["GenericPipelineExecutionRequest"];
 export type LayerDefinitionResponse =
-  components["schemas"]["LayerDefinitionResponse"];
-export type ComponentTerm = components["schemas"]["ComponentTerm"];
+  components["schemas"]["GenericPipelineExecutionResponse"];
+
+// Legacy compatibility: Define ComponentTerm locally since it may not exist in new schema
+export interface ComponentTerm {
+  title: string;
+  definition?: string;
+  relationship_predicate?: string;
+}
 
 // Legacy interface for backward compatibility
 export interface SelectedRelation {
@@ -51,6 +63,14 @@ export interface LLMHealthResponse {
 
 export class LLMService extends BaseService {
   /**
+   * Execute a pipeline using the new generic execution system
+   */
+  private async executePipeline(
+    request: DefinitionSuggestionRequest,
+  ): Promise<DefinitionSuggestionResponse> {
+    return pipelineExecutionService.executePipeline(request);
+  }
+  /**
    * Generate a term definition suggestion based on provided context using LLM
    * @param request The term definition suggestion request containing term and context
    * @returns Term definition suggestion with reasoning
@@ -58,18 +78,35 @@ export class LLMService extends BaseService {
   async suggestTermDefinition(
     request: DefinitionSuggestionRequest,
   ): Promise<DefinitionSuggestionResponse> {
-    this.validateRequired(request.term, "term");
-    const sanitizedTerm = this.sanitizeString(request.term, "term");
+    this.validateRequired(request.pipeline_type, "pipeline_type");
+    this.validateRequired(request.flavor_id, "flavor_id");
+    this.validateRequired(request.context_data, "context_data");
 
     return this.withErrorContext(async () => {
-      const response = await this.postResource<LLMSuccessResponse>(
-        `${ENDPOINTS.LLM}/suggest_term_definition`,
-        {
-          ...request,
-          term: sanitizedTerm,
-        },
-      );
-      return response.data;
+      // For backwards compatibility, support legacy request format
+      if ((request as any).term) {
+        // Legacy request format - convert to new format
+        const legacyRequest = request as any;
+        const newRequest: DefinitionSuggestionRequest = {
+          pipeline_type: 'suggest_term_definition',
+          flavor_id: legacyRequest.flavor || 'default',
+          context_data: {
+            term: this.sanitizeString(legacyRequest.term, "term"),
+            domain_title: legacyRequest.domain_title,
+            domain_definition: legacyRequest.domain_definition,
+            parent_term_title: legacyRequest.parent_term_title,
+            parent_term_definition: legacyRequest.parent_term_definition,
+            parent_relationship_predicate: legacyRequest.parent_relationship_predicate,
+            component_terms: legacyRequest.component_terms,
+            dbpedia_context: legacyRequest.dbpedia_context,
+            wikidata_context: legacyRequest.wikidata_context,
+          },
+        };
+        return this.executePipeline(newRequest);
+      }
+
+      // New format - use directly
+      return this.executePipeline(request);
     }, "suggesting term definition");
   }
 
@@ -81,21 +118,27 @@ export class LLMService extends BaseService {
   async suggestDomainDefinition(
     request: DomainDefinitionRequest,
   ): Promise<DomainDefinitionResponse> {
-    this.validateRequired(request.domain_title, "domain_title");
-    const sanitizedTitle = this.sanitizeString(
-      request.domain_title,
-      "domain_title",
-    );
-
     return this.withErrorContext(async () => {
-      const response = await this.postResource<{
-        success: boolean;
-        data: DomainDefinitionResponse;
-      }>(`${ENDPOINTS.LLM}/suggest_domain_definition`, {
-        ...request,
-        domain_title: sanitizedTitle,
-      });
-      return response.data;
+      // For backwards compatibility, support legacy request format
+      if ((request as any).domain_title) {
+        // Legacy request format - convert to new format
+        const legacyRequest = request as any;
+        const newRequest: DomainDefinitionRequest = {
+          pipeline_type: 'suggest_domain_definition',
+          flavor_id: legacyRequest.flavor || 'default',
+          context_data: {
+            domain_title: this.sanitizeString(legacyRequest.domain_title, "domain_title"),
+            context: legacyRequest.context,
+          },
+        };
+        return this.executePipeline(newRequest);
+      }
+
+      // New format - use directly
+      this.validateRequired(request.pipeline_type, "pipeline_type");
+      this.validateRequired(request.flavor_id, "flavor_id");
+      this.validateRequired(request.context_data, "context_data");
+      return this.executePipeline(request);
     }, "suggesting domain definition");
   }
 
@@ -107,21 +150,27 @@ export class LLMService extends BaseService {
   async suggestLayerDefinition(
     request: LayerDefinitionRequest,
   ): Promise<LayerDefinitionResponse> {
-    this.validateRequired(request.layer_title, "layer_title");
-    const sanitizedTitle = this.sanitizeString(
-      request.layer_title,
-      "layer_title",
-    );
-
     return this.withErrorContext(async () => {
-      const response = await this.postResource<{
-        success: boolean;
-        data: LayerDefinitionResponse;
-      }>(`${ENDPOINTS.LLM}/suggest_layer_definition`, {
-        ...request,
-        layer_title: sanitizedTitle,
-      });
-      return response.data;
+      // For backwards compatibility, support legacy request format
+      if ((request as any).layer_title) {
+        // Legacy request format - convert to new format
+        const legacyRequest = request as any;
+        const newRequest: LayerDefinitionRequest = {
+          pipeline_type: 'suggest_layer_definition',
+          flavor_id: legacyRequest.flavor || 'default',
+          context_data: {
+            layer_title: this.sanitizeString(legacyRequest.layer_title, "layer_title"),
+            context: legacyRequest.context,
+          },
+        };
+        return this.executePipeline(newRequest);
+      }
+
+      // New format - use directly
+      this.validateRequired(request.pipeline_type, "pipeline_type");
+      this.validateRequired(request.flavor_id, "flavor_id");
+      this.validateRequired(request.context_data, "context_data");
+      return this.executePipeline(request);
     }, "suggesting layer definition");
   }
 
@@ -159,7 +208,7 @@ export class LLMService extends BaseService {
   async generateSimpleTermDefinition(
     term: string,
   ): Promise<DefinitionSuggestionResponse> {
-    return this.suggestTermDefinition({ term });
+    return this.suggestTermDefinition({ term } as any);
   }
 
   /**
@@ -178,7 +227,7 @@ export class LLMService extends BaseService {
       term,
       domain_title: domainTitle,
       domain_definition: domainDefinition,
-    });
+    } as any);
   }
 
   /**
@@ -200,7 +249,7 @@ export class LLMService extends BaseService {
       parent_term_title: parentTermTitle,
       parent_term_definition: parentTermDefinition,
       parent_relationship_predicate: relationshipPredicate,
-    });
+    } as any);
   }
 
   /**
@@ -216,7 +265,7 @@ export class LLMService extends BaseService {
     return this.suggestTermDefinition({
       term,
       component_terms: componentTerms,
-    });
+    } as any);
   }
 
   /**
@@ -227,7 +276,7 @@ export class LLMService extends BaseService {
   async generateSimpleDomainDefinition(
     domainTitle: string,
   ): Promise<DomainDefinitionResponse> {
-    return this.suggestDomainDefinition({ domain_title: domainTitle });
+    return this.suggestDomainDefinition({ domain_title: domainTitle } as any);
   }
 
   /**
@@ -238,7 +287,7 @@ export class LLMService extends BaseService {
   async generateSimpleLayerDefinition(
     layerTitle: string,
   ): Promise<LayerDefinitionResponse> {
-    return this.suggestLayerDefinition({ layer_title: layerTitle });
+    return this.suggestLayerDefinition({ layer_title: layerTitle } as any);
   }
 
   /**
@@ -324,7 +373,7 @@ export class LLMService extends BaseService {
       term,
       dbpedia_context: dbpediaContext,
       wikidata_context: wikidataContext,
-    });
+    } as any);
   }
 
   /**

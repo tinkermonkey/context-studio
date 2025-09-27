@@ -341,7 +341,18 @@ class NodeService:
         Returns:
             List of StructureNode instances
         """
-        query = self.db.query(StructureNode)
+        # Defer expensive vector columns for list operations to improve performance
+        from sqlalchemy.orm import defer
+        import time
+        from utils.logger import get_logger
+
+        logger = get_logger(__name__)
+        start_time = time.time()
+
+        query = self.db.query(StructureNode).options(
+            defer(StructureNode.title_embedding),
+            defer(StructureNode.definition_embedding)
+        )
 
         if node_type:
             query = query.filter(StructureNode.node_type == node_type)
@@ -349,7 +360,17 @@ class NodeService:
         if parent_node_id:
             query = query.filter(StructureNode.parent_node_id == parent_node_id)
 
-        return query.order_by(StructureNode.title).offset(skip).limit(limit).all()
+        query = query.order_by(StructureNode.title).offset(skip).limit(limit)
+
+        query_build_time = time.time() - start_time
+        logger.debug(f"Query build time: {query_build_time*1000:.2f}ms")
+
+        execution_start = time.time()
+        result = query.all()
+        execution_time = time.time() - execution_start
+        logger.debug(f"Query execution time: {execution_time*1000:.2f}ms for {len(result)} nodes (skip={skip})")
+
+        return result
 
     def count_nodes(
         self, node_type: Optional[NodeType] = None, parent_node_id: Optional[str] = None

@@ -6,8 +6,8 @@ import json
 from api.dependencies.llm_services import get_default_llm_service
 from llm.service import LLMService
 from llm.models import (
-    GenericPipelineExecutionRequest,
-    GenericPipelineExecutionResponse,
+    PipelineExecutionRequest,
+    PipelineExecutionResponse,
     LLMHealthResponse,
     LLMErrorResponse,
     StreamingLLMResponse
@@ -87,7 +87,7 @@ def handle_llm_error(e: Exception) -> HTTPException:
 
 
 @router.post("/llm/execute_pipeline", 
-            response_model=GenericPipelineExecutionResponse,
+            response_model=PipelineExecutionResponse,
             responses={
                 400: {"model": LLMErrorResponse},
                 422: {"model": LLMErrorResponse, "description": "Request validation failure"},
@@ -96,7 +96,7 @@ def handle_llm_error(e: Exception) -> HTTPException:
                 504: {"model": LLMErrorResponse}
             })
 async def execute_pipeline(
-    request: GenericPipelineExecutionRequest,
+    request: PipelineExecutionRequest,
     llm_service: LLMService = Depends(get_default_llm_service)
 ):
     """
@@ -146,7 +146,7 @@ async def execute_pipeline(
 
 @router.post("/llm/execute_pipeline/stream")
 async def execute_pipeline_stream(
-    request: GenericPipelineExecutionRequest,
+    request: PipelineExecutionRequest,
     llm_service: LLMService = Depends(get_default_llm_service)
 ):
     """

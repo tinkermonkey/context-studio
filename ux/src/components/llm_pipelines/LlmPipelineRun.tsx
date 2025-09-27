@@ -9,9 +9,6 @@ import {
 } from "@/api/hooks/llm";
 import type {
   PipelineType,
-  DefinitionSuggestionRequest,
-  DomainDefinitionRequest,
-  LayerDefinitionRequest,
   DefinitionSuggestionResponse,
   DomainDefinitionResponse,
   LayerDefinitionResponse,
@@ -124,23 +121,23 @@ export const LlmPipelineRun: React.FC<LlmPipelineRunProps> = ({
 
       try {
         let data: any;
-        const requestWithFlavor = { ...context, flavor: flavorId };
+
+        // Construct the new generic pipeline execution request format
+        const pipelineRequest = {
+          pipeline_type: pipelineType,
+          flavor_id: flavorId,
+          context_data: context,
+        };
 
         switch (pipelineType) {
           case "suggest_term_definition":
-            data = await termMutation.mutateAsync(
-              requestWithFlavor as DefinitionSuggestionRequest,
-            );
+            data = await termMutation.mutateAsync(pipelineRequest as any);
             break;
           case "suggest_domain_definition":
-            data = await domainMutation.mutateAsync(
-              requestWithFlavor as DomainDefinitionRequest,
-            );
+            data = await domainMutation.mutateAsync(pipelineRequest as any);
             break;
           case "suggest_layer_definition":
-            data = await layerMutation.mutateAsync(
-              requestWithFlavor as LayerDefinitionRequest,
-            );
+            data = await layerMutation.mutateAsync(pipelineRequest as any);
             break;
           default:
             throw new Error(`Unsupported pipeline type: ${pipelineType}`);

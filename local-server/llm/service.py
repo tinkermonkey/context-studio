@@ -6,6 +6,7 @@ from typing import Optional, Dict, Any, AsyncGenerator
 import os
 import time
 import asyncio
+import string
 from langchain.chat_models import init_chat_model
 from langchain.schema import HumanMessage, SystemMessage
 from openai import RateLimitError, APITimeoutError, APIError, AuthenticationError
@@ -14,8 +15,8 @@ from .models import (
     PipelineType,
     StreamingLLMResponse,
     PipelineFlavor,
-    GenericPipelineExecutionRequest,
-    GenericPipelineExecutionResponse
+    PipelineExecutionRequest,
+    PipelineExecutionResponse
 )
 from .exceptions import (
     LLMConfigurationError, 
@@ -77,7 +78,7 @@ class LLMService:
     
     
     
-    async def execute_pipeline_flavor(self, request: GenericPipelineExecutionRequest) -> GenericPipelineExecutionResponse:
+    async def execute_pipeline_flavor(self, request: PipelineExecutionRequest) -> PipelineExecutionResponse:
         """Generic pipeline execution method with arbitrary context data"""
         start_time = time.time()
         execution_id = "unknown"
@@ -142,7 +143,7 @@ class LLMService:
             
             self.logger.info(f"Successfully executed generic pipeline - Type: {request.pipeline_type}, Flavor: '{flavor.title}', execution: {execution_id}")
             
-            return GenericPipelineExecutionResponse(
+            return PipelineExecutionResponse(
                 response_content=response.content,
                 execution_id=execution_id,
                 flavor_id=flavor.id,
@@ -216,7 +217,7 @@ class LLMService:
             )
             raise LLMProcessingError(f"Failed to execute pipeline: {str(e)}")
 
-    async def execute_pipeline_flavor_streaming(self, request: GenericPipelineExecutionRequest) -> AsyncGenerator[StreamingLLMResponse, None]:
+    async def execute_pipeline_flavor_streaming(self, request: PipelineExecutionRequest) -> AsyncGenerator[StreamingLLMResponse, None]:
         """Generic streaming pipeline execution method with arbitrary context data"""
         execution_id = "unknown"
         
@@ -339,7 +340,7 @@ class LLMService:
     def _render_user_prompt_generic(self, template: str, context_data: Dict[str, Any]) -> str:
         """Render user prompt template with arbitrary context data"""
         self.logger.debug("Rendering generic user prompt template with context data")
-        
+
         try:
             # Create a safe copy of context_data with None values replaced
             safe_context = {}
@@ -357,16 +358,26 @@ class LLMService:
                     safe_context[key] = str(value) if value else "Not specified"
                 else:
                     safe_context[key] = str(value)
-            
-            # Render the template with the safe context data
-            rendered_prompt = template.format(**safe_context)
-            
+
+            # Use a custom formatter that provides default values for missing variables
+            class SafeFormatter(string.Formatter):
+                def get_value(self, key, args, kwargs):
+                    if isinstance(key, str):
+                        try:
+                            return kwargs[key]
+                        except KeyError:
+                            # Return default value for missing variables
+                            return "Not specified"
+                    else:
+                        return super().get_value(key, args, kwargs)
+
+            # Render the template with the safe context data using the custom formatter
+            formatter = SafeFormatter()
+            rendered_prompt = formatter.format(template, **safe_context)
+
             self.logger.debug(f"Successfully rendered generic user prompt template (length: {len(rendered_prompt)} chars)")
             return rendered_prompt
-            
-        except KeyError as e:
-            self.logger.error(f"Missing template variable: {e}")
-            raise LLMProcessingError(f"Template rendering failed - missing variable: {str(e)}")
+
         except Exception as e:
             self.logger.error(f"Error rendering generic user prompt template: {e}")
             raise LLMProcessingError(f"Template rendering failed: {str(e)}")

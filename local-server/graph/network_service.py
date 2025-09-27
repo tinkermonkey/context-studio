@@ -25,14 +25,20 @@ class NetworkService:
     def __init__(self, db_session: Session):
         """
         Initialize the NetworkX service with a database session.
-        
+
         Args:
             db_session: SQLAlchemy database session
         """
         self.db_session = db_session
         self.graph = nx.DiGraph()  # Directed graph for hierarchical relationships
-        self._build_graph()
-    
+        self._graph_built = False  # Track if graph has been built
+        # Don't build graph immediately - use lazy initialization
+
+    def _ensure_graph_built(self):
+        """Ensure the graph is built (lazy initialization)."""
+        if not self._graph_built:
+            self._build_graph()
+
     def _build_graph(self):
         """Build the NetworkX graph from unified structure_nodes table."""
         logger.info("Building NetworkX graph from unified structure_nodes table...")
@@ -45,6 +51,7 @@ class NetworkService:
         self._add_hierarchical_edges()
         self._add_node_link_edges()
         
+        self._graph_built = True
         logger.info(f"NetworkX graph built with {self.graph.number_of_nodes()} structure_nodes and {self.graph.number_of_edges()} edges")
     
     def _add_unified_nodes(self):
@@ -128,10 +135,11 @@ class NetworkService:
     def get_graph_stats(self) -> Dict[str, Any]:
         """
         Get comprehensive statistics about the NetworkX graph.
-        
+
         Returns:
             Dictionary with graph statistics
         """
+        self._ensure_graph_built()  # Lazy initialization
         # Basic stats
         stats = {
             "total_nodes": self.graph.number_of_nodes(),
@@ -167,16 +175,17 @@ class NetworkService:
     def find_shortest_path(self, source_id: str, target_id: str, source_type: str = "term", target_type: str = "term") -> Optional[List[str]]:
         """
         Find the shortest path between two structure_nodes.
-        
+
         Args:
             source_id: Source entity ID
             target_id: Target entity ID
             source_type: Type of source entity (layer, domain, term)
             target_type: Type of target entity (layer, domain, term)
-            
+
         Returns:
             List of structure_node IDs representing the shortest path, or None if no path exists
         """
+        self._ensure_graph_built()  # Lazy initialization
         source_node = f"{source_type}:{source_id}"
         target_node = f"{target_type}:{target_id}"
         
@@ -188,16 +197,17 @@ class NetworkService:
     def get_neighbors(self, entity_id: str, entity_type: str = "term", depth: int = 1, direction: str = "both") -> Dict[str, List[str]]:
         """
         Get neighbors of a structure_node at specified depth.
-        
+
         Args:
             entity_id: Entity ID
             entity_type: Type of entity (layer, domain, term)
             depth: Maximum depth to traverse
             direction: Direction to traverse ("in", "out", "both")
-            
+
         Returns:
             Dictionary with neighbors organized by depth
         """
+        self._ensure_graph_built()  # Lazy initialization
         node_id = f"{entity_type}:{entity_id}"
         
         if node_id not in self.graph:
@@ -234,13 +244,14 @@ class NetworkService:
     def calculate_centrality(self, method: str = "pagerank") -> Dict[str, float]:
         """
         Calculate structure_node centrality using various algorithms.
-        
+
         Args:
             method: Centrality method ("pagerank", "betweenness", "closeness", "degree")
-            
+
         Returns:
             Dictionary mapping structure_node IDs to centrality scores
         """
+        self._ensure_graph_built()  # Lazy initialization
         if method == "pagerank":
             return nx.pagerank(self.graph)
         elif method == "betweenness":
@@ -255,13 +266,14 @@ class NetworkService:
     def detect_communities(self, method: str = "louvain") -> List[Set[str]]:
         """
         Detect communities in the graph.
-        
+
         Args:
             method: Community detection method ("louvain", "label_propagation")
             
         Returns:
             List of sets, each containing structure_node IDs in a community
         """
+        self._ensure_graph_built()  # Lazy initialization
         # Convert to undirected graph for community detection
         undirected_graph = self.graph.to_undirected()
         
@@ -374,6 +386,7 @@ class NetworkService:
         Args:
             filepath: Path to save the GraphML file
         """
+        self._ensure_graph_built()  # Lazy initialization
         nx.write_graphml(self.graph, filepath)
         logger.info(f"Graph exported to {filepath}")
     
@@ -388,8 +401,9 @@ class NetworkService:
         Returns:
             StructureNode information dictionary or None if not found
         """
+        self._ensure_graph_built()  # Lazy initialization
         node_id = f"{entity_type}:{entity_id}"
-        
+
         if node_id not in self.graph:
             return None
         
