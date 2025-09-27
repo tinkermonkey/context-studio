@@ -167,6 +167,20 @@ class FlavorAnalyticsResponse(BaseModel):
     time_range_days: int = Field(..., description="Number of days of data included")
 
 
+class ModelCapabilitiesResponse(BaseModel):
+    """Response model for model capabilities information"""
+
+    model_name: str = Field(..., description="Model name")
+    capabilities: Dict[str, Any] = Field(..., description="Model capabilities and constraints")
+
+
+class SupportedModelsResponse(BaseModel):
+    """Response model for listing supported models"""
+
+    models: List[ModelCapabilitiesResponse] = Field(..., description="List of supported models with capabilities")
+    total_count: int = Field(..., description="Total number of supported models")
+
+
 class PipelineExecutionRequest(BaseModel):
     """Generic request model for pipeline execution with arbitrary context data"""
 
@@ -184,6 +198,23 @@ class PipelineExecutionRequest(BaseModel):
         return v
 
 
+class StructuredOutputDefinition(BaseModel):
+    """Structured output model for pipeline responses with definition, reasoning, and discrepancies"""
+
+    definition: str = Field(..., description="The generated definition")
+    reasoning: Optional[str] = Field(None, description="Brief reasoning explaining the definitional choices")
+    discrepancies: Optional[str] = Field(None, description="Any noted discrepancies between sources")
+
+
+# Static mapping from PipelineType to structured output types
+# All pipeline types currently use the same StructuredOutput model
+PIPELINE_STRUCTURED_OUTPUT_MAPPING = {
+    PipelineType.SUGGEST_TERM_DEFINITION: StructuredOutputDefinition,
+    PipelineType.SUGGEST_LAYER_DEFINITION: StructuredOutputDefinition,
+    PipelineType.SUGGEST_DOMAIN_DEFINITION: StructuredOutputDefinition,
+}
+
+
 class PipelineExecutionResponse(BaseModel):
     """Generic response model for pipeline execution"""
 
@@ -192,3 +223,4 @@ class PipelineExecutionResponse(BaseModel):
     flavor_id: str = Field(..., description="ID of the flavor that generated this response")
     pipeline_type: str = Field(..., description="Type of pipeline that was executed")
     token_usage: Optional[Dict[str, int]] = Field(None, description="Token usage statistics if available")
+    structured_output: Optional[Dict[str, Any]] = Field(None, description="Structured output data parsed from LLM response")

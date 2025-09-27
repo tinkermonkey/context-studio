@@ -1861,29 +1861,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/llm/suggest_term_definition": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Suggest Term Definition
-         * @description Suggest a term definition using LLM pipeline.
-         *
-         *     This is a convenience endpoint that uses the generic execute_pipeline
-         *     but is specifically designed for term definition suggestions.
-         */
-        post: operations["suggest_term_definition_api_llm_suggest_term_definition_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
     "/api/llm/health": {
         parameters: {
             query?: never;
@@ -2051,6 +2028,218 @@ export interface paths {
          * @description Delete a flavor
          */
         delete: operations["delete_flavor_api_pipeline_flavors__flavor_id__delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/model-capabilities": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Supported Models
+         * @description List all supported models with their capabilities
+         */
+        get: operations["list_supported_models_api_model_capabilities_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/model-capabilities/{model_name}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Model Capabilities Endpoint
+         * @description Get capabilities for a specific model
+         */
+        get: operations["get_model_capabilities_endpoint_api_model_capabilities__model_name__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/model-capabilities/providers/{provider_name}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Models By Provider
+         * @description List all models for a specific provider
+         */
+        get: operations["list_models_by_provider_api_model_capabilities_providers__provider_name__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/model-capabilities/openrouter/discover": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Discover Openrouter Models
+         * @description Discover available models from OpenRouter API
+         */
+        get: operations["discover_openrouter_models_api_model_capabilities_openrouter_discover_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/model-capabilities/openrouter/sync": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Sync Openrouter Models
+         * @description Sync OpenRouter models into our static registry (admin endpoint)
+         */
+        post: operations["sync_openrouter_models_api_model_capabilities_openrouter_sync_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/enabled-models": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Enabled Models
+         * @description List configured models with optional filtering
+         */
+        get: operations["list_enabled_models_api_enabled_models_get"];
+        put?: never;
+        /**
+         * Add Enabled Model
+         * @description Add a new enabled model configuration
+         */
+        post: operations["add_enabled_model_api_enabled_models_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/enabled-models/{model_name}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Enabled Model
+         * @description Get configuration for a specific enabled model
+         */
+        get: operations["get_enabled_model_api_enabled_models__model_name__get"];
+        /**
+         * Update Enabled Model
+         * @description Update an existing enabled model configuration
+         */
+        put: operations["update_enabled_model_api_enabled_models__model_name__put"];
+        post?: never;
+        /**
+         * Delete Enabled Model
+         * @description Remove an enabled model configuration
+         */
+        delete: operations["delete_enabled_model_api_enabled_models__model_name__delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/enabled-models/{model_name}/enable": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Enable Model
+         * @description Enable a specific model
+         */
+        post: operations["enable_model_api_enabled_models__model_name__enable_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/enabled-models/{model_name}/disable": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Disable Model
+         * @description Disable a specific model
+         */
+        post: operations["disable_model_api_enabled_models__model_name__disable_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/enabled-models/providers/summary": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Provider Summary
+         * @description Get summary of models grouped by provider
+         */
+        get: operations["get_provider_summary_api_enabled_models_providers_summary_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
         options?: never;
         head?: never;
         patch?: never;
@@ -4754,6 +4943,53 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/embeddings/status": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Regeneration Status
+         * @description Get the current status of embedding regeneration.
+         *
+         *     Returns:
+         *     - is_running: Whether regeneration is currently in progress
+         */
+        get: operations["get_regeneration_status_api_embeddings_status_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/embeddings/stop": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Stop Regeneration
+         * @description Stop the current embedding regeneration process.
+         *
+         *     Returns:
+         *     - stopped: Whether a running process was stopped
+         *     - message: Status message
+         */
+        post: operations["stop_regeneration_api_embeddings_stop_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -4798,6 +5034,37 @@ export interface components {
             title: string;
             /** File Path */
             file_path: string;
+        };
+        /**
+         * AddModelRequest
+         * @description Request model for adding a new enabled model
+         */
+        AddModelRequest: {
+            /** Model Name */
+            model_name: string;
+            provider_type: components["schemas"]["ProviderType"];
+            /** Display Name */
+            display_name: string;
+            /**
+             * Enabled
+             * @default true
+             */
+            enabled: boolean;
+            /** Api Key Env Var */
+            api_key_env_var?: string | null;
+            /** Custom Endpoint */
+            custom_endpoint?: string | null;
+            /** Model Override */
+            model_override?: string | null;
+            /** Description */
+            description?: string | null;
+            /** Cost Tier */
+            cost_tier?: string | null;
+            /**
+             * Tags
+             * @default []
+             */
+            tags: string[];
         };
         /**
          * AnalyticsHealthOut
@@ -5478,6 +5745,44 @@ export interface components {
             total_changes: number;
         };
         /**
+         * EnabledModelResponse
+         * @description Response model for enabled model configuration
+         */
+        EnabledModelResponse: {
+            /** Model Name */
+            model_name: string;
+            provider_type: components["schemas"]["ProviderType"];
+            /** Display Name */
+            display_name: string;
+            /** Enabled */
+            enabled: boolean;
+            /** Api Key Env Var */
+            api_key_env_var?: string | null;
+            /** Custom Endpoint */
+            custom_endpoint?: string | null;
+            /** Model Override */
+            model_override?: string | null;
+            /** Description */
+            description?: string | null;
+            /** Cost Tier */
+            cost_tier?: string | null;
+            /**
+             * Tags
+             * @default []
+             */
+            tags: string[];
+        };
+        /**
+         * EnabledModelsListResponse
+         * @description Response model for list of enabled models
+         */
+        EnabledModelsListResponse: {
+            /** Models */
+            models: components["schemas"]["EnabledModelResponse"][];
+            /** Total Count */
+            total_count: number;
+        };
+        /**
          * EntityData
          * @description Data for a named entity in the analyzed text.
          */
@@ -5699,59 +6004,6 @@ export interface components {
              */
             time_range_days: number;
         };
-        /**
-         * GenericPipelineExecutionRequest
-         * @description Generic request model for pipeline execution with arbitrary context data
-         */
-        GenericPipelineExecutionRequest: {
-            /**
-             * Flavor Id
-             * @description ID of the pipeline flavor to use
-             */
-            flavor_id: string;
-            /** @description Type of pipeline to execute */
-            pipeline_type: components["schemas"]["PipelineType"];
-            /**
-             * Context Data
-             * @description Arbitrary context data for template rendering
-             */
-            context_data: {
-                [key: string]: unknown;
-            };
-        };
-        /**
-         * GenericPipelineExecutionResponse
-         * @description Generic response model for pipeline execution
-         */
-        GenericPipelineExecutionResponse: {
-            /**
-             * Response Content
-             * @description Raw LLM response content
-             */
-            response_content: string;
-            /**
-             * Execution Id
-             * @description Unique execution ID for tracing
-             */
-            execution_id: string;
-            /**
-             * Flavor Id
-             * @description ID of the flavor that generated this response
-             */
-            flavor_id: string;
-            /**
-             * Pipeline Type
-             * @description Type of pipeline that was executed
-             */
-            pipeline_type: string;
-            /**
-             * Token Usage
-             * @description Token usage statistics if available
-             */
-            token_usage?: {
-                [key: string]: number;
-            } | null;
-        };
         /** HTTPValidationError */
         HTTPValidationError: {
             /** Detail */
@@ -5919,6 +6171,24 @@ export interface components {
             pending_migrations: string[];
             /** Needs Migration */
             needs_migration: boolean;
+        };
+        /**
+         * ModelCapabilitiesResponse
+         * @description Response model for model capabilities information
+         */
+        ModelCapabilitiesResponse: {
+            /**
+             * Model Name
+             * @description Model name
+             */
+            model_name: string;
+            /**
+             * Capabilities
+             * @description Model capabilities and constraints
+             */
+            capabilities: {
+                [key: string]: unknown;
+            };
         };
         /**
          * MoveNodesRequest
@@ -6411,6 +6681,66 @@ export interface components {
             performance_grade: string;
         };
         /**
+         * PipelineExecutionRequest
+         * @description Generic request model for pipeline execution with arbitrary context data
+         */
+        PipelineExecutionRequest: {
+            /**
+             * Flavor Id
+             * @description ID of the pipeline flavor to use
+             */
+            flavor_id: string;
+            /** @description Type of pipeline to execute */
+            pipeline_type: components["schemas"]["PipelineType"];
+            /**
+             * Context Data
+             * @description Arbitrary context data for template rendering
+             */
+            context_data: {
+                [key: string]: unknown;
+            };
+        };
+        /**
+         * PipelineExecutionResponse
+         * @description Generic response model for pipeline execution
+         */
+        PipelineExecutionResponse: {
+            /**
+             * Response Content
+             * @description Raw LLM response content
+             */
+            response_content: string;
+            /**
+             * Execution Id
+             * @description Unique execution ID for tracing
+             */
+            execution_id: string;
+            /**
+             * Flavor Id
+             * @description ID of the flavor that generated this response
+             */
+            flavor_id: string;
+            /**
+             * Pipeline Type
+             * @description Type of pipeline that was executed
+             */
+            pipeline_type: string;
+            /**
+             * Token Usage
+             * @description Token usage statistics if available
+             */
+            token_usage?: {
+                [key: string]: number;
+            } | null;
+            /**
+             * Structured Output
+             * @description Structured output data parsed from LLM response
+             */
+            structured_output?: {
+                [key: string]: unknown;
+            } | null;
+        };
+        /**
          * PipelineFlavor
          * @description Database model for pipeline flavors
          */
@@ -6614,6 +6944,12 @@ export interface components {
             /** Total Votes */
             total_votes: number;
         };
+        /**
+         * ProviderType
+         * @description LLM provider routing types
+         * @enum {string}
+         */
+        ProviderType: "native_openai" | "native_anthropic" | "native_google" | "openrouter";
         /** PullRequest */
         PullRequest: {
             /** Since */
@@ -7035,6 +7371,22 @@ export interface components {
             objects_optimized: number;
         };
         /**
+         * SupportedModelsResponse
+         * @description Response model for listing supported models
+         */
+        SupportedModelsResponse: {
+            /**
+             * Models
+             * @description List of supported models with capabilities
+             */
+            models: components["schemas"]["ModelCapabilitiesResponse"][];
+            /**
+             * Total Count
+             * @description Total number of supported models
+             */
+            total_count: number;
+        };
+        /**
          * SyncHealthOut
          * @description API model for sync system health.
          */
@@ -7425,6 +7777,29 @@ export interface components {
         UpdateDatasetDirectoryRequest: {
             /** Datasets Directory */
             datasets_directory: string;
+        };
+        /**
+         * UpdateModelRequest
+         * @description Request model for updating enabled model configuration
+         */
+        UpdateModelRequest: {
+            provider_type?: components["schemas"]["ProviderType"] | null;
+            /** Display Name */
+            display_name?: string | null;
+            /** Enabled */
+            enabled?: boolean | null;
+            /** Api Key Env Var */
+            api_key_env_var?: string | null;
+            /** Custom Endpoint */
+            custom_endpoint?: string | null;
+            /** Model Override */
+            model_override?: string | null;
+            /** Description */
+            description?: string | null;
+            /** Cost Tier */
+            cost_tier?: string | null;
+            /** Tags */
+            tags?: string[] | null;
         };
         /**
          * UpdatePipelineFlavorRequest
@@ -10834,7 +11209,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["GenericPipelineExecutionRequest"];
+                "application/json": components["schemas"]["PipelineExecutionRequest"];
             };
         };
         responses: {
@@ -10844,7 +11219,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["GenericPipelineExecutionResponse"];
+                    "application/json": components["schemas"]["PipelineExecutionResponse"];
                 };
             };
             /** @description Bad Request */
@@ -10903,7 +11278,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["GenericPipelineExecutionRequest"];
+                "application/json": components["schemas"]["PipelineExecutionRequest"];
             };
         };
         responses: {
@@ -10923,75 +11298,6 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    suggest_term_definition_api_llm_suggest_term_definition_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["GenericPipelineExecutionRequest"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["GenericPipelineExecutionResponse"];
-                };
-            };
-            /** @description Bad Request */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["LLMErrorResponse"];
-                };
-            };
-            /** @description Request validation failure */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["LLMErrorResponse"];
-                };
-            };
-            /** @description Too Many Requests */
-            429: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["LLMErrorResponse"];
-                };
-            };
-            /** @description Internal Server Error */
-            500: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["LLMErrorResponse"];
-                };
-            };
-            /** @description Gateway Timeout */
-            504: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["LLMErrorResponse"];
                 };
             };
         };
@@ -11345,6 +11651,418 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_supported_models_api_model_capabilities_get: {
+        parameters: {
+            query?: {
+                /** @description Filter by provider (openai, anthropic, etc.) */
+                provider?: string | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SupportedModelsResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_model_capabilities_endpoint_api_model_capabilities__model_name__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                model_name: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ModelCapabilitiesResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_models_by_provider_api_model_capabilities_providers__provider_name__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                provider_name: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SupportedModelsResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    discover_openrouter_models_api_model_capabilities_openrouter_discover_get: {
+        parameters: {
+            query?: {
+                /** @description Filter by provider (anthropic, openai, etc.) */
+                provider_filter?: string | null;
+                /** @description Minimum context window size */
+                min_context?: number | null;
+                /** @description OpenRouter API key (optional) */
+                api_key?: string | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SupportedModelsResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    sync_openrouter_models_api_model_capabilities_openrouter_sync_post: {
+        parameters: {
+            query?: {
+                /** @description OpenRouter API key (optional) */
+                api_key?: string | null;
+                /** @description Only sync models from specific provider */
+                provider_filter?: string | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_enabled_models_api_enabled_models_get: {
+        parameters: {
+            query?: {
+                /** @description Only return enabled models */
+                enabled_only?: boolean;
+                /** @description Filter by provider type */
+                provider_type?: components["schemas"]["ProviderType"] | null;
+                /** @description Filter by tag */
+                tag?: string | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EnabledModelsListResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    add_enabled_model_api_enabled_models_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AddModelRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EnabledModelResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_enabled_model_api_enabled_models__model_name__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                model_name: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EnabledModelResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_enabled_model_api_enabled_models__model_name__put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                model_name: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateModelRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EnabledModelResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    delete_enabled_model_api_enabled_models__model_name__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                model_name: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    enable_model_api_enabled_models__model_name__enable_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                model_name: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    disable_model_api_enabled_models__model_name__disable_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                model_name: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_provider_summary_api_enabled_models_providers_summary_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
                 };
             };
         };
@@ -15358,6 +16076,46 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_regeneration_status_api_embeddings_status_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+        };
+    };
+    stop_regeneration_api_embeddings_stop_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
                 };
             };
         };

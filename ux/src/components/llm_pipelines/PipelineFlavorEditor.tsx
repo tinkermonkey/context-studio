@@ -8,13 +8,19 @@ import {
   Select,
   Alert,
   Spinner,
+  Badge,
 } from "flowbite-react";
-import { ArrowLeft, Save } from "lucide-react";
+import { ArrowLeft, Save, AlertTriangle, Info } from "lucide-react";
 import {
   useCreatePipelineFlavor,
   useUpdatePipelineFlavor,
   usePipelineFlavors,
 } from "@/api/hooks/pipelineFlavors";
+import {
+  useTypedModelCapabilities,
+  useSupportedModels,
+  useValidateLLMConfig,
+} from "@/api/hooks/modelCapabilities";
 import type {
   PipelineType,
   PipelineFlavor,
@@ -28,32 +34,44 @@ interface PipelineFlavorEditorProps {
   onClose: () => void;
 }
 
-const LLM_PROVIDERS = [
+// Legacy providers for fallback
+const FALLBACK_LLM_PROVIDERS = [
   { value: "openai", label: "OpenAI" },
   { value: "anthropic", label: "Anthropic" },
   { value: "ollama", label: "Ollama" },
   { value: "azure", label: "Azure OpenAI" },
 ];
 
-const OPENAI_MODELS = [
-  "gpt-5",
-  "gpt-5-mini",
-  "gpt-5-nano",
-  "gpt-4o",
-  "gpt-4o-mini",
-  "gpt-4-turbo",
-  "gpt-3.5-turbo",
-  "o3-mini",
-  "o3",
-  "o4-mini",
-  "o4",
-];
-
-const ANTHROPIC_MODELS = [
-  "claude-3-5-sonnet-20241022",
-  "claude-3-5-haiku-20241022",
-  "claude-3-opus-20240229",
-];
+const FALLBACK_MODELS = {
+  openai: [
+    "gpt-5",
+    "gpt-5-mini",
+    "gpt-5-nano",
+    "gpt-4o",
+    "gpt-4o-mini",
+    "gpt-4-turbo",
+    "gpt-3.5-turbo",
+    "o3-mini",
+    "o3",
+    "o4-mini",
+    "o4",
+  ],
+  anthropic: [
+    "claude-3-5-sonnet-20241022",
+    "claude-3-5-haiku-20241022",
+    "claude-3-opus-20240229",
+  ],
+  ollama: ["llama3.2", "llama3.1", "mistral", "codellama"],
+  azure: [
+    "gpt-5",
+    "gpt-5-mini",
+    "gpt-5-nano",
+    "gpt-4o",
+    "gpt-4o-mini",
+    "gpt-4-turbo",
+    "gpt-3.5-turbo",
+  ],
+};
 
 export const PipelineFlavorEditor: React.FC<PipelineFlavorEditorProps> = ({
   pipeline,
@@ -69,6 +87,7 @@ export const PipelineFlavorEditor: React.FC<PipelineFlavorEditorProps> = ({
     temperature: 0.7,
     max_tokens: 1000,
     top_p: 1,
+    top_k: 40,
     frequency_penalty: 0,
     presence_penalty: 0,
     enabled: true,
@@ -77,6 +96,23 @@ export const PipelineFlavorEditor: React.FC<PipelineFlavorEditorProps> = ({
   const [errors, setErrors] = useState<Record<string, string>>({});
   const systemPromptRef = useRef<HTMLTextAreaElement>(null) as React.RefObject<HTMLTextAreaElement>;
   const userPromptRef = useRef<HTMLTextAreaElement>(null) as React.RefObject<HTMLTextAreaElement>;
+
+  // Fetch supported models and capabilities
+  const { data: supportedModelsData, isLoading: modelsLoading } = useSupportedModels();
+  const { data: modelCapabilities, isLoading: capabilitiesLoading } = useTypedModelCapabilities(
+    formData.llm_model
+  );
+  const { data: configValidationWarnings } = useValidateLLMConfig(
+    formData.llm_model,
+    {
+      temperature: formData.temperature,
+      top_p: formData.top_p,
+      top_k: formData.top_k,
+      frequency_penalty: formData.frequency_penalty,
+      presence_penalty: formData.presence_penalty,
+      max_tokens: formData.max_tokens,
+    }
+  );
 
   const adjustTextAreaHeight = (textAreaRef: React.RefObject<HTMLTextAreaElement>) => {
     if (textAreaRef.current) {
@@ -120,6 +156,7 @@ export const PipelineFlavorEditor: React.FC<PipelineFlavorEditorProps> = ({
         temperature: flavor.llm_config.temperature,
         max_tokens: flavor.llm_config.max_tokens || 1000,
         top_p: flavor.llm_config.top_p || 1,
+        top_k: (flavor.llm_config as any).top_k || 40,
         frequency_penalty: flavor.llm_config.frequency_penalty || 0,
         presence_penalty: flavor.llm_config.presence_penalty || 0,
         enabled: flavor.enabled,
@@ -154,6 +191,7 @@ export const PipelineFlavorEditor: React.FC<PipelineFlavorEditorProps> = ({
         temperature: defaultFlavor.llm_config.temperature,
         max_tokens: defaultFlavor.llm_config.max_tokens || 1000,
         top_p: defaultFlavor.llm_config.top_p || 1,
+        top_k: (defaultFlavor.llm_config as any).top_k || 40,
         frequency_penalty: defaultFlavor.llm_config.frequency_penalty || 0,
         presence_penalty: defaultFlavor.llm_config.presence_penalty || 0,
       }));
@@ -166,18 +204,35 @@ export const PipelineFlavorEditor: React.FC<PipelineFlavorEditorProps> = ({
     adjustTextAreaHeight(userPromptRef);
   }, [formData.system_prompt, formData.user_prompt]);
 
-  const getAvailableModels = () => {
-    switch (formData.llm_provider) {
-      case "openai":
-      case "azure":
-        return OPENAI_MODELS;
-      case "anthropic":
-        return ANTHROPIC_MODELS;
-      case "ollama":
-        return ["llama3.2", "llama3.1", "mistral", "codellama"];
-      default:
-        return [];
+  // Get available providers from API data or fallback to static list
+  const getAvailableProviders = () => {
+    if (supportedModelsData?.models) {
+      const providersSet = new Set<string>();
+      supportedModelsData.models.forEach((model) => {
+        const provider = (model.capabilities as any)?.provider;
+        if (provider) {
+          providersSet.add(provider);
+        }
+      });
+      return Array.from(providersSet).map((provider) => ({
+        value: provider,
+        label: provider.charAt(0).toUpperCase() + provider.slice(1),
+      }));
     }
+    return FALLBACK_LLM_PROVIDERS;
+  };
+
+  // Get available models for the selected provider
+  const getAvailableModels = () => {
+    if (supportedModelsData?.models) {
+      const modelsForProvider = supportedModelsData.models.filter(
+        (model) => (model.capabilities as any)?.provider === formData.llm_provider
+      );
+      return modelsForProvider.map((model) => model.model_name);
+    }
+
+    // Fallback to static model lists
+    return FALLBACK_MODELS[formData.llm_provider as keyof typeof FALLBACK_MODELS] || [];
   };
 
   const validateForm = () => {
@@ -214,6 +269,7 @@ export const PipelineFlavorEditor: React.FC<PipelineFlavorEditorProps> = ({
       temperature: formData.temperature,
       max_tokens: formData.max_tokens,
       top_p: formData.top_p,
+      top_k: formData.top_k,
       frequency_penalty: formData.frequency_penalty,
       presence_penalty: formData.presence_penalty,
     };
@@ -258,6 +314,50 @@ export const PipelineFlavorEditor: React.FC<PipelineFlavorEditorProps> = ({
       {errors.submit && (
         <Alert color="failure" className="mb-4">
           {errors.submit}
+        </Alert>
+      )}
+
+      {configValidationWarnings && configValidationWarnings.length > 0 && (
+        <Alert color="warning" className="mb-4">
+          <div className="flex items-start gap-2">
+            <AlertTriangle className="h-4 w-4 mt-0.5 flex-shrink-0" />
+            <div>
+              <div className="font-medium">Model Configuration Warnings</div>
+              <ul className="mt-1 list-disc list-inside text-sm">
+                {configValidationWarnings.map((warning, index) => (
+                  <li key={index}>{warning}</li>
+                ))}
+              </ul>
+            </div>
+          </div>
+        </Alert>
+      )}
+
+      {modelCapabilities && (
+        <Alert color="info" className="mb-4">
+          <div className="flex items-start gap-2">
+            <Info className="h-4 w-4 mt-0.5 flex-shrink-0" />
+            <div>
+              <div className="font-medium">Model Capabilities</div>
+              <div className="mt-1 flex flex-wrap gap-1">
+                {modelCapabilities.supports_structured_output && (
+                  <Badge color="green" size="sm">Structured Output</Badge>
+                )}
+                {modelCapabilities.supports_function_calling && (
+                  <Badge color="green" size="sm">Function Calling</Badge>
+                )}
+                {modelCapabilities.supports_streaming && (
+                  <Badge color="green" size="sm">Streaming</Badge>
+                )}
+                {modelCapabilities.max_tokens_limit && (
+                  <Badge color="blue" size="sm">Max Tokens: {modelCapabilities.max_tokens_limit}</Badge>
+                )}
+                {modelCapabilities.context_window && (
+                  <Badge color="blue" size="sm">Context: {modelCapabilities.context_window}</Badge>
+                )}
+              </div>
+            </div>
+          </div>
         </Alert>
       )}
 
@@ -339,16 +439,18 @@ export const PipelineFlavorEditor: React.FC<PipelineFlavorEditorProps> = ({
               value={formData.llm_provider}
               onChange={(e) => {
                 const provider = e.target.value;
-                const models = getAvailableModels();
-                setFormData({
-                  ...formData,
-                  llm_provider: provider,
-                  llm_model: models[0] || "",
+                setFormData((prev) => {
+                  const models = getAvailableModels();
+                  return {
+                    ...prev,
+                    llm_provider: provider,
+                    llm_model: models[0] || "",
+                  };
                 });
               }}
               disabled={isDefaultFlavor}
             >
-              {LLM_PROVIDERS.map((provider) => (
+              {getAvailableProviders().map((provider) => (
                 <option key={provider.value} value={provider.value}>
                   {provider.label}
                 </option>
@@ -376,7 +478,7 @@ export const PipelineFlavorEditor: React.FC<PipelineFlavorEditorProps> = ({
         </div>
 
         {/* LLM Parameters */}
-        <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
+        <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4">
           <div>
             <Label htmlFor="temperature">Temperature</Label>
             <TextInput
@@ -403,7 +505,14 @@ export const PipelineFlavorEditor: React.FC<PipelineFlavorEditorProps> = ({
           </div>
 
           <div>
-            <Label htmlFor="max_tokens">Max Tokens</Label>
+            <Label htmlFor="max_tokens">
+              Max Tokens
+              {modelCapabilities?.max_tokens_limit && (
+                <span className="text-sm text-gray-500 ml-1">
+                  (limit: {modelCapabilities.max_tokens_limit})
+                </span>
+              )}
+            </Label>
             <TextInput
               id="max_tokens"
               type="number"
@@ -415,7 +524,7 @@ export const PipelineFlavorEditor: React.FC<PipelineFlavorEditorProps> = ({
                 })
               }
               min={1}
-              max={8000}
+              max={modelCapabilities?.max_tokens_limit || 8000}
               disabled={isDefaultFlavor}
             />
           </div>
@@ -439,24 +548,67 @@ export const PipelineFlavorEditor: React.FC<PipelineFlavorEditorProps> = ({
             />
           </div>
 
-          <div>
-            <Label htmlFor="frequency_penalty">Frequency Penalty</Label>
-            <TextInput
-              id="frequency_penalty"
-              type="number"
-              value={formData.frequency_penalty.toString()}
-              onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                setFormData({
-                  ...formData,
-                  frequency_penalty: parseFloat(e.target.value) || 0,
-                })
-              }
-              min={-2}
-              max={2}
-              step={0.1}
-              disabled={isDefaultFlavor}
-            />
-          </div>
+          {(!modelCapabilities || modelCapabilities.supports_top_k) && (
+            <div>
+              <Label htmlFor="top_k">Top K</Label>
+              <TextInput
+                id="top_k"
+                type="number"
+                value={formData.top_k.toString()}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                  setFormData({
+                    ...formData,
+                    top_k: parseInt(e.target.value) || 40,
+                  })
+                }
+                min={1}
+                max={100}
+                disabled={isDefaultFlavor}
+              />
+            </div>
+          )}
+
+          {(!modelCapabilities || modelCapabilities.supports_frequency_penalty) && (
+            <div>
+              <Label htmlFor="frequency_penalty">Frequency Penalty</Label>
+              <TextInput
+                id="frequency_penalty"
+                type="number"
+                value={formData.frequency_penalty.toString()}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                  setFormData({
+                    ...formData,
+                    frequency_penalty: parseFloat(e.target.value) || 0,
+                  })
+                }
+                min={-2}
+                max={2}
+                step={0.1}
+                disabled={isDefaultFlavor}
+              />
+            </div>
+          )}
+
+          {(!modelCapabilities || modelCapabilities.supports_presence_penalty) && (
+            <div>
+              <Label htmlFor="presence_penalty">Presence Penalty</Label>
+              <TextInput
+                id="presence_penalty"
+                type="number"
+                value={formData.presence_penalty.toString()}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                  setFormData({
+                    ...formData,
+                    presence_penalty: parseFloat(e.target.value) || 0,
+                  })
+                }
+                min={-2}
+                max={2}
+                step={0.1}
+                disabled={isDefaultFlavor}
+              />
+            </div>
+          )}
         </div>
 
         {/* Prompts */}

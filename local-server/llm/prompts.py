@@ -54,12 +54,7 @@ Based on this context, provide:
 
 A refined 2-3 sentence definition for the term "{term}"
 Brief reasoning (1-2 sentences) explaining your definitional choices, particularly how component meanings informed the compound definition
-Any notable discrepancies between sources that influenced your decision
-
-Format your response as:
-Definition: [Your 2-3 sentence definition]
-Reasoning: [Your brief explanation]
-Discrepancies: [any noted discrepancies or leave blank]"""
+Any notable discrepancies between sources that influenced your decision"""
 
     @staticmethod
     def get_layer_definition_system_prompt() -> str:
@@ -106,12 +101,7 @@ Based on this context, provide:
 
 A refined 2-3 sentence definition for the layer "{layer_title}"
 Brief reasoning (1-2 sentences) explaining your definitional choices and organizational principles
-Any notable discrepancies or additional context that influenced your decision
-
-Format your response as:
-Definition: [Your 2-3 sentence definition]
-Reasoning: [Your brief explanation]
-Discrepancies: [any noted discrepancies or leave blank]"""
+Any notable discrepancies or additional context that influenced your decision"""
 
     @staticmethod
     def get_domain_definition_system_prompt() -> str:
@@ -159,9 +149,4 @@ Based on this context, provide:
 
 A refined 2-3 sentence definition for the domain "{domain_title}"
 Brief reasoning (1-2 sentences) explaining your definitional choices and thematic coherence
-Any notable discrepancies or additional context that influenced your decision
-
-Format your response as:
-Definition: [Your 2-3 sentence definition]
-Reasoning: [Your brief explanation]
-Discrepancies: [any noted discrepancies or leave blank]"""
+Any notable discrepancies or additional context that influenced your decision"""

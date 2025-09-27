@@ -13,8 +13,10 @@ export {
 
 // Re-export types for convenience
 export type {
-  GenericPipelineExecutionRequest,
-  GenericPipelineExecutionResponse,
+  PipelineExecutionRequest,
+  GenericPipelineExecutionRequest, // Legacy alias
+  PipelineExecutionResponse,
+  GenericPipelineExecutionResponse, // Legacy alias
   PipelineType,
   StreamingChunk,
 } from "../../services/pipelineExecution";

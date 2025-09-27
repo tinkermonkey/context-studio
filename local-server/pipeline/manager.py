@@ -99,18 +99,19 @@ class PipelineDatabaseManager:
                     request_context TEXT NOT NULL,  -- JSON
                     user_prompt TEXT NOT NULL,
                     response_message TEXT,
-                    
+                    structured_output TEXT,  -- JSON structured output data
+
                     execution_time_ms INTEGER,
                     input_tokens INTEGER,
                     output_tokens INTEGER,
                     total_tokens INTEGER,
-                    
+
                     status TEXT NOT NULL DEFAULT 'pending',
                     error_message TEXT,
-                    
+
                     started_at TEXT DEFAULT (datetime('now')),
                     completed_at TEXT,
-                    
+
                     FOREIGN KEY (pipeline_flavor_id) REFERENCES pipeline_flavors(id) ON DELETE CASCADE
                 )
             """))
@@ -183,8 +184,20 @@ class PipelineDatabaseManager:
                 ON pipeline_flavor_selections(date_created)
             """))
             
+            # Add structured_output column to existing pipeline_flavor_executions table if it doesn't exist
+            # This handles migrations for existing installations
+            try:
+                conn.execute(text("""
+                    ALTER TABLE pipeline_flavor_executions
+                    ADD COLUMN structured_output TEXT
+                """))
+                logger.info("Added structured_output column to pipeline_flavor_executions table")
+            except Exception:
+                # Column already exists or table doesn't exist (normal for new installations)
+                pass
+
             conn.commit()
-            
+
         logger.info("Pipeline database schema created/verified")
     
     def get_session(self):

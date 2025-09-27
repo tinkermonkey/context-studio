@@ -7,7 +7,7 @@ from contextlib import asynccontextmanager
 from api import graph, datasets, nlp_analysis, schema, predicates, llm, pipeline_flavors
 from api import reference, config, structure_nodes, version_management, sync, llm_traceability
 from api import changeset_management, proposal_management, identity_management
-from api import conflict_resolution, analytics, incremental_sync, optimization, embeddings
+from api import conflict_resolution, analytics, incremental_sync, optimization, embeddings, model_capabilities, enabled_models
 from api.admin import service_monitoring
 from schema_org import api as schema_org_api
 from api.graph import get_cached_graph_service, invalidate_graph_cache
@@ -200,6 +200,8 @@ def create_app(dataset_id=None, engine=None, session_local=None, service_factory
     app.include_router(llm.router, prefix="/api", tags=["llm"])
     app.include_router(llm_traceability.router, tags=["llm-traceability"])
     app.include_router(pipeline_flavors.router, tags=["pipeline-flavors"])
+    app.include_router(model_capabilities.router, tags=["model-capabilities"])
+    app.include_router(enabled_models.router, tags=["enabled-models"])
     app.include_router(reference.router, prefix="", tags=["nlp-reference"])
     app.include_router(sync.router, tags=["sync"])
     

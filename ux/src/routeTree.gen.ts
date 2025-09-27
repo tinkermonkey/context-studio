@@ -19,7 +19,14 @@ import { Route as AppLayersRouteImport } from './routes/app/layers'
 import { Route as AppDomainsRouteImport } from './routes/app/domains'
 import { Route as AppDatasetsRouteImport } from './routes/app/datasets'
 import { Route as AppConfigRouteImport } from './routes/app/config'
+import { Route as AppConfigIndexRouteImport } from './routes/app/config/index'
+import { Route as AppConfigSystemRouteImport } from './routes/app/config/system'
+import { Route as AppConfigProcessingRouteImport } from './routes/app/config/processing'
 import { Route as AppConfigPipelinesRouteImport } from './routes/app/config/pipelines'
+import { Route as AppConfigNetworkRouteImport } from './routes/app/config/network'
+import { Route as AppConfigModelsRouteImport } from './routes/app/config/models'
+import { Route as AppConfigDataSourcesRouteImport } from './routes/app/config/data-sources'
+import { Route as AppConfigAdvancedRouteImport } from './routes/app/config/advanced'
 import { Route as AppConfigPipelinesIndexRouteImport } from './routes/app/config/pipelines/index'
 import { Route as AppNodesTermTermIdRouteImport } from './routes/app/nodes/term/$termId'
 import { Route as AppNodesLayerLayerIdRouteImport } from './routes/app/nodes/layer/$layerId'
@@ -80,9 +87,44 @@ const AppConfigRoute = AppConfigRouteImport.update({
   path: '/config',
   getParentRoute: () => AppRoute,
 } as any)
+const AppConfigIndexRoute = AppConfigIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AppConfigRoute,
+} as any)
+const AppConfigSystemRoute = AppConfigSystemRouteImport.update({
+  id: '/system',
+  path: '/system',
+  getParentRoute: () => AppConfigRoute,
+} as any)
+const AppConfigProcessingRoute = AppConfigProcessingRouteImport.update({
+  id: '/processing',
+  path: '/processing',
+  getParentRoute: () => AppConfigRoute,
+} as any)
 const AppConfigPipelinesRoute = AppConfigPipelinesRouteImport.update({
   id: '/pipelines',
   path: '/pipelines',
+  getParentRoute: () => AppConfigRoute,
+} as any)
+const AppConfigNetworkRoute = AppConfigNetworkRouteImport.update({
+  id: '/network',
+  path: '/network',
+  getParentRoute: () => AppConfigRoute,
+} as any)
+const AppConfigModelsRoute = AppConfigModelsRouteImport.update({
+  id: '/models',
+  path: '/models',
+  getParentRoute: () => AppConfigRoute,
+} as any)
+const AppConfigDataSourcesRoute = AppConfigDataSourcesRouteImport.update({
+  id: '/data-sources',
+  path: '/data-sources',
+  getParentRoute: () => AppConfigRoute,
+} as any)
+const AppConfigAdvancedRoute = AppConfigAdvancedRouteImport.update({
+  id: '/advanced',
+  path: '/advanced',
   getParentRoute: () => AppConfigRoute,
 } as any)
 const AppConfigPipelinesIndexRoute = AppConfigPipelinesIndexRouteImport.update({
@@ -147,7 +189,14 @@ export interface FileRoutesByFullPath {
   '/app/reference': typeof AppReferenceRoute
   '/app/terms': typeof AppTermsRoute
   '/app/': typeof AppIndexRoute
+  '/app/config/advanced': typeof AppConfigAdvancedRoute
+  '/app/config/data-sources': typeof AppConfigDataSourcesRoute
+  '/app/config/models': typeof AppConfigModelsRoute
+  '/app/config/network': typeof AppConfigNetworkRoute
   '/app/config/pipelines': typeof AppConfigPipelinesRouteWithChildren
+  '/app/config/processing': typeof AppConfigProcessingRoute
+  '/app/config/system': typeof AppConfigSystemRoute
+  '/app/config/': typeof AppConfigIndexRoute
   '/app/config/pipelines/$pipelineType': typeof AppConfigPipelinesPipelineTypeRouteWithChildren
   '/app/nodes/domain/$domainId': typeof AppNodesDomainDomainIdRoute
   '/app/nodes/layer/$layerId': typeof AppNodesLayerLayerIdRoute
@@ -160,7 +209,6 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
-  '/app/config': typeof AppConfigRouteWithChildren
   '/app/datasets': typeof AppDatasetsRoute
   '/app/domains': typeof AppDomainsRoute
   '/app/layers': typeof AppLayersRoute
@@ -168,6 +216,13 @@ export interface FileRoutesByTo {
   '/app/reference': typeof AppReferenceRoute
   '/app/terms': typeof AppTermsRoute
   '/app': typeof AppIndexRoute
+  '/app/config/advanced': typeof AppConfigAdvancedRoute
+  '/app/config/data-sources': typeof AppConfigDataSourcesRoute
+  '/app/config/models': typeof AppConfigModelsRoute
+  '/app/config/network': typeof AppConfigNetworkRoute
+  '/app/config/processing': typeof AppConfigProcessingRoute
+  '/app/config/system': typeof AppConfigSystemRoute
+  '/app/config': typeof AppConfigIndexRoute
   '/app/nodes/domain/$domainId': typeof AppNodesDomainDomainIdRoute
   '/app/nodes/layer/$layerId': typeof AppNodesLayerLayerIdRoute
   '/app/nodes/term/$termId': typeof AppNodesTermTermIdRoute
@@ -189,7 +244,14 @@ export interface FileRoutesById {
   '/app/reference': typeof AppReferenceRoute
   '/app/terms': typeof AppTermsRoute
   '/app/': typeof AppIndexRoute
+  '/app/config/advanced': typeof AppConfigAdvancedRoute
+  '/app/config/data-sources': typeof AppConfigDataSourcesRoute
+  '/app/config/models': typeof AppConfigModelsRoute
+  '/app/config/network': typeof AppConfigNetworkRoute
   '/app/config/pipelines': typeof AppConfigPipelinesRouteWithChildren
+  '/app/config/processing': typeof AppConfigProcessingRoute
+  '/app/config/system': typeof AppConfigSystemRoute
+  '/app/config/': typeof AppConfigIndexRoute
   '/app/config/pipelines/$pipelineType': typeof AppConfigPipelinesPipelineTypeRouteWithChildren
   '/app/nodes/domain/$domainId': typeof AppNodesDomainDomainIdRoute
   '/app/nodes/layer/$layerId': typeof AppNodesLayerLayerIdRoute
@@ -213,7 +275,14 @@ export interface FileRouteTypes {
     | '/app/reference'
     | '/app/terms'
     | '/app/'
+    | '/app/config/advanced'
+    | '/app/config/data-sources'
+    | '/app/config/models'
+    | '/app/config/network'
     | '/app/config/pipelines'
+    | '/app/config/processing'
+    | '/app/config/system'
+    | '/app/config/'
     | '/app/config/pipelines/$pipelineType'
     | '/app/nodes/domain/$domainId'
     | '/app/nodes/layer/$layerId'
@@ -226,7 +295,6 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
-    | '/app/config'
     | '/app/datasets'
     | '/app/domains'
     | '/app/layers'
@@ -234,6 +302,13 @@ export interface FileRouteTypes {
     | '/app/reference'
     | '/app/terms'
     | '/app'
+    | '/app/config/advanced'
+    | '/app/config/data-sources'
+    | '/app/config/models'
+    | '/app/config/network'
+    | '/app/config/processing'
+    | '/app/config/system'
+    | '/app/config'
     | '/app/nodes/domain/$domainId'
     | '/app/nodes/layer/$layerId'
     | '/app/nodes/term/$termId'
@@ -254,7 +329,14 @@ export interface FileRouteTypes {
     | '/app/reference'
     | '/app/terms'
     | '/app/'
+    | '/app/config/advanced'
+    | '/app/config/data-sources'
+    | '/app/config/models'
+    | '/app/config/network'
     | '/app/config/pipelines'
+    | '/app/config/processing'
+    | '/app/config/system'
+    | '/app/config/'
     | '/app/config/pipelines/$pipelineType'
     | '/app/nodes/domain/$domainId'
     | '/app/nodes/layer/$layerId'
@@ -343,11 +425,60 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppConfigRouteImport
       parentRoute: typeof AppRoute
     }
+    '/app/config/': {
+      id: '/app/config/'
+      path: '/'
+      fullPath: '/app/config/'
+      preLoaderRoute: typeof AppConfigIndexRouteImport
+      parentRoute: typeof AppConfigRoute
+    }
+    '/app/config/system': {
+      id: '/app/config/system'
+      path: '/system'
+      fullPath: '/app/config/system'
+      preLoaderRoute: typeof AppConfigSystemRouteImport
+      parentRoute: typeof AppConfigRoute
+    }
+    '/app/config/processing': {
+      id: '/app/config/processing'
+      path: '/processing'
+      fullPath: '/app/config/processing'
+      preLoaderRoute: typeof AppConfigProcessingRouteImport
+      parentRoute: typeof AppConfigRoute
+    }
     '/app/config/pipelines': {
       id: '/app/config/pipelines'
       path: '/pipelines'
       fullPath: '/app/config/pipelines'
       preLoaderRoute: typeof AppConfigPipelinesRouteImport
+      parentRoute: typeof AppConfigRoute
+    }
+    '/app/config/network': {
+      id: '/app/config/network'
+      path: '/network'
+      fullPath: '/app/config/network'
+      preLoaderRoute: typeof AppConfigNetworkRouteImport
+      parentRoute: typeof AppConfigRoute
+    }
+    '/app/config/models': {
+      id: '/app/config/models'
+      path: '/models'
+      fullPath: '/app/config/models'
+      preLoaderRoute: typeof AppConfigModelsRouteImport
+      parentRoute: typeof AppConfigRoute
+    }
+    '/app/config/data-sources': {
+      id: '/app/config/data-sources'
+      path: '/data-sources'
+      fullPath: '/app/config/data-sources'
+      preLoaderRoute: typeof AppConfigDataSourcesRouteImport
+      parentRoute: typeof AppConfigRoute
+    }
+    '/app/config/advanced': {
+      id: '/app/config/advanced'
+      path: '/advanced'
+      fullPath: '/app/config/advanced'
+      preLoaderRoute: typeof AppConfigAdvancedRouteImport
       parentRoute: typeof AppConfigRoute
     }
     '/app/config/pipelines/': {
@@ -455,11 +586,25 @@ const AppConfigPipelinesRouteWithChildren =
   AppConfigPipelinesRoute._addFileChildren(AppConfigPipelinesRouteChildren)
 
 interface AppConfigRouteChildren {
+  AppConfigAdvancedRoute: typeof AppConfigAdvancedRoute
+  AppConfigDataSourcesRoute: typeof AppConfigDataSourcesRoute
+  AppConfigModelsRoute: typeof AppConfigModelsRoute
+  AppConfigNetworkRoute: typeof AppConfigNetworkRoute
   AppConfigPipelinesRoute: typeof AppConfigPipelinesRouteWithChildren
+  AppConfigProcessingRoute: typeof AppConfigProcessingRoute
+  AppConfigSystemRoute: typeof AppConfigSystemRoute
+  AppConfigIndexRoute: typeof AppConfigIndexRoute
 }
 
 const AppConfigRouteChildren: AppConfigRouteChildren = {
+  AppConfigAdvancedRoute: AppConfigAdvancedRoute,
+  AppConfigDataSourcesRoute: AppConfigDataSourcesRoute,
+  AppConfigModelsRoute: AppConfigModelsRoute,
+  AppConfigNetworkRoute: AppConfigNetworkRoute,
   AppConfigPipelinesRoute: AppConfigPipelinesRouteWithChildren,
+  AppConfigProcessingRoute: AppConfigProcessingRoute,
+  AppConfigSystemRoute: AppConfigSystemRoute,
+  AppConfigIndexRoute: AppConfigIndexRoute,
 }
 
 const AppConfigRouteWithChildren = AppConfigRoute._addFileChildren(

@@ -16,17 +16,17 @@ import {
 
 // Type aliases for better readability - using the latest OpenAPI schema
 export type DefinitionSuggestionRequest =
-  components["schemas"]["GenericPipelineExecutionRequest"];
+  components["schemas"]["PipelineExecutionRequest"];
 export type DefinitionSuggestionResponse =
-  components["schemas"]["GenericPipelineExecutionResponse"];
+  components["schemas"]["PipelineExecutionResponse"];
 export type DomainDefinitionRequest =
-  components["schemas"]["GenericPipelineExecutionRequest"];
+  components["schemas"]["PipelineExecutionRequest"];
 export type DomainDefinitionResponse =
-  components["schemas"]["GenericPipelineExecutionResponse"];
+  components["schemas"]["PipelineExecutionResponse"];
 export type LayerDefinitionRequest =
-  components["schemas"]["GenericPipelineExecutionRequest"];
+  components["schemas"]["PipelineExecutionRequest"];
 export type LayerDefinitionResponse =
-  components["schemas"]["GenericPipelineExecutionResponse"];
+  components["schemas"]["PipelineExecutionResponse"];
 
 // Legacy compatibility: Define ComponentTerm locally since it may not exist in new schema
 export interface ComponentTerm {

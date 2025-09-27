@@ -7,8 +7,33 @@ import {
   useUpdateLayer,
 } from "@/api/hooks/structure_nodes/useStructureNodeMutations";
 
+// Interface for the expected pipeline execution result
+interface PipelineExecutionResult {
+  status: "success" | "error" | "running" | "idle";
+  data?: {
+    // New structured format
+    structured_output?: {
+      definition?: string;
+      reasoning?: string;
+      discrepancies?: string;
+      [key: string]: unknown;
+    };
+    response_content?: string;
+    execution_id?: string;
+    flavor_id?: string;
+    pipeline_type?: string;
+    token_usage?: { [key: string]: number };
+
+    // Legacy format support
+    definition?: string;
+    reasoning?: string;
+    discrepancies?: string;
+  };
+  error?: string;
+}
+
 interface PipelineResultViewProps {
-  result: any;
+  result: PipelineExecutionResult;
   apiContext: Record<string, any> | null;
   buildApiContext: () => Record<string, any>;
   termId?: string | null;
@@ -37,6 +62,13 @@ const PipelineResultView: React.FC<PipelineResultViewProps> = ({
   const updateLayer = useUpdateLayer();
 
   const canSaveLocal = Boolean(termId || domainId || layerId);
+
+  // Check if there's any saveable content
+  const hasSaveableContent = Boolean(
+    result.data?.structured_output?.definition ||
+    result.data?.definition ||
+    result.data?.response_content
+  );
 
   const currentContextSnapshotLocal = React.useMemo(() => {
     try {
@@ -70,11 +102,15 @@ const PipelineResultView: React.FC<PipelineResultViewProps> = ({
   ]);
 
   const handleSaveLocal = async (res: any) => {
-    if (!res?.data?.definition) return;
+    // Extract definition from structured_output, legacy format, or raw response
+    const definition = res?.data?.structured_output?.definition ||
+                      res?.data?.definition ||
+                      res?.data?.response_content;
+    if (!definition) return;
     setSaveMessageLocal(null);
     setIsSavingLocal(true);
 
-    const payload: any = { definition: res.data.definition };
+    const payload: any = { definition };
     try {
       if (termId) {
         await updateTerm.mutateAsync({ id: termId, data: payload });
@@ -106,35 +142,56 @@ const PipelineResultView: React.FC<PipelineResultViewProps> = ({
 
   if (result.status === "success" && result.data) {
     const data = result.data;
+
+    // Extract structured data, with fallback to legacy format
+    const structuredData = data.structured_output || {};
+    const definition = structuredData.definition || data.definition;
+    const reasoning = structuredData.reasoning || data.reasoning;
+    const discrepancies = structuredData.discrepancies || data.discrepancies;
+
     return (
       <div className="flex h-full flex-col space-y-3">
-        <div className="rounded-lg bg-gray-50 p-3 dark:bg-gray-800">
-          <h5 className="mb-2 font-medium text-gray-900 dark:text-white">
-            Definition
-          </h5>
-          <p className="text-sm text-gray-700 dark:text-gray-300">
-            {data.definition}
-          </p>
-        </div>
+        {definition && (
+          <div className="rounded-lg bg-gray-50 p-3 dark:bg-gray-800">
+            <h5 className="mb-2 font-medium text-gray-900 dark:text-white">
+              Definition
+            </h5>
+            <p className="text-sm text-gray-700 dark:text-gray-300">
+              {definition}
+            </p>
+          </div>
+        )}
 
-        {data.reasoning && (
+        {/* Fallback: Show raw response if no structured definition found */}
+        {!definition && data.response_content && (
+          <div className="rounded-lg bg-gray-50 p-3 dark:bg-gray-800">
+            <h5 className="mb-2 font-medium text-gray-900 dark:text-white">
+              Response
+            </h5>
+            <p className="text-sm text-gray-700 dark:text-gray-300">
+              {data.response_content}
+            </p>
+          </div>
+        )}
+
+        {reasoning && (
           <div className="rounded-lg bg-blue-50 p-3 dark:bg-blue-900/20">
             <h5 className="mb-2 font-medium text-blue-900 dark:text-blue-200">
               Reasoning
             </h5>
             <p className="text-sm text-blue-700 dark:text-blue-300">
-              {data.reasoning}
+              {reasoning}
             </p>
           </div>
         )}
 
-        {data.discrepancies && (
+        {discrepancies && (
           <div className="rounded-lg bg-yellow-50 p-3 dark:bg-yellow-900/20">
             <h5 className="mb-2 font-medium text-yellow-900 dark:text-yellow-200">
               Discrepancies
             </h5>
             <p className="text-sm text-yellow-700 dark:text-yellow-300">
-              {data.discrepancies}
+              {discrepancies}
             </p>
           </div>
         )}
@@ -144,13 +201,15 @@ const PipelineResultView: React.FC<PipelineResultViewProps> = ({
             <Button
               size="xs"
               onClick={() => handleSaveLocal(result)}
-              disabled={isSavingLocal || !canSaveLocal || savedVisibleLocal}
+              disabled={isSavingLocal || !canSaveLocal || !hasSaveableContent || savedVisibleLocal}
               title={
                 isSavingLocal
                   ? "Saving..."
-                  : canSaveLocal
-                    ? "Save this definition to the selected target"
-                    : "No context ID provided for saving"
+                  : !canSaveLocal
+                    ? "No context ID provided for saving"
+                    : !hasSaveableContent
+                      ? "No content available to save"
+                      : "Save this definition to the selected target"
               }
             >
               {isSavingLocal ? (

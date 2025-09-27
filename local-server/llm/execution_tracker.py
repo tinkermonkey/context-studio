@@ -83,7 +83,8 @@ class ExecutionTracker:
         success: bool = True,
         error_message: Optional[str] = None,
         token_usage: Optional[Dict[str, int]] = None,
-        start_time: Optional[float] = None
+        start_time: Optional[float] = None,
+        structured_output: Optional[Dict[str, Any]] = None
     ) -> None:
         """Complete execution tracking with response data."""
         
@@ -109,12 +110,13 @@ class ExecutionTracker:
                     'execution_time_ms': execution_time_ms,
                     'input_tokens': token_usage.get('input_tokens') if token_usage else None,
                     'output_tokens': token_usage.get('output_tokens') if token_usage else None,
-                    'total_tokens': token_usage.get('total_tokens') if token_usage else None
+                    'total_tokens': token_usage.get('total_tokens') if token_usage else None,
+                    'structured_output': json.dumps(structured_output) if structured_output else None
                 }
                 
                 # Update execution record
                 session.execute(text("""
-                    UPDATE pipeline_flavor_executions 
+                    UPDATE pipeline_flavor_executions
                     SET response_message = :response_message,
                         status = :status,
                         error_message = :error_message,
@@ -122,7 +124,8 @@ class ExecutionTracker:
                         execution_time_ms = :execution_time_ms,
                         input_tokens = :input_tokens,
                         output_tokens = :output_tokens,
-                        total_tokens = :total_tokens
+                        total_tokens = :total_tokens,
+                        structured_output = :structured_output
                     WHERE id = :id
                 """), update_values)
                 
@@ -267,6 +270,14 @@ class ExecutionTracker:
                 
                 executions = []
                 for row in result:
+                    # Parse structured_output if it exists
+                    structured_output = None
+                    if hasattr(row, 'structured_output') and row.structured_output:
+                        try:
+                            structured_output = json.loads(row.structured_output)
+                        except (json.JSONDecodeError, AttributeError):
+                            structured_output = None
+
                     executions.append({
                         "id": row.id,
                         "pipeline_type": row.pipeline_type,
@@ -275,6 +286,7 @@ class ExecutionTracker:
                         "request_context": row.request_context,
                         "user_prompt": row.user_prompt,
                         "response_message": row.response_message,
+                        "structured_output": structured_output,
                         "execution_time_ms": row.execution_time_ms,
                         "token_usage": {
                             "input_tokens": row.input_tokens,
@@ -397,14 +409,22 @@ class ExecutionTracker:
                 execution_row = result.fetchone()
                 if not execution_row:
                     return None
-                
+
+                # Parse structured_output if it exists
+                structured_output = None
+                if hasattr(execution_row, 'structured_output') and execution_row.structured_output:
+                    try:
+                        structured_output = json.loads(execution_row.structured_output)
+                    except (json.JSONDecodeError, AttributeError):
+                        structured_output = None
+
                 # Get associated selections
                 selections_result = session.execute(text("""
-                    SELECT * FROM pipeline_flavor_selections 
+                    SELECT * FROM pipeline_flavor_selections
                     WHERE pipeline_execution_id = :execution_id
                     ORDER BY date_created
                 """), {'execution_id': execution_id})
-                
+
                 selections = []
                 for selection_row in selections_result:
                     selections.append({
@@ -415,7 +435,7 @@ class ExecutionTracker:
                         "selected_content": selection_row.selected_content,
                         "date_created": selection_row.date_created
                     })
-                
+
                 return {
                     "execution": {
                         "id": execution_row.id,
@@ -426,6 +446,7 @@ class ExecutionTracker:
                         "request_context": execution_row.request_context,
                         "user_prompt": execution_row.user_prompt,
                         "response_message": execution_row.response_message,
+                        "structured_output": structured_output,
                         "execution_time_ms": execution_row.execution_time_ms,
                         "token_usage": {
                             "input_tokens": execution_row.input_tokens,

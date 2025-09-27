@@ -7,6 +7,7 @@ import os
 import time
 import asyncio
 import string
+import json
 from langchain.chat_models import init_chat_model
 from langchain.schema import HumanMessage, SystemMessage
 from openai import RateLimitError, APITimeoutError, APIError, AuthenticationError
@@ -16,8 +17,11 @@ from .models import (
     StreamingLLMResponse,
     PipelineFlavor,
     PipelineExecutionRequest,
-    PipelineExecutionResponse
+    PipelineExecutionResponse,
+    PIPELINE_STRUCTURED_OUTPUT_MAPPING
 )
+from .model_capabilities import validate_model_config
+from .provider_router import get_provider_router
 from .exceptions import (
     LLMConfigurationError, 
     LLMProcessingError, 
@@ -31,69 +35,52 @@ from utils.logger import get_logger
 
 
 class LLMService:
-    """Service for handling LLM interactions using Langchain"""
-    
+    """Service for handling LLM interactions using dynamic provider routing"""
+
     def __init__(self, model_name: str = "gpt-3.5-turbo", temperature: float = 0):
         self.logger = get_logger(__name__)
-        self.model_name = model_name
+        self.model_name = model_name  # Default model for legacy compatibility
         self.temperature = temperature
-        self._llm = None
         self.flavor_service = PipelineFlavorService()
         self.execution_tracker = ExecutionTracker()
-        self._initialize_llm()
-    
-    def _initialize_llm(self):
-        """Initialize the LLM with proper configuration"""
-        try:
-            openai_api_key = os.getenv("OPENAI_API_KEY")
-            if not openai_api_key:
-                self.logger.error("OPENAI_API_KEY environment variable not set")
-                raise LLMConfigurationError("OPENAI_API_KEY environment variable not set")
-            
-            # Validate API key format (basic check)
-            if not openai_api_key.startswith("sk-"):
-                self.logger.error("Invalid OpenAI API key format")
-                raise LLMConfigurationError("Invalid OpenAI API key format")
-            
-            self.logger.debug(f"Initializing LLM with model: {self.model_name}, temperature: {self.temperature}")
-            
-            self._llm = init_chat_model(
-                self.model_name,
-                model_provider="openai",
-                temperature=self.temperature,
-                openai_api_key=openai_api_key
-            )
-            self.logger.info(f"LLM initialized successfully with model: {self.model_name}")
-            
-        except LLMConfigurationError:
-            # Re-raise our custom errors as-is
-            raise
-        except AuthenticationError as e:
-            self.logger.error(f"OpenAI authentication failed: {e}")
-            raise LLMConfigurationError(f"OpenAI authentication failed: {str(e)}")
-        except Exception as e:
-            self.logger.error(f"Failed to initialize LLM: {e}")
-            raise LLMConfigurationError(f"LLM initialization failed: {str(e)}")
-    
-    
-    
-    
+
+        # Initialize provider router
+        self.provider_router = get_provider_router()
+
+        self.logger.info(f"LLM Service initialized with dynamic provider routing")
+
+    def get_available_models(self) -> list[str]:
+        """Get list of currently available (enabled) models"""
+        return self.provider_router.get_enabled_models()
+
+    def is_model_available(self, model_name: str) -> bool:
+        """Check if a specific model is available"""
+        return self.provider_router.is_model_available(model_name)
+
+    def get_provider_for_model(self, model_name: str) -> Optional[str]:
+        """Get the provider type for a model"""
+        provider_type = self.provider_router.get_provider_for_model(model_name)
+        return provider_type.value if provider_type else None
+
+
+
+
     async def execute_pipeline_flavor(self, request: PipelineExecutionRequest) -> PipelineExecutionResponse:
         """Generic pipeline execution method with arbitrary context data"""
         start_time = time.time()
         execution_id = "unknown"
-        
+
         self.logger.info(f"Starting generic pipeline execution - Type: {request.pipeline_type}, Flavor: {request.flavor_id}")
         self.logger.debug(f"Context data keys: {list(request.context_data.keys())}")
-        
+
         try:
             # Get flavor
             flavor = await self._get_flavor(request.pipeline_type, request.flavor_id)
-            
+
             # Create prompt using flavor templates and generic context data
             system_prompt = flavor.system_prompt
             user_prompt = self._render_user_prompt_generic(flavor.user_prompt, request.context_data)
-            
+
             # Start execution tracking
             execution_id = self.execution_tracker.start_execution(
                 pipeline_flavor_id=flavor.id,
@@ -102,9 +89,12 @@ class LLMService:
                 request=request,
                 user_prompt=user_prompt
             )
-            
-            # Initialize LLM with flavor configuration
-            llm = self._create_llm_from_flavor(flavor)
+
+            # Get structured output class for this pipeline type
+            structured_output_class = PIPELINE_STRUCTURED_OUTPUT_MAPPING.get(request.pipeline_type)
+
+            # Initialize LLM with flavor configuration and structured output
+            llm = self._create_llm_from_flavor(flavor, structured_output_class)
             
             messages = [
                 SystemMessage(content=system_prompt),
@@ -131,24 +121,31 @@ class LLMService:
                     'output_tokens': usage.get('completion_tokens', 0),
                     'total_tokens': usage.get('total_tokens', 0)
                 }
-            
+
+            # Handle structured output using generic parsing
+            structured_output, response_content = self._process_response_with_structured_output(
+                response, structured_output_class, request.pipeline_type
+            )
+
             # Complete execution tracking
             self.execution_tracker.complete_execution(
                 execution_id=execution_id,
-                response_message=response.content,
+                response_message=response_content,
                 success=True,
                 token_usage=token_usage,
-                start_time=start_time
+                start_time=start_time,
+                structured_output=structured_output
             )
             
             self.logger.info(f"Successfully executed generic pipeline - Type: {request.pipeline_type}, Flavor: '{flavor.title}', execution: {execution_id}")
             
             return PipelineExecutionResponse(
-                response_content=response.content,
+                response_content=response_content,
                 execution_id=execution_id,
                 flavor_id=flavor.id,
                 pipeline_type=request.pipeline_type.value,
-                token_usage=token_usage
+                token_usage=token_usage,
+                structured_output=structured_output
             )
             
         except (LLMConfigurationError, LLMTimeoutError):
@@ -315,28 +312,233 @@ class LLMService:
             self.logger.warning(f"Flavor '{flavor_identifier}' not found, using default")
             return await self.flavor_service.get_default_flavor(pipeline)
     
-    def _create_llm_from_flavor(self, flavor: PipelineFlavor):
-        """Create LLM instance from flavor configuration"""
+    def _create_llm_from_flavor(self, flavor: PipelineFlavor, structured_output_class=None):
+        """Create LLM instance with automatic capability detection and parameter validation"""
+        # Create base LLM with validated configuration
+        llm = self._create_base_llm(flavor)
+
+        # Add structured output if specified
+        if structured_output_class:
+            try:
+                # Suppress LangChain warnings about method selection by using a warning filter
+                import warnings
+                with warnings.catch_warnings():
+                    warnings.filterwarnings("ignore", category=UserWarning, module="langchain_openai")
+                    structured_llm = llm.with_structured_output(structured_output_class)
+
+                self.logger.debug(f"Structured output enabled for {flavor.llm_model}")
+                return structured_llm
+
+            except Exception as e:
+                self.logger.warning(
+                    f"Structured output not available for {flavor.llm_model}: {e}. "
+                    f"Will use text parsing fallback."
+                )
+                return llm
+
+        return llm
+
+    def _create_base_llm(self, flavor: PipelineFlavor):
+        """Create base LLM with validated configuration parameters using provider router"""
         config = flavor.llm_config.model_dump()
-        
-        # Filter out parameters not supported by specific providers
-        if flavor.llm_provider.lower() == 'openai':
-            # OpenAI doesn't support top_k parameter
-            config.pop('top_k', None)
-        elif flavor.llm_provider.lower() in ['anthropic', 'claude']:
-            # Anthropic might have different parameter restrictions
-            # Add filtering as needed
-            pass
-        
+
         # Remove None values to avoid passing empty parameters
-        config = {k: v for k, v in config.items() if v is not None}
-        
+        filtered_config = {k: v for k, v in config.items() if v is not None}
+
+        self.logger.debug(f"Creating {flavor.llm_model} with config: {list(filtered_config.keys())}")
+
+        # Use provider router to get appropriate LLM
+        provider_router = get_provider_router()
+
+        try:
+            return provider_router.get_llm_for_model(flavor.llm_model, **filtered_config)
+        except Exception as e:
+            self.logger.error(f"Failed to create LLM for model {flavor.llm_model}: {e}")
+            # Fallback to legacy hardcoded behavior if provider routing fails
+            self.logger.warning("Falling back to legacy LLM creation")
+            return self._create_legacy_llm(flavor.llm_model, filtered_config)
+
+    def _create_legacy_llm(self, model_name: str, config: dict):
+        """Legacy LLM creation for backward compatibility"""
+        # Validate and filter configuration based on model capabilities
+        filtered_config, warnings = validate_model_config(model_name, config)
+
+        # Log any parameter adjustments
+        for warning in warnings:
+            self.logger.warning(warning)
+
+        # Remove None values to avoid passing empty parameters
+        filtered_config = {k: v for k, v in filtered_config.items() if v is not None}
+
+        # Default to OpenAI for legacy compatibility
+        openai_api_key = os.getenv("OPENAI_API_KEY")
+        if not openai_api_key:
+            raise LLMConfigurationError("OPENAI_API_KEY environment variable not set")
+
         return init_chat_model(
-            model=flavor.llm_model,
-            model_provider=flavor.llm_provider,
-            **config
+            model=model_name,
+            model_provider="openai",
+            openai_api_key=openai_api_key,
+            **filtered_config
         )
-    
+
+    def _process_response_with_structured_output(
+        self,
+        response: Any,
+        structured_output_class: Optional[type],
+        pipeline_type: PipelineType
+    ) -> tuple[Optional[Dict[str, Any]], str]:
+        """
+        Process LLM response with structured output, handling both direct structured responses
+        and fallback text parsing.
+
+        Returns:
+            tuple: (structured_output_dict, response_content_string)
+        """
+        structured_output = None
+        response_content = ""
+
+        if structured_output_class:
+            # First, try to extract structured output from LangChain structured response
+            structured_output = self._extract_structured_output_from_response(response, structured_output_class)
+
+            if structured_output:
+                # Convert structured output back to text for compatibility
+                response_content = self._structured_output_to_text(structured_output, structured_output_class)
+                self.logger.debug(f"Successfully extracted structured output using LangChain for pipeline {pipeline_type}")
+            else:
+                # Fall back to text parsing
+                self.logger.warning(f"LangChain structured output failed for pipeline {pipeline_type}, falling back to regex parsing")
+                response_content = response.content if hasattr(response, 'content') else str(response)
+                structured_output = self._parse_structured_output_from_text(response_content, structured_output_class, pipeline_type)
+        else:
+            # No structured output expected, just get the text content
+            response_content = response.content if hasattr(response, 'content') else str(response)
+            self.logger.debug(f"No structured output class configured for pipeline {pipeline_type}")
+
+        return structured_output, response_content
+
+    def _extract_structured_output_from_response(
+        self,
+        response: Any,
+        structured_output_class: type
+    ) -> Optional[Dict[str, Any]]:
+        """Extract structured output from LangChain structured response object."""
+        try:
+            if not structured_output_class:
+                return None
+
+            # Get field names from the Pydantic model
+            field_names = list(structured_output_class.model_fields.keys())
+
+            # Check if response has the expected structured output attributes
+            if not any(hasattr(response, field_name) for field_name in field_names):
+                return None
+
+            # Extract all fields defined in the structured output class
+            extracted_data = {}
+            for field_name in field_names:
+                value = getattr(response, field_name, None)
+                # Convert empty strings to None for optional fields
+                if value == "":
+                    value = None
+                extracted_data[field_name] = value
+
+            # Validate that at least one required field has content
+            required_fields = [
+                name for name, field in structured_output_class.model_fields.items()
+                if field.is_required()
+            ]
+
+            if required_fields and not any(extracted_data.get(field) for field in required_fields):
+                return None
+
+            return extracted_data
+
+        except Exception as e:
+            self.logger.warning(f"Failed to extract structured output from response: {e}")
+            return None
+
+    def _structured_output_to_text(
+        self,
+        structured_output: Dict[str, Any],
+        structured_output_class: type
+    ) -> str:
+        """Convert structured output dictionary back to formatted text."""
+        try:
+            field_names = list(structured_output_class.model_fields.keys())
+            text_parts = []
+
+            for field_name in field_names:
+                value = structured_output.get(field_name)
+                if value:
+                    # Capitalize field name for display
+                    display_name = field_name.replace('_', ' ').title()
+                    text_parts.append(f"{display_name}: {value}")
+
+            return "\n".join(text_parts)
+
+        except Exception as e:
+            self.logger.warning(f"Failed to convert structured output to text: {e}")
+            # Fallback to simple formatting
+            return str(structured_output)
+
+    def _parse_structured_output_from_text(
+        self,
+        response_content: str,
+        structured_output_class: type,
+        pipeline_type: PipelineType
+    ) -> Optional[Dict[str, Any]]:
+        """Parse structured output from raw text response using regex based on Pydantic model fields."""
+        try:
+            if not structured_output_class:
+                return None
+
+            import re
+
+            # Get field names from the Pydantic model
+            field_names = list(structured_output_class.model_fields.keys())
+            parsed_output = {}
+
+            # Create regex patterns dynamically based on field names
+            for field_name in field_names:
+                # Convert field_name to display format (e.g., "definition" -> "Definition")
+                display_name = field_name.replace('_', ' ').title()
+
+                # Create pattern to match "FieldName: content" format
+                # Match until next field name or end of string
+                next_fields = [fn.replace('_', ' ').title() for fn in field_names if fn != field_name]
+                if next_fields:
+                    next_pattern = '|'.join(re.escape(f"{nf}:") for nf in next_fields)
+                    pattern = rf'{re.escape(display_name)}:\s*(.+?)(?=\n(?:{next_pattern})|$)'
+                else:
+                    pattern = rf'{re.escape(display_name)}:\s*(.+?)(?=\n|$)'
+
+                match = re.search(pattern, response_content, re.DOTALL)
+                if match:
+                    value = match.group(1).strip()
+                    # Convert empty strings to None
+                    parsed_output[field_name] = value if value else None
+                else:
+                    parsed_output[field_name] = None
+
+            # Validate that at least one required field has content
+            required_fields = [
+                name for name, field in structured_output_class.model_fields.items()
+                if field.is_required()
+            ]
+
+            if required_fields and not any(parsed_output.get(field) for field in required_fields):
+                self.logger.warning(f"No required fields found in text parsing for pipeline {pipeline_type}")
+                return None
+
+            self.logger.info(f"Successfully parsed structured output from text for pipeline {pipeline_type}")
+            return parsed_output
+
+        except Exception as e:
+            self.logger.error(f"Failed to parse structured output from text for pipeline {pipeline_type}: {e}")
+            return None
+
     def _render_user_prompt_generic(self, template: str, context_data: Dict[str, Any]) -> str:
         """Render user prompt template with arbitrary context data"""
         self.logger.debug("Rendering generic user prompt template with context data")

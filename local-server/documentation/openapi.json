@@ -4776,7 +4776,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/GenericPipelineExecutionRequest"
+                "$ref": "#/components/schemas/PipelineExecutionRequest"
               }
             }
           },
@@ -4788,7 +4788,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/GenericPipelineExecutionResponse"
+                  "$ref": "#/components/schemas/PipelineExecutionResponse"
                 }
               }
             }
@@ -4858,7 +4858,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/GenericPipelineExecutionRequest"
+                "$ref": "#/components/schemas/PipelineExecutionRequest"
               }
             }
           },
@@ -5414,6 +5414,670 @@
                 "schema": {
                   "$ref": "#/components/schemas/HTTPValidationError"
                 }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/model-capabilities": {
+      "get": {
+        "tags": [
+          "model-capabilities",
+          "Model Capabilities"
+        ],
+        "summary": "List Supported Models",
+        "description": "List all supported models with their capabilities",
+        "operationId": "list_supported_models_api_model_capabilities_get",
+        "parameters": [
+          {
+            "name": "provider",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by provider (openai, anthropic, etc.)",
+              "title": "Provider"
+            },
+            "description": "Filter by provider (openai, anthropic, etc.)"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SupportedModelsResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/model-capabilities/{model_name}": {
+      "get": {
+        "tags": [
+          "model-capabilities",
+          "Model Capabilities"
+        ],
+        "summary": "Get Model Capabilities Endpoint",
+        "description": "Get capabilities for a specific model",
+        "operationId": "get_model_capabilities_endpoint_api_model_capabilities__model_name__get",
+        "parameters": [
+          {
+            "name": "model_name",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Model Name"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ModelCapabilitiesResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/model-capabilities/providers/{provider_name}": {
+      "get": {
+        "tags": [
+          "model-capabilities",
+          "Model Capabilities"
+        ],
+        "summary": "List Models By Provider",
+        "description": "List all models for a specific provider",
+        "operationId": "list_models_by_provider_api_model_capabilities_providers__provider_name__get",
+        "parameters": [
+          {
+            "name": "provider_name",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Provider Name"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SupportedModelsResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/model-capabilities/openrouter/discover": {
+      "get": {
+        "tags": [
+          "model-capabilities",
+          "Model Capabilities"
+        ],
+        "summary": "Discover Openrouter Models",
+        "description": "Discover available models from OpenRouter API",
+        "operationId": "discover_openrouter_models_api_model_capabilities_openrouter_discover_get",
+        "parameters": [
+          {
+            "name": "provider_filter",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by provider (anthropic, openai, etc.)",
+              "title": "Provider Filter"
+            },
+            "description": "Filter by provider (anthropic, openai, etc.)"
+          },
+          {
+            "name": "min_context",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Minimum context window size",
+              "title": "Min Context"
+            },
+            "description": "Minimum context window size"
+          },
+          {
+            "name": "api_key",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "OpenRouter API key (optional)",
+              "title": "Api Key"
+            },
+            "description": "OpenRouter API key (optional)"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SupportedModelsResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/model-capabilities/openrouter/sync": {
+      "post": {
+        "tags": [
+          "model-capabilities",
+          "Model Capabilities"
+        ],
+        "summary": "Sync Openrouter Models",
+        "description": "Sync OpenRouter models into our static registry (admin endpoint)",
+        "operationId": "sync_openrouter_models_api_model_capabilities_openrouter_sync_post",
+        "parameters": [
+          {
+            "name": "api_key",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "OpenRouter API key (optional)",
+              "title": "Api Key"
+            },
+            "description": "OpenRouter API key (optional)"
+          },
+          {
+            "name": "provider_filter",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Only sync models from specific provider",
+              "title": "Provider Filter"
+            },
+            "description": "Only sync models from specific provider"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/enabled-models": {
+      "get": {
+        "tags": [
+          "enabled-models",
+          "Enabled Models"
+        ],
+        "summary": "List Enabled Models",
+        "description": "List configured models with optional filtering",
+        "operationId": "list_enabled_models_api_enabled_models_get",
+        "parameters": [
+          {
+            "name": "enabled_only",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "description": "Only return enabled models",
+              "default": true,
+              "title": "Enabled Only"
+            },
+            "description": "Only return enabled models"
+          },
+          {
+            "name": "provider_type",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/ProviderType"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by provider type",
+              "title": "Provider Type"
+            },
+            "description": "Filter by provider type"
+          },
+          {
+            "name": "tag",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by tag",
+              "title": "Tag"
+            },
+            "description": "Filter by tag"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EnabledModelsListResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "enabled-models",
+          "Enabled Models"
+        ],
+        "summary": "Add Enabled Model",
+        "description": "Add a new enabled model configuration",
+        "operationId": "add_enabled_model_api_enabled_models_post",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AddModelRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EnabledModelResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/enabled-models/{model_name}": {
+      "get": {
+        "tags": [
+          "enabled-models",
+          "Enabled Models"
+        ],
+        "summary": "Get Enabled Model",
+        "description": "Get configuration for a specific enabled model",
+        "operationId": "get_enabled_model_api_enabled_models__model_name__get",
+        "parameters": [
+          {
+            "name": "model_name",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Model Name"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EnabledModelResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "enabled-models",
+          "Enabled Models"
+        ],
+        "summary": "Update Enabled Model",
+        "description": "Update an existing enabled model configuration",
+        "operationId": "update_enabled_model_api_enabled_models__model_name__put",
+        "parameters": [
+          {
+            "name": "model_name",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Model Name"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateModelRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EnabledModelResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "enabled-models",
+          "Enabled Models"
+        ],
+        "summary": "Delete Enabled Model",
+        "description": "Remove an enabled model configuration",
+        "operationId": "delete_enabled_model_api_enabled_models__model_name__delete",
+        "parameters": [
+          {
+            "name": "model_name",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Model Name"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/enabled-models/{model_name}/enable": {
+      "post": {
+        "tags": [
+          "enabled-models",
+          "Enabled Models"
+        ],
+        "summary": "Enable Model",
+        "description": "Enable a specific model",
+        "operationId": "enable_model_api_enabled_models__model_name__enable_post",
+        "parameters": [
+          {
+            "name": "model_name",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Model Name"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/enabled-models/{model_name}/disable": {
+      "post": {
+        "tags": [
+          "enabled-models",
+          "Enabled Models"
+        ],
+        "summary": "Disable Model",
+        "description": "Disable a specific model",
+        "operationId": "disable_model_api_enabled_models__model_name__disable_post",
+        "parameters": [
+          {
+            "name": "model_name",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Model Name"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/enabled-models/providers/summary": {
+      "get": {
+        "tags": [
+          "enabled-models",
+          "Enabled Models"
+        ],
+        "summary": "Get Provider Summary",
+        "description": "Get summary of models grouped by provider",
+        "operationId": "get_provider_summary_api_enabled_models_providers_summary_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
               }
             }
           }
@@ -12311,6 +12975,48 @@
           }
         }
       }
+    },
+    "/api/embeddings/status": {
+      "get": {
+        "tags": [
+          "embeddings",
+          "embeddings"
+        ],
+        "summary": "Get Regeneration Status",
+        "description": "Get the current status of embedding regeneration.\n\nReturns:\n- is_running: Whether regeneration is currently in progress",
+        "operationId": "get_regeneration_status_api_embeddings_status_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/embeddings/stop": {
+      "post": {
+        "tags": [
+          "embeddings",
+          "embeddings"
+        ],
+        "summary": "Stop Regeneration",
+        "description": "Stop the current embedding regeneration process.\n\nReturns:\n- stopped: Whether a running process was stopped\n- message: Status message",
+        "operationId": "stop_regeneration_api_embeddings_stop_post",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
@@ -12398,6 +13104,97 @@
         ],
         "title": "AddExistingDatasetRequest",
         "description": "Request to add an existing dataset file."
+      },
+      "AddModelRequest": {
+        "properties": {
+          "model_name": {
+            "type": "string",
+            "title": "Model Name"
+          },
+          "provider_type": {
+            "$ref": "#/components/schemas/ProviderType"
+          },
+          "display_name": {
+            "type": "string",
+            "title": "Display Name"
+          },
+          "enabled": {
+            "type": "boolean",
+            "title": "Enabled",
+            "default": true
+          },
+          "api_key_env_var": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Api Key Env Var"
+          },
+          "custom_endpoint": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Custom Endpoint"
+          },
+          "model_override": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Model Override"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          },
+          "cost_tier": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cost Tier"
+          },
+          "tags": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Tags",
+            "default": []
+          }
+        },
+        "type": "object",
+        "required": [
+          "model_name",
+          "provider_type",
+          "display_name"
+        ],
+        "title": "AddModelRequest",
+        "description": "Request model for adding a new enabled model"
       },
       "AnalyticsHealthOut": {
         "properties": {
@@ -13744,6 +14541,119 @@
         "title": "DiffSummaryOut",
         "description": "Model for diff summary output/response."
       },
+      "EnabledModelResponse": {
+        "properties": {
+          "model_name": {
+            "type": "string",
+            "title": "Model Name"
+          },
+          "provider_type": {
+            "$ref": "#/components/schemas/ProviderType"
+          },
+          "display_name": {
+            "type": "string",
+            "title": "Display Name"
+          },
+          "enabled": {
+            "type": "boolean",
+            "title": "Enabled"
+          },
+          "api_key_env_var": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Api Key Env Var"
+          },
+          "custom_endpoint": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Custom Endpoint"
+          },
+          "model_override": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Model Override"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          },
+          "cost_tier": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cost Tier"
+          },
+          "tags": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Tags",
+            "default": []
+          }
+        },
+        "type": "object",
+        "required": [
+          "model_name",
+          "provider_type",
+          "display_name",
+          "enabled"
+        ],
+        "title": "EnabledModelResponse",
+        "description": "Response model for enabled model configuration"
+      },
+      "EnabledModelsListResponse": {
+        "properties": {
+          "models": {
+            "items": {
+              "$ref": "#/components/schemas/EnabledModelResponse"
+            },
+            "type": "array",
+            "title": "Models"
+          },
+          "total_count": {
+            "type": "integer",
+            "title": "Total Count"
+          }
+        },
+        "type": "object",
+        "required": [
+          "models",
+          "total_count"
+        ],
+        "title": "EnabledModelsListResponse",
+        "description": "Response model for list of enabled models"
+      },
       "EntityData": {
         "properties": {
           "text": {
@@ -14161,81 +15071,6 @@
         "title": "FlavorAnalyticsResponse",
         "description": "Response model for flavor-specific analytics"
       },
-      "GenericPipelineExecutionRequest": {
-        "properties": {
-          "flavor_id": {
-            "type": "string",
-            "title": "Flavor Id",
-            "description": "ID of the pipeline flavor to use"
-          },
-          "pipeline_type": {
-            "$ref": "#/components/schemas/PipelineType",
-            "description": "Type of pipeline to execute"
-          },
-          "context_data": {
-            "additionalProperties": true,
-            "type": "object",
-            "title": "Context Data",
-            "description": "Arbitrary context data for template rendering"
-          }
-        },
-        "type": "object",
-        "required": [
-          "flavor_id",
-          "pipeline_type",
-          "context_data"
-        ],
-        "title": "GenericPipelineExecutionRequest",
-        "description": "Generic request model for pipeline execution with arbitrary context data"
-      },
-      "GenericPipelineExecutionResponse": {
-        "properties": {
-          "response_content": {
-            "type": "string",
-            "title": "Response Content",
-            "description": "Raw LLM response content"
-          },
-          "execution_id": {
-            "type": "string",
-            "title": "Execution Id",
-            "description": "Unique execution ID for tracing"
-          },
-          "flavor_id": {
-            "type": "string",
-            "title": "Flavor Id",
-            "description": "ID of the flavor that generated this response"
-          },
-          "pipeline_type": {
-            "type": "string",
-            "title": "Pipeline Type",
-            "description": "Type of pipeline that was executed"
-          },
-          "token_usage": {
-            "anyOf": [
-              {
-                "additionalProperties": {
-                  "type": "integer"
-                },
-                "type": "object"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Token Usage",
-            "description": "Token usage statistics if available"
-          }
-        },
-        "type": "object",
-        "required": [
-          "response_content",
-          "execution_id",
-          "flavor_id",
-          "pipeline_type"
-        ],
-        "title": "GenericPipelineExecutionResponse",
-        "description": "Generic response model for pipeline execution"
-      },
       "HTTPValidationError": {
         "properties": {
           "detail": {
@@ -14523,6 +15358,28 @@
         ],
         "title": "MigrationStatus",
         "description": "Status of database migrations."
+      },
+      "ModelCapabilitiesResponse": {
+        "properties": {
+          "model_name": {
+            "type": "string",
+            "title": "Model Name",
+            "description": "Model name"
+          },
+          "capabilities": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Capabilities",
+            "description": "Model capabilities and constraints"
+          }
+        },
+        "type": "object",
+        "required": [
+          "model_name",
+          "capabilities"
+        ],
+        "title": "ModelCapabilitiesResponse",
+        "description": "Response model for model capabilities information"
       },
       "MoveNodesRequest": {
         "properties": {
@@ -15605,6 +16462,94 @@
         "title": "PerformanceTrendsOut",
         "description": "API model for performance trends output."
       },
+      "PipelineExecutionRequest": {
+        "properties": {
+          "flavor_id": {
+            "type": "string",
+            "title": "Flavor Id",
+            "description": "ID of the pipeline flavor to use"
+          },
+          "pipeline_type": {
+            "$ref": "#/components/schemas/PipelineType",
+            "description": "Type of pipeline to execute"
+          },
+          "context_data": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Context Data",
+            "description": "Arbitrary context data for template rendering"
+          }
+        },
+        "type": "object",
+        "required": [
+          "flavor_id",
+          "pipeline_type",
+          "context_data"
+        ],
+        "title": "PipelineExecutionRequest",
+        "description": "Generic request model for pipeline execution with arbitrary context data"
+      },
+      "PipelineExecutionResponse": {
+        "properties": {
+          "response_content": {
+            "type": "string",
+            "title": "Response Content",
+            "description": "Raw LLM response content"
+          },
+          "execution_id": {
+            "type": "string",
+            "title": "Execution Id",
+            "description": "Unique execution ID for tracing"
+          },
+          "flavor_id": {
+            "type": "string",
+            "title": "Flavor Id",
+            "description": "ID of the flavor that generated this response"
+          },
+          "pipeline_type": {
+            "type": "string",
+            "title": "Pipeline Type",
+            "description": "Type of pipeline that was executed"
+          },
+          "token_usage": {
+            "anyOf": [
+              {
+                "additionalProperties": {
+                  "type": "integer"
+                },
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Token Usage",
+            "description": "Token usage statistics if available"
+          },
+          "structured_output": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Structured Output",
+            "description": "Structured output data parsed from LLM response"
+          }
+        },
+        "type": "object",
+        "required": [
+          "response_content",
+          "execution_id",
+          "flavor_id",
+          "pipeline_type"
+        ],
+        "title": "PipelineExecutionResponse",
+        "description": "Generic response model for pipeline execution"
+      },
       "PipelineFlavor": {
         "properties": {
           "id": {
@@ -16061,6 +17006,17 @@
         ],
         "title": "ProposalVotesResponse",
         "description": "Response model for proposal votes list."
+      },
+      "ProviderType": {
+        "type": "string",
+        "enum": [
+          "native_openai",
+          "native_anthropic",
+          "native_google",
+          "openrouter"
+        ],
+        "title": "ProviderType",
+        "description": "LLM provider routing types"
       },
       "PullRequest": {
         "properties": {
@@ -16963,6 +17919,30 @@
         ],
         "title": "StorageOptimizationOut",
         "description": "API model for storage optimization output."
+      },
+      "SupportedModelsResponse": {
+        "properties": {
+          "models": {
+            "items": {
+              "$ref": "#/components/schemas/ModelCapabilitiesResponse"
+            },
+            "type": "array",
+            "title": "Models",
+            "description": "List of supported models with capabilities"
+          },
+          "total_count": {
+            "type": "integer",
+            "title": "Total Count",
+            "description": "Total number of supported models"
+          }
+        },
+        "type": "object",
+        "required": [
+          "models",
+          "total_count"
+        ],
+        "title": "SupportedModelsResponse",
+        "description": "Response model for listing supported models"
       },
       "SyncHealthOut": {
         "properties": {
@@ -17869,6 +18849,114 @@
         ],
         "title": "UpdateDatasetDirectoryRequest",
         "description": "Request to update the datasets directory."
+      },
+      "UpdateModelRequest": {
+        "properties": {
+          "provider_type": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ProviderType"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "display_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Display Name"
+          },
+          "enabled": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Enabled"
+          },
+          "api_key_env_var": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Api Key Env Var"
+          },
+          "custom_endpoint": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Custom Endpoint"
+          },
+          "model_override": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Model Override"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          },
+          "cost_tier": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cost Tier"
+          },
+          "tags": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Tags"
+          }
+        },
+        "type": "object",
+        "title": "UpdateModelRequest",
+        "description": "Request model for updating enabled model configuration"
       },
       "UpdatePipelineFlavorRequest": {
         "properties": {

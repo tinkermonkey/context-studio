@@ -7,8 +7,8 @@
 import { useMutation, UseMutationOptions } from "@tanstack/react-query";
 import {
   pipelineExecutionService,
-  type GenericPipelineExecutionRequest,
-  type GenericPipelineExecutionResponse,
+  type PipelineExecutionRequest,
+  type PipelineExecutionResponse,
   type StreamingChunk,
 } from "../../services/pipelineExecution";
 
@@ -17,13 +17,13 @@ import {
  */
 export const usePipelineExecutionMutation = (
   options?: UseMutationOptions<
-    GenericPipelineExecutionResponse,
+    PipelineExecutionResponse,
     Error,
-    GenericPipelineExecutionRequest
+    PipelineExecutionRequest
   >,
 ) => {
   return useMutation({
-    mutationFn: (request: GenericPipelineExecutionRequest) =>
+    mutationFn: (request: PipelineExecutionRequest) =>
       pipelineExecutionService.executePipeline(request),
     ...options,
   });
@@ -35,13 +35,13 @@ export const usePipelineExecutionMutation = (
 export const usePipelineExecutionStreamMutation = (
   onChunk?: (chunk: StreamingChunk) => void,
   options?: UseMutationOptions<
-    GenericPipelineExecutionResponse,
+    PipelineExecutionResponse,
     Error,
-    GenericPipelineExecutionRequest
+    PipelineExecutionRequest
   >,
 ) => {
   return useMutation({
-    mutationFn: (request: GenericPipelineExecutionRequest) =>
+    mutationFn: (request: PipelineExecutionRequest) =>
       pipelineExecutionService.executePipelineStream(request, onChunk),
     ...options,
   });
@@ -52,13 +52,13 @@ export const usePipelineExecutionStreamMutation = (
  */
 export const useBatchPipelineExecutionMutation = (
   options?: UseMutationOptions<
-    GenericPipelineExecutionResponse[],
+    PipelineExecutionResponse[],
     Error,
-    GenericPipelineExecutionRequest[]
+    PipelineExecutionRequest[]
   >,
 ) => {
   return useMutation({
-    mutationFn: async (requests: GenericPipelineExecutionRequest[]) => {
+    mutationFn: async (requests: PipelineExecutionRequest[]) => {
       const promises = requests.map(request =>
         pipelineExecutionService.executePipeline(request)
       );
@@ -74,13 +74,13 @@ export const useBatchPipelineExecutionMutation = (
 export const useBatchPipelineExecutionStreamMutation = (
   onChunk?: (chunk: StreamingChunk & { flavorId: string }) => void,
   options?: UseMutationOptions<
-    GenericPipelineExecutionResponse[],
+    PipelineExecutionResponse[],
     Error,
-    GenericPipelineExecutionRequest[]
+    PipelineExecutionRequest[]
   >,
 ) => {
   return useMutation({
-    mutationFn: async (requests: GenericPipelineExecutionRequest[]) => {
+    mutationFn: async (requests: PipelineExecutionRequest[]) => {
       const promises = requests.map(request =>
         pipelineExecutionService.executePipelineStream(request, (chunk) => {
           onChunk?.({ ...chunk, flavorId: request.flavor_id });

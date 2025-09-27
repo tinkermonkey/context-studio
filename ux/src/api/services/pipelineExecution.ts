@@ -9,10 +9,16 @@ import { ENDPOINTS } from "../config";
 import type { components } from "@/api/client/types";
 
 // Type aliases for the new pipeline execution system
-export type GenericPipelineExecutionRequest =
-  components["schemas"]["GenericPipelineExecutionRequest"];
-export type GenericPipelineExecutionResponse =
-  components["schemas"]["GenericPipelineExecutionResponse"];
+export type PipelineExecutionRequest =
+  components["schemas"]["PipelineExecutionRequest"];
+
+// Legacy alias for backward compatibility
+export type GenericPipelineExecutionRequest = PipelineExecutionRequest;
+export type PipelineExecutionResponse =
+  components["schemas"]["PipelineExecutionResponse"];
+
+// Legacy alias for backward compatibility
+export type GenericPipelineExecutionResponse = PipelineExecutionResponse;
 export type { PipelineType } from "./pipelineFlavors";
 
 // Legacy compatibility types for easier migration
@@ -58,14 +64,14 @@ export class PipelineExecutionService extends BaseService {
    * Execute a pipeline with the new unified execution system
    */
   async executePipeline(
-    request: GenericPipelineExecutionRequest,
-  ): Promise<GenericPipelineExecutionResponse> {
+    request: PipelineExecutionRequest,
+  ): Promise<PipelineExecutionResponse> {
     return this.withErrorContext(() => {
       this.validateRequired(request.pipeline_type, "pipeline_type");
       this.validateRequired(request.flavor_id, "flavor_id");
       this.validateRequired(request.context_data, "context_data");
 
-      return this.postResource<GenericPipelineExecutionResponse>(
+      return this.postResource<PipelineExecutionResponse>(
         `${ENDPOINTS.LLM}/execute_pipeline`,
         request,
       );
@@ -77,9 +83,9 @@ export class PipelineExecutionService extends BaseService {
    * Note: This is a simplified implementation for now - streaming will need custom handling
    */
   async executePipelineStream(
-    request: GenericPipelineExecutionRequest,
+    request: PipelineExecutionRequest,
     onChunk?: (chunk: StreamingChunk) => void,
-  ): Promise<GenericPipelineExecutionResponse> {
+  ): Promise<PipelineExecutionResponse> {
     // For now, fall back to non-streaming execution
     // TODO: Implement proper streaming with server-sent events
     console.warn('Streaming not yet implemented, falling back to regular execution');
@@ -91,8 +97,8 @@ export class PipelineExecutionService extends BaseService {
    */
   async executeTermDefinition(
     request: LegacyTermDefinitionRequest,
-  ): Promise<GenericPipelineExecutionResponse> {
-    const pipelineRequest: GenericPipelineExecutionRequest = {
+  ): Promise<PipelineExecutionResponse> {
+    const pipelineRequest: PipelineExecutionRequest = {
       pipeline_type: 'suggest_term_definition',
       flavor_id: request.flavor || 'default',
       context_data: {
@@ -116,8 +122,8 @@ export class PipelineExecutionService extends BaseService {
    */
   async executeDomainDefinition(
     request: LegacyDomainDefinitionRequest,
-  ): Promise<GenericPipelineExecutionResponse> {
-    const pipelineRequest: GenericPipelineExecutionRequest = {
+  ): Promise<PipelineExecutionResponse> {
+    const pipelineRequest: PipelineExecutionRequest = {
       pipeline_type: 'suggest_domain_definition',
       flavor_id: request.flavor || 'default',
       context_data: {
@@ -134,8 +140,8 @@ export class PipelineExecutionService extends BaseService {
    */
   async executeLayerDefinition(
     request: LegacyLayerDefinitionRequest,
-  ): Promise<GenericPipelineExecutionResponse> {
-    const pipelineRequest: GenericPipelineExecutionRequest = {
+  ): Promise<PipelineExecutionResponse> {
+    const pipelineRequest: PipelineExecutionRequest = {
       pipeline_type: 'suggest_layer_definition',
       flavor_id: request.flavor || 'default',
       context_data: {
@@ -150,7 +156,7 @@ export class PipelineExecutionService extends BaseService {
   /**
    * Convert new generic response to legacy term definition response format
    */
-  convertToLegacyTermResponse(response: GenericPipelineExecutionResponse): any {
+  convertToLegacyTermResponse(response: PipelineExecutionResponse): any {
     // Parse the response_content as JSON if it's a string
     let parsedResult: any = response.response_content;
     if (typeof response.response_content === 'string') {
@@ -174,7 +180,7 @@ export class PipelineExecutionService extends BaseService {
   /**
    * Convert new generic response to legacy domain definition response format
    */
-  convertToLegacyDomainResponse(response: GenericPipelineExecutionResponse): any {
+  convertToLegacyDomainResponse(response: PipelineExecutionResponse): any {
     let parsedResult: any = response.response_content;
     if (typeof response.response_content === 'string') {
       try {
@@ -195,7 +201,7 @@ export class PipelineExecutionService extends BaseService {
   /**
    * Convert new generic response to legacy layer definition response format
    */
-  convertToLegacyLayerResponse(response: GenericPipelineExecutionResponse): any {
+  convertToLegacyLayerResponse(response: PipelineExecutionResponse): any {
     let parsedResult: any = response.response_content;
     if (typeof response.response_content === 'string') {
       try {
