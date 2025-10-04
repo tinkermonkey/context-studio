@@ -48,7 +48,8 @@ class DatabaseConfig(BaseModel):
     """Database configuration section"""
     default_url: str = Field(default="sqlite:///./local.db", description="Default database URL")
     default_dataset_filename: str = Field(default="default.db", description="Default dataset filename")
-    schema_org_path: str = Field(default="./schemaorg.db", description="Schema.org database path")
+    schema_org_path: str = Field(default="./schemaorg.db", description="Schema.org database path (legacy)")
+    reference_path: str = Field(default="./reference.db", description="Reference database path")
     reference_cache_path: str = Field(default="./reference_api_cache.db", description="Reference API cache database path")
     pipeline_path: str = Field(default="./pipeline.db", description="Pipeline database path")
     check_same_thread: bool = Field(default=False, description="SQLite check_same_thread setting")
