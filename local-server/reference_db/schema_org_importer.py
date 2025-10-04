@@ -33,8 +33,12 @@ logger = logging.getLogger(__name__)
 
 # Constants
 DEFAULT_BATCH_SIZE = 200
+MAX_BATCH_SIZE = 5000
+MIN_BATCH_SIZE = 1
 DEFAULT_RETRY_COUNT = 3
-LOCK_FILE_STALE_HOURS = 1
+DEFAULT_STALE_LOCK_THRESHOLD = 3600  # 1 hour in seconds
+DEFAULT_EMBEDDING_DIMS = 384  # all-MiniLM-L6-v2 model
+PROGRESS_LOG_INTERVAL = 500  # Log progress every N nodes
 SOURCE_NAME = "schema.org"
 
 
@@ -77,17 +81,36 @@ class SchemaOrgImporter:
     - Lock file management for concurrent import protection
     """
 
-    def __init__(self, config: ReferenceConfig, manager: ReferenceManager):
+    def __init__(
+        self,
+        config: ReferenceConfig,
+        manager: ReferenceManager,
+        stale_lock_threshold: int = DEFAULT_STALE_LOCK_THRESHOLD
+    ):
         """
         Initialize the Schema.org importer.
 
         Args:
             config: ReferenceConfig with operational parameters
             manager: ReferenceManager instance for database operations
+            stale_lock_threshold: Time in seconds after which a lock file is considered stale
         """
         self.config = config
         self.manager = manager
         self.lock_path = f"{manager.db_path}.import.lock"
+        self.stale_lock_threshold = stale_lock_threshold
+        self.vec_table_created = False  # Track vec table creation state
+
+        # Setup signal handlers for graceful lock cleanup
+        import signal
+        signal.signal(signal.SIGTERM, self._signal_handler)
+        signal.signal(signal.SIGINT, self._signal_handler)
+
+    def _signal_handler(self, signum, frame):
+        """Handle termination signals for graceful lock cleanup."""
+        logger.info(f"Received signal {signum}, cleaning up...")
+        self._release_lock()
+        raise SystemExit(0)
 
     def import_schema_org(self, batch_size: int = DEFAULT_BATCH_SIZE) -> Dict[str, Any]:
         """
@@ -101,7 +124,7 @@ class SchemaOrgImporter:
         5. Extract and insert relationships in separate transaction
 
         Args:
-            batch_size: Number of items to process per batch (default: 200)
+            batch_size: Number of items to process per batch (default: 200, max: 5000)
 
         Returns:
             Dict with import statistics and status
@@ -112,7 +135,15 @@ class SchemaOrgImporter:
             ParseError: If JSON-LD parsing fails
             EmbeddingError: If embedding generation fails
             SchemaOrgImportError: For other import failures
+            ValueError: If batch_size is invalid
         """
+        # Validate batch size
+        if not MIN_BATCH_SIZE <= batch_size <= MAX_BATCH_SIZE:
+            raise ValueError(
+                f"batch_size must be between {MIN_BATCH_SIZE} and {MAX_BATCH_SIZE}, "
+                f"got {batch_size}"
+            )
+
         logger.info("Starting Schema.org import pipeline")
 
         # Check and acquire lock
@@ -140,7 +171,19 @@ class SchemaOrgImporter:
 
             # Step 4: Create and populate vec0 virtual table
             logger.info("Step 4: Creating and populating vec0 virtual table")
-            self._create_vec_table()
+            try:
+                vec_success = self._create_vec_table()
+                if not vec_success:
+                    logger.warning(
+                        "Operating in degraded mode: embeddings stored but not searchable "
+                        "via vec tables. Install sqlite-vec extension for full functionality."
+                    )
+            except Exception as e:
+                # Clean up vec table if creation failed partway
+                logger.error(f"Vec table creation failed, cleaning up: {e}")
+                self._cleanup_vec_table()
+                # Re-raise to trigger full rollback
+                raise
 
             # Step 5: Extract and insert relationships
             logger.info("Step 5: Extracting and inserting relationships")
@@ -174,7 +217,11 @@ class SchemaOrgImporter:
 
     def _acquire_lock(self):
         """
-        Acquire import lock file to prevent concurrent imports.
+        Acquire import lock file to prevent concurrent imports using atomic file creation.
+
+        Uses atomic file creation (open with 'x' mode) to prevent TOCTOU race conditions.
+        If the lock file exists and is stale (older than stale_lock_threshold), it will
+        be removed and acquisition will be retried.
 
         Raises:
             LockError: If lock cannot be acquired or stale lock detected
@@ -182,11 +229,11 @@ class SchemaOrgImporter:
         # Check for stale lock files
         if os.path.exists(self.lock_path):
             lock_age = time.time() - os.path.getmtime(self.lock_path)
-            stale_threshold = LOCK_FILE_STALE_HOURS * 3600
 
-            if lock_age > stale_threshold:
+            if lock_age > self.stale_lock_threshold:
                 logger.warning(
-                    f"Detected stale lock file (age: {lock_age/3600:.1f} hours). "
+                    f"Detected stale lock file (age: {lock_age/3600:.1f} hours, "
+                    f"threshold: {self.stale_lock_threshold/3600:.1f} hours). "
                     f"Removing stale lock."
                 )
                 try:
@@ -198,14 +245,20 @@ class SchemaOrgImporter:
                     f"Another import is in progress (lock file: {self.lock_path})"
                 )
 
-        # Create lock file
+        # Create lock file atomically using 'x' mode (exclusive creation)
+        # This prevents race conditions between check and creation
         try:
-            with open(self.lock_path, 'w') as f:
+            with open(self.lock_path, 'x') as f:
                 f.write(json.dumps({
                     "pid": os.getpid(),
                     "timestamp": datetime.now().isoformat()
                 }))
             logger.info(f"Acquired import lock: {self.lock_path}")
+        except FileExistsError:
+            # Another process created the file between our check and creation attempt
+            raise LockError(
+                f"Another import acquired the lock concurrently (lock file: {self.lock_path})"
+            )
         except Exception as e:
             raise LockError(f"Failed to create lock file: {e}")
 
@@ -233,6 +286,10 @@ class SchemaOrgImporter:
         url = self.config.schema_org_api_url
 
         # Runtime URL validation (TC-SEC002)
+        # IMPORTANT: Security check - only HTTPS URLs allowed for remote sources
+        # Exception: localhost/127.0.0.1 allowed for testing purposes
+        # WARNING: Localhost exception could be exploited via DNS rebinding attacks
+        # Mitigation: Ensure firewall rules prevent external access to localhost endpoints
         if not url.startswith('https://'):
             if not ('localhost' in url or '127.0.0.1' in url):
                 raise DownloadError(
@@ -262,7 +319,7 @@ class SchemaOrgImporter:
                 tmp_file.write(response.text)
                 tmp_file.close()
 
-                logger.info(f"Downloaded {len(response.text)} bytes to {tmp_file.name}")
+                logger.debug(f"Downloaded {len(response.text)} bytes to {tmp_file.name}")
                 return tmp_file.name
 
             except requests.RequestException as e:
@@ -344,7 +401,8 @@ class SchemaOrgImporter:
         Generate embeddings for a list of Schema.org items.
 
         This method processes items in configurable batches and generates
-        separate embeddings for title and definition fields.
+        separate embeddings for title and definition fields. Validates embedding
+        dimensions and provides progress logging.
 
         Args:
             items: List of Schema.org items (entities or properties)
@@ -354,10 +412,11 @@ class SchemaOrgImporter:
             List of dictionaries with item data and embeddings
 
         Raises:
-            EmbeddingError: If embedding generation fails (fail-fast)
+            EmbeddingError: If embedding generation fails or returns invalid dimensions
         """
         embedded_items = []
         failed_items = []
+        items_processed = 0
 
         for i in range(0, len(items), batch_size):
             batch = items[i:i + batch_size]
@@ -386,9 +445,25 @@ class SchemaOrgImporter:
 
                     if title:
                         title_embedding = generate_embedding(title)
+                        # Validate embedding dimensions
+                        if title_embedding:
+                            actual_dims = len(title_embedding) // 4  # float32 = 4 bytes
+                            if actual_dims != DEFAULT_EMBEDDING_DIMS:
+                                raise EmbeddingError(
+                                    f"Title embedding dimension mismatch: expected {DEFAULT_EMBEDDING_DIMS}, "
+                                    f"got {actual_dims} for '{title}'"
+                                )
 
                     if definition:
                         definition_embedding = generate_embedding(definition)
+                        # Validate embedding dimensions
+                        if definition_embedding:
+                            actual_dims = len(definition_embedding) // 4  # float32 = 4 bytes
+                            if actual_dims != DEFAULT_EMBEDDING_DIMS:
+                                raise EmbeddingError(
+                                    f"Definition embedding dimension mismatch: expected {DEFAULT_EMBEDDING_DIMS}, "
+                                    f"got {actual_dims} for '{definition[:50]}...'"
+                                )
 
                     embedded_items.append({
                         "external_id": external_id,
@@ -399,16 +474,33 @@ class SchemaOrgImporter:
                         "raw_data": item
                     })
 
+                    # Progress logging
+                    items_processed += 1
+                    if items_processed % PROGRESS_LOG_INTERVAL == 0:
+                        logger.info(f"Progress: {items_processed}/{len(items)} items processed")
+
                 except Exception as e:
-                    error_msg = f"Failed to generate embedding for {item.get('@id', 'unknown')}: {e}"
-                    logger.error(error_msg)
+                    logger.error(
+                        f"Embedding generation failed",
+                        extra={
+                            "external_id": item.get("@id", "unknown"),
+                            "error": str(e)
+                        }
+                    )
                     failed_items.append(item.get("@id", "unknown"))
 
         # Fail-fast behavior (TC-I001)
         if failed_items:
+            logger.error(
+                f"Embedding generation failed",
+                extra={
+                    "failed_count": len(failed_items),
+                    "failed_ids": failed_items
+                }
+            )
             raise EmbeddingError(
                 f"Embedding generation failed for {len(failed_items)} items. "
-                f"Failed IDs: {failed_items[:5]}..."
+                f"See logs for detailed failed IDs."
             )
 
         logger.info(f"Generated embeddings for {len(embedded_items)} items")
@@ -434,6 +526,7 @@ class SchemaOrgImporter:
             SchemaOrgImportError: If transaction fails
         """
         node_map = {}
+        nodes_inserted = 0
 
         try:
             # Clear any existing nodes from this source for idempotency
@@ -459,6 +552,11 @@ class SchemaOrgImporter:
                     self.manager.session.add(node)
                     node_map[node_data["external_id"]] = node.id
 
+                    # Progress logging
+                    nodes_inserted += 1
+                    if nodes_inserted % PROGRESS_LOG_INTERVAL == 0:
+                        logger.info(f"Progress: {nodes_inserted}/{len(embedded_nodes)} nodes inserted")
+
             # Commit transaction
             self.manager.session.commit()
             logger.info(f"Inserted {len(node_map)} nodes in transaction")
@@ -470,15 +568,20 @@ class SchemaOrgImporter:
 
         return node_map
 
-    def _create_vec_table(self):
+    def _create_vec_table(self) -> bool:
         """
         Create vec0 virtual table and populate via INSERT...SELECT (Phase 4).
 
         This method implements atomic vector table creation and population
         as specified in the 5-step workflow.
 
-        Note: If sqlite-vec extension is not available, this step is skipped.
-        The embeddings are still stored in the reference_nodes table as BLOB columns.
+        Returns:
+            bool: True if vec table was created successfully, False if skipped
+
+        Note:
+            If sqlite-vec extension is not available, this step is skipped and False is returned.
+            The embeddings are still stored in the reference_nodes table as BLOB columns.
+            Callers should check the return value to determine if full functionality is available.
         """
         try:
             # Check if sqlite-vec extension is available
@@ -491,7 +594,8 @@ class SchemaOrgImporter:
                     "sqlite-vec extension not available, skipping vec table creation. "
                     "Embeddings are still stored in reference_nodes table."
                 )
-                return
+                self.vec_table_created = False
+                return False
 
             # Determine embedding dimensions from first non-null embedding
             result = self.manager.session.execute(
@@ -505,7 +609,8 @@ class SchemaOrgImporter:
 
             if not result or not result[0]:
                 logger.warning("No embeddings found, skipping vec table creation")
-                return
+                self.vec_table_created = False
+                return False
 
             # Calculate dimensions (float32 = 4 bytes per dimension)
             embedding_bytes = result[0]
@@ -519,6 +624,8 @@ class SchemaOrgImporter:
             )
 
             # Create vec0 virtual table with two embedding columns
+            # Column naming: title_embedding and definition_embedding maintain consistency
+            # with the source table column names for semantic clarity
             self.manager.session.execute(
                 text(f"""
                     CREATE VIRTUAL TABLE reference_nodes_vec
@@ -543,6 +650,8 @@ class SchemaOrgImporter:
 
             self.manager.session.commit()
             logger.info("Vec0 table created and populated successfully")
+            self.vec_table_created = True
+            return True
 
         except SQLAlchemyError as e:
             error_msg = str(e)
@@ -553,11 +662,35 @@ class SchemaOrgImporter:
                     self.manager.session.rollback()
                 except Exception:
                     pass
+                self.vec_table_created = False
+                return False
             else:
                 # Other SQLAlchemy errors should fail
                 logger.error(f"Vec table creation failed: {e}")
                 self.manager.session.rollback()
                 raise SchemaOrgImportError(f"Vec table creation failed: {e}")
+
+    def _cleanup_vec_table(self):
+        """
+        Clean up orphaned vec table in case of partial creation failure.
+
+        This method is called when vec table creation fails partway through,
+        ensuring no orphaned tables are left behind.
+        """
+        if not self.vec_table_created:
+            return
+
+        try:
+            logger.info("Cleaning up vec table after failed import")
+            self.manager.session.execute(
+                text("DROP TABLE IF EXISTS reference_nodes_vec")
+            )
+            self.manager.session.commit()
+            self.vec_table_created = False
+            logger.info("Vec table cleanup complete")
+        except Exception as e:
+            logger.warning(f"Failed to clean up vec table: {e}")
+            # Don't raise - this is a best-effort cleanup
 
     def _insert_relationships_transaction(
         self,
