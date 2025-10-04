@@ -309,8 +309,8 @@ async def multi_source_search_get(
 async def reference_db_search(
     query: str = Query(..., description="Search query text", min_length=1),
     source: Optional[str] = Query(None, description="Filter by source (e.g., 'schema.org')"),
-    limit: int = Query(20, ge=1, le=100, description="Maximum results"),
-    threshold: float = Query(0.7, ge=0.0, le=1.0, description="Similarity threshold"),
+    limit: int = Query(20, ge=1, le=10000, description="Maximum results"),
+    threshold: float = Query(0.7, ge=-1.0, le=1.0, description="Similarity threshold"),
 ):
     """
     Search reference database using semantic vector similarity.
@@ -318,6 +318,22 @@ async def reference_db_search(
     This endpoint uses vector embeddings for semantic search and returns results
     ranked by similarity score.
     """
+    # Additional input validation
+    if not query or not query.strip():
+        raise HTTPException(status_code=400, detail="Query parameter cannot be empty")
+
+    if not -1.0 <= threshold <= 1.0:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Threshold must be between -1.0 and 1.0, got {threshold}"
+        )
+
+    if limit < 1 or limit > 10000:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Limit must be between 1 and 10000, got {limit}"
+        )
+
     try:
         from reference_db.manager import ReferenceManager
         from reference_db.config import ReferenceConfig
@@ -356,7 +372,15 @@ async def reference_db_search(
                 "results": results
             }
 
+    except HTTPException:
+        # Re-raise HTTP exceptions (validation errors)
+        raise
+    except ValueError as e:
+        # Return 400 for validation errors from manager
+        logger.warning(f"Invalid search parameters: {e}")
+        raise HTTPException(status_code=400, detail=str(e))
     except Exception as e:
+        # Return 500 for database/vector search errors (fail fast)
         logger.error(f"Reference DB search failed: {e}")
         raise HTTPException(status_code=500, detail=f"Vector search failed: {str(e)}")
 

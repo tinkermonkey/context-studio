@@ -93,7 +93,7 @@ class TestDistanceToSimilarity:
                 for distance, expected_similarity in test_cases:
                     similarity = manager._distance_to_similarity(distance)
                     assert abs(similarity - expected_similarity) < 1e-10, \
-                        f"Distance {distance} should convert to similarity {expected_similarity}"
+                        f"Distance {distance} should convert to similarity {expected_similarity}, got {similarity}"
         finally:
             if os.path.exists(db_path):
                 os.unlink(db_path)
@@ -202,7 +202,7 @@ class TestSearchBySimilarity:
 
         # All returned results must have similarity >= threshold
         for node, score in results:
-            assert score >= 0.7, f"Result {node.title} has score {score} < threshold 0.7"
+            assert score >= 0.7, f"Result '{node.title}' has similarity score {score:.3f} which is less than threshold 0.7"
 
     def test_search_returns_ordered_results(self, manager_with_data):
         """Test that search returns results ordered by similarity descending."""
@@ -220,7 +220,7 @@ class TestSearchBySimilarity:
         # Verify results are ordered by similarity descending
         scores = [score for _, score in results]
         assert scores == sorted(scores, reverse=True), \
-            "Results should be ordered by similarity descending"
+            f"Results should be ordered by similarity descending, got scores: {scores}"
 
     def test_search_respects_limit(self, manager_with_data):
         """Test that search respects the limit parameter."""
@@ -236,7 +236,7 @@ class TestSearchBySimilarity:
             embedding_generator=embedding_gen
         )
 
-        assert len(results) <= 2, "Results should not exceed limit"
+        assert len(results) <= 2, f"Results should not exceed limit of 2, got {len(results)} results"
 
     def test_search_filters_by_source(self, manager_with_data):
         """Test that search filters by source when provided."""
@@ -268,6 +268,73 @@ class TestSearchBySimilarity:
         for node, score in results:
             assert node.source == "schema.org", \
                 f"Result {node.title} is from {node.source}, expected schema.org"
+
+    def test_search_invalid_threshold_raises_error(self, manager_with_data):
+        """Test that invalid threshold values raise ValueError."""
+        manager, db_path, create_embedding = manager_with_data
+
+        def embedding_gen(text: str) -> bytes:
+            return create_embedding(0.5)
+
+        # Test threshold > 1.0
+        with pytest.raises(ValueError, match="threshold must be between -1.0 and 1.0"):
+            manager.search_by_similarity(
+                "test query",
+                threshold=1.5,
+                embedding_generator=embedding_gen
+            )
+
+        # Test threshold < -1.0
+        with pytest.raises(ValueError, match="threshold must be between -1.0 and 1.0"):
+            manager.search_by_similarity(
+                "test query",
+                threshold=-1.5,
+                embedding_generator=embedding_gen
+            )
+
+    def test_search_invalid_limit_raises_error(self, manager_with_data):
+        """Test that invalid limit values raise ValueError."""
+        manager, db_path, create_embedding = manager_with_data
+
+        def embedding_gen(text: str) -> bytes:
+            return create_embedding(0.5)
+
+        # Test negative limit
+        with pytest.raises(ValueError, match="limit must be a positive integer"):
+            manager.search_by_similarity(
+                "test query",
+                limit=-1,
+                embedding_generator=embedding_gen
+            )
+
+        # Test limit = 0
+        with pytest.raises(ValueError, match="limit must be a positive integer"):
+            manager.search_by_similarity(
+                "test query",
+                limit=0,
+                embedding_generator=embedding_gen
+            )
+
+        # Test limit > 10000
+        with pytest.raises(ValueError, match="limit must not exceed 10000"):
+            manager.search_by_similarity(
+                "test query",
+                limit=10001,
+                embedding_generator=embedding_gen
+            )
+
+    def test_search_empty_embedding_raises_error(self, manager_with_data):
+        """Test that empty embedding from generator raises ValueError."""
+        manager, db_path, create_embedding = manager_with_data
+
+        def bad_embedding_gen(text: str) -> bytes:
+            return b""
+
+        with pytest.raises(ValueError, match="embedding_generator returned empty embedding"):
+            manager.search_by_similarity(
+                "test query",
+                embedding_generator=bad_embedding_gen
+            )
 
 
 class TestGetNodeLinks:
@@ -337,12 +404,12 @@ class TestGetNodeLinks:
         links = manager.get_node_links(node1.id, direction="outbound")
 
         # Node1 has 2 outbound links
-        assert len(links) == 2, f"Expected 2 outbound links, got {len(links)}"
+        assert len(links) == 2, f"Expected 2 outbound links for node1, got {len(links)}"
 
         # All links should have node1 as subject
         for link in links:
             assert link.subject_node == node1.id, \
-                "Outbound links should have query node as subject"
+                f"Outbound link should have query node {node1.id} as subject, got {link.subject_node}"
 
     def test_get_inbound_links(self, manager_with_links):
         """Test retrieving inbound links."""
@@ -352,12 +419,12 @@ class TestGetNodeLinks:
         links = manager.get_node_links(node3.id, direction="inbound")
 
         # Node3 has 2 inbound links
-        assert len(links) == 2, f"Expected 2 inbound links, got {len(links)}"
+        assert len(links) == 2, f"Expected 2 inbound links for node3, got {len(links)}"
 
         # All links should have node3 as object
         for link in links:
             assert link.object_node == node3.id, \
-                "Inbound links should have query node as object"
+                f"Inbound link should have query node {node3.id} as object, got {link.object_node}"
 
     def test_get_both_direction_links(self, manager_with_links):
         """Test retrieving links in both directions."""
@@ -367,7 +434,7 @@ class TestGetNodeLinks:
         links = manager.get_node_links(node1.id, direction="both")
 
         # Node1 has 2 outbound links and 0 inbound links
-        assert len(links) == 2, f"Expected 2 total links, got {len(links)}"
+        assert len(links) == 2, f"Expected 2 total links for node1 (both directions), got {len(links)}"
 
     def test_get_links_with_predicate_filter(self, manager_with_links):
         """
@@ -385,9 +452,9 @@ class TestGetNodeLinks:
         )
 
         # Node1 has 1 subClassOf link
-        assert len(links) == 1, f"Expected 1 subClassOf link, got {len(links)}"
+        assert len(links) == 1, f"Expected 1 subClassOf link for node1, got {len(links)}"
         assert links[0].predicate == "subClassOf", \
-            "Filtered link should have correct predicate"
+            f"Filtered link should have predicate 'subClassOf', got '{links[0].predicate}'"
 
     def test_get_links_ordered_by_created_at_desc(self, manager_with_links):
         """
@@ -402,7 +469,7 @@ class TestGetNodeLinks:
         # Verify ordering (newer links first)
         created_ats = [link.created_at for link in links]
         assert created_ats == sorted(created_ats, reverse=True), \
-            "Links should be ordered by created_at DESC"
+            f"Links should be ordered by created_at DESC, got timestamps: {created_ats}"
 
     def test_get_links_respects_limit(self, manager_with_links):
         """Test that get_node_links respects the limit parameter."""
@@ -410,7 +477,7 @@ class TestGetNodeLinks:
 
         links = manager.get_node_links(node1.id, direction="outbound", limit=1)
 
-        assert len(links) == 1, "Should return only 1 link when limit=1"
+        assert len(links) == 1, f"Should return only 1 link when limit=1, got {len(links)}"
 
     def test_get_links_invalid_direction_raises_error(self, manager_with_links):
         """Test that invalid direction raises ValueError."""
@@ -425,4 +492,4 @@ class TestGetNodeLinks:
 
         links = manager.get_node_links("nonexistent-id", direction="both")
 
-        assert links == [], "Should return empty list for non-existent node"
+        assert links == [], f"Should return empty list for non-existent node, got {len(links)} links"
