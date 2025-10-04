@@ -304,6 +304,155 @@ async def multi_source_search_get(
         raise handle_service_error(e)
 
 
+# Reference database vector search endpoints
+@router.get("/ref-db/search")
+async def reference_db_search(
+    query: str = Query(..., description="Search query text", min_length=1),
+    source: Optional[str] = Query(None, description="Filter by source (e.g., 'schema.org')"),
+    limit: int = Query(20, ge=1, le=100, description="Maximum results"),
+    threshold: float = Query(0.7, ge=0.0, le=1.0, description="Similarity threshold"),
+):
+    """
+    Search reference database using semantic vector similarity.
+
+    This endpoint uses vector embeddings for semantic search and returns results
+    ranked by similarity score.
+    """
+    try:
+        from reference_db.manager import ReferenceManager
+        from reference_db.config import ReferenceConfig
+        from embeddings.generate_embeddings import generate_embedding
+
+        config = ReferenceConfig()
+        with ReferenceManager(config) as manager:
+            # Create embedding generator
+            def embedding_gen(text: str) -> bytes:
+                return generate_embedding(text)
+
+            # Execute search
+            results_with_scores = manager.search_by_similarity(
+                query_text=query,
+                source=source,
+                limit=limit,
+                threshold=threshold,
+                embedding_generator=embedding_gen
+            )
+
+            # Format response
+            results = []
+            for node, score in results_with_scores:
+                results.append({
+                    "id": node.id,
+                    "title": node.title,
+                    "definition": node.definition,
+                    "source": node.source,
+                    "external_id": node.external_id,
+                    "similarity_score": score
+                })
+
+            return {
+                "query": query,
+                "total_results": len(results),
+                "results": results
+            }
+
+    except Exception as e:
+        logger.error(f"Reference DB search failed: {e}")
+        raise HTTPException(status_code=500, detail=f"Vector search failed: {str(e)}")
+
+
+@router.get("/ref-db/nodes/{node_id}")
+async def get_reference_node(
+    node_id: str = Path(..., description="Reference node ID"),
+):
+    """Get a reference node by ID."""
+    try:
+        from reference_db.manager import ReferenceManager
+        from reference_db.config import ReferenceConfig
+
+        config = ReferenceConfig()
+        with ReferenceManager(config) as manager:
+            node = manager.get_reference_node(node_id)
+
+            if not node:
+                raise HTTPException(status_code=404, detail=f"Node not found: {node_id}")
+
+            return {
+                "id": node.id,
+                "title": node.title,
+                "definition": node.definition,
+                "source": node.source,
+                "external_id": node.external_id,
+                "created_at": node.created_at,
+                "updated_at": node.updated_at
+            }
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Get reference node failed: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.get("/ref-db/nodes/{node_id}/links")
+async def get_node_links(
+    node_id: str = Path(..., description="Reference node ID"),
+    direction: str = Query("both", description="Link direction: inbound, outbound, or both"),
+    predicate: Optional[str] = Query(None, description="Filter by predicate (exact match)"),
+    limit: Optional[int] = Query(None, ge=1, le=1000, description="Maximum results"),
+):
+    """
+    Retrieve links connected to a reference node.
+
+    Returns links ordered by created_at (descending).
+    """
+    try:
+        from reference_db.manager import ReferenceManager
+        from reference_db.config import ReferenceConfig
+
+        config = ReferenceConfig()
+        with ReferenceManager(config) as manager:
+            # Verify node exists
+            node = manager.get_reference_node(node_id)
+            if not node:
+                raise HTTPException(status_code=404, detail=f"Node not found: {node_id}")
+
+            # Get links
+            links = manager.get_node_links(
+                node_id=node_id,
+                direction=direction,
+                predicate=predicate,
+                limit=limit
+            )
+
+            # Format response
+            results = []
+            for link in links:
+                results.append({
+                    "id": link.id,
+                    "subject_node": link.subject_node,
+                    "predicate": link.predicate,
+                    "object_node": link.object_node,
+                    "created_at": link.created_at
+                })
+
+            return {
+                "node_id": node_id,
+                "direction": direction,
+                "predicate": predicate,
+                "total_links": len(results),
+                "links": results
+            }
+
+    except HTTPException:
+        raise
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        logger.error(f"Get node links failed: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
 # Health and status endpoints
 @router.get("/health")
 async def health_check(service: ReferenceService = Depends(get_reference_service)):

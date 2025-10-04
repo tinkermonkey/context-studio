@@ -580,3 +580,239 @@ class ReferenceManager:
             query = query.limit(limit)
 
         return query.all()
+
+    def _distance_to_similarity(self, distance: float) -> float:
+        """
+        Convert vector distance to cosine similarity.
+
+        For cosine distance, the relationship is: similarity = 1 - distance
+
+        Edge cases:
+        - distance 0.0 → similarity 1.0 (identical vectors)
+        - distance 1.0 → similarity 0.0 (orthogonal vectors)
+        - distance 2.0 → similarity -1.0 (opposite vectors)
+
+        Args:
+            distance: Vector distance from sqlite-vec (0.0 to 2.0 for cosine)
+
+        Returns:
+            Cosine similarity score (-1.0 to 1.0)
+
+        Examples:
+            >>> manager._distance_to_similarity(0.0)
+            1.0
+            >>> manager._distance_to_similarity(1.0)
+            0.0
+            >>> manager._distance_to_similarity(2.0)
+            -1.0
+        """
+        return 1.0 - distance
+
+    def search_by_similarity(
+        self,
+        query_text: str,
+        source: str | None = None,
+        node_type: str | None = None,
+        limit: int = 20,
+        threshold: float = 0.7,
+        embedding_generator = None
+    ) -> List[tuple[ReferenceNode, float]]:
+        """
+        Search for reference nodes by semantic similarity.
+
+        This method:
+        1. Generates embeddings for the query text using the provided generator
+        2. Performs vector search using sqlite-vec
+        3. Computes max(title_similarity, definition_similarity) for ranking
+        4. Filters results by similarity threshold
+        5. Returns nodes ordered by similarity (descending)
+
+        Args:
+            query_text: Text query to search for
+            source: Optional source filter (e.g., 'schema.org')
+            node_type: Optional node type filter (from attributes)
+            limit: Maximum number of results (default: 20)
+            threshold: Minimum similarity threshold (0.0 to 1.0, default: 0.7)
+            embedding_generator: Function that takes text and returns embedding bytes
+                               If None, an error is raised.
+
+        Returns:
+            List of (ReferenceNode, similarity_score) tuples ordered by similarity descending
+
+        Raises:
+            ValueError: If embedding_generator is None or query_text is empty
+            RuntimeError: If vector search fails
+
+        Examples:
+            >>> results = manager.search_by_similarity(
+            ...     "person entity",
+            ...     source="schema.org",
+            ...     limit=10,
+            ...     threshold=0.8,
+            ...     embedding_generator=lambda text: generate_embedding(text)
+            ... )
+            >>> for node, score in results:
+            ...     print(f"{node.title}: {score:.3f}")
+        """
+        if not query_text or not query_text.strip():
+            raise ValueError("query_text cannot be empty")
+
+        if embedding_generator is None:
+            raise ValueError("embedding_generator must be provided")
+
+        try:
+            # Generate embeddings for the query
+            query_embedding = embedding_generator(query_text)
+
+            if not query_embedding or len(query_embedding) == 0:
+                raise ValueError("embedding_generator returned empty embedding")
+
+            # Convert embedding to the format expected by sqlite-vec
+            import numpy as np
+            if isinstance(query_embedding, bytes):
+                query_vec = np.frombuffer(query_embedding, dtype=np.float32)
+            else:
+                query_vec = np.array(query_embedding, dtype=np.float32)
+
+            # Serialize to JSON array format for sqlite-vec
+            import json
+            query_vec_json = json.dumps(query_vec.tolist())
+
+            # Build the vector search query
+            # We search both title and definition embeddings and take the max similarity
+            # SQLite doesn't support FULL OUTER JOIN, so we use UNION to combine results
+
+            sql_query = """
+            WITH similarities AS (
+                SELECT
+                    rn.id,
+                    rn.title,
+                    rn.definition,
+                    rn.source,
+                    rn.external_id,
+                    rn.attributes,
+                    rn.created_at,
+                    rn.updated_at,
+                    CASE
+                        WHEN rn.title_embedding IS NOT NULL AND rn.definition_embedding IS NOT NULL THEN
+                            MAX(
+                                (1.0 - vec_distance_cosine(rn.title_embedding, :query_vec)),
+                                (1.0 - vec_distance_cosine(rn.definition_embedding, :query_vec))
+                            )
+                        WHEN rn.title_embedding IS NOT NULL THEN
+                            (1.0 - vec_distance_cosine(rn.title_embedding, :query_vec))
+                        WHEN rn.definition_embedding IS NOT NULL THEN
+                            (1.0 - vec_distance_cosine(rn.definition_embedding, :query_vec))
+                        ELSE 0.0
+                    END AS max_similarity
+                FROM reference_nodes rn
+                WHERE rn.title_embedding IS NOT NULL OR rn.definition_embedding IS NOT NULL
+            )
+            SELECT * FROM similarities
+            WHERE max_similarity >= :threshold
+            """
+
+            # Add source filter if provided
+            if source:
+                sql_query += " AND source = :source"
+
+            # Add ordering and limit
+            sql_query += " ORDER BY max_similarity DESC LIMIT :limit"
+
+            # Execute the query
+            params = {
+                'query_vec': query_vec_json,
+                'threshold': threshold,
+                'limit': limit
+            }
+
+            if source:
+                params['source'] = source
+
+            result = self.session.execute(text(sql_query), params)
+
+            # Convert results to (ReferenceNode, similarity) tuples
+            results = []
+            for row in result:
+                node = ReferenceNode(
+                    id=row.id,
+                    title=row.title,
+                    definition=row.definition,
+                    source=row.source,
+                    external_id=row.external_id,
+                    attributes=row.attributes,
+                    title_embedding=None,  # Don't load embeddings in results
+                    definition_embedding=None,
+                    created_at=row.created_at,
+                    updated_at=row.updated_at
+                )
+                similarity = float(row.max_similarity)
+                results.append((node, similarity))
+
+            return results
+
+        except Exception as e:
+            logger.error(f"Vector search failed: {e}")
+            raise RuntimeError(f"Vector search failed: {e}") from e
+
+    def get_node_links(
+        self,
+        node_id: str,
+        direction: str = "both",
+        predicate: str | None = None,
+        limit: int | None = None
+    ) -> List[ReferenceLink]:
+        """
+        Retrieve links connected to a reference node.
+
+        Args:
+            node_id: UUID of the reference node
+            direction: Link direction - "inbound", "outbound", or "both" (default: "both")
+            predicate: Optional predicate filter for exact match
+            limit: Optional limit on number of results
+
+        Returns:
+            List of ReferenceLink instances ordered by created_at DESC
+
+        Raises:
+            ValueError: If direction is not one of "inbound", "outbound", "both"
+
+        Examples:
+            >>> # Get all links for a node
+            >>> links = manager.get_node_links("550e8400-e29b-41d4-a716-446655440000")
+
+            >>> # Get only outbound "subClassOf" links
+            >>> links = manager.get_node_links(
+            ...     "550e8400-e29b-41d4-a716-446655440000",
+            ...     direction="outbound",
+            ...     predicate="subClassOf"
+            ... )
+        """
+        if direction not in ["inbound", "outbound", "both"]:
+            raise ValueError(f"Invalid direction: {direction}. Must be 'inbound', 'outbound', or 'both'")
+
+        query = self.session.query(ReferenceLink)
+
+        # Apply direction filter
+        if direction == "inbound":
+            query = query.filter(ReferenceLink.object_node == node_id)
+        elif direction == "outbound":
+            query = query.filter(ReferenceLink.subject_node == node_id)
+        else:  # both
+            query = query.filter(
+                (ReferenceLink.subject_node == node_id) |
+                (ReferenceLink.object_node == node_id)
+            )
+
+        # Apply predicate filter if provided
+        if predicate:
+            query = query.filter(ReferenceLink.predicate == predicate)
+
+        # Order by created_at DESC
+        query = query.order_by(ReferenceLink.created_at.desc())
+
+        # Apply limit if provided
+        if limit:
+            query = query.limit(limit)
+
+        return query.all()
