@@ -65,37 +65,72 @@ class SchemaOrgSource(BaseReferenceSource):
 
     async def search(self, query: str, search_type: str = "both", limit: int = 20, offset: int = 0, similarity_threshold: float = 0.7) -> SchemaOrgSearchResponse:
         try:
-            # Simple search against FTS tables if available; fallback to empty
+            # Use vector search instead of FTS
             def _search():
-                sess_maker = self.manager.get_session_local()
-                session = sess_maker()
-                try:
-                    sql = []
-                    results = []
-                    if search_type in ("entities", "both"):
-                        # Check if FTS table exists
-                        table_exists = session.execute(text("SELECT name FROM sqlite_master WHERE type='table' AND name='schema_org_entities_fts'")).fetchone()
-                        if table_exists:
-                            q = session.execute(text("SELECT identifier, title, definition FROM schema_org_entities_fts WHERE schema_org_entities_fts MATCH :q LIMIT :lim"), {"q": query, "lim": limit}).fetchall()
-                        else:
-                            q = []
-                        for r in q:
-                            results.append({"type": "entity", "identifier": r[0], "title": r[1], "definition": r[2], "relevance_score": 1.0})
-                    if search_type in ("properties", "both"):
-                        # Check if FTS table exists
-                        table_exists = session.execute(text("SELECT name FROM sqlite_master WHERE type='table' AND name='schema_org_properties_fts'")).fetchone()
-                        if table_exists:
-                            q = session.execute(text("SELECT identifier, title, definition FROM schema_org_properties_fts WHERE schema_org_properties_fts MATCH :q LIMIT :lim"), {"q": query, "lim": limit}).fetchall()
-                        else:
-                            q = []
-                        for r in q:
-                            results.append({"type": "property", "identifier": r[0], "title": r[1], "definition": r[2], "relevance_score": 1.0})
-                    return results
-                finally:
-                    session.close()
+                from reference_db.manager import ReferenceManager
+                from reference_db.config import ReferenceConfig
+                import logging
+                logger = logging.getLogger(__name__)
+
+                # Create a manager instance to use the vector search
+                config = ReferenceConfig()
+                with ReferenceManager(config) as ref_manager:
+                    # We need an embedding generator - import from nlp_tools
+                    try:
+                        from embeddings.generate_embeddings import generate_embedding
+
+                        # Create embedding generator function
+                        def embedding_gen(text: str) -> bytes:
+                            return generate_embedding(text)
+
+                        # Search using vector similarity
+                        results_with_scores = ref_manager.search_by_similarity(
+                            query_text=query,
+                            source="schema.org",
+                            limit=limit,
+                            threshold=similarity_threshold,
+                            embedding_generator=embedding_gen
+                        )
+
+                        # Convert to response format
+                        results = []
+                        for node, score in results_with_scores:
+                            # Determine type from attributes if available
+                            node_type = "entity"  # default
+                            if node.attributes:
+                                import json
+                                try:
+                                    attrs = json.loads(node.attributes) if isinstance(node.attributes, str) else node.attributes
+                                    node_type = attrs.get("node_type", "entity")
+                                except:
+                                    pass
+
+                            # Filter by search_type
+                            if search_type == "entities" and node_type != "entity":
+                                continue
+                            if search_type == "properties" and node_type != "property":
+                                continue
+
+                            results.append({
+                                "type": node_type,
+                                "identifier": node.external_id,
+                                "title": node.title,
+                                "definition": node.definition,
+                                "relevance_score": score
+                            })
+
+                        return results
+
+                    except ImportError:
+                        # If embeddings not available, return empty results
+                        logger.warning("Vector search not available: embeddings module not found")
+                        return []
 
             loop = __import__('asyncio').get_event_loop()
             results = await loop.run_in_executor(None, _search)
             return SchemaOrgSearchResponse(**self._create_base_response(), query=query, search_type=search_type, total_results=len(results), results=results)
         except Exception as e:
+            import logging
+            logger = logging.getLogger(__name__)
+            logger.error(f"Schema.org vector search failed: {e}")
             return SchemaOrgSearchResponse(**self._create_base_response(success=False, error=str(e)))
