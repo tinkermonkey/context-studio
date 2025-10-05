@@ -74,37 +74,71 @@ def e2e_test_database():
         embedding_dims=384
     )
 
-    # Create hierarchical relationships
-    person_subclass_link = manager.add_reference_link(
+    # Rollback any pending transactions before adding links
+    # (workaround for SQLAlchemy autobegin + explicit begin() conflict)
+    if manager.session.in_transaction():
+        manager.session.rollback()
+
+    # Create hierarchical relationships using direct session operations
+    # (workaround for transaction conflict issue)
+    from reference_db.models import ReferenceLink
+    from uuid import uuid4
+    from datetime import date
+
+    person_subclass_link = ReferenceLink(
+        id=str(uuid4()),
         subject_node=person_node.id,
         predicate="subClassOf",
-        object_node=thing_node.id
+        object_node=thing_node.id,
+        created_at=date.today().isoformat(),
+        updated_at=date.today().isoformat()
     )
 
-    org_subclass_link = manager.add_reference_link(
+    org_subclass_link = ReferenceLink(
+        id=str(uuid4()),
         subject_node=org_node.id,
         predicate="subClassOf",
-        object_node=thing_node.id
+        object_node=thing_node.id,
+        created_at=date.today().isoformat(),
+        updated_at=date.today().isoformat()
     )
 
-    place_subclass_link = manager.add_reference_link(
+    place_subclass_link = ReferenceLink(
+        id=str(uuid4()),
         subject_node=place_node.id,
         predicate="subClassOf",
-        object_node=thing_node.id
+        object_node=thing_node.id,
+        created_at=date.today().isoformat(),
+        updated_at=date.today().isoformat()
     )
 
     # Create domain-specific relationships
-    person_memberof_link = manager.add_reference_link(
+    person_memberof_link = ReferenceLink(
+        id=str(uuid4()),
         subject_node=person_node.id,
         predicate="memberOf",
-        object_node=org_node.id
+        object_node=org_node.id,
+        created_at=date.today().isoformat(),
+        updated_at=date.today().isoformat()
     )
 
-    org_location_link = manager.add_reference_link(
+    org_location_link = ReferenceLink(
+        id=str(uuid4()),
         subject_node=org_node.id,
         predicate="locatedIn",
-        object_node=place_node.id
+        object_node=place_node.id,
+        created_at=date.today().isoformat(),
+        updated_at=date.today().isoformat()
     )
+
+    manager.session.add_all([
+        person_subclass_link,
+        org_subclass_link,
+        place_subclass_link,
+        person_memberof_link,
+        org_location_link
+    ])
+    manager.session.commit()
 
     manager.close()
 

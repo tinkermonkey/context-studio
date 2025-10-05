@@ -49,7 +49,7 @@ def large_dataset_manager():
         "Vehicle", "Car", "Motorcycle", "BusOrCoach", "Airplane",
         "TVSeries", "TVEpisode", "RadioSeries", "RadioEpisode", "PodcastSeries",
         "JobPosting", "Occupation", "EducationalOccupationalCredential", "WorkersUnion", "ProfessionalService",
-        "GovernmentOrganization", "NGO", "Corporation", "EducationalOrganization", "PerformingGroup",
+        "GovernmentOrganization", "NGO", "Corporation", "LegalService", "PerformingGroup",
         "MusicGroup", "DanceGroup", "TheaterGroup", "SportsTeam", "SportsOrganization",
         "Airline", "Consortium", "FundingScheme", "Project", "ResearchProject",
         "Brand", "ContactPoint", "PostalAddress", "GeoCoordinates", "GeoShape",

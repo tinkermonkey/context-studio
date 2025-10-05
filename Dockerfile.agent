@@ -5,7 +5,9 @@
 # IMPORTANT: Code is mounted at runtime via -v flag, NOT copied at build time.
 # This allows git operations to persist and changes to be committed.
 
-FROM python:3.11-slim
+# Detect build architecture automatically
+ARG TARGETARCH=arm64
+FROM --platform=linux/${TARGETARCH} python:3.11-slim
 
 # Set environment to avoid interactive prompts
 ENV DEBIAN_FRONTEND=noninteractive
@@ -21,6 +23,7 @@ RUN apt-get update && apt-get install -y \
     libsqlite3-dev \
     ca-certificates \
     gnupg \
+    gettext-base \
     && rm -rf /var/lib/apt/lists/*
 
 # Install Node.js 22.x (for frontend/ux and Tauri app)
@@ -46,7 +49,27 @@ WORKDIR /workspace
 # Backend dependencies (Python) - local-server/
 # Copy only dependency file to /tmp for installation
 COPY local-server/requirements.txt /tmp/backend-requirements.txt
+
+# Build sqlite-vec from source for current architecture
+# The pre-built Python wheels contain 32-bit ARM binaries on ARM64
+RUN python3 -m pip install --no-cache-dir sqlite-vec==0.1.6 && \
+    cd /tmp && \
+    wget -q https://github.com/asg017/sqlite-vec/archive/refs/tags/v0.1.6.tar.gz && \
+    tar -xzf v0.1.6.tar.gz && \
+    cd sqlite-vec-0.1.6 && \
+    make loadable && \
+    cp dist/vec0.so /usr/local/lib/python3.11/site-packages/sqlite_vec/vec0.so && \
+    cd / && rm -rf /tmp/sqlite-vec-0.1.6 /tmp/v0.1.6.tar.gz && \
+    python3 -c "import sqlite_vec, platform; print(f'sqlite-vec compiled and installed for {platform.machine()}')"
+
+# Install remaining dependencies
 RUN pip install --no-cache-dir -r /tmp/backend-requirements.txt
+
+# Copy and run validation script to verify sqlite-vec installation
+COPY utils/validate_sqlite_vec.py /tmp/validate_sqlite_vec.py
+RUN chmod +x /tmp/validate_sqlite_vec.py && \
+    python3 /tmp/validate_sqlite_vec.py && \
+    rm /tmp/validate_sqlite_vec.py
 
 # Frontend dependencies (Node.js) - ux/
 # Install to /opt so it persists across mounts

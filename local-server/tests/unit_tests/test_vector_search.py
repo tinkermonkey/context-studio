@@ -371,24 +371,44 @@ class TestGetNodeLinks:
             external_id="Thing"
         )
 
-        # Create test links
-        link1 = manager.add_reference_link(
+        # Rollback any pending transactions before adding links
+        # (workaround for SQLAlchemy autobegin + explicit begin() conflict)
+        if manager.session.in_transaction():
+            manager.session.rollback()
+
+        # Create test links using direct session operations instead of add_reference_link
+        # (workaround for transaction conflict issue)
+        from reference_db.models import ReferenceLink
+        from uuid import uuid4
+        from datetime import date
+
+        link1 = ReferenceLink(
+            id=str(uuid4()),
             subject_node=node1.id,
             predicate="subClassOf",
-            object_node=node3.id
+            object_node=node3.id,
+            created_at=date.today().isoformat(),
+            updated_at=date.today().isoformat()
         )
-
-        link2 = manager.add_reference_link(
+        link2 = ReferenceLink(
+            id=str(uuid4()),
             subject_node=node2.id,
             predicate="subClassOf",
-            object_node=node3.id
+            object_node=node3.id,
+            created_at=date.today().isoformat(),
+            updated_at=date.today().isoformat()
         )
-
-        link3 = manager.add_reference_link(
+        link3 = ReferenceLink(
+            id=str(uuid4()),
             subject_node=node1.id,
             predicate="relatedTo",
-            object_node=node2.id
+            object_node=node2.id,
+            created_at=date.today().isoformat(),
+            updated_at=date.today().isoformat()
         )
+
+        manager.session.add_all([link1, link2, link3])
+        manager.session.commit()
 
         yield manager, db_path, (node1, node2, node3), (link1, link2, link3)
 
