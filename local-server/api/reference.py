@@ -490,3 +490,59 @@ async def health_check(service: ReferenceService = Depends(get_reference_service
             content={"overall": "unhealthy", "error": str(e)}
         )
 
+
+@router.get("/ref-db/health")
+async def reference_db_health_check():
+    """
+    Check health status of the reference database.
+
+    Returns comprehensive status information including:
+    - status: "healthy", "degraded", or "missing"
+    - node_count: Total number of reference nodes
+    - vec_count: Number of nodes with embeddings
+    - schema_version: Current database schema version
+    - model_version: Embedding model version
+    - last_import_at: Timestamp of last import
+    - database_size: Size of database file in bytes
+
+    Performance target: <200ms
+
+    Test Case: TC-S002
+    """
+    import time
+    start_time = time.time()
+
+    try:
+        from reference_db.manager import ReferenceManager
+        from reference_db.config import ReferenceConfig
+
+        config = ReferenceConfig()
+        with ReferenceManager(config) as manager:
+            status = manager.get_status()
+
+            # Calculate execution time
+            execution_time_ms = (time.time() - start_time) * 1000
+
+            # Add execution time to response
+            status["execution_time_ms"] = round(execution_time_ms, 2)
+
+            # Log warning if execution time exceeds target
+            if execution_time_ms > 200:
+                logger.warning(
+                    f"Health check exceeded 200ms target: {execution_time_ms:.2f}ms"
+                )
+
+            return status
+
+    except Exception as e:
+        logger.error(f"Reference DB health check failed: {e}")
+        execution_time_ms = (time.time() - start_time) * 1000
+        return JSONResponse(
+            status_code=500,
+            content={
+                "status": "error",
+                "error": "Health check failed",
+                "execution_time_ms": round(execution_time_ms, 2)
+            }
+        )
+
