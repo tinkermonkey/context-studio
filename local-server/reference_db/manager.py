@@ -857,7 +857,7 @@ class ReferenceManager:
         Get comprehensive status of the reference database.
 
         Returns dictionary with:
-        - status: "healthy", "degraded", or "missing"
+        - status: "healthy", "degraded", "missing", or "error"
         - node_count: Total number of reference nodes
         - vec_count: Number of nodes with embeddings
         - schema_version: Current database schema version
@@ -865,11 +865,14 @@ class ReferenceManager:
         - last_import_at: Timestamp of last import (if available)
         - database_size: Size of database file in bytes
         - database_path: Path to database file
+        - connection_healthy: Whether database connection is functional
+        - remediation: Suggested action if status is not healthy
 
         The health status is determined as:
         - "healthy": node_count == vec_count and versions match
-        - "degraded": vec_count mismatch detected
+        - "degraded": vec_count mismatch or version mismatch detected
         - "missing": database file doesn't exist
+        - "error": database operations failed
 
         Returns:
             Status dictionary with comprehensive database information
@@ -882,6 +885,10 @@ class ReferenceManager:
         import os
         from datetime import datetime, UTC
 
+        # Constants for version checking
+        EXPECTED_SCHEMA_VERSION = REFERENCE_SCHEMA_VERSION
+        EXPECTED_MODEL_VERSION = EMBEDDING_MODEL_VERSION
+
         status = {
             "status": "missing",
             "node_count": 0,
@@ -891,11 +898,14 @@ class ReferenceManager:
             "last_import_at": None,
             "database_size": 0,
             "database_path": self.db_path,
+            "connection_healthy": False,
             "checked_at": datetime.now(UTC).isoformat()
         }
 
         # Check if database file exists
         if not os.path.exists(self.db_path):
+            status["remediation"] = "Database file does not exist. Run import pipeline to create it."
+            logger.debug(f"Database file does not exist: {self.db_path}")
             return status
 
         # Get database file size
@@ -903,9 +913,20 @@ class ReferenceManager:
             status["database_size"] = os.path.getsize(self.db_path)
         except Exception as e:
             logger.warning(f"Could not get database size: {e}")
+            status["status"] = "error"
+            status["error"] = f"Unable to read database file: {str(e)}"
+            status["remediation"] = "Check file system permissions and disk health."
+            return status
 
+        # Test database connection and query capabilities
         try:
+            # Test connection pool health
             with self.engine.connect() as conn:
+                # Simple query to verify connection
+                conn.execute(text("SELECT 1")).scalar()
+                status["connection_healthy"] = True
+                logger.debug("Database connection verified")
+
                 # Get schema version information
                 try:
                     version_result = conn.execute(
@@ -919,6 +940,9 @@ class ReferenceManager:
                         status["last_import_at"] = version_result[2]
                 except Exception as e:
                     logger.debug(f"Could not get schema version: {e}")
+                    status["status"] = "degraded"
+                    status["degraded_reason"] = "schema_version_table_missing"
+                    status["remediation"] = "Run database migration to create schema_version table."
 
                 # Get node count
                 try:
@@ -928,6 +952,10 @@ class ReferenceManager:
                     status["node_count"] = int(node_count_result or 0)
                 except Exception as e:
                     logger.warning(f"Could not get node count: {e}")
+                    status["status"] = "error"
+                    status["error"] = f"Unable to query reference_nodes: {str(e)}"
+                    status["remediation"] = "Verify database schema integrity. May need to rebuild database."
+                    return status
 
                 # Get vector count (nodes with embeddings)
                 try:
@@ -940,25 +968,44 @@ class ReferenceManager:
                     status["vec_count"] = int(vec_count_result or 0)
                 except Exception as e:
                     logger.warning(f"Could not get vector count: {e}")
+                    status["vec_count"] = 0
+                    status["status"] = "degraded"
+                    status["degraded_reason"] = "vector_query_failed"
+                    status["remediation"] = "Check sqlite-vec extension installation."
+                    return status
 
                 # Determine health status
                 if status["node_count"] == 0:
                     status["status"] = "missing"
+                    status["remediation"] = "No reference nodes found. Run import pipeline to populate database."
                 elif status["node_count"] == status["vec_count"]:
                     # Check if versions match expected
-                    if (status["schema_version"] == REFERENCE_SCHEMA_VERSION and
-                        status["model_version"] == EMBEDDING_MODEL_VERSION):
+                    if (status["schema_version"] == EXPECTED_SCHEMA_VERSION and
+                        status["model_version"] == EXPECTED_MODEL_VERSION):
                         status["status"] = "healthy"
+                        logger.debug("Database status: healthy")
                     else:
                         status["status"] = "degraded"
                         status["degraded_reason"] = "schema_or_model_version_mismatch"
+                        status["remediation"] = (
+                            f"Schema/model version mismatch. Expected schema={EXPECTED_SCHEMA_VERSION}, "
+                            f"model={EXPECTED_MODEL_VERSION}. Run migration or reimport."
+                        )
                 else:
                     status["status"] = "degraded"
                     status["degraded_reason"] = "embedding_count_mismatch"
+                    embedding_pct = (status["vec_count"] / status["node_count"] * 100) if status["node_count"] > 0 else 0
+                    status["embedding_coverage_pct"] = round(embedding_pct, 2)
+                    status["remediation"] = (
+                        f"Only {status['vec_count']}/{status['node_count']} nodes have embeddings "
+                        f"({embedding_pct:.1f}%). Run import pipeline to sync vectors."
+                    )
 
         except Exception as e:
-            logger.error(f"Error getting database status: {e}")
-            status["status"] = "degraded"
-            status["error"] = str(e)
+            logger.error(f"Error getting database status: {e}", exc_info=True)
+            status["status"] = "error"
+            status["error"] = "Database connection or query failed"
+            status["remediation"] = "Check database file integrity and connection pool. May need to restart application."
+            status["connection_healthy"] = False
 
         return status
