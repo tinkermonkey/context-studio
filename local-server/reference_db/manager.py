@@ -851,3 +851,114 @@ class ReferenceManager:
                 query = query.limit(limit)
 
             return query.all()
+
+    def get_status(self) -> Dict[str, Any]:
+        """
+        Get comprehensive status of the reference database.
+
+        Returns dictionary with:
+        - status: "healthy", "degraded", or "missing"
+        - node_count: Total number of reference nodes
+        - vec_count: Number of nodes with embeddings
+        - schema_version: Current database schema version
+        - model_version: Embedding model version
+        - last_import_at: Timestamp of last import (if available)
+        - database_size: Size of database file in bytes
+        - database_path: Path to database file
+
+        The health status is determined as:
+        - "healthy": node_count == vec_count and versions match
+        - "degraded": vec_count mismatch detected
+        - "missing": database file doesn't exist
+
+        Returns:
+            Status dictionary with comprehensive database information
+
+        Examples:
+            >>> status = manager.get_status()
+            >>> print(status['status'])  # "healthy"
+            >>> print(status['node_count'])  # 1000
+        """
+        import os
+        from datetime import datetime, UTC
+
+        status = {
+            "status": "missing",
+            "node_count": 0,
+            "vec_count": 0,
+            "schema_version": None,
+            "model_version": None,
+            "last_import_at": None,
+            "database_size": 0,
+            "database_path": self.db_path,
+            "checked_at": datetime.now(UTC).isoformat()
+        }
+
+        # Check if database file exists
+        if not os.path.exists(self.db_path):
+            return status
+
+        # Get database file size
+        try:
+            status["database_size"] = os.path.getsize(self.db_path)
+        except Exception as e:
+            logger.warning(f"Could not get database size: {e}")
+
+        try:
+            with self.engine.connect() as conn:
+                # Get schema version information
+                try:
+                    version_result = conn.execute(
+                        text("SELECT schema_version, embedding_model, created_at FROM schema_version LIMIT 1")
+                    ).first()
+
+                    if version_result:
+                        status["schema_version"] = version_result[0]
+                        status["model_version"] = version_result[1]
+                        # Use created_at as a proxy for last import (can be improved)
+                        status["last_import_at"] = version_result[2]
+                except Exception as e:
+                    logger.debug(f"Could not get schema version: {e}")
+
+                # Get node count
+                try:
+                    node_count_result = conn.execute(
+                        text("SELECT COUNT(*) FROM reference_nodes")
+                    ).scalar()
+                    status["node_count"] = int(node_count_result or 0)
+                except Exception as e:
+                    logger.warning(f"Could not get node count: {e}")
+
+                # Get vector count (nodes with embeddings)
+                try:
+                    vec_count_result = conn.execute(
+                        text("""
+                            SELECT COUNT(*) FROM reference_nodes
+                            WHERE title_embedding IS NOT NULL OR definition_embedding IS NOT NULL
+                        """)
+                    ).scalar()
+                    status["vec_count"] = int(vec_count_result or 0)
+                except Exception as e:
+                    logger.warning(f"Could not get vector count: {e}")
+
+                # Determine health status
+                if status["node_count"] == 0:
+                    status["status"] = "missing"
+                elif status["node_count"] == status["vec_count"]:
+                    # Check if versions match expected
+                    if (status["schema_version"] == REFERENCE_SCHEMA_VERSION and
+                        status["model_version"] == EMBEDDING_MODEL_VERSION):
+                        status["status"] = "healthy"
+                    else:
+                        status["status"] = "degraded"
+                        status["degraded_reason"] = "schema_or_model_version_mismatch"
+                else:
+                    status["status"] = "degraded"
+                    status["degraded_reason"] = "embedding_count_mismatch"
+
+        except Exception as e:
+            logger.error(f"Error getting database status: {e}")
+            status["status"] = "degraded"
+            status["error"] = str(e)
+
+        return status

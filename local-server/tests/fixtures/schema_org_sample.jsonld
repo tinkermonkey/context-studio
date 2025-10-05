@@ -1,0 +1,343 @@
+{
+  "@context": {
+    "@vocab": "https://schema.org/",
+    "rdf": "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+    "rdfs": "http://www.w3.org/2000/01/rdf-schema#"
+  },
+  "@graph": [
+    {
+      "@id": "schema:Person",
+      "@type": "rdfs:Class",
+      "rdfs:label": "Person",
+      "rdfs:comment": "A person (alive, dead, undead, or fictional).",
+      "rdfs:subClassOf": {
+        "@id": "schema:Thing"
+      }
+    },
+    {
+      "@id": "schema:Thing",
+      "@type": "rdfs:Class",
+      "rdfs:label": "Thing",
+      "rdfs:comment": "The most generic type of item."
+    },
+    {
+      "@id": "schema:Organization",
+      "@type": "rdfs:Class",
+      "rdfs:label": "Organization",
+      "rdfs:comment": "An organization such as a school, NGO, corporation, club, etc.",
+      "rdfs:subClassOf": {
+        "@id": "schema:Thing"
+      }
+    },
+    {
+      "@id": "schema:Place",
+      "@type": "rdfs:Class",
+      "rdfs:label": "Place",
+      "rdfs:comment": "Entities that have a somewhat fixed, physical extension.",
+      "rdfs:subClassOf": {
+        "@id": "schema:Thing"
+      }
+    },
+    {
+      "@id": "schema:CreativeWork",
+      "@type": "rdfs:Class",
+      "rdfs:label": "CreativeWork",
+      "rdfs:comment": "The most generic kind of creative work, including books, movies, photographs, software programs, etc.",
+      "rdfs:subClassOf": {
+        "@id": "schema:Thing"
+      }
+    },
+    {
+      "@id": "schema:Book",
+      "@type": "rdfs:Class",
+      "rdfs:label": "Book",
+      "rdfs:comment": "A book.",
+      "rdfs:subClassOf": {
+        "@id": "schema:CreativeWork"
+      }
+    },
+    {
+      "@id": "schema:author",
+      "@type": "rdf:Property",
+      "rdfs:label": "author",
+      "rdfs:comment": "The author of this content or rating.",
+      "schema:domainIncludes": [
+        {
+          "@id": "schema:CreativeWork"
+        },
+        {
+          "@id": "schema:Book"
+        }
+      ],
+      "schema:rangeIncludes": [
+        {
+          "@id": "schema:Person"
+        },
+        {
+          "@id": "schema:Organization"
+        }
+      ]
+    },
+    {
+      "@id": "schema:name",
+      "@type": "rdf:Property",
+      "rdfs:label": "name",
+      "rdfs:comment": "The name of the item.",
+      "schema:domainIncludes": {
+        "@id": "schema:Thing"
+      },
+      "schema:rangeIncludes": {
+        "@id": "schema:Text"
+      }
+    },
+    {
+      "@id": "schema:givenName",
+      "@type": "rdf:Property",
+      "rdfs:label": "givenName",
+      "rdfs:comment": "Given name. In the U.S., the first name of a Person.",
+      "schema:domainIncludes": {
+        "@id": "schema:Person"
+      },
+      "schema:rangeIncludes": {
+        "@id": "schema:Text"
+      }
+    },
+    {
+      "@id": "schema:familyName",
+      "@type": "rdf:Property",
+      "rdfs:label": "familyName",
+      "rdfs:comment": "Family name. In the U.S., the last name of a Person.",
+      "schema:domainIncludes": {
+        "@id": "schema:Person"
+      },
+      "schema:rangeIncludes": {
+        "@id": "schema:Text"
+      }
+    },
+    {
+      "@id": "schema:address",
+      "@type": "rdf:Property",
+      "rdfs:label": "address",
+      "rdfs:comment": "Physical address of the item.",
+      "schema:domainIncludes": [
+        {
+          "@id": "schema:Person"
+        },
+        {
+          "@id": "schema:Organization"
+        },
+        {
+          "@id": "schema:Place"
+        }
+      ],
+      "schema:rangeIncludes": {
+        "@id": "schema:PostalAddress"
+      }
+    },
+    {
+      "@id": "schema:PostalAddress",
+      "@type": "rdfs:Class",
+      "rdfs:label": "PostalAddress",
+      "rdfs:comment": "The mailing address.",
+      "rdfs:subClassOf": {
+        "@id": "schema:ContactPoint"
+      }
+    },
+    {
+      "@id": "schema:ContactPoint",
+      "@type": "rdfs:Class",
+      "rdfs:label": "ContactPoint",
+      "rdfs:comment": "A contact point—for example, a Customer Complaints department.",
+      "rdfs:subClassOf": {
+        "@id": "schema:StructuredValue"
+      }
+    },
+    {
+      "@id": "schema:StructuredValue",
+      "@type": "rdfs:Class",
+      "rdfs:label": "StructuredValue",
+      "rdfs:comment": "Structured values are used when the value of a property has a more complex structure.",
+      "rdfs:subClassOf": {
+        "@id": "schema:Intangible"
+      }
+    },
+    {
+      "@id": "schema:Intangible",
+      "@type": "rdfs:Class",
+      "rdfs:label": "Intangible",
+      "rdfs:comment": "A utility class that serves as the umbrella for a number of 'intangible' things.",
+      "rdfs:subClassOf": {
+        "@id": "schema:Thing"
+      }
+    },
+    {
+      "@id": "schema:Text",
+      "@type": "rdfs:Class",
+      "rdfs:label": "Text",
+      "rdfs:comment": "Data type: Text.",
+      "rdfs:subClassOf": {
+        "@id": "schema:DataType"
+      }
+    },
+    {
+      "@id": "schema:DataType",
+      "@type": "rdfs:Class",
+      "rdfs:label": "DataType",
+      "rdfs:comment": "The basic data types such as Integers, Strings, etc."
+    },
+    {
+      "@id": "schema:Event",
+      "@type": "rdfs:Class",
+      "rdfs:label": "Event",
+      "rdfs:comment": "An event happening at a certain time and location.",
+      "rdfs:subClassOf": {
+        "@id": "schema:Thing"
+      }
+    },
+    {
+      "@id": "schema:organizer",
+      "@type": "rdf:Property",
+      "rdfs:label": "organizer",
+      "rdfs:comment": "An organizer of an Event.",
+      "schema:domainIncludes": {
+        "@id": "schema:Event"
+      },
+      "schema:rangeIncludes": [
+        {
+          "@id": "schema:Person"
+        },
+        {
+          "@id": "schema:Organization"
+        }
+      ]
+    },
+    {
+      "@id": "schema:location",
+      "@type": "rdf:Property",
+      "rdfs:label": "location",
+      "rdfs:comment": "The location of for example where the event is happening.",
+      "schema:domainIncludes": [
+        {
+          "@id": "schema:Event"
+        },
+        {
+          "@id": "schema:Organization"
+        }
+      ],
+      "schema:rangeIncludes": [
+        {
+          "@id": "schema:Place"
+        },
+        {
+          "@id": "schema:PostalAddress"
+        }
+      ]
+    },
+    {
+      "@id": "schema:Product",
+      "@type": "rdfs:Class",
+      "rdfs:label": "Product",
+      "rdfs:comment": "Any offered product or service.",
+      "rdfs:subClassOf": {
+        "@id": "schema:Thing"
+      }
+    },
+    {
+      "@id": "schema:brand",
+      "@type": "rdf:Property",
+      "rdfs:label": "brand",
+      "rdfs:comment": "The brand(s) associated with a product or service.",
+      "schema:domainIncludes": {
+        "@id": "schema:Product"
+      },
+      "schema:rangeIncludes": [
+        {
+          "@id": "schema:Brand"
+        },
+        {
+          "@id": "schema:Organization"
+        }
+      ]
+    },
+    {
+      "@id": "schema:Brand",
+      "@type": "rdfs:Class",
+      "rdfs:label": "Brand",
+      "rdfs:comment": "A brand is a name used by an organization or business person for labeling a product.",
+      "rdfs:subClassOf": {
+        "@id": "schema:Intangible"
+      }
+    },
+    {
+      "@id": "schema:Review",
+      "@type": "rdfs:Class",
+      "rdfs:label": "Review",
+      "rdfs:comment": "A review of an item - for example, of a restaurant, movie, or store.",
+      "rdfs:subClassOf": {
+        "@id": "schema:CreativeWork"
+      }
+    },
+    {
+      "@id": "schema:reviewRating",
+      "@type": "rdf:Property",
+      "rdfs:label": "reviewRating",
+      "rdfs:comment": "The rating given in this review.",
+      "schema:domainIncludes": {
+        "@id": "schema:Review"
+      },
+      "schema:rangeIncludes": {
+        "@id": "schema:Rating"
+      }
+    },
+    {
+      "@id": "schema:Rating",
+      "@type": "rdfs:Class",
+      "rdfs:label": "Rating",
+      "rdfs:comment": "A rating is an evaluation on a numeric scale.",
+      "rdfs:subClassOf": {
+        "@id": "schema:Intangible"
+      }
+    },
+    {
+      "@id": "schema:publisher",
+      "@type": "rdf:Property",
+      "rdfs:label": "publisher",
+      "rdfs:comment": "The publisher of the creative work.",
+      "schema:domainIncludes": {
+        "@id": "schema:CreativeWork"
+      },
+      "schema:rangeIncludes": [
+        {
+          "@id": "schema:Person"
+        },
+        {
+          "@id": "schema:Organization"
+        }
+      ]
+    },
+    {
+      "@id": "schema:employee",
+      "@type": "rdf:Property",
+      "rdfs:label": "employee",
+      "rdfs:comment": "Someone working for this organization.",
+      "schema:domainIncludes": {
+        "@id": "schema:Organization"
+      },
+      "schema:rangeIncludes": {
+        "@id": "schema:Person"
+      }
+    },
+    {
+      "@id": "schema:founder",
+      "@type": "rdf:Property",
+      "rdfs:label": "founder",
+      "rdfs:comment": "A person who founded this organization.",
+      "schema:domainIncludes": {
+        "@id": "schema:Organization"
+      },
+      "schema:rangeIncludes": {
+        "@id": "schema:Person"
+      }
+    }
+  ]
+}
