@@ -6,12 +6,14 @@ capabilities to the API layer.
 """
 
 from typing import Optional, Dict, Any, List, Tuple
+import time
 from .manager import SchemaOrgManager
 from .models import SchemaOrgEntity, SchemaOrgProperty
 from utils.logger import get_logger
 import numpy as np
 from sqlalchemy import select, func, text
 from .errors import SearchError, ValidationError
+from .metrics import SearchMetrics
 
 logger = get_logger(__name__)
 
@@ -87,7 +89,7 @@ class SchemaOrgService:
                         limit: int = 50, offset: int = 0) -> Dict[str, Any]:
         """Search entities with simple text matching and pagination.
 
-        This uses SQL LIKE fallback; FTS5 or vector indexes are preferred when available.
+        This uses SQL LIKE for text matching; vector indexes are used for semantic search.
         """
         logger.debug("search_entities called (query=%s parent_id=%s limit=%s offset=%s)", query, parent_id, limit, offset)
         if limit <= 0 or offset < 0:
@@ -177,6 +179,7 @@ class SchemaOrgService:
         similarity, returning top results above the threshold.
         """
         logger.debug("semantic_search called (query=%s search_type=%s)", query, search_type)
+        search_start = time.perf_counter()
         q_emb_bytes = None
         if not query or not query.strip():
             logger.warning("Empty semantic search query")
@@ -295,6 +298,18 @@ class SchemaOrgService:
                     if results:
                         results.sort(key=lambda x: x[0], reverse=True)
                         items = [item for _, item in results[:limit]]
+
+                        # Log search metrics
+                        query_time_ms = (time.perf_counter() - search_start) * 1000
+                        metrics = SearchMetrics(
+                            query_time_ms=query_time_ms,
+                            result_count=len(results),
+                            search_type="semantic",
+                            threshold=similarity_threshold,
+                            limit=limit
+                        )
+                        metrics.log()
+
                         return {"items": items, "total_count": len(results), "limit": limit, "offset": 0}
                 # Fallback path: in-memory scan with cached embeddings
                 SessionLocal = self.manager.get_session_local()
@@ -339,6 +354,18 @@ class SchemaOrgService:
 
                     results.sort(key=lambda x: x[0], reverse=True)
                     items = [item for _, item in results[:limit]]
+
+                    # Log search metrics
+                    query_time_ms = (time.perf_counter() - search_start) * 1000
+                    metrics = SearchMetrics(
+                        query_time_ms=query_time_ms,
+                        result_count=len(results),
+                        search_type="semantic",
+                        threshold=similarity_threshold,
+                        limit=limit
+                    )
+                    metrics.log()
+
                     return {"items": items, "total_count": len(results), "limit": limit, "offset": 0}
                 finally:
                     session.close()

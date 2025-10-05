@@ -1,0 +1,44 @@
+{
+  "version": "1.0",
+  "description": "Performance baselines for vector search operations",
+  "last_updated": "2025-10-05",
+  "test_environment": {
+    "cpu": "Generic x86_64",
+    "memory_gb": 8,
+    "python_version": "3.11",
+    "dataset_size": 100
+  },
+  "baselines": {
+    "top_20_query_latency_ms": {
+      "target": 50.0,
+      "average": 30.0,
+      "p95": 45.0,
+      "tolerance_pct": 15,
+      "description": "Average latency for top-20 vector search queries (TC-P002, TC-S003)"
+    },
+    "search_scaling_factor": {
+      "target": 10.0,
+      "actual": 8.5,
+      "tolerance_pct": 15,
+      "description": "Time ratio for 100x limit increase vs 10x limit (should be <10x)"
+    },
+    "threshold_filtering_overhead_pct": {
+      "target": 20.0,
+      "actual": 12.0,
+      "tolerance_pct": 15,
+      "description": "Overhead percentage when applying threshold filtering"
+    },
+    "concurrent_throughput_qps": {
+      "target": 10.0,
+      "actual": 15.0,
+      "tolerance_pct": 15,
+      "description": "Queries per second with 20 concurrent queries (TC-P003)"
+    }
+  },
+  "notes": [
+    "Baselines are measured on reference hardware and may vary by system",
+    "Tolerance is ±15% to account for hardware variability",
+    "Update baselines when making performance improvements",
+    "Target values are based on requirements, actual values from recent measurements"
+  ]
+}

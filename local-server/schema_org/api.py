@@ -13,8 +13,6 @@ from .service import SchemaOrgService
 from utils.logger import get_logger
 from .errors import (
     DownloadError,
-    BackupError,
-    RestoreError,
     DatabaseError,
     ValidationError,
     SearchError,
