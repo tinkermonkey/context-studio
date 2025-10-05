@@ -28,7 +28,6 @@ logger = logging.getLogger(__name__)
 # Constants
 EMBEDDING_DIMENSION = 768  # Dimension for sentence-transformers/all-MiniLM-L6-v2
 
-
 class ReferenceManager:
     """
     Manager for reference database operations.
