@@ -17,14 +17,6 @@ class ParseError(SchemaOrgError):
     """Raised when parsing the downloaded JSON-LD fails or is invalid."""
 
 
-class BackupError(SchemaOrgError):
-    """Raised when a backup cannot be created or restore fails."""
-
-
-class RestoreError(SchemaOrgError):
-    """Raised when a restore from backup fails."""
-
-
 class DatabaseError(SchemaOrgError):
     """Raised for generic database population/operation errors."""
 
