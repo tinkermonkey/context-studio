@@ -11,7 +11,7 @@ from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field
 
 from config import get_config_manager, notify_global_configuration_reload
-from reference.service import ReferenceService
+from reference_api.service import ReferenceService
 from utils.logger import get_logger
 
 logger = get_logger(__name__)

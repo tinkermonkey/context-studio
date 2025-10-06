@@ -7,8 +7,8 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(
 import pytest
 from typing import List
 
-from reference.response_builders import ResponseBuilder
-from reference.models import (
+from reference_api.response_builders import ResponseBuilder
+from reference_api.models import (
     SourceType, SearchNode, SearchLink, MultiSourceSearchResponse
 )
 

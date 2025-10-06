@@ -6,14 +6,14 @@ from typing import Optional, Literal
 import logging
 
 from api.dependencies.reference_services import get_reference_service
-from reference.service import ReferenceService
-from reference.models import (
+from reference_api.service import ReferenceService
+from reference_api.models import (
     DBpediaResourceRequest, DBpediaSearchRequest, DBpediaSparqlRequest, ConceptNetQueryRequest,
     WikidataSparqlRequest, WikidataEntityRequest, WikidataSearchRequest, SchemaOrgEntityRequest,
     SchemaOrgPropertyRequest, SchemaOrgSearchRequest, ResponseFormat, SourceType, MultiSourceSearchRequest,
     MultiSourceSearchResponse
 )
-from reference.exceptions import ReferenceError, SourceError, SourceTimeoutError
+from reference_api.exceptions import ReferenceError, SourceError, SourceTimeoutError
 
 logger = logging.getLogger(__name__)
 

@@ -9,8 +9,8 @@ import asyncio
 from unittest.mock import Mock, AsyncMock, patch
 from datetime import datetime, UTC
 
-from reference.service import ReferenceService
-from reference.models import (
+from reference_api.service import ReferenceService
+from reference_api.models import (
     SourceType, SearchNode, SearchLink, MultiSourceSearchResponse,
     DBpediaSearchRequest, DBpediaResourceRequest, DBpediaSparqlRequest,
     ConceptNetQueryRequest, WikidataSparqlRequest, WikidataEntityRequest, WikidataSearchRequest,
@@ -337,7 +337,7 @@ class TestReferenceServiceRefactored:
             return mock_sources[source_type]
 
         with patch.object(service, '_get_source', side_effect=mock_get_source):
-            from reference.models import MultiSourceSearchRequest
+            from reference_api.models import MultiSourceSearchRequest
 
             request = MultiSourceSearchRequest(query="python", limit=10)
             response = await service.search(request)
@@ -421,7 +421,7 @@ class TestReferenceServiceRefactored:
             return slow_sources.get(source_type, AsyncMock())
 
         with patch.object(service, '_get_source', side_effect=mock_get_source):
-            from reference.models import MultiSourceSearchRequest
+            from reference_api.models import MultiSourceSearchRequest
 
             start_time = time.time()
             request = MultiSourceSearchRequest(
@@ -504,7 +504,7 @@ class TestReferenceServiceRefactored:
             return mock_sources[source_type]
 
         with patch.object(service, '_get_source', side_effect=mock_get_source):
-            from reference.models import MultiSourceSearchRequest
+            from reference_api.models import MultiSourceSearchRequest
 
             request = MultiSourceSearchRequest(
                 query="Python",

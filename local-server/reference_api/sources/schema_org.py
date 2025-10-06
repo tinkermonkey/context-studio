@@ -1,15 +1,17 @@
-"""Schema.org source implementation that leverages the existing SchemaOrgManager"""
+"""Schema.org source implementation using reference_db"""
 
 from .base import BaseReferenceSource
 from ..models import SchemaOrgEntityResponse, SchemaOrgPropertyResponse, SchemaOrgSearchResponse
-from schema_org.manager import SchemaOrgManager
+from reference_db.manager import ReferenceManager
+from reference_db.config import ReferenceConfig
 from sqlalchemy import text
+import json
 
 
 class SchemaOrgSource(BaseReferenceSource):
     def __init__(self, source_type, config):
         super().__init__(source_type, config)
-        self.manager = SchemaOrgManager()
+        self.ref_config = ReferenceConfig()
 
     def _get_default_base_url(self) -> str:
         # Schema.org is local; base_url not used for this source
@@ -20,19 +22,31 @@ class SchemaOrgSource(BaseReferenceSource):
 
     async def get_entity(self, identifier: str, include_inherited: bool = True, include_children: bool = False) -> SchemaOrgEntityResponse:
         try:
-            # Use manager's DB to retrieve entity by identifier
-            # The manager is synchronous; run in thread to avoid blocking
+            # Use reference_db to retrieve entity by identifier
             def _lookup():
-                sess_maker = self.manager.get_session_local()
-                session = sess_maker()
-                try:
-                    # Minimal query that returns raw JSON columns; implementation may vary
-                    row = session.execute(text("SELECT raw FROM schema_org_entities WHERE identifier = :id"), {"id": identifier}).fetchone()
-                    if not row:
+                with ReferenceManager(self.ref_config) as ref_manager:
+                    # Query reference_nodes for schema.org entity
+                    result = ref_manager.session.execute(
+                        text("""
+                            SELECT id, title, definition, external_id, attributes
+                            FROM reference_nodes
+                            WHERE source = :source AND external_id = :identifier
+                        """),
+                        {"source": "schema.org", "identifier": identifier}
+                    ).fetchone()
+
+                    if not result:
                         return None
-                    return row[0]
-                finally:
-                    session.close()
+
+                    # Construct entity data from node
+                    entity_data = {
+                        "id": result[0],
+                        "identifier": result[3],
+                        "title": result[1],
+                        "definition": result[2],
+                        "attributes": json.loads(result[4]) if result[4] else {}
+                    }
+                    return entity_data
 
             loop = __import__('asyncio').get_event_loop()
             data = await loop.run_in_executor(None, _lookup)
@@ -45,15 +59,29 @@ class SchemaOrgSource(BaseReferenceSource):
     async def get_property(self, identifier: str, include_usage: bool = True) -> SchemaOrgPropertyResponse:
         try:
             def _lookup():
-                sess_maker = self.manager.get_session_local()
-                session = sess_maker()
-                try:
-                    row = session.execute(text("SELECT raw FROM schema_org_properties WHERE identifier = :id"), {"id": identifier}).fetchone()
-                    if not row:
+                with ReferenceManager(self.ref_config) as ref_manager:
+                    # Query reference_nodes for schema.org property
+                    result = ref_manager.session.execute(
+                        text("""
+                            SELECT id, title, definition, external_id, attributes
+                            FROM reference_nodes
+                            WHERE source = :source AND external_id = :identifier
+                        """),
+                        {"source": "schema.org", "identifier": identifier}
+                    ).fetchone()
+
+                    if not result:
                         return None
-                    return row[0]
-                finally:
-                    session.close()
+
+                    # Construct property data from node
+                    property_data = {
+                        "id": result[0],
+                        "identifier": result[3],
+                        "title": result[1],
+                        "definition": result[2],
+                        "attributes": json.loads(result[4]) if result[4] else {}
+                    }
+                    return property_data
 
             loop = __import__('asyncio').get_event_loop()
             data = await loop.run_in_executor(None, _lookup)
@@ -65,17 +93,12 @@ class SchemaOrgSource(BaseReferenceSource):
 
     async def search(self, query: str, search_type: str = "both", limit: int = 20, offset: int = 0, similarity_threshold: float = 0.7) -> SchemaOrgSearchResponse:
         try:
-            # Use vector search instead of FTS
+            # Use vector search
             def _search():
-                from reference_db.manager import ReferenceManager
-                from reference_db.config import ReferenceConfig
                 import logging
                 logger = logging.getLogger(__name__)
 
-                # Create a manager instance to use the vector search
-                config = ReferenceConfig()
-                with ReferenceManager(config) as ref_manager:
-                    # We need an embedding generator - import from nlp_tools
+                with ReferenceManager(self.ref_config) as ref_manager:
                     try:
                         from embeddings.generate_embeddings import generate_embedding
 
@@ -98,10 +121,14 @@ class SchemaOrgSource(BaseReferenceSource):
                             # Determine type from attributes if available
                             node_type = "entity"  # default
                             if node.attributes:
-                                import json
                                 try:
                                     attrs = json.loads(node.attributes) if isinstance(node.attributes, str) else node.attributes
-                                    node_type = attrs.get("node_type", "entity")
+                                    node_type = attrs.get("@type", "entity")
+                                    # Check if it's a property type
+                                    if "Property" in str(node_type):
+                                        node_type = "property"
+                                    else:
+                                        node_type = "entity"
                                 except:
                                     pass
 

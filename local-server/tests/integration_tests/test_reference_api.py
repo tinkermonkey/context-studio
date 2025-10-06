@@ -9,7 +9,7 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from unittest.mock import patch
 from datetime import datetime, UTC
-from reference.models import (
+from reference_api.models import (
     SourceType, SearchNode, SearchLink, MultiSourceSearchResponse
 )
 
@@ -31,7 +31,7 @@ class TestReferenceAPIIntegration:
     def test_dbpedia_search_endpoint_success(self, client):
         """Test DBpedia search endpoint with successful response"""
         with patch(
-            "reference.service.ReferenceService.dbpedia_search"
+            "reference_api.service.ReferenceService.dbpedia_search"
         ) as mock_search:
             # Mock returns MultiSourceSearchResponse instead of dict
             mock_search.return_value = MultiSourceSearchResponse(
@@ -82,7 +82,7 @@ class TestReferenceAPIIntegration:
     def test_dbpedia_resource_endpoint_success(self, client):
         """Test DBpedia resource endpoint with successful response"""
         with patch(
-            "reference.service.ReferenceService.dbpedia_get_resource"
+            "reference_api.service.ReferenceService.dbpedia_get_resource"
         ) as mock_resource:
             # Mock returns MultiSourceSearchResponse instead of dict
             mock_resource.return_value = MultiSourceSearchResponse(
@@ -123,7 +123,7 @@ class TestReferenceAPIIntegration:
     def test_dbpedia_sparql_endpoint_success(self, client):
         """Test DBpedia SPARQL endpoint with successful response"""
         with patch(
-            "reference.service.ReferenceService.dbpedia_sparql"
+            "reference_api.service.ReferenceService.dbpedia_sparql"
         ) as mock_sparql:
             # Mock returns MultiSourceSearchResponse instead of dict
             mock_sparql.return_value = MultiSourceSearchResponse(
@@ -156,7 +156,7 @@ class TestReferenceAPIIntegration:
     def test_conceptnet_query_endpoint_success(self, client):
         """Test ConceptNet query endpoint with successful response"""
         with patch(
-            "reference.service.ReferenceService.conceptnet_query"
+            "reference_api.service.ReferenceService.conceptnet_query"
         ) as mock_query:
             # Mock returns MultiSourceSearchResponse instead of dict
             mock_query.return_value = MultiSourceSearchResponse(
@@ -216,7 +216,7 @@ class TestReferenceAPIIntegration:
     def test_conceptnet_concept_endpoint_success(self, client):
         """Test ConceptNet concept endpoint with successful response"""
         with patch(
-            "reference.service.ReferenceService.conceptnet_get_concept"
+            "reference_api.service.ReferenceService.conceptnet_get_concept"
         ) as mock_concept:
             # Mock returns MultiSourceSearchResponse instead of dict
             mock_concept.return_value = MultiSourceSearchResponse(
@@ -255,7 +255,7 @@ class TestReferenceAPIIntegration:
     def test_conceptnet_related_endpoint_success(self, client):
         """Test ConceptNet related concepts endpoint with successful response"""
         with patch(
-            "reference.service.ReferenceService.conceptnet_get_related"
+            "reference_api.service.ReferenceService.conceptnet_get_related"
         ) as mock_related:
             # Mock returns MultiSourceSearchResponse instead of dict
             mock_related.return_value = MultiSourceSearchResponse(
@@ -295,7 +295,7 @@ class TestReferenceAPIIntegration:
     def test_wikidata_sparql_endpoint_success(self, client):
         """Test Wikidata SPARQL endpoint with successful response"""
         with patch(
-            "reference.service.ReferenceService.wikidata_sparql"
+            "reference_api.service.ReferenceService.wikidata_sparql"
         ) as mock_sparql:
             # Mock returns MultiSourceSearchResponse instead of dict
             mock_sparql.return_value = MultiSourceSearchResponse(
@@ -327,7 +327,7 @@ class TestReferenceAPIIntegration:
     def test_wikidata_entity_endpoint_success(self, client):
         """Test Wikidata entity endpoint with successful response"""
         with patch(
-            "reference.service.ReferenceService.wikidata_get_entity"
+            "reference_api.service.ReferenceService.wikidata_get_entity"
         ) as mock_entity:
             # Mock returns MultiSourceSearchResponse instead of dict
             mock_entity.return_value = MultiSourceSearchResponse(
@@ -368,7 +368,7 @@ class TestReferenceAPIIntegration:
     def test_schema_org_entity_endpoint_success(self, client):
         """Test Schema.org entity endpoint with successful response"""
         with patch(
-            "reference.service.ReferenceService.schema_org_get_entity"
+            "reference_api.service.ReferenceService.schema_org_get_entity"
         ) as mock_entity:
             # Mock returns MultiSourceSearchResponse instead of dict
             mock_entity.return_value = MultiSourceSearchResponse(
@@ -407,7 +407,7 @@ class TestReferenceAPIIntegration:
     def test_schema_org_property_endpoint_success(self, client):
         """Test Schema.org property endpoint with successful response"""
         with patch(
-            "reference.service.ReferenceService.schema_org_get_property"
+            "reference_api.service.ReferenceService.schema_org_get_property"
         ) as mock_property:
             # Mock returns MultiSourceSearchResponse instead of dict
             mock_property.return_value = MultiSourceSearchResponse(
@@ -446,7 +446,7 @@ class TestReferenceAPIIntegration:
     def test_schema_org_search_endpoint_success(self, client):
         """Test Schema.org search endpoint with successful response"""
         with patch(
-            "reference.service.ReferenceService.schema_org_search"
+            "reference_api.service.ReferenceService.schema_org_search"
         ) as mock_search:
             # Mock returns MultiSourceSearchResponse instead of dict
             mock_search.return_value = MultiSourceSearchResponse(
@@ -486,9 +486,9 @@ class TestReferenceAPIIntegration:
     def test_service_error_handling(self, client):
         """Test API error handling for service errors"""
         with patch(
-            "reference.service.ReferenceService.dbpedia_search"
+            "reference_api.service.ReferenceService.dbpedia_search"
         ) as mock_search:
-            from reference.exceptions import SourceTimeoutError
+            from reference_api.exceptions import SourceTimeoutError
 
             mock_search.side_effect = SourceTimeoutError("Request timed out")
 
@@ -503,9 +503,9 @@ class TestReferenceAPIIntegration:
     def test_source_unavailable_error_handling(self, client):
         """Test API error handling for source unavailable errors"""
         with patch(
-            "reference.service.ReferenceService.conceptnet_query"
+            "reference_api.service.ReferenceService.conceptnet_query"
         ) as mock_query:
-            from reference.exceptions import SourceError
+            from reference_api.exceptions import SourceError
 
             mock_query.side_effect = SourceError("ConceptNet unavailable")
 
@@ -520,9 +520,9 @@ class TestReferenceAPIIntegration:
     def test_reference_error_handling(self, client):
         """Test API error handling for reference errors"""
         with patch(
-            "reference.service.ReferenceService.wikidata_get_entity"
+            "reference_api.service.ReferenceService.wikidata_get_entity"
         ) as mock_entity:
-            from reference.exceptions import ReferenceError
+            from reference_api.exceptions import ReferenceError
 
             mock_entity.side_effect = ReferenceError("Invalid entity URL")
 
@@ -537,7 +537,7 @@ class TestReferenceAPIIntegration:
     def test_unexpected_error_handling(self, client):
         """Test API error handling for unexpected errors"""
         with patch(
-            "reference.service.ReferenceService.schema_org_get_entity"
+            "reference_api.service.ReferenceService.schema_org_get_entity"
         ) as mock_entity:
             mock_entity.side_effect = RuntimeError("Unexpected error")
 
@@ -550,7 +550,7 @@ class TestReferenceAPIIntegration:
 
     def test_health_endpoint_service_failure(self, client):
         """Test health endpoint when service fails"""
-        with patch("reference.service.ReferenceService.health_check") as mock_health:
+        with patch("reference_api.service.ReferenceService.health_check") as mock_health:
             mock_health.side_effect = RuntimeError("Health check failed")
 
             response = client.get("/api/reference/health")
@@ -623,7 +623,7 @@ class TestReferenceAPIIntegration:
 
     def test_multi_source_search_endpoint_success(self, client):
         """Test multi-source search endpoint with successful response"""
-        with patch("reference.service.ReferenceService.search") as mock_search:
+        with patch("reference_api.service.ReferenceService.search") as mock_search:
             # Mock returns MultiSourceSearchResponse directly (already the correct format)
             mock_search.return_value = MultiSourceSearchResponse(
                 query="apple",
@@ -678,7 +678,7 @@ class TestReferenceAPIIntegration:
 
     def test_multi_source_search_get_endpoint_success(self, client):
         """Test multi-source search GET endpoint with successful response"""
-        with patch("reference.service.ReferenceService.search") as mock_search:
+        with patch("reference_api.service.ReferenceService.search") as mock_search:
             # Mock returns MultiSourceSearchResponse directly
             mock_search.return_value = MultiSourceSearchResponse(
                 query="apple",
@@ -722,7 +722,7 @@ class TestReferenceAPIIntegration:
 
     def test_multi_source_search_with_source_errors(self, client):
         """Test multi-source search with some source errors"""
-        with patch("reference.service.ReferenceService.search") as mock_search:
+        with patch("reference_api.service.ReferenceService.search") as mock_search:
             # Mock returns MultiSourceSearchResponse with source errors
             mock_search.return_value = MultiSourceSearchResponse(
                 query="apple",

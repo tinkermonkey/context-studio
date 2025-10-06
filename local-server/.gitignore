@@ -117,7 +117,7 @@ poetry.lock
 .pyre/
 
 # dotenv
-.env
+**/.env
 .env.*
 
 # VS Code

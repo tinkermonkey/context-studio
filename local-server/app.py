@@ -9,7 +9,6 @@ from api import reference, config, structure_nodes, version_management, sync, ll
 from api import changeset_management, proposal_management, identity_management
 from api import conflict_resolution, analytics, incremental_sync, optimization, embeddings, model_capabilities, enabled_models
 from api.admin import service_monitoring
-from schema_org import api as schema_org_api
 from api.graph import get_cached_graph_service, invalidate_graph_cache
 from database.migrations.migration_manager import MigrationManager
 from database.utils import (
@@ -195,7 +194,6 @@ def create_app(dataset_id=None, engine=None, session_local=None, service_factory
     app.include_router(datasets.router, prefix="/api", tags=["datasets"])
     app.include_router(schema.router, prefix="/api", tags=["schema"])
     app.include_router(config.router)
-    app.include_router(schema_org_api.router)
     app.include_router(nlp_analysis.router, prefix="/api", tags=["nlp"])
     app.include_router(llm.router, prefix="/api", tags=["llm"])
     app.include_router(llm_traceability.router, tags=["llm-traceability"])

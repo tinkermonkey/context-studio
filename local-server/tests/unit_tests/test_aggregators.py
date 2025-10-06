@@ -7,8 +7,8 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(
 import pytest
 from typing import List
 
-from reference.aggregators import ResultAggregator
-from reference.models import (
+from reference_api.aggregators import ResultAggregator
+from reference_api.models import (
     SourceType, SearchNode, SearchLink, MultiSourceSearchResponse
 )
 

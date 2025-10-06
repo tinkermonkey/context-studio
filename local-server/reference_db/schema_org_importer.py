@@ -322,12 +322,13 @@ class SchemaOrgImporter:
                 logger.debug(f"Downloaded {len(response.text)} bytes to {tmp_file.name}")
                 return tmp_file.name
 
-            except requests.RequestException as e:
+            except Exception as e:
                 logger.warning(f"Download attempt {attempt + 1} failed: {e}")
                 if attempt == retry_count - 1:
                     raise DownloadError(
                         f"Failed to download after {retry_count} attempts: {e}"
                     )
+                # Continue to next retry attempt
 
         raise DownloadError("Download failed for unknown reason")
 
@@ -765,6 +766,16 @@ class SchemaOrgImporter:
                                 "object": node_map[domain_id],
                                 "metadata": {"source": "schema.org"}
                             })
+                else:
+                    # Single value
+                    domain_id = self._extract_id(domain_includes)
+                    if domain_id and domain_id in node_map:
+                        links_to_insert.append({
+                            "subject": subject_id,
+                            "predicate": "domainIncludes",
+                            "object": node_map[domain_id],
+                            "metadata": {"source": "schema.org"}
+                        })
 
             # Extract rangeIncludes
             range_includes = (
@@ -782,6 +793,16 @@ class SchemaOrgImporter:
                                 "object": node_map[range_id],
                                 "metadata": {"source": "schema.org"}
                             })
+                else:
+                    # Single value
+                    range_id = self._extract_id(range_includes)
+                    if range_id and range_id in node_map:
+                        links_to_insert.append({
+                            "subject": subject_id,
+                            "predicate": "rangeIncludes",
+                            "object": node_map[range_id],
+                            "metadata": {"source": "schema.org"}
+                        })
 
             # Extract inverseOf
             inverse_of = item.get("inverseOf") or item.get("schema:inverseOf")

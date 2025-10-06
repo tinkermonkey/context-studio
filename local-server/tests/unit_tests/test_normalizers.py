@@ -8,8 +8,8 @@ import pytest
 from datetime import datetime, UTC
 from unittest.mock import Mock
 
-from reference.normalizers import ResultNormalizer
-from reference.models import (
+from reference_api.normalizers import ResultNormalizer
+from reference_api.models import (
     SourceType, SearchNode, SearchLink,
     DBpediaSearchResponse, DBpediaSearchResult, DBpediaResourceResponse, DBpediaSparqlResponse,
     ConceptNetQueryResponse, ConceptNetEdge, ConceptNetConceptResponse, ConceptNetRelatedResponse,

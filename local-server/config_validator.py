@@ -293,7 +293,7 @@ class ConfigurationValidator:
         try:
             # Test reference service imports
             try:
-                from reference.service import ReferenceService
+                from reference_api.service import ReferenceService
                 from api.reference import get_reference_service
                 self._add_result(True, category, "reference_imports", "Reference service imports successfully")
             except ImportError as e:

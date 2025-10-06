@@ -124,19 +124,18 @@ class TestSchemaOrgImporterDownload:
                 assert "3 attempts" in str(exc_info.value)
 
     def test_download_rejects_non_https_url(self, tmp_path):
-        """Test runtime URL validation rejects non-HTTPS sources (TC-SEC002)."""
-        config = ReferenceConfig(
-            schema_org_api_url="http://malicious.com/schema.jsonld"
-        )
-        db_path = tmp_path / "test.db"
+        """Test config validation rejects non-HTTPS sources (TC-SEC002)."""
+        from pydantic import ValidationError
 
-        with ReferenceManager(config, db_path=str(db_path)) as manager:
-            importer = SchemaOrgImporter(config, manager)
+        # Test that Pydantic validation rejects non-HTTPS URLs for remote hosts
+        with pytest.raises(ValidationError) as exc_info:
+            config = ReferenceConfig(
+                schema_org_api_url="http://malicious.com/schema.jsonld"
+            )
 
-            with pytest.raises(DownloadError) as exc_info:
-                importer._download_with_retry()
-
-            assert "security" in str(exc_info.value).lower()
+        # Verify the error message mentions security/HTTPS
+        error_str = str(exc_info.value)
+        assert "https" in error_str.lower() or "security" in error_str.lower()
 
 
 class TestSchemaOrgImporterParsing:
@@ -286,33 +285,32 @@ class TestSchemaOrgImporterTransactions:
             assert len(nodes) == 2
 
     def test_transaction_rollback_on_failure(self, tmp_path):
-        """Test transaction rollback works correctly on Phase 3 failure (TC-I004.1)."""
+        """Test transaction rollback works correctly on SQLAlchemy errors (TC-I004.1)."""
         config = ReferenceConfig()
         db_path = tmp_path / "test.db"
 
         with ReferenceManager(config, db_path=str(db_path)) as manager:
             importer = SchemaOrgImporter(config, manager)
 
-            # Create one valid node first
-            valid_node = [
+            # Create a node with invalid data that will cause an error
+            invalid_node = [
                 {
                     "external_id": "https://schema.org/Thing",
                     "title": "Thing",
                     "definition": "Test",
-                    "title_embedding": b'\x00' * 512,
+                    "title_embedding": "invalid_not_bytes",  # Should be bytes
                     "definition_embedding": b'\x00' * 512,
                     "raw_data": {}
                 }
             ]
-            importer._insert_nodes_transaction(valid_node)
 
-            # Try to insert duplicate (should fail)
+            # Try to insert invalid node (should raise SchemaOrgImportError)
             with pytest.raises(SchemaOrgImportError):
-                importer._insert_nodes_transaction(valid_node)
+                importer._insert_nodes_transaction(invalid_node)
 
-            # Verify only one node exists (rollback worked)
+            # Verify no nodes were inserted (rollback worked)
             nodes = manager.list_reference_nodes(source="schema.org")
-            assert len(nodes) == 1
+            assert len(nodes) == 0
 
 
 class TestSchemaOrgImporterVectorTables:
@@ -351,8 +349,9 @@ class TestSchemaOrgImporterVectorTables:
             importer._create_vec_table()
 
             # Verify vec table exists
+            from sqlalchemy import text
             result = manager.session.execute(
-                "SELECT name FROM sqlite_master WHERE type='table' AND name='reference_nodes_vec'"
+                text("SELECT name FROM sqlite_master WHERE type='table' AND name='reference_nodes_vec'")
             ).fetchone()
 
             assert result is not None
@@ -383,8 +382,9 @@ class TestSchemaOrgImporterVectorTables:
             importer._create_vec_table()
 
             # Verify all nodes in vec table
+            from sqlalchemy import text
             count = manager.session.execute(
-                "SELECT COUNT(*) FROM reference_nodes_vec"
+                text("SELECT COUNT(*) FROM reference_nodes_vec")
             ).scalar()
 
             assert count == 3

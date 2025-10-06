@@ -40,8 +40,7 @@ from graph.sparql_service import SPARQLService
 from llm.flavor_service import PipelineFlavorService
 from llm.service import LLMService
 from llm.execution_tracker import ExecutionTracker
-from reference.service import ReferenceService
-from schema_org.service import SchemaOrgService
+from reference_api.service import ReferenceService
 from database.utils import get_db
 from config import get_settings
 from utils.logger import get_logger
@@ -66,7 +65,6 @@ class ServiceType(Enum):
     LLM_SERVICE = "llm_service"
     EXECUTION_TRACKER = "execution_tracker"
     REFERENCE_SERVICE = "reference_service"
-    SCHEMA_ORG_SERVICE = "schema_org_service"
     S3_SYNC_MANAGER = "s3_sync_manager"
     CHANGESET_MANAGER = "changeset_manager"
     PROPOSAL_MANAGER = "proposal_manager"
@@ -375,15 +373,6 @@ class ServiceFactory:
         """
         return self._create_service(ServiceType.REFERENCE_SERVICE, ReferenceService)
 
-    def create_schema_org_service(self) -> SchemaOrgService:
-        """
-        Create SchemaOrgService with optimized instantiation.
-
-        Returns:
-            SchemaOrgService instance
-        """
-        return self._create_service(ServiceType.SCHEMA_ORG_SERVICE, SchemaOrgService)
-    
     def create_changeset_manager(
         self, 
         db: Session, 

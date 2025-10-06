@@ -66,7 +66,7 @@ RUN python3 -m pip install --no-cache-dir sqlite-vec==0.1.6 && \
 RUN pip install --no-cache-dir -r /tmp/backend-requirements.txt
 
 # Copy and run validation script to verify sqlite-vec installation
-COPY utils/validate_sqlite_vec.py /tmp/validate_sqlite_vec.py
+COPY local-server/utils/validate_sqlite_vec.py /tmp/validate_sqlite_vec.py
 RUN chmod +x /tmp/validate_sqlite_vec.py && \
     python3 /tmp/validate_sqlite_vec.py && \
     rm /tmp/validate_sqlite_vec.py
