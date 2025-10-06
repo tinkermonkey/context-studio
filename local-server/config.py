@@ -46,12 +46,12 @@ class ServerConfig(BaseModel):
 
 class DatabaseConfig(BaseModel):
     """Database configuration section"""
-    default_url: str = Field(default="sqlite:///./local.db", description="Default database URL")
+    default_url: str = Field(default="sqlite:///./datafiles/local.db", description="Default database URL")
     default_dataset_filename: str = Field(default="default.db", description="Default dataset filename")
-    schema_org_path: str = Field(default="./schemaorg.db", description="Schema.org database path")
-    reference_path: str = Field(default="./reference.db", description="Reference database path (multi-source knowledge graph)")
-    reference_cache_path: str = Field(default="./reference_api_cache.db", description="Reference API cache database path")
-    pipeline_path: str = Field(default="./pipeline.db", description="Pipeline database path")
+    # schema_org_path is deprecated and no longer used
+    reference_path: str = Field(default="./datafiles/reference.db", description="Reference database path (multi-source knowledge graph)")
+    reference_cache_path: str = Field(default="./datafiles/reference_api_cache.db", description="Reference API cache database path")
+    pipeline_path: str = Field(default="./datafiles/pipeline.db", description="Pipeline database path")
     check_same_thread: bool = Field(default=False, description="SQLite check_same_thread setting")
     pool_timeout: int = Field(default=30, ge=1, description="Database pool timeout seconds")
     
@@ -147,7 +147,7 @@ class ProxyServerConfig(BaseModel):
     host: str = Field(default="127.0.0.1", description="Proxy server host")
     port: int = Field(default=18080, ge=1024, le=65535, description="Proxy server port")
     enabled: bool = Field(default=True, description="Enable proxy server globally")
-    database_path: str = Field(default="./reference_api_cache.db", description="Cache database path")
+    database_path: str = Field(default="./datafiles/reference_api_cache.db", description="Cache database path")
     max_cache_entries: int = Field(default=10000, ge=100, description="Maximum total cache entries")
     
     # Global cache defaults (can be overridden per source)
@@ -388,25 +388,6 @@ class Settings(BaseModel):
         }
 
     # Legacy compatibility properties for gradual migration
-    @property
-    def SCHEMA_ORG_DB_PATH(self) -> str:
-        """Legacy compatibility property"""
-        return self.database.schema_org_path
-    
-    @property
-    def SCHEMA_ORG_SOURCE_URL(self) -> str:
-        """Legacy compatibility property"""
-        return "https://schema.org/version/latest/schemaorg-current-https.jsonld"
-    
-    @property
-    def SCHEMA_ORG_AUTO_INITIALIZE(self) -> bool:
-        """Legacy compatibility property"""
-        return True
-    
-    @property
-    def SCHEMA_ORG_SIMILARITY_THRESHOLD(self) -> float:
-        """Legacy compatibility property"""
-        return 0.7
     
     @property
     def NLP_MAX_TEXT_LENGTH(self) -> int:

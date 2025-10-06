@@ -10,11 +10,11 @@
     "log_level": "INFO"
   },
   "database": {
-    "default_url": "test://db",
+    "default_url": "sqlite:///./datafiles/local.db",
     "default_dataset_filename": "default.db",
-    "schema_org_path": "./schemaorg.db",
-    "reference_cache_path": "./reference_api_cache.db",
-    "pipeline_path": "./pipeline.db",
+    "reference_path": "./datafiles/reference.db",
+    "reference_cache_path": "./datafiles/reference_api_cache.db",
+    "pipeline_path": "./datafiles/pipeline.db",
     "check_same_thread": true,
     "pool_timeout": 30
   },
@@ -115,7 +115,7 @@
     "host": "127.0.0.1",
     "port": 18080,
     "enabled": true,
-    "database_path": "./reference_api_cache.db",
+    "database_path": "./datafiles/reference_api_cache.db",
     "max_cache_entries": 10000,
     "default_cache_ttl": 3600,
     "default_max_response_size": 10485760,

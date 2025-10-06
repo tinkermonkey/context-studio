@@ -4,6 +4,9 @@
 # Local database files
 datasets.json
 
+# Application datafiles directory (non-dataset databases)
+datafiles/
+
 # Local downloads
 downloads/
 

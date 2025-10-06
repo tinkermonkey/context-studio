@@ -18,23 +18,26 @@ class PipelineDatabaseManager:
     def __init__(self, pipeline_db_path: str = None):
         """
         Initialize pipeline database manager.
-        
+
         Args:
             pipeline_db_path: Path to pipeline database file. If None, uses default location.
         """
         if pipeline_db_path is None:
-            # Use datasets directory for pipeline database
-            from database.utils import get_dataset_manager
-            dataset_manager = get_dataset_manager()
-            datasets_dir = dataset_manager.datasets_directory
-            os.makedirs(datasets_dir, exist_ok=True)
-            pipeline_db_path = os.path.join(datasets_dir, "pipeline_configurations.db")
+            # Use config path for pipeline database
+            from config import get_settings
+            settings = get_settings()
+            pipeline_db_path = settings.database.pipeline_path
         
         self.pipeline_db_path = pipeline_db_path
         self.engine = None
         self.session_local = None
         self.logger = logger
-        
+
+        # Ensure datafiles directory exists
+        db_dir = os.path.dirname(self.pipeline_db_path)
+        if db_dir:
+            os.makedirs(db_dir, exist_ok=True)
+
         self._initialize_database()
     
     def _initialize_database(self):

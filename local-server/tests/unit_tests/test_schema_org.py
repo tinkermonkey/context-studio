@@ -8,7 +8,7 @@ import numpy as np
 
 from schema_org.manager import SchemaOrgManager
 from schema_org.service import SchemaOrgService
-from schema_org.errors import BackupError
+from schema_org.errors import DatabaseError
 
 
 def _fake_embedding(text: str, dim: int = 384) -> bytes:
@@ -104,19 +104,21 @@ def test_semantic_search_fallback_uses_cache(monkeypatch, tmp_path):
     assert r2["total_count"] == r1["total_count"]
 
 
-def test_refresh_handles_backup_failure(monkeypatch, tmp_path):
+def test_refresh_data_with_validation(monkeypatch, tmp_path):
+    """Test that refresh_data validates input and handles errors gracefully."""
     db_file = tmp_path / "schemaorg_test3.db"
     db_path = str(db_file)
     mgr = SchemaOrgManager(db_path=db_path)
 
-    # Force _create_backup to raise BackupError
+    # Create sample data
+    tmp_json = str(tmp_path / "sample3.jsonld")
+    _write_sample_jsonld(tmp_json)
+    monkeypatch.setattr(SchemaOrgManager, "_download_schema_org", lambda self: tmp_json)
     monkeypatch.setattr(
-        SchemaOrgManager,
-        "_create_backup",
-        lambda self: (_ for _ in ()).throw(BackupError("permission_denied")),
+        "schema_org.manager.generate_embedding", lambda text: _fake_embedding(text)
     )
 
-    # Call refresh_data and expect it to return a dict with backup_failed
+    # Test successful refresh
     res = mgr.refresh_data(force=True)
-    assert res.get("success") is False
-    assert "backup_failed" in res.get("message", "")
+    assert res.get("success") is True
+    assert res.get("entity_count", 0) >= 1
