@@ -48,7 +48,6 @@ class DatabaseConfig(BaseModel):
     """Database configuration section"""
     default_url: str = Field(default="sqlite:///./datafiles/local.db", description="Default database URL")
     default_dataset_filename: str = Field(default="default.db", description="Default dataset filename")
-    # schema_org_path is deprecated and no longer used
     reference_path: str = Field(default="./datafiles/reference.db", description="Reference database path (multi-source knowledge graph)")
     reference_cache_path: str = Field(default="./datafiles/reference_api_cache.db", description="Reference API cache database path")
     pipeline_path: str = Field(default="./datafiles/pipeline.db", description="Pipeline database path")

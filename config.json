@@ -12,7 +12,6 @@
   "database": {
     "default_url": "sqlite:///./local.db",
     "default_dataset_filename": "default.db",
-    "schema_org_path": "./schemaorg.db",
     "reference_path": "./reference.db",
     "reference_cache_path": "./reference_api_cache.db",
     "pipeline_path": "./pipeline.db",
