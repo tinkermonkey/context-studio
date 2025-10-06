@@ -37,9 +37,13 @@
     ],
     "filter_missing_text": true,
     "edge_weight_filter": 1.5,
-    "request_timeout": 30
+    "request_timeout": 30,
+    "auto_download_models": true,
+    "download_timeout": 600
   },
   "reference_sources": {
+    "default_language": "en",
+    "search_timeout": 30,
     "conceptnet": {
       "enabled": true,
       "upstream_url": "https://api.conceptnet.io",
@@ -137,5 +141,12 @@
     "secure_key": null,
     "log_security_events": false,
     "api_key_header": "X-API-Key"
-  }
+  },
+  "S3_BUCKET": null,
+  "S3_REGION": "us-east-1",
+  "S3_ACCESS_KEY": null,
+  "S3_SECRET_KEY": null,
+  "S3_ENDPOINT": null,
+  "DUCKDB_MEMORY_LIMIT": "2GB",
+  "DUCKDB_THREADS": 4
 }

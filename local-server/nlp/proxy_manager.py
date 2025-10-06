@@ -73,6 +73,14 @@ class ReferenceAPIProxyManager:
                 return True
 
             try:
+                # Ensure database directory exists before starting proxy
+                import os
+                db_path = config.get("cache", {}).get("database_path", "./datafiles/reference_api_cache.db")
+                db_dir = os.path.dirname(db_path)
+                if db_dir:
+                    os.makedirs(db_dir, exist_ok=True)
+                    logger.debug(f"Ensured proxy cache directory exists: {db_dir}")
+
                 # Import here to avoid dependency issues when not using proxy
                 from reference_api_buddy.core.proxy import CachingProxy
 
