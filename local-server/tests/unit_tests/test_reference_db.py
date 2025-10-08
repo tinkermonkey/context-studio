@@ -11,7 +11,7 @@ import pytest
 from datetime import date
 from uuid import uuid4
 
-from reference_db.models import ReferenceNode, ReferenceLink
+from reference_db.models import ReferenceNode, ReferenceLink, ExternalPredicate
 from reference_db.config import ReferenceConfig, REFERENCE_SCHEMA_VERSION
 from reference_db.manager import ReferenceManager
 

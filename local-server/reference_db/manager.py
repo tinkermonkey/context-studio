@@ -19,7 +19,7 @@ from sqlalchemy.orm import sessionmaker, Session
 from sqlalchemy.exc import OperationalError
 
 from database.utils import get_engine, init_db
-from reference_db.models import Base, ReferenceNode, ReferenceLink
+from reference_db.models import Base, ReferenceNode, ReferenceLink, ExternalPredicate
 from reference_db.config import ReferenceConfig, REFERENCE_SCHEMA_VERSION
 from embeddings.generate_embeddings import generate_embedding
 
@@ -857,6 +857,315 @@ class ReferenceManager:
                 query = query.limit(limit)
 
             return query.all()
+
+    def add_external_predicate(
+        self,
+        title: str,
+        definition: str,
+        source: str,
+        external_id: str,
+        attributes: Dict[str, Any] | None = None,
+        title_embedding: bytes | None = None,
+        definition_embedding: bytes | None = None,
+        embedding_dims: int = EMBEDDING_DIMENSION
+    ) -> ExternalPredicate:
+        """
+        Add a new external predicate to the database.
+
+        Embeddings are automatically generated using the existing embeddings module
+        if not provided. The embeddings use sentence-transformers/all-MiniLM-L6-v2
+        model with 768 dimensions.
+
+        Args:
+            title: Human-readable predicate name
+            definition: Detailed description of the predicate's meaning
+            source: Source identifier (e.g., 'schema.org')
+            external_id: Source-specific identifier for the predicate
+            attributes: Optional dictionary of additional metadata
+            title_embedding: Optional embedding vector for title (auto-generated if None)
+            definition_embedding: Optional embedding vector for definition (auto-generated if None)
+            embedding_dims: Expected embedding dimensions (default: 768 for all-MiniLM-L6-v2)
+
+        Returns:
+            Created ExternalPredicate instance
+
+        Raises:
+            ValueError: If embedding dimensions don't match expected value
+            IntegrityError: If (source, external_id) already exists
+
+        Examples:
+            >>> predicate = manager.add_external_predicate(
+            ...     title="subClassOf",
+            ...     definition="Indicates that one class is a subclass of another",
+            ...     source="schema.org",
+            ...     external_id="subClassOf"
+            ... )
+        """
+        # Auto-generate embeddings if not provided
+        if title_embedding is None:
+            logger.debug(f"Generating embedding for predicate title: {title}")
+            title_embedding = generate_embedding(title)
+        else:
+            self._validate_embedding_dimensions(title_embedding, embedding_dims)
+
+        if definition_embedding is None:
+            logger.debug(f"Generating embedding for predicate definition")
+            definition_embedding = generate_embedding(definition)
+        else:
+            self._validate_embedding_dimensions(definition_embedding, embedding_dims)
+
+        # Create predicate with transaction
+        with self.session.begin():
+            predicate = ExternalPredicate(
+                id=str(uuid4()),
+                title=title,
+                definition=definition,
+                source=source,
+                external_id=external_id,
+                attributes=str(attributes) if attributes else None,
+                title_embedding=title_embedding,
+                definition_embedding=definition_embedding,
+                created_at=date.today().isoformat(),
+                updated_at=date.today().isoformat()
+            )
+            self.session.add(predicate)
+
+        logger.debug(
+            f"Added external predicate: source={source}, external_id={external_id}, title={title}"
+        )
+        return predicate
+
+    def get_external_predicate(self, predicate_id: str) -> ExternalPredicate | None:
+        """
+        Retrieve an external predicate by ID.
+
+        Args:
+            predicate_id: UUID of the external predicate
+
+        Returns:
+            ExternalPredicate instance or None if not found
+
+        Examples:
+            >>> predicate = manager.get_external_predicate("550e8400-e29b-41d4-a716-446655440000")
+        """
+        return self.session.query(ExternalPredicate).filter_by(id=predicate_id).first()
+
+    def get_external_predicate_by_source(
+        self, source: str, external_id: str
+    ) -> ExternalPredicate | None:
+        """
+        Retrieve an external predicate by source and external ID.
+
+        Args:
+            source: Source identifier
+            external_id: Source-specific identifier
+
+        Returns:
+            ExternalPredicate instance or None if not found
+
+        Examples:
+            >>> predicate = manager.get_external_predicate_by_source("schema.org", "subClassOf")
+        """
+        return self.session.query(ExternalPredicate).filter_by(
+            source=source,
+            external_id=external_id
+        ).first()
+
+    def list_external_predicates(
+        self,
+        source: str | None = None,
+        limit: int | None = None
+    ) -> List[ExternalPredicate]:
+        """
+        List external predicates, optionally filtered by source.
+
+        Args:
+            source: Optional source filter
+            limit: Optional limit on number of results
+
+        Returns:
+            List of ExternalPredicate instances
+
+        Examples:
+            >>> predicates = manager.list_external_predicates(source="schema.org", limit=100)
+        """
+        query = self.session.query(ExternalPredicate)
+
+        if source:
+            query = query.filter_by(source=source)
+
+        if limit:
+            query = query.limit(limit)
+
+        return query.all()
+
+    def search_external_predicates_by_similarity(
+        self,
+        query_text: str,
+        source: str | None = None,
+        limit: int = 20,
+        threshold: float = 0.7,
+        embedding_generator = None
+    ) -> List[tuple[ExternalPredicate, float]]:
+        """
+        Search for external predicates by semantic similarity.
+
+        Uses the existing embeddings module (sentence-transformers/all-MiniLM-L6-v2)
+        to generate query embeddings by default.
+
+        This method:
+        1. Generates embeddings for the query text using the embeddings module
+        2. Performs vector search using sqlite-vec
+        3. Computes max(title_similarity, definition_similarity) for ranking
+        4. Filters results by similarity threshold
+        5. Returns predicates ordered by similarity (descending)
+
+        Args:
+            query_text: Text query to search for
+            source: Optional source filter (e.g., 'schema.org')
+            limit: Maximum number of results (default: 20, max: 10000)
+            threshold: Minimum similarity threshold (-1.0 to 1.0, default: 0.7)
+            embedding_generator: Optional custom function that takes text and returns embedding bytes.
+                               If None, uses the default embeddings.generate_embedding function.
+
+        Returns:
+            List of (ExternalPredicate, similarity_score) tuples ordered by similarity descending
+
+        Raises:
+            ValueError: If inputs are invalid (empty query_text, invalid threshold/limit)
+            sqlite3.Error: If vector search database operation fails
+            RuntimeError: If vector search fails for other reasons
+
+        Examples:
+            >>> results = manager.search_external_predicates_by_similarity(
+            ...     "relationship type",
+            ...     source="schema.org",
+            ...     limit=10,
+            ...     threshold=0.8
+            ... )
+            >>> for predicate, score in results:
+            ...     print(f"{predicate.title}: {score:.3f}")
+        """
+        # Input validation
+        if not query_text or not query_text.strip():
+            raise ValueError("query_text cannot be empty")
+
+        # Use default embedding generator if not provided
+        if embedding_generator is None:
+            embedding_generator = generate_embedding
+
+        if not -1.0 <= threshold <= 1.0:
+            raise ValueError(f"threshold must be between -1.0 and 1.0, got {threshold}")
+
+        if not isinstance(limit, int) or limit < 1:
+            raise ValueError(f"limit must be a positive integer, got {limit}")
+
+        if limit > 10000:
+            raise ValueError(f"limit must not exceed 10000, got {limit}")
+
+        try:
+            # Generate embeddings for the query
+            query_embedding = embedding_generator(query_text)
+
+            if not query_embedding or len(query_embedding) == 0:
+                raise ValueError("embedding_generator returned empty embedding")
+
+            # Convert embedding to the format expected by sqlite-vec
+            import numpy as np
+            if isinstance(query_embedding, bytes):
+                query_vec = np.frombuffer(query_embedding, dtype=np.float32)
+            else:
+                query_vec = np.array(query_embedding, dtype=np.float32)
+
+            # Serialize to JSON array format for sqlite-vec
+            import json
+            query_vec_json = json.dumps(query_vec.tolist())
+
+            # Build the vector search query using parameterized SQL to prevent injection
+            sql_query = """
+            WITH similarities AS (
+                SELECT
+                    ep.id,
+                    ep.title,
+                    ep.definition,
+                    ep.source,
+                    ep.external_id,
+                    ep.attributes,
+                    ep.created_at,
+                    ep.updated_at,
+                    CASE
+                        -- Both embeddings present: compute max similarity
+                        WHEN ep.title_embedding IS NOT NULL AND ep.definition_embedding IS NOT NULL THEN
+                            MAX(
+                                (1.0 - vec_distance_cosine(ep.title_embedding, :query_vec)),
+                                (1.0 - vec_distance_cosine(ep.definition_embedding, :query_vec))
+                            )
+                        -- Only title embedding: use title similarity
+                        WHEN ep.title_embedding IS NOT NULL THEN
+                            (1.0 - vec_distance_cosine(ep.title_embedding, :query_vec))
+                        -- Only definition embedding: use definition similarity
+                        WHEN ep.definition_embedding IS NOT NULL THEN
+                            (1.0 - vec_distance_cosine(ep.definition_embedding, :query_vec))
+                        -- No embeddings: zero similarity (filtered out by HAVING clause)
+                        ELSE 0.0
+                    END AS max_similarity
+                FROM external_predicates ep
+                WHERE ep.title_embedding IS NOT NULL OR ep.definition_embedding IS NOT NULL
+            )
+            SELECT * FROM similarities
+            WHERE max_similarity >= :threshold
+            """
+
+            # Add source filter if provided
+            if source:
+                sql_query += " AND source = :source"
+
+            # Add ordering and limit
+            sql_query += " ORDER BY max_similarity DESC LIMIT :limit"
+
+            # Build parameters dictionary
+            params = {
+                'query_vec': query_vec_json,
+                'threshold': threshold,
+                'limit': limit
+            }
+
+            if source:
+                params['source'] = source
+
+            # Execute the query with explicit connection management
+            with self.engine.connect() as conn:
+                result = conn.execute(text(sql_query), params)
+
+                # Convert results to (ExternalPredicate, similarity) tuples
+                results = []
+                for row in result:
+                    predicate = ExternalPredicate(
+                        id=row.id,
+                        title=row.title,
+                        definition=row.definition,
+                        source=row.source,
+                        external_id=row.external_id,
+                        attributes=row.attributes,
+                        title_embedding=None,  # Don't load embeddings in results
+                        definition_embedding=None,
+                        created_at=row.created_at,
+                        updated_at=row.updated_at
+                    )
+                    similarity = float(row.max_similarity)
+                    results.append((predicate, similarity))
+
+            return results
+
+        except ValueError:
+            # Re-raise validation errors
+            raise
+        except sqlite3.Error as e:
+            logger.error(f"Vector search database error: {e}")
+            raise
+        except Exception as e:
+            logger.error(f"Vector search failed: {e}")
+            raise RuntimeError(f"Vector search failed: {e}") from e
 
     def get_status(self) -> Dict[str, Any]:
         """
