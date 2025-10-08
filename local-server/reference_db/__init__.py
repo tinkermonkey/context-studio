@@ -9,7 +9,7 @@ like Schema.org and WikiData, including:
 """
 
 from reference_db.models import ReferenceNode, ReferenceLink
-from reference_db.config import ReferenceConfig, REFERENCE_SCHEMA_VERSION, EMBEDDING_MODEL_VERSION
+from reference_db.config import ReferenceConfig, REFERENCE_SCHEMA_VERSION
 from reference_db.manager import ReferenceManager
 
 __all__ = [
@@ -18,5 +18,4 @@ __all__ = [
     'ReferenceConfig',
     'ReferenceManager',
     'REFERENCE_SCHEMA_VERSION',
-    'EMBEDDING_MODEL_VERSION',
 ]

@@ -12,7 +12,7 @@ from datetime import date
 from uuid import uuid4
 
 from reference_db.models import ReferenceNode, ReferenceLink
-from reference_db.config import ReferenceConfig, REFERENCE_SCHEMA_VERSION, EMBEDDING_MODEL_VERSION
+from reference_db.config import ReferenceConfig, REFERENCE_SCHEMA_VERSION
 from reference_db.manager import ReferenceManager
 
 from pydantic import ValidationError
@@ -168,7 +168,6 @@ class TestReferenceConfig:
         config = ReferenceConfig()
 
         assert config.schema_org_api_url.startswith("https://")
-        assert config.embedding_model == EMBEDDING_MODEL_VERSION
         assert 0.0 <= config.similarity_threshold <= 1.0
         assert 1 <= config.batch_size <= 1000
         assert 0 <= config.retry_count <= 10
@@ -653,13 +652,12 @@ class TestReferenceManagerVector:
                 # Verify schema version was written
                 result = manager.session.execute(
                     manager.engine.connect().execute(
-                        "SELECT schema_version, embedding_model FROM schema_version"
+                        "SELECT schema_version FROM schema_version"
                     )
                 ).first()
 
                 assert result is not None
                 assert result[0] == REFERENCE_SCHEMA_VERSION
-                assert result[1] == EMBEDDING_MODEL_VERSION
 
         finally:
             if os.path.exists(db_path):

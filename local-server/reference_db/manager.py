@@ -20,7 +20,8 @@ from sqlalchemy.exc import OperationalError
 
 from database.utils import get_engine, init_db
 from reference_db.models import Base, ReferenceNode, ReferenceLink
-from reference_db.config import ReferenceConfig, REFERENCE_SCHEMA_VERSION, EMBEDDING_MODEL_VERSION
+from reference_db.config import ReferenceConfig, REFERENCE_SCHEMA_VERSION
+from embeddings.generate_embeddings import generate_embedding
 
 # Configure logging
 logger = logging.getLogger(__name__)
@@ -167,8 +168,7 @@ class ReferenceManager:
         # Verify schema version
         if not self._verify_schema_version():
             logger.warning(
-                f"Schema version mismatch detected. Expected schema={REFERENCE_SCHEMA_VERSION}, "
-                f"embedding_model={EMBEDDING_MODEL_VERSION}"
+                f"Schema version mismatch detected. Expected schema={REFERENCE_SCHEMA_VERSION}"
             )
             self._rebuild_database()
 
@@ -185,8 +185,8 @@ class ReferenceManager:
         """
         Verify that the database schema version matches the expected version.
 
-        This method checks both the schema version and the embedding model version
-        to determine if the database structure is compatible with the current code.
+        This method checks the schema version to determine if the database structure
+        is compatible with the current code.
 
         Returns:
             True if schema version matches, False if rebuild is needed
@@ -206,18 +206,13 @@ class ReferenceManager:
             try:
                 # Query the schema_version table
                 result = session.execute(
-                    text("SELECT schema_version, embedding_model FROM schema_version LIMIT 1")
+                    text("SELECT schema_version FROM schema_version LIMIT 1")
                 ).first()
 
                 if result:
-                    schema_ver, embed_model = result
-                    logger.info(
-                        f"Found schema version: {schema_ver}, embedding model: {embed_model}"
-                    )
-                    return (
-                        schema_ver == REFERENCE_SCHEMA_VERSION and
-                        embed_model == EMBEDDING_MODEL_VERSION
-                    )
+                    schema_ver = result[0]
+                    logger.info(f"Found schema version: {schema_ver}")
+                    return schema_ver == REFERENCE_SCHEMA_VERSION
                 else:
                     logger.warning("Schema version table exists but is empty")
                     return False
@@ -332,7 +327,6 @@ class ReferenceManager:
                     CREATE TABLE IF NOT EXISTS schema_version (
                         id INTEGER PRIMARY KEY,
                         schema_version TEXT NOT NULL,
-                        embedding_model TEXT NOT NULL,
                         created_at TEXT NOT NULL
                     )
                 """))
@@ -340,19 +334,17 @@ class ReferenceManager:
                 # Insert current schema version
                 conn.execute(
                     text("""
-                        INSERT INTO schema_version (schema_version, embedding_model, created_at)
-                        VALUES (:schema_ver, :embed_model, :created_at)
+                        INSERT INTO schema_version (schema_version, created_at)
+                        VALUES (:schema_ver, :created_at)
                     """),
                     {
                         "schema_ver": REFERENCE_SCHEMA_VERSION,
-                        "embed_model": EMBEDDING_MODEL_VERSION,
                         "created_at": date.today().isoformat()
                     }
                 )
 
             logger.info(
-                f"Database rebuild complete. Schema version: {REFERENCE_SCHEMA_VERSION}, "
-                f"Embedding model: {EMBEDDING_MODEL_VERSION}"
+                f"Database rebuild complete. Schema version: {REFERENCE_SCHEMA_VERSION}"
             )
 
         except FileExistsError:
@@ -418,10 +410,14 @@ class ReferenceManager:
         attributes: Dict[str, Any] | None = None,
         title_embedding: bytes | None = None,
         definition_embedding: bytes | None = None,
-        embedding_dims: int = 1536  # Default for text-embedding-3-small
+        embedding_dims: int = EMBEDDING_DIMENSION  # Use constant from config
     ) -> ReferenceNode:
         """
         Add a new reference node to the database.
+
+        Embeddings are automatically generated using the existing embeddings module
+        if not provided. The embeddings use sentence-transformers/all-MiniLM-L6-v2
+        model with 768 dimensions.
 
         Args:
             title: Human-readable title
@@ -429,9 +425,9 @@ class ReferenceManager:
             source: Source identifier (e.g., 'schema.org')
             external_id: Source-specific identifier
             attributes: Optional dictionary of additional metadata
-            title_embedding: Optional embedding vector for title
-            definition_embedding: Optional embedding vector for definition
-            embedding_dims: Expected embedding dimensions (default: 1536 for text-embedding-3-small)
+            title_embedding: Optional embedding vector for title (auto-generated if None)
+            definition_embedding: Optional embedding vector for definition (auto-generated if None)
+            embedding_dims: Expected embedding dimensions (default: 768 for all-MiniLM-L6-v2)
 
         Returns:
             Created ReferenceNode instance
@@ -448,10 +444,17 @@ class ReferenceManager:
             ...     external_id="Person"
             ... )
         """
-        # Validate embeddings if provided
-        if title_embedding:
+        # Auto-generate embeddings if not provided
+        if title_embedding is None:
+            logger.debug(f"Generating embedding for title: {title}")
+            title_embedding = generate_embedding(title)
+        else:
             self._validate_embedding_dimensions(title_embedding, embedding_dims)
-        if definition_embedding:
+            
+        if definition_embedding is None:
+            logger.debug(f"Generating embedding for definition")
+            definition_embedding = generate_embedding(definition)
+        else:
             self._validate_embedding_dimensions(definition_embedding, embedding_dims)
 
         # Create node with transaction
@@ -623,8 +626,11 @@ class ReferenceManager:
         """
         Search for reference nodes by semantic similarity.
 
+        Uses the existing embeddings module (sentence-transformers/all-MiniLM-L6-v2)
+        to generate query embeddings by default.
+
         This method:
-        1. Generates embeddings for the query text using the provided generator
+        1. Generates embeddings for the query text using the embeddings module
         2. Performs vector search using sqlite-vec
         3. Computes max(title_similarity, definition_similarity) for ranking
         4. Filters results by similarity threshold
@@ -636,14 +642,14 @@ class ReferenceManager:
             node_type: Optional node type filter (from attributes)
             limit: Maximum number of results (default: 20, max: 10000)
             threshold: Minimum similarity threshold (-1.0 to 1.0, default: 0.7)
-            embedding_generator: Function that takes text and returns embedding bytes
-                               If None, an error is raised.
+            embedding_generator: Optional custom function that takes text and returns embedding bytes.
+                               If None, uses the default embeddings.generate_embedding function.
 
         Returns:
             List of (ReferenceNode, similarity_score) tuples ordered by similarity descending
 
         Raises:
-            ValueError: If inputs are invalid (empty query_text, invalid threshold/limit, missing generator)
+            ValueError: If inputs are invalid (empty query_text, invalid threshold/limit)
             sqlite3.Error: If vector search database operation fails
             RuntimeError: If vector search fails for other reasons
 
@@ -652,8 +658,7 @@ class ReferenceManager:
             ...     "person entity",
             ...     source="schema.org",
             ...     limit=10,
-            ...     threshold=0.8,
-            ...     embedding_generator=lambda text: generate_embedding(text)
+            ...     threshold=0.8
             ... )
             >>> for node, score in results:
             ...     print(f"{node.title}: {score:.3f}")
@@ -662,8 +667,9 @@ class ReferenceManager:
         if not query_text or not query_text.strip():
             raise ValueError("query_text cannot be empty")
 
+        # Use default embedding generator if not provided
         if embedding_generator is None:
-            raise ValueError("embedding_generator must be provided")
+            embedding_generator = generate_embedding
 
         if not -1.0 <= threshold <= 1.0:
             raise ValueError(f"threshold must be between -1.0 and 1.0, got {threshold}")
@@ -887,14 +893,12 @@ class ReferenceManager:
 
         # Constants for version checking
         EXPECTED_SCHEMA_VERSION = REFERENCE_SCHEMA_VERSION
-        EXPECTED_MODEL_VERSION = EMBEDDING_MODEL_VERSION
 
         status = {
             "status": "missing",
             "node_count": 0,
             "vec_count": 0,
             "schema_version": None,
-            "model_version": None,
             "last_import_at": None,
             "database_size": 0,
             "database_path": self.db_path,
@@ -930,14 +934,13 @@ class ReferenceManager:
                 # Get schema version information
                 try:
                     version_result = conn.execute(
-                        text("SELECT schema_version, embedding_model, created_at FROM schema_version LIMIT 1")
+                        text("SELECT schema_version, created_at FROM schema_version LIMIT 1")
                     ).first()
 
                     if version_result:
                         status["schema_version"] = version_result[0]
-                        status["model_version"] = version_result[1]
                         # Use created_at as a proxy for last import (can be improved)
-                        status["last_import_at"] = version_result[2]
+                        status["last_import_at"] = version_result[1]
                 except Exception as e:
                     logger.debug(f"Could not get schema version: {e}")
                     status["status"] = "degraded"
@@ -980,16 +983,15 @@ class ReferenceManager:
                     status["remediation"] = "No reference nodes found. Run import pipeline to populate database."
                 elif status["node_count"] == status["vec_count"]:
                     # Check if versions match expected
-                    if (status["schema_version"] == EXPECTED_SCHEMA_VERSION and
-                        status["model_version"] == EXPECTED_MODEL_VERSION):
+                    if status["schema_version"] == EXPECTED_SCHEMA_VERSION:
                         status["status"] = "healthy"
                         logger.debug("Database status: healthy")
                     else:
                         status["status"] = "degraded"
-                        status["degraded_reason"] = "schema_or_model_version_mismatch"
+                        status["degraded_reason"] = "schema_version_mismatch"
                         status["remediation"] = (
-                            f"Schema/model version mismatch. Expected schema={EXPECTED_SCHEMA_VERSION}, "
-                            f"model={EXPECTED_MODEL_VERSION}. Run migration or reimport."
+                            f"Schema version mismatch. Expected schema={EXPECTED_SCHEMA_VERSION}. "
+                            f"Run migration or reimport."
                         )
                 else:
                     status["status"] = "degraded"

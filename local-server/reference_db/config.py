@@ -13,10 +13,6 @@ from typing import Optional
 # Increment this when making breaking changes to the database schema
 REFERENCE_SCHEMA_VERSION = "1.0.0"
 
-# Embedding model version for semantic similarity
-# Change this when switching embedding models to trigger re-embedding of all content
-EMBEDDING_MODEL_VERSION = "text-embedding-3-small"
-
 
 class ReferenceConfig(BaseModel):
     """
@@ -24,13 +20,11 @@ class ReferenceConfig(BaseModel):
 
     This configuration class provides validated settings for:
     - External API access (Schema.org, WikiData, etc.)
-    - Embedding model selection and parameters
     - Operational limits and thresholds
     - Retry and timeout behaviors
 
     Default Value Rationale:
         - schema_org_api_url: Standard Schema.org HTTPS endpoint for production use
-        - embedding_model: OpenAI's text-embedding-3-small balances quality and cost
         - similarity_threshold: 0.7 provides good precision/recall for semantic matching
         - batch_size: 100 balances memory usage with API efficiency
         - retry_count: 3 retries handles transient failures without excessive delay
@@ -55,12 +49,6 @@ class ReferenceConfig(BaseModel):
     schema_org_api_url: str = Field(
         default="https://schema.org/version/latest/schemaorg-current-https.jsonld",
         description="URL to the Schema.org JSON-LD API endpoint"
-    )
-
-    # Embedding model configuration
-    embedding_model: str = Field(
-        default=EMBEDDING_MODEL_VERSION,
-        description="Name of the embedding model to use for semantic similarity"
     )
 
     # Operational parameters
