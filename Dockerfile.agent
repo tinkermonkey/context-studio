@@ -5,9 +5,9 @@
 # IMPORTANT: Code is mounted at runtime via -v flag, NOT copied at build time.
 # This allows git operations to persist and changes to be committed.
 
-# Detect build architecture automatically
-ARG TARGETARCH=arm64
-FROM --platform=linux/${TARGETARCH} python:3.11-slim
+# Use build architecture automatically (buildx sets TARGETARCH)
+ARG TARGETARCH
+FROM python:3.11-slim
 
 # Set environment to avoid interactive prompts
 ENV DEBIAN_FRONTEND=noninteractive
