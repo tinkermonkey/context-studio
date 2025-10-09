@@ -2,7 +2,8 @@
 
 import datetime
 import json
-from fastapi import APIRouter, HTTPException, Query, Depends
+import asyncio
+from fastapi import APIRouter, HTTPException, Query, Depends, BackgroundTasks
 from pydantic import BaseModel, Field, ConfigDict
 from typing import List, Optional, Dict
 from uuid import UUID, uuid4
@@ -12,12 +13,15 @@ from sqlalchemy.exc import IntegrityError
 from database import models
 from database.utils import get_db
 from database.predicate_utils import generate_identifier_from_title, import_conceptnet_predicates, get_conceptnet_relation_for_predicate, validate_predicate_identifier
-from config import get_settings
+from config import get_settings, get_config_manager
 from api.api_errors import validation_error_response, conflict_error_response, bad_request_error_response
 from utils.logger import get_logger
 
 logger = get_logger("predicates_api")
 router = APIRouter()
+
+# Store background task status
+_discovery_tasks = {}
 
 
 def validate_uuid_format(uuid_string: str) -> bool:
@@ -343,10 +347,228 @@ def get_conceptnet_mapping(db: Session = Depends(get_db)):
     """Get a mapping of all predicate identifiers to their ConceptNet relations."""
     predicates = db.query(models.Predicate).all()
     mapping = {}
-    
+
     for predicate in predicates:
         conceptnet_relation = get_conceptnet_relation_for_predicate(predicate)
         if conceptnet_relation:
             mapping[predicate.identifier] = conceptnet_relation
-    
+
     return mapping
+
+
+# External Predicate Discovery Endpoints (Phase 2)
+
+class PredicateDiscoveryResponse(BaseModel):
+    """Response for predicate discovery requests."""
+    task_id: str
+    status: str = "started"
+    message: str
+
+
+class PredicateDiscoveryStatus(BaseModel):
+    """Status of a predicate discovery task."""
+    task_id: str
+    status: str  # "pending", "running", "completed", "failed"
+    sources: Optional[List[str]] = None
+    results: Optional[Dict[str, Dict[str, any]]] = None
+    error: Optional[str] = None
+    started_at: Optional[str] = None
+    completed_at: Optional[str] = None
+
+
+class ExternalPredicateOut(BaseModel):
+    """Response model for external predicates."""
+    id: str
+    title: str
+    definition: str
+    source: str
+    external_id: str
+    attributes: Optional[Dict[str, any]] = None
+    created_at: str
+    updated_at: str
+
+
+class PaginatedExternalPredicatesResponse(BaseModel):
+    """Paginated response for external predicates."""
+    data: List[ExternalPredicateOut]
+    total: int
+    skip: int
+    limit: int
+    source: Optional[str] = None
+
+
+async def _run_discovery_task(task_id: str, sources: Optional[List[str]] = None):
+    """Background task to run predicate discovery."""
+    from reference_db.predicate_discovery import PredicateDiscoveryService
+    from reference_db.config import ReferenceConfig
+
+    _discovery_tasks[task_id]["status"] = "running"
+    _discovery_tasks[task_id]["started_at"] = datetime.datetime.now(datetime.UTC).isoformat()
+
+    try:
+        # Get configuration
+        config_manager = get_config_manager()
+        settings = config_manager.settings
+
+        # Prepare source configs
+        source_configs = {}
+        for source_name in ['conceptnet', 'dbpedia', 'wikidata']:
+            source_config = settings.get_source_config(source_name)
+            if source_config:
+                source_configs[source_name] = source_config
+
+        # Create reference config
+        ref_config = ReferenceConfig()
+
+        # Run discovery
+        with PredicateDiscoveryService(ref_config, source_configs) as service:
+            results = await service.discover_all_predicates(sources)
+
+        # Format results
+        formatted_results = {}
+        for source, (created, updated, errors) in results.items():
+            formatted_results[source] = {
+                "created": created,
+                "updated": updated,
+                "error_count": len(errors),
+                "errors": errors[:10] if errors else []  # Limit errors to first 10
+            }
+
+        _discovery_tasks[task_id]["status"] = "completed"
+        _discovery_tasks[task_id]["results"] = formatted_results
+        _discovery_tasks[task_id]["completed_at"] = datetime.datetime.now(datetime.UTC).isoformat()
+
+        logger.info(f"Discovery task {task_id} completed successfully")
+
+    except Exception as e:
+        logger.error(f"Discovery task {task_id} failed: {e}", exc_info=True)
+        _discovery_tasks[task_id]["status"] = "failed"
+        _discovery_tasks[task_id]["error"] = str(e)
+        _discovery_tasks[task_id]["completed_at"] = datetime.datetime.now(datetime.UTC).isoformat()
+
+
+@router.post("/discover", response_model=PredicateDiscoveryResponse)
+async def discover_external_predicates(
+    background_tasks: BackgroundTasks,
+    sources: Optional[List[str]] = Query(None, description="Sources to discover from (conceptnet, dbpedia, wikidata)")
+):
+    """
+    Discover predicates from external knowledge sources.
+
+    This endpoint starts a background task to fetch predicate metadata from:
+    - ConceptNet (40 relations)
+    - DBpedia (760 properties via SPARQL)
+    - WikiData (10K properties via SPARQL)
+
+    Returns a task_id that can be used to check the status of the discovery process.
+
+    **Performance targets:**
+    - ConceptNet: <2s for 40 relations
+    - DBpedia: <10s for 760 properties
+    - WikiData: <30s for 10K properties
+    """
+    # Validate sources if provided
+    valid_sources = ['conceptnet', 'dbpedia', 'wikidata']
+    if sources:
+        invalid = [s for s in sources if s not in valid_sources]
+        if invalid:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Invalid sources: {invalid}. Valid sources: {valid_sources}"
+            )
+
+    # Generate task ID
+    task_id = str(uuid4())
+
+    # Initialize task status
+    _discovery_tasks[task_id] = {
+        "task_id": task_id,
+        "status": "pending",
+        "sources": sources or valid_sources,
+        "results": None,
+        "error": None,
+        "started_at": None,
+        "completed_at": None
+    }
+
+    # Start background task
+    background_tasks.add_task(_run_discovery_task, task_id, sources)
+
+    return PredicateDiscoveryResponse(
+        task_id=task_id,
+        status="started",
+        message=f"Discovery task started for sources: {sources or valid_sources}"
+    )
+
+
+@router.get("/discover/{task_id}", response_model=PredicateDiscoveryStatus)
+def get_discovery_status(task_id: str):
+    """
+    Get the status of a predicate discovery task.
+
+    Returns the current status and results (if completed) of the discovery task.
+    """
+    if task_id not in _discovery_tasks:
+        raise HTTPException(status_code=404, detail="Task not found")
+
+    return PredicateDiscoveryStatus(**_discovery_tasks[task_id])
+
+
+@router.get("/external", response_model=PaginatedExternalPredicatesResponse)
+def list_external_predicates(
+    source: Optional[str] = Query(None, description="Filter by source (conceptnet, dbpedia, wikidata)"),
+    skip: int = Query(0, ge=0),
+    limit: int = Query(50, ge=1, le=1000),
+):
+    """
+    List external predicates with pagination.
+
+    Returns predicates discovered from external knowledge sources with optional source filtering.
+    """
+    from reference_db.manager import ReferenceManager
+    from reference_db.config import ReferenceConfig
+
+    try:
+        config = ReferenceConfig()
+        with ReferenceManager(config) as manager:
+            # Get predicates
+            predicates = manager.list_external_predicates(source=source, limit=limit + skip)
+
+            # Apply pagination
+            total = len(predicates)
+            paginated = predicates[skip:skip + limit]
+
+            # Format response
+            data = []
+            for predicate in paginated:
+                # Parse attributes if present
+                attrs = None
+                if predicate.attributes:
+                    try:
+                        import ast
+                        attrs = ast.literal_eval(predicate.attributes)
+                    except:
+                        attrs = {"raw": predicate.attributes}
+
+                data.append(ExternalPredicateOut(
+                    id=predicate.id,
+                    title=predicate.title,
+                    definition=predicate.definition,
+                    source=predicate.source,
+                    external_id=predicate.external_id,
+                    attributes=attrs,
+                    created_at=predicate.created_at,
+                    updated_at=predicate.updated_at
+                ))
+
+            return PaginatedExternalPredicatesResponse(
+                data=data,
+                total=total,
+                skip=skip,
+                limit=limit,
+                source=source
+            )
+
+    except Exception as e:
+        logger.error(f"Failed to list external predicates: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail=str(e))
