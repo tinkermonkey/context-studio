@@ -8,13 +8,14 @@ like Schema.org and WikiData, including:
 - Database operations (ReferenceManager)
 """
 
-from reference_db.models import ReferenceNode, ReferenceLink
+from reference_db.models import ReferenceNode, ReferenceLink, ExternalPredicate
 from reference_db.config import ReferenceConfig, REFERENCE_SCHEMA_VERSION
 from reference_db.manager import ReferenceManager
 
 __all__ = [
     'ReferenceNode',
     'ReferenceLink',
+    'ExternalPredicate',
     'ReferenceConfig',
     'ReferenceManager',
     'REFERENCE_SCHEMA_VERSION',
