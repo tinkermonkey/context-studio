@@ -164,9 +164,16 @@ def create_app(dataset_id=None, engine=None, session_local=None, service_factory
                 logger.info("Continuing startup despite GraphService warmup failure")
 
             # Phase 4: Initialize TaskManager for background task processing
+            # This initializes the asyncio-based background task management system
+            # that handles long-running operations like predicate discovery and mapping.
+            # The TaskManager provides:
+            # - Asyncio queue for task submission (max 100 pending tasks)
+            # - Progress tracking and task cancellation support
+            # - Dead letter queue for failed tasks (max 1000 entries)
+            # - Sequential task processing to control resource usage
             logger.info("Initializing TaskManager for background task processing...")
             try:
-                task_manager = initialize_task_manager(max_queue_size=100)
+                task_manager = initialize_task_manager(max_queue_size=100, max_dlq_size=1000)
                 await task_manager.start()
                 app.state.task_manager = task_manager
                 logger.info("TaskManager initialized and started successfully")

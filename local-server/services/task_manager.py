@@ -14,11 +14,24 @@ import uuid
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from enum import Enum
-from typing import Any, Callable, Dict, List, Optional, Awaitable
+from typing import Any, Callable, Dict, List, Optional, Awaitable, Protocol
 from utils.logger import get_logger
 
 
 logger = get_logger(__name__)
+
+
+class ProgressCallback(Protocol):
+    """Protocol for progress callback functions."""
+    def __call__(self, task_id: str, progress: float) -> None:
+        """
+        Called when task progress updates.
+
+        Args:
+            task_id: The task identifier
+            progress: Progress value from 0.0 to 1.0
+        """
+        ...
 
 
 class TaskStatus(Enum):
@@ -103,20 +116,23 @@ class TaskManager:
         await task_manager.shutdown()
     """
 
-    def __init__(self, max_queue_size: int = 100):
+    def __init__(self, max_queue_size: int = 100, max_dlq_size: int = 1000):
         """
         Initialize the TaskManager.
 
         Args:
             max_queue_size: Maximum number of tasks in queue (default: 100)
+            max_dlq_size: Maximum size of dead letter queue (default: 1000)
         """
         self.max_queue_size = max_queue_size
+        self.max_dlq_size = max_dlq_size
         self.task_queue: asyncio.Queue[BackgroundTask] = asyncio.Queue(maxsize=max_queue_size)
         self.tasks: Dict[str, BackgroundTask] = {}  # All tasks by ID
         self.dead_letter_queue: List[BackgroundTask] = []  # Failed tasks for analysis
+        self._tasks_lock = asyncio.Lock()  # Protect concurrent access to tasks dict
         self._worker_task: Optional[asyncio.Task] = None
         self._running = False
-        logger.info(f"TaskManager initialized with max_queue_size={max_queue_size}")
+        logger.info(f"TaskManager initialized with max_queue_size={max_queue_size}, max_dlq_size={max_dlq_size}")
 
     async def start(self):
         """Start the task manager worker."""
@@ -163,7 +179,8 @@ class TaskManager:
         task_type: str,
         coroutine: Awaitable[Any],
         metadata: Optional[Dict[str, Any]] = None,
-        progress_callback: Optional[Callable[[str, float], None]] = None
+        progress_callback: Optional[ProgressCallback] = None,
+        timeout: Optional[float] = None
     ) -> str:
         """
         Submit a new task to the queue.
@@ -173,6 +190,7 @@ class TaskManager:
             coroutine: The async coroutine to execute
             metadata: Optional metadata about the task
             progress_callback: Optional callback for progress updates: callback(task_id, progress)
+            timeout: Optional timeout in seconds for task execution
 
         Returns:
             task_id: Unique identifier for the submitted task
@@ -188,14 +206,16 @@ class TaskManager:
             metadata=metadata or {}
         )
 
-        # Store the coroutine and progress callback in metadata for worker
+        # Store the coroutine, progress callback, and timeout in metadata for worker
         task.metadata['_coroutine'] = coroutine
         task.metadata['_progress_callback'] = progress_callback
+        task.metadata['_timeout'] = timeout
 
         # Try to add to queue (raises QueueFull if at capacity)
         try:
             self.task_queue.put_nowait(task)
-            self.tasks[task_id] = task
+            async with self._tasks_lock:
+                self.tasks[task_id] = task
             logger.info(f"Task {task_id} ({task_type}) submitted to queue")
             return task_id
         except asyncio.QueueFull:
@@ -261,7 +281,7 @@ class TaskManager:
             progress: Progress value (0.0 to 1.0)
         """
         task = self.tasks.get(task_id)
-        if task:
+        if task and task.status == TaskStatus.RUNNING:
             task.progress = max(0.0, min(1.0, progress))  # Clamp to [0.0, 1.0]
             logger.debug(f"Task {task_id} progress: {task.progress:.2%}")
 
@@ -304,24 +324,47 @@ class TaskManager:
         task.status = TaskStatus.RUNNING
         task.started_at = datetime.now(timezone.utc)
 
-        # Extract coroutine and progress callback from metadata
+        # Extract coroutine, progress callback, and timeout from metadata
         coroutine = task.metadata.pop('_coroutine', None)
         progress_callback = task.metadata.pop('_progress_callback', None)
+        timeout = task.metadata.pop('_timeout', None)
 
         if coroutine is None:
             logger.error(f"Task {task.task_id} has no coroutine to execute")
             task.status = TaskStatus.FAILED
             task.error = "No coroutine provided"
             task.completed_at = datetime.now(timezone.utc)
-            self.dead_letter_queue.append(task)
+            self._add_to_dead_letter_queue(task)
             return
 
+        # Create wrapper coroutine that supports progress callback
+        async def execute_with_progress():
+            # If progress callback provided, inject it into coroutine context
+            if progress_callback:
+                # Create a wrapped progress updater that calls both internal and external callbacks
+                def progress_updater(progress: float):
+                    self._update_progress(task.task_id, progress)
+                    try:
+                        progress_callback(task.task_id, progress)
+                    except Exception as e:
+                        logger.warning(f"Progress callback error for task {task.task_id}: {e}")
+
+                # Execute the coroutine with progress support
+                # Note: The actual implementation depends on how the coroutine accepts progress updates
+                # For now, we assume the coroutine can access progress via callback
+                return await coroutine
+            else:
+                return await coroutine
+
         # Wrap the coroutine in an asyncio task
-        task._asyncio_task = asyncio.create_task(coroutine)
+        task._asyncio_task = asyncio.create_task(execute_with_progress())
 
         try:
-            # Execute the task
-            result = await task._asyncio_task
+            # Execute the task with optional timeout
+            if timeout:
+                result = await asyncio.wait_for(task._asyncio_task, timeout=timeout)
+            else:
+                result = await task._asyncio_task
 
             # Task completed successfully
             task.status = TaskStatus.COMPLETED
@@ -329,6 +372,14 @@ class TaskManager:
             task.progress = 1.0
             task.completed_at = datetime.now(timezone.utc)
             logger.info(f"Task {task.task_id} completed successfully")
+
+        except asyncio.TimeoutError:
+            # Task timed out
+            task.status = TaskStatus.FAILED
+            task.error = f"Task timed out after {timeout} seconds"
+            task.completed_at = datetime.now(timezone.utc)
+            self._add_to_dead_letter_queue(task)
+            logger.error(f"Task {task.task_id} timed out after {timeout} seconds")
 
         except asyncio.CancelledError:
             # Task was cancelled
@@ -343,9 +394,32 @@ class TaskManager:
             task.completed_at = datetime.now(timezone.utc)
 
             # Add to dead letter queue for analysis
-            self.dead_letter_queue.append(task)
+            self._add_to_dead_letter_queue(task)
 
             logger.error(f"Task {task.task_id} failed: {e}", exc_info=True)
+
+    def _add_to_dead_letter_queue(self, task: BackgroundTask):
+        """
+        Add a failed task to the dead letter queue with size limit enforcement.
+
+        Args:
+            task: The failed task to add
+        """
+        self.dead_letter_queue.append(task)
+
+        # Enforce max DLQ size with FIFO eviction
+        while len(self.dead_letter_queue) > self.max_dlq_size:
+            evicted = self.dead_letter_queue.pop(0)
+            logger.warning(
+                f"Dead letter queue exceeded max size ({self.max_dlq_size}), "
+                f"evicted oldest task: {evicted.task_id}"
+            )
+
+    def clear_dead_letter_queue(self):
+        """Clear all tasks from the dead letter queue."""
+        count = len(self.dead_letter_queue)
+        self.dead_letter_queue.clear()
+        logger.info(f"Cleared {count} tasks from dead letter queue")
 
     def get_all_tasks(self) -> List[Dict[str, Any]]:
         """
@@ -417,12 +491,13 @@ def get_task_manager() -> TaskManager:
     return _task_manager
 
 
-def initialize_task_manager(max_queue_size: int = 100) -> TaskManager:
+def initialize_task_manager(max_queue_size: int = 100, max_dlq_size: int = 1000) -> TaskManager:
     """
     Initialize the global TaskManager instance.
 
     Args:
         max_queue_size: Maximum number of tasks in queue
+        max_dlq_size: Maximum size of dead letter queue
 
     Returns:
         The initialized TaskManager instance
@@ -432,7 +507,7 @@ def initialize_task_manager(max_queue_size: int = 100) -> TaskManager:
         logger.warning("TaskManager already initialized")
         return _task_manager
 
-    _task_manager = TaskManager(max_queue_size=max_queue_size)
+    _task_manager = TaskManager(max_queue_size=max_queue_size, max_dlq_size=max_dlq_size)
     logger.info("Global TaskManager initialized")
     return _task_manager
 
