@@ -108,6 +108,7 @@ safetensors==0.5.3
 schemathesis==4.0.8
 scikit-learn==1.7.0
 scipy==1.16.0
+cachetools==5.3.2
 sense2vec>=2.0.0
 sentence-transformers==5.0.0
 setuptools==80.9.0

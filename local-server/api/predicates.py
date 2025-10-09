@@ -575,3 +575,297 @@ def list_external_predicates(
     except Exception as e:
         logger.error(f"Failed to list external predicates: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail=str(e))
+
+
+# Predicate Similarity Search Endpoints (Phase 3)
+
+class SimilarPredicateOut(BaseModel):
+    """Response model for similar predicates."""
+    predicate_id: str
+    source: str
+    source_id: str
+    title: str
+    definition: str
+    similarity_score: float
+    confidence: str  # "high", "medium", "low"
+
+
+class FindSimilarResponse(BaseModel):
+    """Response for find-similar endpoint."""
+    predicate_id: str
+    predicate_title: str
+    results: List[SimilarPredicateOut]
+    total_results: int
+    search_time_ms: float
+    cached: bool
+
+
+class ClusterOut(BaseModel):
+    """Response model for predicate clusters."""
+    cluster_id: int
+    predicate_ids: List[str]
+    centroid_title: str
+    avg_similarity: float
+    size: int
+
+
+class ClusterPredicatesResponse(BaseModel):
+    """Response for cluster-predicates endpoint."""
+    clusters: List[ClusterOut]
+    total_clusters: int
+    total_predicates: int
+    cluster_time_ms: float
+
+
+@router.post("/{id}/find-similar", response_model=FindSimilarResponse)
+def find_similar_predicates(
+    id: str,
+    source: Optional[str] = Query(None, description="Filter by source (conceptnet, dbpedia, wikidata)"),
+    limit: int = Query(100, ge=1, le=100),
+    threshold: float = Query(0.7, ge=0.0, le=1.0),
+    use_cache: bool = Query(True, description="Use cached results if available"),
+    db: Session = Depends(get_db)
+):
+    """
+    Find similar external predicates for a given predicate using vector similarity search.
+
+    This endpoint:
+    1. Retrieves the predicate by ID
+    2. Performs vector similarity search against external predicates
+    3. Returns ranked results with confidence scores
+    4. Caches results for 1 hour (TTL-based)
+
+    **Performance targets:**
+    - <200ms p95 for 10K-50K predicates (PT-VS-001, PT-VS-002)
+    - <50ms p95 for cached searches (PT-VS-006)
+
+    **Confidence scores:**
+    - High: similarity >= 0.85
+    - Medium: similarity >= 0.70
+    - Low: similarity >= 0.60
+    - Results below 0.60 are rejected
+
+    Args:
+        id: UUID of the predicate to find similar predicates for
+        source: Optional source filter
+        limit: Maximum number of results (default: 100, max: 100)
+        threshold: Minimum similarity threshold (default: 0.7)
+        use_cache: Whether to use cached results (default: True)
+
+    Returns:
+        FindSimilarResponse with ranked similarity results
+    """
+    import time
+    from services.predicate_similarity import PredicateSimilarityService
+    from reference_db.manager import ReferenceManager
+    from reference_db.config import ReferenceConfig
+
+    start_time = time.perf_counter()
+    cached = False
+
+    # Validate UUID format
+    if not validate_uuid_format(id):
+        raise HTTPException(status_code=400, detail="Invalid UUID format.")
+
+    # Get the predicate
+    predicate = db.query(models.Predicate).filter_by(id=id).first()
+    if not predicate:
+        raise HTTPException(status_code=404, detail="Predicate not found.")
+
+    try:
+        # Initialize services
+        ref_config = ReferenceConfig()
+        with ReferenceManager(ref_config) as manager:
+            similarity_service = PredicateSimilarityService(manager)
+
+            # Find similar predicates
+            results = similarity_service.find_similar_predicates(
+                predicate_title=predicate.title,
+                predicate_definition=predicate.definition,
+                source=source,
+                limit=limit,
+                threshold=threshold,
+                use_cache=use_cache
+            )
+
+            # Check if results were cached
+            cache_key = similarity_service._get_cache_key(
+                predicate.title, source, limit, threshold
+            )
+            from services.predicate_similarity import _similarity_cache
+            cached = cache_key in _similarity_cache
+
+            # Convert to response models
+            similar_predicates = []
+            for result in results:
+                similar_predicates.append(SimilarPredicateOut(
+                    predicate_id=result.predicate_id,
+                    source=result.source,
+                    source_id=result.source_id,
+                    title=result.title,
+                    definition=result.definition,
+                    similarity_score=result.similarity_score,
+                    confidence=result.confidence
+                ))
+
+            search_time_ms = (time.perf_counter() - start_time) * 1000
+
+            return FindSimilarResponse(
+                predicate_id=predicate.id,
+                predicate_title=predicate.title,
+                results=similar_predicates,
+                total_results=len(similar_predicates),
+                search_time_ms=search_time_ms,
+                cached=cached
+            )
+
+    except Exception as e:
+        logger.error(f"Failed to find similar predicates: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.post("/cluster-predicates", response_model=ClusterPredicatesResponse)
+def cluster_predicates(
+    predicate_ids: Optional[List[str]] = Query(None, description="Specific predicate IDs to cluster (if None, clusters all)"),
+    min_similarity: float = Query(0.7, ge=0.0, le=1.0),
+    min_cluster_size: int = Query(2, ge=2),
+    eps: float = Query(0.3, ge=0.1, le=1.0, description="DBSCAN epsilon (distance threshold)"),
+    db: Session = Depends(get_db)
+):
+    """
+    Cluster similar predicates using DBSCAN algorithm.
+
+    This endpoint:
+    1. Retrieves predicates (all or specified IDs)
+    2. Generates embeddings for each predicate
+    3. Performs density-based clustering (DBSCAN)
+    4. Returns clusters with automatic count determination
+
+    **Algorithm:** DBSCAN (Density-Based Spatial Clustering of Applications with Noise)
+    - Automatically determines number of clusters
+    - Handles noise points (outliers)
+    - Does not require specifying cluster count in advance
+
+    Args:
+        predicate_ids: Optional list of specific predicate IDs to cluster
+        min_similarity: Minimum similarity for cluster membership (default: 0.7)
+        min_cluster_size: Minimum predicates per cluster (default: 2)
+        eps: DBSCAN epsilon parameter - lower values create tighter clusters (default: 0.3)
+
+    Returns:
+        ClusterPredicatesResponse with clusters and statistics
+    """
+    import time
+    from services.predicate_similarity import PredicateSimilarityService
+    from reference_db.manager import ReferenceManager
+    from reference_db.config import ReferenceConfig
+
+    start_time = time.perf_counter()
+
+    try:
+        # Get predicates
+        if predicate_ids:
+            # Validate UUID formats
+            for pred_id in predicate_ids:
+                if not validate_uuid_format(pred_id):
+                    raise HTTPException(
+                        status_code=400,
+                        detail=f"Invalid UUID format: {pred_id}"
+                    )
+
+            # Get specified predicates
+            predicates = db.query(models.Predicate).filter(
+                models.Predicate.id.in_(predicate_ids)
+            ).all()
+
+            if len(predicates) != len(predicate_ids):
+                found_ids = {p.id for p in predicates}
+                missing_ids = set(predicate_ids) - found_ids
+                raise HTTPException(
+                    status_code=404,
+                    detail=f"Predicates not found: {list(missing_ids)}"
+                )
+        else:
+            # Get all predicates
+            predicates = db.query(models.Predicate).all()
+
+        if len(predicates) < min_cluster_size:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Not enough predicates for clustering. Need at least {min_cluster_size}, got {len(predicates)}"
+            )
+
+        # Prepare predicate data for clustering
+        predicate_data = [
+            (p.id, p.title, p.definition)
+            for p in predicates
+        ]
+
+        # Initialize services and perform clustering
+        ref_config = ReferenceConfig()
+        with ReferenceManager(ref_config) as manager:
+            similarity_service = PredicateSimilarityService(manager)
+
+            cluster_results = similarity_service.cluster_predicates(
+                predicates=predicate_data,
+                min_similarity=min_similarity,
+                min_cluster_size=min_cluster_size,
+                eps=eps
+            )
+
+            # Convert to response models
+            clusters = []
+            total_clustered_predicates = 0
+
+            for cluster in cluster_results:
+                clusters.append(ClusterOut(
+                    cluster_id=cluster.cluster_id,
+                    predicate_ids=cluster.predicate_ids,
+                    centroid_title=cluster.centroid_title,
+                    avg_similarity=cluster.avg_similarity,
+                    size=cluster.size
+                ))
+                total_clustered_predicates += cluster.size
+
+            cluster_time_ms = (time.perf_counter() - start_time) * 1000
+
+            return ClusterPredicatesResponse(
+                clusters=clusters,
+                total_clusters=len(clusters),
+                total_predicates=total_clustered_predicates,
+                cluster_time_ms=cluster_time_ms
+            )
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Failed to cluster predicates: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.post("/invalidate-similarity-cache", status_code=200)
+def invalidate_similarity_cache():
+    """
+    Invalidate the similarity search cache.
+
+    This should be called when external predicates are updated to ensure
+    fresh results in similarity searches.
+
+    Returns:
+        Success message
+    """
+    from services.predicate_similarity import PredicateSimilarityService
+    from reference_db.manager import ReferenceManager
+    from reference_db.config import ReferenceConfig
+
+    try:
+        ref_config = ReferenceConfig()
+        with ReferenceManager(ref_config) as manager:
+            similarity_service = PredicateSimilarityService(manager)
+            similarity_service.invalidate_cache()
+
+        return {"success": True, "message": "Similarity search cache invalidated"}
+
+    except Exception as e:
+        logger.error(f"Failed to invalidate cache: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail=str(e))
