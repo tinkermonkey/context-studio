@@ -16,6 +16,7 @@ from datetime import datetime
 
 from sqlalchemy.orm import Session
 from sqlalchemy.exc import IntegrityError, OperationalError
+from sqlalchemy import text
 
 from database.models import AuditLog
 from database.input_validation import sanitize_audit_log_value
@@ -75,8 +76,8 @@ def atomic_transaction(
     start_time = time.perf_counter()
 
     try:
-        # Set isolation level using SQLAlchemy's execution options
-        # Map isolation levels to SQLite PRAGMA settings
+        # For SQLite, map standard isolation levels to SQLite transaction modes
+        # SQLite uses BEGIN IMMEDIATE or BEGIN DEFERRED to control locking
         isolation_map = {
             "SERIALIZABLE": "IMMEDIATE",
             "READ_COMMITTED": "DEFERRED",
@@ -84,19 +85,19 @@ def atomic_transaction(
             "REPEATABLE_READ": "IMMEDIATE"
         }
 
-        # Get the connection and set isolation level
-        connection = session.connection()
-        if isolation_level in isolation_map:
-            # For SQLite, we use transaction locking modes
-            # IMMEDIATE = SERIALIZABLE/REPEATABLE_READ
-            # DEFERRED = READ_COMMITTED/READ_UNCOMMITTED
-            lock_mode = isolation_map[isolation_level]
-            connection.execution_options(
-                isolation_level=lock_mode
-            )
+        # Get the lock mode for this isolation level
+        lock_mode = isolation_map.get(isolation_level, "DEFERRED")
 
-        session.begin()
-        logger.debug(f"Transaction started with isolation level: {isolation_level}")
+        # Begin transaction with appropriate lock mode
+        # For SQLite: IMMEDIATE acquires a lock immediately (SERIALIZABLE/REPEATABLE_READ)
+        #             DEFERRED defers locking until first write (READ_COMMITTED/READ_UNCOMMITTED)
+        # Using text() for explicit SQL execution (safe - not user input)
+        if lock_mode == "IMMEDIATE":
+            session.execute(text("BEGIN IMMEDIATE"))
+        else:
+            session.execute(text("BEGIN DEFERRED"))
+
+        logger.debug(f"Transaction started with isolation level: {isolation_level} (SQLite mode: {lock_mode})")
 
         # Yield control to the transaction block
         yield session

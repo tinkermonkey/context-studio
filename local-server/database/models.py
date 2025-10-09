@@ -137,7 +137,7 @@ class AuditLog(Base):
     entity_id = Column(String, nullable=False)  # ID of the affected entity
     action = Column(String, nullable=False)  # create, update, delete
     user_id = Column(String, nullable=True)  # Optional user ID
-    old_value = Column(JSON, nullable=True)  # Previous state (for updates/deletes)
-    new_value = Column(JSON, nullable=True)  # New state (for creates/updates)
+    old_value = Column(Text, nullable=True)  # Previous state as JSON string (for updates/deletes)
+    new_value = Column(Text, nullable=True)  # New state as JSON string (for creates/updates)
     timestamp = Column(DateTime, default=lambda: datetime.datetime.now(datetime.UTC), nullable=False)
     execution_time_ms = Column(Integer, nullable=True)  # Time taken for operation

@@ -103,29 +103,29 @@ def to_predicate_out(predicate: models.Predicate) -> PredicateOut:
 def create_predicate(predicate: PredicateCreate, db: Session = Depends(get_db)):
     """Create a new predicate."""
     if not predicate.title or not predicate.title.strip():
-        return validation_error_response("Predicate title must not be empty.", loc=["body", "title"])
-    
+        raise HTTPException(status_code=400, detail="Predicate title must not be empty.")
+
     # Generate identifier if not provided
     identifier = predicate.identifier
     if not identifier:
         identifier = generate_identifier_from_title(predicate.title)
-    
+
     # Validate identifier uniqueness
     if not validate_predicate_identifier(identifier, None, db):
-        return conflict_error_response(f"Predicate with identifier '{identifier}' already exists.")
-    
+        raise HTTPException(status_code=409, detail=f"Predicate with identifier '{identifier}' already exists.")
+
     # Validate title uniqueness
     if db.query(models.Predicate).filter_by(title=predicate.title).first():
-        return conflict_error_response(f"Predicate with title '{predicate.title}' already exists.")
-    
+        raise HTTPException(status_code=409, detail=f"Predicate with title '{predicate.title}' already exists.")
+
     # Serialize mapping to JSON if provided
     mapping_json = None
     if predicate.mapping:
         try:
             mapping_json = json.dumps(predicate.mapping)
         except (TypeError, ValueError) as e:
-            return validation_error_response(f"Invalid mapping format: {str(e)}", loc=["body", "mapping"])
-    
+            raise HTTPException(status_code=400, detail=f"Invalid mapping format: {str(e)}")
+
     try:
         db_predicate = models.Predicate(
             id=str(uuid4()),
@@ -139,12 +139,12 @@ def create_predicate(predicate: PredicateCreate, db: Session = Depends(get_db)):
         db.add(db_predicate)
         db.commit()
         db.refresh(db_predicate)
-        
+
         return to_predicate_out(db_predicate)
-        
+
     except IntegrityError:
         db.rollback()
-        return conflict_error_response("Predicate with this identifier or title already exists.")
+        raise HTTPException(status_code=409, detail="Predicate with this identifier or title already exists.")
 
 
 @router.get("/{id}", response_model=PredicateOut, responses={404: {"description": "Predicate not found"}})
@@ -268,13 +268,13 @@ def update_predicate(
                 if predicate.identifier != db_predicate.identifier:
                     # Validate identifier uniqueness
                     if not validate_predicate_identifier(predicate.identifier, id, tx_session):
-                        return conflict_error_response(f"Predicate with identifier '{predicate.identifier}' already exists.")
+                        raise HTTPException(status_code=409, detail=f"Predicate with identifier '{predicate.identifier}' already exists.")
                     db_predicate.identifier = predicate.identifier
 
             # Update title if provided
             if predicate.title is not None:
                 if not predicate.title.strip():
-                    return validation_error_response("Predicate title must not be empty.", loc=["body", "title"])
+                    raise HTTPException(status_code=400, detail="Predicate title must not be empty.")
 
                 # Check title uniqueness (excluding current predicate)
                 if predicate.title != db_predicate.title:
@@ -283,7 +283,7 @@ def update_predicate(
                         models.Predicate.id != id
                     ).first()
                     if existing:
-                        return conflict_error_response(f"Predicate with title '{predicate.title}' already exists.")
+                        raise HTTPException(status_code=409, detail=f"Predicate with title '{predicate.title}' already exists.")
 
                 db_predicate.title = predicate.title
 
@@ -300,13 +300,13 @@ def update_predicate(
                 # Validate mapping structure
                 is_valid, error_msg = validate_mapping(predicate.mapping)
                 if not is_valid:
-                    return validation_error_response(f"Invalid mapping structure: {error_msg}", loc=["body", "mapping"])
+                    raise HTTPException(status_code=400, detail=f"Invalid mapping structure: {error_msg}")
 
                 try:
                     mapping_json = json.dumps(predicate.mapping)
                     db_predicate.mapping = mapping_json
                 except (TypeError, ValueError) as e:
-                    return validation_error_response(f"Invalid mapping format: {str(e)}", loc=["body", "mapping"])
+                    raise HTTPException(status_code=400, detail=f"Invalid mapping format: {str(e)}")
 
             # Increment version for optimistic locking
             db_predicate.version += 1
@@ -455,18 +455,18 @@ def get_predicate_history(
     # Convert to response models
     result = []
     for log in audit_logs:
-        # Parse JSON values
+        # Parse JSON values (stored as TEXT in SQLite)
         old_value = None
         if log.old_value:
             try:
-                old_value = json.loads(log.old_value) if isinstance(log.old_value, str) else log.old_value
+                old_value = json.loads(log.old_value)
             except json.JSONDecodeError:
                 logger.warning(f"Invalid JSON in audit log {log.id} old_value")
 
         new_value = None
         if log.new_value:
             try:
-                new_value = json.loads(log.new_value) if isinstance(log.new_value, str) else log.new_value
+                new_value = json.loads(log.new_value)
             except json.JSONDecodeError:
                 logger.warning(f"Invalid JSON in audit log {log.id} new_value")
 
