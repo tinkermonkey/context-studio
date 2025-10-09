@@ -11,8 +11,8 @@ proper rate limiting and caching.
 """
 
 import asyncio
-import logging
 import psutil
+import numpy as np
 from typing import List, Dict, Any, Optional, Tuple
 from datetime import datetime, UTC, date
 from uuid import uuid4
@@ -41,6 +41,14 @@ CONCEPTNET_RELATIONS = [
     "ReceivesAction", "ExternalURL", "dbpedia", "NotCapableOf", "NotDesires",
     "NotHasProperty", "NotMadeOf", "NotUsedFor"
 ]
+
+# Batch size calculation constants (in GB)
+MEMORY_THRESHOLD_HIGH = 8
+MEMORY_THRESHOLD_MEDIUM = 4
+MEMORY_THRESHOLD_LOW = 2
+
+# Wikidata pagination chunk size for memory efficiency
+WIKIDATA_CHUNK_SIZE = 1000
 
 
 class PredicateDiscoveryService:
@@ -100,11 +108,11 @@ class PredicateDiscoveryService:
             memory = psutil.virtual_memory()
             available_gb = memory.available / (1024 ** 3)
 
-            if available_gb > 8:
+            if available_gb > MEMORY_THRESHOLD_HIGH:
                 batch_size = max_size
-            elif available_gb > 4:
+            elif available_gb > MEMORY_THRESHOLD_MEDIUM:
                 batch_size = 64
-            elif available_gb > 2:
+            elif available_gb > MEMORY_THRESHOLD_LOW:
                 batch_size = 32
             else:
                 batch_size = min_size
@@ -154,75 +162,97 @@ class PredicateDiscoveryService:
             batch_embeddings = model.encode(batch)
 
             # Convert to bytes
-            import numpy as np
             for emb in batch_embeddings:
                 embeddings.append(np.array(emb, dtype=np.float32).tobytes())
 
         logger.info(f"Generated {len(embeddings)} embeddings")
         return embeddings
 
-    def _upsert_predicate(
+    def _upsert_predicates_batch(
         self,
-        title: str,
-        definition: str,
+        predicates: List[Dict[str, Any]],
         source: str,
-        external_id: str,
-        attributes: Optional[Dict[str, Any]] = None,
-        title_embedding: Optional[bytes] = None,
-        definition_embedding: Optional[bytes] = None
-    ) -> ExternalPredicate:
+        batch_size: Optional[int] = None
+    ) -> Tuple[int, int]:
         """
-        Insert or update an external predicate.
+        Insert or update a batch of external predicates with batch embedding generation.
 
         If a predicate with the same (source, external_id) exists, it will be updated.
         Otherwise, a new predicate will be created.
 
+        This method generates embeddings in batches for efficiency.
+
         Args:
-            title: Predicate title
-            definition: Predicate definition
+            predicates: List of predicate dictionaries with keys:
+                       title, definition, external_id, attributes (optional)
             source: Source identifier
-            external_id: External identifier
-            attributes: Optional metadata
-            title_embedding: Optional title embedding (auto-generated if None)
-            definition_embedding: Optional definition embedding (auto-generated if None)
+            batch_size: Optional batch size for embedding generation
 
         Returns:
-            Created or updated ExternalPredicate instance
+            Tuple of (created_count, updated_count)
         """
-        # Check if predicate already exists
-        existing = self.manager.get_external_predicate_by_source(source, external_id)
+        if not predicates:
+            return (0, 0)
 
-        if existing:
-            # Update existing predicate
-            logger.debug(f"Updating existing predicate: {source}/{external_id}")
-            existing.title = title
-            existing.definition = definition
-            existing.attributes = str(attributes) if attributes else None
+        logger.info(f"Batch upserting {len(predicates)} predicates from {source}")
 
-            # Generate embeddings if not provided
-            if title_embedding is None:
-                title_embedding = generate_embedding(title)
-            if definition_embedding is None:
-                definition_embedding = generate_embedding(definition)
+        # Collect texts for batch embedding generation
+        titles = [p['title'] for p in predicates]
+        definitions = [p['definition'] for p in predicates]
 
-            existing.title_embedding = title_embedding
-            existing.definition_embedding = definition_embedding
-            existing.updated_at = date.today().isoformat()
+        # Generate all embeddings in batches
+        logger.debug("Generating title embeddings in batch")
+        title_embeddings = self._generate_embeddings_batch(titles, batch_size)
 
+        logger.debug("Generating definition embeddings in batch")
+        definition_embeddings = self._generate_embeddings_batch(definitions, batch_size)
+
+        # Perform upserts in a transaction
+        created = 0
+        updated = 0
+
+        try:
+            for i, predicate_data in enumerate(predicates):
+                external_id = predicate_data['external_id']
+
+                # Check if predicate already exists
+                existing = self.manager.get_external_predicate_by_source(source, external_id)
+
+                if existing:
+                    # Update existing predicate
+                    logger.debug(f"Updating existing predicate: {source}/{external_id}")
+                    existing.title = predicate_data['title']
+                    existing.definition = predicate_data['definition']
+                    existing.attributes = str(predicate_data.get('attributes')) if predicate_data.get('attributes') else None
+                    existing.title_embedding = title_embeddings[i]
+                    existing.definition_embedding = definition_embeddings[i]
+                    existing.updated_at = date.today().isoformat()
+                    updated += 1
+                else:
+                    # Create new predicate
+                    logger.debug(f"Creating new predicate: {source}/{external_id}")
+                    self.manager.add_external_predicate(
+                        title=predicate_data['title'],
+                        definition=predicate_data['definition'],
+                        source=source,
+                        external_id=external_id,
+                        attributes=predicate_data.get('attributes'),
+                        title_embedding=title_embeddings[i],
+                        definition_embedding=definition_embeddings[i]
+                    )
+                    created += 1
+
+            # Commit all changes in one transaction
             self.manager.session.commit()
-            return existing
-        else:
-            # Create new predicate
-            logger.debug(f"Creating new predicate: {source}/{external_id}")
-            return self.manager.add_external_predicate(
-                title=title,
-                definition=definition,
-                source=source,
-                external_id=external_id,
-                attributes=attributes,
-                title_embedding=title_embedding,
-                definition_embedding=definition_embedding
-            )
+            logger.info(f"Batch upsert complete: {created} created, {updated} updated")
+
+        except Exception as e:
+            # Rollback on error
+            self.manager.session.rollback()
+            logger.error(f"Error in batch upsert, rolled back transaction: {e}", exc_info=True)
+            raise
+
+        return (created, updated)
 
     async def discover_conceptnet_predicates(self) -> Tuple[int, int, List[str]]:
         """
@@ -237,9 +267,8 @@ class PredicateDiscoveryService:
         logger.info("Starting ConceptNet predicate discovery")
         start_time = datetime.now(UTC)
 
-        created = 0
-        updated = 0
         errors = []
+        predicates_to_upsert = []
 
         try:
             # Get source configuration
@@ -282,24 +311,13 @@ class PredicateDiscoveryService:
                                 'source_data': response.data
                             }
 
-                            # Check if exists to determine if update or create
-                            existing = self.manager.get_external_predicate_by_source(
-                                'conceptnet', external_id
-                            )
-
-                            # Upsert predicate
-                            self._upsert_predicate(
-                                title=label,
-                                definition=definition,
-                                source='conceptnet',
-                                external_id=external_id,
-                                attributes=attributes
-                            )
-
-                            if existing:
-                                updated += 1
-                            else:
-                                created += 1
+                            # Add to batch
+                            predicates_to_upsert.append({
+                                'title': label,
+                                'definition': definition,
+                                'external_id': external_id,
+                                'attributes': attributes
+                            })
 
                         else:
                             error_msg = f"Failed to fetch {relation}: {response.error}"
@@ -311,6 +329,12 @@ class PredicateDiscoveryService:
                         logger.error(error_msg, exc_info=True)
                         errors.append(error_msg)
 
+            # Batch upsert all predicates
+            created, updated = self._upsert_predicates_batch(
+                predicates_to_upsert,
+                source='conceptnet'
+            )
+
             elapsed = (datetime.now(UTC) - start_time).total_seconds()
             logger.info(
                 f"ConceptNet discovery complete: {created} created, {updated} updated, "
@@ -321,6 +345,7 @@ class PredicateDiscoveryService:
             error_msg = f"Fatal error in ConceptNet discovery: {str(e)}"
             logger.error(error_msg, exc_info=True)
             errors.append(error_msg)
+            return (0, 0, errors)
 
         return (created, updated, errors)
 
@@ -339,11 +364,17 @@ class PredicateDiscoveryService:
         logger.info(f"Starting DBpedia predicate discovery (limit: {limit})")
         start_time = datetime.now(UTC)
 
-        created = 0
-        updated = 0
         errors = []
+        predicates_to_upsert = []
 
         try:
+            # Validate limit parameter to prevent SPARQL injection
+            if not isinstance(limit, int) or limit < 1 or limit > 100000:
+                error_msg = f"Invalid limit parameter: {limit}. Must be integer between 1 and 100000"
+                logger.error(error_msg)
+                errors.append(error_msg)
+                return (0, 0, errors)
+
             # Get source configuration
             source_config = self.source_configs.get('dbpedia')
             if not source_config or not source_config.enabled:
@@ -355,6 +386,7 @@ class PredicateDiscoveryService:
             # Create source instance
             async with DBpediaSource(SourceType.DBPEDIA, source_config) as source:
                 # SPARQL query to fetch DBpedia properties with labels and comments
+                # Limit is validated above, safe to interpolate
                 sparql_query = f"""
                 PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
                 PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
@@ -400,34 +432,29 @@ class PredicateDiscoveryService:
                                 'property_type': 'dbpedia_property'
                             }
 
-                            # Check if exists
-                            existing = self.manager.get_external_predicate_by_source(
-                                'dbpedia', property_uri
-                            )
-
-                            # Upsert predicate
-                            self._upsert_predicate(
-                                title=title,
-                                definition=definition,
-                                source='dbpedia',
-                                external_id=property_uri,
-                                attributes=attributes
-                            )
-
-                            if existing:
-                                updated += 1
-                            else:
-                                created += 1
+                            # Add to batch
+                            predicates_to_upsert.append({
+                                'title': title,
+                                'definition': definition,
+                                'external_id': property_uri,
+                                'attributes': attributes
+                            })
 
                         except Exception as e:
                             error_msg = f"Error processing DBpedia property {property_uri}: {str(e)}"
-                            logger.error(error_msg)
+                            logger.error(error_msg, exc_info=True)
                             errors.append(error_msg)
 
                 else:
                     error_msg = f"DBpedia SPARQL query failed: {response.error}"
                     logger.error(error_msg)
                     errors.append(error_msg)
+
+            # Batch upsert all predicates
+            created, updated = self._upsert_predicates_batch(
+                predicates_to_upsert,
+                source='dbpedia'
+            )
 
             elapsed = (datetime.now(UTC) - start_time).total_seconds()
             logger.info(
@@ -439,14 +466,17 @@ class PredicateDiscoveryService:
             error_msg = f"Fatal error in DBpedia discovery: {str(e)}"
             logger.error(error_msg, exc_info=True)
             errors.append(error_msg)
+            return (0, 0, errors)
 
         return (created, updated, errors)
 
     async def discover_wikidata_predicates(self, limit: int = 10000) -> Tuple[int, int, List[str]]:
         """
-        Discover WikiData properties via SPARQL query.
+        Discover Wikidata properties via SPARQL query with pagination.
 
-        Fetches property metadata (labels, descriptions) from WikiData endpoint.
+        Fetches property metadata (labels, descriptions) from Wikidata endpoint.
+        Uses chunking to handle large result sets efficiently without loading
+        all properties into memory at once.
 
         Args:
             limit: Maximum number of properties to fetch (default: 10000)
@@ -454,111 +484,139 @@ class PredicateDiscoveryService:
         Returns:
             Tuple of (created_count, updated_count, errors)
         """
-        logger.info(f"Starting WikiData predicate discovery (limit: {limit})")
+        logger.info(f"Starting Wikidata predicate discovery (limit: {limit})")
         start_time = datetime.now(UTC)
 
-        created = 0
-        updated = 0
+        total_created = 0
+        total_updated = 0
         errors = []
 
         try:
+            # Validate limit parameter to prevent SPARQL injection
+            if not isinstance(limit, int) or limit < 1 or limit > 100000:
+                error_msg = f"Invalid limit parameter: {limit}. Must be integer between 1 and 100000"
+                logger.error(error_msg)
+                errors.append(error_msg)
+                return (0, 0, errors)
+
             # Get source configuration
             source_config = self.source_configs.get('wikidata')
             if not source_config or not source_config.enabled:
-                error_msg = "WikiData source not enabled in configuration"
+                error_msg = "Wikidata source not enabled in configuration"
                 logger.warning(error_msg)
                 errors.append(error_msg)
                 return (0, 0, errors)
 
             # Create source instance
             async with WikidataSource(SourceType.WIKIDATA, source_config) as source:
-                # SPARQL query to fetch WikiData properties with labels and descriptions
-                sparql_query = f"""
-                SELECT ?property ?propertyLabel ?propertyDescription
-                WHERE {{
-                  ?property a wikibase:Property .
-                  SERVICE wikibase:label {{
-                    bd:serviceParam wikibase:language "en" .
-                    ?property rdfs:label ?propertyLabel .
-                    ?property schema:description ?propertyDescription .
-                  }}
-                }}
-                LIMIT {limit}
-                """
+                # Process in chunks to avoid memory issues with large result sets
+                chunk_size = WIKIDATA_CHUNK_SIZE
+                num_chunks = (limit + chunk_size - 1) // chunk_size
 
-                logger.debug("Executing WikiData SPARQL query")
-                response = await source.sparql_query(sparql_query, format='json')
+                logger.info(f"Processing Wikidata discovery in {num_chunks} chunks of {chunk_size}")
 
-                if response.success and response.results:
-                    bindings = response.results.get('results', {}).get('bindings', [])
-                    logger.info(f"Fetched {len(bindings)} WikiData properties")
+                for chunk_idx in range(num_chunks):
+                    offset = chunk_idx * chunk_size
+                    chunk_limit = min(chunk_size, limit - offset)
 
-                    for binding in bindings:
-                        try:
-                            property_uri = binding.get('property', {}).get('value', '')
-                            label = binding.get('propertyLabel', {}).get('value', '')
-                            description = binding.get('propertyDescription', {}).get('value', '')
+                    logger.info(f"Processing chunk {chunk_idx + 1}/{num_chunks} (offset: {offset}, limit: {chunk_limit})")
 
-                            if not property_uri:
-                                continue
+                    predicates_to_upsert = []
 
-                            # Extract property ID from URI (e.g., P31 from http://www.wikidata.org/entity/P31)
-                            property_id = property_uri.split('/')[-1]
+                    # SPARQL query to fetch Wikidata properties with labels and descriptions
+                    # Both offset and chunk_limit are validated integers, safe to interpolate
+                    sparql_query = f"""
+                    SELECT ?property ?propertyLabel ?propertyDescription
+                    WHERE {{
+                      ?property a wikibase:Property .
+                      SERVICE wikibase:label {{
+                        bd:serviceParam wikibase:language "en" .
+                        ?property rdfs:label ?propertyLabel .
+                        ?property schema:description ?propertyDescription .
+                      }}
+                    }}
+                    LIMIT {chunk_limit}
+                    OFFSET {offset}
+                    """
 
-                            # Use label if available, otherwise use property ID
-                            title = label if label else property_id
+                    logger.debug(f"Executing Wikidata SPARQL query (chunk {chunk_idx + 1})")
+                    response = await source.sparql_query(sparql_query, format='json')
 
-                            # Use description if available, otherwise create basic definition
-                            definition = description if description else f"WikiData property: {title}"
+                    if response.success and response.results:
+                        bindings = response.results.get('results', {}).get('bindings', [])
+                        logger.info(f"Fetched {len(bindings)} Wikidata properties in chunk {chunk_idx + 1}")
 
-                            # Prepare attributes
-                            attributes = {
-                                'property_uri': property_uri,
-                                'property_id': property_id,
-                                'property_type': 'wikidata_property'
-                            }
+                        if not bindings:
+                            # No more results, stop pagination
+                            logger.info("No more results, stopping pagination")
+                            break
 
-                            # Check if exists
-                            existing = self.manager.get_external_predicate_by_source(
-                                'wikidata', property_uri
-                            )
+                        for binding in bindings:
+                            try:
+                                property_uri = binding.get('property', {}).get('value', '')
+                                label = binding.get('propertyLabel', {}).get('value', '')
+                                description = binding.get('propertyDescription', {}).get('value', '')
 
-                            # Upsert predicate
-                            self._upsert_predicate(
-                                title=title,
-                                definition=definition,
-                                source='wikidata',
-                                external_id=property_uri,
-                                attributes=attributes
-                            )
+                                if not property_uri:
+                                    continue
 
-                            if existing:
-                                updated += 1
-                            else:
-                                created += 1
+                                # Extract property ID from URI (e.g., P31 from http://www.wikidata.org/entity/P31)
+                                property_id = property_uri.split('/')[-1]
 
-                        except Exception as e:
-                            error_msg = f"Error processing WikiData property {property_uri}: {str(e)}"
-                            logger.error(error_msg)
-                            errors.append(error_msg)
+                                # Use label if available, otherwise use property ID
+                                title = label if label else property_id
 
-                else:
-                    error_msg = f"WikiData SPARQL query failed: {response.error}"
-                    logger.error(error_msg)
-                    errors.append(error_msg)
+                                # Use description if available, otherwise create basic definition
+                                definition = description if description else f"Wikidata property: {title}"
+
+                                # Prepare attributes
+                                attributes = {
+                                    'property_uri': property_uri,
+                                    'property_id': property_id,
+                                    'property_type': 'wikidata_property'
+                                }
+
+                                # Add to batch
+                                predicates_to_upsert.append({
+                                    'title': title,
+                                    'definition': definition,
+                                    'external_id': property_uri,
+                                    'attributes': attributes
+                                })
+
+                            except Exception as e:
+                                error_msg = f"Error processing Wikidata property {property_uri}: {str(e)}"
+                                logger.error(error_msg, exc_info=True)
+                                errors.append(error_msg)
+
+                        # Batch upsert this chunk's predicates
+                        created, updated = self._upsert_predicates_batch(
+                            predicates_to_upsert,
+                            source='wikidata'
+                        )
+                        total_created += created
+                        total_updated += updated
+
+                    else:
+                        error_msg = f"Wikidata SPARQL query failed for chunk {chunk_idx + 1}: {response.error}"
+                        logger.error(error_msg)
+                        errors.append(error_msg)
+                        # Continue with next chunk instead of stopping completely
+                        continue
 
             elapsed = (datetime.now(UTC) - start_time).total_seconds()
             logger.info(
-                f"WikiData discovery complete: {created} created, {updated} updated, "
+                f"Wikidata discovery complete: {total_created} created, {total_updated} updated, "
                 f"{len(errors)} errors in {elapsed:.2f}s"
             )
 
         except Exception as e:
-            error_msg = f"Fatal error in WikiData discovery: {str(e)}"
+            error_msg = f"Fatal error in Wikidata discovery: {str(e)}"
             logger.error(error_msg, exc_info=True)
             errors.append(error_msg)
+            return (total_created, total_updated, errors)
 
-        return (created, updated, errors)
+        return (total_created, total_updated, errors)
 
     async def discover_all_predicates(
         self,

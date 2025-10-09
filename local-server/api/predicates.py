@@ -427,11 +427,14 @@ async def _run_discovery_task(task_id: str, sources: Optional[List[str]] = None)
         # Format results
         formatted_results = {}
         for source, (created, updated, errors) in results.items():
+            total_errors = len(errors)
+            truncated_errors = errors[:10] if errors else []
             formatted_results[source] = {
                 "created": created,
                 "updated": updated,
-                "error_count": len(errors),
-                "errors": errors[:10] if errors else []  # Limit errors to first 10
+                "error_count": total_errors,
+                "errors": truncated_errors,
+                "errors_truncated": total_errors > 10  # Indicate if errors were truncated
             }
 
         _discovery_tasks[task_id]["status"] = "completed"
