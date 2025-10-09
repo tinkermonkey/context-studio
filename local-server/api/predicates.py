@@ -20,6 +20,8 @@ from database.transaction_utils import (
     TransactionException
 )
 from database.mapping_validation import validate_mapping, validate_mapping_json
+from database.input_validation import sanitize_user_input, validate_identifier, MAX_TITLE_LENGTH
+from api.auth_dependencies import get_current_user, get_optional_user, UserContext
 from config import get_settings, get_config_manager
 from api.api_errors import validation_error_response, conflict_error_response, bad_request_error_response
 from utils.logger import get_logger
@@ -196,14 +198,21 @@ def list_predicates(
 
 
 @router.put("/{id}", response_model=PredicateOut, responses={404: {"description": "Predicate not found"}})
-def update_predicate(id: str, predicate: PredicateUpdate, db: Session = Depends(get_db)):
+def update_predicate(
+    id: str,
+    predicate: PredicateUpdate,
+    current_user: UserContext = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
     """
     Update an existing predicate with ACID transaction guarantees.
 
     This endpoint implements:
+    - User authentication for audit trail
+    - Input sanitization for defense in depth
     - Optimistic locking for concurrent updates
     - JSON schema validation for mappings
-    - Audit logging for all changes
+    - Audit logging for all changes with user tracking
     - Cache invalidation after successful update
 
     Performance target: <100ms (PT-MAP-001)
@@ -214,8 +223,27 @@ def update_predicate(id: str, predicate: PredicateUpdate, db: Session = Depends(
     if not validate_uuid_format(id):
         raise HTTPException(status_code=400, detail="Invalid UUID format.")
 
+    # Sanitize input data
     try:
-        with atomic_transaction(db) as tx_session:
+        predicate_dict = predicate.model_dump(exclude_unset=True)
+        sanitized_data = sanitize_user_input(
+            predicate_dict,
+            field_configs={
+                "title": {"max_length": MAX_TITLE_LENGTH},
+                "identifier": {"max_length": 255},
+                "definition": {"max_length": 10000}
+            }
+        )
+        # Update predicate object with sanitized data
+        for key, value in sanitized_data.items():
+            if hasattr(predicate, key):
+                setattr(predicate, key, value)
+    except Exception as e:
+        logger.warning(f"Input sanitization failed: {e}")
+        raise HTTPException(status_code=400, detail=f"Invalid input data: {str(e)}")
+
+    try:
+        with atomic_transaction(db, isolation_level="READ_COMMITTED") as tx_session:
             # Get predicate with row-level lock for optimistic locking
             db_predicate = tx_session.query(models.Predicate).filter_by(id=id).with_for_update().first()
             if not db_predicate:
@@ -300,7 +328,7 @@ def update_predicate(id: str, predicate: PredicateUpdate, db: Session = Depends(
             tx_session.flush()
             execution_time_ms = int((time.perf_counter() - start_time) * 1000)
 
-            # Create audit log
+            # Create audit log with user tracking
             create_audit_log(
                 tx_session,
                 entity_type="predicate",
@@ -308,6 +336,7 @@ def update_predicate(id: str, predicate: PredicateUpdate, db: Session = Depends(
                 action="update",
                 old_value=old_values,
                 new_value=new_values,
+                user_id=current_user.user_id,
                 execution_time_ms=execution_time_ms
             )
 

@@ -18,6 +18,7 @@ from sqlalchemy.orm import Session
 from sqlalchemy.exc import IntegrityError, OperationalError
 
 from database.models import AuditLog
+from database.input_validation import sanitize_audit_log_value
 from utils.logger import get_logger
 
 logger = get_logger(__name__)
@@ -74,12 +75,27 @@ def atomic_transaction(
     start_time = time.perf_counter()
 
     try:
-        # Set isolation level (SQLite supports SERIALIZABLE via locking)
-        if isolation_level == "SERIALIZABLE":
-            session.execute("BEGIN IMMEDIATE")
-        else:
-            session.begin()
+        # Set isolation level using SQLAlchemy's execution options
+        # Map isolation levels to SQLite PRAGMA settings
+        isolation_map = {
+            "SERIALIZABLE": "IMMEDIATE",
+            "READ_COMMITTED": "DEFERRED",
+            "READ_UNCOMMITTED": "DEFERRED",
+            "REPEATABLE_READ": "IMMEDIATE"
+        }
 
+        # Get the connection and set isolation level
+        connection = session.connection()
+        if isolation_level in isolation_map:
+            # For SQLite, we use transaction locking modes
+            # IMMEDIATE = SERIALIZABLE/REPEATABLE_READ
+            # DEFERRED = READ_COMMITTED/READ_UNCOMMITTED
+            lock_mode = isolation_map[isolation_level]
+            connection.execution_options(
+                isolation_level=lock_mode
+            )
+
+        session.begin()
         logger.debug(f"Transaction started with isolation level: {isolation_level}")
 
         # Yield control to the transaction block
@@ -191,9 +207,12 @@ def create_audit_log(
     """
     start_time = time.perf_counter()
 
-    # Serialize values to JSON
-    old_value_json = json.dumps(old_value) if old_value else None
-    new_value_json = json.dumps(new_value) if new_value else None
+    # Sanitize and serialize values to JSON
+    sanitized_old_value = sanitize_audit_log_value(old_value) if old_value else None
+    sanitized_new_value = sanitize_audit_log_value(new_value) if new_value else None
+
+    old_value_json = json.dumps(sanitized_old_value) if sanitized_old_value else None
+    new_value_json = json.dumps(sanitized_new_value) if sanitized_new_value else None
 
     audit_log = AuditLog(
         entity_type=entity_type,

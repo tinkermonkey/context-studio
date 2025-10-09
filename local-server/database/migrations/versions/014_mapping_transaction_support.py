@@ -1,4 +1,4 @@
-"""Migration 014: Phase 5 - Transaction Management with Audit Logging"""
+"""Migration 014: Transaction Management with Audit Logging"""
 
 from sqlalchemy.engine import Connection
 from sqlalchemy import text
