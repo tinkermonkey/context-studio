@@ -2,6 +2,7 @@
 
 import datetime
 import json
+import time
 import asyncio
 from fastapi import APIRouter, HTTPException, Query, Depends, BackgroundTasks
 from pydantic import BaseModel, Field, ConfigDict
@@ -13,6 +14,12 @@ from sqlalchemy.exc import IntegrityError
 from database import models
 from database.utils import get_db
 from database.predicate_utils import generate_identifier_from_title, import_conceptnet_predicates, get_conceptnet_relation_for_predicate, validate_predicate_identifier
+from database.transaction_utils import (
+    atomic_transaction, check_optimistic_lock, create_audit_log,
+    get_audit_history, invalidate_entity_cache, OptimisticLockException,
+    TransactionException
+)
+from database.mapping_validation import validate_mapping, validate_mapping_json
 from config import get_settings, get_config_manager
 from api.api_errors import validation_error_response, conflict_error_response, bad_request_error_response
 from utils.logger import get_logger
@@ -49,6 +56,8 @@ class PredicateUpdate(BaseModel):
     definition: Optional[str] = None
     mapping: Optional[dict] = None
     identifier: Optional[str] = None  # Allow identifier updates with validation
+    is_relevant: Optional[bool] = None  # For marking predicate relevance
+    version: Optional[int] = None  # For optimistic locking
 
 
 class PredicateOut(PredicateBase):
@@ -188,62 +197,145 @@ def list_predicates(
 
 @router.put("/{id}", response_model=PredicateOut, responses={404: {"description": "Predicate not found"}})
 def update_predicate(id: str, predicate: PredicateUpdate, db: Session = Depends(get_db)):
-    """Update an existing predicate."""
+    """
+    Update an existing predicate with ACID transaction guarantees.
+
+    This endpoint implements:
+    - Optimistic locking for concurrent updates
+    - JSON schema validation for mappings
+    - Audit logging for all changes
+    - Cache invalidation after successful update
+
+    Performance target: <100ms (PT-MAP-001)
+    """
+    start_time = time.perf_counter()
+
     # Validate UUID format
     if not validate_uuid_format(id):
         raise HTTPException(status_code=400, detail="Invalid UUID format.")
-    
-    db_predicate = db.query(models.Predicate).filter_by(id=id).first()
-    if not db_predicate:
-        raise HTTPException(status_code=404, detail="Predicate not found.")
-    
-    # Update identifier if provided
-    if predicate.identifier is not None:
-        if predicate.identifier != db_predicate.identifier:
-            # Validate identifier uniqueness
-            if not validate_predicate_identifier(predicate.identifier, id, db):
-                return conflict_error_response(f"Predicate with identifier '{predicate.identifier}' already exists.")
-            db_predicate.identifier = predicate.identifier
-    
-    # Update title if provided
-    if predicate.title is not None:
-        if not predicate.title.strip():
-            return validation_error_response("Predicate title must not be empty.", loc=["body", "title"])
-        
-        # Check title uniqueness (excluding current predicate)
-        if predicate.title != db_predicate.title:
-            existing = db.query(models.Predicate).filter(
-                models.Predicate.title == predicate.title,
-                models.Predicate.id != id
-            ).first()
-            if existing:
-                return conflict_error_response(f"Predicate with title '{predicate.title}' already exists.")
-        
-        db_predicate.title = predicate.title
-    
-    # Update definition if provided
-    if predicate.definition is not None:
-        db_predicate.definition = predicate.definition
-    
-    # Update mapping if provided
-    if predicate.mapping is not None:
-        try:
-            mapping_json = json.dumps(predicate.mapping)
-            db_predicate.mapping = mapping_json
-        except (TypeError, ValueError) as e:
-            return validation_error_response(f"Invalid mapping format: {str(e)}", loc=["body", "mapping"])
-    
-    # Update modification timestamp
-    db_predicate.date_modified = datetime.datetime.now(datetime.UTC)
-    
+
     try:
-        db.commit()
+        with atomic_transaction(db) as tx_session:
+            # Get predicate with row-level lock for optimistic locking
+            db_predicate = tx_session.query(models.Predicate).filter_by(id=id).with_for_update().first()
+            if not db_predicate:
+                raise HTTPException(status_code=404, detail="Predicate not found.")
+
+            # Check optimistic lock if version provided
+            if predicate.version is not None:
+                check_optimistic_lock(tx_session, db_predicate, predicate.version)
+
+            # Store old values for audit log
+            old_values = {
+                "identifier": db_predicate.identifier,
+                "title": db_predicate.title,
+                "definition": db_predicate.definition,
+                "mapping": json.loads(db_predicate.mapping) if db_predicate.mapping else None,
+                "is_relevant": db_predicate.is_relevant,
+                "version": db_predicate.version
+            }
+
+            # Update identifier if provided
+            if predicate.identifier is not None:
+                if predicate.identifier != db_predicate.identifier:
+                    # Validate identifier uniqueness
+                    if not validate_predicate_identifier(predicate.identifier, id, tx_session):
+                        return conflict_error_response(f"Predicate with identifier '{predicate.identifier}' already exists.")
+                    db_predicate.identifier = predicate.identifier
+
+            # Update title if provided
+            if predicate.title is not None:
+                if not predicate.title.strip():
+                    return validation_error_response("Predicate title must not be empty.", loc=["body", "title"])
+
+                # Check title uniqueness (excluding current predicate)
+                if predicate.title != db_predicate.title:
+                    existing = tx_session.query(models.Predicate).filter(
+                        models.Predicate.title == predicate.title,
+                        models.Predicate.id != id
+                    ).first()
+                    if existing:
+                        return conflict_error_response(f"Predicate with title '{predicate.title}' already exists.")
+
+                db_predicate.title = predicate.title
+
+            # Update definition if provided
+            if predicate.definition is not None:
+                db_predicate.definition = predicate.definition
+
+            # Update is_relevant if provided
+            if predicate.is_relevant is not None:
+                db_predicate.is_relevant = predicate.is_relevant
+
+            # Update mapping if provided with validation
+            if predicate.mapping is not None:
+                # Validate mapping structure
+                is_valid, error_msg = validate_mapping(predicate.mapping)
+                if not is_valid:
+                    return validation_error_response(f"Invalid mapping structure: {error_msg}", loc=["body", "mapping"])
+
+                try:
+                    mapping_json = json.dumps(predicate.mapping)
+                    db_predicate.mapping = mapping_json
+                except (TypeError, ValueError) as e:
+                    return validation_error_response(f"Invalid mapping format: {str(e)}", loc=["body", "mapping"])
+
+            # Increment version for optimistic locking
+            db_predicate.version += 1
+
+            # Update modification timestamp
+            db_predicate.date_modified = datetime.datetime.now(datetime.UTC)
+
+            # Store new values for audit log
+            new_values = {
+                "identifier": db_predicate.identifier,
+                "title": db_predicate.title,
+                "definition": db_predicate.definition,
+                "mapping": json.loads(db_predicate.mapping) if db_predicate.mapping else None,
+                "is_relevant": db_predicate.is_relevant,
+                "version": db_predicate.version
+            }
+
+            # Flush to get execution time for audit log
+            tx_session.flush()
+            execution_time_ms = int((time.perf_counter() - start_time) * 1000)
+
+            # Create audit log
+            create_audit_log(
+                tx_session,
+                entity_type="predicate",
+                entity_id=id,
+                action="update",
+                old_value=old_values,
+                new_value=new_values,
+                execution_time_ms=execution_time_ms
+            )
+
+        # Transaction committed successfully, invalidate cache
+        invalidate_entity_cache("predicate", id)
+
+        # Refresh to get updated object
         db.refresh(db_predicate)
+
+        elapsed_ms = (time.perf_counter() - start_time) * 1000
+        logger.info(f"Predicate {id} updated successfully in {elapsed_ms:.2f}ms")
+
         return to_predicate_out(db_predicate)
-        
-    except IntegrityError:
-        db.rollback()
-        return conflict_error_response("Update would create duplicate identifier or title.")
+
+    except OptimisticLockException as e:
+        logger.warning(f"Optimistic lock failed for predicate {id}: {e}")
+        raise HTTPException(status_code=409, detail=str(e))
+
+    except TransactionException as e:
+        logger.error(f"Transaction failed for predicate {id}: {e}")
+        raise HTTPException(status_code=500, detail=f"Transaction failed: {str(e)}")
+
+    except HTTPException:
+        raise
+
+    except Exception as e:
+        logger.error(f"Unexpected error updating predicate {id}: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail=f"Failed to update predicate: {str(e)}")
 
 
 @router.delete("/{id}", status_code=200, responses={404: {"description": "Predicate not found"}})
@@ -279,8 +371,89 @@ def get_predicate_by_identifier(identifier: str, db: Session = Depends(get_db)):
     predicate = db.query(models.Predicate).filter_by(identifier=identifier).first()
     if not predicate:
         raise HTTPException(status_code=404, detail="Predicate not found.")
-    
+
     return to_predicate_out(predicate)
+
+
+# Audit History Endpoint (Phase 5)
+
+class AuditLogEntry(BaseModel):
+    """Response model for audit log entries."""
+    id: int
+    entity_type: str
+    entity_id: str
+    action: str
+    user_id: Optional[str]
+    old_value: Optional[Dict[str, Any]]
+    new_value: Optional[Dict[str, Any]]
+    timestamp: str
+    execution_time_ms: Optional[int]
+
+
+@router.get("/{id}/history", response_model=List[AuditLogEntry], responses={404: {"description": "Predicate not found"}})
+def get_predicate_history(
+    id: str,
+    limit: int = Query(100, ge=1, le=1000, description="Maximum number of history entries to return"),
+    db: Session = Depends(get_db)
+):
+    """
+    Get the audit history for a predicate.
+
+    Returns a chronological list of all changes made to the predicate,
+    including old and new values for each change.
+
+    Args:
+        id: UUID of the predicate
+        limit: Maximum number of history entries to return (default: 100, max: 1000)
+
+    Returns:
+        List of AuditLogEntry objects ordered by timestamp descending
+
+    Performance target: <200ms for typical queries
+    """
+    # Validate UUID format
+    if not validate_uuid_format(id):
+        raise HTTPException(status_code=400, detail="Invalid UUID format.")
+
+    # Verify predicate exists
+    predicate = db.query(models.Predicate).filter_by(id=id).first()
+    if not predicate:
+        raise HTTPException(status_code=404, detail="Predicate not found.")
+
+    # Get audit history
+    audit_logs = get_audit_history(db, "predicate", id, limit=limit)
+
+    # Convert to response models
+    result = []
+    for log in audit_logs:
+        # Parse JSON values
+        old_value = None
+        if log.old_value:
+            try:
+                old_value = json.loads(log.old_value) if isinstance(log.old_value, str) else log.old_value
+            except json.JSONDecodeError:
+                logger.warning(f"Invalid JSON in audit log {log.id} old_value")
+
+        new_value = None
+        if log.new_value:
+            try:
+                new_value = json.loads(log.new_value) if isinstance(log.new_value, str) else log.new_value
+            except json.JSONDecodeError:
+                logger.warning(f"Invalid JSON in audit log {log.id} new_value")
+
+        result.append(AuditLogEntry(
+            id=log.id,
+            entity_type=log.entity_type,
+            entity_id=log.entity_id,
+            action=log.action,
+            user_id=log.user_id,
+            old_value=old_value,
+            new_value=new_value,
+            timestamp=log.timestamp.isoformat(),
+            execution_time_ms=log.execution_time_ms
+        ))
+
+    return result
 
 
 # ConceptNet Integration Endpoints
