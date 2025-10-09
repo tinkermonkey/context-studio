@@ -12,7 +12,7 @@ Tests the PredicateSimilarityService functionality including:
 import pytest
 import tempfile
 import os
-from datetime import date
+from uuid import uuid4
 
 from reference_db.config import ReferenceConfig
 from reference_db.manager import ReferenceManager
@@ -20,7 +20,7 @@ from services.predicate_similarity import (
     PredicateSimilarityService,
     SimilarityResult,
     ClusterResult,
-    _similarity_cache
+    BatchError
 )
 from embeddings.generate_embeddings import generate_embedding
 
@@ -226,7 +226,7 @@ class TestPredicateSimilarityService:
             ("property", "entity attribute"),
         ]
 
-        results = similarity_service.find_similar_batch(
+        results, errors = similarity_service.find_similar_batch(
             predicates=batch_queries,
             limit=10,
             threshold=0.5
@@ -235,20 +235,46 @@ class TestPredicateSimilarityService:
         # Should have results for each query
         assert len(results) == len(batch_queries)
 
+        # Should have no errors for valid queries
+        assert len(errors) == 0
+
         # Check each result
         for title, definition in batch_queries:
             assert title in results
             assert isinstance(results[title], list)
 
+    def test_find_similar_batch_with_errors(self, similarity_service):
+        """Test batch similarity search with some invalid queries."""
+        batch_queries = [
+            ("valid_query", "good definition"),
+            ("", "empty title should error"),  # This should error
+            ("another_valid", None),
+        ]
+
+        results, errors = similarity_service.find_similar_batch(
+            predicates=batch_queries,
+            limit=10,
+            threshold=0.5
+        )
+
+        # Should have results for all queries (empty list for errors)
+        assert len(results) == len(batch_queries)
+
+        # Should have 1 error (empty title)
+        assert len(errors) == 1
+        assert isinstance(errors[0], BatchError)
+        assert errors[0].predicate_title == ""
+        assert errors[0].error_type == "ValueError"
+
     def test_cluster_predicates_basic(self, similarity_service):
         """Test basic clustering functionality."""
-        # Create test predicates with clear groupings
+        # Create test predicates with clear groupings (using UUIDs)
         predicates = [
-            ("pred1", "spatial_relation_1", "Indicates location in space"),
-            ("pred2", "spatial_relation_2", "Indicates position in area"),
-            ("pred3", "temporal_relation_1", "Indicates time relationship"),
-            ("pred4", "temporal_relation_2", "Indicates timing of event"),
-            ("pred5", "causal_relation_1", "Indicates cause and effect"),
+            (str(uuid4()), "spatial_relation_1", "Indicates location in space"),
+            (str(uuid4()), "spatial_relation_2", "Indicates position in area"),
+            (str(uuid4()), "temporal_relation_1", "Indicates time relationship"),
+            (str(uuid4()), "temporal_relation_2", "Indicates timing of event"),
+            (str(uuid4()), "causal_relation_1", "Indicates cause and effect"),
         ]
 
         clusters = similarity_service.cluster_predicates(
@@ -272,9 +298,9 @@ class TestPredicateSimilarityService:
 
     def test_cluster_predicates_insufficient_data(self, similarity_service):
         """Test clustering with insufficient data."""
-        # Only 1 predicate (less than min_cluster_size)
+        # Only 1 predicate (less than min_cluster_size, using UUID)
         predicates = [
-            ("pred1", "test_predicate", "A test predicate"),
+            (str(uuid4()), "test_predicate", "A test predicate"),
         ]
 
         clusters = similarity_service.cluster_predicates(
@@ -337,3 +363,20 @@ class TestEdgeCases:
         )
 
         assert clusters == []
+
+    def test_clustering_too_many_predicates(self, similarity_service):
+        """Test clustering with too many predicates (resource exhaustion protection)."""
+        # Create a list that exceeds max_predicates limit
+        large_list = [
+            (str(uuid4()), f"predicate_{i}", f"definition_{i}")
+            for i in range(1001)
+        ]
+
+        with pytest.raises(ValueError) as exc_info:
+            similarity_service.cluster_predicates(
+                predicates=large_list,
+                min_cluster_size=2,
+                max_predicates=1000
+            )
+
+        assert "Too many predicates" in str(exc_info.value)

@@ -25,11 +25,9 @@ import hashlib
 import json
 from typing import List, Dict, Any, Optional, Tuple
 from dataclasses import dataclass
-from datetime import datetime, timedelta, UTC
 from collections import defaultdict
 
 import numpy as np
-from sqlalchemy import text
 from sqlalchemy.orm import Session
 from sklearn.cluster import DBSCAN
 from cachetools import TTLCache
@@ -37,36 +35,65 @@ from cachetools import TTLCache
 from embeddings.generate_embeddings import generate_embedding
 from utils.logger import get_logger
 from reference_db.manager import ReferenceManager
-from reference_db.config import ReferenceConfig
 
 logger = get_logger("predicate_similarity")
 
 
-# TTL-based cache for similarity search results (1 hour)
-# Stores up to 1000 queries
-_similarity_cache = TTLCache(maxsize=1000, ttl=3600)
-
-
 @dataclass
 class SimilarityResult:
-    """Result of a similarity search."""
+    """
+    Result of a similarity search.
+
+    Attributes:
+        predicate_id: Unique identifier for the predicate
+        source: Data source (e.g., "dbpedia", "wikidata")
+        source_id: External ID in the source system
+        title: Predicate title/label
+        definition: Predicate definition/description
+        similarity_score: Cosine similarity score (0.0 to 1.0)
+        confidence: Confidence level ("high", "medium", "low", "reject")
+    """
     predicate_id: str
     source: str
     source_id: str
     title: str
     definition: str
     similarity_score: float
-    confidence: str  # "high", "medium", "low", "reject"
+    confidence: str
 
 
 @dataclass
 class ClusterResult:
-    """Result of predicate clustering."""
+    """
+    Result of predicate clustering.
+
+    Attributes:
+        cluster_id: Unique cluster identifier (assigned by DBSCAN)
+        predicate_ids: List of predicate IDs in this cluster
+        centroid_title: Title of the most central predicate
+        avg_similarity: Average pairwise similarity within cluster
+        size: Number of predicates in cluster
+    """
     cluster_id: int
     predicate_ids: List[str]
     centroid_title: str
     avg_similarity: float
     size: int
+
+
+@dataclass
+class BatchError:
+    """
+    Error information for failed batch operations.
+
+    Attributes:
+        predicate_title: Title of the predicate that failed
+        error_message: Description of the error
+        error_type: Type of exception that occurred
+    """
+    predicate_title: str
+    error_message: str
+    error_type: str
 
 
 class PredicateSimilarityService:
@@ -79,18 +106,46 @@ class PredicateSimilarityService:
     - Cache invalidation on predicate updates
     - Clustering algorithm for grouping similar predicates
     - Warm-up procedures for index loading
+
+    Attributes:
+        HIGH_CONFIDENCE_THRESHOLD: Similarity threshold for high confidence (0.85)
+        MEDIUM_CONFIDENCE_THRESHOLD: Similarity threshold for medium confidence (0.70)
+        LOW_CONFIDENCE_THRESHOLD: Similarity threshold for low confidence (0.60)
     """
 
-    def __init__(self, reference_manager: ReferenceManager):
+    # Confidence level thresholds
+    HIGH_CONFIDENCE_THRESHOLD = 0.85
+    MEDIUM_CONFIDENCE_THRESHOLD = 0.70
+    LOW_CONFIDENCE_THRESHOLD = 0.60
+
+    def __init__(
+        self,
+        reference_manager: ReferenceManager,
+        embedding_dimensions: int = 384,
+        cache_maxsize: int = 1000,
+        cache_ttl: int = 3600
+    ):
         """
         Initialize the predicate similarity service.
 
         Args:
             reference_manager: ReferenceManager instance for vector search
+            embedding_dimensions: Dimension of embedding vectors (default: 384)
+            cache_maxsize: Maximum number of cached queries (default: 1000)
+            cache_ttl: Cache TTL in seconds (default: 3600 = 1 hour)
         """
         self.reference_manager = reference_manager
+        self.embedding_dimensions = embedding_dimensions
         self.warm_up_complete = False
-        logger.info("PredicateSimilarityService initialized")
+
+        # Initialize instance-level cache
+        self._similarity_cache = TTLCache(maxsize=cache_maxsize, ttl=cache_ttl)
+
+        logger.info(
+            f"PredicateSimilarityService initialized: "
+            f"embedding_dim={embedding_dimensions}, "
+            f"cache_maxsize={cache_maxsize}, cache_ttl={cache_ttl}s"
+        )
 
     def warm_up(self, sample_size: int = 10) -> float:
         """
@@ -144,16 +199,19 @@ class PredicateSimilarityService:
         threshold: float = 0.7
     ) -> str:
         """
-        Generate cache key for similarity search.
+        Generate cache key for similarity search using SHA-256 hash.
+
+        This method creates a robust cache key that handles special characters
+        and ensures consistent hashing across calls.
 
         Args:
             query_text: Search query text
-            source: Optional source filter
-            limit: Result limit
-            threshold: Similarity threshold
+            source: Optional source filter (e.g., "dbpedia", "wikidata")
+            limit: Maximum number of results (default: 100)
+            threshold: Minimum similarity threshold (default: 0.7)
 
         Returns:
-            Cache key as hex string
+            Cache key as 64-character hexadecimal string (SHA-256 hash)
         """
         cache_data = {
             "query": query_text,
@@ -161,18 +219,30 @@ class PredicateSimilarityService:
             "limit": limit,
             "threshold": threshold
         }
+        # Use sorted keys for consistent JSON serialization
         cache_str = json.dumps(cache_data, sort_keys=True)
-        return hashlib.sha256(cache_str.encode()).hexdigest()
+        # Generate SHA-256 hash for robust key generation
+        return hashlib.sha256(cache_str.encode('utf-8')).hexdigest()
 
     def invalidate_cache(self):
-        """Invalidate the entire similarity search cache."""
-        global _similarity_cache
-        _similarity_cache.clear()
+        """
+        Invalidate the entire similarity search cache.
+
+        This method clears all cached query results. Use this when predicates
+        are updated to ensure fresh results.
+        """
+        self._similarity_cache.clear()
         logger.info("Similarity search cache invalidated")
 
     def _confidence_level(self, similarity: float) -> str:
         """
         Determine confidence level based on similarity score.
+
+        Confidence levels:
+        - High: >= 0.85 (strong semantic match)
+        - Medium: 0.70-0.84 (good semantic match)
+        - Low: 0.60-0.69 (weak semantic match)
+        - Reject: < 0.60 (insufficient match)
 
         Args:
             similarity: Cosine similarity score (0.0 to 1.0)
@@ -180,11 +250,11 @@ class PredicateSimilarityService:
         Returns:
             Confidence level: "high", "medium", "low", or "reject"
         """
-        if similarity >= 0.85:
+        if similarity >= self.HIGH_CONFIDENCE_THRESHOLD:
             return "high"
-        elif similarity >= 0.70:
+        elif similarity >= self.MEDIUM_CONFIDENCE_THRESHOLD:
             return "medium"
-        elif similarity >= 0.60:
+        elif similarity >= self.LOW_CONFIDENCE_THRESHOLD:
             return "low"
         else:
             return "reject"
@@ -201,26 +271,38 @@ class PredicateSimilarityService:
         """
         Find similar predicates using vector similarity search.
 
+        This method uses cosine similarity on vector embeddings to find
+        semantically similar predicates in the external predicate database.
+
         Args:
-            predicate_title: Title of the predicate to search for
+            predicate_title: Title of the predicate to search for (required, non-empty)
             predicate_definition: Optional definition to include in search
             source: Optional source filter (e.g., "dbpedia", "wikidata")
-            limit: Maximum number of results (default: 100)
-            threshold: Minimum similarity threshold (default: 0.7)
+            limit: Maximum number of results (default: 100, max: 100)
+            threshold: Minimum similarity threshold (default: 0.7, range: 0.0-1.0)
             use_cache: Whether to use cached results (default: True)
 
         Returns:
             List of SimilarityResult objects ordered by similarity descending
 
+        Raises:
+            ValueError: If predicate_title is empty or validation fails
+
         Performance target: <200ms p95 for 10K-50K predicates (PT-VS-001, PT-VS-002)
                            <50ms p95 for cached results (PT-VS-006)
         """
+        # Validate input
+        if not predicate_title or not predicate_title.strip():
+            error_msg = "predicate_title cannot be empty"
+            logger.error(f"Input validation failed: {error_msg}")
+            raise ValueError(error_msg)
+
         # Check cache first
         cache_key = self._get_cache_key(predicate_title, source, limit, threshold)
 
-        if use_cache and cache_key in _similarity_cache:
+        if use_cache and cache_key in self._similarity_cache:
             logger.debug(f"Cache hit for query: {predicate_title[:50]}...")
-            return _similarity_cache[cache_key]
+            return self._similarity_cache[cache_key]
 
         start_time = time.perf_counter()
 
@@ -259,18 +341,31 @@ class PredicateSimilarityService:
 
             # Cache the results
             if use_cache:
-                _similarity_cache[cache_key] = similarity_results
+                self._similarity_cache[cache_key] = similarity_results
 
             elapsed = (time.perf_counter() - start_time) * 1000  # Convert to ms
             logger.info(
                 f"Similarity search completed in {elapsed:.2f}ms: "
-                f"query='{predicate_title[:50]}...', results={len(similarity_results)}"
+                f"query='{predicate_title[:50]}...', results={len(similarity_results)}, "
+                f"cache_enabled={use_cache}"
             )
 
             return similarity_results
 
+        except ValueError:
+            # Re-raise validation errors
+            raise
         except Exception as e:
-            logger.error(f"Similarity search failed: {e}", exc_info=True)
+            error_context = {
+                "predicate_title": predicate_title[:100],
+                "source": source,
+                "limit": limit,
+                "threshold": threshold
+            }
+            logger.error(
+                f"Similarity search failed: {e}. Context: {error_context}",
+                exc_info=True
+            )
             raise
 
     def find_similar_batch(
@@ -279,23 +374,29 @@ class PredicateSimilarityService:
         source: Optional[str] = None,
         limit: int = 100,
         threshold: float = 0.7
-    ) -> Dict[str, List[SimilarityResult]]:
+    ) -> Tuple[Dict[str, List[SimilarityResult]], List[BatchError]]:
         """
         Find similar predicates for a batch of queries.
 
+        This method processes multiple similarity searches and returns both
+        successful results and error information for failed queries.
+
         Args:
             predicates: List of (title, definition) tuples
-            source: Optional source filter
-            limit: Maximum results per query
-            threshold: Minimum similarity threshold
+            source: Optional source filter (e.g., "dbpedia", "wikidata")
+            limit: Maximum results per query (default: 100)
+            threshold: Minimum similarity threshold (default: 0.7)
 
         Returns:
-            Dictionary mapping predicate titles to similarity results
+            Tuple containing:
+            - Dictionary mapping predicate titles to similarity results
+            - List of BatchError objects for failed queries
 
         Performance target: <800ms p95 for 10 predicates (PT-VS-003)
         """
         start_time = time.perf_counter()
         results = {}
+        errors = []
 
         for title, definition in predicates:
             try:
@@ -307,23 +408,36 @@ class PredicateSimilarityService:
                     threshold=threshold
                 )
             except Exception as e:
-                logger.error(f"Batch query failed for '{title}': {e}")
+                error_type = type(e).__name__
+                error_msg = str(e)
+                logger.error(
+                    f"Batch query failed for '{title}': {error_type}: {error_msg}"
+                )
+                errors.append(BatchError(
+                    predicate_title=title,
+                    error_message=error_msg,
+                    error_type=error_type
+                ))
+                # Still add empty list to results for consistency
                 results[title] = []
 
         elapsed = (time.perf_counter() - start_time) * 1000  # Convert to ms
+        success_count = len([r for r in results.values() if r])
         logger.info(
             f"Batch similarity search completed in {elapsed:.2f}ms: "
-            f"{len(predicates)} queries, {sum(len(r) for r in results.values())} total results"
+            f"{len(predicates)} queries, {success_count} successful, "
+            f"{len(errors)} errors, {sum(len(r) for r in results.values())} total results"
         )
 
-        return results
+        return results, errors
 
     def cluster_predicates(
         self,
         predicates: List[Tuple[str, str, Optional[str]]],  # (id, title, definition)
         min_similarity: float = 0.7,
         min_cluster_size: int = 2,
-        eps: float = 0.3  # DBSCAN epsilon (distance threshold)
+        eps: float = 0.3,  # DBSCAN epsilon (distance threshold)
+        max_predicates: int = 1000
     ) -> List[ClusterResult]:
         """
         Cluster similar predicates using DBSCAN algorithm.
@@ -336,23 +450,41 @@ class PredicateSimilarityService:
 
         Args:
             predicates: List of (id, title, definition) tuples
-            min_similarity: Minimum similarity to be considered in same cluster
-            min_cluster_size: Minimum number of predicates per cluster
-            eps: DBSCAN epsilon parameter (distance threshold)
+            min_similarity: Minimum similarity to be considered in same cluster (0.0-1.0)
+            min_cluster_size: Minimum number of predicates per cluster (default: 2)
+            eps: DBSCAN epsilon parameter for distance threshold (default: 0.3)
+            max_predicates: Maximum number of predicates to process (default: 1000)
 
         Returns:
-            List of ClusterResult objects
+            List of ClusterResult objects, sorted by cluster size descending
+
+        Raises:
+            ValueError: If predicates list exceeds max_predicates limit
 
         Notes:
             - DBSCAN automatically determines number of clusters
             - Noise points (cluster_id=-1) are excluded from results
             - eps parameter controls cluster tightness (lower = tighter)
+            - Large datasets (>1000 predicates) may cause performance issues
         """
         if not predicates:
+            logger.info("No predicates provided for clustering")
             return []
 
+        # Validate predicate count to prevent resource exhaustion
+        if len(predicates) > max_predicates:
+            error_msg = (
+                f"Too many predicates for clustering: {len(predicates)} "
+                f"(max: {max_predicates}). Consider processing in batches."
+            )
+            logger.error(error_msg)
+            raise ValueError(error_msg)
+
         start_time = time.perf_counter()
-        logger.info(f"Clustering {len(predicates)} predicates...")
+        logger.info(
+            f"Clustering {len(predicates)} predicates with "
+            f"min_cluster_size={min_cluster_size}, eps={eps}..."
+        )
 
         # Generate embeddings for all predicates
         embeddings = []
@@ -467,11 +599,15 @@ class PredicateSimilarityService:
         Get cache statistics.
 
         Returns:
-            Dictionary with cache statistics
+            Dictionary with cache statistics including:
+            - size: Current number of cached queries
+            - maxsize: Maximum cache capacity
+            - ttl: Time-to-live in seconds
+            - currsize: Current cache size (same as size)
         """
         return {
-            "size": len(_similarity_cache),
-            "maxsize": _similarity_cache.maxsize,
-            "ttl": _similarity_cache.ttl,
-            "currsize": _similarity_cache.currsize
+            "size": len(self._similarity_cache),
+            "maxsize": self._similarity_cache.maxsize,
+            "ttl": self._similarity_cache.ttl,
+            "currsize": self._similarity_cache.currsize
         }

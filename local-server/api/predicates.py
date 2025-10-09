@@ -665,12 +665,27 @@ def find_similar_predicates(
 
     # Validate UUID format
     if not validate_uuid_format(id):
-        raise HTTPException(status_code=400, detail="Invalid UUID format.")
+        raise HTTPException(
+            status_code=400,
+            detail=f"Invalid UUID format for predicate ID: '{id}'. Expected format: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+        )
 
-    # Get the predicate
-    predicate = db.query(models.Predicate).filter_by(id=id).first()
-    if not predicate:
-        raise HTTPException(status_code=404, detail="Predicate not found.")
+    # Get the predicate with explicit session management
+    try:
+        predicate = db.query(models.Predicate).filter_by(id=id).first()
+        if not predicate:
+            raise HTTPException(
+                status_code=404,
+                detail=f"Predicate with ID '{id}' not found in database"
+            )
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Database error while fetching predicate {id}: {e}", exc_info=True)
+        raise HTTPException(
+            status_code=500,
+            detail=f"Database error while fetching predicate: {str(e)}"
+        )
 
     try:
         # Initialize services
@@ -692,8 +707,7 @@ def find_similar_predicates(
             cache_key = similarity_service._get_cache_key(
                 predicate.title, source, limit, threshold
             )
-            from services.predicate_similarity import _similarity_cache
-            cached = cache_key in _similarity_cache
+            cached = cache_key in similarity_service._similarity_cache
 
             # Convert to response models
             similar_predicates = []
@@ -719,9 +733,29 @@ def find_similar_predicates(
                 cached=cached
             )
 
+    except ValueError as e:
+        # Handle validation errors from service
+        logger.warning(f"Validation error in find_similar_predicates: {e}")
+        raise HTTPException(
+            status_code=400,
+            detail=f"Validation error: {str(e)}"
+        )
     except Exception as e:
-        logger.error(f"Failed to find similar predicates: {e}", exc_info=True)
-        raise HTTPException(status_code=500, detail=str(e))
+        error_context = {
+            "predicate_id": id,
+            "predicate_title": predicate.title if predicate else "unknown",
+            "source": source,
+            "limit": limit,
+            "threshold": threshold
+        }
+        logger.error(
+            f"Failed to find similar predicates: {e}. Context: {error_context}",
+            exc_info=True
+        )
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to find similar predicates: {str(e)}. Please check logs for details."
+        )
 
 
 @router.post("/cluster-predicates", response_model=ClusterPredicatesResponse)
@@ -730,6 +764,7 @@ def cluster_predicates(
     min_similarity: float = Query(0.7, ge=0.0, le=1.0),
     min_cluster_size: int = Query(2, ge=2),
     eps: float = Query(0.3, ge=0.1, le=1.0, description="DBSCAN epsilon (distance threshold)"),
+    max_predicates: int = Query(1000, ge=1, le=10000, description="Maximum predicates to process"),
     db: Session = Depends(get_db)
 ):
     """
@@ -746,11 +781,16 @@ def cluster_predicates(
     - Handles noise points (outliers)
     - Does not require specifying cluster count in advance
 
+    **Resource limits:**
+    - Default max_predicates: 1000 (to prevent resource exhaustion)
+    - For larger datasets, process in batches or increase max_predicates
+
     Args:
         predicate_ids: Optional list of specific predicate IDs to cluster
         min_similarity: Minimum similarity for cluster membership (default: 0.7)
         min_cluster_size: Minimum predicates per cluster (default: 2)
         eps: DBSCAN epsilon parameter - lower values create tighter clusters (default: 0.3)
+        max_predicates: Maximum predicates to process (default: 1000, max: 10000)
 
     Returns:
         ClusterPredicatesResponse with clusters and statistics
@@ -763,31 +803,52 @@ def cluster_predicates(
     start_time = time.perf_counter()
 
     try:
-        # Get predicates
+        # Get predicates with explicit session management
         if predicate_ids:
             # Validate UUID formats
             for pred_id in predicate_ids:
                 if not validate_uuid_format(pred_id):
                     raise HTTPException(
                         status_code=400,
-                        detail=f"Invalid UUID format: {pred_id}"
+                        detail=f"Invalid UUID format for predicate ID: '{pred_id}'. Expected format: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
                     )
 
             # Get specified predicates
-            predicates = db.query(models.Predicate).filter(
-                models.Predicate.id.in_(predicate_ids)
-            ).all()
+            try:
+                predicates = db.query(models.Predicate).filter(
+                    models.Predicate.id.in_(predicate_ids)
+                ).all()
+            except Exception as e:
+                logger.error(f"Database error while fetching predicates: {e}", exc_info=True)
+                raise HTTPException(
+                    status_code=500,
+                    detail=f"Database error while fetching predicates: {str(e)}"
+                )
 
             if len(predicates) != len(predicate_ids):
                 found_ids = {p.id for p in predicates}
                 missing_ids = set(predicate_ids) - found_ids
                 raise HTTPException(
                     status_code=404,
-                    detail=f"Predicates not found: {list(missing_ids)}"
+                    detail=f"Predicates not found with IDs: {list(missing_ids)[:10]}"  # Limit to 10 for readability
                 )
         else:
-            # Get all predicates
-            predicates = db.query(models.Predicate).all()
+            # Get all predicates (limit to max_predicates for safety)
+            try:
+                predicates = db.query(models.Predicate).limit(max_predicates + 1).all()
+            except Exception as e:
+                logger.error(f"Database error while fetching all predicates: {e}", exc_info=True)
+                raise HTTPException(
+                    status_code=500,
+                    detail=f"Database error while fetching predicates: {str(e)}"
+                )
+
+            if len(predicates) > max_predicates:
+                raise HTTPException(
+                    status_code=400,
+                    detail=f"Too many predicates to cluster: {len(predicates)} (max: {max_predicates}). "
+                           f"Please specify predicate_ids or increase max_predicates parameter."
+                )
 
         if len(predicates) < min_cluster_size:
             raise HTTPException(
@@ -810,7 +871,8 @@ def cluster_predicates(
                 predicates=predicate_data,
                 min_similarity=min_similarity,
                 min_cluster_size=min_cluster_size,
-                eps=eps
+                eps=eps,
+                max_predicates=max_predicates
             )
 
             # Convert to response models
@@ -838,9 +900,29 @@ def cluster_predicates(
 
     except HTTPException:
         raise
+    except ValueError as e:
+        # Handle validation errors from service
+        logger.warning(f"Validation error in cluster_predicates: {e}")
+        raise HTTPException(
+            status_code=400,
+            detail=f"Validation error: {str(e)}"
+        )
     except Exception as e:
-        logger.error(f"Failed to cluster predicates: {e}", exc_info=True)
-        raise HTTPException(status_code=500, detail=str(e))
+        error_context = {
+            "predicate_count": len(predicate_ids) if predicate_ids else "all",
+            "min_similarity": min_similarity,
+            "min_cluster_size": min_cluster_size,
+            "eps": eps,
+            "max_predicates": max_predicates
+        }
+        logger.error(
+            f"Failed to cluster predicates: {e}. Context: {error_context}",
+            exc_info=True
+        )
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to cluster predicates: {str(e)}. Please check logs for details."
+        )
 
 
 @router.post("/invalidate-similarity-cache", status_code=200)
@@ -851,8 +933,13 @@ def invalidate_similarity_cache():
     This should be called when external predicates are updated to ensure
     fresh results in similarity searches.
 
+    **Use cases:**
+    - After running predicate discovery
+    - After updating external predicate definitions
+    - When stale cache results are suspected
+
     Returns:
-        Success message
+        Success message with cache statistics
     """
     from services.predicate_similarity import PredicateSimilarityService
     from reference_db.manager import ReferenceManager
@@ -862,10 +949,22 @@ def invalidate_similarity_cache():
         ref_config = ReferenceConfig()
         with ReferenceManager(ref_config) as manager:
             similarity_service = PredicateSimilarityService(manager)
+
+            # Get cache stats before invalidation
+            cache_stats_before = similarity_service.get_cache_stats()
+
+            # Invalidate cache
             similarity_service.invalidate_cache()
 
-        return {"success": True, "message": "Similarity search cache invalidated"}
+            return {
+                "success": True,
+                "message": "Similarity search cache invalidated successfully",
+                "cache_entries_cleared": cache_stats_before["size"]
+            }
 
     except Exception as e:
         logger.error(f"Failed to invalidate cache: {e}", exc_info=True)
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to invalidate similarity cache: {str(e)}"
+        )
