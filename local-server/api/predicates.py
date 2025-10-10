@@ -310,8 +310,6 @@ def get_predicate_by_identifier(identifier: str, db: Session = Depends(get_db)):
     return to_predicate_out(predicate)
 
 
-# Audit History Endpoint (Phase 5)
-
 # ConceptNet Integration Endpoints
 @router.get("/conceptnet-relations", response_model=List[str])
 def get_conceptnet_relations():

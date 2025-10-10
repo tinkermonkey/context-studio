@@ -205,6 +205,15 @@ The valuable business logic was preserved:
 4. `/local-server/tests/integration_tests/test_mapping_crud.py`
 5. `/local-server/tests/unit_tests/test_transaction_utils.py`
 
+## AuditLog Models Removed
+
+There were **two separate AuditLog models** in the codebase, both unused and redundant:
+
+1. **`database.models.AuditLog`** - Removed from main database models
+2. **`operations.models.AuditLog`** - Removed from operations database models
+
+Both have been replaced by the superior `ChangeEvent` system which is already integrated throughout the codebase.
+
 ## Conclusion
 
 This simplification removes approximately **1,000+ lines of over-engineered infrastructure** that was solving problems that don't actually exist in this system. The predicates API now follows the same simple, proven patterns used throughout the rest of the codebase while maintaining all valuable business logic validation.

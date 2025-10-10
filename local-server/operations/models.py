@@ -1,11 +1,13 @@
 """
 Operations Database Models
 
-These models are for operational data (audit logs, task management, etc.)
+These models are for operational data (task management, LLM traceability, etc.)
 stored in the operations.db database, separate from dataset data.
 
 Schema is automatically managed - no manual migrations needed.
 SQLAlchemy's metadata.create_all() handles schema updates automatically.
+
+Note: For change tracking, use the ChangeEvent model in database.models instead.
 """
 
 from sqlalchemy import Column, String, Text, Integer, DateTime, Boolean
@@ -14,30 +16,6 @@ import datetime
 
 # Separate base for operations database
 OperationsBase = declarative_base()
-
-
-class AuditLog(OperationsBase):
-    """
-    Audit log for tracking changes to critical entities.
-    
-    Tracks who changed what, when, and what the changes were.
-    Used for compliance, debugging, and change tracking.
-    """
-
-    __tablename__ = "audit_logs"
-
-    id = Column(Integer, primary_key=True, autoincrement=True)
-    entity_type = Column(String, nullable=False, index=True)  # e.g., "predicate", "structure_node"
-    entity_id = Column(String, nullable=False, index=True)  # ID of the affected entity
-    action = Column(String, nullable=False)  # create, update, delete
-    user_id = Column(String, nullable=True)  # Optional user ID (may not have auth)
-    old_value = Column(Text, nullable=True)  # Previous state as JSON string (for updates/deletes)
-    new_value = Column(Text, nullable=True)  # New state as JSON string (for creates/updates)
-    timestamp = Column(DateTime, default=lambda: datetime.datetime.now(datetime.UTC), nullable=False, index=True)
-    execution_time_ms = Column(Integer, nullable=True)  # Time taken for operation
-
-    def __repr__(self):
-        return f"<AuditLog(entity_type='{self.entity_type}', entity_id='{self.entity_id}', action='{self.action}')>"
 
 
 class PipelineFlavor(OperationsBase):
