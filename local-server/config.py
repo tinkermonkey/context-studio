@@ -50,7 +50,7 @@ class DatabaseConfig(BaseModel):
     default_dataset_filename: str = Field(default="default.db", description="Default dataset filename")
     reference_path: str = Field(default="./datafiles/reference.db", description="Reference database path (multi-source knowledge graph)")
     reference_cache_path: str = Field(default="./datafiles/reference_api_cache.db", description="Reference API cache database path")
-    pipeline_path: str = Field(default="./datafiles/pipeline.db", description="Pipeline database path")
+    operations_path: str = Field(default="./datafiles/operations.db", description="Operations database path (pipeline configs, audit logs, task management)")
     check_same_thread: bool = Field(default=False, description="SQLite check_same_thread setting")
     pool_timeout: int = Field(default=30, ge=1, description="Database pool timeout seconds")
     

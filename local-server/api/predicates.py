@@ -21,7 +21,6 @@ from database.transaction_utils import (
 )
 from database.mapping_validation import validate_mapping, validate_mapping_json
 from database.input_validation import sanitize_user_input, validate_identifier, MAX_TITLE_LENGTH
-from api.auth_dependencies import get_current_user, get_optional_user, UserContext
 from config import get_settings, get_config_manager
 from api.api_errors import validation_error_response, conflict_error_response, bad_request_error_response
 from utils.logger import get_logger
@@ -201,18 +200,16 @@ def list_predicates(
 def update_predicate(
     id: str,
     predicate: PredicateUpdate,
-    current_user: UserContext = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
     """
     Update an existing predicate with ACID transaction guarantees.
 
     This endpoint implements:
-    - User authentication for audit trail
     - Input sanitization for defense in depth
     - Optimistic locking for concurrent updates
     - JSON schema validation for mappings
-    - Audit logging for all changes with user tracking
+    - Audit logging for all changes
     - Cache invalidation after successful update
 
     Performance target: <100ms (PT-MAP-001)
@@ -328,7 +325,7 @@ def update_predicate(
             tx_session.flush()
             execution_time_ms = int((time.perf_counter() - start_time) * 1000)
 
-            # Create audit log with user tracking
+            # Create audit log
             create_audit_log(
                 tx_session,
                 entity_type="predicate",
@@ -336,7 +333,6 @@ def update_predicate(
                 action="update",
                 old_value=old_values,
                 new_value=new_values,
-                user_id=current_user.user_id,
                 execution_time_ms=execution_time_ms
             )
 
