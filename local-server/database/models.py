@@ -44,7 +44,6 @@ class Predicate(Base):
     definition = Column(Text, nullable=True)
     mapping = Column(Text, nullable=True)  # JSON string
     is_relevant = Column(Boolean, nullable=True)  # None=not evaluated, True=relevant, False=irrelevant
-    version = Column(Integer, nullable=False, default=1)  # For optimistic locking
     date_created = Column(DateTime, default=lambda: datetime.datetime.now(datetime.UTC))
     date_modified = Column(
         DateTime,
@@ -125,19 +124,3 @@ class ChangeEvent(Base):
 
 # Legacy alias for backwards compatibility during transition
 NodeEvent = ChangeEvent
-
-
-class AuditLog(Base):
-    """Audit log for tracking changes to critical entities."""
-
-    __tablename__ = "audit_logs"
-
-    id = Column(Integer, primary_key=True, autoincrement=True)
-    entity_type = Column(String, nullable=False)  # e.g., "predicate"
-    entity_id = Column(String, nullable=False)  # ID of the affected entity
-    action = Column(String, nullable=False)  # create, update, delete
-    user_id = Column(String, nullable=True)  # Optional user ID
-    old_value = Column(Text, nullable=True)  # Previous state as JSON string (for updates/deletes)
-    new_value = Column(Text, nullable=True)  # New state as JSON string (for creates/updates)
-    timestamp = Column(DateTime, default=lambda: datetime.datetime.now(datetime.UTC), nullable=False)
-    execution_time_ms = Column(Integer, nullable=True)  # Time taken for operation
