@@ -79,10 +79,10 @@ def create_app(dataset_id=None, engine=None, session_local=None, service_factory
             init_db(engine=engine or get_current_engine())
             logger.info("Database initialized.")
             
-            # Initialize pipeline database (independent of datasets)
-            logger.info("Initializing pipeline database...")
-            pipeline_db_manager = get_pipeline_database_manager()
-            logger.info("Pipeline database initialized.")
+            # Initialize operations database (independent of datasets)
+            logger.info("Initializing operations database...")
+            operations_db_manager = get_pipeline_database_manager()
+            logger.info("Operations database initialized.")
             
             # Run migrations to ensure schema is up to date
             active_dataset = dataset_manager.get_active_dataset()

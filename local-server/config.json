@@ -14,7 +14,7 @@
     "default_dataset_filename": "default.db",
     "reference_path": "./datafiles/reference.db",
     "reference_cache_path": "./datafiles/reference_api_cache.db",
-    "pipeline_path": "./datafiles/pipeline.db",
+    "operations_path": "./datafiles/operations.db",
     "check_same_thread": true,
     "pool_timeout": 30
   },

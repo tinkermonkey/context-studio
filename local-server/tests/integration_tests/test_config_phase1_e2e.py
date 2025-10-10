@@ -31,7 +31,7 @@ class TestApplicationStartupE2E:
                 'default_url': 'sqlite:///:memory:',
                 'reference_path': ':memory:',
                 'reference_cache_path': ':memory:',
-                'pipeline_path': ':memory:'
+                'operations_path': ':memory:'
             }
         }
 
@@ -78,7 +78,7 @@ class TestApplicationStartupE2E:
                     'default_url': f'sqlite:///{db_dir}/local.db',
                     'reference_path': f'{db_dir}/reference.db',
                     'reference_cache_path': f'{db_dir}/cache.db',
-                    'pipeline_path': f'{db_dir}/pipeline.db'
+                    'operations_path': f'{db_dir}/operations.db'
                 }
             }
 
@@ -119,7 +119,7 @@ class TestApplicationStartupE2E:
                     'schema_org_path': './old_schema.db',  # Deprecated
                     'reference_path': './reference.db',
                     'reference_cache_path': './cache.db',
-                    'pipeline_path': './pipeline.db'
+                    'operations_path': './operations.db'
                 }
             }
 
@@ -154,7 +154,7 @@ class TestApplicationStartupE2E:
             assert db_config.default_url
             assert db_config.reference_path
             assert db_config.reference_cache_path
-            assert db_config.pipeline_path
+            assert db_config.operations_path
 
     def test_multi_user_config_scenario(self):
         """Test scenario with multiple config files (e.g., dev, staging, prod)"""
@@ -170,7 +170,7 @@ class TestApplicationStartupE2E:
                         'default_url': f'sqlite:///./local_{env}.db',
                         'reference_path': f'./reference_{env}.db',
                         'reference_cache_path': f'./cache_{env}.db',
-                        'pipeline_path': f'./pipeline_{env}.db'
+                        'operations_path': f'./pipeline_{env}.db'
                     }
                 }
 
@@ -218,7 +218,7 @@ class TestApplicationStartupE2E:
                     'default_url': test_case['url'],
                     'reference_path': ':memory:',
                     'reference_cache_path': ':memory:',
-                    'pipeline_path': ':memory:'
+                    'operations_path': ':memory:'
                 }
             }
 
@@ -242,7 +242,7 @@ class TestApplicationStartupE2E:
                     'default_url': 'sqlite:///./local.db',
                     'reference_path': './reference.db',
                     'reference_cache_path': './cache.db',
-                    'pipeline_path': './pipeline.db'
+                    'operations_path': './operations.db'
                 }
             }
 
@@ -280,7 +280,7 @@ class TestApplicationStartupE2E:
                     'default_url': 'sqlite:///./original.db',
                     'reference_path': './original_ref.db',
                     'reference_cache_path': './original_cache.db',
-                    'pipeline_path': './original_pipeline.db'
+                    'operations_path': './original_pipeline.db'
                 }
             }
 
@@ -320,7 +320,7 @@ class TestApplicationStartupE2E:
                     'default_url': 'sqlite:///./test.db',
                     'reference_path': './reference.db',
                     'reference_cache_path': './cache.db',
-                    'pipeline_path': './pipeline.db'
+                    'operations_path': './operations.db'
                 }
             }
 
@@ -367,7 +367,7 @@ class TestApplicationStartupE2E:
                     'default_url': 'sqlite:///./local.db',
                     'reference_path': './reference.db',
                     'reference_cache_path': './cache.db',
-                    'pipeline_path': './pipeline.db'
+                    'operations_path': './operations.db'
                 }
             }
 

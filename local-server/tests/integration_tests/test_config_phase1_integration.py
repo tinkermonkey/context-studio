@@ -39,7 +39,7 @@ class TestConfigDatabaseIntegration:
                 'default_url': 'sqlite:///:memory:',  # Use in-memory for test
                 'reference_path': ':memory:',
                 'reference_cache_path': ':memory:',
-                'pipeline_path': ':memory:'
+                'operations_path': ':memory:'
             }
         }
 
@@ -68,7 +68,7 @@ class TestConfigDatabaseIntegration:
                     'default_url': f'sqlite:///{tmpdir}/local.db',
                     'reference_path': ref_db_path,
                     'reference_cache_path': f'{tmpdir}/cache.db',
-                    'pipeline_path': f'{tmpdir}/pipeline.db'
+                    'operations_path': f'{tmpdir}/operations.db'
                 }
             }
 
@@ -106,7 +106,7 @@ class TestConfigDatabaseIntegration:
                     'default_url': 'sqlite:///./test.db',
                     'reference_path': './reference.db',
                     'reference_cache_path': './cache.db',
-                    'pipeline_path': './pipeline.db'
+                    'operations_path': './operations.db'
                 }
             }
 
@@ -144,7 +144,7 @@ class TestConfigDatabaseIntegration:
                     'schema_org_path': './old_schema.db',  # Deprecated
                     'reference_path': './reference.db',
                     'reference_cache_path': './cache.db',
-                    'pipeline_path': './pipeline.db'
+                    'operations_path': './operations.db'
                 }
             }
 
@@ -182,7 +182,7 @@ class TestConfigDatabaseIntegration:
                     'default_url': 'sqlite:///./db1.db',
                     'reference_path': './ref1.db',
                     'reference_cache_path': './cache1.db',
-                    'pipeline_path': './pipeline1.db'
+                    'operations_path': './pipeline1.db'
                 }
             }
 
@@ -191,7 +191,7 @@ class TestConfigDatabaseIntegration:
                     'default_url': 'sqlite:///./db2.db',
                     'reference_path': './ref2.db',
                     'reference_cache_path': './cache2.db',
-                    'pipeline_path': './pipeline2.db'
+                    'operations_path': './pipeline2.db'
                 }
             }
 
@@ -224,7 +224,7 @@ class TestConfigDatabaseIntegration:
                     'default_url': f'sqlite:///{db_dir}/local.db',
                     'reference_path': f'{db_dir}/reference.db',
                     'reference_cache_path': f'{db_dir}/cache.db',
-                    'pipeline_path': f'{db_dir}/pipeline.db'
+                    'operations_path': f'{db_dir}/operations.db'
                 }
             }
 
@@ -245,7 +245,7 @@ class TestConfigDatabaseIntegration:
             for db_path in [
                 config_manager.settings.database.reference_path,
                 config_manager.settings.database.reference_cache_path,
-                config_manager.settings.database.pipeline_path
+                config_manager.settings.database.operations_path
             ]:
                 # Create database
                 conn = sqlite3.connect(db_path)
@@ -284,7 +284,7 @@ class TestConfigDatabaseIntegration:
                     'default_url': 'sqlite:///./local.db',
                     'reference_path': os.environ.get('TEST_DB_PATH', './default.db'),
                     'reference_cache_path': './cache.db',
-                    'pipeline_path': './pipeline.db'
+                    'operations_path': './operations.db'
                 }
             }
 

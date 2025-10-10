@@ -36,7 +36,7 @@ class TestFreshInstallationE2E:
                     'default_url': f'sqlite:///{datafiles_dir}/local.db',
                     'reference_path': f'{datafiles_dir}/reference.db',
                     'reference_cache_path': f'{datafiles_dir}/cache.db',
-                    'pipeline_path': f'{datafiles_dir}/pipeline.db'
+                    'operations_path': f'{datafiles_dir}/operations.db'
                 }
             }
 
@@ -55,7 +55,7 @@ class TestFreshInstallationE2E:
 
             # Initialize pipeline manager
             pipeline_mgr = PipelineDatabaseManager(
-                pipeline_db_path=config_manager.settings.database.pipeline_path
+                operations_db_path=config_manager.settings.database.operations_path
             )
 
             # Step 4: Verify directory was created automatically
@@ -69,11 +69,11 @@ class TestFreshInstallationE2E:
             )
 
             # Step 5: Verify all databases were created
-            assert os.path.exists(config_manager.settings.database.pipeline_path)
+            assert os.path.exists(config_manager.settings.database.operations_path)
             assert os.path.exists(config_manager.settings.database.reference_path)
 
             # Step 6: Perform actual database operations
-            # Test pipeline database operations
+            # Test operations database operations
             from pipeline.models import LLMPipeline
             from sqlalchemy.orm import sessionmaker
 
@@ -113,7 +113,7 @@ class TestFreshInstallationE2E:
 
             # Step 8: Verify application can restart successfully
             pipeline_mgr2 = PipelineDatabaseManager(
-                pipeline_db_path=config_manager.settings.database.pipeline_path
+                operations_db_path=config_manager.settings.database.operations_path
             )
             assert pipeline_mgr2.engine is not None
 
@@ -137,11 +137,11 @@ class TestFreshInstallationE2E:
             from dataset.manager import DatasetManager
 
             # Create managers
-            pipeline_path = os.path.join(datafiles_dir, 'pipeline.db')
+            operations_path = os.path.join(datafiles_dir, 'operations.db')
             reference_path = os.path.join(datafiles_dir, 'reference.db')
             config_path = os.path.join(tmpdir, 'datasets.json')
 
-            pipeline_mgr = PipelineDatabaseManager(pipeline_db_path=pipeline_path)
+            pipeline_mgr = PipelineDatabaseManager(operations_db_path=operations_path)
             ref_config = ReferenceConfig()
             ref_mgr = ReferenceManager(ref_config, db_path=reference_path)
             dataset_mgr = DatasetManager(
@@ -207,19 +207,19 @@ class TestApplicationRestartE2E:
         """Test application restart when directories already exist."""
         with tempfile.TemporaryDirectory() as tmpdir:
             datafiles_dir = os.path.join(tmpdir, 'datafiles')
-            pipeline_path = os.path.join(datafiles_dir, 'pipeline.db')
+            operations_path = os.path.join(datafiles_dir, 'operations.db')
 
             # First startup - creates directory
             from pipeline.manager import PipelineDatabaseManager
 
-            mgr1 = PipelineDatabaseManager(pipeline_db_path=pipeline_path)
+            mgr1 = PipelineDatabaseManager(operations_db_path=operations_path)
             assert os.path.exists(datafiles_dir)
             mgr1.engine.dispose()
 
             # Second startup - directory already exists
-            mgr2 = PipelineDatabaseManager(pipeline_db_path=pipeline_path)
+            mgr2 = PipelineDatabaseManager(operations_db_path=operations_path)
             assert os.path.exists(datafiles_dir)
-            assert os.path.exists(pipeline_path)
+            assert os.path.exists(operations_path)
 
             # Should work without errors
             assert mgr2.engine is not None
@@ -230,14 +230,14 @@ class TestApplicationRestartE2E:
         """Test that application restart preserves existing database data."""
         with tempfile.TemporaryDirectory() as tmpdir:
             datafiles_dir = os.path.join(tmpdir, 'datafiles')
-            pipeline_path = os.path.join(datafiles_dir, 'pipeline.db')
+            operations_path = os.path.join(datafiles_dir, 'operations.db')
 
             from pipeline.manager import PipelineDatabaseManager
             from pipeline.models import LLMPipeline
             from sqlalchemy.orm import sessionmaker
 
             # First startup - create data
-            mgr1 = PipelineDatabaseManager(pipeline_db_path=pipeline_path)
+            mgr1 = PipelineDatabaseManager(operations_db_path=operations_path)
             Session1 = sessionmaker(bind=mgr1.engine)
             session1 = Session1()
 
@@ -253,7 +253,7 @@ class TestApplicationRestartE2E:
             mgr1.engine.dispose()
 
             # Second startup - verify data persists
-            mgr2 = PipelineDatabaseManager(pipeline_db_path=pipeline_path)
+            mgr2 = PipelineDatabaseManager(operations_db_path=operations_path)
             Session2 = sessionmaker(bind=mgr2.engine)
             session2 = Session2()
 
@@ -284,8 +284,8 @@ class TestMigrationScenarioE2E:
             # Now use automated directory creation
             from pipeline.manager import PipelineDatabaseManager
 
-            pipeline_path = os.path.join(datafiles_dir, 'pipeline.db')
-            mgr = PipelineDatabaseManager(pipeline_db_path=pipeline_path)
+            operations_path = os.path.join(datafiles_dir, 'operations.db')
+            mgr = PipelineDatabaseManager(operations_db_path=operations_path)
 
             # Verify existing files are preserved
             assert os.path.exists(marker_file)
@@ -294,7 +294,7 @@ class TestMigrationScenarioE2E:
                 assert content == 'I existed before automated creation'
 
             # Verify new database was created
-            assert os.path.exists(pipeline_path)
+            assert os.path.exists(operations_path)
 
             mgr.engine.dispose()
 
@@ -305,8 +305,8 @@ class TestMigrationScenarioE2E:
             os.makedirs(datafiles_dir, exist_ok=True)
 
             # Create one database manually
-            pipeline_path = os.path.join(datafiles_dir, 'pipeline.db')
-            conn = sqlite3.connect(pipeline_path)
+            operations_path = os.path.join(datafiles_dir, 'operations.db')
+            conn = sqlite3.connect(operations_path)
             conn.execute("CREATE TABLE test (id INTEGER)")
             conn.commit()
             conn.close()
@@ -317,7 +317,7 @@ class TestMigrationScenarioE2E:
             from reference_db.config import ReferenceConfig
 
             # Pipeline manager with existing DB
-            pipeline_mgr = PipelineDatabaseManager(pipeline_db_path=pipeline_path)
+            pipeline_mgr = PipelineDatabaseManager(operations_db_path=operations_path)
             assert pipeline_mgr.engine is not None
 
             # Reference manager creating new DB in same directory
@@ -326,7 +326,7 @@ class TestMigrationScenarioE2E:
             ref_mgr = ReferenceManager(ref_config, db_path=reference_path)
 
             # Verify both databases exist
-            assert os.path.exists(pipeline_path)
+            assert os.path.exists(operations_path)
             assert os.path.exists(reference_path)
 
             # Clean up
@@ -355,7 +355,7 @@ class TestProductionDeploymentE2E:
                     'default_url': f'sqlite:///{datafiles_dir}/local.db',
                     'reference_path': f'{datafiles_dir}/reference.db',
                     'reference_cache_path': f'{datafiles_dir}/cache.db',
-                    'pipeline_path': f'{datafiles_dir}/pipeline.db'
+                    'operations_path': f'{datafiles_dir}/operations.db'
                 }
             }
 
@@ -369,7 +369,7 @@ class TestProductionDeploymentE2E:
             from reference_db.config import ReferenceConfig
 
             pipeline_mgr = PipelineDatabaseManager(
-                pipeline_db_path=config_manager.settings.database.pipeline_path
+                operations_db_path=config_manager.settings.database.operations_path
             )
             ref_config = ReferenceConfig()
             ref_mgr = ReferenceManager(
@@ -379,7 +379,7 @@ class TestProductionDeploymentE2E:
 
             # Verify databases created in volume
             assert os.path.exists(datafiles_dir)
-            assert os.path.exists(config_manager.settings.database.pipeline_path)
+            assert os.path.exists(config_manager.settings.database.operations_path)
             assert os.path.exists(config_manager.settings.database.reference_path)
 
             # Clean up
@@ -400,13 +400,13 @@ class TestProductionDeploymentE2E:
             from pipeline.manager import PipelineDatabaseManager
 
             # Instance 1
-            pipeline1_path = os.path.join(instance1_dir, 'pipeline.db')
-            mgr1 = PipelineDatabaseManager(pipeline_db_path=pipeline1_path)
+            pipeline1_path = os.path.join(instance1_dir, 'operations.db')
+            mgr1 = PipelineDatabaseManager(operations_db_path=pipeline1_path)
             assert os.path.exists(instance1_dir)
 
             # Instance 2
-            pipeline2_path = os.path.join(instance2_dir, 'pipeline.db')
-            mgr2 = PipelineDatabaseManager(pipeline_db_path=pipeline2_path)
+            pipeline2_path = os.path.join(instance2_dir, 'operations.db')
+            mgr2 = PipelineDatabaseManager(operations_db_path=pipeline2_path)
             assert os.path.exists(instance2_dir)
 
             # Verify both instances are independent
@@ -434,7 +434,7 @@ class TestRealWorldWorkflowsE2E:
                     'default_url': f'sqlite:///{datafiles_dir}/local.db',
                     'reference_path': f'{datafiles_dir}/reference.db',
                     'reference_cache_path': f'{datafiles_dir}/cache.db',
-                    'pipeline_path': f'{datafiles_dir}/pipeline.db'
+                    'operations_path': f'{datafiles_dir}/operations.db'
                 }
             }
 
@@ -451,7 +451,7 @@ class TestRealWorldWorkflowsE2E:
             from sqlalchemy.orm import sessionmaker
 
             pipeline_mgr = PipelineDatabaseManager(
-                pipeline_db_path=config_manager.settings.database.pipeline_path
+                operations_db_path=config_manager.settings.database.operations_path
             )
 
             # Directory created automatically
@@ -486,7 +486,7 @@ class TestRealWorldWorkflowsE2E:
 
             # Verify data persists
             pipeline_mgr2 = PipelineDatabaseManager(
-                pipeline_db_path=config_manager.settings.database.pipeline_path
+                operations_db_path=config_manager.settings.database.operations_path
             )
             Session2 = sessionmaker(bind=pipeline_mgr2.engine)
             session2 = Session2()
@@ -510,8 +510,8 @@ class TestRealWorldWorkflowsE2E:
             from sqlalchemy.orm import sessionmaker
 
             # Create original data
-            original_path = os.path.join(original_dir, 'pipeline.db')
-            mgr1 = PipelineDatabaseManager(pipeline_db_path=original_path)
+            original_path = os.path.join(original_dir, 'operations.db')
+            mgr1 = PipelineDatabaseManager(operations_db_path=original_path)
             Session1 = sessionmaker(bind=mgr1.engine)
             session1 = Session1()
 
@@ -532,17 +532,17 @@ class TestRealWorldWorkflowsE2E:
             assert not os.path.exists(recovery_dir)
 
             # Initialize new instance (creates directory)
-            recovery_path = os.path.join(recovery_dir, 'pipeline.db')
-            mgr2 = PipelineDatabaseManager(pipeline_db_path=recovery_path)
+            recovery_path = os.path.join(recovery_dir, 'operations.db')
+            mgr2 = PipelineDatabaseManager(operations_db_path=recovery_path)
             mgr2.engine.dispose()
 
             # Restore from backup
-            restored_path = os.path.join(recovery_dir, 'pipeline.db')
-            backup_db_path = os.path.join(backup_dir, 'pipeline.db')
+            restored_path = os.path.join(recovery_dir, 'operations.db')
+            backup_db_path = os.path.join(backup_dir, 'operations.db')
             shutil.copy(backup_db_path, restored_path)
 
             # Verify recovery
-            mgr3 = PipelineDatabaseManager(pipeline_db_path=restored_path)
+            mgr3 = PipelineDatabaseManager(operations_db_path=restored_path)
             Session3 = sessionmaker(bind=mgr3.engine)
             session3 = Session3()
 
@@ -565,7 +565,7 @@ class TestRealWorldWorkflowsE2E:
                     'default_url': f'sqlite:///{old_datafiles}/local.db',
                     'reference_path': f'{old_datafiles}/reference.db',
                     'reference_cache_path': f'{old_datafiles}/cache.db',
-                    'pipeline_path': f'{old_datafiles}/pipeline.db'
+                    'operations_path': f'{old_datafiles}/operations.db'
                 }
             }
 
@@ -576,26 +576,26 @@ class TestRealWorldWorkflowsE2E:
             # Create initial database
             from pipeline.manager import PipelineDatabaseManager
 
-            old_pipeline_path = config_manager.settings.database.pipeline_path
-            mgr1 = PipelineDatabaseManager(pipeline_db_path=old_pipeline_path)
+            old_operations_path = config_manager.settings.database.operations_path
+            mgr1 = PipelineDatabaseManager(operations_db_path=old_operations_path)
             assert os.path.exists(old_datafiles)
             mgr1.engine.dispose()
 
             # User changes configuration to new path
             new_datafiles = os.path.join(tmpdir, 'new_datafiles')
-            config_manager.settings.database.pipeline_path = f'{new_datafiles}/pipeline.db'
+            config_manager.settings.database.operations_path = f'{new_datafiles}/operations.db'
             config_manager.save()
 
             # Verify new directory doesn't exist yet
             assert not os.path.exists(new_datafiles)
 
             # Application restarts with new config
-            new_pipeline_path = config_manager.settings.database.pipeline_path
-            mgr2 = PipelineDatabaseManager(pipeline_db_path=new_pipeline_path)
+            new_operations_path = config_manager.settings.database.operations_path
+            mgr2 = PipelineDatabaseManager(operations_db_path=new_operations_path)
 
             # New directory should be created automatically
             assert os.path.exists(new_datafiles)
-            assert os.path.exists(new_pipeline_path)
+            assert os.path.exists(new_operations_path)
 
             # Old directory still exists (user must manually migrate)
             assert os.path.exists(old_datafiles)

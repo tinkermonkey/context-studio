@@ -94,13 +94,13 @@ class OperationsDatabaseManager:
     def get_session(self):
         """Get a database session for pipeline operations."""
         if not self.session_local:
-            raise RuntimeError("Pipeline database not initialized")
+            raise RuntimeError("Operations database not initialized")
         return self.session_local()
     
     def get_engine(self):
         """Get the database engine for pipeline operations."""
         if not self.engine:
-            raise RuntimeError("Pipeline database not initialized")
+            raise RuntimeError("Operations database not initialized")
         return self.engine
 
 
@@ -118,12 +118,12 @@ def get_operations_database_manager() -> OperationsDatabaseManager:
 
 # Backward compatibility aliases
 PipelineDatabaseManager = OperationsDatabaseManager
-_pipeline_db_manager = None
+_operations_db_manager = None
 
 
 def get_pipeline_database_manager() -> OperationsDatabaseManager:
     """
-    Get the global pipeline database manager instance.
+    Get the global operations database manager instance.
     
     DEPRECATED: Use get_operations_database_manager() instead.
     Kept for backward compatibility.

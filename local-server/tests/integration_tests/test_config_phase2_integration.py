@@ -32,7 +32,7 @@ class TestDatabaseManagerDirectoryIntegration:
                     'default_url': f'sqlite:///{tmpdir}/datafiles/local.db',
                     'reference_path': f'{tmpdir}/datafiles/reference.db',
                     'reference_cache_path': f'{tmpdir}/datafiles/cache.db',
-                    'pipeline_path': f'{tmpdir}/datafiles/pipeline.db'
+                    'operations_path': f'{tmpdir}/datafiles/operations.db'
                 }
             }
 
@@ -48,15 +48,15 @@ class TestDatabaseManagerDirectoryIntegration:
             # Initialize pipeline manager with config path
             from pipeline.manager import PipelineDatabaseManager
 
-            pipeline_path = config_manager.settings.database.pipeline_path
-            manager = PipelineDatabaseManager(pipeline_db_path=pipeline_path)
+            operations_path = config_manager.settings.database.operations_path
+            manager = PipelineDatabaseManager(operations_db_path=operations_path)
 
             # Verify directory was created
             assert os.path.exists(datafiles_dir)
             assert os.path.isdir(datafiles_dir)
 
             # Verify database file exists
-            assert os.path.exists(pipeline_path)
+            assert os.path.exists(operations_path)
 
             # Verify we can interact with the database
             from pipeline.models import Base
@@ -74,7 +74,7 @@ class TestDatabaseManagerDirectoryIntegration:
                     'default_url': f'sqlite:///{tmpdir}/datafiles/local.db',
                     'reference_path': f'{tmpdir}/datafiles/reference.db',
                     'reference_cache_path': f'{tmpdir}/datafiles/cache.db',
-                    'pipeline_path': f'{tmpdir}/datafiles/pipeline.db'
+                    'operations_path': f'{tmpdir}/datafiles/operations.db'
                 }
             }
 
@@ -123,11 +123,11 @@ class TestDatabaseManagerDirectoryIntegration:
             from reference_db.manager import ReferenceManager
             from reference_db.config import ReferenceConfig
 
-            pipeline_path = os.path.join(datafiles_dir, 'pipeline.db')
+            operations_path = os.path.join(datafiles_dir, 'operations.db')
             reference_path = os.path.join(datafiles_dir, 'reference.db')
 
             # Initialize pipeline manager (creates directory)
-            pipeline_mgr = PipelineDatabaseManager(pipeline_db_path=pipeline_path)
+            pipeline_mgr = PipelineDatabaseManager(operations_db_path=operations_path)
             assert os.path.exists(datafiles_dir)
 
             # Initialize reference manager (directory already exists)
@@ -135,7 +135,7 @@ class TestDatabaseManagerDirectoryIntegration:
             reference_mgr = ReferenceManager(ref_config, db_path=reference_path)
 
             # Verify both databases exist
-            assert os.path.exists(pipeline_path)
+            assert os.path.exists(operations_path)
             assert os.path.exists(reference_path)
 
             # Verify both managers are functional
@@ -192,14 +192,14 @@ class TestDirectoryCreationWithFileSystemOperations:
         """Test that managers can create nested directory structures."""
         with tempfile.TemporaryDirectory() as tmpdir:
             # Use nested path structure
-            nested_path = os.path.join(tmpdir, 'app', 'data', 'datafiles', 'pipeline.db')
+            nested_path = os.path.join(tmpdir, 'app', 'data', 'datafiles', 'operations.db')
 
             # Ensure parent directories don't exist
             assert not os.path.exists(os.path.dirname(nested_path))
 
             from pipeline.manager import PipelineDatabaseManager
 
-            manager = PipelineDatabaseManager(pipeline_db_path=nested_path)
+            manager = PipelineDatabaseManager(operations_db_path=nested_path)
 
             # Verify full path was created
             assert os.path.exists(os.path.dirname(nested_path))
@@ -219,11 +219,11 @@ class TestDirectoryCreationWithFileSystemOperations:
                 os.chdir(tmpdir)
 
                 # Use relative path
-                relative_path = './datafiles/pipeline.db'
+                relative_path = './datafiles/operations.db'
 
                 from pipeline.manager import PipelineDatabaseManager
 
-                manager = PipelineDatabaseManager(pipeline_db_path=relative_path)
+                manager = PipelineDatabaseManager(operations_db_path=relative_path)
 
                 # Verify directory was created in current directory
                 assert os.path.exists('./datafiles')
@@ -240,11 +240,11 @@ class TestDirectoryCreationWithFileSystemOperations:
         """Test that created directories have appropriate permissions."""
         with tempfile.TemporaryDirectory() as tmpdir:
             datafiles_dir = os.path.join(tmpdir, 'datafiles')
-            db_path = os.path.join(datafiles_dir, 'pipeline.db')
+            db_path = os.path.join(datafiles_dir, 'operations.db')
 
             from pipeline.manager import PipelineDatabaseManager
 
-            manager = PipelineDatabaseManager(pipeline_db_path=db_path)
+            manager = PipelineDatabaseManager(operations_db_path=db_path)
 
             # Check directory permissions
             dir_stat = os.stat(datafiles_dir)
@@ -277,7 +277,7 @@ class TestDirectoryCreationWithFileSystemOperations:
                 try:
                     from pipeline.manager import PipelineDatabaseManager
                     db_path = os.path.join(datafiles_dir, db_name)
-                    mgr = PipelineDatabaseManager(pipeline_db_path=db_path)
+                    mgr = PipelineDatabaseManager(operations_db_path=db_path)
                     managers.append(mgr)
                 except Exception as e:
                     errors.append(str(e))
@@ -314,7 +314,7 @@ class TestManagerInitializationSequencing:
         """Test that PipelineDatabaseManager creates directory before database initialization."""
         with tempfile.TemporaryDirectory() as tmpdir:
             datafiles_dir = os.path.join(tmpdir, 'datafiles')
-            db_path = os.path.join(datafiles_dir, 'pipeline.db')
+            db_path = os.path.join(datafiles_dir, 'operations.db')
 
             # Track when directory was created
             creation_sequence = []
@@ -337,7 +337,7 @@ class TestManagerInitializationSequencing:
                 with patch('pipeline.manager.create_engine', side_effect=tracked_create_engine):
                     from pipeline.manager import PipelineDatabaseManager
 
-                    manager = PipelineDatabaseManager(pipeline_db_path=db_path)
+                    manager = PipelineDatabaseManager(operations_db_path=db_path)
 
                     # Verify makedirs was called before create_engine
                     if 'makedirs' in creation_sequence and 'create_engine' in creation_sequence:
@@ -385,7 +385,7 @@ class TestFreshInstallationScenarios:
                     'default_url': f'sqlite:///{tmpdir}/datafiles/local.db',
                     'reference_path': f'{tmpdir}/datafiles/reference.db',
                     'reference_cache_path': f'{tmpdir}/datafiles/cache.db',
-                    'pipeline_path': f'{tmpdir}/datafiles/pipeline.db'
+                    'operations_path': f'{tmpdir}/datafiles/operations.db'
                 }
             }
 
@@ -405,7 +405,7 @@ class TestFreshInstallationScenarios:
 
             # Start pipeline manager
             pipeline_mgr = PipelineDatabaseManager(
-                pipeline_db_path=config_manager.settings.database.pipeline_path
+                operations_db_path=config_manager.settings.database.operations_path
             )
 
             # Verify directory was created
@@ -419,7 +419,7 @@ class TestFreshInstallationScenarios:
             )
 
             # Verify all databases exist
-            assert os.path.exists(config_manager.settings.database.pipeline_path)
+            assert os.path.exists(config_manager.settings.database.operations_path)
             assert os.path.exists(config_manager.settings.database.reference_path)
 
             # Verify managers are functional
@@ -442,21 +442,21 @@ class TestFreshInstallationScenarios:
             from reference_db.manager import ReferenceManager
             from reference_db.config import ReferenceConfig
 
-            pipeline_path = os.path.join(datafiles_dir, 'pipeline.db')
+            operations_path = os.path.join(datafiles_dir, 'operations.db')
             reference_path = os.path.join(datafiles_dir, 'reference.db')
 
             # Create managers
-            pipeline_mgr = PipelineDatabaseManager(pipeline_db_path=pipeline_path)
+            pipeline_mgr = PipelineDatabaseManager(operations_db_path=operations_path)
             ref_config = ReferenceConfig()
             ref_mgr = ReferenceManager(ref_config, db_path=reference_path)
 
             # Verify databases are valid SQLite files
-            # Check pipeline database
-            pipeline_conn = sqlite3.connect(pipeline_path)
+            # Check operations database
+            pipeline_conn = sqlite3.connect(operations_path)
             pipeline_cursor = pipeline_conn.cursor()
             pipeline_cursor.execute("SELECT name FROM sqlite_master WHERE type='table'")
             pipeline_tables = pipeline_cursor.fetchall()
-            assert len(pipeline_tables) > 0, "Pipeline database should have tables"
+            assert len(pipeline_tables) > 0, "Operations database should have tables"
             pipeline_conn.close()
 
             # Check reference database
@@ -482,7 +482,7 @@ class TestFreshInstallationScenarios:
                     'default_url': f'sqlite:///{custom_dir}/local.db',
                     'reference_path': f'{custom_dir}/reference.db',
                     'reference_cache_path': f'{custom_dir}/cache.db',
-                    'pipeline_path': f'{custom_dir}/pipeline.db'
+                    'operations_path': f'{custom_dir}/operations.db'
                 }
             }
 
@@ -498,12 +498,12 @@ class TestFreshInstallationScenarios:
             from pipeline.manager import PipelineDatabaseManager
 
             pipeline_mgr = PipelineDatabaseManager(
-                pipeline_db_path=config_manager.settings.database.pipeline_path
+                operations_db_path=config_manager.settings.database.operations_path
             )
 
             # Verify entire path was created
             assert os.path.exists(custom_dir)
-            assert os.path.exists(config_manager.settings.database.pipeline_path)
+            assert os.path.exists(config_manager.settings.database.operations_path)
 
             # Clean up
             pipeline_mgr.engine.dispose()
@@ -561,10 +561,10 @@ class TestDatasetManagerDirectoryIntegration:
             from dataset.manager import DatasetManager
 
             # Create both managers
-            pipeline_path = os.path.join(datafiles_dir, 'pipeline.db')
+            operations_path = os.path.join(datafiles_dir, 'operations.db')
             config_path = os.path.join(tmpdir, 'datasets.json')
 
-            pipeline_mgr = PipelineDatabaseManager(pipeline_db_path=pipeline_path)
+            pipeline_mgr = PipelineDatabaseManager(operations_db_path=operations_path)
             dataset_mgr = DatasetManager(
                 datasets_config_path=config_path,
                 datasets_directory=datasets_dir
@@ -586,7 +586,7 @@ class TestErrorHandlingIntegration:
         # Test with None path
         with pytest.raises(Exception):
             from pipeline.manager import PipelineDatabaseManager
-            manager = PipelineDatabaseManager(pipeline_db_path=None)
+            manager = PipelineDatabaseManager(operations_db_path=None)
 
     def test_directory_cleanup_on_error(self):
         """Test that resources are cleaned up properly if initialization fails."""
@@ -596,7 +596,7 @@ class TestErrorHandlingIntegration:
             from pipeline.manager import PipelineDatabaseManager
 
             # Create manager
-            manager = PipelineDatabaseManager(pipeline_db_path=db_path)
+            manager = PipelineDatabaseManager(operations_db_path=db_path)
 
             # Verify database exists
             assert os.path.exists(db_path)
@@ -605,7 +605,7 @@ class TestErrorHandlingIntegration:
             manager.engine.dispose()
 
             # Verify we can create another manager with the same path
-            manager2 = PipelineDatabaseManager(pipeline_db_path=db_path)
+            manager2 = PipelineDatabaseManager(operations_db_path=db_path)
             assert manager2.engine is not None
 
             # Clean up

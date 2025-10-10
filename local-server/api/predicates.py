@@ -6,7 +6,7 @@ import time
 import asyncio
 from fastapi import APIRouter, HTTPException, Query, Depends, BackgroundTasks
 from pydantic import BaseModel, Field, ConfigDict
-from typing import List, Optional, Dict
+from typing import List, Optional, Dict, Any
 from uuid import UUID, uuid4
 from sqlalchemy.orm import Session
 from sqlalchemy.exc import IntegrityError
@@ -397,7 +397,7 @@ class PredicateDiscoveryStatus(BaseModel):
     task_id: str
     status: str  # "pending", "running", "completed", "failed"
     sources: Optional[List[str]] = None
-    results: Optional[Dict[str, Dict[str, any]]] = None
+    results: Optional[Dict[str, Dict[str, Any]]] = None
     error: Optional[str] = None
     started_at: Optional[str] = None
     completed_at: Optional[str] = None
@@ -410,7 +410,7 @@ class ExternalPredicateOut(BaseModel):
     definition: str
     source: str
     external_id: str
-    attributes: Optional[Dict[str, any]] = None
+    attributes: Optional[Dict[str, Any]] = None
     created_at: str
     updated_at: str
 

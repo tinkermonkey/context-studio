@@ -169,9 +169,10 @@ class TestExternalPredicateManager:
                 assert predicate.title == "relatedTo"
                 assert predicate.title_embedding is not None
                 assert predicate.definition_embedding is not None
-                # Verify embeddings have correct size (768 dims * 4 bytes = 3072 bytes)
-                assert len(predicate.title_embedding) == 768 * 4
-                assert len(predicate.definition_embedding) == 768 * 4
+                # Verify embeddings have correct size (384 dims * 4 bytes = 1536 bytes)
+                # all-MiniLM-L6-v2 produces 384-dimensional embeddings
+                assert len(predicate.title_embedding) == 384 * 4
+                assert len(predicate.definition_embedding) == 384 * 4
 
         finally:
             if os.path.exists(db_path):

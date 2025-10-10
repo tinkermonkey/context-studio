@@ -14,14 +14,14 @@ from pathlib import Path
 
 
 class TestPipelineDatabaseManager:
-    """Test datafiles directory creation in pipeline database manager."""
+    """Test datafiles directory creation in operations database manager."""
 
-    def test_pipeline_db_creates_datafiles_directory(self):
+    def test_operations_db_creates_datafiles_directory(self):
         """Test that PipelineDatabaseManager creates /datafiles/ directory if it doesn't exist."""
         with tempfile.TemporaryDirectory() as temp_dir:
-            # Set up pipeline database path in a non-existent datafiles directory
+            # Set up operations database path in a non-existent datafiles directory
             db_dir = os.path.join(temp_dir, "datafiles")
-            db_path = os.path.join(db_dir, "pipeline.db")
+            db_path = os.path.join(db_dir, "operations.db")
 
             # Ensure directory does not exist initially
             assert not os.path.exists(db_dir)
@@ -29,7 +29,7 @@ class TestPipelineDatabaseManager:
             # Import and initialize pipeline manager
             from pipeline.manager import PipelineDatabaseManager
 
-            manager = PipelineDatabaseManager(pipeline_db_path=db_path)
+            manager = PipelineDatabaseManager(operations_db_path=db_path)
 
             # Verify directory was created
             assert os.path.exists(db_dir)
@@ -41,18 +41,18 @@ class TestPipelineDatabaseManager:
             # Clean up
             manager.engine.dispose()
 
-    def test_pipeline_db_handles_existing_directory(self):
+    def test_operations_db_handles_existing_directory(self):
         """Test that PipelineDatabaseManager works when directory already exists."""
         with tempfile.TemporaryDirectory() as temp_dir:
-            # Set up pipeline database path with existing datafiles directory
+            # Set up operations database path with existing datafiles directory
             db_dir = os.path.join(temp_dir, "datafiles")
             os.makedirs(db_dir, exist_ok=True)
-            db_path = os.path.join(db_dir, "pipeline.db")
+            db_path = os.path.join(db_dir, "operations.db")
 
             # Import and initialize pipeline manager
             from pipeline.manager import PipelineDatabaseManager
 
-            manager = PipelineDatabaseManager(pipeline_db_path=db_path)
+            manager = PipelineDatabaseManager(operations_db_path=db_path)
 
             # Verify no errors occurred
             assert os.path.exists(db_dir)
@@ -61,14 +61,14 @@ class TestPipelineDatabaseManager:
             # Clean up
             manager.engine.dispose()
 
-    def test_pipeline_db_uses_config_default_path(self):
+    def test_operations_db_uses_config_default_path(self):
         """Test that PipelineDatabaseManager uses config default path correctly."""
         with tempfile.TemporaryDirectory() as temp_dir:
             # Mock settings to use temp directory
             mock_settings = MagicMock()
-            mock_settings.database.pipeline_path = os.path.join(temp_dir, "datafiles", "pipeline.db")
+            mock_settings.database.operations_path = os.path.join(temp_dir, "datafiles", "operations.db")
 
-            with patch('pipeline.manager.get_settings', return_value=mock_settings):
+            with patch('config.get_settings', return_value=mock_settings):
                 from pipeline.manager import PipelineDatabaseManager
 
                 manager = PipelineDatabaseManager()
@@ -204,7 +204,7 @@ class TestProxyManager:
             mock_settings.get_reference_api_buddy_config.return_value = mock_config
 
             with patch('nlp.proxy_manager.get_settings', return_value=mock_settings):
-                with patch('nlp.proxy_manager.CachingProxy') as mock_proxy_class:
+                with patch('reference_api_buddy.core.proxy.CachingProxy') as mock_proxy_class:
                     # Set up mock proxy instance
                     mock_proxy_instance = MagicMock()
                     mock_proxy_class.return_value = mock_proxy_instance
@@ -245,7 +245,7 @@ class TestProxyManager:
             mock_settings.get_reference_api_buddy_config.return_value = mock_config
 
             with patch('nlp.proxy_manager.get_settings', return_value=mock_settings):
-                with patch('nlp.proxy_manager.CachingProxy') as mock_proxy_class:
+                with patch('reference_api_buddy.core.proxy.CachingProxy') as mock_proxy_class:
                     mock_proxy_instance = MagicMock()
                     mock_proxy_class.return_value = mock_proxy_instance
 
@@ -325,8 +325,8 @@ class TestFreshInstallation:
             from reference_db.config import ReferenceConfig
 
             # Create pipeline manager
-            pipeline_db_path = os.path.join(datafiles_dir, "pipeline.db")
-            pipeline_manager = PipelineDatabaseManager(pipeline_db_path=pipeline_db_path)
+            operations_db_path = os.path.join(datafiles_dir, "operations.db")
+            pipeline_manager = PipelineDatabaseManager(operations_db_path=operations_db_path)
 
             # Verify datafiles directory was created
             assert os.path.exists(datafiles_dir)
@@ -337,7 +337,7 @@ class TestFreshInstallation:
             reference_manager = ReferenceManager(reference_config, db_path=reference_db_path)
 
             # Verify all databases exist
-            assert os.path.exists(pipeline_db_path)
+            assert os.path.exists(operations_db_path)
             assert os.path.exists(reference_db_path)
 
             # Clean up
@@ -348,10 +348,10 @@ class TestFreshInstallation:
         """Test that created directories have appropriate file permissions."""
         with tempfile.TemporaryDirectory() as temp_dir:
             datafiles_dir = os.path.join(temp_dir, "datafiles")
-            db_path = os.path.join(datafiles_dir, "pipeline.db")
+            db_path = os.path.join(datafiles_dir, "operations.db")
 
             from pipeline.manager import PipelineDatabaseManager
-            manager = PipelineDatabaseManager(pipeline_db_path=db_path)
+            manager = PipelineDatabaseManager(operations_db_path=db_path)
 
             # Check directory permissions
             dir_stat = os.stat(datafiles_dir)
@@ -385,7 +385,7 @@ class TestErrorHandling:
 
                 # This should raise an error due to permissions
                 with pytest.raises((OSError, PermissionError)):
-                    manager = PipelineDatabaseManager(pipeline_db_path=db_path)
+                    manager = PipelineDatabaseManager(operations_db_path=db_path)
             finally:
                 # Restore permissions for cleanup
                 os.chmod(readonly_dir, 0o755)
