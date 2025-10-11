@@ -487,8 +487,12 @@ class TestExternalPredicatesE2E:
                     successful.append(pred.external_id)
                 except Exception as e:
                     failed.append((external_id, str(e)))
+                    # Rollback the session after error to allow subsequent operations
+                    manager.session.rollback()
 
             # Verify results
+            # Note: After rollback from duplicate, subsequent operations should work
+            # We expect: pred1 (success), pred2 (success), pred1 duplicate (fail), pred3 (success after rollback)
             assert len(successful) == 3  # pred1, pred2, pred3
             assert len(failed) == 1  # Duplicate pred1
 

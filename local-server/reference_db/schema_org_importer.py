@@ -500,8 +500,8 @@ class SchemaOrgImporter:
                 }
             )
             raise EmbeddingError(
-                f"Embedding generation failed for {len(failed_items)} items. "
-                f"See logs for detailed failed IDs."
+                f"Embedding generation failed for {len(failed_items)} items: "
+                f"{', '.join(failed_items)}"
             )
 
         logger.info(f"Generated embeddings for {len(embedded_items)} items")

@@ -63,21 +63,23 @@ class PredicateDiscoveryService:
     - Uses existing reference_api infrastructure for rate limiting
     """
 
-    def __init__(self, config: ReferenceConfig, source_configs: Dict[str, SourceConfig]):
+    def __init__(self, config: ReferenceConfig, source_configs: Dict[str, SourceConfig], db_path: str | None = None):
         """
         Initialize the predicate discovery service.
 
         Args:
             config: Reference database configuration
             source_configs: Dictionary mapping source names to their configurations
+            db_path: Optional path to the database file (for testing)
         """
         self.config = config
         self.source_configs = source_configs
+        self.db_path = db_path
         self.manager: Optional[ReferenceManager] = None
 
     def __enter__(self):
         """Context manager entry."""
-        self.manager = ReferenceManager(self.config)
+        self.manager = ReferenceManager(self.config, self.db_path)
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
@@ -167,6 +169,55 @@ class PredicateDiscoveryService:
 
         logger.info(f"Generated {len(embeddings)} embeddings")
         return embeddings
+
+    def _upsert_predicate(
+        self,
+        title: str,
+        definition: str,
+        source: str,
+        external_id: str,
+        attributes: Dict[str, Any] | None = None
+    ) -> ExternalPredicate:
+        """
+        Insert or update a single external predicate.
+
+        If a predicate with the same (source, external_id) exists, it will be updated.
+        Otherwise, a new predicate will be created.
+
+        Args:
+            title: Predicate title
+            definition: Predicate definition
+            source: Source identifier
+            external_id: Source-specific identifier
+            attributes: Optional dictionary of additional metadata
+
+        Returns:
+            The created or updated ExternalPredicate instance
+        """
+        # Check if predicate already exists
+        existing = self.manager.get_external_predicate_by_source(source, external_id)
+
+        if existing:
+            # Update existing predicate
+            logger.debug(f"Updating existing predicate: {source}/{external_id}")
+            existing.title = title
+            existing.definition = definition
+            existing.attributes = str(attributes) if attributes is not None else None
+            existing.title_embedding = generate_embedding(title)
+            existing.definition_embedding = generate_embedding(definition)
+            existing.updated_at = date.today().isoformat()
+            self.manager.session.commit()
+            return existing
+        else:
+            # Create new predicate
+            logger.debug(f"Creating new predicate: {source}/{external_id}")
+            return self.manager.add_external_predicate(
+                title=title,
+                definition=definition,
+                source=source,
+                external_id=external_id,
+                attributes=attributes
+            )
 
     def _upsert_predicates_batch(
         self,

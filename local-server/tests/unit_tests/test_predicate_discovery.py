@@ -130,8 +130,10 @@ class TestPredicateDiscoveryService:
         with patch('reference_db.predicate_discovery.get_model') as mock_get_model:
             mock_model = Mock()
             import numpy as np
-            # Return 768-dimensional embeddings (all-MiniLM-L6-v2 dimension)
-            mock_model.encode.return_value = [np.random.rand(768).astype(np.float32) for _ in range(3)]
+            # Return different batch sizes based on input
+            def mock_encode(batch):
+                return [np.random.rand(768).astype(np.float32) for _ in range(len(batch))]
+            mock_model.encode.side_effect = mock_encode
             mock_get_model.return_value = mock_model
 
             service = PredicateDiscoveryService(mock_ref_config, mock_source_configs)

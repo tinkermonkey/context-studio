@@ -76,6 +76,9 @@ class BackgroundTask:
 
     def to_dict(self) -> Dict[str, Any]:
         """Convert task to dictionary for API responses."""
+        # Filter out internal metadata keys (those starting with '_')
+        public_metadata = {k: v for k, v in self.metadata.items() if not k.startswith('_')}
+
         return {
             "task_id": self.task_id,
             "task_type": self.task_type,
@@ -86,7 +89,7 @@ class BackgroundTask:
             "created_at": self.created_at.isoformat() if self.created_at else None,
             "started_at": self.started_at.isoformat() if self.started_at else None,
             "completed_at": self.completed_at.isoformat() if self.completed_at else None,
-            "metadata": self.metadata
+            "metadata": public_metadata
         }
 
 
@@ -144,7 +147,7 @@ class TaskManager:
         self._worker_task = asyncio.create_task(self._worker())
         logger.info("TaskManager worker started")
 
-    async def shutdown(self, timeout: float = 10.0):
+    async def shutdown(self, timeout: float = 5.0):
         """
         Shutdown the task manager gracefully.
 
@@ -157,20 +160,27 @@ class TaskManager:
         logger.info("Shutting down TaskManager...")
         self._running = False
 
-        # Cancel worker task
+        # Cancel worker task and wait briefly for it to finish
         if self._worker_task and not self._worker_task.done():
             self._worker_task.cancel()
             try:
-                await asyncio.wait_for(self._worker_task, timeout=timeout)
+                await asyncio.wait_for(self._worker_task, timeout=2.0)
             except asyncio.TimeoutError:
-                logger.warning("Worker task did not finish within timeout")
+                logger.warning("Worker task did not finish within 2.0s timeout")
             except asyncio.CancelledError:
                 pass
+            except Exception as e:
+                logger.warning(f"Exception during worker shutdown: {e}")
 
-        # Cancel all pending/running tasks
-        for task in self.tasks.values():
-            if task.status in [TaskStatus.PENDING, TaskStatus.RUNNING]:
-                await self._cancel_task_internal(task)
+        # Mark all pending/running tasks as cancelled
+        # We iterate over a copy since we're modifying task state
+        tasks_to_cancel = [
+            task for task in list(self.tasks.values())
+            if task.status in [TaskStatus.PENDING, TaskStatus.RUNNING]
+        ]
+
+        for task in tasks_to_cancel:
+            await self._cancel_task_internal(task)
 
         logger.info("TaskManager shutdown complete")
 
@@ -264,9 +274,14 @@ class TaskManager:
         if task._asyncio_task and not task._asyncio_task.done():
             task._asyncio_task.cancel()
             try:
-                await task._asyncio_task
+                # Use a short timeout to avoid hanging if task is unresponsive
+                await asyncio.wait_for(task._asyncio_task, timeout=1.0)
             except asyncio.CancelledError:
                 pass
+            except asyncio.TimeoutError:
+                logger.warning(f"Task {task.task_id} cancellation timed out after 1.0s")
+            except Exception as e:
+                logger.warning(f"Exception during task {task.task_id} cancellation: {e}")
 
         task.status = TaskStatus.CANCELLED
         task.completed_at = datetime.now(timezone.utc)
@@ -386,6 +401,8 @@ class TaskManager:
             task.status = TaskStatus.CANCELLED
             task.completed_at = datetime.now(timezone.utc)
             logger.info(f"Task {task.task_id} was cancelled")
+            # Re-raise to propagate cancellation to worker loop
+            raise
 
         except Exception as e:
             # Task failed

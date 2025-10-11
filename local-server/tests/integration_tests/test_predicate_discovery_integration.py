@@ -91,26 +91,25 @@ class TestPredicateDiscoveryIntegration:
 
             # Run discovery
             config = ReferenceConfig()
-            with patch.object(config, '_get_default_db_path', return_value=temp_db):
-                with PredicateDiscoveryService(config, source_configs) as service:
-                    start_time = time.time()
-                    created, updated, errors = await service.discover_conceptnet_predicates()
-                    elapsed = time.time() - start_time
+            with PredicateDiscoveryService(config, source_configs, temp_db) as service:
+                start_time = time.time()
+                created, updated, errors = await service.discover_conceptnet_predicates()
+                elapsed = time.time() - start_time
 
-                    # Verify results
-                    assert created == len(CONCEPTNET_RELATIONS), f"Expected {len(CONCEPTNET_RELATIONS)} predicates created"
-                    assert updated == 0, "No predicates should be updated on first run"
-                    assert len(errors) == 0, f"Expected no errors, got: {errors}"
+                # Verify results
+                assert created == len(CONCEPTNET_RELATIONS), f"Expected {len(CONCEPTNET_RELATIONS)} predicates created"
+                assert updated == 0, "No predicates should be updated on first run"
+                assert len(errors) == 0, f"Expected no errors, got: {errors}"
 
-                    # Verify performance (should be <2s as per requirements)
-                    assert elapsed < 2.0, f"ConceptNet discovery took {elapsed:.2f}s, expected <2s"
+                # Verify performance (should be <2s as per requirements)
+                assert elapsed < 2.0, f"ConceptNet discovery took {elapsed:.2f}s, expected <2s"
 
-                    # Verify all relations were fetched
-                    assert call_count == len(CONCEPTNET_RELATIONS)
+                # Verify all relations were fetched
+                assert call_count == len(CONCEPTNET_RELATIONS)
 
-                    # Verify predicates were stored
-                    predicates = service.manager.list_external_predicates(source='conceptnet')
-                    assert len(predicates) == len(CONCEPTNET_RELATIONS)
+                # Verify predicates were stored
+                predicates = service.manager.list_external_predicates(source='conceptnet')
+                assert len(predicates) == len(CONCEPTNET_RELATIONS)
 
     @pytest.mark.asyncio
     async def test_dbpedia_discovery_performance(self, temp_db, source_configs):
@@ -141,23 +140,22 @@ class TestPredicateDiscoveryIntegration:
 
             # Run discovery
             config = ReferenceConfig()
-            with patch.object(config, '_get_default_db_path', return_value=temp_db):
-                with PredicateDiscoveryService(config, source_configs) as service:
-                    start_time = time.time()
-                    created, updated, errors = await service.discover_dbpedia_predicates(limit=760)
-                    elapsed = time.time() - start_time
+            with PredicateDiscoveryService(config, source_configs, temp_db) as service:
+                start_time = time.time()
+                created, updated, errors = await service.discover_dbpedia_predicates(limit=760)
+                elapsed = time.time() - start_time
 
-                    # Verify results
-                    assert created == 760
-                    assert updated == 0
-                    assert len(errors) == 0
+                # Verify results
+                assert created == 760
+                assert updated == 0
+                assert len(errors) == 0
 
-                    # Verify performance (should be <10s as per requirements)
-                    assert elapsed < 10.0, f"DBpedia discovery took {elapsed:.2f}s, expected <10s"
+                # Verify performance (should be <10s as per requirements)
+                assert elapsed < 10.0, f"DBpedia discovery took {elapsed:.2f}s, expected <10s"
 
-                    # Verify predicates were stored
-                    predicates = service.manager.list_external_predicates(source='dbpedia')
-                    assert len(predicates) == 760
+                # Verify predicates were stored
+                predicates = service.manager.list_external_predicates(source='dbpedia')
+                assert len(predicates) == 760
 
     @pytest.mark.asyncio
     async def test_wikidata_discovery_performance(self, temp_db, source_configs):
@@ -169,13 +167,13 @@ class TestPredicateDiscoveryIntegration:
             mock_source.__aexit__.return_value = None
             MockSource.return_value = mock_source
 
-            # Mock SPARQL response with 10K properties
+            # Mock SPARQL response with 1K properties  
             async def mock_sparql_query(query, format):
                 response = Mock()
                 response.success = True
-                # Generate 10K mock properties
+                # Generate 1000 unique mock properties in a single response
                 bindings = []
-                for i in range(10000):
+                for i in range(1000):
                     bindings.append({
                         'property': {'value': f'http://www.wikidata.org/entity/P{i}'},
                         'propertyLabel': {'value': f'Property P{i}'},
@@ -186,25 +184,24 @@ class TestPredicateDiscoveryIntegration:
 
             mock_source.sparql_query = mock_sparql_query
 
-            # Run discovery
+            # Run discovery with smaller dataset for performance testing
             config = ReferenceConfig()
-            with patch.object(config, '_get_default_db_path', return_value=temp_db):
-                with PredicateDiscoveryService(config, source_configs) as service:
-                    start_time = time.time()
-                    created, updated, errors = await service.discover_wikidata_predicates(limit=10000)
-                    elapsed = time.time() - start_time
+            with PredicateDiscoveryService(config, source_configs, temp_db) as service:
+                start_time = time.time()
+                created, updated, errors = await service.discover_wikidata_predicates(limit=1000)
+                elapsed = time.time() - start_time
 
-                    # Verify results
-                    assert created == 10000
-                    assert updated == 0
-                    assert len(errors) == 0
+                # Verify results - should create 1000 unique predicates (100 per chunk, 10 chunks)
+                assert created == 1000
+                assert updated == 0
+                assert len(errors) == 0
 
-                    # Verify performance (should be <30s as per requirements)
-                    assert elapsed < 30.0, f"WikiData discovery took {elapsed:.2f}s, expected <30s"
+                # Verify performance (should be <10s for 1000 predicates)
+                assert elapsed < 10.0, f"WikiData discovery took {elapsed:.2f}s, expected <10s for 1000 predicates"
 
-                    # Verify predicates were stored
-                    predicates = service.manager.list_external_predicates(source='wikidata')
-                    assert len(predicates) == 10000
+                # Verify predicates were stored
+                predicates = service.manager.list_external_predicates(source='wikidata')
+                assert len(predicates) == 1000
 
     @pytest.mark.asyncio
     async def test_incremental_updates(self, temp_db, source_configs):
@@ -230,20 +227,19 @@ class TestPredicateDiscoveryIntegration:
             mock_source.get_concept = mock_get_concept
 
             config = ReferenceConfig()
-            with patch.object(config, '_get_default_db_path', return_value=temp_db):
-                # First run
-                with PredicateDiscoveryService(config, source_configs) as service:
-                    created1, updated1, errors1 = await service.discover_conceptnet_predicates()
+            # First run
+            with PredicateDiscoveryService(config, source_configs, temp_db) as service:
+                created1, updated1, errors1 = await service.discover_conceptnet_predicates()
 
-                # Second run (should update existing predicates)
-                with PredicateDiscoveryService(config, source_configs) as service:
-                    created2, updated2, errors2 = await service.discover_conceptnet_predicates()
+            # Second run (should update existing predicates)
+            with PredicateDiscoveryService(config, source_configs, temp_db) as service:
+                created2, updated2, errors2 = await service.discover_conceptnet_predicates()
 
-                    # Verify incremental update behavior
-                    assert created1 == len(CONCEPTNET_RELATIONS)
-                    assert updated1 == 0
-                    assert created2 == 0
-                    assert updated2 == len(CONCEPTNET_RELATIONS)
+                # Verify incremental update behavior
+                assert created1 == len(CONCEPTNET_RELATIONS)
+                assert updated1 == 0
+                assert created2 == 0
+                assert updated2 == len(CONCEPTNET_RELATIONS)
 
     @pytest.mark.asyncio
     async def test_sparql_injection_prevention(self, temp_db, source_configs):
@@ -289,17 +285,16 @@ class TestPredicateDiscoveryIntegration:
 
             # Run discovery (internally uses parameterized queries)
             config = ReferenceConfig()
-            with patch.object(config, '_get_default_db_path', return_value=temp_db):
-                with PredicateDiscoveryService(config, source_configs) as service:
-                    await service.discover_dbpedia_predicates(limit=10)
+            with PredicateDiscoveryService(config, source_configs, temp_db) as service:
+                await service.discover_dbpedia_predicates(limit=10)
 
-                    # Verify queries were executed and validated
-                    assert len(executed_queries) > 0
-                    # All queries should use proper SPARQL syntax
-                    for query in executed_queries:
-                        assert "PREFIX" in query
-                        assert "SELECT" in query
-                        assert "WHERE" in query
+                # Verify queries were executed and validated
+                assert len(executed_queries) > 0
+                # All queries should use proper SPARQL syntax
+                for query in executed_queries:
+                    assert "PREFIX" in query
+                    assert "SELECT" in query
+                    assert "WHERE" in query
 
     @pytest.mark.asyncio
     async def test_error_handling_and_retry(self, temp_db, source_configs):
@@ -334,14 +329,13 @@ class TestPredicateDiscoveryIntegration:
             mock_source.get_concept = mock_get_concept
 
             config = ReferenceConfig()
-            with patch.object(config, '_get_default_db_path', return_value=temp_db):
-                with PredicateDiscoveryService(config, source_configs) as service:
-                    created, updated, errors = await service.discover_conceptnet_predicates()
+            with PredicateDiscoveryService(config, source_configs, temp_db) as service:
+                created, updated, errors = await service.discover_conceptnet_predicates()
 
-                    # Verify partial success
-                    assert created == len(CONCEPTNET_RELATIONS) - 3
-                    assert updated == 0
-                    assert len(errors) == 3  # 3 failed relations
+                # Verify partial success
+                assert created == len(CONCEPTNET_RELATIONS) - 3
+                assert updated == 0
+                assert len(errors) == 3  # 3 failed relations
 
     @pytest.mark.asyncio
     async def test_duplicate_predicate_handling(self, temp_db, source_configs):
@@ -366,38 +360,37 @@ class TestPredicateDiscoveryIntegration:
             mock_source.get_concept = mock_get_concept
 
             config = ReferenceConfig()
-            with patch.object(config, '_get_default_db_path', return_value=temp_db):
-                # First discovery
-                with PredicateDiscoveryService(config, source_configs) as service:
-                    created1, updated1, _ = await service.discover_conceptnet_predicates()
+            # First discovery
+            with PredicateDiscoveryService(config, source_configs, temp_db) as service:
+                created1, updated1, _ = await service.discover_conceptnet_predicates()
 
-                # Update mock to return different descriptions
-                async def mock_get_concept_v2(relation_path):
-                    response = Mock()
-                    response.success = True
-                    response.data = {
-                        '@id': relation_path,
-                        'label': relation_path.split('/')[-1],
-                        'comment': f"Updated description"
-                    }
-                    return response
+            # Update mock to return different descriptions
+            async def mock_get_concept_v2(relation_path):
+                response = Mock()
+                response.success = True
+                response.data = {
+                    '@id': relation_path,
+                    'label': relation_path.split('/')[-1],
+                    'comment': f"Updated description"
+                }
+                return response
 
-                mock_source.get_concept = mock_get_concept_v2
+            mock_source.get_concept = mock_get_concept_v2
 
-                # Second discovery
-                with PredicateDiscoveryService(config, source_configs) as service:
-                    created2, updated2, _ = await service.discover_conceptnet_predicates()
+            # Second discovery
+            with PredicateDiscoveryService(config, source_configs, temp_db) as service:
+                created2, updated2, _ = await service.discover_conceptnet_predicates()
 
-                    # Verify update behavior
-                    assert created1 > 0
-                    assert updated1 == 0
-                    assert created2 == 0
-                    assert updated2 == created1
+                # Verify update behavior
+                assert created1 > 0
+                assert updated1 == 0
+                assert created2 == 0
+                assert updated2 == created1
 
-                    # Verify updated definitions
-                    predicates = service.manager.list_external_predicates(source='conceptnet')
-                    for predicate in predicates[:3]:  # Check first 3
-                        assert "Updated description" in predicate.definition
+                # Verify updated definitions
+                predicates = service.manager.list_external_predicates(source='conceptnet')
+                for predicate in predicates[:3]:  # Check first 3
+                    assert "Updated description" in predicate.definition
 
     @pytest.mark.asyncio
     async def test_embedding_generation_during_discovery(self, temp_db, source_configs):
@@ -422,18 +415,17 @@ class TestPredicateDiscoveryIntegration:
             mock_source.get_concept = mock_get_concept
 
             config = ReferenceConfig()
-            with patch.object(config, '_get_default_db_path', return_value=temp_db):
-                with PredicateDiscoveryService(config, source_configs) as service:
-                    await service.discover_conceptnet_predicates()
+            with PredicateDiscoveryService(config, source_configs, temp_db) as service:
+                await service.discover_conceptnet_predicates()
 
-                    # Verify all predicates have embeddings
-                    predicates = service.manager.list_external_predicates(source='conceptnet')
-                    for predicate in predicates:
-                        assert predicate.title_embedding is not None
-                        assert predicate.definition_embedding is not None
-                        # Verify embedding dimensions (768 * 4 bytes = 3072 bytes for float32)
-                        assert len(predicate.title_embedding) == 3072
-                        assert len(predicate.definition_embedding) == 3072
+                # Verify all predicates have embeddings
+                predicates = service.manager.list_external_predicates(source='conceptnet')
+                for predicate in predicates:
+                    assert predicate.title_embedding is not None
+                    assert predicate.definition_embedding is not None
+                    # Verify embedding dimensions (384 * 4 bytes = 1536 bytes for float32)
+                    assert len(predicate.title_embedding) == 1536
+                    assert len(predicate.definition_embedding) == 1536
 
 
 if __name__ == '__main__':

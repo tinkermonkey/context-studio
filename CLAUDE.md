@@ -36,7 +36,7 @@ Context Studio is local-first, designed to be packaged as a desktop app and run 
 
 ### General Guidelines
 
-- **Do not create documentation files** unless explicitly asked to do so
+- **Do not create documentation files** like implementation reports, design docs, etc.
 - Use meaningful variable and function names - **avoid terms like "enhanced", "improved", "optimized"** in names
 - This is a desktop app - configuration should not rely on environment variables and should instead be managed through the config.json file
 
@@ -67,6 +67,29 @@ When back-end APIs are added/updated/removed:
 - **Database**: SQLite with SQLiteVector for vector storage
 - **Data Validation**: Pydantic
 - **Test Framework**: pytest
+
+### Database Files
+
+Context Studio uses multiple SQLite database files for different purposes:
+
+- **`local.db`** (default): Primary user workspace database containing:
+  - `structure_nodes` - Unified table for layers, domains, and terms in knowledge graphs
+  - `structure_node_links` - Relationships between structure nodes with predicates
+  - `predicates` - Semantic predicate definitions with optional mappings to external ontologies
+  - `change_events` - Audit trail of all database changes across record types
+
+- **`reference.db`**: Multi-source knowledge graph database containing consolidated reference data from external sources like ConceptNet, DBpedia, and Wikidata
+
+- **`reference_api_cache.db`**: Caches API responses from external reference sources to improve performance and reduce API calls
+
+- **`operations.db`**: Operational database for:
+  - `pipeline_flavors` - LLM pipeline configurations for different processing tasks
+  - `pipeline_flavor_executions` - Execution records and LLM traceability logs
+  - Background task management
+  - System audit logs
+  - Administrative operations tracking
+
+All databases use SQLite with the SQLiteVector extension for embedding storage and semantic search capabilities.
 
 ### Setup & Running
 

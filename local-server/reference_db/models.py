@@ -6,8 +6,7 @@ from external knowledge sources (e.g., Schema.org, WikiData).
 """
 
 from sqlalchemy import Column, String, Integer, ForeignKey, UniqueConstraint, LargeBinary, Text
-from sqlalchemy.orm import relationship
-from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.orm import relationship, declarative_base
 from typing import Dict, Any
 
 Base = declarative_base()

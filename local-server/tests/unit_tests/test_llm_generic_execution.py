@@ -30,9 +30,24 @@ class TestGenericPipelineExecution:
     @pytest.fixture
     def mock_llm_service(self):
         """Create a mock LLM service with required dependencies"""
-        with patch.dict("os.environ", {"OPENAI_API_KEY": "sk-test1234567890abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMN"}):
-            # Mock the provider router to avoid initialization issues
-            with patch('llm.service.get_provider_router'):
+        # Mock the provider router to avoid initialization issues
+        with patch('llm.service.get_provider_router') as mock_get_router:
+            # Create a mock provider router that indicates models are available
+            mock_router = MagicMock()
+            mock_router.get_enabled_models.return_value = ["gpt-3.5-turbo"]
+            mock_router.is_model_available.return_value = True
+            
+            # Mock models manager
+            mock_models_manager = MagicMock()
+            mock_config = MagicMock()
+            mock_config.api_key_env_var = "OPENAI_API_KEY"
+            mock_models_manager.get_model_config.return_value = mock_config
+            mock_router.models_manager = mock_models_manager
+            
+            mock_get_router.return_value = mock_router
+            
+            # Set environment variable before creating service
+            with patch.dict("os.environ", {"OPENAI_API_KEY": "sk-test1234567890abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMN"}):
                 service = LLMService()
                 service.flavor_service = AsyncMock()
                 service.execution_tracker = MagicMock()
@@ -253,7 +268,7 @@ class TestGenericPipelineExecution:
             "current_definition": "A fruit"
         }
         
-        result = mock_llm_service._render_user_prompt_generic(template, context_data)
+        result = mock_llm_service._render_user_prompt_generic(template, context_data, strict=False)
         
         expected = "Term: apple, Domain: Not specified, Definition: A fruit"
         assert result == expected
@@ -266,7 +281,7 @@ class TestGenericPipelineExecution:
             "numbers": [1, 2, 3]
         }
         
-        result = mock_llm_service._render_user_prompt_generic(template, context_data)
+        result = mock_llm_service._render_user_prompt_generic(template, context_data, strict=False)
         
         expected = "Terms: apple, orange, banana, Numbers: [1, 2, 3]"
         assert result == expected
@@ -291,7 +306,7 @@ class TestGenericPipelineExecution:
         }
         
         # The implementation now provides default values for missing variables
-        result = mock_llm_service._render_user_prompt_generic(template, context_data)
+        result = mock_llm_service._render_user_prompt_generic(template, context_data, strict=False)
         
         # Missing variable should be replaced with "Not specified"
         assert result == "Term: apple, Missing: Not specified"

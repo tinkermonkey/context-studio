@@ -46,8 +46,42 @@ class LLMService:
 
         # Initialize provider router
         self.provider_router = get_provider_router()
+        
+        # Validate configuration on startup
+        self._validate_configuration()
 
         self.logger.info(f"LLM Service initialized with dynamic provider routing")
+
+    def _validate_configuration(self):
+        """Validate that at least one enabled model has a valid API key configured"""
+        enabled_models = self.provider_router.get_enabled_models()
+        
+        if not enabled_models:
+            raise LLMConfigurationError("No models are enabled in configuration")
+        
+        # Check if any enabled model has its required API key
+        has_valid_config = False
+        missing_keys = []
+        
+        for model_name in enabled_models:
+            config = self.provider_router.models_manager.get_model_config(model_name)
+            if config and config.api_key_env_var:
+                api_key = os.getenv(config.api_key_env_var)
+                if api_key:
+                    # Basic validation for OpenAI API key format
+                    if config.api_key_env_var == "OPENAI_API_KEY" and not api_key.startswith("sk-"):
+                        missing_keys.append(f"{config.api_key_env_var} (invalid format)")
+                        continue
+                    has_valid_config = True
+                    break
+                else:
+                    missing_keys.append(config.api_key_env_var)
+        
+        if not has_valid_config:
+            if missing_keys:
+                raise LLMConfigurationError(f"No valid API keys found. Missing or invalid: {', '.join(missing_keys)}")
+            else:
+                raise LLMConfigurationError("No enabled models have API key configuration")
 
     def get_available_models(self) -> list[str]:
         """Get list of currently available (enabled) models"""
@@ -79,7 +113,7 @@ class LLMService:
 
             # Create prompt using flavor templates and generic context data
             system_prompt = flavor.system_prompt
-            user_prompt = self._render_user_prompt_generic(flavor.user_prompt, request.context_data)
+            user_prompt = self._render_user_prompt_generic(flavor.user_prompt, request.context_data, strict=False)
 
             # Start execution tracking
             execution_id = self.execution_tracker.start_execution(
@@ -227,7 +261,7 @@ class LLMService:
             
             # Create prompt using flavor templates and generic context data
             system_prompt = flavor.system_prompt
-            user_prompt = self._render_user_prompt_generic(flavor.user_prompt, request.context_data)
+            user_prompt = self._render_user_prompt_generic(flavor.user_prompt, request.context_data, strict=False)
             
             # Start execution tracking
             execution_id = self.execution_tracker.start_execution(
@@ -539,47 +573,66 @@ class LLMService:
             self.logger.error(f"Failed to parse structured output from text for pipeline {pipeline_type}: {e}")
             return None
 
-    def _render_user_prompt_generic(self, template: str, context_data: Dict[str, Any]) -> str:
+    def _render_user_prompt_generic(self, template: str, context_data: Dict[str, Any], strict: bool = True) -> str:
         """Render user prompt template with arbitrary context data"""
         self.logger.debug("Rendering generic user prompt template with context data")
 
         try:
-            # Create a safe copy of context_data with None values replaced
-            safe_context = {}
-            for key, value in context_data.items():
-                if value is None:
-                    safe_context[key] = "Not specified"
-                elif isinstance(value, (list, tuple)):
-                    # Handle lists by joining them or converting to string
-                    if all(isinstance(item, str) for item in value):
-                        safe_context[key] = ", ".join(value) if value else "Not specified"
-                    else:
+            if strict:
+                # Strict mode: fail on missing variables
+                import re
+                
+                # Find all template variables in the format {variable_name}
+                template_vars = set(re.findall(r'\{([^}]+)\}', template))
+                context_vars = set(context_data.keys())
+                missing_vars = template_vars - context_vars
+                
+                if missing_vars:
+                    raise LLMProcessingError(f"Missing template variables: {', '.join(missing_vars)}")
+                
+                # Use standard format with strict checking
+                rendered_prompt = template.format(**context_data)
+            else:
+                # Lenient mode: provide defaults for missing variables
+                # Create a safe copy of context_data with None values replaced
+                safe_context = {}
+                for key, value in context_data.items():
+                    if value is None:
+                        safe_context[key] = "Not specified"
+                    elif isinstance(value, (list, tuple)):
+                        # Handle lists by joining them or converting to string
+                        if all(isinstance(item, str) for item in value):
+                            safe_context[key] = ", ".join(value) if value else "Not specified"
+                        else:
+                            safe_context[key] = str(value) if value else "Not specified"
+                    elif isinstance(value, dict):
+                        # Handle dictionaries by converting to string representation
                         safe_context[key] = str(value) if value else "Not specified"
-                elif isinstance(value, dict):
-                    # Handle dictionaries by converting to string representation
-                    safe_context[key] = str(value) if value else "Not specified"
-                else:
-                    safe_context[key] = str(value)
-
-            # Use a custom formatter that provides default values for missing variables
-            class SafeFormatter(string.Formatter):
-                def get_value(self, key, args, kwargs):
-                    if isinstance(key, str):
-                        try:
-                            return kwargs[key]
-                        except KeyError:
-                            # Return default value for missing variables
-                            return "Not specified"
                     else:
-                        return super().get_value(key, args, kwargs)
+                        safe_context[key] = str(value)
 
-            # Render the template with the safe context data using the custom formatter
-            formatter = SafeFormatter()
-            rendered_prompt = formatter.format(template, **safe_context)
+                # Use a custom formatter that provides default values for missing variables
+                class SafeFormatter(string.Formatter):
+                    def get_value(self, key, args, kwargs):
+                        if isinstance(key, str):
+                            try:
+                                return kwargs[key]
+                            except KeyError:
+                                # Return default value for missing variables
+                                return "Not specified"
+                        else:
+                            return super().get_value(key, args, kwargs)
+
+                # Render the template with the safe context data using the custom formatter
+                formatter = SafeFormatter()
+                rendered_prompt = formatter.format(template, **safe_context)
 
             self.logger.debug(f"Successfully rendered generic user prompt template (length: {len(rendered_prompt)} chars)")
             return rendered_prompt
 
+        except LLMProcessingError:
+            # Re-raise LLMProcessingErrors as-is
+            raise
         except Exception as e:
             self.logger.error(f"Error rendering generic user prompt template: {e}")
             raise LLMProcessingError(f"Template rendering failed: {str(e)}")

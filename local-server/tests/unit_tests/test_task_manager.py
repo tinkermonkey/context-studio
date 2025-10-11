@@ -30,6 +30,24 @@ from services.task_manager import (
 )
 
 
+@pytest.fixture(autouse=True)
+async def cleanup_task_manager():
+    """Ensure task manager is cleaned up before and after each test."""
+    # Cleanup before test
+    try:
+        await shutdown_task_manager()
+    except RuntimeError:
+        pass  # Not initialized, that's fine
+    
+    yield
+    
+    # Cleanup after test
+    try:
+        await shutdown_task_manager()
+    except RuntimeError:
+        pass  # Not initialized, that's fine
+
+
 class TestBackgroundTaskDataclass:
     """Tests for BackgroundTask dataclass."""
 

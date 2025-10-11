@@ -170,11 +170,24 @@ class TestSearchBySimilarity:
             manager.search_by_similarity("   ", embedding_generator=embedding_gen)
 
     def test_search_requires_embedding_generator(self, manager_with_data):
-        """Test that search_by_similarity requires embedding_generator."""
+        """Test that search_by_similarity uses default embedding generator if None."""
         manager, db_path, create_embedding = manager_with_data
 
-        with pytest.raises(ValueError, match="embedding_generator must be provided"):
-            manager.search_by_similarity("test query", embedding_generator=None)
+        # The implementation now defaults to generate_embedding if None is provided
+        # Instead of raising ValueError, it should use the default generator
+        from unittest.mock import patch, MagicMock
+        
+        mock_embedding = MagicMock(return_value=b'\x00' * (384 * 4))  # Mock 384-dim embedding
+        
+        with patch('reference_db.manager.generate_embedding', mock_embedding):
+            results = manager.search_by_similarity(
+                "test query",
+                embedding_generator=None,
+                threshold=0.0
+            )
+            
+            # Should have called the default embedding generator
+            mock_embedding.assert_called_once_with("test query")
 
     def test_search_with_threshold_filtering(self, manager_with_data):
         """

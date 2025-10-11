@@ -100,7 +100,7 @@ class TestExternalPredicatesIntegration:
 
         Validates:
         - Embeddings are auto-generated when not provided
-        - Generated embeddings have correct dimensions (768)
+        - Generated embeddings have correct dimensions (384)
         - Embeddings are stored as binary data
         - Both title and definition embeddings are generated
         """
@@ -115,9 +115,10 @@ class TestExternalPredicatesIntegration:
         assert predicate.title_embedding is not None
         assert predicate.definition_embedding is not None
 
-        # Verify dimensions (768 dims * 4 bytes per float32 = 3072 bytes)
-        assert len(predicate.title_embedding) == 768 * 4
-        assert len(predicate.definition_embedding) == 768 * 4
+        # Verify dimensions (384 dims * 4 bytes per float32 = 1536 bytes)
+        # Using all-MiniLM-L6-v2 model which produces 384-dimensional embeddings
+        assert len(predicate.title_embedding) == 384 * 4
+        assert len(predicate.definition_embedding) == 384 * 4
 
         # Verify embeddings are different (not duplicate references)
         assert predicate.title_embedding != predicate.definition_embedding
@@ -214,6 +215,9 @@ class TestExternalPredicatesIntegration:
 
         # Verify error message mentions constraint
         assert "UNIQUE constraint failed" in str(exc_info.value) or "unique" in str(exc_info.value).lower()
+
+        # Rollback the session after the IntegrityError to clean up the failed transaction
+        manager.session.rollback()
 
         # Different source should succeed
         pred2 = manager.add_external_predicate(

@@ -55,106 +55,8 @@ class CancelTaskResponse(BaseModel):
     message: str
 
 
-@router.get("/{task_id}", response_model=TaskStatusResponse)
-async def get_task_status(task_id: str):
-    """
-    Get the status of a background task.
-
-    Args:
-        task_id: The unique task identifier
-
-    Returns:
-        Task status information
-
-    Raises:
-        HTTPException: 404 if task not found
-    """
-    try:
-        task_manager = get_task_manager()
-        task_status = task_manager.get_task_status(task_id)
-
-        if task_status is None:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail=f"Task {task_id} not found"
-            )
-
-        return TaskStatusResponse(**task_status)
-
-    except RuntimeError as e:
-        logger.error(f"TaskManager not initialized: {e}")
-        raise HTTPException(
-            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-            detail="Task management service not available"
-        )
-    except HTTPException:
-        raise
-    except Exception as e:
-        logger.error(f"Error getting task status: {e}", exc_info=True)
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Internal server error"
-        )
-
-
-@router.delete("/{task_id}", response_model=CancelTaskResponse)
-async def cancel_task(task_id: str):
-    """
-    Cancel a running or pending background task.
-
-    Args:
-        task_id: The unique task identifier
-
-    Returns:
-        Cancellation result
-
-    Raises:
-        HTTPException: 404 if task not found, 400 if task cannot be cancelled
-    """
-    try:
-        task_manager = get_task_manager()
-
-        # Check if task exists
-        task_status = task_manager.get_task_status(task_id)
-        if task_status is None:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail=f"Task {task_id} not found"
-            )
-
-        # Check if task can be cancelled
-        current_status = task_status['status']
-        if current_status not in ['pending', 'running']:
-            return CancelTaskResponse(
-                task_id=task_id,
-                cancelled=False,
-                message=f"Task is in state '{current_status}' and cannot be cancelled"
-            )
-
-        # Cancel the task
-        cancelled = await task_manager.cancel_task(task_id)
-
-        return CancelTaskResponse(
-            task_id=task_id,
-            cancelled=cancelled,
-            message="Task cancelled successfully" if cancelled else "Task cancellation failed"
-        )
-
-    except RuntimeError as e:
-        logger.error(f"TaskManager not initialized: {e}")
-        raise HTTPException(
-            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-            detail="Task management service not available"
-        )
-    except HTTPException:
-        raise
-    except Exception as e:
-        logger.error(f"Error cancelling task: {e}", exc_info=True)
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Internal server error"
-        )
-
+# NOTE: Specific routes (with literal paths) must be defined BEFORE
+# parameterized routes (with path parameters like {task_id}) to avoid conflicts
 
 @router.get("", response_model=TaskListResponse)
 async def list_tasks(
@@ -263,6 +165,107 @@ async def get_dead_letter_queue():
         )
     except Exception as e:
         logger.error(f"Error getting dead letter queue: {e}", exc_info=True)
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Internal server error"
+        )
+
+
+@router.get("/{task_id}", response_model=TaskStatusResponse)
+async def get_task_status(task_id: str):
+    """
+    Get the status of a background task.
+
+    Args:
+        task_id: The unique task identifier
+
+    Returns:
+        Task status information
+
+    Raises:
+        HTTPException: 404 if task not found
+    """
+    try:
+        task_manager = get_task_manager()
+        task_status = task_manager.get_task_status(task_id)
+
+        if task_status is None:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"Task {task_id} not found"
+            )
+
+        return TaskStatusResponse(**task_status)
+
+    except RuntimeError as e:
+        logger.error(f"TaskManager not initialized: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Task management service not available"
+        )
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error getting task status: {e}", exc_info=True)
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Internal server error"
+        )
+
+
+@router.delete("/{task_id}", response_model=CancelTaskResponse)
+async def cancel_task(task_id: str):
+    """
+    Cancel a running or pending background task.
+
+    Args:
+        task_id: The unique task identifier
+
+    Returns:
+        Cancellation result
+
+    Raises:
+        HTTPException: 404 if task not found, 400 if task cannot be cancelled
+    """
+    try:
+        task_manager = get_task_manager()
+
+        # Check if task exists
+        task_status = task_manager.get_task_status(task_id)
+        if task_status is None:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"Task {task_id} not found"
+            )
+
+        # Check if task can be cancelled
+        current_status = task_status['status']
+        if current_status not in ['pending', 'running']:
+            return CancelTaskResponse(
+                task_id=task_id,
+                cancelled=False,
+                message=f"Task is in state '{current_status}' and cannot be cancelled"
+            )
+
+        # Cancel the task
+        cancelled = await task_manager.cancel_task(task_id)
+
+        return CancelTaskResponse(
+            task_id=task_id,
+            cancelled=cancelled,
+            message="Task cancelled successfully" if cancelled else "Task cancellation failed"
+        )
+
+    except RuntimeError as e:
+        logger.error(f"TaskManager not initialized: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Task management service not available"
+        )
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error cancelling task: {e}", exc_info=True)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Internal server error"

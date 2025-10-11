@@ -253,6 +253,16 @@ class TestIdentifierGeneration:
 class TestConceptNetMapping:
     """Test ConceptNet mapping functionality."""
 
+    @pytest.fixture
+    def db_session(self):
+        """Create in-memory database session for testing."""
+        engine = create_engine("sqlite:///:memory:")
+        Base.metadata.create_all(engine)
+        SessionLocal = sessionmaker(bind=engine)
+        session = SessionLocal()
+        yield session
+        session.close()
+
     def test_create_predicate_with_conceptnet_mapping(self, db_session):
         """Test creating predicate with ConceptNet mapping."""
         # Use a unique predicate name not in the migration

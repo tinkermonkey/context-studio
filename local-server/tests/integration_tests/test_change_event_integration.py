@@ -9,7 +9,6 @@ sys.path.append(
 
 import pytest
 from sqlalchemy import text
-from database.utils import get_current_engine
 from services.change_event_handler import ChangeEventHandler
 from utils.event_processor import EventProcessor
 from database.models import ChangeEvent
@@ -73,7 +72,8 @@ def test_end_to_end_event_processing_all_record_types(db_session, change_event_h
     assert all(not event.processed for event in events)
 
     # Process events with EventProcessor
-    engine = get_current_engine()
+    # Get the engine from the db_session's bind
+    engine = db_session.bind
     database_url = str(engine.url)
 
     processor = EventProcessor(
@@ -130,7 +130,8 @@ def test_predicate_event_integration(db_session, change_event_handler):
     assert delete_event.record_type == RecordType.PREDICATE
 
     # Process with EventProcessor
-    engine = get_current_engine()
+    # Get the engine from the db_session's bind
+    engine = db_session.bind
     database_url = str(engine.url)
 
     processor = EventProcessor(
@@ -222,7 +223,8 @@ def test_mixed_event_processing_with_filtering(db_session, change_event_handler)
     assert len(predicate_unprocessed) == 3
 
     # Process all events
-    engine = get_current_engine()
+    # Get the engine from the db_session's bind
+    engine = db_session.bind
     database_url = str(engine.url)
 
     processor = EventProcessor(
@@ -332,7 +334,8 @@ def test_normalized_change_event_integration(db_session):
     assert node_event.record_id == node_id
 
     # Process with EventProcessor
-    engine = get_current_engine()
+    # Get the engine from the db_session's bind
+    engine = db_session.bind
     database_url = str(engine.url)
 
     processor = EventProcessor(
@@ -360,7 +363,8 @@ def test_database_trigger_integration(db_session):
     # and would insert directly into the tables to trigger the events
     # For now, we'll test the handler integration
 
-    engine = get_current_engine()
+    # Get the engine from the db_session's bind
+    engine = db_session.bind
 
     # Insert a structure_node directly (would trigger change_events via database trigger)
     # This is a simulated test since we'd need the actual triggers in place
@@ -459,7 +463,8 @@ def test_event_data_integrity_integration(db_session, change_event_handler):
     assert event.record_id == integrity_node_id
 
     # Process event
-    engine = get_current_engine()
+    # Get the engine from the db_session's bind
+    engine = db_session.bind
     database_url = str(engine.url)
 
     processor = EventProcessor(
@@ -508,7 +513,8 @@ def test_high_volume_event_processing(db_session, change_event_handler):
     assert unprocessed_count >= 50
 
     # Process with higher limits
-    engine = get_current_engine()
+    # Get the engine from the db_session's bind
+    engine = db_session.bind
     database_url = str(engine.url)
 
     processor = EventProcessor(

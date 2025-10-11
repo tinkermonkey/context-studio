@@ -27,7 +27,8 @@ from embeddings.generate_embeddings import generate_embedding
 logger = logging.getLogger(__name__)
 
 # Constants
-EMBEDDING_DIMENSION = 768  # Dimension for sentence-transformers/all-MiniLM-L6-v2
+EMBEDDING_DIMENSION = 384  # Dimension for sentence-transformers/all-MiniLM-L6-v2
+EMBEDDING_MODEL_VERSION = "all-MiniLM-L6-v2"  # Current embedding model version
 
 class ReferenceManager:
     """
@@ -127,8 +128,8 @@ class ReferenceManager:
             Path to the reference database file
         """
         # This will be overridden by the application config
-        from config import get_config
-        app_config = get_config()
+        from config import get_settings
+        app_config = get_settings()
         return app_config.database.reference_path
 
     def _initialize_database(self):
@@ -166,10 +167,16 @@ class ReferenceManager:
             raise RuntimeError(f"Failed to create database engine: {error_msg}") from e
 
         # Verify schema version
-        if not self._verify_schema_version():
-            logger.warning(
-                f"Schema version mismatch detected. Expected schema={REFERENCE_SCHEMA_VERSION}"
-            )
+        schema_status = self._verify_schema_version()
+        if schema_status != "valid":
+            if schema_status == "missing":
+                logger.info(
+                    f"Initializing new database with schema version {REFERENCE_SCHEMA_VERSION}"
+                )
+            else:  # "mismatch"
+                logger.warning(
+                    f"Schema version mismatch detected. Expected schema={REFERENCE_SCHEMA_VERSION}"
+                )
             self._rebuild_database()
 
         # Initialize database tables using existing utility
@@ -181,7 +188,7 @@ class ReferenceManager:
 
         logger.info("Reference database initialized successfully")
 
-    def _verify_schema_version(self) -> bool:
+    def _verify_schema_version(self) -> str:
         """
         Verify that the database schema version matches the expected version.
 
@@ -189,7 +196,9 @@ class ReferenceManager:
         is compatible with the current code.
 
         Returns:
-            True if schema version matches, False if rebuild is needed
+            "valid" if schema version matches expected version
+            "missing" if schema_version table doesn't exist (new database)
+            "mismatch" if schema version exists but doesn't match expected version
 
         Raises:
             Exception: Re-raises any unexpected exceptions (not OperationalError)
@@ -212,10 +221,16 @@ class ReferenceManager:
                 if result:
                     schema_ver = result[0]
                     logger.info(f"Found schema version: {schema_ver}")
-                    return schema_ver == REFERENCE_SCHEMA_VERSION
+                    if schema_ver == REFERENCE_SCHEMA_VERSION:
+                        return "valid"
+                    else:
+                        logger.warning(
+                            f"Schema version mismatch: found {schema_ver}, expected {REFERENCE_SCHEMA_VERSION}"
+                        )
+                        return "mismatch"
                 else:
                     logger.warning("Schema version table exists but is empty")
-                    return False
+                    return "mismatch"
 
             finally:
                 session.close()
@@ -223,8 +238,14 @@ class ReferenceManager:
         except OperationalError as e:
             # Expected error when table doesn't exist
             if 'no such table' in str(e).lower():
-                logger.info("Schema version table does not exist, rebuild required")
-                return False
+                logger.debug("Schema version table does not exist (new database)")
+                return "missing"
+            # Re-raise other operational errors (e.g., database locked, corrupted)
+            raise
+
+        except Exception:
+            # Re-raise any unexpected exceptions to surface real problems
+            raise
             # Re-raise other operational errors (e.g., database locked, corrupted)
             raise
 
@@ -427,7 +448,7 @@ class ReferenceManager:
             attributes: Optional dictionary of additional metadata
             title_embedding: Optional embedding vector for title (auto-generated if None)
             definition_embedding: Optional embedding vector for definition (auto-generated if None)
-            embedding_dims: Expected embedding dimensions (default: 768 for all-MiniLM-L6-v2)
+            embedding_dims: Expected embedding dimensions (default: 384 for all-MiniLM-L6-v2)
 
         Returns:
             Created ReferenceNode instance
@@ -458,20 +479,20 @@ class ReferenceManager:
             self._validate_embedding_dimensions(definition_embedding, embedding_dims)
 
         # Create node with transaction
-        with self.session.begin():
-            node = ReferenceNode(
-                id=str(uuid4()),
-                title=title,
-                definition=definition,
-                source=source,
-                external_id=external_id,
-                attributes=str(attributes) if attributes else None,
-                title_embedding=title_embedding,
-                definition_embedding=definition_embedding,
-                created_at=date.today().isoformat(),
-                updated_at=date.today().isoformat()
-            )
-            self.session.add(node)
+        node = ReferenceNode(
+            id=str(uuid4()),
+            title=title,
+            definition=definition,
+            source=source,
+            external_id=external_id,
+            attributes=str(attributes) if attributes is not None else None,
+            title_embedding=title_embedding,
+            definition_embedding=definition_embedding,
+            created_at=date.today().isoformat(),
+            updated_at=date.today().isoformat()
+        )
+        self.session.add(node)
+        self.session.commit()
 
         logger.debug(
             f"Added reference node: source={source}, external_id={external_id}, title={title}"
@@ -508,17 +529,17 @@ class ReferenceManager:
             ... )
         """
         # Create link with transaction
-        with self.session.begin():
-            link = ReferenceLink(
-                id=str(uuid4()),
-                subject_node=subject_node,
-                predicate=predicate,
-                object_node=object_node,
-                attributes=str(attributes) if attributes else None,
-                created_at=date.today().isoformat(),
-                updated_at=date.today().isoformat()
-            )
-            self.session.add(link)
+        link = ReferenceLink(
+            id=str(uuid4()),
+            subject_node=subject_node,
+            predicate=predicate,
+            object_node=object_node,
+            attributes=str(attributes) if attributes is not None else None,
+            created_at=date.today().isoformat(),
+            updated_at=date.today().isoformat()
+        )
+        self.session.add(link)
+        self.session.commit()
 
         logger.debug(
             f"Added reference link: {subject_node} --{predicate}--> {object_node}"
@@ -884,7 +905,7 @@ class ReferenceManager:
             attributes: Optional dictionary of additional metadata
             title_embedding: Optional embedding vector for title (auto-generated if None)
             definition_embedding: Optional embedding vector for definition (auto-generated if None)
-            embedding_dims: Expected embedding dimensions (default: 768 for all-MiniLM-L6-v2)
+            embedding_dims: Expected embedding dimensions (default: 384 for all-MiniLM-L6-v2)
 
         Returns:
             Created ExternalPredicate instance
@@ -915,20 +936,20 @@ class ReferenceManager:
             self._validate_embedding_dimensions(definition_embedding, embedding_dims)
 
         # Create predicate with transaction
-        with self.session.begin():
-            predicate = ExternalPredicate(
-                id=str(uuid4()),
-                title=title,
-                definition=definition,
-                source=source,
-                external_id=external_id,
-                attributes=str(attributes) if attributes else None,
-                title_embedding=title_embedding,
-                definition_embedding=definition_embedding,
-                created_at=date.today().isoformat(),
-                updated_at=date.today().isoformat()
-            )
-            self.session.add(predicate)
+        predicate = ExternalPredicate(
+            id=str(uuid4()),
+            title=title,
+            definition=definition,
+            source=source,
+            external_id=external_id,
+            attributes=str(attributes) if attributes is not None else None,
+            title_embedding=title_embedding,
+            definition_embedding=definition_embedding,
+            created_at=date.today().isoformat(),
+            updated_at=date.today().isoformat()
+        )
+        self.session.add(predicate)
+        self.session.commit()
 
         logger.debug(
             f"Added external predicate: source={source}, external_id={external_id}, title={title}"
@@ -1208,6 +1229,7 @@ class ReferenceManager:
             "node_count": 0,
             "vec_count": 0,
             "schema_version": None,
+            "model_version": EMBEDDING_MODEL_VERSION,
             "last_import_at": None,
             "database_size": 0,
             "database_path": self.db_path,

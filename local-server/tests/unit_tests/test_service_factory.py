@@ -14,7 +14,7 @@ sys.path.append(
 import pytest
 import time
 import threading
-from unittest.mock import Mock, patch
+from unittest.mock import Mock, patch, MagicMock
 
 from services.service_factory import (
     ServiceFactory,
@@ -236,8 +236,24 @@ class TestServiceFactory:
             assert service_metrics["cache_hits"] == 0
             assert service_metrics["cache_misses"] == 0
 
-    def test_llm_service_caching_with_parameters(self, service_factory):
+    @patch('llm.service.get_provider_router')
+    @patch.dict("os.environ", {"OPENAI_API_KEY": "sk-test1234567890abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMN"})
+    def test_llm_service_caching_with_parameters(self, mock_get_router, service_factory):
         """Test LLM service caching with different parameters."""
+        # Mock the provider router to avoid initialization issues
+        mock_router = MagicMock()
+        mock_router.get_enabled_models.return_value = ["gpt-3.5-turbo"]
+        mock_router.is_model_available.return_value = True
+        
+        # Mock models manager
+        mock_models_manager = MagicMock()
+        mock_config = MagicMock()
+        mock_config.api_key_env_var = "OPENAI_API_KEY"
+        mock_models_manager.get_model_config.return_value = mock_config
+        mock_router.models_manager = mock_models_manager
+        
+        mock_get_router.return_value = mock_router
+        
         # Create LLM services with different parameters
         llm1 = service_factory.create_llm_service(
             model_name="gpt-3.5-turbo", temperature=0.0
