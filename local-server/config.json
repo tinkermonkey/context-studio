@@ -44,6 +44,8 @@
   "reference_sources": {
     "default_language": "en",
     "search_timeout": 30,
+    "enable_relevance_filtering": false,
+    "filter_cache_ttl": 300,
     "conceptnet": {
       "enabled": true,
       "upstream_url": "https://api.conceptnet.io",

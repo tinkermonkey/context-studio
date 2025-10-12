@@ -15,6 +15,7 @@ from reference_api.models import (
     MultiSourceSearchResponse
 )
 from reference_api.exceptions import ReferenceError, SourceError, SourceTimeoutError
+from config import get_settings, Settings
 
 logger = logging.getLogger(__name__)
 
@@ -580,15 +581,27 @@ async def get_node_links(
     direction: str = Query("both", description="Link direction: inbound, outbound, or both"),
     predicate: Optional[str] = Query(None, description="Filter by predicate (exact match)"),
     limit: Optional[int] = Query(None, ge=1, le=1000, description="Maximum results"),
+    apply_relevance_filter: Optional[bool] = Query(None, description="Apply predicate relevance filtering (defaults to config setting)"),
+    settings: Settings = Depends(get_settings),
 ):
     """
     Retrieve links connected to a reference node.
 
     Returns links ordered by created_at (descending).
+
+    When apply_relevance_filter=True, filters links based on predicate relevance
+    mappings from the global predicates table. If not specified, uses the
+    enable_relevance_filtering setting from configuration.
     """
     try:
         from reference_db.manager import ReferenceManager
         from reference_db.config import ReferenceConfig
+        from database.utils import get_db
+        from services.reference_filter_service import ReferenceFilterService
+
+        # Use configuration default if not explicitly provided
+        if apply_relevance_filter is None:
+            apply_relevance_filter = settings.reference_sources.enable_relevance_filtering
 
         config = ReferenceConfig()
         with ReferenceManager(config) as manager:
@@ -605,6 +618,17 @@ async def get_node_links(
                 limit=limit
             )
 
+            # Apply relevance filtering if requested
+            filter_stats = None
+            if apply_relevance_filter:
+                # Get local DB session for predicate access
+                local_db = next(get_db())
+                try:
+                    filter_service = ReferenceFilterService(local_db, manager)
+                    links, filter_stats = filter_service.filter_links(links)
+                finally:
+                    local_db.close()
+
             # Format response
             results = []
             for link in links:
@@ -616,13 +640,19 @@ async def get_node_links(
                     "created_at": link.created_at
                 })
 
-            return {
+            response = {
                 "node_id": node_id,
                 "direction": direction,
                 "predicate": predicate,
                 "total_links": len(results),
-                "links": results
+                "links": results,
+                "filtering_applied": apply_relevance_filter
             }
+
+            if filter_stats:
+                response["filter_statistics"] = filter_stats
+
+            return response
 
     except HTTPException:
         raise
@@ -701,4 +731,39 @@ async def reference_db_health_check():
                 "execution_time_ms": round(execution_time_ms, 2)
             }
         )
+
+
+# Reference filter endpoints
+@router.get("/ref-db/filter/statistics")
+async def get_filter_statistics():
+    """
+    Get reference link filtering statistics.
+
+    Returns information about the current predicate relevance configuration:
+    - Number of relevant/irrelevant predicates
+    - External predicate mappings
+    - Filtering readiness status
+
+    This endpoint helps users understand what will be filtered when
+    they enable relevance filtering on reference queries.
+    """
+    try:
+        from reference_db.manager import ReferenceManager
+        from reference_db.config import ReferenceConfig
+        from database.utils import get_db
+        from services.reference_filter_service import ReferenceFilterService
+
+        config = ReferenceConfig()
+        with ReferenceManager(config) as manager:
+            local_db = next(get_db())
+            try:
+                filter_service = ReferenceFilterService(local_db, manager)
+                stats = filter_service.get_filter_statistics()
+                return stats
+            finally:
+                local_db.close()
+
+    except Exception as e:
+        logger.error(f"Get filter statistics failed: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
 

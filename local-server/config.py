@@ -110,6 +110,10 @@ class ReferenceSourcesConfig(BaseModel):
     # Global search timeout for multi-source search operations
     search_timeout: int = Field(default=30, ge=5, le=300, description="Timeout in seconds for multi-source search operations")
 
+    # Reference link filtering settings
+    enable_relevance_filtering: bool = Field(default=False, description="Enable predicate relevance filtering for reference queries by default")
+    filter_cache_ttl: int = Field(default=300, ge=60, le=3600, description="Cache TTL for predicate relevance filters in seconds")
+
     # Individual source configurations
     conceptnet: ReferenceSourceConfig = Field(default_factory=lambda: ReferenceSourceConfig(
         upstream_url="https://api.conceptnet.io",
