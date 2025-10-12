@@ -199,30 +199,19 @@ class ReferenceFilterService:
         if not unique_predicate_ids:
             return {}
 
-        # Batch fetch only the external predicates we need using SQL IN clause
+        # Batch fetch only the external predicates we need
         predicate_map = {}
         try:
-            # Use direct SQL query for better performance with IN clause
-            ref_session = self.ref_manager.get_session()
-            query = text("""
-                SELECT external_id, source
-                FROM reference_predicates
-                WHERE external_id IN :predicate_ids
-            """)
+            # Fetch all external predicates and filter in memory
+            # This is more reliable across SQLite versions than IN clause with text()
+            all_ext_preds = self.ref_manager.list_external_predicates()
 
-            result = ref_session.execute(
-                query,
-                {"predicate_ids": tuple(unique_predicate_ids)}
-            )
-
-            for row in result:
-                external_id = row[0]
-                source = row[1]
-
-                if external_id not in predicate_map:
-                    predicate_map[external_id] = []
-                pred_key = f"{source}:{external_id}"
-                predicate_map[external_id].append(pred_key)
+            for ext_pred in all_ext_preds:
+                if ext_pred.external_id in unique_predicate_ids:
+                    if ext_pred.external_id not in predicate_map:
+                        predicate_map[ext_pred.external_id] = []
+                    pred_key = f"{ext_pred.source}:{ext_pred.external_id}"
+                    predicate_map[ext_pred.external_id].append(pred_key)
 
         except Exception as e:
             logger.error(f"Database error fetching external predicates: {e}", exc_info=True)
