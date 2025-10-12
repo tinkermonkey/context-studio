@@ -261,6 +261,22 @@ def update_predicate(
         db.commit()
         db.refresh(db_predicate)
 
+        # If relevance was updated, invalidate the reference filter cache
+        if predicate.is_relevant is not None:
+            try:
+                from reference_db.manager import ReferenceManager
+                from reference_db.config import ReferenceConfig
+                from services.reference_filter_service import ReferenceFilterService
+
+                ref_config = ReferenceConfig()
+                with ReferenceManager(ref_config) as manager:
+                    filter_service = ReferenceFilterService(db, manager)
+                    filter_service.invalidate_cache()
+                    logger.info(f"Invalidated reference filter cache after updating predicate {id} relevance")
+            except Exception as cache_error:
+                # Log but don't fail the update if cache invalidation fails
+                logger.warning(f"Failed to invalidate reference filter cache: {cache_error}")
+
         return to_predicate_out(db_predicate)
 
     except HTTPException:

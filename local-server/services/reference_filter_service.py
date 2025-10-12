@@ -8,7 +8,7 @@ this service applies those filters to reference query results.
 
 import json
 import logging
-from typing import List, Dict, Any, Optional, Set
+from typing import List, Dict, Any, Optional, Set, Tuple
 from sqlalchemy.orm import Session
 from sqlalchemy import text
 
@@ -43,9 +43,9 @@ class ReferenceFilterService:
         self._relevant_cache: Optional[Set[str]] = None
         self._irrelevant_cache: Optional[Set[str]] = None
 
-    def _get_predicate_mappings(self) -> Dict[str, Any]:
+    def _get_all_predicate_mappings_with_relevance(self) -> Dict[str, Any]:
         """
-        Get all predicate mappings with relevance flags.
+        Get all predicate mappings with relevance flags from the global predicates table.
 
         Returns:
             Dict mapping predicate IDs to their relevance info and external mappings:
@@ -59,7 +59,11 @@ class ReferenceFilterService:
                 }
             }
         """
-        predicates = self.local_session.query(Predicate).all()
+        try:
+            predicates = self.local_session.query(Predicate).all()
+        except Exception as e:
+            logger.error(f"Database error fetching predicates: {e}", exc_info=True)
+            return {}
 
         mappings = {}
         for pred in predicates:
@@ -84,7 +88,7 @@ class ReferenceFilterService:
 
         return mappings
 
-    def _build_relevance_sets(self) -> tuple[Set[str], Set[str]]:
+    def _build_relevance_sets(self) -> Tuple[Set[str], Set[str]]:
         """
         Build sets of relevant and irrelevant external predicate identifiers.
 
@@ -92,7 +96,7 @@ class ReferenceFilterService:
             Tuple of (relevant_predicates, irrelevant_predicates) where each is a set
             of strings in format "source:external_id" (e.g., "schema.org:subClassOf")
         """
-        mappings = self._get_predicate_mappings()
+        mappings = self._get_all_predicate_mappings_with_relevance()
 
         relevant = set()
         irrelevant = set()
@@ -152,19 +156,99 @@ class ReferenceFilterService:
         self._irrelevant_cache = None
         logger.debug("Reference filter cache invalidated")
 
+    def _determine_filter_mode(self, relevant: Set[str], irrelevant: Set[str]) -> str:
+        """
+        Determine the filtering strategy based on which predicates are marked.
+
+        Filtering Modes:
+        - WHITELIST: When relevant predicates exist, ONLY include links using those predicates
+        - BLACKLIST: When only irrelevant predicates exist, EXCLUDE those and include all others
+
+        Args:
+            relevant: Set of relevant external predicate identifiers
+            irrelevant: Set of irrelevant external predicate identifiers
+
+        Returns:
+            "whitelist" or "blacklist" indicating the filtering strategy
+        """
+        if len(relevant) > 0:
+            # If any predicates are marked relevant, use whitelist mode
+            # This means: only include links that use relevant predicates
+            return "whitelist"
+        else:
+            # If only irrelevant predicates exist (no relevant ones), use blacklist mode
+            # This means: exclude irrelevant predicates, include everything else
+            return "blacklist"
+
+    def _batch_fetch_predicates_for_links(self, links: List[ReferenceLink]) -> Dict[str, List[str]]:
+        """
+        Batch fetch external predicates needed for the given links.
+
+        This optimizes performance by fetching only the predicates referenced in the links,
+        rather than fetching ALL external predicates from the database.
+
+        Args:
+            links: List of ReferenceLink objects to fetch predicates for
+
+        Returns:
+            Dict mapping link predicate IDs to list of "source:external_id" keys
+        """
+        # Collect unique predicate IDs from links
+        unique_predicate_ids = {link.predicate for link in links}
+
+        if not unique_predicate_ids:
+            return {}
+
+        # Batch fetch only the external predicates we need using SQL IN clause
+        predicate_map = {}
+        try:
+            # Use direct SQL query for better performance with IN clause
+            ref_session = self.ref_manager.get_session()
+            query = text("""
+                SELECT external_id, source
+                FROM reference_predicates
+                WHERE external_id IN :predicate_ids
+            """)
+
+            result = ref_session.execute(
+                query,
+                {"predicate_ids": tuple(unique_predicate_ids)}
+            )
+
+            for row in result:
+                external_id = row[0]
+                source = row[1]
+
+                if external_id not in predicate_map:
+                    predicate_map[external_id] = []
+                pred_key = f"{source}:{external_id}"
+                predicate_map[external_id].append(pred_key)
+
+        except Exception as e:
+            logger.error(f"Database error fetching external predicates: {e}", exc_info=True)
+            # Return empty map on error - will result in graceful degradation
+            return {}
+
+        return predicate_map
+
     def filter_links(
         self,
         links: List[ReferenceLink],
         include_relevant: bool = True,
         exclude_irrelevant: bool = True
-    ) -> tuple[List[ReferenceLink], Dict[str, Any]]:
+    ) -> Tuple[List[ReferenceLink], Dict[str, Any]]:
         """
-        Filter reference links based on predicate relevance.
+        Filter reference links based on predicate relevance mappings.
+
+        This method applies filtering based on the is_relevant flags set on global predicates.
+        It uses two modes:
+        - Whitelist mode (when relevant predicates exist): Only include links using relevant predicates
+        - Blacklist mode (when only irrelevant exist): Exclude irrelevant, include everything else
 
         Args:
             links: List of ReferenceLink objects to filter
-            include_relevant: If True, include links using relevant predicates
-            exclude_irrelevant: If True, exclude links using irrelevant predicates
+            include_relevant: If True, include links using relevant predicates (whitelist mode)
+            exclude_irrelevant: If True, exclude links using irrelevant predicates (blacklist mode)
 
         Returns:
             Tuple of (filtered_links, statistics) where statistics contains:
@@ -178,9 +262,21 @@ class ReferenceFilterService:
         """
         total_before = len(links)
 
-        # Get relevance sets
-        relevant = self.get_relevant_predicates()
-        irrelevant = self.get_irrelevant_predicates()
+        try:
+            # Get relevance sets
+            relevant = self.get_relevant_predicates()
+            irrelevant = self.get_irrelevant_predicates()
+        except Exception as e:
+            logger.error(f"Error getting relevance sets: {e}", exc_info=True)
+            # On error, return all links unfiltered
+            return links, {
+                "total_before": total_before,
+                "total_after": total_before,
+                "filtered_count": 0,
+                "predicates_used": [],
+                "filtering_active": False,
+                "error": str(e)
+            }
 
         # If no predicates marked relevant or irrelevant, return all links
         if not relevant and not irrelevant:
@@ -192,40 +288,37 @@ class ReferenceFilterService:
                 "filtering_active": False
             }
 
+        # Determine filtering strategy
+        filter_mode = self._determine_filter_mode(relevant, irrelevant)
+        whitelist_mode = (filter_mode == "whitelist")
+
+        # Batch fetch predicates for all links (performance optimization)
+        predicate_map = self._batch_fetch_predicates_for_links(links)
+
         # Filter links
         filtered_links = []
         predicates_used = set()
 
-        # Determine filtering mode:
-        # - If relevant predicates exist, use whitelist mode (only include relevant)
-        # - If only irrelevant predicates exist, use blacklist mode (exclude irrelevant, include others)
-        whitelist_mode = len(relevant) > 0
-
         for link in links:
-            # Find all external predicates matching this link's predicate across all sources
-            # Use list_external_predicates and filter by external_id
-            all_ext_preds = self.ref_manager.list_external_predicates()
-            matching_predicates = [ep for ep in all_ext_preds if ep.external_id == link.predicate]
+            # Get all external predicate keys for this link
+            pred_keys = predicate_map.get(link.predicate, [])
 
-            if matching_predicates:
+            if pred_keys:
                 # Check if any of the matching predicates are relevant/irrelevant
                 should_include = False
-                found_relevant = False
 
-                for ext_pred in matching_predicates:
-                    pred_key = f"{ext_pred.source}:{ext_pred.external_id}"
-
+                for pred_key in pred_keys:
                     if whitelist_mode:
                         # Whitelist mode: include if ANY matching predicate is relevant
                         if include_relevant and pred_key in relevant:
                             should_include = True
-                            found_relevant = True
                             predicates_used.add(pred_key)
+                            break  # Found a relevant match, include it
                     else:
                         # Blacklist mode: exclude if ANY matching predicate is irrelevant
                         if exclude_irrelevant and pred_key in irrelevant:
                             should_include = False
-                            break
+                            break  # Found irrelevant match, exclude it
                         else:
                             should_include = True
 
@@ -244,12 +337,13 @@ class ReferenceFilterService:
             "total_after": total_after,
             "filtered_count": filtered_count,
             "predicates_used": sorted(list(predicates_used)),
-            "filtering_active": True
+            "filtering_active": True,
+            "filter_mode": filter_mode
         }
 
         logger.info(
-            f"Filtered {filtered_count} links ({total_before} -> {total_after}), "
-            f"used {len(predicates_used)} predicates"
+            f"Filtered {filtered_count} links using {filter_mode} mode "
+            f"({total_before} -> {total_after}), used {len(predicates_used)} predicates"
         )
 
         return filtered_links, statistics
@@ -269,20 +363,32 @@ class ReferenceFilterService:
                 "irrelevant_external_predicates": List[str]
             }
         """
-        mappings = self._get_predicate_mappings()
-        relevant = self.get_relevant_predicates(force_refresh=True)
-        irrelevant = self.get_irrelevant_predicates()
+        try:
+            mappings = self._get_all_predicate_mappings_with_relevance()
+            relevant = self.get_relevant_predicates(force_refresh=True)
+            irrelevant = self.get_irrelevant_predicates()
 
-        # Count predicates by relevance status
-        relevant_count = sum(1 for info in mappings.values() if info["is_relevant"] is True)
-        irrelevant_count = sum(1 for info in mappings.values() if info["is_relevant"] is False)
-        unmapped_count = sum(1 for info in mappings.values() if info["is_relevant"] is None)
+            # Count predicates by relevance status
+            relevant_count = sum(1 for info in mappings.values() if info["is_relevant"] is True)
+            irrelevant_count = sum(1 for info in mappings.values() if info["is_relevant"] is False)
+            unmapped_count = sum(1 for info in mappings.values() if info["is_relevant"] is None)
 
-        return {
-            "total_predicates": len(mappings),
-            "relevant_count": relevant_count,
-            "irrelevant_count": irrelevant_count,
-            "unmapped_count": unmapped_count,
-            "relevant_external_predicates": sorted(list(relevant)),
-            "irrelevant_external_predicates": sorted(list(irrelevant))
-        }
+            return {
+                "total_predicates": len(mappings),
+                "relevant_count": relevant_count,
+                "irrelevant_count": irrelevant_count,
+                "unmapped_count": unmapped_count,
+                "relevant_external_predicates": sorted(list(relevant)),
+                "irrelevant_external_predicates": sorted(list(irrelevant))
+            }
+        except Exception as e:
+            logger.error(f"Error getting filter statistics: {e}", exc_info=True)
+            return {
+                "total_predicates": 0,
+                "relevant_count": 0,
+                "irrelevant_count": 0,
+                "unmapped_count": 0,
+                "relevant_external_predicates": [],
+                "irrelevant_external_predicates": [],
+                "error": str(e)
+            }
