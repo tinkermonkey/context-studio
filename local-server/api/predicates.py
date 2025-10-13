@@ -139,20 +139,6 @@ def create_predicate(predicate: PredicateCreate, db: Session = Depends(get_db)):
         raise HTTPException(status_code=409, detail="Predicate with this identifier or title already exists.")
 
 
-@router.get("/{id}", response_model=PredicateOut, responses={404: {"description": "Predicate not found"}})
-def get_predicate(id: str, db: Session = Depends(get_db)):
-    """Get a predicate by ID."""
-    # Validate UUID format
-    if not validate_uuid_format(id):
-        raise HTTPException(status_code=400, detail="Invalid UUID format.")
-    
-    predicate = db.query(models.Predicate).filter_by(id=id).first()
-    if not predicate:
-        raise HTTPException(status_code=404, detail="Predicate not found.")
-    
-    return to_predicate_out(predicate)
-
-
 @router.get("/", response_model=PaginatedPredicatesResponse)
 def list_predicates(
     skip: int = Query(0, ge=0),
@@ -163,10 +149,10 @@ def list_predicates(
     """List predicates with pagination and sorting."""
     # Build base query
     query = db.query(models.Predicate)
-    
+
     # Get total count
     total = query.count()
-    
+
     # Apply sorting
     if sortBy == "title":
         query = query.order_by(models.Predicate.title)
@@ -174,19 +160,179 @@ def list_predicates(
         query = query.order_by(models.Predicate.identifier)
     elif sortBy == "date_created":
         query = query.order_by(models.Predicate.date_created.desc())
-    
+
     # Apply pagination
     predicates = query.offset(skip).limit(limit).all()
-    
+
     # Convert to response models
     result = [to_predicate_out(p) for p in predicates]
-    
+
     return PaginatedPredicatesResponse(
         data=result,
         total=total,
         skip=skip,
         limit=limit
     )
+
+
+# ConceptNet Integration Endpoints
+@router.get("/conceptnet-relations", response_model=List[str])
+def get_conceptnet_relations():
+    """Get the list of ConceptNet relations configured in the system."""
+    settings = get_settings()
+    return settings.concepcy_config["relations_of_interest"]
+
+
+@router.get("/conceptnet-mapping", response_model=Dict[str, str])
+def get_conceptnet_mapping(db: Session = Depends(get_db)):
+    """Get a mapping of all predicate identifiers to their ConceptNet relations."""
+    predicates = db.query(models.Predicate).all()
+    mapping = {}
+
+    for predicate in predicates:
+        conceptnet_relation = get_conceptnet_relation_for_predicate(predicate)
+        if conceptnet_relation:
+            mapping[predicate.identifier] = conceptnet_relation
+
+    return mapping
+
+
+@router.get("/by-identifier/{identifier}", response_model=PredicateOut, responses={404: {"description": "Predicate not found"}})
+def get_predicate_by_identifier(identifier: str, db: Session = Depends(get_db)):
+    """Get a predicate by its identifier."""
+    predicate = db.query(models.Predicate).filter_by(identifier=identifier).first()
+    if not predicate:
+        raise HTTPException(status_code=404, detail="Predicate not found.")
+
+    return to_predicate_out(predicate)
+
+
+# External Predicate Discovery Endpoints (Phase 2)
+
+class PredicateDiscoveryResponse(BaseModel):
+    """Response for predicate discovery requests."""
+    task_id: str
+    status: str = "started"
+    message: str
+
+
+class PredicateDiscoveryStatus(BaseModel):
+    """Status of a predicate discovery task."""
+    task_id: str
+    status: str  # "pending", "running", "completed", "failed"
+    sources: Optional[List[str]] = None
+    results: Optional[Dict[str, Dict[str, Any]]] = None
+    error: Optional[str] = None
+    started_at: Optional[str] = None
+    completed_at: Optional[str] = None
+
+
+class ExternalPredicateOut(BaseModel):
+    """Response model for external predicates."""
+    id: str
+    title: str
+    definition: str
+    source: str
+    external_id: str
+    attributes: Optional[Dict[str, Any]] = None
+    created_at: str
+    updated_at: str
+
+
+class PaginatedExternalPredicatesResponse(BaseModel):
+    """Paginated response for external predicates."""
+    data: List[ExternalPredicateOut]
+    total: int
+    skip: int
+    limit: int
+    source: Optional[str] = None
+
+
+@router.get("/discover/{task_id}", response_model=PredicateDiscoveryStatus)
+def get_discovery_status(task_id: str):
+    """
+    Get the status of a predicate discovery task.
+
+    Returns the current status and results (if completed) of the discovery task.
+    """
+    if task_id not in _discovery_tasks:
+        raise HTTPException(status_code=404, detail="Task not found")
+
+    return PredicateDiscoveryStatus(**_discovery_tasks[task_id])
+
+
+@router.get("/external", response_model=PaginatedExternalPredicatesResponse)
+def list_external_predicates(
+    source: Optional[str] = Query(None, description="Filter by source (conceptnet, dbpedia, wikidata)"),
+    skip: int = Query(0, ge=0),
+    limit: int = Query(50, ge=1, le=1000),
+):
+    """
+    List external predicates with pagination.
+
+    Returns predicates discovered from external knowledge sources with optional source filtering.
+    """
+    from reference_db.manager import ReferenceManager
+    from reference_db.config import ReferenceConfig
+
+    try:
+        config = ReferenceConfig()
+        with ReferenceManager(config) as manager:
+            # Get predicates
+            predicates = manager.list_external_predicates(source=source, limit=limit + skip)
+
+            # Apply pagination
+            total = len(predicates)
+            paginated = predicates[skip:skip + limit]
+
+            # Format response
+            data = []
+            for predicate in paginated:
+                # Parse attributes if present
+                attrs = None
+                if predicate.attributes:
+                    try:
+                        import ast
+                        attrs = ast.literal_eval(predicate.attributes)
+                    except:
+                        attrs = {"raw": predicate.attributes}
+
+                data.append(ExternalPredicateOut(
+                    id=predicate.id,
+                    title=predicate.title,
+                    definition=predicate.definition,
+                    source=predicate.source,
+                    external_id=predicate.external_id,
+                    attributes=attrs,
+                    created_at=predicate.created_at,
+                    updated_at=predicate.updated_at
+                ))
+
+            return PaginatedExternalPredicatesResponse(
+                data=data,
+                total=total,
+                skip=skip,
+                limit=limit,
+                source=source
+            )
+
+    except Exception as e:
+        logger.error(f"Failed to list external predicates: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.get("/{id}", response_model=PredicateOut, responses={404: {"description": "Predicate not found"}})
+def get_predicate(id: str, db: Session = Depends(get_db)):
+    """Get a predicate by ID."""
+    # Validate UUID format
+    if not validate_uuid_format(id):
+        raise HTTPException(status_code=400, detail="Invalid UUID format.")
+
+    predicate = db.query(models.Predicate).filter_by(id=id).first()
+    if not predicate:
+        raise HTTPException(status_code=404, detail="Predicate not found.")
+
+    return to_predicate_out(predicate)
 
 
 @router.put("/{id}", response_model=PredicateOut, responses={404: {"description": "Predicate not found"}})
@@ -316,24 +462,6 @@ def delete_predicate(id: str, db: Session = Depends(get_db)):
     return {"success": True}
 
 
-@router.get("/by-identifier/{identifier}", response_model=PredicateOut, responses={404: {"description": "Predicate not found"}})
-def get_predicate_by_identifier(identifier: str, db: Session = Depends(get_db)):
-    """Get a predicate by its identifier."""
-    predicate = db.query(models.Predicate).filter_by(identifier=identifier).first()
-    if not predicate:
-        raise HTTPException(status_code=404, detail="Predicate not found.")
-
-    return to_predicate_out(predicate)
-
-
-# ConceptNet Integration Endpoints
-@router.get("/conceptnet-relations", response_model=List[str])
-def get_conceptnet_relations():
-    """Get the list of ConceptNet relations configured in the system."""
-    settings = get_settings()
-    return settings.concepcy_config["relations_of_interest"]
-
-
 @router.post("/import-from-conceptnet", response_model=List[PredicateOut])
 def import_predicates_from_conceptnet(
     relations: Optional[List[str]] = None,  # If None, import all configured relations
@@ -342,19 +470,19 @@ def import_predicates_from_conceptnet(
     """Import predicates from ConceptNet relations."""
     settings = get_settings()
     available_relations = settings.concepcy_config["relations_of_interest"]
-    
+
     # If specific relations are requested, validate and filter
     if relations:
         # Validate that all requested relations are available
         invalid_relations = [r for r in relations if r not in available_relations]
         if invalid_relations:
             return bad_request_error_response(f"Invalid ConceptNet relations: {invalid_relations}")
-        
+
         # Temporarily update the config to only import requested relations
         # We'll create a modified session for this specific import
         original_relations = settings.concepcy_config["relations_of_interest"]
         settings.concepcy_config["relations_of_interest"] = relations
-        
+
         try:
             imported_predicates = import_conceptnet_predicates(db)
         finally:
@@ -363,10 +491,10 @@ def import_predicates_from_conceptnet(
     else:
         # Import all configured relations
         imported_predicates = import_conceptnet_predicates(db)
-    
+
     # Convert to response models
     result = [to_predicate_out(predicate) for predicate in imported_predicates]
-    
+
     return result
 
 
@@ -376,68 +504,13 @@ def get_predicate_conceptnet_relation(id: str, db: Session = Depends(get_db)):
     # Validate UUID format
     if not validate_uuid_format(id):
         raise HTTPException(status_code=400, detail="Invalid UUID format.")
-    
+
     predicate = db.query(models.Predicate).filter_by(id=id).first()
     if not predicate:
         raise HTTPException(status_code=404, detail="Predicate not found.")
-    
+
     relation = get_conceptnet_relation_for_predicate(predicate)
     return relation
-
-
-@router.get("/conceptnet-mapping", response_model=Dict[str, str])
-def get_conceptnet_mapping(db: Session = Depends(get_db)):
-    """Get a mapping of all predicate identifiers to their ConceptNet relations."""
-    predicates = db.query(models.Predicate).all()
-    mapping = {}
-
-    for predicate in predicates:
-        conceptnet_relation = get_conceptnet_relation_for_predicate(predicate)
-        if conceptnet_relation:
-            mapping[predicate.identifier] = conceptnet_relation
-
-    return mapping
-
-
-# External Predicate Discovery Endpoints (Phase 2)
-
-class PredicateDiscoveryResponse(BaseModel):
-    """Response for predicate discovery requests."""
-    task_id: str
-    status: str = "started"
-    message: str
-
-
-class PredicateDiscoveryStatus(BaseModel):
-    """Status of a predicate discovery task."""
-    task_id: str
-    status: str  # "pending", "running", "completed", "failed"
-    sources: Optional[List[str]] = None
-    results: Optional[Dict[str, Dict[str, Any]]] = None
-    error: Optional[str] = None
-    started_at: Optional[str] = None
-    completed_at: Optional[str] = None
-
-
-class ExternalPredicateOut(BaseModel):
-    """Response model for external predicates."""
-    id: str
-    title: str
-    definition: str
-    source: str
-    external_id: str
-    attributes: Optional[Dict[str, Any]] = None
-    created_at: str
-    updated_at: str
-
-
-class PaginatedExternalPredicatesResponse(BaseModel):
-    """Paginated response for external predicates."""
-    data: List[ExternalPredicateOut]
-    total: int
-    skip: int
-    limit: int
-    source: Optional[str] = None
 
 
 async def _run_discovery_task(task_id: str, sources: Optional[List[str]] = None):
@@ -545,79 +618,6 @@ async def discover_external_predicates(
         status="started",
         message=f"Discovery task started for sources: {sources or valid_sources}"
     )
-
-
-@router.get("/discover/{task_id}", response_model=PredicateDiscoveryStatus)
-def get_discovery_status(task_id: str):
-    """
-    Get the status of a predicate discovery task.
-
-    Returns the current status and results (if completed) of the discovery task.
-    """
-    if task_id not in _discovery_tasks:
-        raise HTTPException(status_code=404, detail="Task not found")
-
-    return PredicateDiscoveryStatus(**_discovery_tasks[task_id])
-
-
-@router.get("/external", response_model=PaginatedExternalPredicatesResponse)
-def list_external_predicates(
-    source: Optional[str] = Query(None, description="Filter by source (conceptnet, dbpedia, wikidata)"),
-    skip: int = Query(0, ge=0),
-    limit: int = Query(50, ge=1, le=1000),
-):
-    """
-    List external predicates with pagination.
-
-    Returns predicates discovered from external knowledge sources with optional source filtering.
-    """
-    from reference_db.manager import ReferenceManager
-    from reference_db.config import ReferenceConfig
-
-    try:
-        config = ReferenceConfig()
-        with ReferenceManager(config) as manager:
-            # Get predicates
-            predicates = manager.list_external_predicates(source=source, limit=limit + skip)
-
-            # Apply pagination
-            total = len(predicates)
-            paginated = predicates[skip:skip + limit]
-
-            # Format response
-            data = []
-            for predicate in paginated:
-                # Parse attributes if present
-                attrs = None
-                if predicate.attributes:
-                    try:
-                        import ast
-                        attrs = ast.literal_eval(predicate.attributes)
-                    except:
-                        attrs = {"raw": predicate.attributes}
-
-                data.append(ExternalPredicateOut(
-                    id=predicate.id,
-                    title=predicate.title,
-                    definition=predicate.definition,
-                    source=predicate.source,
-                    external_id=predicate.external_id,
-                    attributes=attrs,
-                    created_at=predicate.created_at,
-                    updated_at=predicate.updated_at
-                ))
-
-            return PaginatedExternalPredicatesResponse(
-                data=data,
-                total=total,
-                skip=skip,
-                limit=limit,
-                source=source
-            )
-
-    except Exception as e:
-        logger.error(f"Failed to list external predicates: {e}", exc_info=True)
-        raise HTTPException(status_code=500, detail=str(e))
 
 
 # Predicate Similarity Search Endpoints (Phase 3)
