@@ -6,6 +6,32 @@ import os
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 import pytest
+
+
+def pytest_collection_modifyitems(config, items):
+    """Modify test collection to skip utility classes that start with Test."""
+    # No need to modify items, just hook for future use
+    pass
+
+
+def pytest_ignore_collect(collection_path, config):
+    """Ignore collection from utility files that have non-test Test* classes."""
+    # Get the string representation of the path
+    path_str = str(collection_path)
+
+    # List of utility files that should not be collected
+    utility_files = [
+        'test_config.py',
+        'test_db_utils.py',
+        'test_environment.py'
+    ]
+
+    # Check if this is one of our utility files (not in subdirectories)
+    for util_file in utility_files:
+        if path_str.endswith(f'/tests/{util_file}') or path_str.endswith(f'\\tests\\{util_file}'):
+            return True
+
+    return False
 import tempfile
 from fastapi.testclient import TestClient
 from app import create_app

@@ -17,7 +17,7 @@ from sqlalchemy.orm import sessionmaker, Session
 import json
 
 from database.models import Base, Predicate
-from reference_db.models import ReferenceBase, ReferenceNode, ReferenceLink, ReferencePredicate
+from reference_db.models import Base as ReferenceBase, ReferenceNode, ReferenceLink, ExternalPredicate
 from reference_db.manager import ReferenceManager
 from reference_db.config import ReferenceConfig
 from services.reference_filter_service import ReferenceFilterService
@@ -78,7 +78,7 @@ def test_filter_service_with_real_database_interaction(local_db_session, ref_db_
     local_db_session.commit()
 
     # Create external predicate in reference database
-    ext_pred = ReferencePredicate(
+    ext_pred = ExternalPredicate(
         id="ext-pred-1",
         source="schema.org",
         external_id="relatedTo",
@@ -219,7 +219,7 @@ def test_batch_predicate_fetch_optimization(local_db_session, ref_db_session, mo
     """Test that batch fetching optimizes database queries."""
     # Create multiple external predicates
     for i in range(10):
-        ext_pred = ReferencePredicate(
+        ext_pred = ExternalPredicate(
             id=f"ext-pred-{i}",
             source="test",
             external_id=f"pred{i}",
