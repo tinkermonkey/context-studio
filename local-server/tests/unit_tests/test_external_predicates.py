@@ -525,6 +525,9 @@ class TestExternalPredicateManager:
                         external_id="test1"
                     )
 
+                # Roll back the session after the integrity error
+                manager.session.rollback()
+
                 # Different source with same external_id should succeed
                 manager.add_external_predicate(
                     title="testPredicate",
