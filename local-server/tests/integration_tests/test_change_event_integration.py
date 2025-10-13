@@ -530,3 +530,152 @@ def test_high_volume_event_processing(db_session, change_event_handler):
     # Verify all events are processed
     final_unprocessed = change_event_handler.get_unprocessed_events()
     assert len(final_unprocessed) == 0
+
+
+def test_update_node_type_trigger(db_session):
+    """Test that updating a node's type generates an update-type event."""
+
+    # Generate unique ID for this test
+    node_id = f"type-change-node-{uuid4()}"
+
+    # Get the engine from the db_session's bind
+    engine = db_session.bind
+
+    with engine.connect() as conn:
+        # Insert a structure_node directly
+        conn.execute(
+            text("""
+                INSERT INTO structure_nodes (id, node_type, title, definition)
+                VALUES (:node_id, 'term', 'Test Node', 'Test definition')
+            """),
+            {"node_id": node_id}
+        )
+        conn.commit()
+
+        # Clear any create events from the insert
+        conn.execute(text("DELETE FROM change_events WHERE record_id = :node_id"), {"node_id": node_id})
+        conn.commit()
+
+        # Update the node_type
+        conn.execute(
+            text("""
+                UPDATE structure_nodes
+                SET node_type = 'domain'
+                WHERE id = :node_id
+            """),
+            {"node_id": node_id}
+        )
+        conn.commit()
+
+        # Check for update-type event
+        event = conn.execute(
+            text("""
+                SELECT event_type, record_type, record_id, old_data, new_data
+                FROM change_events
+                WHERE record_id = :node_id AND event_type = 'update-type'
+            """),
+            {"node_id": node_id}
+        ).fetchone()
+
+        assert event is not None, "Expected update-type event not found"
+        assert event[0] == "update-type"
+        assert event[1] == "structure_node"
+        assert event[2] == node_id
+
+        # Verify old_data has old node_type
+        old_data = json.loads(event[3])
+        assert old_data["node_type"] == "term"
+
+        # Verify new_data has new node_type
+        new_data = json.loads(event[4])
+        assert new_data["node_type"] == "domain"
+
+        # Clean up
+        conn.execute(text("DELETE FROM change_events WHERE record_id = :node_id"), {"node_id": node_id})
+        conn.execute(text("DELETE FROM structure_nodes WHERE id = :node_id"), {"node_id": node_id})
+        conn.commit()
+
+
+def test_move_node_trigger(db_session):
+    """Test that moving a node (changing parent_node_id) generates a move event."""
+
+    # Generate unique IDs for this test
+    node_id = f"move-node-{uuid4()}"
+    old_parent_id = f"old-parent-{uuid4()}"
+    new_parent_id = f"new-parent-{uuid4()}"
+
+    # Get the engine from the db_session's bind
+    engine = db_session.bind
+
+    with engine.connect() as conn:
+        # Create parent nodes
+        conn.execute(
+            text("""
+                INSERT INTO structure_nodes (id, node_type, title, definition)
+                VALUES (:parent_id, 'domain', 'Old Parent', 'Old parent definition')
+            """),
+            {"parent_id": old_parent_id}
+        )
+        conn.execute(
+            text("""
+                INSERT INTO structure_nodes (id, node_type, title, definition)
+                VALUES (:parent_id, 'domain', 'New Parent', 'New parent definition')
+            """),
+            {"parent_id": new_parent_id}
+        )
+
+        # Insert a structure_node with old parent
+        conn.execute(
+            text("""
+                INSERT INTO structure_nodes (id, node_type, parent_node_id, title, definition)
+                VALUES (:node_id, 'term', :old_parent_id, 'Test Node', 'Test definition')
+            """),
+            {"node_id": node_id, "old_parent_id": old_parent_id}
+        )
+        conn.commit()
+
+        # Clear any create events from the inserts
+        conn.execute(text("DELETE FROM change_events WHERE record_id IN (:node_id, :old_parent_id, :new_parent_id)"),
+                    {"node_id": node_id, "old_parent_id": old_parent_id, "new_parent_id": new_parent_id})
+        conn.commit()
+
+        # Move the node to new parent
+        conn.execute(
+            text("""
+                UPDATE structure_nodes
+                SET parent_node_id = :new_parent_id
+                WHERE id = :node_id
+            """),
+            {"node_id": node_id, "new_parent_id": new_parent_id}
+        )
+        conn.commit()
+
+        # Check for move event
+        event = conn.execute(
+            text("""
+                SELECT event_type, record_type, record_id, old_data, new_data
+                FROM change_events
+                WHERE record_id = :node_id AND event_type = 'move'
+            """),
+            {"node_id": node_id}
+        ).fetchone()
+
+        assert event is not None, "Expected move event not found"
+        assert event[0] == "move"
+        assert event[1] == "structure_node"
+        assert event[2] == node_id
+
+        # Verify old_data has old parent_node_id
+        old_data = json.loads(event[3])
+        assert old_data["parent_node_id"] == old_parent_id
+
+        # Verify new_data has new parent_node_id
+        new_data = json.loads(event[4])
+        assert new_data["parent_node_id"] == new_parent_id
+
+        # Clean up
+        conn.execute(text("DELETE FROM change_events WHERE record_id IN (:node_id, :old_parent_id, :new_parent_id)"),
+                    {"node_id": node_id, "old_parent_id": old_parent_id, "new_parent_id": new_parent_id})
+        conn.execute(text("DELETE FROM structure_nodes WHERE id IN (:node_id, :old_parent_id, :new_parent_id)"),
+                    {"node_id": node_id, "old_parent_id": old_parent_id, "new_parent_id": new_parent_id})
+        conn.commit()
