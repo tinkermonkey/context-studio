@@ -132,11 +132,15 @@ class TestPhase4AnalyticsWorkflows:
             "id": "sync-456",
             "sync_type": "incremental",
             "started_at": datetime.now(timezone.utc),
+            "completed_at": None,
             "since_timestamp": datetime.now(timezone.utc) - timedelta(hours=1),
+            "until_timestamp": None,
+            "entity_types": ["structure_node", "structure_node_link"],
             "synced_changes": 125,
             "new_entities": 25,
             "updated_entities": 100,
-            "errors": []
+            "errors": [],
+            "metadata": {}
         }
         
         mock_sync_engine.get_sync_system_status.return_value = {
@@ -207,6 +211,11 @@ class TestPhase4AnalyticsWorkflows:
     @pytest.fixture
     def test_app(self, mock_db, mock_session_local, mock_service_factory):
         """Create test FastAPI application."""
+        from services.service_factory import set_service_factory
+
+        # Set the mock factory as the global factory so dependency functions use it
+        set_service_factory(mock_service_factory)
+
         return create_app(
             dataset_id="test-dataset",
             engine=None,
@@ -323,7 +332,8 @@ class TestPhase4AnalyticsWorkflows:
             "synced_changes": 125,
             "new_entities": 25,
             "updated_entities": 100,
-            "errors": []
+            "errors": [],
+            "metadata": {}
         }
 
         response = client.get(f"/api/sync/operations/{sync_id}")
