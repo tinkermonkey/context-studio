@@ -186,6 +186,9 @@ class TestTaskSubmission:
         assert task_status["metadata"]["description"] == "Test task"
         assert task_status["metadata"]["priority"] == "high"
 
+        # Wait for task to complete before shutdown
+        await asyncio.sleep(0.2)
+
         await task_manager.shutdown()
 
     @pytest.mark.asyncio
@@ -195,15 +198,25 @@ class TestTaskSubmission:
         await task_manager.start()
 
         async def slow_task():
-            await asyncio.sleep(10)  # Long running task
+            try:
+                await asyncio.sleep(10)  # Long running task
+            except asyncio.CancelledError:
+                # Properly handle cancellation
+                raise
 
         # Fill the queue
         await task_manager.submit_task("test", slow_task())
         await task_manager.submit_task("test", slow_task())
 
         # Third task should raise QueueFull
-        with pytest.raises(asyncio.QueueFull):
-            await task_manager.submit_task("test", slow_task())
+        # Create the coroutine and properly close it if rejected
+        rejected_coro = slow_task()
+        try:
+            with pytest.raises(asyncio.QueueFull):
+                await task_manager.submit_task("test", rejected_coro)
+        finally:
+            # Close the coroutine if it wasn't submitted
+            rejected_coro.close()
 
         await task_manager.shutdown()
 
@@ -222,6 +235,9 @@ class TestTaskSubmission:
             task_ids.add(task_id)
 
         assert len(task_ids) == 10  # All IDs should be unique
+
+        # Wait for tasks to complete before shutdown
+        await asyncio.sleep(0.3)
 
         await task_manager.shutdown()
 
@@ -286,7 +302,11 @@ class TestTaskStateTransitions:
         await task_manager.start()
 
         async def long_task():
-            await asyncio.sleep(10)
+            try:
+                await asyncio.sleep(10)
+            except asyncio.CancelledError:
+                # Properly handle cancellation
+                raise
 
         # Submit multiple tasks to ensure some stay pending
         task_ids = []
@@ -430,7 +450,11 @@ class TestTaskCancellation:
         await task_manager.start()
 
         async def slow_task():
-            await asyncio.sleep(10)
+            try:
+                await asyncio.sleep(10)
+            except asyncio.CancelledError:
+                # Properly handle cancellation
+                raise
 
         # Submit multiple tasks
         task_id1 = await task_manager.submit_task("test", slow_task())
@@ -649,6 +673,9 @@ class TestTaskRetrieval:
         assert status is not None
         assert status["task_id"] == task_id
 
+        # Wait for task to complete before shutdown
+        await asyncio.sleep(0.2)
+
         await task_manager.shutdown()
 
     @pytest.mark.asyncio
@@ -674,6 +701,9 @@ class TestTaskRetrieval:
 
         all_tasks = task_manager.get_all_tasks()
         assert len(all_tasks) == 5
+
+        # Wait for tasks to complete before shutdown
+        await asyncio.sleep(0.3)
 
         await task_manager.shutdown()
 
@@ -714,7 +744,11 @@ class TestResourceCleanup:
         await task_manager.start()
 
         async def long_task():
-            await asyncio.sleep(10)
+            try:
+                await asyncio.sleep(10)
+            except asyncio.CancelledError:
+                # Properly handle cancellation
+                raise
 
         # Submit multiple long tasks
         task_ids = []
@@ -741,8 +775,12 @@ class TestResourceCleanup:
         await task_manager.start()
 
         async def infinite_task():
-            while True:
-                await asyncio.sleep(1)
+            try:
+                while True:
+                    await asyncio.sleep(1)
+            except asyncio.CancelledError:
+                # Properly handle cancellation
+                raise
 
         await task_manager.submit_task("test", infinite_task())
 
@@ -919,6 +957,9 @@ class TestEdgeCases:
         task_ids = await asyncio.gather(*tasks)
         assert len(task_ids) == 10
         assert len(set(task_ids)) == 10  # All unique
+
+        # Wait for tasks to complete before shutdown
+        await asyncio.sleep(0.5)
 
         await task_manager.shutdown()
 
