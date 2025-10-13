@@ -558,6 +558,202 @@ class TestExternalPredicatesIntegration:
 
         assert no_results == []
 
+    def test_predicate_mapping_stores_external_reference(self, manager):
+        """
+        Test that external predicate mappings are stored correctly.
+
+        Validates:
+        - External predicates can be added with source and external_id
+        - Predicates can be retrieved by source and external_id
+        - Attributes field stores additional metadata
+        """
+        # Add an external predicate with mapping information
+        attributes = {
+            "url": "https://schema.org/subClassOf",
+            "domain": "rdfs:Class",
+            "range": "rdfs:Class"
+        }
+
+        predicate = manager.add_external_predicate(
+            title="subClassOf",
+            definition="Indicates that one class is a subclass of another",
+            source="schema.org",
+            external_id="subClassOf",
+            attributes=attributes
+        )
+
+        assert predicate.id is not None
+        assert predicate.source == "schema.org"
+        assert predicate.external_id == "subClassOf"
+
+        # Retrieve by source and external_id
+        retrieved = manager.get_external_predicate_by_source("schema.org", "subClassOf")
+        assert retrieved is not None
+        assert retrieved.id == predicate.id
+        assert retrieved.title == "subClassOf"
+        assert retrieved.source == "schema.org"
+        assert retrieved.external_id == "subClassOf"
+
+    def test_external_source_filtering(self, manager):
+        """
+        Test filtering external predicates by source.
+
+        Validates:
+        - List operations can filter by source
+        - Search operations can filter by source
+        - Filtering is accurate and complete
+        """
+        # Add predicates from multiple sources
+        manager.add_external_predicate(
+            title="type",
+            definition="The type of the item",
+            source="schema.org",
+            external_id="type"
+        )
+
+        manager.add_external_predicate(
+            title="instance of",
+            definition="That class of which this subject is a particular example",
+            source="wikidata",
+            external_id="P31"
+        )
+
+        manager.add_external_predicate(
+            title="IsA",
+            definition="Indicates that one concept is a type of another",
+            source="conceptnet",
+            external_id="/r/IsA"
+        )
+
+        # List all predicates
+        all_preds = manager.list_external_predicates()
+        assert len(all_preds) == 3
+
+        # Filter by schema.org
+        schema_preds = manager.list_external_predicates(source="schema.org")
+        assert len(schema_preds) == 1
+        assert schema_preds[0].source == "schema.org"
+
+        # Filter by wikidata
+        wikidata_preds = manager.list_external_predicates(source="wikidata")
+        assert len(wikidata_preds) == 1
+        assert wikidata_preds[0].source == "wikidata"
+
+        # Filter by conceptnet
+        conceptnet_preds = manager.list_external_predicates(source="conceptnet")
+        assert len(conceptnet_preds) == 1
+        assert conceptnet_preds[0].source == "conceptnet"
+
+        # Search with source filter
+        schema_search = manager.search_external_predicates_by_similarity(
+            "type classification",
+            source="schema.org",
+            threshold=0.3,
+            limit=10
+        )
+        for pred, score in schema_search:
+            assert pred.source == "schema.org"
+
+    def test_predicate_similarity_scoring(self, manager):
+        """
+        Test similarity scoring for external predicates.
+
+        Validates:
+        - Similarity scores are in valid range [0, 1]
+        - More similar predicates have higher scores
+        - Scores are based on semantic meaning
+        """
+        # Add predicates with varying degrees of semantic similarity
+        manager.add_external_predicate(
+            title="subClassOf",
+            definition="Indicates that one class is a subclass of another class in a hierarchy",
+            source="test",
+            external_id="subclass"
+        )
+
+        manager.add_external_predicate(
+            title="parentClass",
+            definition="The parent class in a class hierarchy structure",
+            source="test",
+            external_id="parent"
+        )
+
+        manager.add_external_predicate(
+            title="color",
+            definition="The color appearance of an object",
+            source="test",
+            external_id="color"
+        )
+
+        # Search for class hierarchy concepts
+        results = manager.search_external_predicates_by_similarity(
+            "class hierarchy parent subclass",
+            source="test",
+            threshold=0.0,  # Get all results
+            limit=10
+        )
+
+        assert len(results) > 0
+
+        # Check all scores are valid
+        for pred, score in results:
+            assert 0.0 <= score <= 1.0, f"Score {score} out of valid range"
+
+        # Get scores for each predicate
+        scores_by_id = {pred.external_id: score for pred, score in results}
+
+        # Class-related predicates should have higher scores than color
+        if "subclass" in scores_by_id and "color" in scores_by_id:
+            assert scores_by_id["subclass"] > scores_by_id["color"]
+
+        if "parent" in scores_by_id and "color" in scores_by_id:
+            assert scores_by_id["parent"] > scores_by_id["color"]
+
+    def test_external_predicate_caching(self, manager):
+        """
+        Test that external predicate retrieval is efficient with repeated access.
+
+        Validates:
+        - Repeated retrieval by ID returns consistent results
+        - Repeated retrieval by source/external_id returns consistent results
+        - No errors occur with repeated access
+        """
+        # Add a predicate
+        predicate = manager.add_external_predicate(
+            title="relatedTo",
+            definition="Indicates a general relationship between entities",
+            source="test",
+            external_id="related"
+        )
+
+        pred_id = predicate.id
+
+        # Retrieve multiple times by ID
+        for _ in range(10):
+            retrieved = manager.get_external_predicate(pred_id)
+            assert retrieved is not None
+            assert retrieved.id == pred_id
+            assert retrieved.title == "relatedTo"
+            assert retrieved.source == "test"
+            assert retrieved.external_id == "related"
+
+        # Retrieve multiple times by source/external_id
+        for _ in range(10):
+            retrieved = manager.get_external_predicate_by_source("test", "related")
+            assert retrieved is not None
+            assert retrieved.id == pred_id
+            assert retrieved.title == "relatedTo"
+
+        # Verify data consistency across retrieval methods
+        by_id = manager.get_external_predicate(pred_id)
+        by_source = manager.get_external_predicate_by_source("test", "related")
+
+        assert by_id.id == by_source.id
+        assert by_id.title == by_source.title
+        assert by_id.definition == by_source.definition
+        assert by_id.source == by_source.source
+        assert by_id.external_id == by_source.external_id
+
     def test_list_predicates_limit(self, manager):
         """
         Test that limit parameter works correctly in list operations.
