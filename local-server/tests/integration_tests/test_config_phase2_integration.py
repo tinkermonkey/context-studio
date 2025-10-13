@@ -610,5 +610,84 @@ class TestErrorHandlingIntegration:
             manager2.engine.dispose()
 
 
+class TestConfigurationManagerFeatures:
+    """Test ConfigurationManager advanced features like validation, reload, nested access, and key checks."""
+
+    def test_config_validation_enforcement(self):
+        """Test that invalid configuration is rejected during validation."""
+        with tempfile.TemporaryDirectory() as tmpdir:
+            config_file = os.path.join(tmpdir, 'config.json')
+            config_manager = ConfigurationManager(config_file)
+
+            # Set an invalid value (port out of range)
+            config_manager.settings.server.port = 99999  # Exceeds max value of 65535
+
+            # Validate should return errors
+            errors = config_manager.validate()
+            assert len(errors) > 0, "Invalid configuration should be rejected"
+            assert any("port" in error.lower() for error in errors), f"Expected port validation error, got: {errors}"
+
+    def test_reload_configuration_at_runtime(self):
+        """Test that configuration can be reloaded at runtime."""
+        with tempfile.TemporaryDirectory() as tmpdir:
+            config_file = os.path.join(tmpdir, 'config.json')
+
+            # Create initial config
+            config_manager = ConfigurationManager(config_file)
+            initial_port = config_manager.settings.server.port
+
+            # Modify the config file directly
+            config_data = config_manager.settings.model_dump()
+            config_data['server']['port'] = 9999
+            with open(config_file, 'w') as f:
+                json.dump(config_data, f, indent=2)
+
+            # Reload configuration
+            reloaded_settings = config_manager.load()
+
+            # Verify configuration was reloaded
+            assert reloaded_settings.server.port == 9999, "Configuration reload failed"
+            assert config_manager.settings.server.port == 9999, "Configuration manager state not updated"
+
+    def test_nested_config_value_access(self):
+        """Test that nested configuration values can be accessed using dot notation."""
+        with tempfile.TemporaryDirectory() as tmpdir:
+            config_file = os.path.join(tmpdir, 'config.json')
+            config_manager = ConfigurationManager(config_file)
+
+            # Test nested get
+            try:
+                port = config_manager.get('server.port')
+                assert port == config_manager.settings.server.port, "Nested configuration access failed"
+
+                # Test deeper nesting
+                cache_ttl = config_manager.get('reference_sources.conceptnet.rate_limit.requests_per_hour')
+                assert cache_ttl == config_manager.settings.reference_sources.conceptnet.rate_limit.requests_per_hour
+
+            except Exception as e:
+                pytest.fail(f"Nested configuration access failed: {e}")
+
+    def test_config_key_existence_checks(self):
+        """Test that configuration key existence can be checked properly."""
+        with tempfile.TemporaryDirectory() as tmpdir:
+            config_file = os.path.join(tmpdir, 'config.json')
+            config_manager = ConfigurationManager(config_file)
+
+            # Test that valid keys can be accessed
+            try:
+                config_manager.get('server.port')
+                config_manager.get('database.default_url')
+                config_manager.get('llm.model_name')
+            except KeyError:
+                pytest.fail("Configuration key existence check failed - valid keys should exist")
+
+            # Test that invalid keys raise KeyError
+            with pytest.raises(KeyError):
+                config_manager.get('invalid.key.path')
+
+            with pytest.raises(KeyError):
+                config_manager.get('server.nonexistent_field')
+
+
 if __name__ == "__main__":
     pytest.main([__file__, "-v"])
