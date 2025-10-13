@@ -702,3 +702,141 @@ class TestExternalPredicatesE2E:
             for ext_id in ["persist1", "persist2", "persist3"]:
                 pred = manager.get_external_predicate_by_source("test", ext_id)
                 assert pred is not None
+
+    def test_map_local_predicate_to_dbpedia(self, temp_db):
+        """
+        Test mapping a local predicate to DBpedia predicates.
+
+        Workflow:
+        1. Create DBpedia predicates in reference database
+        2. Search for similar predicates
+        3. Verify DBpedia predicates are found
+        4. Verify similarity scoring works
+        """
+        config = ReferenceConfig()
+
+        with ReferenceManager(config, db_path=temp_db) as manager:
+            # Add DBpedia predicates
+            manager.add_external_predicate(
+                title="location",
+                definition="The geographic location of an entity",
+                source="dbpedia",
+                external_id="dbo:location"
+            )
+
+            manager.add_external_predicate(
+                title="isPartOf",
+                definition="Indicates that one entity is part of another",
+                source="dbpedia",
+                external_id="dbo:isPartOf"
+            )
+
+            manager.add_external_predicate(
+                title="nearestCity",
+                definition="The nearest city to a location",
+                source="dbpedia",
+                external_id="dbo:nearestCity"
+            )
+
+            # Search for location-related predicates
+            location_results = manager.search_external_predicates_by_similarity(
+                "geographic location place position",
+                source="dbpedia",
+                threshold=0.3,
+                limit=10
+            )
+
+            # Verify we found relevant predicates
+            assert len(location_results) > 0, "Should find location-related DBpedia predicates"
+
+            # Check that location predicate is in results
+            titles = [pred.title for pred, score in location_results]
+            assert "location" in titles or "nearestCity" in titles
+
+            # Verify scores are reasonable
+            for pred, score in location_results:
+                assert 0.0 <= score <= 1.0, f"Score {score} out of range"
+                assert score >= 0.3, f"Score {score} below threshold"
+
+    def test_discover_similar_predicates_from_conceptnet(self, temp_db):
+        """
+        Test discovering similar predicates from ConceptNet.
+
+        Workflow:
+        1. Create ConceptNet predicates in reference database
+        2. Search for predicates related to relationships
+        3. Verify ConceptNet predicates are found
+        4. Verify semantic similarity matching works
+        """
+        config = ReferenceConfig()
+
+        with ReferenceManager(config, db_path=temp_db) as manager:
+            # Add ConceptNet relation predicates
+            manager.add_external_predicate(
+                title="RelatedTo",
+                definition="General semantic relationship between concepts",
+                source="conceptnet",
+                external_id="/r/RelatedTo"
+            )
+
+            manager.add_external_predicate(
+                title="IsA",
+                definition="Indicates that one concept is a type or instance of another",
+                source="conceptnet",
+                external_id="/r/IsA"
+            )
+
+            manager.add_external_predicate(
+                title="PartOf",
+                definition="Indicates a part-whole relationship",
+                source="conceptnet",
+                external_id="/r/PartOf"
+            )
+
+            manager.add_external_predicate(
+                title="HasProperty",
+                definition="Indicates that an entity has a specific property or attribute",
+                source="conceptnet",
+                external_id="/r/HasProperty"
+            )
+
+            manager.add_external_predicate(
+                title="Causes",
+                definition="Indicates a causal relationship where one event causes another",
+                source="conceptnet",
+                external_id="/r/Causes"
+            )
+
+            # Search for hierarchy-related predicates
+            hierarchy_results = manager.search_external_predicates_by_similarity(
+                "type classification taxonomy hierarchy",
+                source="conceptnet",
+                threshold=0.3,
+                limit=10
+            )
+
+            # Verify we found relevant predicates
+            assert len(hierarchy_results) > 0, "Should find hierarchy-related ConceptNet predicates"
+
+            # IsA should be among the results for hierarchy queries
+            titles = [pred.title for pred, score in hierarchy_results]
+            assert "IsA" in titles or "PartOf" in titles
+
+            # Search for property-related predicates
+            property_results = manager.search_external_predicates_by_similarity(
+                "attribute characteristic property feature",
+                source="conceptnet",
+                threshold=0.3,
+                limit=10
+            )
+
+            # Verify we found property-related predicates
+            assert len(property_results) > 0, "Should find property-related ConceptNet predicates"
+
+            property_titles = [pred.title for pred, score in property_results]
+            assert "HasProperty" in property_titles or "RelatedTo" in property_titles
+
+            # Verify all scores are valid
+            for pred, score in hierarchy_results + property_results:
+                assert 0.0 <= score <= 1.0, f"Score {score} out of range"
+                assert pred.source == "conceptnet", f"Expected conceptnet, got {pred.source}"
