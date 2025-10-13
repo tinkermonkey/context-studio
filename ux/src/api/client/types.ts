@@ -256,7 +256,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/predicates/{id}": {
+    "/api/predicates/conceptnet-relations": {
         parameters: {
             query?: never;
             header?: never;
@@ -264,21 +264,33 @@ export interface paths {
             cookie?: never;
         };
         /**
-         * Get Predicate
-         * @description Get a predicate by ID.
+         * Get Conceptnet Relations
+         * @description Get the list of ConceptNet relations configured in the system.
          */
-        get: operations["get_predicate_api_predicates__id__get"];
-        /**
-         * Update Predicate
-         * @description Update an existing predicate.
-         */
-        put: operations["update_predicate_api_predicates__id__put"];
+        get: operations["get_conceptnet_relations_api_predicates_conceptnet_relations_get"];
+        put?: never;
         post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/predicates/conceptnet-mapping": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
         /**
-         * Delete Predicate
-         * @description Delete a predicate.
+         * Get Conceptnet Mapping
+         * @description Get a mapping of all predicate identifiers to their ConceptNet relations.
          */
-        delete: operations["delete_predicate_api_predicates__id__delete"];
+        get: operations["get_conceptnet_mapping_api_predicates_conceptnet_mapping_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
         options?: never;
         head?: never;
         patch?: never;
@@ -304,7 +316,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/predicates/conceptnet-relations": {
+    "/api/predicates/discover/{task_id}": {
         parameters: {
             query?: never;
             header?: never;
@@ -312,13 +324,67 @@ export interface paths {
             cookie?: never;
         };
         /**
-         * Get Conceptnet Relations
-         * @description Get the list of ConceptNet relations configured in the system.
+         * Get Discovery Status
+         * @description Get the status of a predicate discovery task.
+         *
+         *     Returns the current status and results (if completed) of the discovery task.
          */
-        get: operations["get_conceptnet_relations_api_predicates_conceptnet_relations_get"];
+        get: operations["get_discovery_status_api_predicates_discover__task_id__get"];
         put?: never;
         post?: never;
         delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/predicates/external": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List External Predicates
+         * @description List external predicates with pagination.
+         *
+         *     Returns predicates discovered from external knowledge sources with optional source filtering.
+         */
+        get: operations["list_external_predicates_api_predicates_external_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/predicates/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Predicate
+         * @description Get a predicate by ID.
+         */
+        get: operations["get_predicate_api_predicates__id__get"];
+        /**
+         * Update Predicate
+         * @description Update an existing predicate.
+         *
+         *     This endpoint implements JSON schema validation for mappings.
+         */
+        put: operations["update_predicate_api_predicates__id__put"];
+        post?: never;
+        /**
+         * Delete Predicate
+         * @description Delete a predicate.
+         */
+        delete: operations["delete_predicate_api_predicates__id__delete"];
         options?: never;
         head?: never;
         patch?: never;
@@ -364,20 +430,154 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/predicates/conceptnet-mapping": {
+    "/api/predicates/discover": {
         parameters: {
             query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
-        /**
-         * Get Conceptnet Mapping
-         * @description Get a mapping of all predicate identifiers to their ConceptNet relations.
-         */
-        get: operations["get_conceptnet_mapping_api_predicates_conceptnet_mapping_get"];
+        get?: never;
         put?: never;
-        post?: never;
+        /**
+         * Discover External Predicates
+         * @description Discover predicates from external knowledge sources.
+         *
+         *     This endpoint starts a background task to fetch predicate metadata from:
+         *     - ConceptNet (40 relations)
+         *     - DBpedia (760 properties via SPARQL)
+         *     - WikiData (10K properties via SPARQL)
+         *
+         *     Returns a task_id that can be used to check the status of the discovery process.
+         *
+         *     **Performance targets:**
+         *     - ConceptNet: <2s for 40 relations
+         *     - DBpedia: <10s for 760 properties
+         *     - WikiData: <30s for 10K properties
+         */
+        post: operations["discover_external_predicates_api_predicates_discover_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/predicates/{id}/find-similar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Find Similar Predicates
+         * @description Find similar external predicates for a given predicate using vector similarity search.
+         *
+         *     This endpoint:
+         *     1. Retrieves the predicate by ID
+         *     2. Performs vector similarity search against external predicates
+         *     3. Returns ranked results with confidence scores
+         *     4. Caches results for 1 hour (TTL-based)
+         *
+         *     **Performance targets:**
+         *     - <200ms p95 for 10K-50K predicates (PT-VS-001, PT-VS-002)
+         *     - <50ms p95 for cached searches (PT-VS-006)
+         *
+         *     **Confidence scores:**
+         *     - High: similarity >= 0.85
+         *     - Medium: similarity >= 0.70
+         *     - Low: similarity >= 0.60
+         *     - Results below 0.60 are rejected
+         *
+         *     Args:
+         *         id: UUID of the predicate to find similar predicates for
+         *         source: Optional source filter
+         *         limit: Maximum number of results (default: 100, max: 100)
+         *         threshold: Minimum similarity threshold (default: 0.7)
+         *         use_cache: Whether to use cached results (default: True)
+         *
+         *     Returns:
+         *         FindSimilarResponse with ranked similarity results
+         */
+        post: operations["find_similar_predicates_api_predicates__id__find_similar_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/predicates/cluster-predicates": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Cluster Predicates
+         * @description Cluster similar predicates using DBSCAN algorithm.
+         *
+         *     This endpoint:
+         *     1. Retrieves predicates (all or specified IDs)
+         *     2. Generates embeddings for each predicate
+         *     3. Performs density-based clustering (DBSCAN)
+         *     4. Returns clusters with automatic count determination
+         *
+         *     **Algorithm:** DBSCAN (Density-Based Spatial Clustering of Applications with Noise)
+         *     - Automatically determines number of clusters
+         *     - Handles noise points (outliers)
+         *     - Does not require specifying cluster count in advance
+         *
+         *     **Resource limits:**
+         *     - Default max_predicates: 1000 (to prevent resource exhaustion)
+         *     - For larger datasets, process in batches or increase max_predicates
+         *
+         *     Args:
+         *         predicate_ids: Optional list of specific predicate IDs to cluster
+         *         min_similarity: Minimum similarity for cluster membership (default: 0.7)
+         *         min_cluster_size: Minimum predicates per cluster (default: 2)
+         *         eps: DBSCAN epsilon parameter - lower values create tighter clusters (default: 0.3)
+         *         max_predicates: Maximum predicates to process (default: 1000, max: 10000)
+         *
+         *     Returns:
+         *         ClusterPredicatesResponse with clusters and statistics
+         */
+        post: operations["cluster_predicates_api_predicates_cluster_predicates_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/predicates/invalidate-similarity-cache": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Invalidate Similarity Cache
+         * @description Invalidate the similarity search cache.
+         *
+         *     This should be called when external predicates are updated to ensure
+         *     fresh results in similarity searches.
+         *
+         *     **Use cases:**
+         *     - After running predicate discovery
+         *     - After updating external predicate definitions
+         *     - When stale cache results are suspected
+         *
+         *     Returns:
+         *         Success message with cache statistics
+         */
+        post: operations["invalidate_similarity_cache_api_predicates_invalidate_similarity_cache_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1575,131 +1775,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/schema-org/status": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Get Status
-         * @description Return schema.org database status.
-         */
-        get: operations["get_status_api_schema_org_status_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/schema-org/refresh": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Refresh Schema Org
-         * @description Trigger a refresh of the schema.org database.
-         */
-        post: operations["refresh_schema_org_api_schema_org_refresh_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/schema-org/entities": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** List Entities */
-        get: operations["list_entities_api_schema_org_entities_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/schema-org/entities/{identifier}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Get Entity */
-        get: operations["get_entity_api_schema_org_entities__identifier__get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/schema-org/properties": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** List Properties */
-        get: operations["list_properties_api_schema_org_properties_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/schema-org/properties/{identifier}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Get Property */
-        get: operations["get_property_api_schema_org_properties__identifier__get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/schema-org/search": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Semantic Search */
-        get: operations["semantic_search_api_schema_org_search_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
     "/api/nlp_analysis": {
         parameters: {
             query?: never;
@@ -2534,6 +2609,129 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/reference/ref-db/search": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Reference Db Search
+         * @description Search reference database using semantic vector similarity.
+         *
+         *     This endpoint uses vector embeddings for semantic search and returns results
+         *     ranked by similarity score.
+         */
+        get: operations["reference_db_search_api_reference_ref_db_search_get"];
+        put?: never;
+        /**
+         * Reference Db Search Post
+         * @description Search reference database using semantic vector similarity (POST version).
+         *
+         *     This endpoint uses vector embeddings for semantic search and returns results
+         *     ranked by similarity score. Accepts a JSON body with search parameters.
+         */
+        post: operations["reference_db_search_post_api_reference_ref_db_search_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/reference/ref-db/entity/{source}/{external_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Reference Entity
+         * @description Get a reference entity by source and external ID.
+         *
+         *     This endpoint looks up entities from the reference database using their
+         *     source identifier and external ID.
+         */
+        get: operations["get_reference_entity_api_reference_ref_db_entity__source___external_id__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/reference/ref-db/property/{source}/{external_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Reference Property
+         * @description Get a reference property by source and external ID.
+         *
+         *     This endpoint looks up properties from the reference database using their
+         *     source identifier and external ID. Properties are stored as reference nodes
+         *     with a type attribute indicating they are properties.
+         */
+        get: operations["get_reference_property_api_reference_ref_db_property__source___external_id__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/reference/ref-db/nodes/{node_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Reference Node
+         * @description Get a reference node by ID.
+         */
+        get: operations["get_reference_node_api_reference_ref_db_nodes__node_id__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/reference/ref-db/nodes/{node_id}/links": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Node Links
+         * @description Retrieve links connected to a reference node.
+         *
+         *     Returns links ordered by created_at (descending).
+         *
+         *     When apply_relevance_filter=True, filters links based on predicate relevance
+         *     mappings from the global predicates table. If not specified, uses the
+         *     enable_relevance_filtering setting from configuration.
+         */
+        get: operations["get_node_links_api_reference_ref_db_nodes__node_id__links_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/reference/health": {
         parameters: {
             query?: never;
@@ -2546,6 +2744,67 @@ export interface paths {
          * @description Check health status of all reference API sources
          */
         get: operations["health_check_api_reference_health_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/reference/ref-db/health": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Reference Db Health Check
+         * @description Check health status of the reference database.
+         *
+         *     Returns comprehensive status information including:
+         *     - status: "healthy", "degraded", or "missing"
+         *     - node_count: Total number of reference nodes
+         *     - vec_count: Number of nodes with embeddings
+         *     - schema_version: Current database schema version
+         *     - model_version: Embedding model version
+         *     - last_import_at: Timestamp of last import
+         *     - database_size: Size of database file in bytes
+         *
+         *     Performance target: <200ms
+         *
+         *     Test Case: TC-S002
+         */
+        get: operations["reference_db_health_check_api_reference_ref_db_health_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/reference/ref-db/filter/statistics": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Filter Statistics
+         * @description Get reference link filtering statistics.
+         *
+         *     Returns information about the current predicate relevance configuration:
+         *     - Number of relevant/irrelevant predicates
+         *     - External predicate mappings
+         *     - Filtering readiness status
+         *
+         *     This endpoint helps users understand what will be filtered when
+         *     they enable relevance filtering on reference queries.
+         */
+        get: operations["get_filter_statistics_api_reference_ref_db_filter_statistics_get"];
         put?: never;
         post?: never;
         delete?: never;
@@ -4619,6 +4878,121 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/tasks": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Tasks
+         * @description List all background tasks with optional filtering.
+         *
+         *     Args:
+         *         status_filter: Optional status filter (pending, running, completed, failed, cancelled)
+         *         task_type: Optional task type filter
+         *
+         *     Returns:
+         *         List of tasks matching the filters
+         */
+        get: operations["list_tasks_api_tasks_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/tasks/stats/summary": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Task Stats
+         * @description Get task management statistics.
+         *
+         *     Returns:
+         *         Statistics about task manager and tasks
+         */
+        get: operations["get_task_stats_api_tasks_stats_summary_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/tasks/dead-letter-queue": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Dead Letter Queue
+         * @description Get all failed tasks from the dead letter queue.
+         *
+         *     Returns:
+         *         List of failed tasks requiring manual intervention
+         */
+        get: operations["get_dead_letter_queue_api_tasks_dead_letter_queue_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/tasks/{task_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Task Status
+         * @description Get the status of a background task.
+         *
+         *     Args:
+         *         task_id: The unique task identifier
+         *
+         *     Returns:
+         *         Task status information
+         *
+         *     Raises:
+         *         HTTPException: 404 if task not found
+         */
+        get: operations["get_task_status_api_tasks__task_id__get"];
+        put?: never;
+        post?: never;
+        /**
+         * Cancel Task
+         * @description Cancel a running or pending background task.
+         *
+         *     Args:
+         *         task_id: The unique task identifier
+         *
+         *     Returns:
+         *         Cancellation result
+         *
+         *     Raises:
+         *         HTTPException: 404 if task not found, 400 if task cannot be cancelled
+         */
+        delete: operations["cancel_task_api_tasks__task_id__delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/optimization/health": {
         parameters: {
             query?: never;
@@ -5169,6 +5543,18 @@ export interface components {
              */
             resolution_strategy: string;
         };
+        /**
+         * CancelTaskResponse
+         * @description Response model for task cancellation.
+         */
+        CancelTaskResponse: {
+            /** Task Id */
+            task_id: string;
+            /** Cancelled */
+            cancelled: boolean;
+            /** Message */
+            message: string;
+        };
         /** CentralityRequest */
         CentralityRequest: {
             /**
@@ -5277,6 +5663,36 @@ export interface components {
             version_ids: string[];
             /** Version Count */
             version_count: number;
+        };
+        /**
+         * ClusterOut
+         * @description Response model for predicate clusters.
+         */
+        ClusterOut: {
+            /** Cluster Id */
+            cluster_id: number;
+            /** Predicate Ids */
+            predicate_ids: string[];
+            /** Centroid Title */
+            centroid_title: string;
+            /** Avg Similarity */
+            avg_similarity: number;
+            /** Size */
+            size: number;
+        };
+        /**
+         * ClusterPredicatesResponse
+         * @description Response for cluster-predicates endpoint.
+         */
+        ClusterPredicatesResponse: {
+            /** Clusters */
+            clusters: components["schemas"]["ClusterOut"][];
+            /** Total Clusters */
+            total_clusters: number;
+            /** Total Predicates */
+            total_predicates: number;
+            /** Cluster Time Ms */
+            cluster_time_ms: number;
         };
         /**
          * CollaborationInsightsOut
@@ -5982,6 +6398,48 @@ export interface components {
             generated_at: string;
         };
         /**
+         * ExternalPredicateOut
+         * @description Response model for external predicates.
+         */
+        ExternalPredicateOut: {
+            /** Id */
+            id: string;
+            /** Title */
+            title: string;
+            /** Definition */
+            definition: string;
+            /** Source */
+            source: string;
+            /** External Id */
+            external_id: string;
+            /** Attributes */
+            attributes?: {
+                [key: string]: unknown;
+            } | null;
+            /** Created At */
+            created_at: string;
+            /** Updated At */
+            updated_at: string;
+        };
+        /**
+         * FindSimilarResponse
+         * @description Response for find-similar endpoint.
+         */
+        FindSimilarResponse: {
+            /** Predicate Id */
+            predicate_id: string;
+            /** Predicate Title */
+            predicate_title: string;
+            /** Results */
+            results: components["schemas"]["SimilarPredicateOut"][];
+            /** Total Results */
+            total_results: number;
+            /** Search Time Ms */
+            search_time_ms: number;
+            /** Cached */
+            cached: boolean;
+        };
+        /**
          * FlavorAnalyticsResponse
          * @description Response model for flavor-specific analytics
          */
@@ -6615,6 +7073,22 @@ export interface components {
             applied_changes: string[];
         };
         /**
+         * PaginatedExternalPredicatesResponse
+         * @description Paginated response for external predicates.
+         */
+        PaginatedExternalPredicatesResponse: {
+            /** Data */
+            data: components["schemas"]["ExternalPredicateOut"][];
+            /** Total */
+            total: number;
+            /** Skip */
+            skip: number;
+            /** Limit */
+            limit: number;
+            /** Source */
+            source?: string | null;
+        };
+        /**
          * PaginatedNodesResponse
          * @description Model for paginated structure_node responses.
          */
@@ -6838,6 +7312,45 @@ export interface components {
             /** Identifier */
             identifier?: string | null;
         };
+        /**
+         * PredicateDiscoveryResponse
+         * @description Response for predicate discovery requests.
+         */
+        PredicateDiscoveryResponse: {
+            /** Task Id */
+            task_id: string;
+            /**
+             * Status
+             * @default started
+             */
+            status: string;
+            /** Message */
+            message: string;
+        };
+        /**
+         * PredicateDiscoveryStatus
+         * @description Status of a predicate discovery task.
+         */
+        PredicateDiscoveryStatus: {
+            /** Task Id */
+            task_id: string;
+            /** Status */
+            status: string;
+            /** Sources */
+            sources?: string[] | null;
+            /** Results */
+            results?: {
+                [key: string]: {
+                    [key: string]: unknown;
+                };
+            } | null;
+            /** Error */
+            error?: string | null;
+            /** Started At */
+            started_at?: string | null;
+            /** Completed At */
+            completed_at?: string | null;
+        };
         /** PredicateOut */
         PredicateOut: {
             /** Title */
@@ -6869,6 +7382,8 @@ export interface components {
             } | null;
             /** Identifier */
             identifier?: string | null;
+            /** Is Relevant */
+            is_relevant?: boolean | null;
         };
         /**
          * ProposalListResponse
@@ -7029,6 +7544,34 @@ export interface components {
             selected_content: string;
         };
         /**
+         * ReferenceSearchRequest
+         * @description Request model for reference database search
+         */
+        ReferenceSearchRequest: {
+            /**
+             * Query
+             * @description Search query text
+             */
+            query: string;
+            /**
+             * Source
+             * @description Filter by source (e.g., 'schema.org')
+             */
+            source?: string | null;
+            /**
+             * Limit
+             * @description Maximum results
+             * @default 20
+             */
+            limit: number;
+            /**
+             * Threshold
+             * @description Similarity threshold
+             * @default 0.7
+             */
+            threshold: number;
+        };
+        /**
          * RegisterUserRequest
          * @description Request model for user registration.
          */
@@ -7111,67 +7654,6 @@ export interface components {
              * @default json
              */
             format: string | null;
-        };
-        /** SchemaOrgEntityOut */
-        SchemaOrgEntityOut: {
-            /** Id */
-            id: string;
-            /** Identifier */
-            identifier: string;
-            /** Title */
-            title: string;
-            /** Definition */
-            definition: string | null;
-            /** Parent Identifier */
-            parent_identifier: string | null;
-            /** Parent Id */
-            parent_id: string | null;
-            /** Created At */
-            created_at: string | null;
-            /** Children Count */
-            children_count?: number | null;
-            /** Raw */
-            raw: {
-                [key: string]: unknown;
-            } | null;
-        };
-        /** SchemaOrgPropertyOut */
-        SchemaOrgPropertyOut: {
-            /** Id */
-            id: string;
-            /** Identifier */
-            identifier: string;
-            /** Title */
-            title: string;
-            /** Definition */
-            definition: string | null;
-            /** Contributors */
-            contributors: string[] | null;
-            /** Domain Includes */
-            domain_includes: string[] | null;
-            /** Range Includes */
-            range_includes: string[] | null;
-            /** Inverse Of */
-            inverse_of: string[] | null;
-            /** Created At */
-            created_at: string | null;
-            /** Raw */
-            raw: {
-                [key: string]: unknown;
-            } | null;
-        };
-        /** SchemaOrgStatus */
-        SchemaOrgStatus: {
-            /** Is Populated */
-            is_populated: boolean;
-            /** Entity Count */
-            entity_count: number;
-            /** Property Count */
-            property_count: number;
-            /** Last Updated */
-            last_updated: number | null;
-            /** Database Size */
-            database_size: number | null;
         };
         /**
          * SearchLink
@@ -7269,19 +7751,6 @@ export interface components {
              */
             analysis_depth: number | null;
         };
-        /** SearchResult */
-        SearchResult: {
-            /** Items */
-            items: (components["schemas"]["SchemaOrgEntityOut"] | components["schemas"]["SchemaOrgPropertyOut"])[];
-            /** Total Count */
-            total_count: number;
-            /** Limit */
-            limit: number;
-            /** Offset */
-            offset: number;
-            /** Query */
-            query: string | null;
-        };
         /**
          * SelectionResponse
          * @description Response model for selection recording.
@@ -7336,6 +7805,26 @@ export interface components {
             most_similar?: {
                 [key: string]: unknown;
             }[];
+        };
+        /**
+         * SimilarPredicateOut
+         * @description Response model for similar predicates.
+         */
+        SimilarPredicateOut: {
+            /** Predicate Id */
+            predicate_id: string;
+            /** Source */
+            source: string;
+            /** Source Id */
+            source_id: string;
+            /** Title */
+            title: string;
+            /** Definition */
+            definition: string;
+            /** Similarity Score */
+            similarity_score: number;
+            /** Confidence */
+            confidence: string;
         };
         /**
          * SourceType
@@ -7517,6 +8006,64 @@ export interface components {
             last_optimization: string | null;
             /** Issues */
             issues: string[];
+        };
+        /**
+         * TaskListResponse
+         * @description Response model for list of tasks.
+         */
+        TaskListResponse: {
+            /** Tasks */
+            tasks: components["schemas"]["TaskStatusResponse"][];
+            /** Total */
+            total: number;
+        };
+        /**
+         * TaskStatsResponse
+         * @description Response model for task statistics.
+         */
+        TaskStatsResponse: {
+            /** Total Tasks */
+            total_tasks: number;
+            /** Queue Size */
+            queue_size: number;
+            /** Max Queue Size */
+            max_queue_size: number;
+            /** Dead Letter Queue Size */
+            dead_letter_queue_size: number;
+            /** Status Counts */
+            status_counts: {
+                [key: string]: number;
+            };
+            /** Is Running */
+            is_running: boolean;
+        };
+        /**
+         * TaskStatusResponse
+         * @description Response model for task status.
+         */
+        TaskStatusResponse: {
+            /** Task Id */
+            task_id: string;
+            /** Task Type */
+            task_type: string;
+            /** Status */
+            status: string;
+            /** Progress */
+            progress: number;
+            /** Result */
+            result?: unknown | null;
+            /** Error */
+            error?: string | null;
+            /** Created At */
+            created_at?: string | null;
+            /** Started At */
+            started_at?: string | null;
+            /** Completed At */
+            completed_at?: string | null;
+            /** Metadata */
+            metadata?: {
+                [key: string]: unknown;
+            };
         };
         /**
          * ThreeWayDiffOut
@@ -8666,6 +9213,164 @@ export interface operations {
             };
         };
     };
+    get_conceptnet_relations_api_predicates_conceptnet_relations_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": string[];
+                };
+            };
+        };
+    };
+    get_conceptnet_mapping_api_predicates_conceptnet_mapping_get: {
+        parameters: {
+            query?: {
+                SessionLocal?: unknown;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: string;
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_predicate_by_identifier_api_predicates_by_identifier__identifier__get: {
+        parameters: {
+            query?: {
+                SessionLocal?: unknown;
+            };
+            header?: never;
+            path: {
+                identifier: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PredicateOut"];
+                };
+            };
+            /** @description Predicate not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_discovery_status_api_predicates_discover__task_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                task_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PredicateDiscoveryStatus"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_external_predicates_api_predicates_external_get: {
+        parameters: {
+            query?: {
+                /** @description Filter by source (conceptnet, dbpedia, wikidata) */
+                source?: string | null;
+                skip?: number;
+                limit?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PaginatedExternalPredicatesResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     get_predicate_api_predicates__id__get: {
         parameters: {
             query?: {
@@ -8790,66 +9495,6 @@ export interface operations {
             };
         };
     };
-    get_predicate_by_identifier_api_predicates_by_identifier__identifier__get: {
-        parameters: {
-            query?: {
-                SessionLocal?: unknown;
-            };
-            header?: never;
-            path: {
-                identifier: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["PredicateOut"];
-                };
-            };
-            /** @description Predicate not found */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    get_conceptnet_relations_api_predicates_conceptnet_relations_get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": string[];
-                };
-            };
-        };
-    };
     import_predicates_from_conceptnet_api_predicates_import_from_conceptnet_post: {
         parameters: {
             query?: {
@@ -8918,9 +9563,88 @@ export interface operations {
             };
         };
     };
-    get_conceptnet_mapping_api_predicates_conceptnet_mapping_get: {
+    discover_external_predicates_api_predicates_discover_post: {
         parameters: {
             query?: {
+                /** @description Sources to discover from (conceptnet, dbpedia, wikidata) */
+                sources?: string[] | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PredicateDiscoveryResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    find_similar_predicates_api_predicates__id__find_similar_post: {
+        parameters: {
+            query?: {
+                /** @description Filter by source (conceptnet, dbpedia, wikidata) */
+                source?: string | null;
+                limit?: number;
+                threshold?: number;
+                /** @description Use cached results if available */
+                use_cache?: boolean;
+                SessionLocal?: unknown;
+            };
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FindSimilarResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    cluster_predicates_api_predicates_cluster_predicates_post: {
+        parameters: {
+            query?: {
+                /** @description Specific predicate IDs to cluster (if None, clusters all) */
+                predicate_ids?: string[] | null;
+                min_similarity?: number;
+                min_cluster_size?: number;
+                /** @description DBSCAN epsilon (distance threshold) */
+                eps?: number;
+                /** @description Maximum predicates to process */
+                max_predicates?: number;
                 SessionLocal?: unknown;
             };
             header?: never;
@@ -8935,9 +9659,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": {
-                        [key: string]: string;
-                    };
+                    "application/json": components["schemas"]["ClusterPredicatesResponse"];
                 };
             };
             /** @description Validation Error */
@@ -8947,6 +9669,26 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    invalidate_similarity_cache_api_predicates_invalidate_similarity_cache_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
                 };
             };
         };
@@ -10855,224 +11597,6 @@ export interface operations {
             };
         };
     };
-    get_status_api_schema_org_status_get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["SchemaOrgStatus"];
-                };
-            };
-        };
-    };
-    refresh_schema_org_api_schema_org_refresh_post: {
-        parameters: {
-            query?: {
-                force?: boolean;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        [key: string]: unknown;
-                    };
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    list_entities_api_schema_org_entities_get: {
-        parameters: {
-            query?: {
-                query?: string | null;
-                parent_id?: string | null;
-                limit?: number;
-                offset?: number;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["SearchResult"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    get_entity_api_schema_org_entities__identifier__get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                identifier: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["SchemaOrgEntityOut"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    list_properties_api_schema_org_properties_get: {
-        parameters: {
-            query?: {
-                query?: string | null;
-                domain_includes?: string | null;
-                range_includes?: string | null;
-                limit?: number;
-                offset?: number;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["SearchResult"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    get_property_api_schema_org_properties__identifier__get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                identifier: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["SchemaOrgPropertyOut"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    semantic_search_api_schema_org_search_get: {
-        parameters: {
-            query: {
-                query: string;
-                search_type?: string;
-                limit?: number;
-                similarity_threshold?: number;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["SearchResult"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
     nlp_analysis_api_nlp_analysis_post: {
         parameters: {
             query?: never;
@@ -12607,7 +13131,259 @@ export interface operations {
             };
         };
     };
+    reference_db_search_api_reference_ref_db_search_get: {
+        parameters: {
+            query: {
+                /** @description Search query text */
+                query: string;
+                /** @description Filter by source (e.g., 'schema.org') */
+                source?: string | null;
+                /** @description Maximum results */
+                limit?: number;
+                /** @description Similarity threshold */
+                threshold?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    reference_db_search_post_api_reference_ref_db_search_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ReferenceSearchRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_reference_entity_api_reference_ref_db_entity__source___external_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Source identifier (e.g., 'schema.org') */
+                source: string;
+                /** @description External identifier from source */
+                external_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_reference_property_api_reference_ref_db_property__source___external_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Source identifier (e.g., 'schema.org') */
+                source: string;
+                /** @description External identifier from source */
+                external_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_reference_node_api_reference_ref_db_nodes__node_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Reference node ID */
+                node_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_node_links_api_reference_ref_db_nodes__node_id__links_get: {
+        parameters: {
+            query?: {
+                /** @description Link direction: inbound, outbound, or both */
+                direction?: string;
+                /** @description Filter by predicate (exact match) */
+                predicate?: string | null;
+                /** @description Maximum results */
+                limit?: number | null;
+                /** @description Apply predicate relevance filtering (defaults to config setting) */
+                apply_relevance_filter?: boolean | null;
+            };
+            header?: never;
+            path: {
+                /** @description Reference node ID */
+                node_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     health_check_api_reference_health_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+        };
+    };
+    reference_db_health_check_api_reference_ref_db_health_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+        };
+    };
+    get_filter_statistics_api_reference_ref_db_filter_statistics_get: {
         parameters: {
             query?: never;
             header?: never;
@@ -15622,6 +16398,140 @@ export interface operations {
                 };
                 content: {
                     "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_tasks_api_tasks_get: {
+        parameters: {
+            query?: {
+                status_filter?: string | null;
+                task_type?: string | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TaskListResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_task_stats_api_tasks_stats_summary_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TaskStatsResponse"];
+                };
+            };
+        };
+    };
+    get_dead_letter_queue_api_tasks_dead_letter_queue_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TaskListResponse"];
+                };
+            };
+        };
+    };
+    get_task_status_api_tasks__task_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                task_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TaskStatusResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    cancel_task_api_tasks__task_id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                task_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CancelTaskResponse"];
                 };
             };
             /** @description Validation Error */

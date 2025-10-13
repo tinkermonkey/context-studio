@@ -8,11 +8,48 @@ export type PredicateCreate = components["schemas"]["PredicateCreate"];
 export type PredicateUpdate = components["schemas"]["PredicateUpdate"];
 export type PaginatedPredicatesResponse =
   components["schemas"]["PaginatedPredicatesResponse"];
+export type ExternalPredicateOut = components["schemas"]["ExternalPredicateOut"];
+export type PaginatedExternalPredicatesResponse =
+  components["schemas"]["PaginatedExternalPredicatesResponse"];
+export type PredicateDiscoveryResponse =
+  components["schemas"]["PredicateDiscoveryResponse"];
+export type PredicateDiscoveryStatus =
+  components["schemas"]["PredicateDiscoveryStatus"];
+export type SimilarPredicateOut = components["schemas"]["SimilarPredicateOut"];
+export type FindSimilarResponse = components["schemas"]["FindSimilarResponse"];
+export type ClusterOut = components["schemas"]["ClusterOut"];
+export type ClusterPredicatesResponse =
+  components["schemas"]["ClusterPredicatesResponse"];
 
 export interface PredicateListParams {
   skip?: number;
   limit?: number;
   sort_by?: string;
+}
+
+export interface ListExternalPredicatesParams extends Record<string, unknown> {
+  source?: string;
+  skip?: number;
+  limit?: number;
+}
+
+export interface FindSimilarParams extends Record<string, unknown> {
+  source?: string;
+  limit?: number;
+  threshold?: number;
+  use_cache?: boolean;
+}
+
+export interface ClusterPredicatesParams extends Record<string, unknown> {
+  predicate_ids?: string[];
+  min_similarity?: number;
+  min_cluster_size?: number;
+  eps?: number;
+  max_predicates?: number;
+}
+
+export interface DiscoverPredicatesParams extends Record<string, unknown> {
+  sources?: string[];
 }
 
 export class PredicateService extends BaseService {
@@ -121,6 +158,111 @@ export class PredicateService extends BaseService {
   async getConceptNetMapping(): Promise<Record<string, string>> {
     return this.getResource<Record<string, string>>(
       `${ENDPOINTS.PREDICATES}/conceptnet-mapping`,
+    );
+  }
+
+  // ================== External Predicates Discovery ==================
+
+  /**
+   * Discover predicates from external knowledge sources
+   */
+  async discoverPredicates(
+    params?: DiscoverPredicatesParams,
+  ): Promise<PredicateDiscoveryResponse> {
+    return this.withErrorContext(
+      () =>
+        this.postResource<PredicateDiscoveryResponse>(
+          `${ENDPOINTS.PREDICATES}/discover`,
+          null,
+          params,
+        ),
+      "discover predicates",
+    );
+  }
+
+  /**
+   * Get the status of a predicate discovery task
+   */
+  async getDiscoveryStatus(taskId: string): Promise<PredicateDiscoveryStatus> {
+    return this.withErrorContext(() => {
+      this.validateRequired(taskId, "Task ID");
+      return this.getResource<PredicateDiscoveryStatus>(
+        `${ENDPOINTS.PREDICATES}/discover/${taskId}`,
+      );
+    }, "get discovery status");
+  }
+
+  /**
+   * List external predicates with pagination
+   */
+  async listExternalPredicates(
+    params?: ListExternalPredicatesParams,
+  ): Promise<PaginatedExternalPredicatesResponse> {
+    return this.withErrorContext(
+      () =>
+        this.getResource<PaginatedExternalPredicatesResponse>(
+          `${ENDPOINTS.PREDICATES}/external`,
+          params,
+        ),
+      "list external predicates",
+    );
+  }
+
+  // ================== Similarity Search ==================
+
+  /**
+   * Find similar external predicates for a given predicate
+   */
+  async findSimilarPredicates(
+    id: string,
+    params?: FindSimilarParams,
+  ): Promise<FindSimilarResponse> {
+    return this.withErrorContext(() => {
+      this.validateRequired(id, "Predicate ID");
+
+      return this.postResource<FindSimilarResponse>(
+        `${ENDPOINTS.PREDICATES}/${id}/find-similar`,
+        null,
+        params,
+      );
+    }, "find similar predicates");
+  }
+
+  /**
+   * Invalidate the similarity search cache
+   */
+  async invalidateSimilarityCache(): Promise<{
+    success: boolean;
+    message: string;
+    cache_entries_cleared: number;
+  }> {
+    return this.withErrorContext(
+      () =>
+        this.postResource<{
+          success: boolean;
+          message: string;
+          cache_entries_cleared: number;
+        }>(`${ENDPOINTS.PREDICATES}/invalidate-similarity-cache`),
+      "invalidate similarity cache",
+    );
+  }
+
+  // ================== Clustering ==================
+
+  /**
+   * Cluster similar predicates using DBSCAN algorithm
+   */
+  async clusterPredicates(
+    params?: ClusterPredicatesParams,
+  ): Promise<ClusterPredicatesResponse> {
+    return this.withErrorContext(
+      () =>
+        this.postResource<ClusterPredicatesResponse>(
+          `${ENDPOINTS.PREDICATES}/cluster-predicates`,
+          null,
+          params,
+        ),
+      "cluster predicates",
     );
   }
 }

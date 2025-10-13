@@ -34,6 +34,7 @@ export const QUERY_KEYS = {
   LLM_TRACEABILITY: "llm_traceability",
   PIPELINE_FLAVORS: "pipeline-flavors",
   NLP_REFERENCE: "nlp-reference",
+  REFERENCE: "reference",
   STRUCTURE_NODES: "structure_nodes",
   NODE_LINKS: "node_links",
   CHANGE_EVENTS: "change_events",
