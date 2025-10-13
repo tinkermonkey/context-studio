@@ -10,6 +10,7 @@ import os
 import tempfile
 import shutil
 import sqlite3
+import json
 from pathlib import Path
 from unittest.mock import patch, MagicMock
 import pytest
