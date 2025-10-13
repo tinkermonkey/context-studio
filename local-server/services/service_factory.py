@@ -643,12 +643,17 @@ class ServiceFactory:
                 }
 
             # Create S3 client and extract bucket name from config
-            import boto3
-            s3_client = boto3.client('s3',
-                aws_access_key_id=s3_conf.get('aws_access_key_id'),
-                aws_secret_access_key=s3_conf.get('aws_secret_access_key'),
-                region_name=s3_conf.get('region', 'us-east-1')
-            )
+            try:
+                import boto3
+                s3_client = boto3.client('s3',
+                    aws_access_key_id=s3_conf.get('aws_access_key_id'),
+                    aws_secret_access_key=s3_conf.get('aws_secret_access_key'),
+                    region_name=s3_conf.get('region', 'us-east-1')
+                )
+            except ImportError:
+                # boto3 not installed, create a mock S3 client
+                s3_client = None
+
             bucket_name = s3_conf.get('bucket_name', 'context-studio-default')
 
             return S3StorageOptimizer(s3_client, bucket_name)

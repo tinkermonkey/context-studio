@@ -63,7 +63,66 @@ class TestPhase4AnalyticsWorkflows:
             "lifespan_days": [45, 60, 30],
             "modification_rate": [1.89, 1.12, 1.5]
         })
-        
+
+        # Mock additional analytics methods needed by tests
+        mock_analytics_engine.generate_executive_summary.return_value = {
+            "summary_period_days": 30,
+            "key_metrics": {
+                "total_changes": 1250,
+                "active_users": 15,
+                "entities_modified": 340
+            },
+            "collaboration_health": {
+                "team_size": 15,
+                "collaboration_score": 0.85
+            },
+            "system_health": {
+                "sync_status": "healthy",
+                "performance_grade": "A"
+            },
+            "top_entities": [],
+            "generated_at": "2024-01-31T23:59:59Z"
+        }
+
+        mock_analytics_engine.get_comprehensive_change_trends.return_value = {
+            "analysis_period_days": 90,
+            "daily_trends": [],
+            "peak_hours": []
+        }
+
+        mock_analytics_engine.get_system_performance_metrics.return_value = {
+            "sync_performance": {
+                "avg_sync_time_minutes": 7.5
+            },
+            "system_load": []
+        }
+
+        mock_analytics_engine.get_advanced_collaboration_insights.return_value = {
+            "collaboration_networks": [],
+            "team_productivity": [],
+            "analysis_period_days": 60
+        }
+
+        mock_analytics_engine.get_collaboration_metrics.return_value = {
+            "proposal_authors": 8,
+            "voters": 12,
+            "total_votes": 48,
+            "avg_response_time_hours": 16.5,
+            "approval_rate": 0.85
+        }
+
+        mock_analytics_engine.get_conflict_resolution_metrics.return_value = {
+            "total_conflicts": 8,
+            "resolved_conflicts": 6,
+            "high_severity_conflicts": 1
+        }
+
+        # Mock duckdb and s3_config for health check
+        mock_analytics_engine.duckdb = Mock()
+        mock_analytics_engine.duckdb.connection = Mock()
+        mock_analytics_engine.duckdb.execute_query.return_value = pd.DataFrame({"view_count": [5]})
+        mock_analytics_engine.s3_config = {"bucket": "test-bucket"}
+
         factory.create_change_analytics_engine.return_value = mock_analytics_engine
         
         # Mock incremental sync engine
@@ -89,18 +148,69 @@ class TestPhase4AnalyticsWorkflows:
             "available_workers": 6,
             "sync_health_score": 0.92
         }
-        
+
+        # Mock additional sync methods needed by tests
+        mock_sync_engine.get_sync_operation.return_value = None  # Will be set dynamically in tests
+        mock_sync_engine.get_sync_performance_metrics.return_value = {
+            "avg_sync_time_minutes": 12.5,
+            "throughput_changes_per_minute": 425.5,
+            "success_rate_percent": 0.97,
+            "error_rate_percent": 0.03,
+            "peak_performance_hour": 14,
+            "bottleneck_analysis": {
+                "s3_latency": "acceptable",
+                "batch_processing": "optimal",
+                "database_writes": "good"
+            }
+        }
+
+        mock_sync_engine.get_performance_recommendations.return_value = [
+            "Consider increasing batch size for better throughput",
+            "Enable parallel processing for large entity sets",
+            "Optimize S3 connection pooling for reduced latency",
+            "Schedule maintenance syncs during low-activity hours"
+        ]
+
+        mock_sync_engine.optimize_sync_configuration.return_value = {
+            "optimized_parameters": {
+                "batch_size": 2000,
+                "parallel_workers": 6,
+                "connection_pool_size": 20,
+                "retry_attempts": 3
+            },
+            "expected_improvement_percent": 25.5,
+            "recommendation_summary": "Optimized for speed with increased parallelism and batch processing",
+            "applied_changes": [
+                "Increased batch size from 1000 to 2000",
+                "Increased parallel workers from 4 to 6",
+                "Enabled connection pooling optimization"
+            ]
+        }
+
+        mock_sync_engine.validate_data_integrity.return_value = {
+            "status": "healthy",
+            "integrity_score": 0.998,
+            "issues_found": []
+        }
+
         factory.create_incremental_sync_engine.return_value = mock_sync_engine
         
         return factory
     
     @pytest.fixture
-    def test_app(self, mock_db, mock_service_factory):
+    def mock_session_local(self, mock_db):
+        """Create mock session local that returns the mock db."""
+        def _session_local():
+            return mock_db
+        return _session_local
+
+    @pytest.fixture
+    def test_app(self, mock_db, mock_session_local, mock_service_factory):
         """Create test FastAPI application."""
         return create_app(
             dataset_id="test-dataset",
             engine=None,
-            session_local=None,
+            session_local=mock_session_local,
             service_factory=mock_service_factory
         )
     
@@ -201,6 +311,7 @@ class TestPhase4AnalyticsWorkflows:
         sync_id = sync_op["id"]
         
         # Step 3: Monitor sync operation
+        # Update the mock to return operation details for this specific sync_id
         mock_service_factory.create_incremental_sync_engine.return_value.get_sync_operation.return_value = {
             "id": sync_id,
             "sync_type": "incremental",
@@ -214,28 +325,15 @@ class TestPhase4AnalyticsWorkflows:
             "updated_entities": 100,
             "errors": []
         }
-        
+
         response = client.get(f"/api/sync/operations/{sync_id}")
         assert response.status_code == 200
         completed_sync = response.json()
         assert completed_sync["id"] == sync_id
         assert completed_sync["completed_at"] is not None
         assert completed_sync["synced_changes"] == 125
-        
-        # Step 4: Get sync performance metrics
-        mock_service_factory.create_incremental_sync_engine.return_value.get_sync_performance_metrics.return_value = {
-            "avg_sync_time_minutes": 12.5,
-            "throughput_changes_per_minute": 425.5,
-            "success_rate_percent": 0.97,
-            "error_rate_percent": 0.03,
-            "peak_performance_hour": 14,
-            "bottleneck_analysis": {
-                "s3_latency": "acceptable",
-                "batch_processing": "optimal",
-                "database_writes": "good"
-            }
-        }
-        
+
+        # Step 4: Get sync performance metrics (already configured in fixture)
         response = client.get("/api/sync/performance", params={"days": 7})
         assert response.status_code == 200
         perf_metrics = response.json()
@@ -248,7 +346,7 @@ class TestPhase4AnalyticsWorkflows:
     
     def test_collaboration_insights_workflow(self, client, mock_service_factory):
         """Test advanced collaboration insights workflow."""
-        # Setup collaboration data
+        # Update collaboration data with detailed test data
         mock_service_factory.create_change_analytics_engine.return_value.get_advanced_collaboration_insights.return_value = {
             "collaboration_networks": [
                 {
@@ -285,14 +383,6 @@ class TestPhase4AnalyticsWorkflows:
             "analysis_period_days": 60
         }
         
-        mock_service_factory.create_change_analytics_engine.return_value.get_collaboration_metrics.return_value = {
-            "proposal_authors": 8,
-            "voters": 12,
-            "total_votes": 48,
-            "avg_response_time_hours": 16.5,
-            "approval_rate": 0.85
-        }
-        
         # Step 1: Get collaboration insights
         response = client.get("/api/analytics/collaboration-insights", params={"days": 60})
         assert response.status_code == 200
@@ -320,35 +410,22 @@ class TestPhase4AnalyticsWorkflows:
     
     def test_real_time_dashboard_workflow(self, client, mock_service_factory):
         """Test real-time dashboard metrics workflow."""
-        # Setup real-time data
+        # Update mock data for dashboard-specific scenario
+        # Override get_change_summary to return dashboard-specific data (last 24 hours)
         mock_service_factory.create_change_analytics_engine.return_value.get_change_summary.return_value = {
             "total_changes": 45,  # Last 24 hours
             "entities_modified": 18,
             "active_users": 6,
             "changesets": 12
         }
-        
-        # Mock user activity for last week
+
+        # Override user activity for last week
         weekly_activity = pd.DataFrame({
             "author_id": ["alice@example.com", "bob@example.com", "charlie@example.com"],
             "total_changes": [125, 98, 87],
             "active_days": [6, 5, 4]
         })
         mock_service_factory.create_change_analytics_engine.return_value.get_user_activity_report.return_value = weekly_activity
-        
-        # Mock conflict metrics
-        mock_service_factory.create_change_analytics_engine.return_value.get_conflict_resolution_metrics.return_value = {
-            "total_conflicts": 8,
-            "resolved_conflicts": 6,
-            "high_severity_conflicts": 1
-        }
-        
-        # Mock performance metrics
-        mock_service_factory.create_change_analytics_engine.return_value.get_system_performance_metrics.return_value = {
-            "sync_performance": {
-                "avg_sync_time_minutes": 7.5
-            }
-        }
         
         # Step 1: Get dashboard metrics
         response = client.get("/api/analytics/dashboard/metrics", params={"refresh_interval": 300})
@@ -361,12 +438,8 @@ class TestPhase4AnalyticsWorkflows:
         assert dashboard_data["metrics"]["unresolved_conflicts"] == 2  # 8 - 6
         assert dashboard_data["metrics"]["avg_sync_time"] == 7.5
         assert dashboard_data["metrics"]["system_status"] == "healthy"
-        
+
         # Step 2: Get system health
-        mock_service_factory.create_change_analytics_engine.return_value.duckdb = Mock()
-        mock_service_factory.create_change_analytics_engine.return_value.duckdb.connection = Mock()
-        mock_service_factory.create_change_analytics_engine.return_value.s3_config = {"bucket": "test-bucket"}
-        
         response = client.get("/api/analytics/health")
         assert response.status_code == 200
         health = response.json()
@@ -380,58 +453,29 @@ class TestPhase4AnalyticsWorkflows:
     
     def test_sync_optimization_workflow(self, client, mock_service_factory):
         """Test sync optimization and tuning workflow."""
-        # Step 1: Get sync recommendations
-        mock_service_factory.create_incremental_sync_engine.return_value.get_performance_recommendations.return_value = [
-            "Consider increasing batch size for better throughput",
-            "Enable parallel processing for large entity sets",
-            "Optimize S3 connection pooling for reduced latency",
-            "Schedule maintenance syncs during low-activity hours"
-        ]
-        
+        # Step 1: Get sync recommendations (already configured in fixture)
         response = client.get("/api/sync/recommendations")
         assert response.status_code == 200
         recommendations = response.json()
         assert len(recommendations["recommendations"]) == 4
         assert "batch size" in recommendations["recommendations"][0]
         
-        # Step 2: Apply sync optimization
+        # Step 2: Apply sync optimization (already configured in fixture)
         optimize_data = {
             "target_throughput": 600.0,
             "max_batch_size": 2500,
             "optimize_for": "speed",
             "enable_auto_tuning": True
         }
-        
-        mock_service_factory.create_incremental_sync_engine.return_value.optimize_sync_configuration.return_value = {
-            "optimized_parameters": {
-                "batch_size": 2000,
-                "parallel_workers": 6,
-                "connection_pool_size": 20,
-                "retry_attempts": 3
-            },
-            "expected_improvement_percent": 25.5,
-            "recommendation_summary": "Optimized for speed with increased parallelism and batch processing",
-            "applied_changes": [
-                "Increased batch size from 1000 to 2000",
-                "Increased parallel workers from 4 to 6",
-                "Enabled connection pooling optimization"
-            ]
-        }
-        
+
         response = client.post("/api/sync/optimize", json=optimize_data)
         assert response.status_code == 200
         optimization = response.json()
         assert optimization["expected_improvement_percent"] == 25.5
         assert len(optimization["applied_changes"]) == 3
         assert optimization["optimized_parameters"]["batch_size"] == 2000
-        
-        # Step 3: Validate data integrity
-        mock_service_factory.create_incremental_sync_engine.return_value.validate_data_integrity.return_value = {
-            "status": "healthy",
-            "integrity_score": 0.998,
-            "issues_found": []
-        }
-        
+
+        # Step 3: Validate data integrity (already configured in fixture)
         response = client.post("/api/sync/validate-data", params={"sample_size": 2000})
         assert response.status_code == 200
         validation = response.json()
