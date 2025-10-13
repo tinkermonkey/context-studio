@@ -1032,10 +1032,15 @@ class ServiceFactory:
             cleared_count = len(self._cache)
             self._cache.clear()
 
-            # Reset metrics
+            # Reset all metrics including total_created for complete test isolation
             for metrics in self._metrics.values():
+                metrics.total_created = 0
                 metrics.total_cache_hits = 0
                 metrics.total_cache_misses = 0
+                metrics.avg_creation_time_ms = 0.0
+                metrics.creation_times.clear()
+                metrics.last_created_at = None
+                metrics.last_accessed_at = None
 
             logger.info(
                 f"ServiceFactory [{self._factory_id}] cleared {cleared_count} cache entries and reset metrics"
