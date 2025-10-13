@@ -41,7 +41,7 @@ class TestReferenceFilterService:
         """Test getting mappings when no predicates exist"""
         mock_local_session.query.return_value.all.return_value = []
 
-        mappings = filter_service._get_predicate_mappings()
+        mappings = filter_service._get_all_predicate_mappings_with_relevance()
 
         assert mappings == {}
 
@@ -57,7 +57,7 @@ class TestReferenceFilterService:
 
         mock_local_session.query.return_value.all.return_value = [mock_pred]
 
-        mappings = filter_service._get_predicate_mappings()
+        mappings = filter_service._get_all_predicate_mappings_with_relevance()
 
         assert "pred1" in mappings
         assert mappings["pred1"]["is_relevant"] is True
@@ -77,7 +77,7 @@ class TestReferenceFilterService:
 
         mock_local_session.query.return_value.all.return_value = [mock_pred]
 
-        mappings = filter_service._get_predicate_mappings()
+        mappings = filter_service._get_all_predicate_mappings_with_relevance()
 
         assert mappings["pred1"]["is_relevant"] is False
         assert len(mappings["pred1"]["external_predicates"]) == 1
@@ -91,7 +91,7 @@ class TestReferenceFilterService:
 
         mock_local_session.query.return_value.all.return_value = [mock_pred]
 
-        mappings = filter_service._get_predicate_mappings()
+        mappings = filter_service._get_all_predicate_mappings_with_relevance()
 
         # Should handle gracefully with empty external_predicates list
         assert mappings["pred1"]["external_predicates"] == []
@@ -120,7 +120,7 @@ class TestReferenceFilterService:
             }
         }
 
-        with patch.object(filter_service, '_get_predicate_mappings', return_value=mock_mappings):
+        with patch.object(filter_service, '_get_all_predicate_mappings_with_relevance', return_value=mock_mappings):
             relevant, irrelevant = filter_service._build_relevance_sets()
 
         assert "schema.org:subClassOf" in relevant
@@ -138,13 +138,13 @@ class TestReferenceFilterService:
             }
         }
 
-        with patch.object(filter_service, '_get_predicate_mappings', return_value=mock_mappings) as mock_get:
+        with patch.object(filter_service, '_get_all_predicate_mappings_with_relevance', return_value=mock_mappings) as mock_get:
             # First call should build cache
             result1 = filter_service.get_relevant_predicates()
             # Second call should use cache
             result2 = filter_service.get_relevant_predicates()
 
-            # _get_predicate_mappings should only be called once
+            # _get_all_predicate_mappings_with_relevance should only be called once
             assert mock_get.call_count == 1
             assert result1 == result2
 
@@ -157,7 +157,7 @@ class TestReferenceFilterService:
             }
         }
 
-        with patch.object(filter_service, '_get_predicate_mappings', return_value=mock_mappings) as mock_get:
+        with patch.object(filter_service, '_get_all_predicate_mappings_with_relevance', return_value=mock_mappings) as mock_get:
             filter_service.get_relevant_predicates()
             filter_service.get_relevant_predicates(force_refresh=True)
 
@@ -219,16 +219,8 @@ class TestReferenceFilterService:
         ext_pred3.source = "wikidata"
         ext_pred3.external_id = "P279"
 
-        def get_external_pred(source, predicate):
-            if source == "schema.org" and predicate == "subClassOf":
-                return ext_pred1
-            elif source == "schema.org" and predicate == "property":
-                return ext_pred2
-            elif source == "wikidata" and predicate == "P279":
-                return ext_pred3
-            return None
-
-        mock_ref_manager.get_external_predicate_by_source.side_effect = get_external_pred
+        # Mock list_external_predicates to return all external predicates
+        mock_ref_manager.list_external_predicates.return_value = [ext_pred1, ext_pred2, ext_pred3]
 
         # Mark subClassOf and P279 as relevant
         with patch.object(filter_service, 'get_relevant_predicates', return_value={"schema.org:subClassOf", "wikidata:P279"}):
@@ -263,14 +255,8 @@ class TestReferenceFilterService:
         ext_pred2.source = "schema.org"
         ext_pred2.external_id = "property"
 
-        def get_external_pred(source, predicate):
-            if predicate == "subClassOf":
-                return ext_pred1
-            elif predicate == "property":
-                return ext_pred2
-            return None
-
-        mock_ref_manager.get_external_predicate_by_source.side_effect = get_external_pred
+        # Mock list_external_predicates to return all external predicates
+        mock_ref_manager.list_external_predicates.return_value = [ext_pred1, ext_pred2]
 
         # Mark property as irrelevant
         with patch.object(filter_service, 'get_relevant_predicates', return_value=set()):
@@ -339,7 +325,7 @@ class TestReferenceFilterService:
             }
         }
 
-        with patch.object(filter_service, '_get_predicate_mappings', return_value=mock_mappings):
+        with patch.object(filter_service, '_get_all_predicate_mappings_with_relevance', return_value=mock_mappings):
             stats = filter_service.get_filter_statistics()
 
         assert stats["total_predicates"] == 3
@@ -359,14 +345,15 @@ class TestReferenceFilterService:
         # Make first 3 relevant
         relevant_preds = {f"test:pred{i}" for i in range(3)}
 
-        # Mock external predicates
-        def get_external_pred(source, predicate):
+        # Mock external predicates - create all 10
+        all_ext_preds = []
+        for i in range(10):
             ext_pred = Mock(spec=ExternalPredicate)
-            ext_pred.source = source
-            ext_pred.external_id = predicate
-            return ext_pred
+            ext_pred.source = "test"
+            ext_pred.external_id = f"pred{i}"
+            all_ext_preds.append(ext_pred)
 
-        mock_ref_manager.get_external_predicate_by_source.side_effect = get_external_pred
+        mock_ref_manager.list_external_predicates.return_value = all_ext_preds
 
         with patch.object(filter_service, 'get_relevant_predicates', return_value=relevant_preds):
             with patch.object(filter_service, 'get_irrelevant_predicates', return_value=set()):
