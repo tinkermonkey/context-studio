@@ -49,7 +49,17 @@ def ref_db_session():
 def mock_ref_manager(ref_db_session):
     """Create a mock reference manager with database session."""
     manager = Mock(spec=ReferenceManager)
-    manager.get_session.return_value = ref_db_session
+    manager.session = ref_db_session
+    # Mock the list_external_predicates method to query the test database
+    def list_external_predicates(source=None, limit=None):
+        from reference_db.models import ExternalPredicate
+        query = ref_db_session.query(ExternalPredicate)
+        if source:
+            query = query.filter_by(source=source)
+        if limit:
+            query = query.limit(limit)
+        return query.all()
+    manager.list_external_predicates = list_external_predicates
     return manager
 
 
@@ -78,24 +88,46 @@ def test_filter_service_with_real_database_interaction(local_db_session, ref_db_
     local_db_session.commit()
 
     # Create external predicate in reference database
+    from datetime import date
     ext_pred = ExternalPredicate(
         id="ext-pred-1",
         source="schema.org",
         external_id="relatedTo",
         title="Related To",
-        definition="Schema.org related relationship"
+        definition="Schema.org related relationship",
+        created_at=date.today().isoformat(),
+        updated_at=date.today().isoformat()
     )
     ref_db_session.add(ext_pred)
     ref_db_session.commit()
 
     # Create reference nodes and links
-    node1 = ReferenceNode(id="node-1", title="Concept A", source="schema.org", external_id="ConceptA")
-    node2 = ReferenceNode(id="node-2", title="Concept B", source="schema.org", external_id="ConceptB")
+    today = date.today().isoformat()
+    node1 = ReferenceNode(
+        id="node-1",
+        title="Concept A",
+        definition="Definition of Concept A",
+        source="schema.org",
+        external_id="ConceptA",
+        created_at=today,
+        updated_at=today
+    )
+    node2 = ReferenceNode(
+        id="node-2",
+        title="Concept B",
+        definition="Definition of Concept B",
+        source="schema.org",
+        external_id="ConceptB",
+        created_at=today,
+        updated_at=today
+    )
     link = ReferenceLink(
         id="link-1",
         subject_node="node-1",
         predicate="relatedTo",
-        object_node="node-2"
+        object_node="node-2",
+        created_at=today,
+        updated_at=today
     )
     ref_db_session.add_all([node1, node2, link])
     ref_db_session.commit()
@@ -114,8 +146,7 @@ def test_filter_service_with_real_database_interaction(local_db_session, ref_db_
 
 def test_filter_service_handles_database_errors_gracefully(local_db_session, mock_ref_manager):
     """Test that database errors are handled gracefully."""
-    # Close the session to simulate database error
-    local_db_session.close()
+    from unittest.mock import patch
 
     service = ReferenceFilterService(local_db_session, mock_ref_manager)
 
@@ -123,13 +154,16 @@ def test_filter_service_handles_database_errors_gracefully(local_db_session, moc
     link = Mock(spec=ReferenceLink)
     link.predicate = "testPred"
 
-    # Should handle error and return unfiltered links
-    filtered_links, stats = service.filter_links([link])
+    # Mock the _build_relevance_sets method to raise an exception
+    with patch.object(service, '_build_relevance_sets', side_effect=Exception("Database error")):
+        # Should handle error and return unfiltered links
+        filtered_links, stats = service.filter_links([link])
 
-    # Should return original links on error
-    assert len(filtered_links) == 1
-    assert "error" in stats
-    assert stats["filtering_active"] is False
+        # Should return original links on error
+        assert len(filtered_links) == 1
+        assert "error" in stats
+        assert stats["error"] == "Database error"
+        assert stats["filtering_active"] is False
 
 
 def test_filter_statistics_with_real_predicates(local_db_session, mock_ref_manager):
@@ -217,6 +251,7 @@ def test_cache_behavior_with_database_updates(local_db_session, mock_ref_manager
 
 def test_batch_predicate_fetch_optimization(local_db_session, ref_db_session, mock_ref_manager):
     """Test that batch fetching optimizes database queries."""
+    from datetime import date
     # Create multiple external predicates
     for i in range(10):
         ext_pred = ExternalPredicate(
@@ -224,7 +259,9 @@ def test_batch_predicate_fetch_optimization(local_db_session, ref_db_session, mo
             source="test",
             external_id=f"pred{i}",
             title=f"Predicate {i}",
-            definition=f"Test predicate {i}"
+            definition=f"Test predicate {i}",
+            created_at=date.today().isoformat(),
+            updated_at=date.today().isoformat()
         )
         ref_db_session.add(ext_pred)
     ref_db_session.commit()
