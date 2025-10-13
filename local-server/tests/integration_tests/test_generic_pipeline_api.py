@@ -58,6 +58,7 @@ class TestGenericPipelineAPIIntegration:
             "output_tokens": 25,
             "total_tokens": 40
         }
+        mock_response.structured_output = None
         mock_service.execute_pipeline_flavor.return_value = mock_response
 
         # Override the dependency
@@ -110,13 +111,13 @@ class TestGenericPipelineAPIIntegration:
         from api.dependencies.llm_services import get_default_llm_service
         del self.app.dependency_overrides[get_default_llm_service]
     
-    @patch('api.dependencies.llm_services.get_default_llm_service')
-    def test_execute_pipeline_endpoint_validation_error(self, mock_get_service):
+    def test_execute_pipeline_endpoint_validation_error(self):
         """Test validation error handling in generic pipeline endpoint."""
 
-        # Mock the LLM service
+        # Mock the LLM service using FastAPI dependency override
         mock_service = AsyncMock()
-        mock_get_service.return_value = mock_service
+        from api.dependencies.llm_services import get_default_llm_service
+        self.app.dependency_overrides[get_default_llm_service] = lambda: mock_service
 
         # Test request payload with missing context_data
         request_payload = {
@@ -135,15 +136,18 @@ class TestGenericPipelineAPIIntegration:
         assert response.status_code == 422
         response_data = response.json()
         assert any("context_data cannot be empty" in error.get("msg", "") for error in response_data["detail"])
+
+        # Clean up dependency override
+        del self.app.dependency_overrides[get_default_llm_service]
     
-    @patch('api.dependencies.llm_services.get_default_llm_service')
-    def test_execute_pipeline_endpoint_context_too_large(self, mock_get_service):
+    def test_execute_pipeline_endpoint_context_too_large(self):
         """Test context data size validation in generic pipeline endpoint."""
-        
-        # Mock the LLM service
+
+        # Mock the LLM service using FastAPI dependency override
         mock_service = AsyncMock()
-        mock_get_service.return_value = mock_service
-        
+        from api.dependencies.llm_services import get_default_llm_service
+        self.app.dependency_overrides[get_default_llm_service] = lambda: mock_service
+
         # Create very large context data
         large_data = "x" * 60000
         request_payload = {
@@ -151,17 +155,20 @@ class TestGenericPipelineAPIIntegration:
             "pipeline_type": "suggest_term_definition",
             "context_data": {"large_field": large_data}
         }
-        
+
         # Make the API request
         response = self.client.post(
             "/api/llm/execute_pipeline",
             json=request_payload
         )
-        
+
         # Verify error response
         assert response.status_code == 400
         response_data = response.json()
         assert "Context data is too large" in response_data["detail"]
+
+        # Clean up dependency override
+        del self.app.dependency_overrides[get_default_llm_service]
     
     @patch('llm.execution_tracker.get_pipeline_session')
     def test_execute_pipeline_streaming_endpoint_success(self, mock_get_session):
@@ -237,21 +244,21 @@ class TestGenericPipelineAPIIntegration:
         from api.dependencies.llm_services import get_default_llm_service
         del self.app.dependency_overrides[get_default_llm_service]
     
-    @patch('api.dependencies.llm_services.get_default_llm_service')
-    def test_execute_pipeline_streaming_validation_error(self, mock_get_service):
+    def test_execute_pipeline_streaming_validation_error(self):
         """Test validation error handling in streaming pipeline endpoint."""
-        
-        # Mock the LLM service
+
+        # Mock the LLM service using FastAPI dependency override
         mock_service = AsyncMock()
-        mock_get_service.return_value = mock_service
-        
+        from api.dependencies.llm_services import get_default_llm_service
+        self.app.dependency_overrides[get_default_llm_service] = lambda: mock_service
+
         # Test request payload with empty context_data
         request_payload = {
             "flavor_id": "default",
             "pipeline_type": "suggest_term_definition",
             "context_data": {}
         }
-        
+
         # Make the API request
         response = self.client.post(
             "/api/llm/execute_pipeline/stream",
@@ -262,6 +269,9 @@ class TestGenericPipelineAPIIntegration:
         assert response.status_code == 422
         response_data = response.json()
         assert any("context_data cannot be empty" in error.get("msg", "") for error in response_data["detail"])
+
+        # Clean up dependency override
+        del self.app.dependency_overrides[get_default_llm_service]
     
     def test_execute_pipeline_different_pipeline_types(self):
         """Test generic pipeline endpoint with different pipeline types."""
@@ -310,6 +320,7 @@ class TestGenericPipelineAPIIntegration:
             mock_response.flavor_id = "test-flavor"
             mock_response.pipeline_type = test_case['pipeline_type']
             mock_response.token_usage = None
+            mock_response.structured_output = None
             mock_service.execute_pipeline_flavor.return_value = mock_response
             
             # Test request
@@ -354,6 +365,7 @@ class TestGenericPipelineAPIIntegration:
             "output_tokens": 30,
             "total_tokens": 50
         }
+        mock_response.structured_output = None
         mock_service.execute_pipeline_flavor.return_value = mock_response
 
         # Override the dependency
