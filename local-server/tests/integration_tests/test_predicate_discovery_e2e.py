@@ -11,6 +11,7 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import pytest
 import asyncio
 import time
+import tempfile
 from fastapi.testclient import TestClient
 from unittest.mock import patch, AsyncMock, Mock
 
@@ -19,9 +20,9 @@ from app import app
 
 
 @pytest.fixture
-def client():
-    """Create a test client for the FastAPI app."""
-    return TestClient(app)
+def client(shared_client):
+    """Use the shared client from conftest which has proper dataset setup."""
+    return shared_client
 
 
 @pytest.fixture
@@ -221,11 +222,14 @@ class TestPredicateDiscoveryE2E:
         - Source filtering works
         - Predicates have all required fields
         """
-        with patch('reference_db.manager.ReferenceManager') as MockManager:
-            # Mock the manager
+        with patch('reference_db.manager.ReferenceManager') as MockManager, \
+             patch('reference_db.config.ReferenceConfig') as MockConfig:
+            # Mock the config
+            mock_config = Mock()
+            MockConfig.return_value = mock_config
+
+            # Mock the manager instance that will be returned by __enter__
             mock_manager = Mock()
-            MockManager.return_value.__enter__ = Mock(return_value=mock_manager)
-            MockManager.return_value.__exit__ = Mock(return_value=False)
 
             # Create mock predicates
             mock_predicates = []
@@ -243,8 +247,15 @@ class TestPredicateDiscoveryE2E:
 
             mock_manager.list_external_predicates.return_value = mock_predicates
 
+            # Set up the context manager to return the mock manager
+            MockManager.return_value.__enter__.return_value = mock_manager
+            MockManager.return_value.__exit__.return_value = None
+
             # Test pagination
             response = client.get("/api/predicates/external?skip=0&limit=50")
+            if response.status_code != 200:
+                print(f"Response status: {response.status_code}")
+                print(f"Response body: {response.text}")
             assert response.status_code == 200
             data = response.json()
 
@@ -265,10 +276,14 @@ class TestPredicateDiscoveryE2E:
 
     def test_external_predicates_source_filtering(self, client):
         """Test filtering external predicates by source."""
-        with patch('reference_db.manager.ReferenceManager') as MockManager:
+        with patch('reference_db.manager.ReferenceManager') as MockManager, \
+             patch('reference_db.config.ReferenceConfig') as MockConfig:
+            # Mock the config
+            mock_config = Mock()
+            MockConfig.return_value = mock_config
+
+            # Mock the manager instance that will be returned by __enter__
             mock_manager = Mock()
-            MockManager.return_value.__enter__ = Mock(return_value=mock_manager)
-            MockManager.return_value.__exit__ = Mock(return_value=False)
 
             # Mock predicates from different sources
             conceptnet_preds = [Mock(
@@ -283,6 +298,10 @@ class TestPredicateDiscoveryE2E:
                 return []
 
             mock_manager.list_external_predicates.side_effect = list_by_source
+
+            # Set up the context manager to return the mock manager
+            MockManager.return_value.__enter__.return_value = mock_manager
+            MockManager.return_value.__exit__.return_value = None
 
             # Test filtering by source
             response = client.get("/api/predicates/external?source=conceptnet&limit=50")
