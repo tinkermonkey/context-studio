@@ -215,7 +215,7 @@ def realistic_reference_db():
 
 
 @pytest.fixture
-def e2e_client(realistic_test_db, realistic_reference_db):
+def e2e_client(realistic_test_db, realistic_reference_db, monkeypatch):
     """Create a test client with realistic data."""
     session, db_path, predicates = realistic_test_db
     ref_manager, ref_db_path = realistic_reference_db
@@ -227,6 +227,16 @@ def e2e_client(realistic_test_db, realistic_reference_db):
             pass
 
     app.dependency_overrides[get_db] = override_get_db
+
+    # Override the reference database path for this test
+    # Monkeypatch the _get_default_db_path method to return our test database
+    from reference_db.manager import ReferenceManager
+    original_get_default_db_path = ReferenceManager._get_default_db_path
+
+    def mock_get_default_db_path(self):
+        return ref_db_path
+
+    monkeypatch.setattr(ReferenceManager, "_get_default_db_path", mock_get_default_db_path)
 
     with TestClient(app) as client:
         yield client, predicates
