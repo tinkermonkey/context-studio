@@ -55,6 +55,11 @@ export interface DiscoverPredicatesParams extends Record<string, unknown> {
 export class PredicateService extends BaseService {
   /**
    * List predicates with pagination and sorting
+   * @param {PredicateListParams} params - Optional pagination and sorting parameters
+   * @param {number} params.skip - Number of records to skip
+   * @param {number} params.limit - Maximum number of records to return
+   * @param {string} params.sort_by - Field to sort by
+   * @returns {Promise<PaginatedPredicatesResponse>} Paginated list of predicates
    */
   async list(
     params?: PredicateListParams,
@@ -67,6 +72,11 @@ export class PredicateService extends BaseService {
 
   /**
    * Create a new predicate
+   * @param {PredicateCreate} data - Predicate creation data
+   * @param {string} data.title - Title of the predicate (required)
+   * @param {string} data.definition - Definition of the predicate (optional)
+   * @param {string} data.identifier - Unique identifier (optional, auto-generated if not provided)
+   * @returns {Promise<PredicateOut>} Created predicate
    */
   async create(data: PredicateCreate): Promise<PredicateOut> {
     return this.withErrorContext(() => {
@@ -80,6 +90,8 @@ export class PredicateService extends BaseService {
 
   /**
    * Get a predicate by ID
+   * @param {string} id - Predicate ID
+   * @returns {Promise<PredicateOut>} Predicate data
    */
   async get(id: string): Promise<PredicateOut> {
     this.validateRequired(id, "Predicate ID");
@@ -88,6 +100,12 @@ export class PredicateService extends BaseService {
 
   /**
    * Update a predicate
+   * @param {string} id - Predicate ID
+   * @param {PredicateUpdate} data - Predicate update data
+   * @param {string} data.title - Updated title (optional)
+   * @param {string} data.definition - Updated definition (optional)
+   * @param {string} data.identifier - Updated identifier (optional)
+   * @returns {Promise<PredicateOut>} Updated predicate
    */
   async update(id: string, data: PredicateUpdate): Promise<PredicateOut> {
     return this.withErrorContext(() => {
@@ -107,6 +125,8 @@ export class PredicateService extends BaseService {
 
   /**
    * Delete a predicate
+   * @param {string} id - Predicate ID
+   * @returns {Promise<void>}
    */
   async delete(id: string): Promise<void> {
     this.validateRequired(id, "Predicate ID");
@@ -164,7 +184,10 @@ export class PredicateService extends BaseService {
   // ================== External Predicates Discovery ==================
 
   /**
-   * Discover predicates from external knowledge sources
+   * Discover predicates from external knowledge sources (async background task)
+   * @param {DiscoverPredicatesParams} params - Discovery parameters
+   * @param {string[]} params.sources - Optional list of sources to discover from (e.g., ['conceptnet', 'dbpedia'])
+   * @returns {Promise<PredicateDiscoveryResponse>} Task ID and status for tracking the discovery process
    */
   async discoverPredicates(
     params?: DiscoverPredicatesParams,
@@ -182,6 +205,8 @@ export class PredicateService extends BaseService {
 
   /**
    * Get the status of a predicate discovery task
+   * @param {string} taskId - The task ID returned from discoverPredicates
+   * @returns {Promise<PredicateDiscoveryStatus>} Current status of the discovery task
    */
   async getDiscoveryStatus(taskId: string): Promise<PredicateDiscoveryStatus> {
     return this.withErrorContext(() => {
@@ -193,7 +218,12 @@ export class PredicateService extends BaseService {
   }
 
   /**
-   * List external predicates with pagination
+   * List external predicates with pagination and source filtering
+   * @param {ListExternalPredicatesParams} params - Query parameters
+   * @param {string} params.source - Optional source filter (e.g., 'conceptnet', 'dbpedia')
+   * @param {number} params.skip - Number of records to skip
+   * @param {number} params.limit - Maximum number of records to return
+   * @returns {Promise<PaginatedExternalPredicatesResponse>} Paginated list of external predicates
    */
   async listExternalPredicates(
     params?: ListExternalPredicatesParams,
@@ -211,7 +241,14 @@ export class PredicateService extends BaseService {
   // ================== Similarity Search ==================
 
   /**
-   * Find similar external predicates for a given predicate
+   * Find similar external predicates for a given predicate using vector similarity
+   * @param {string} id - Predicate ID to find similar predicates for
+   * @param {FindSimilarParams} params - Search parameters
+   * @param {string} params.source - Optional source filter
+   * @param {number} params.limit - Maximum number of results (default: 20)
+   * @param {number} params.threshold - Minimum similarity threshold (0.0-1.0, default: 0.7)
+   * @param {boolean} params.use_cache - Whether to use cached results (default: true)
+   * @returns {Promise<FindSimilarResponse>} List of similar predicates with similarity scores
    */
   async findSimilarPredicates(
     id: string,
@@ -229,7 +266,8 @@ export class PredicateService extends BaseService {
   }
 
   /**
-   * Invalidate the similarity search cache
+   * Invalidate the similarity search cache to force fresh calculations
+   * @returns {Promise<Object>} Success status and number of cache entries cleared
    */
   async invalidateSimilarityCache(): Promise<{
     success: boolean;
@@ -251,6 +289,13 @@ export class PredicateService extends BaseService {
 
   /**
    * Cluster similar predicates using DBSCAN algorithm
+   * @param {ClusterPredicatesParams} params - Clustering parameters
+   * @param {string[]} params.predicate_ids - Optional list of specific predicate IDs to cluster
+   * @param {number} params.min_similarity - Minimum similarity threshold for clustering
+   * @param {number} params.min_cluster_size - Minimum number of predicates to form a cluster
+   * @param {number} params.eps - DBSCAN epsilon parameter (maximum distance between predicates)
+   * @param {number} params.max_predicates - Maximum number of predicates to analyze
+   * @returns {Promise<ClusterPredicatesResponse>} Clusters with representative predicates and statistics
    */
   async clusterPredicates(
     params?: ClusterPredicatesParams,

@@ -58,6 +58,11 @@ export const ENDPOINTS = {
   },
   PIPELINE_FLAVORS: "/api/pipeline-flavors",
   NLP_REFERENCE: "/api/reference",
+  REFERENCE: {
+    BASE: "/api/reference/ref-db",
+    FILTER_STATISTICS: "/api/reference/ref-db/filter/statistics",
+    NODES: "/api/reference/ref-db/nodes",
+  },
   STRUCTURE_NODES: "/api/structure_nodes",
   NODE_LINKS: "/api/structure_nodes/links",
   CHANGE_EVENTS: "/api/change_events",

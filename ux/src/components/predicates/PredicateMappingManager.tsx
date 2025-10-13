@@ -10,12 +10,23 @@
  */
 
 import React, { useState } from "react";
-import { Card, Tabs } from "flowbite-react";
-import { HiDatabase, HiSearch, HiCollection, HiCog } from "react-icons/hi";
+import { Card, Tabs, Modal } from "flowbite-react";
+import {
+  HiDatabase,
+  HiSearch,
+  HiCollection,
+  HiCog,
+  HiPlusCircle,
+  HiCheckCircle,
+} from "react-icons/hi";
 import { ExternalPredicatesTab } from "./ExternalPredicatesTab";
 import { SimilaritySearchTab } from "./SimilaritySearchTab";
 import { ClusterVisualizationTab } from "./ClusterVisualizationTab";
 import { MappingConfigurationTab } from "./MappingConfigurationTab";
+import { ManualMappingInterface } from "./ManualMappingInterface";
+import { RelevanceSelectionUI } from "./RelevanceSelectionUI";
+import { MappingCreationWorkflow } from "./MappingCreationWorkflow";
+import type { PredicateOut } from "@/api/services/predicates";
 
 export interface PredicateMappingManagerProps {
   className?: string;
@@ -25,6 +36,24 @@ export const PredicateMappingManager: React.FC<
   PredicateMappingManagerProps
 > = ({ className }) => {
   const [activeTab, setActiveTab] = useState<number>(0);
+  const [showWorkflowModal, setShowWorkflowModal] = useState<boolean>(false);
+  const [selectedPredicateIds, setSelectedPredicateIds] = useState<string[]>([]);
+
+  const handleClusterSelect = (predicateIds: string[]) => {
+    setSelectedPredicateIds(predicateIds);
+    setShowWorkflowModal(true);
+  };
+
+  const handleWorkflowComplete = (predicate: PredicateOut) => {
+    setShowWorkflowModal(false);
+    setSelectedPredicateIds([]);
+    // Could switch to a different tab or show success message
+  };
+
+  const handleWorkflowCancel = () => {
+    setShowWorkflowModal(false);
+    setSelectedPredicateIds([]);
+  };
 
   return (
     <div className={className}>
@@ -45,16 +74,38 @@ export const PredicateMappingManager: React.FC<
             <ExternalPredicatesTab />
           </Tabs.Item>
           <Tabs.Item title="Similarity Search" icon={HiSearch}>
-            <SimilaritySearchTab />
+            <SimilaritySearchTab onClusterSelect={handleClusterSelect} />
           </Tabs.Item>
           <Tabs.Item title="Cluster Analysis" icon={HiCollection}>
-            <ClusterVisualizationTab />
+            <ClusterVisualizationTab onCreateGlobalPredicate={handleClusterSelect} />
+          </Tabs.Item>
+          <Tabs.Item title="Manual Mapping" icon={HiPlusCircle}>
+            <ManualMappingInterface />
+          </Tabs.Item>
+          <Tabs.Item title="Relevance Selection" icon={HiCheckCircle}>
+            <RelevanceSelectionUI />
           </Tabs.Item>
           <Tabs.Item title="Configuration" icon={HiCog}>
             <MappingConfigurationTab />
           </Tabs.Item>
         </Tabs>
       </Card>
+
+      {/* Mapping Creation Workflow Modal */}
+      <Modal
+        show={showWorkflowModal}
+        onClose={handleWorkflowCancel}
+        size="3xl"
+      >
+        <Modal.Header>Create Global Predicate from Cluster</Modal.Header>
+        <Modal.Body>
+          <MappingCreationWorkflow
+            predicateIds={selectedPredicateIds}
+            onComplete={handleWorkflowComplete}
+            onCancel={handleWorkflowCancel}
+          />
+        </Modal.Body>
+      </Modal>
     </div>
   );
 };

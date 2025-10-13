@@ -5,6 +5,7 @@
  */
 
 import { BaseService } from "./base";
+import { ENDPOINTS } from "../config";
 
 export interface FilterStatistics {
   relevant_predicates_count: number;
@@ -58,12 +59,13 @@ export interface NodeLinksResponse {
 export class ReferenceService extends BaseService {
   /**
    * Get reference link filtering statistics
+   * @returns {Promise<FilterStatistics>} Statistics about relevant/irrelevant predicates and filtering status
    */
   async getFilterStatistics(): Promise<FilterStatistics> {
     return this.withErrorContext(
       () =>
         this.getResource<FilterStatistics>(
-          "/api/reference/ref-db/filter/statistics",
+          ENDPOINTS.REFERENCE.FILTER_STATISTICS,
         ),
       "get filter statistics",
     );
@@ -71,18 +73,23 @@ export class ReferenceService extends BaseService {
 
   /**
    * Get a reference node by ID
+   * @param {string} nodeId - The ID of the reference node to retrieve
+   * @returns {Promise<ReferenceNode>} The reference node data
    */
   async getNode(nodeId: string): Promise<ReferenceNode> {
     return this.withErrorContext(() => {
       this.validateRequired(nodeId, "Node ID");
       return this.getResource<ReferenceNode>(
-        `/api/reference/ref-db/nodes/${nodeId}`,
+        `${ENDPOINTS.REFERENCE.NODES}/${nodeId}`,
       );
     }, "get reference node");
   }
 
   /**
    * Get links for a reference node with optional filtering
+   * @param {string} nodeId - The ID of the reference node
+   * @param {NodeLinksParams} params - Optional parameters for filtering links
+   * @returns {Promise<NodeLinksResponse>} Links for the node with optional filtering applied
    */
   async getNodeLinks(
     nodeId: string,
@@ -91,7 +98,7 @@ export class ReferenceService extends BaseService {
     return this.withErrorContext(() => {
       this.validateRequired(nodeId, "Node ID");
       return this.getResource<NodeLinksResponse>(
-        `/api/reference/ref-db/nodes/${nodeId}/links`,
+        `${ENDPOINTS.REFERENCE.NODES}/${nodeId}/links`,
         params,
       );
     }, "get node links");
