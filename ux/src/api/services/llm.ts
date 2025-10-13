@@ -78,14 +78,10 @@ export class LLMService extends BaseService {
   async suggestTermDefinition(
     request: DefinitionSuggestionRequest,
   ): Promise<DefinitionSuggestionResponse> {
-    this.validateRequired(request.pipeline_type, "pipeline_type");
-    this.validateRequired(request.flavor_id, "flavor_id");
-    this.validateRequired(request.context_data, "context_data");
-
     return this.withErrorContext(async () => {
       // For backwards compatibility, support legacy request format
-      if ((request as any).term) {
-        // Legacy request format - convert to new format
+      if ((request as any).term !== undefined) {
+        // Legacy request format - validate and convert to new format
         const legacyRequest = request as any;
         const newRequest: DefinitionSuggestionRequest = {
           pipeline_type: 'suggest_term_definition',
@@ -105,7 +101,11 @@ export class LLMService extends BaseService {
         return this.executePipeline(newRequest);
       }
 
-      // New format - use directly
+      // New format - validate required fields
+      this.validateRequired(request.pipeline_type, "pipeline_type");
+      this.validateRequired(request.flavor_id, "flavor_id");
+      this.validateRequired(request.context_data, "context_data");
+
       return this.executePipeline(request);
     }, "suggesting term definition");
   }
