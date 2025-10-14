@@ -31,7 +31,24 @@ class TestGenericPipelineExecution:
     def mock_llm_service(self):
         """Create a mock LLM service with required dependencies"""
         with patch.dict("os.environ", {"OPENAI_API_KEY": "sk-test1234567890abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMN"}):
-            with patch('llm.service.get_provider_router'):
+            # Create a mock provider router with proper configuration
+            mock_provider_router = MagicMock()
+            mock_provider_router.get_enabled_models.return_value = ["gpt-3.5-turbo"]
+
+            # Create a mock model config for validation
+            mock_model_config = MagicMock()
+            mock_model_config.provider_type = MagicMock()
+            mock_model_config.provider_type.name = "NATIVE_OPENAI"
+            mock_model_config.api_key_env_var = "OPENAI_API_KEY"
+
+            # Import ProviderType for proper mocking
+            from llm.enabled_models import ProviderType
+            mock_model_config.provider_type = ProviderType.NATIVE_OPENAI
+
+            mock_provider_router.models_manager = MagicMock()
+            mock_provider_router.models_manager.get_model_config.return_value = mock_model_config
+
+            with patch('llm.service.get_provider_router', return_value=mock_provider_router):
                 with patch('llm.service.PipelineFlavorService'):
                     with patch('llm.service.ExecutionTracker'):
                         service = LLMService()
@@ -292,12 +309,11 @@ class TestGenericPipelineExecution:
             "term": "apple"
         }
 
-        # The SafeFormatter now provides default values for missing variables
-        result = mock_llm_service._render_user_prompt_generic(template, context_data)
+        # Missing variables should raise LLMProcessingError
+        with pytest.raises(LLMProcessingError) as exc_info:
+            mock_llm_service._render_user_prompt_generic(template, context_data)
 
-        # Missing variables should be replaced with "Not specified"
-        expected = "Term: apple, Missing: Not specified"
-        assert result == expected
+        assert "missing required variables" in str(exc_info.value).lower()
 
     def test_generic_pipeline_request_validation(self):
         """Test GenericPipelineExecutionRequest model validation"""

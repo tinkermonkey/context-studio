@@ -47,7 +47,83 @@ class LLMService:
         # Initialize provider router
         self.provider_router = get_provider_router()
 
+        # Validate that at least one model is properly configured
+        self._validate_configuration()
+
         self.logger.info(f"LLM Service initialized with dynamic provider routing")
+
+    def _validate_configuration(self):
+        """
+        Validate that at least one model has proper API key configuration.
+        This ensures fail-fast behavior at initialization time.
+        """
+        from .enabled_models import ProviderType
+
+        enabled_models = self.provider_router.get_enabled_models()
+
+        if not enabled_models:
+            raise LLMConfigurationError("No models are enabled in configuration")
+
+        # Check that at least one enabled model has a valid API key
+        has_valid_config = False
+        validation_errors = []
+
+        for model_name in enabled_models:
+            try:
+                config = self.provider_router.models_manager.get_model_config(model_name)
+                if not config:
+                    continue
+
+                # Determine the API key environment variable for this model
+                if config.provider_type == ProviderType.NATIVE_OPENAI:
+                    api_key_var = config.api_key_env_var or "OPENAI_API_KEY"
+                    api_key = os.getenv(api_key_var)
+                    if api_key:
+                        # Validate OpenAI API key format
+                        if not api_key.startswith("sk-"):
+                            validation_errors.append(f"Invalid OpenAI API key format in '{api_key_var}' (must start with 'sk-')")
+                            continue
+                        has_valid_config = True
+                        break
+                    else:
+                        validation_errors.append(f"Environment variable '{api_key_var}' not set for model '{model_name}'")
+
+                elif config.provider_type == ProviderType.NATIVE_ANTHROPIC:
+                    api_key_var = config.api_key_env_var or "ANTHROPIC_API_KEY"
+                    api_key = os.getenv(api_key_var)
+                    if api_key:
+                        has_valid_config = True
+                        break
+                    else:
+                        validation_errors.append(f"Environment variable '{api_key_var}' not set for model '{model_name}'")
+
+                elif config.provider_type == ProviderType.NATIVE_GOOGLE:
+                    api_key_var = config.api_key_env_var or "GOOGLE_API_KEY"
+                    api_key = os.getenv(api_key_var)
+                    if api_key:
+                        has_valid_config = True
+                        break
+                    else:
+                        validation_errors.append(f"Environment variable '{api_key_var}' not set for model '{model_name}'")
+
+                elif config.provider_type == ProviderType.OPENROUTER:
+                    api_key_var = config.api_key_env_var or "OPENROUTER_API_KEY"
+                    api_key = os.getenv(api_key_var)
+                    if api_key:
+                        has_valid_config = True
+                        break
+                    else:
+                        validation_errors.append(f"Environment variable '{api_key_var}' not set for model '{model_name}'")
+
+            except Exception as e:
+                validation_errors.append(f"Error validating model '{model_name}': {str(e)}")
+                continue
+
+        if not has_valid_config:
+            error_msg = "No valid API key configuration found for any enabled model"
+            if validation_errors:
+                error_msg += f": {'; '.join(validation_errors)}"
+            raise LLMConfigurationError(error_msg)
 
     def get_available_models(self) -> list[str]:
         """Get list of currently available (enabled) models"""
@@ -544,6 +620,22 @@ class LLMService:
         self.logger.debug("Rendering generic user prompt template with context data")
 
         try:
+            # First, extract all template variables from the template
+            import re
+            template_vars = set()
+            for match in re.finditer(r'\{([^}]+)\}', template):
+                var_name = match.group(1)
+                # Handle format specifiers (e.g., {var:.2f})
+                var_name = var_name.split(':')[0].split('!')[0]
+                template_vars.add(var_name)
+
+            # Check if all required template variables are present in context_data
+            missing_vars = template_vars - set(context_data.keys())
+            if missing_vars:
+                raise LLMProcessingError(
+                    f"Template rendering failed: missing required variables: {', '.join(sorted(missing_vars))}"
+                )
+
             # Create a safe copy of context_data with None values replaced
             safe_context = {}
             for key, value in context_data.items():
@@ -561,25 +653,15 @@ class LLMService:
                 else:
                     safe_context[key] = str(value)
 
-            # Use a custom formatter that provides default values for missing variables
-            class SafeFormatter(string.Formatter):
-                def get_value(self, key, args, kwargs):
-                    if isinstance(key, str):
-                        try:
-                            return kwargs[key]
-                        except KeyError:
-                            # Return default value for missing variables
-                            return "Not specified"
-                    else:
-                        return super().get_value(key, args, kwargs)
-
-            # Render the template with the safe context data using the custom formatter
-            formatter = SafeFormatter()
-            rendered_prompt = formatter.format(template, **safe_context)
+            # Render the template with the safe context data
+            rendered_prompt = template.format(**safe_context)
 
             self.logger.debug(f"Successfully rendered generic user prompt template (length: {len(rendered_prompt)} chars)")
             return rendered_prompt
 
+        except KeyError as e:
+            self.logger.error(f"Missing template variable in user prompt template: {e}")
+            raise LLMProcessingError(f"Template rendering failed: missing variable {str(e)}")
         except Exception as e:
             self.logger.error(f"Error rendering generic user prompt template: {e}")
             raise LLMProcessingError(f"Template rendering failed: {str(e)}")
