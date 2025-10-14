@@ -8,6 +8,7 @@ including schema version detection, database rebuild, and embedding operations.
 import os
 import shutil
 import logging
+import threading
 from datetime import date
 from pathlib import Path
 from typing import Optional, List, Dict, Any, Literal
@@ -19,7 +20,7 @@ from sqlalchemy.orm import sessionmaker, Session
 from sqlalchemy.exc import OperationalError
 
 from database.utils import get_engine, init_db
-from reference_db.models import Base, ReferenceNode, ReferenceLink
+from reference_db.models import Base, ReferenceNode, ReferenceLink, ExternalPredicate
 from reference_db.config import ReferenceConfig, REFERENCE_SCHEMA_VERSION
 from embeddings.generate_embeddings import generate_embedding
 
@@ -27,7 +28,8 @@ from embeddings.generate_embeddings import generate_embedding
 logger = logging.getLogger(__name__)
 
 # Constants
-EMBEDDING_DIMENSION = 768  # Dimension for sentence-transformers/all-MiniLM-L6-v2
+EMBEDDING_DIMENSION = 384  # Dimension for sentence-transformers/all-MiniLM-L6-v2
+EMBEDDING_MODEL_VERSION = "all-MiniLM-L6-v2"  # Current embedding model version
 
 class ReferenceManager:
     """
@@ -127,8 +129,8 @@ class ReferenceManager:
             Path to the reference database file
         """
         # This will be overridden by the application config
-        from config import get_config
-        app_config = get_config()
+        from config import get_settings
+        app_config = get_settings()
         return app_config.database.reference_path
 
     def _initialize_database(self):
@@ -157,6 +159,8 @@ class ReferenceManager:
             # Convert file path to SQLAlchemy URL format
             db_url = f"sqlite:///{self.db_path}"
             self.engine = get_engine(db_url)
+            # Initialize database with sqlite-vec extension loading
+            self.engine = init_db(self.engine, db_url)
         except Exception as e:
             error_msg = str(e)
             if 'sqlite-vec' in error_msg or 'vec0' in error_msg:
@@ -166,14 +170,21 @@ class ReferenceManager:
             raise RuntimeError(f"Failed to create database engine: {error_msg}") from e
 
         # Verify schema version
-        if not self._verify_schema_version():
-            logger.warning(
-                f"Schema version mismatch detected. Expected schema={REFERENCE_SCHEMA_VERSION}"
-            )
+        schema_status = self._verify_schema_version()
+        if schema_status != "valid":
+            if schema_status == "missing":
+                logger.info(
+                    f"Initializing new database with schema version {REFERENCE_SCHEMA_VERSION}"
+                )
+            else:  # "mismatch"
+                logger.warning(
+                    f"Schema version mismatch detected. Expected schema={REFERENCE_SCHEMA_VERSION}"
+                )
             self._rebuild_database()
-
-        # Initialize database tables using existing utility
-        init_db(self.engine, Base)
+        else:
+            # Ensure all tables exist even if schema version is valid
+            # This is idempotent and safe to call multiple times
+            Base.metadata.create_all(bind=self.engine)
 
         # Create session factory
         self.SessionLocal = sessionmaker(bind=self.engine)
@@ -181,7 +192,7 @@ class ReferenceManager:
 
         logger.info("Reference database initialized successfully")
 
-    def _verify_schema_version(self) -> bool:
+    def _verify_schema_version(self) -> str:
         """
         Verify that the database schema version matches the expected version.
 
@@ -189,7 +200,9 @@ class ReferenceManager:
         is compatible with the current code.
 
         Returns:
-            True if schema version matches, False if rebuild is needed
+            "valid" if schema version matches expected version
+            "missing" if schema_version table doesn't exist (new database)
+            "mismatch" if schema version exists but doesn't match expected version
 
         Raises:
             Exception: Re-raises any unexpected exceptions (not OperationalError)
@@ -212,10 +225,16 @@ class ReferenceManager:
                 if result:
                     schema_ver = result[0]
                     logger.info(f"Found schema version: {schema_ver}")
-                    return schema_ver == REFERENCE_SCHEMA_VERSION
+                    if schema_ver == REFERENCE_SCHEMA_VERSION:
+                        return "valid"
+                    else:
+                        logger.warning(
+                            f"Schema version mismatch: found {schema_ver}, expected {REFERENCE_SCHEMA_VERSION}"
+                        )
+                        return "mismatch"
                 else:
                     logger.warning("Schema version table exists but is empty")
-                    return False
+                    return "mismatch"
 
             finally:
                 session.close()
@@ -223,8 +242,14 @@ class ReferenceManager:
         except OperationalError as e:
             # Expected error when table doesn't exist
             if 'no such table' in str(e).lower():
-                logger.info("Schema version table does not exist, rebuild required")
-                return False
+                logger.debug("Schema version table does not exist (new database)")
+                return "missing"
+            # Re-raise other operational errors (e.g., database locked, corrupted)
+            raise
+
+        except Exception:
+            # Re-raise any unexpected exceptions to surface real problems
+            raise
             # Re-raise other operational errors (e.g., database locked, corrupted)
             raise
 
@@ -317,9 +342,12 @@ class ReferenceManager:
             logger.info("Creating new database with current schema")
             db_url = f"sqlite:///{self.db_path}"
             self.engine = get_engine(db_url)
+            # Initialize database with sqlite-vec extension loading
+            self.engine = init_db(self.engine, db_url)
 
             # Initialize tables and schema version in a transaction
             with self.engine.begin() as conn:
+                # Create all tables defined in Base metadata
                 Base.metadata.create_all(bind=self.engine)
 
                 # Create schema version table
@@ -427,7 +455,7 @@ class ReferenceManager:
             attributes: Optional dictionary of additional metadata
             title_embedding: Optional embedding vector for title (auto-generated if None)
             definition_embedding: Optional embedding vector for definition (auto-generated if None)
-            embedding_dims: Expected embedding dimensions (default: 768 for all-MiniLM-L6-v2)
+            embedding_dims: Expected embedding dimensions (default: 384 for all-MiniLM-L6-v2)
 
         Returns:
             Created ReferenceNode instance
@@ -458,20 +486,20 @@ class ReferenceManager:
             self._validate_embedding_dimensions(definition_embedding, embedding_dims)
 
         # Create node with transaction
-        with self.session.begin():
-            node = ReferenceNode(
-                id=str(uuid4()),
-                title=title,
-                definition=definition,
-                source=source,
-                external_id=external_id,
-                attributes=str(attributes) if attributes else None,
-                title_embedding=title_embedding,
-                definition_embedding=definition_embedding,
-                created_at=date.today().isoformat(),
-                updated_at=date.today().isoformat()
-            )
-            self.session.add(node)
+        node = ReferenceNode(
+            id=str(uuid4()),
+            title=title,
+            definition=definition,
+            source=source,
+            external_id=external_id,
+            attributes=str(attributes) if attributes is not None else None,
+            title_embedding=title_embedding,
+            definition_embedding=definition_embedding,
+            created_at=date.today().isoformat(),
+            updated_at=date.today().isoformat()
+        )
+        self.session.add(node)
+        self.session.commit()
 
         logger.debug(
             f"Added reference node: source={source}, external_id={external_id}, title={title}"
@@ -508,17 +536,17 @@ class ReferenceManager:
             ... )
         """
         # Create link with transaction
-        with self.session.begin():
-            link = ReferenceLink(
-                id=str(uuid4()),
-                subject_node=subject_node,
-                predicate=predicate,
-                object_node=object_node,
-                attributes=str(attributes) if attributes else None,
-                created_at=date.today().isoformat(),
-                updated_at=date.today().isoformat()
-            )
-            self.session.add(link)
+        link = ReferenceLink(
+            id=str(uuid4()),
+            subject_node=subject_node,
+            predicate=predicate,
+            object_node=object_node,
+            attributes=str(attributes) if attributes is not None else None,
+            created_at=date.today().isoformat(),
+            updated_at=date.today().isoformat()
+        )
+        self.session.add(link)
+        self.session.commit()
 
         logger.debug(
             f"Added reference link: {subject_node} --{predicate}--> {object_node}"
@@ -858,6 +886,331 @@ class ReferenceManager:
 
             return query.all()
 
+    def add_external_predicate(
+        self,
+        title: str,
+        definition: str,
+        source: str,
+        external_id: str,
+        attributes: Dict[str, Any] | None = None,
+        title_embedding: bytes | None = None,
+        definition_embedding: bytes | None = None,
+        embedding_dims: int = EMBEDDING_DIMENSION
+    ) -> ExternalPredicate:
+        """
+        Add a new external predicate to the database.
+
+        Embeddings are automatically generated using the existing embeddings module
+        if not provided. The embeddings use sentence-transformers/all-MiniLM-L6-v2
+        model with 768 dimensions.
+
+        Args:
+            title: Human-readable predicate name
+            definition: Detailed description of the predicate's meaning
+            source: Source identifier (e.g., 'schema.org')
+            external_id: Source-specific identifier for the predicate
+            attributes: Optional dictionary of additional metadata
+            title_embedding: Optional embedding vector for title (auto-generated if None)
+            definition_embedding: Optional embedding vector for definition (auto-generated if None)
+            embedding_dims: Expected embedding dimensions (default: 384 for all-MiniLM-L6-v2)
+
+        Returns:
+            Created ExternalPredicate instance
+
+        Raises:
+            ValueError: If embedding dimensions don't match expected value
+            IntegrityError: If (source, external_id) already exists
+
+        Examples:
+            >>> predicate = manager.add_external_predicate(
+            ...     title="subClassOf",
+            ...     definition="Indicates that one class is a subclass of another",
+            ...     source="schema.org",
+            ...     external_id="subClassOf"
+            ... )
+        """
+        # Auto-generate embeddings if not provided
+        if title_embedding is None:
+            logger.debug(f"Generating embedding for predicate title: {title}")
+            title_embedding = generate_embedding(title)
+        else:
+            self._validate_embedding_dimensions(title_embedding, embedding_dims)
+
+        if definition_embedding is None:
+            logger.debug(f"Generating embedding for predicate definition")
+            definition_embedding = generate_embedding(definition)
+        else:
+            self._validate_embedding_dimensions(definition_embedding, embedding_dims)
+
+        # Create predicate with transaction
+        predicate = ExternalPredicate(
+            id=str(uuid4()),
+            title=title,
+            definition=definition,
+            source=source,
+            external_id=external_id,
+            attributes=str(attributes) if attributes is not None else None,
+            title_embedding=title_embedding,
+            definition_embedding=definition_embedding,
+            created_at=date.today().isoformat(),
+            updated_at=date.today().isoformat()
+        )
+        self.session.add(predicate)
+        self.session.commit()
+
+        logger.debug(
+            f"Added external predicate: source={source}, external_id={external_id}, title={title}"
+        )
+        return predicate
+
+    def get_external_predicate(self, predicate_id: str) -> ExternalPredicate | None:
+        """
+        Retrieve an external predicate by ID.
+
+        Args:
+            predicate_id: UUID of the external predicate
+
+        Returns:
+            ExternalPredicate instance or None if not found
+
+        Examples:
+            >>> predicate = manager.get_external_predicate("550e8400-e29b-41d4-a716-446655440000")
+        """
+        return self.session.query(ExternalPredicate).filter_by(id=predicate_id).first()
+
+    def get_external_predicate_by_source(
+        self, source: str, external_id: str
+    ) -> ExternalPredicate | None:
+        """
+        Retrieve an external predicate by source and external ID.
+
+        Args:
+            source: Source identifier
+            external_id: Source-specific identifier
+
+        Returns:
+            ExternalPredicate instance or None if not found
+
+        Examples:
+            >>> predicate = manager.get_external_predicate_by_source("schema.org", "subClassOf")
+        """
+        return self.session.query(ExternalPredicate).filter_by(
+            source=source,
+            external_id=external_id
+        ).first()
+
+    def list_external_predicates(
+        self,
+        source: str | None = None,
+        limit: int | None = None
+    ) -> List[ExternalPredicate]:
+        """
+        List external predicates, optionally filtered by source.
+
+        Args:
+            source: Optional source filter
+            limit: Optional limit on number of results
+
+        Returns:
+            List of ExternalPredicate instances
+
+        Examples:
+            >>> predicates = manager.list_external_predicates(source="schema.org", limit=100)
+        """
+        query = self.session.query(ExternalPredicate)
+
+        if source:
+            query = query.filter_by(source=source)
+
+        if limit:
+            query = query.limit(limit)
+
+        return query.all()
+
+    def search_external_predicates_by_similarity(
+        self,
+        query_text: str,
+        source: str | None = None,
+        limit: int = 20,
+        threshold: float = 0.7,
+        embedding_generator = None
+    ) -> List[tuple[ExternalPredicate, float]]:
+        """
+        Search for external predicates by semantic similarity.
+
+        Uses the existing embeddings module (sentence-transformers/all-MiniLM-L6-v2)
+        to generate query embeddings by default.
+
+        This method:
+        1. Generates embeddings for the query text using the embeddings module
+        2. Performs vector search using sqlite-vec
+        3. Computes max(title_similarity, definition_similarity) for ranking
+        4. Filters results by similarity threshold
+        5. Returns predicates ordered by similarity (descending)
+
+        Args:
+            query_text: Text query to search for
+            source: Optional source filter (e.g., 'schema.org')
+            limit: Maximum number of results (default: 20, max: 10000)
+            threshold: Minimum similarity threshold (-1.0 to 1.0, default: 0.7)
+            embedding_generator: Optional custom function that takes text and returns embedding bytes.
+                               If None, uses the default embeddings.generate_embedding function.
+
+        Returns:
+            List of (ExternalPredicate, similarity_score) tuples ordered by similarity descending
+
+        Raises:
+            ValueError: If inputs are invalid (empty query_text, invalid threshold/limit)
+            sqlite3.Error: If vector search database operation fails
+            RuntimeError: If vector search fails for other reasons
+
+        Examples:
+            >>> results = manager.search_external_predicates_by_similarity(
+            ...     "relationship type",
+            ...     source="schema.org",
+            ...     limit=10,
+            ...     threshold=0.8
+            ... )
+            >>> for predicate, score in results:
+            ...     print(f"{predicate.title}: {score:.3f}")
+        """
+        # Input validation
+        if not query_text or not query_text.strip():
+            raise ValueError("query_text cannot be empty")
+
+        # Use default embedding generator if not provided
+        if embedding_generator is None:
+            embedding_generator = generate_embedding
+
+        if not -1.0 <= threshold <= 1.0:
+            raise ValueError(f"threshold must be between -1.0 and 1.0, got {threshold}")
+
+        if not isinstance(limit, int) or limit < 1:
+            raise ValueError(f"limit must be a positive integer, got {limit}")
+
+        if limit > 10000:
+            raise ValueError(f"limit must not exceed 10000, got {limit}")
+
+        # Performance tracking
+        import time
+        total_start = time.perf_counter()
+        
+        try:
+            # Generate embeddings for the query
+            embedding_start = time.perf_counter()
+            query_embedding = embedding_generator(query_text)
+            embedding_time = (time.perf_counter() - embedding_start) * 1000
+            logger.info(f"Embedding generation: {embedding_time:.2f}ms for query '{query_text[:50]}'")
+
+            if not query_embedding or len(query_embedding) == 0:
+                raise ValueError("embedding_generator returned empty embedding")
+
+            # Convert embedding to the format expected by sqlite-vec
+            prep_start = time.perf_counter()
+            import numpy as np
+            if isinstance(query_embedding, bytes):
+                query_vec = np.frombuffer(query_embedding, dtype=np.float32)
+            else:
+                query_vec = np.array(query_embedding, dtype=np.float32)
+
+            # Serialize to JSON array format for sqlite-vec
+            import json
+            query_vec_json = json.dumps(query_vec.tolist())
+            prep_time = (time.perf_counter() - prep_start) * 1000
+            logger.debug(f"Embedding prep: {prep_time:.2f}ms")
+
+            # Build the vector search query using parameterized SQL to prevent injection
+            query_start = time.perf_counter()
+            sql_query = """
+            WITH similarities AS (
+                SELECT
+                    ep.id,
+                    ep.title,
+                    ep.definition,
+                    ep.source,
+                    ep.external_id,
+                    ep.attributes,
+                    ep.created_at,
+                    ep.updated_at,
+                    CASE
+                        -- Both embeddings present: compute max similarity
+                        WHEN ep.title_embedding IS NOT NULL AND ep.definition_embedding IS NOT NULL THEN
+                            MAX(
+                                (1.0 - vec_distance_cosine(ep.title_embedding, :query_vec)),
+                                (1.0 - vec_distance_cosine(ep.definition_embedding, :query_vec))
+                            )
+                        -- Only title embedding: use title similarity
+                        WHEN ep.title_embedding IS NOT NULL THEN
+                            (1.0 - vec_distance_cosine(ep.title_embedding, :query_vec))
+                        -- Only definition embedding: use definition similarity
+                        WHEN ep.definition_embedding IS NOT NULL THEN
+                            (1.0 - vec_distance_cosine(ep.definition_embedding, :query_vec))
+                        -- No embeddings: zero similarity (filtered out by HAVING clause)
+                        ELSE 0.0
+                    END AS max_similarity
+                FROM external_predicates ep
+                WHERE ep.title_embedding IS NOT NULL OR ep.definition_embedding IS NOT NULL
+            )
+            SELECT * FROM similarities
+            WHERE max_similarity >= :threshold
+            """
+
+            # Add source filter if provided
+            if source:
+                sql_query += " AND source = :source"
+
+            # Add ordering and limit
+            sql_query += " ORDER BY max_similarity DESC LIMIT :limit"
+
+            # Build parameters dictionary
+            params = {
+                'query_vec': query_vec_json,
+                'threshold': threshold,
+                'limit': limit
+            }
+
+            if source:
+                params['source'] = source
+
+            # Execute the query with explicit connection management
+            with self.engine.connect() as conn:
+                result = conn.execute(text(sql_query), params)
+                query_time = (time.perf_counter() - query_start) * 1000
+                logger.info(f"Vector search query: {query_time:.2f}ms")
+
+                # Convert results to (ExternalPredicate, similarity) tuples
+                results = []
+                for row in result:
+                    predicate = ExternalPredicate(
+                        id=row.id,
+                        title=row.title,
+                        definition=row.definition,
+                        source=row.source,
+                        external_id=row.external_id,
+                        attributes=row.attributes,
+                        title_embedding=None,  # Don't load embeddings in results
+                        definition_embedding=None,
+                        created_at=row.created_at,
+                        updated_at=row.updated_at
+                    )
+                    similarity = float(row.max_similarity)
+                    results.append((predicate, similarity))
+
+            total_time = (time.perf_counter() - total_start) * 1000
+            logger.info(f"Total search time: {total_time:.2f}ms, found {len(results)} results")
+            
+            return results
+
+        except ValueError:
+            # Re-raise validation errors
+            raise
+        except sqlite3.Error as e:
+            logger.error(f"Vector search database error: {e}")
+            raise
+        except Exception as e:
+            logger.error(f"Vector search failed: {e}")
+            raise RuntimeError(f"Vector search failed: {e}") from e
+
     def get_status(self) -> Dict[str, Any]:
         """
         Get comprehensive status of the reference database.
@@ -899,6 +1252,7 @@ class ReferenceManager:
             "node_count": 0,
             "vec_count": 0,
             "schema_version": None,
+            "model_version": EMBEDDING_MODEL_VERSION,
             "last_import_at": None,
             "database_size": 0,
             "database_path": self.db_path,
@@ -1011,3 +1365,115 @@ class ReferenceManager:
             status["connection_healthy"] = False
 
         return status
+
+
+# Singleton pattern for application-wide reference manager
+_reference_manager_instance: Optional[ReferenceManager] = None
+_reference_manager_lock = threading.Lock()
+
+
+def get_reference_manager(config: Optional[ReferenceConfig] = None, 
+                         force_new: bool = False) -> ReferenceManager:
+    """
+    Get or create a singleton ReferenceManager instance.
+    
+    This function maintains a single ReferenceManager instance across the application
+    lifecycle, avoiding repeated engine creation on each API call. Uses double-check
+    locking pattern consistent with other singletons in the application.
+    
+    Args:
+        config: Optional ReferenceConfig. If not provided, uses default config.
+        force_new: If True, creates a new instance even if one exists (for testing).
+    
+    Returns:
+        Shared ReferenceManager instance
+        
+    Thread Safety:
+        This function is thread-safe via double-check locking pattern.
+        
+    Example:
+        >>> # In API endpoints - reuses existing instance
+        >>> manager = get_reference_manager()
+        >>> results = manager.search_external_predicates_by_similarity(...)
+        
+        >>> # For testing - force new instance
+        >>> test_manager = get_reference_manager(test_config, force_new=True)
+    """
+    global _reference_manager_instance
+    
+    # Double-check locking pattern (consistent with DatabaseManager, NLPPipeline, etc.)
+    # First check without lock for fast path
+    if _reference_manager_instance is not None and not force_new:
+        return _reference_manager_instance
+    
+    # Acquire lock for initialization
+    with _reference_manager_lock:
+        # Double-check after acquiring lock
+        if _reference_manager_instance is not None and not force_new:
+            return _reference_manager_instance
+        
+        # Create new instance
+        if config is None:
+            config = ReferenceConfig()
+        
+        # Close old instance if replacing
+        if _reference_manager_instance is not None:
+            try:
+                _reference_manager_instance.close()
+            except Exception as e:
+                logger.warning(f"Error closing old ReferenceManager: {e}")
+        
+        # Create and cache new instance
+        _reference_manager_instance = ReferenceManager(config)
+        logger.info("Created singleton ReferenceManager instance")
+        
+        return _reference_manager_instance
+
+
+def get_reference_session():
+    """
+    FastAPI dependency function to get a reference database session.
+    
+    This function provides a database session from the singleton ReferenceManager,
+    ensuring the session is properly closed after use.
+    
+    Yields:
+        SQLAlchemy session for reference database
+        
+    Example:
+        >>> @app.get("/api/predicates/external")
+        >>> def list_predicates(session: Session = Depends(get_reference_session)):
+        ...     results = session.query(ExternalPredicate).all()
+        ...     return results
+    """
+    manager = get_reference_manager()
+    session = manager.SessionLocal()
+    try:
+        yield session
+    finally:
+        session.close()
+
+
+def cleanup_reference_manager():
+    """
+    Clean up the singleton ReferenceManager instance.
+    
+    This should be called during application shutdown to properly release
+    database resources.
+    
+    Example:
+        >>> # In FastAPI lifespan or shutdown event
+        >>> @app.on_event("shutdown")
+        >>> async def shutdown_event():
+        ...     cleanup_reference_manager()
+    """
+    global _reference_manager_instance
+    
+    if _reference_manager_instance is not None:
+        logger.info("Cleaning up singleton ReferenceManager instance")
+        try:
+            _reference_manager_instance.close()
+        except Exception as e:
+            logger.error(f"Error cleaning up ReferenceManager: {e}")
+        finally:
+            _reference_manager_instance = None

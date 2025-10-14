@@ -15,12 +15,12 @@ from llm.models import RecordSelectionRequest
 class TestLLMTraceabilityPerformance:
     
     def setup_method(self):
-        """Set up test fixtures with temporary pipeline database."""
-        # Create temporary pipeline database for testing
+        """Set up test fixtures with temporary operations database."""
+        # Create temporary operations database for testing
         self.temp_db = tempfile.NamedTemporaryFile(suffix='.db', delete=False)
         self.temp_db.close()
         
-        # Initialize pipeline database manager with temp file
+        # Initialize operations database manager with temp file
         self.pipeline_manager = PipelineDatabaseManager(self.temp_db.name)
         
     def teardown_method(self):

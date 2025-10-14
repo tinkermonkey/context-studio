@@ -50,7 +50,7 @@ class DatabaseConfig(BaseModel):
     default_dataset_filename: str = Field(default="default.db", description="Default dataset filename")
     reference_path: str = Field(default="./datafiles/reference.db", description="Reference database path (multi-source knowledge graph)")
     reference_cache_path: str = Field(default="./datafiles/reference_api_cache.db", description="Reference API cache database path")
-    pipeline_path: str = Field(default="./datafiles/pipeline.db", description="Pipeline database path")
+    operations_path: str = Field(default="./datafiles/operations.db", description="Operations database path (pipeline configs, audit logs, task management)")
     check_same_thread: bool = Field(default=False, description="SQLite check_same_thread setting")
     pool_timeout: int = Field(default=30, ge=1, description="Database pool timeout seconds")
     
@@ -110,15 +110,24 @@ class ReferenceSourcesConfig(BaseModel):
     # Global search timeout for multi-source search operations
     search_timeout: int = Field(default=30, ge=5, le=300, description="Timeout in seconds for multi-source search operations")
 
+    # Reference link filtering settings
+    enable_relevance_filtering: bool = Field(default=False, description="Enable predicate relevance filtering for reference queries by default")
+    filter_cache_ttl: int = Field(default=300, ge=60, le=3600, description="Cache TTL for predicate relevance filters in seconds")
+
     # Individual source configurations
     conceptnet: ReferenceSourceConfig = Field(default_factory=lambda: ReferenceSourceConfig(
         upstream_url="https://api.conceptnet.io",
         rate_limit=ReferenceSourceRateLimitConfig(requests_per_hour=3600)
     ))
     
-    dbpedia: ReferenceSourceConfig = Field(default_factory=lambda: ReferenceSourceConfig(
+    # DBpedia has multiple services, so we configure them separately
+    dbpedia_lookup: ReferenceSourceConfig = Field(default_factory=lambda: ReferenceSourceConfig(
         upstream_url="https://lookup.dbpedia.org",
-        use_proxy=False,  # Temporarily disable proxy for testing
+        rate_limit=ReferenceSourceRateLimitConfig(requests_per_hour=3600)
+    ))
+    
+    dbpedia_sparql: ReferenceSourceConfig = Field(default_factory=lambda: ReferenceSourceConfig(
+        upstream_url="https://dbpedia.org",
         rate_limit=ReferenceSourceRateLimitConfig(requests_per_hour=3600)
     ))
     
@@ -197,26 +206,16 @@ class SourceConfig(BaseModel):
     base_url: Optional[str] = Field(None, description="Override base URL for source")
 
 
-class ReferenceConfig(BaseModel):
-    """Overall reference service configuration (legacy compatibility)"""
-    sources: Dict[SourceType, SourceConfig] = Field(default_factory=dict)
-    default_timeout: int = Field(30, ge=1, le=300, description="Default timeout for all sources")
-    concurrent_requests: int = Field(5, ge=1, le=20, description="Maximum concurrent requests per source")
-    cache_results: bool = Field(True, description="Whether to cache reference results")
-    cache_ttl: int = Field(3600, ge=60, description="Cache TTL in seconds")
-    
-    def get_source_config(self, source: SourceType) -> SourceConfig:
-        """Get configuration for a specific source with defaults"""
-        if source not in self.sources:
-            self.sources[source] = SourceConfig()
-        return self.sources[source]
-
-
 
 class Settings(BaseModel):
     """Centralized configuration settings"""
 
-    model_config = ConfigDict(env_file='.env', env_file_encoding='utf-8', extra='ignore')
+    model_config = ConfigDict(
+        env_file='.env',
+        env_file_encoding='utf-8',
+        extra='ignore',
+        env_nested_delimiter='__'
+    )
 
     # Configuration sections
     server: ServerConfig = Field(default_factory=ServerConfig)
@@ -279,7 +278,16 @@ class Settings(BaseModel):
         )
     
     def get_source_config(self, source_name: str) -> ReferenceSourceConfig:
-        """Get configuration for a specific reference source"""
+        """
+        Get configuration for a specific reference source.
+        
+        Supports aliases for backwards compatibility:
+        - 'dbpedia' maps to 'dbpedia_sparql' (SPARQL endpoint used for discovery)
+        """
+        # Handle aliases
+        if source_name == 'dbpedia':
+            source_name = 'dbpedia_sparql'
+        
         if hasattr(self.reference_sources, source_name):
             return getattr(self.reference_sources, source_name)
         raise ValueError(f"Unknown reference source: {source_name}")
@@ -287,9 +295,9 @@ class Settings(BaseModel):
     def get_enabled_sources(self) -> List[str]:
         """Get list of enabled reference sources"""
         enabled = []
-        for source_name in ["conceptnet", "dbpedia", "dbpedia_spotlight", "wikidata", "schema_org"]:
-            config = getattr(self.reference_sources, source_name)
-            if config.enabled:
+        for source_name in ["conceptnet", "dbpedia_lookup", "dbpedia_sparql", "dbpedia_spotlight", "wikidata", "schema_org"]:
+            config = getattr(self.reference_sources, source_name, None)
+            if config and config.enabled:
                 enabled.append(source_name)
         return enabled
     
@@ -342,7 +350,8 @@ class Settings(BaseModel):
             legacy_keys = {
                 "conceptnet": ["concepcy", "conceptnet"],
                 "dbpedia_spotlight": ["spacy_dbpedia_spotlight", "dbpedia_spotlight"],
-                "dbpedia": ["dbpedia"],
+                "dbpedia_lookup": ["dbpedia", "dbpedia_lookup"],  # Map dbpedia_lookup to legacy 'dbpedia' key
+                "dbpedia_sparql": ["dbpedia_sparql"],
                 "wikidata": ["wikidata"]
             }
             domain_mappings[source_name] = {
@@ -366,7 +375,8 @@ class Settings(BaseModel):
                 "progressive_max_delay": self.proxy_server.progressive_max_delay,
                 "domain_limits": {
                     "conceptnet": self.reference_sources.conceptnet.rate_limit.requests_per_hour,
-                    "dbpedia": self.reference_sources.dbpedia.rate_limit.requests_per_hour,
+                    "dbpedia_lookup": self.reference_sources.dbpedia_lookup.rate_limit.requests_per_hour,
+                    "dbpedia_sparql": self.reference_sources.dbpedia_sparql.rate_limit.requests_per_hour,
                     "dbpedia_spotlight": self.reference_sources.dbpedia_spotlight.rate_limit.requests_per_hour,
                     "wikidata": self.reference_sources.wikidata.rate_limit.requests_per_hour
                 }
@@ -414,46 +424,6 @@ class Settings(BaseModel):
         return self.llm.timeout
     
     @property
-    def REFERENCE_CONFIG(self) -> Dict[str, Any]:
-        """Legacy compatibility property"""
-        return {
-            "sources": {
-                "dbpedia": {
-                    "enabled": self.reference_sources.dbpedia.enabled,
-                    "use_proxy": self.reference_sources.dbpedia.use_proxy,
-                    "timeout": self.reference_sources.dbpedia.timeout,
-                    "max_retries": self.reference_sources.dbpedia.max_retries,
-                    "base_url": None
-                },
-                "conceptnet": {
-                    "enabled": self.reference_sources.conceptnet.enabled,
-                    "use_proxy": self.reference_sources.conceptnet.use_proxy,
-                    "timeout": self.reference_sources.conceptnet.timeout,
-                    "max_retries": self.reference_sources.conceptnet.max_retries,
-                    "base_url": None
-                },
-                "wikidata": {
-                    "enabled": self.reference_sources.wikidata.enabled,
-                    "use_proxy": self.reference_sources.wikidata.use_proxy,
-                    "timeout": self.reference_sources.wikidata.timeout,
-                    "max_retries": self.reference_sources.wikidata.max_retries,
-                    "base_url": None
-                },
-                "schema_org": {
-                    "enabled": self.reference_sources.schema_org.enabled,
-                    "use_proxy": self.reference_sources.schema_org.use_proxy,
-                    "timeout": self.reference_sources.schema_org.timeout,
-                    "max_retries": self.reference_sources.schema_org.max_retries,
-                    "base_url": None
-                }
-            },
-            "default_timeout": 30,
-            "concurrent_requests": 5,
-            "cache_results": True,
-            "cache_ttl": 3600
-        }
-    
-    @property
     def ENABLE_CACHING_PROXY(self) -> Dict[str, bool]:
         """Legacy compatibility property"""
         return {
@@ -463,8 +433,13 @@ class Settings(BaseModel):
                                       self.reference_sources.dbpedia_spotlight.use_proxy),
             "conceptnet": (self.reference_sources.conceptnet.enabled and 
                           self.reference_sources.conceptnet.use_proxy),
-            "dbpedia": (self.reference_sources.dbpedia.enabled and 
-                       self.reference_sources.dbpedia.use_proxy),
+            # Map legacy 'dbpedia' to dbpedia_lookup for backward compatibility
+            "dbpedia": (self.reference_sources.dbpedia_lookup.enabled and 
+                       self.reference_sources.dbpedia_lookup.use_proxy),
+            "dbpedia_lookup": (self.reference_sources.dbpedia_lookup.enabled and 
+                              self.reference_sources.dbpedia_lookup.use_proxy),
+            "dbpedia_sparql": (self.reference_sources.dbpedia_sparql.enabled and 
+                              self.reference_sources.dbpedia_sparql.use_proxy),
             "wikidata": (self.reference_sources.wikidata.enabled and 
                         self.reference_sources.wikidata.use_proxy)
         }
@@ -513,11 +488,17 @@ class ConfigurationManager:
         self.load()
     
     def load(self) -> Settings:
-        """Load configuration from file with defaults"""
+        """Load configuration from file with defaults and apply environment overrides"""
         try:
+            # Load environment variables first
+            load_dotenv()
+
             if os.path.exists(self.config_file):
                 with open(self.config_file, 'r') as f:
                     config_data = json.load(f)
+
+                # Apply environment variable overrides to config_data
+                config_data = self._apply_env_overrides(config_data)
                 self.settings = Settings(**config_data)
             else:
                 self.settings = Settings()
@@ -526,6 +507,41 @@ class ConfigurationManager:
             print(f"Error loading config: {e}")  # Use print to avoid circular dependency
             self.settings = Settings()
         return self.settings
+
+    def _apply_env_overrides(self, config_data: dict) -> dict:
+        """Apply environment variable overrides to configuration data"""
+        # Environment variables use double underscore for nesting: SECTION__KEY
+        # e.g., SERVER__PORT overrides server.port
+        env_overrides = {}
+
+        # Collect all environment variables that match configuration pattern
+        for env_key, env_value in os.environ.items():
+            if '__' in env_key:
+                parts = env_key.lower().split('__')
+                if len(parts) == 2:
+                    section, key = parts
+                    if section not in env_overrides:
+                        env_overrides[section] = {}
+                    # Try to convert to appropriate type
+                    env_overrides[section][key] = self._convert_env_value(env_value)
+
+        # Apply overrides to config_data
+        for section, overrides in env_overrides.items():
+            if section in config_data:
+                config_data[section].update(overrides)
+            else:
+                config_data[section] = overrides
+
+        return config_data
+
+    def _convert_env_value(self, value: str) -> Any:
+        """Convert environment variable string value to appropriate type"""
+        # Try to parse as JSON first (handles numbers, booleans, etc.)
+        try:
+            return json.loads(value)
+        except (json.JSONDecodeError, ValueError):
+            # Return as string if not valid JSON
+            return value
     
     def save(self) -> bool:
         """Save current configuration to file"""
@@ -646,14 +662,15 @@ def get_config_manager() -> ConfigurationManager:
 
 def get_settings() -> Settings:
     """
-    Get the global settings instance.
+    Get the global settings instance with environment variable overrides.
+
+    Environment variables can override config.json settings using the format:
+    SECTION__KEY (e.g., SERVER__PORT=9999 overrides server.port)
     """
-    # Load .env into the environment so callers can override settings using
-    # standard environment variables. This does not perform automatic mapping
-    # of environment variables to nested fields like BaseSettings would.
+    # Load .env into the environment and apply overrides
     load_dotenv()
 
-    # Return settings from the configuration manager
+    # Return settings from the configuration manager (includes env overrides)
     config_manager = get_config_manager()
     return config_manager.settings
 

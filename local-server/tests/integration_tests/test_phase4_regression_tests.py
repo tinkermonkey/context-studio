@@ -12,6 +12,10 @@ Test Cases:
 - TC-R005: Performance regressions not introduced
 """
 
+import sys
+import os
+sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
+
 import pytest
 import time
 from typing import Dict, Any
@@ -160,7 +164,7 @@ class TestBackwardCompatibility:
         assert search_time < 200, f"Search should complete in <200ms (actual: {search_time:.2f}ms)"
 
 
-@pytest.fixture
+@pytest.fixture(scope="function")
 def test_db_with_data(tmpdir):
     """
     Create a test database with sample data for regression testing.
@@ -169,43 +173,47 @@ def test_db_with_data(tmpdir):
     """
     # Import here to avoid circular dependencies
     from reference_db.manager import ReferenceManager
+    from reference_db.config import ReferenceConfig
     import json
     import os
 
     # Create temporary database
     db_path = str(tmpdir / "test_regression.db")
-    manager = ReferenceManager(db_path)
+    config = ReferenceConfig()
 
-    # Load schema.org sample data
-    fixture_path = os.path.join(
-        os.path.dirname(__file__),
-        "..",
-        "fixtures",
-        "schema_org_sample.jsonld"
-    )
+    # Use context manager to ensure proper cleanup
+    with ReferenceManager(config, db_path) as manager:
+        # Load schema.org sample data
+        fixture_path = os.path.join(
+            os.path.dirname(__file__),
+            "..",
+            "fixtures",
+            "schema_org_sample.jsonld"
+        )
 
-    if os.path.exists(fixture_path):
-        with open(fixture_path, "r") as f:
-            data = json.load(f)
-            # Import the data (would use actual import logic here)
-            # For now, create some basic test data
+        if os.path.exists(fixture_path):
+            with open(fixture_path, "r") as f:
+                data = json.load(f)
+                # Import the data (would use actual import logic here)
+                # For now, create some basic test data
 
-    # Create test nodes directly
-    manager.add_reference_node(
-        title="Person",
-        definition="A person (alive, dead, undead, or fictional).",
-        source="schema.org",
-        external_id="Person",
-        attributes={"@type": "Class"}
-    )
+        # Create test nodes directly
+        manager.add_reference_node(
+            title="Person",
+            definition="A person (alive, dead, undead, or fictional).",
+            source="schema.org",
+            external_id="Person",
+            attributes={"@type": "Class"}
+        )
 
-    manager.add_reference_node(
-        title="name",
-        definition="The name of the item.",
-        source="schema.org",
-        external_id="name",
-        attributes={"@type": "Property"}
-    )
+        manager.add_reference_node(
+            title="name",
+            definition="The name of the item.",
+            source="schema.org",
+            external_id="name",
+            attributes={"@type": "Property"}
+        )
+    # Manager is now closed, database is ready to use
 
     yield db_path
 
@@ -214,24 +222,28 @@ def test_db_with_data(tmpdir):
         os.remove(db_path)
 
 
-@pytest.fixture
-def client(test_db_with_data):
+@pytest.fixture(scope="function")
+def client(test_db_with_data, monkeypatch):
     """
     Create test client with test database.
     """
     from fastapi.testclient import TestClient
     from api.reference import router
-    from reference_db.manager import ReferenceManager
-
-    # Override the reference manager to use test database
-    test_manager = ReferenceManager(test_db_with_data)
-
-    # Create app and inject test manager
     from fastapi import FastAPI
+
+    # Monkey-patch ReferenceManager to use test database
+    # This ensures all endpoints use the test database
+    from reference_db import manager as ref_manager_module
+    original_manager_init = ref_manager_module.ReferenceManager.__init__
+
+    def patched_init(self, config, db_path=None):
+        # Always use the test database path
+        return original_manager_init(self, config, test_db_with_data)
+
+    monkeypatch.setattr(ref_manager_module.ReferenceManager, '__init__', patched_init)
+
+    # Create app
     app = FastAPI()
     app.include_router(router)
-
-    # Override dependency
-    app.dependency_overrides = {}
 
     return TestClient(app)

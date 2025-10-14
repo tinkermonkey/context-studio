@@ -192,18 +192,21 @@ def test_database_with_schema_org():
     ])
     manager.session.commit()
 
-    manager.close()
-
-    yield db_path, {
+    # Extract node data before closing the session to avoid DetachedInstanceError
+    node_data = {
         "nodes": {
-            "person": person_node,
-            "thing": thing_node,
-            "book": book_node,
-            "author": author_prop,
-            "name": name_prop,
-            "givenName": given_name_prop
+            "person": {"id": person_node.id, "title": person_node.title},
+            "thing": {"id": thing_node.id, "title": thing_node.title},
+            "book": {"id": book_node.id, "title": book_node.title},
+            "author": {"id": author_prop.id, "title": author_prop.title},
+            "name": {"id": name_prop.id, "title": name_prop.title},
+            "givenName": {"id": given_name_prop.id, "title": given_name_prop.title}
         }
     }
+
+    manager.close()
+
+    yield db_path, node_data
 
     # Cleanup
     if os.path.exists(db_path):
@@ -215,28 +218,21 @@ def app_client(test_database_with_schema_org):
     """Create FastAPI test client with test database."""
     db_path, nodes = test_database_with_schema_org
 
-    # Patch the ReferenceConfig to use our test database
-    with patch('reference_db.config.ReferenceConfig') as mock_config_class:
-        mock_config = MagicMock()
-        mock_config_class.return_value = mock_config
+    # Import app
+    from app import app
+    client = TestClient(app)
 
-        # Import after patching
-        from app import app
-        client = TestClient(app)
+    # Create a custom ReferenceManager that always uses test database
+    test_db_path = db_path  # Capture in closure
 
-        # Patch the manager creation in the API endpoints
-        with patch('api.reference.ReferenceConfig') as api_config:
-            api_config.return_value = ReferenceConfig()
+    class TestReferenceManager(ReferenceManager):
+        def __init__(self, config, db_path=None):
+            # Always use test database path
+            super().__init__(config, db_path=test_db_path)
 
-            with patch('api.reference.ReferenceManager') as mock_manager_class:
-                # Create actual manager with test DB
-                def create_manager(*args, **kwargs):
-                    config = ReferenceConfig()
-                    return ReferenceManager(config, db_path=db_path)
-
-                mock_manager_class.side_effect = create_manager
-
-                yield client
+    # Patch ReferenceManager in the reference_db.manager module
+    with patch('reference_db.manager.ReferenceManager', TestReferenceManager):
+        yield client
 
 
 class TestTC_S001_EndToEndWorkflow:
@@ -386,13 +382,12 @@ class TestTC_S002_HealthCheck:
             # Use a manager with non-existent DB
             config = ReferenceConfig()
 
-            with patch('api.reference.ReferenceManager') as mock_manager_class:
-                # Create manager that points to non-existent DB
-                def create_manager(*args, **kwargs):
-                    return ReferenceManager(config, db_path=non_existent_db)
+            # Create a custom ReferenceManager that uses non-existent DB
+            class TestReferenceManager(ReferenceManager):
+                def __init__(self, config, db_path=None):
+                    super().__init__(config, db_path=non_existent_db)
 
-                mock_manager_class.side_effect = create_manager
-
+            with patch('reference_db.manager.ReferenceManager', TestReferenceManager):
                 from app import app
                 client = TestClient(app)
 
@@ -448,7 +443,7 @@ class TestTC_S003_APIContractValidation:
     def test_node_retrieval_api_schema(self, app_client, test_database_with_schema_org):
         """Verify node retrieval API returns expected schema."""
         db_path, nodes = test_database_with_schema_org
-        person_id = nodes["nodes"]["person"].id
+        person_id = nodes["nodes"]["person"]["id"]
 
         response = app_client.get(f"/api/reference/ref-db/nodes/{person_id}")
 
@@ -467,7 +462,7 @@ class TestTC_S003_APIContractValidation:
     def test_links_api_response_schema(self, app_client, test_database_with_schema_org):
         """Verify links API returns expected response schema."""
         db_path, nodes = test_database_with_schema_org
-        person_id = nodes["nodes"]["person"].id
+        person_id = nodes["nodes"]["person"]["id"]
 
         response = app_client.get(
             f"/api/reference/ref-db/nodes/{person_id}/links",

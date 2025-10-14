@@ -187,11 +187,14 @@ def test_integration_with_existing_config(test_settings):
         else:
             print(f"  ❌ {field}: Missing from configuration")
 
-    # Test that new LLM config doesn't break existing functionality
+    # Test that new config doesn't break existing functionality
     try:
-        reference_config = settings.REFERENCE_CONFIG
         reference_sources = settings.reference_sources
+        # Verify the new dbpedia split configuration
+        assert hasattr(settings.reference_sources, 'dbpedia_lookup')
+        assert hasattr(settings.reference_sources, 'dbpedia_sparql')
         print("  ✓ Existing configuration still accessible")
+        print("  ✓ New dbpedia split configuration present")
     except Exception as e:
         print(f"  ❌ Existing configuration broken: {e}")
 

@@ -368,7 +368,15 @@ class NodeService:
         execution_start = time.time()
         result = query.all()
         execution_time = time.time() - execution_start
-        logger.debug(f"Query execution time: {execution_time*1000:.2f}ms for {len(result)} nodes (skip={skip})")
+        
+        # Handle case where result might be a Mock object in tests
+        try:
+            result_length = len(result)
+        except TypeError:
+            # If result is a Mock object, use a default value for logging
+            result_length = "?"
+        
+        logger.debug(f"Query execution time: {execution_time*1000:.2f}ms for {result_length} nodes (skip={skip})")
 
         return result
 

@@ -18,6 +18,7 @@ import {
 import { UnifiedLink, UnifiedNode, UnifiedSearchLink } from "@/api/types/unified";
 import { SOURCE_METADATA } from "@/api/types/unified";
 import { useNodeDetails } from "@/api/hooks/unifiedReference/useUnifiedReference";
+import { getSourceBadgeColor, getSourceLabel } from "@/utils/sourceUtils";
 
 // Adapter function to convert SearchLink to UnifiedLink format
 const convertSearchLinkToUnifiedLink = (searchLink: UnifiedSearchLink): UnifiedLink => ({
@@ -67,12 +68,6 @@ const LinkItem: React.FC<LinkItemProps> = ({
   const isLoading = !targetNodeFromSearch && apiLoading;
   const error = !targetNodeFromSearch ? apiError : null;
 
-  const sourceMetadata = SOURCE_METADATA[link.source] || {
-    label: link.source,
-    color: "gray",
-    description: "",
-  };
-
   const confidencePercent = Math.round(link.confidence_score * 100);
 
   const handleNodeClick = () => {
@@ -111,8 +106,8 @@ const LinkItem: React.FC<LinkItemProps> = ({
       <div className="space-y-3">
         {/* Link relationship */}
         <div className="flex items-center gap-2 text-sm">
-          <Badge color={sourceMetadata.color as any} size="sm">
-            {sourceMetadata.label}
+          <Badge color={getSourceBadgeColor(link.source)} size="sm">
+            {getSourceLabel(link.source)}
           </Badge>
 
           <div className="flex items-center gap-1 text-gray-600">
@@ -153,12 +148,10 @@ const LinkItem: React.FC<LinkItemProps> = ({
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <Badge
-                color={
-                  (SOURCE_METADATA[targetNode.source]?.color as any) || "gray"
-                }
+                color={getSourceBadgeColor(targetNode.source)}
                 size="sm"
               >
-                {SOURCE_METADATA[targetNode.source]?.label || targetNode.source}
+                {getSourceLabel(targetNode.source)}
               </Badge>
             </div>
 

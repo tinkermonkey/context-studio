@@ -4,6 +4,12 @@ import {
   PredicateListParams,
   PredicateOut,
   PaginatedPredicatesResponse,
+  PaginatedExternalPredicatesResponse,
+  PredicateDiscoveryStatus,
+  FindSimilarResponse,
+  ListExternalPredicatesParams,
+  SearchExternalPredicatesParams,
+  FindSimilarParams,
 } from "@/api/services/predicates";
 import { QUERY_KEYS } from "@/api/config";
 import { createQueryKey } from "@/api/utils/queryClient";
@@ -100,6 +106,88 @@ export const usePredicateConceptNetRelation = (
     }),
     queryFn: () => predicateService.getConceptNetRelation(id!),
     enabled: !!id,
+    ...options,
+  });
+};
+
+/**
+ * Hook to fetch external predicates with pagination
+ */
+export const useExternalPredicates = (
+  params?: ListExternalPredicatesParams,
+  options?: UseQueryOptions<PaginatedExternalPredicatesResponse, Error>,
+) => {
+  return useQuery({
+    queryKey: createQueryKey(
+      QUERY_KEYS.PREDICATES,
+      "external",
+      params as Record<string, unknown>,
+    ),
+    queryFn: () => predicateService.listExternalPredicates(params),
+    staleTime: 10 * 60 * 1000, // 10 minutes
+    ...options,
+  });
+};
+
+/**
+ * Hook to search external predicates using vector similarity
+ */
+export const useSearchExternalPredicates = (
+  params?: SearchExternalPredicatesParams,
+  options?: UseQueryOptions<any, Error>,
+) => {
+  return useQuery({
+    queryKey: createQueryKey(
+      QUERY_KEYS.PREDICATES,
+      "external-search",
+      params as Record<string, unknown>,
+    ),
+    queryFn: () => predicateService.searchExternalPredicates(params!),
+    enabled: !!params?.query && params.query.trim().length > 0,
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    ...options,
+  });
+};
+
+/**
+ * Hook to fetch discovery task status
+ */
+export const useDiscoveryStatus = (
+  taskId?: string,
+  options?: UseQueryOptions<PredicateDiscoveryStatus, Error>,
+) => {
+  return useQuery({
+    queryKey: createQueryKey(QUERY_KEYS.PREDICATES, "discover", { taskId }),
+    queryFn: () => predicateService.getDiscoveryStatus(taskId!),
+    enabled: !!taskId,
+    refetchInterval: (data) => {
+      // Poll every 2 seconds if task is pending or running
+      if (data && (data.status === "pending" || data.status === "running")) {
+        return 2000;
+      }
+      return false;
+    },
+    ...options,
+  });
+};
+
+/**
+ * Hook to fetch similar predicates for a given predicate
+ */
+export const useSimilarPredicates = (
+  id?: string,
+  params?: FindSimilarParams,
+  options?: UseQueryOptions<FindSimilarResponse, Error>,
+) => {
+  return useQuery({
+    queryKey: createQueryKey(
+      QUERY_KEYS.PREDICATES,
+      "find-similar",
+      { id, ...params } as Record<string, unknown>,
+    ),
+    queryFn: () => predicateService.findSimilarPredicates(id!, params),
+    enabled: !!id,
+    staleTime: 60 * 60 * 1000, // 1 hour (results are cached on backend)
     ...options,
   });
 };

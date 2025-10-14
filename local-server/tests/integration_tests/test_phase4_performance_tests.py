@@ -70,9 +70,13 @@ def performance_test_database():
 
     manager.session.add_all(links)
     manager.session.commit()
+
+    # Extract node IDs before closing the session to avoid DetachedInstanceError
+    node_data = [(node.id, node.title) for node in nodes]
+
     manager.close()
 
-    yield db_path, nodes
+    yield db_path, node_data
 
     # Cleanup
     if os.path.exists(db_path):
@@ -211,7 +215,7 @@ class TestTC_P002_ConcurrentRequestHandling:
 
     def test_concurrent_link_retrievals(self, performance_test_database):
         """Test concurrent link retrieval requests."""
-        db_path, nodes = performance_test_database
+        db_path, node_data = performance_test_database
 
         def run_link_retrieval(node_id: str):
             """Run a single link retrieval and return timing."""
@@ -223,7 +227,7 @@ class TestTC_P002_ConcurrentRequestHandling:
 
         # Run 30 concurrent link retrievals
         num_concurrent = 30
-        node_ids = [node.id for node in nodes[:num_concurrent]]
+        node_ids = [node_id for node_id, _ in node_data[:num_concurrent]]
 
         start_time = time.time()
 

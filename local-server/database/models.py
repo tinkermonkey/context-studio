@@ -43,6 +43,7 @@ class Predicate(Base):
     title = Column(String, unique=True, nullable=False)
     definition = Column(Text, nullable=True)
     mapping = Column(Text, nullable=True)  # JSON string
+    is_relevant = Column(Boolean, nullable=True)  # None=not evaluated, True=relevant, False=irrelevant
     date_created = Column(DateTime, default=lambda: datetime.datetime.now(datetime.UTC))
     date_modified = Column(
         DateTime,

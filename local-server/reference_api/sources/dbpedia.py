@@ -6,12 +6,25 @@ from ..models import DBpediaResourceResponse, DBpediaSearchResponse, DBpediaSpar
 
 
 class DBpediaSource(BaseReferenceSource):
+    """
+    DBpedia source implementation with support for multiple service endpoints.
+    
+    Uses different proxy domain keys for different services:
+    - dbpedia_lookup: for search and data retrieval (lookup.dbpedia.org)
+    - dbpedia_sparql: for SPARQL queries (dbpedia.org/sparql)
+    """
+    
     def _get_default_base_url(self) -> str:
-        # Use English DBpedia lookup service for consistent language results
+        # Default to lookup service
         return "https://lookup.dbpedia.org"
 
     def _get_proxy_domain_key(self) -> str:
-        return "dbpedia"
+        # Default domain key for lookup operations
+        return "dbpedia_lookup"
+    
+    def _get_sparql_proxy_domain_key(self) -> str:
+        # Domain key for SPARQL operations
+        return "dbpedia_sparql"
 
     async def get_resource_data(self, resource_url: str, format: str = "json") -> DBpediaResourceResponse:
         try:
@@ -78,8 +91,35 @@ class DBpediaSource(BaseReferenceSource):
 
     async def sparql_query(self, query: str, format: str = "json") -> DBpediaSparqlResponse:
         try:
-            sparql_url = f"{self._get_base_url()}/sparql"
-            headers = {"Accept": "application/json" if format == "json" else "application/xml"}
+            # Use SPARQL-specific proxy configuration
+            if getattr(self.config, 'use_proxy', False):
+                # Get proxy base URL for SPARQL endpoint
+                from nlp.proxy_manager import get_proxy_manager
+                proxy_manager = get_proxy_manager()
+                if getattr(proxy_manager, 'is_running', False):
+                    proxy_config = proxy_manager.get_proxy_config()
+                    if proxy_config and 'domain_mappings' in proxy_config:
+                        domain_key = self._get_sparql_proxy_domain_key()
+                        if domain_key in proxy_config['domain_mappings']:
+                            server_config = proxy_config.get('server', {})
+                            host = server_config.get('host', '127.0.0.1')
+                            port = server_config.get('port', 18080)
+                            # Proxy will forward to dbpedia.org/sparql
+                            sparql_url = f"http://{host}:{port}/{domain_key}/sparql"
+                        else:
+                            # Fallback to direct connection
+                            sparql_url = "https://dbpedia.org/sparql"
+                    else:
+                        sparql_url = "https://dbpedia.org/sparql"
+                else:
+                    sparql_url = "https://dbpedia.org/sparql"
+            else:
+                # Direct connection to DBpedia SPARQL endpoint
+                sparql_url = "https://dbpedia.org/sparql"
+            
+            headers = {
+                "Accept": "application/sparql-results+json" if format == "json" else "application/sparql-results+xml"
+            }
             data = {"query": query, "format": format}
 
             response_data = await self._make_request("POST", sparql_url, data=data, headers=headers)

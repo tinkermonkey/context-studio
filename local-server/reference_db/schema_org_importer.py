@@ -4,8 +4,11 @@ Schema.org import pipeline with vector embeddings and relationship extraction.
 This module implements Phase 2 of the reference database import workflow:
 - Fetches Schema.org JSON-LD with retry logic and exponential backoff
 - Generates vector embeddings for titles and definitions
+- Imports Schema.org Classes as ReferenceNodes (entities)
+- Imports Schema.org Properties as ExternalPredicates (relationships)
+- Extracts Schema.org Class hierarchy (subClassOf) as ReferenceLinks
+- Property metadata (domainIncludes, rangeIncludes, inverseOf) stored in ExternalPredicate.attributes
 - Implements 5-step vector table synchronization workflow
-- Extracts Schema.org relationships (subClassOf, domainIncludes, rangeIncludes, inverseOf)
 - Provides transaction boundaries with rollback support
 - Implements lock file management for concurrent import protection
 """
@@ -26,7 +29,7 @@ from sqlalchemy.exc import SQLAlchemyError
 
 from reference_db.config import ReferenceConfig
 from reference_db.manager import ReferenceManager
-from reference_db.models import ReferenceNode, ReferenceLink
+from reference_db.models import ReferenceNode, ReferenceLink, ExternalPredicate
 from embeddings.generate_embeddings import generate_embedding
 
 logger = logging.getLogger(__name__)
@@ -116,12 +119,13 @@ class SchemaOrgImporter:
         """
         Execute the complete Schema.org import pipeline.
 
-        This method implements the 5-step vector table synchronization workflow:
+        This method implements the revised import workflow:
         1. Download and parse Schema.org JSON-LD
-        2. Generate embeddings for all nodes (title and definition)
-        3. Insert nodes with embeddings in single transaction (Phase 3)
-        4. Create vec0 virtual table and populate via INSERT...SELECT (atomic)
-        5. Extract and insert relationships in separate transaction
+        2. Generate embeddings for all items (entities and properties)
+        3. Insert Classes as ReferenceNodes with embeddings
+        4. Insert Properties as ExternalPredicates with embeddings
+        5. Create vec0 virtual table for ReferenceNodes
+        6. Extract and insert metadata relationships as ReferenceLinks
 
         Args:
             batch_size: Number of items to process per batch (default: 200, max: 5000)
@@ -155,22 +159,32 @@ class SchemaOrgImporter:
             json_data = self._download_with_retry()
             entities, properties = self._parse_jsonld(json_data)
 
-            total_items = len(entities) + len(properties)
-            logger.info(f"Parsed {len(entities)} entities and {len(properties)} properties")
+            logger.info(f"Parsed {len(entities)} entities (Classes) and {len(properties)} properties")
 
-            # Step 2: Generate embeddings
-            logger.info("Step 2: Generating embeddings in batches")
-            embedded_nodes = self._generate_embeddings_batch(
-                entities + properties,
+            # Step 2: Generate embeddings for entities
+            logger.info("Step 2: Generating embeddings for entities")
+            embedded_entities = self._generate_embeddings_batch(
+                entities,
                 batch_size=batch_size
             )
 
-            # Step 3: Insert nodes with embeddings in transaction
-            logger.info("Step 3: Inserting nodes with embeddings")
-            node_map = self._insert_nodes_transaction(embedded_nodes)
+            # Step 3: Generate embeddings for properties
+            logger.info("Step 3: Generating embeddings for properties")
+            embedded_properties = self._generate_embeddings_batch(
+                properties,
+                batch_size=batch_size
+            )
 
-            # Step 4: Create and populate vec0 virtual table
-            logger.info("Step 4: Creating and populating vec0 virtual table")
+            # Step 4: Insert entities as ReferenceNodes with embeddings
+            logger.info("Step 4: Inserting entities as ReferenceNodes")
+            node_map = self._insert_nodes_transaction(embedded_entities)
+
+            # Step 5: Insert properties as ExternalPredicates with embeddings
+            logger.info("Step 5: Inserting properties as ExternalPredicates")
+            predicate_map = self._insert_predicates_transaction(embedded_properties)
+
+            # Step 6: Create and populate vec0 virtual table for ReferenceNodes
+            logger.info("Step 6: Creating and populating vec0 virtual table")
             try:
                 vec_success = self._create_vec_table()
                 if not vec_success:
@@ -185,16 +199,19 @@ class SchemaOrgImporter:
                 # Re-raise to trigger full rollback
                 raise
 
-            # Step 5: Extract and insert relationships
-            logger.info("Step 5: Extracting and inserting relationships")
+            # Step 7: Extract and insert metadata relationships
+            logger.info("Step 7: Extracting and inserting metadata relationships")
             link_count = self._insert_relationships_transaction(
-                entities + properties,
-                node_map
+                entities,
+                properties,
+                node_map,
+                predicate_map
             )
 
             result = {
                 "success": True,
-                "nodes_imported": len(node_map),
+                "entities_imported": len(node_map),
+                "properties_imported": len(predicate_map),
                 "links_imported": link_count,
                 "timestamp": datetime.now().isoformat()
             }
@@ -427,18 +444,38 @@ class SchemaOrgImporter:
                 try:
                     # Extract fields
                     external_id = item.get("@id", "")
-                    title = (
+                    
+                    # Extract title - handle both string and JSON-LD object format
+                    title_raw = (
                         item.get("rdfs:label") or
                         item.get("label") or
                         item.get("name") or
                         ""
                     )
-                    definition = (
+                    if isinstance(title_raw, dict):
+                        # JSON-LD object with @value
+                        title = title_raw.get("@value", str(title_raw))
+                    elif isinstance(title_raw, list):
+                        # Multiple values - take the first string
+                        title = next((t.get("@value", t) if isinstance(t, dict) else t for t in title_raw), "")
+                    else:
+                        title = str(title_raw) if title_raw else ""
+                    
+                    # Extract definition - handle both string and JSON-LD object format
+                    definition_raw = (
                         item.get("rdfs:comment") or
                         item.get("comment") or
                         item.get("description") or
                         ""
                     )
+                    if isinstance(definition_raw, dict):
+                        # JSON-LD object with @value
+                        definition = definition_raw.get("@value", str(definition_raw))
+                    elif isinstance(definition_raw, list):
+                        # Multiple values - take the first string
+                        definition = next((d.get("@value", d) if isinstance(d, dict) else d for d in definition_raw), "")
+                    else:
+                        definition = str(definition_raw) if definition_raw else ""
 
                     # Generate embeddings separately for title and definition
                     title_embedding = None
@@ -500,8 +537,8 @@ class SchemaOrgImporter:
                 }
             )
             raise EmbeddingError(
-                f"Embedding generation failed for {len(failed_items)} items. "
-                f"See logs for detailed failed IDs."
+                f"Embedding generation failed for {len(failed_items)} items: "
+                f"{', '.join(failed_items)}"
             )
 
         logger.info(f"Generated embeddings for {len(embedded_items)} items")
@@ -512,13 +549,13 @@ class SchemaOrgImporter:
         embedded_nodes: List[Dict[str, Any]]
     ) -> Dict[str, str]:
         """
-        Insert nodes with embeddings in a single transaction (Phase 3).
+        Insert Schema.org Classes as ReferenceNodes with embeddings in a single transaction.
 
         This method uses transaction boundaries to ensure atomicity.
         If any insert fails, the entire transaction is rolled back.
 
         Args:
-            embedded_nodes: List of nodes with embeddings
+            embedded_nodes: List of entity (Class) items with embeddings
 
         Returns:
             Dict mapping external_id to node UUID
@@ -568,6 +605,68 @@ class SchemaOrgImporter:
             raise SchemaOrgImportError(f"Node insertion failed: {e}")
 
         return node_map
+
+    def _insert_predicates_transaction(
+        self,
+        embedded_predicates: List[Dict[str, Any]]
+    ) -> Dict[str, str]:
+        """
+        Insert Schema.org Properties as ExternalPredicates with embeddings in a single transaction.
+
+        This method uses transaction boundaries to ensure atomicity.
+        If any insert fails, the entire transaction is rolled back.
+
+        Args:
+            embedded_predicates: List of property (rdf:Property) items with embeddings
+
+        Returns:
+            Dict mapping external_id to predicate UUID
+
+        Raises:
+            SchemaOrgImportError: If transaction fails
+        """
+        predicate_map = {}
+        predicates_inserted = 0
+
+        try:
+            # Clear any existing predicates from this source for idempotency
+            self.manager.session.query(ExternalPredicate).filter_by(source=SOURCE_NAME).delete()
+            self.manager.session.commit()
+
+            # Start transaction for new predicates
+            with self.manager.session.begin_nested():
+                for predicate_data in embedded_predicates:
+                    predicate = ExternalPredicate(
+                        id=str(uuid4()),
+                        title=predicate_data["title"],
+                        definition=predicate_data["definition"],
+                        source=SOURCE_NAME,
+                        external_id=predicate_data["external_id"],
+                        attributes=json.dumps(predicate_data["raw_data"]),
+                        title_embedding=predicate_data["title_embedding"],
+                        definition_embedding=predicate_data["definition_embedding"],
+                        created_at=datetime.now().isoformat(),
+                        updated_at=datetime.now().isoformat()
+                    )
+
+                    self.manager.session.add(predicate)
+                    predicate_map[predicate_data["external_id"]] = predicate.id
+
+                    # Progress logging
+                    predicates_inserted += 1
+                    if predicates_inserted % PROGRESS_LOG_INTERVAL == 0:
+                        logger.info(f"Progress: {predicates_inserted}/{len(embedded_predicates)} predicates inserted")
+
+            # Commit transaction
+            self.manager.session.commit()
+            logger.info(f"Inserted {len(predicate_map)} predicates in transaction")
+
+        except SQLAlchemyError as e:
+            logger.error(f"Transaction failed, rolling back: {e}")
+            self.manager.session.rollback()
+            raise SchemaOrgImportError(f"Predicate insertion failed: {e}")
+
+        return predicate_map
 
     def _create_vec_table(self) -> bool:
         """
@@ -695,21 +794,28 @@ class SchemaOrgImporter:
 
     def _insert_relationships_transaction(
         self,
-        items: List[Dict],
-        node_map: Dict[str, str]
+        entities: List[Dict],
+        properties: List[Dict],
+        node_map: Dict[str, str],
+        predicate_map: Dict[str, str]
     ) -> int:
         """
-        Extract and insert Schema.org relationships in separate transaction (Phase 5).
+        Extract and insert Schema.org metadata relationships in separate transaction.
 
         Extracts the following relationship types:
-        - subClassOf: Entity inheritance relationships
-        - domainIncludes: Property domain constraints
-        - rangeIncludes: Property range constraints
-        - inverseOf: Inverse property relationships
+        - subClassOf: Entity inheritance relationships (Class -> Class)
+        - domainIncludes: Property domain constraints (Property -> Class)
+        - rangeIncludes: Property range constraints (Property -> Class)
+        - inverseOf: Inverse property relationships (Property -> Property)
+
+        Note: These are metadata relationships that describe the schema structure,
+        not the actual relationships that the properties represent.
 
         Args:
-            items: List of Schema.org items
-            node_map: Mapping of external_id to node UUID
+            entities: List of Schema.org entity (Class) items
+            properties: List of Schema.org property (rdf:Property) items
+            node_map: Mapping of entity external_id to ReferenceNode UUID
+            predicate_map: Mapping of property external_id to ExternalPredicate UUID
 
         Returns:
             Number of links inserted
@@ -719,15 +825,32 @@ class SchemaOrgImporter:
         """
         links_to_insert = []
 
-        # Extract relationships
-        for item in items:
+        # Combine all items for relationship extraction
+        # We need to create "virtual nodes" for properties in order to create links
+        # since ReferenceLinks connect nodes, not predicates
+        all_items = entities + properties
+        
+        # Create a combined map that includes both entities and properties
+        # Properties need to be represented as nodes for the relationship graph
+        combined_map = {**node_map}
+        
+        # For properties, we'll store links but note they reference ExternalPredicates
+        # This is a limitation of the current schema where ReferenceLinks only connect nodes
+        
+        # Note: Currently we can only create ReferenceLinks between ReferenceNodes,
+        # so property metadata relationships (domainIncludes, rangeIncludes, inverseOf)
+        # will be stored in the ExternalPredicate.attributes field rather than as links.
+        # Only subClassOf relationships between entities will be stored as ReferenceLinks.
+        
+        # Extract relationships for entities only (subClassOf)
+        for item in entities:
             external_id = item.get("@id", "")
             subject_id = node_map.get(external_id)
 
             if not subject_id:
                 continue
 
-            # Extract subClassOf
+            # Extract subClassOf (Class -> Class relationships)
             subclass_of = item.get("rdfs:subClassOf") or item.get("subClassOf")
             if subclass_of:
                 if isinstance(subclass_of, list):
@@ -738,7 +861,7 @@ class SchemaOrgImporter:
                                 "subject": subject_id,
                                 "predicate": "subClassOf",
                                 "object": node_map[parent_id],
-                                "metadata": {"source": "schema.org"}
+                                "metadata": {"source": "schema.org", "type": "class_hierarchy"}
                             })
                 else:
                     parent_id = self._extract_id(subclass_of)
@@ -747,74 +870,15 @@ class SchemaOrgImporter:
                             "subject": subject_id,
                             "predicate": "subClassOf",
                             "object": node_map[parent_id],
-                            "metadata": {"source": "schema.org"}
+                            "metadata": {"source": "schema.org", "type": "class_hierarchy"}
                         })
 
-            # Extract domainIncludes
-            domain_includes = (
-                item.get("schema:domainIncludes") or
-                item.get("domainIncludes")
-            )
-            if domain_includes:
-                if isinstance(domain_includes, list):
-                    for domain in domain_includes:
-                        domain_id = self._extract_id(domain)
-                        if domain_id and domain_id in node_map:
-                            links_to_insert.append({
-                                "subject": subject_id,
-                                "predicate": "domainIncludes",
-                                "object": node_map[domain_id],
-                                "metadata": {"source": "schema.org"}
-                            })
-                else:
-                    # Single value
-                    domain_id = self._extract_id(domain_includes)
-                    if domain_id and domain_id in node_map:
-                        links_to_insert.append({
-                            "subject": subject_id,
-                            "predicate": "domainIncludes",
-                            "object": node_map[domain_id],
-                            "metadata": {"source": "schema.org"}
-                        })
-
-            # Extract rangeIncludes
-            range_includes = (
-                item.get("schema:rangeIncludes") or
-                item.get("rangeIncludes")
-            )
-            if range_includes:
-                if isinstance(range_includes, list):
-                    for range_item in range_includes:
-                        range_id = self._extract_id(range_item)
-                        if range_id and range_id in node_map:
-                            links_to_insert.append({
-                                "subject": subject_id,
-                                "predicate": "rangeIncludes",
-                                "object": node_map[range_id],
-                                "metadata": {"source": "schema.org"}
-                            })
-                else:
-                    # Single value
-                    range_id = self._extract_id(range_includes)
-                    if range_id and range_id in node_map:
-                        links_to_insert.append({
-                            "subject": subject_id,
-                            "predicate": "rangeIncludes",
-                            "object": node_map[range_id],
-                            "metadata": {"source": "schema.org"}
-                        })
-
-            # Extract inverseOf
-            inverse_of = item.get("inverseOf") or item.get("schema:inverseOf")
-            if inverse_of:
-                inverse_id = self._extract_id(inverse_of)
-                if inverse_id and inverse_id in node_map:
-                    links_to_insert.append({
-                        "subject": subject_id,
-                        "predicate": "inverseOf",
-                        "object": node_map[inverse_id],
-                        "metadata": {"source": "schema.org"}
-                    })
+        # Note: Property relationships (domainIncludes, rangeIncludes, inverseOf)
+        # are already stored in the ExternalPredicate.attributes field as part of the raw_data.
+        # We skip creating ReferenceLinks for these since:
+        # 1. ReferenceLinks are designed to connect ReferenceNodes, not ExternalPredicates
+        # 2. The property metadata is preserved in the attributes field
+        # 3. A future refactoring could add support for predicate-to-predicate links if needed
 
         # Insert links in transaction
         try:

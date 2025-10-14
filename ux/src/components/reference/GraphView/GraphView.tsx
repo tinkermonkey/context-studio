@@ -14,6 +14,7 @@ import {
   convertToReagraphFormat,
   analyzeGraphStructure
 } from "./graphUtils";
+import { getSourceBadgeColor } from "@/utils/sourceUtils";
 
 interface GraphViewProps {
   results: UnifiedNode[];

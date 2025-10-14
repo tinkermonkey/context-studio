@@ -10,7 +10,13 @@ import time
 import pandas as pd
 from typing import Dict, Any, Optional
 from datetime import datetime, timedelta
-from botocore.exceptions import ClientError
+
+try:
+    from botocore.exceptions import ClientError
+except ImportError:
+    # Define a dummy ClientError for environments where boto3 is not installed
+    class ClientError(Exception):
+        pass
 
 from utils.logger import get_logger
 

@@ -42,7 +42,7 @@ class ExecutionTracker:
             else:
                 request_context = json.dumps(str(request))
             
-            # Get pipeline database session
+            # Get operations database session
             session = get_pipeline_session()
             
             try:

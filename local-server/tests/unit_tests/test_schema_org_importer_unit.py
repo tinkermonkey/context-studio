@@ -9,6 +9,7 @@ import json
 import pytest
 from unittest.mock import Mock, patch, MagicMock
 from datetime import datetime, timedelta
+from pydantic import ValidationError
 
 from reference_db.config import ReferenceConfig
 from reference_db.schema_org_importer import (
@@ -124,16 +125,14 @@ class TestURLValidation:
                 assert "security" not in str(e).lower()
 
     def test_http_remote_rejected(self):
-        """Test HTTP remote URLs are rejected."""
-        config = ReferenceConfig(
-            schema_org_api_url="http://evil.com/schema.jsonld"
-        )
-        importer = SchemaOrgImporter(config, Mock())
-
-        with pytest.raises(DownloadError) as exc_info:
-            importer._download_with_retry()
-
-        assert "security" in str(exc_info.value).lower() or "https" in str(exc_info.value).lower()
+        """Test HTTP remote URLs are rejected during config validation."""
+        with pytest.raises(ValidationError) as exc_info:
+            config = ReferenceConfig(
+                schema_org_api_url="http://evil.com/schema.jsonld"
+            )
+        
+        error = str(exc_info.value)
+        assert "Schema.org API URL must use HTTPS for security" in error
 
 
 class TestRetryLogic:
@@ -210,9 +209,9 @@ class TestBatchProcessing:
             for i in range(5)
         ]
 
-        # Mock embedding generation
+        # Mock embedding generation - use 384 * 4 = 1536 bytes for all-MiniLM-L6-v2
         with patch('reference_db.schema_org_importer.generate_embedding',
-                  return_value=b'\x00' * 512):
+                  return_value=b'\x00' * 1536):
             result = importer._generate_embeddings_batch(items, batch_size=2)
 
             assert len(result) == 5
@@ -225,35 +224,28 @@ class TestEmbeddingFields:
     """Test separate embedding generation for title and definition."""
 
     def test_title_and_definition_embedded_separately(self):
-        """Test title and definition get separate embeddings."""
+        """Test that title and definition get separate embeddings."""
         config = ReferenceConfig()
         mock_manager = Mock()
         mock_manager.db_path = "/tmp/test.db"
 
         importer = SchemaOrgImporter(config, mock_manager)
 
-        items = [
-            {
-                "@id": "https://schema.org/Thing",
-                "rdfs:label": "Thing",
-                "rdfs:comment": "The most generic type"
-            }
-        ]
+        items = [{
+            "@id": "https://schema.org/TestItem",
+            "rdfs:label": "TestLabel",
+            "rdfs:comment": "TestComment"
+        }]
 
-        call_count = 0
-        def mock_generate_embedding(text):
-            nonlocal call_count
-            call_count += 1
-            return f"embedding_{call_count}".encode()
-
+        # Mock to return different embeddings - use 384 * 4 = 1536 bytes for all-MiniLM-L6-v2
+        mock_embeddings = [b'\x01' * 1536, b'\x02' * 1536]
         with patch('reference_db.schema_org_importer.generate_embedding',
-                  side_effect=mock_generate_embedding):
-            result = importer._generate_embeddings_batch(items)
+                  side_effect=mock_embeddings):
+            result = importer._generate_embeddings_batch(items, batch_size=1)
 
             assert len(result) == 1
-            assert result[0]["title_embedding"] == b"embedding_1"
-            assert result[0]["definition_embedding"] == b"embedding_2"
-            assert call_count == 2  # Called twice: once for title, once for definition
+            assert result[0]["title_embedding"] == b'\x01' * 1536
+            assert result[0]["definition_embedding"] == b'\x02' * 1536
 
     def test_empty_fields_skip_embedding(self):
         """Test empty title or definition fields skip embedding generation."""
@@ -271,12 +263,13 @@ class TestEmbeddingFields:
             }
         ]
 
+        # Use 384 * 4 = 1536 bytes for all-MiniLM-L6-v2
         with patch('reference_db.schema_org_importer.generate_embedding',
-                  return_value=b"embedding") as mock_embed:
+                  return_value=b'\x00' * 1536) as mock_embed:
             result = importer._generate_embeddings_batch(items)
 
             assert len(result) == 1
-            assert result[0]["title_embedding"] == b"embedding"
+            assert result[0]["title_embedding"] == b'\x00' * 1536
             assert result[0]["definition_embedding"] is None
             # Called only once for title
             assert mock_embed.call_count == 1

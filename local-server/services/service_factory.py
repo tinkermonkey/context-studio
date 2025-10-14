@@ -643,12 +643,17 @@ class ServiceFactory:
                 }
 
             # Create S3 client and extract bucket name from config
-            import boto3
-            s3_client = boto3.client('s3',
-                aws_access_key_id=s3_conf.get('aws_access_key_id'),
-                aws_secret_access_key=s3_conf.get('aws_secret_access_key'),
-                region_name=s3_conf.get('region', 'us-east-1')
-            )
+            try:
+                import boto3
+                s3_client = boto3.client('s3',
+                    aws_access_key_id=s3_conf.get('aws_access_key_id'),
+                    aws_secret_access_key=s3_conf.get('aws_secret_access_key'),
+                    region_name=s3_conf.get('region', 'us-east-1')
+                )
+            except ImportError:
+                # boto3 not installed, create a mock S3 client
+                s3_client = None
+
             bucket_name = s3_conf.get('bucket_name', 'context-studio-default')
 
             return S3StorageOptimizer(s3_client, bucket_name)
@@ -1027,10 +1032,15 @@ class ServiceFactory:
             cleared_count = len(self._cache)
             self._cache.clear()
 
-            # Reset metrics
+            # Reset all metrics including total_created for complete test isolation
             for metrics in self._metrics.values():
+                metrics.total_created = 0
                 metrics.total_cache_hits = 0
                 metrics.total_cache_misses = 0
+                metrics.avg_creation_time_ms = 0.0
+                metrics.creation_times.clear()
+                metrics.last_created_at = None
+                metrics.last_accessed_at = None
 
             logger.info(
                 f"ServiceFactory [{self._factory_id}] cleared {cleared_count} cache entries and reset metrics"

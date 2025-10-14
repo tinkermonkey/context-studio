@@ -31,7 +31,7 @@ class TestApplicationStartupE2E:
                 'default_url': 'sqlite:///:memory:',
                 'reference_path': ':memory:',
                 'reference_cache_path': ':memory:',
-                'pipeline_path': ':memory:'
+                'operations_path': ':memory:'
             }
         }
 
@@ -78,7 +78,7 @@ class TestApplicationStartupE2E:
                     'default_url': f'sqlite:///{db_dir}/local.db',
                     'reference_path': f'{db_dir}/reference.db',
                     'reference_cache_path': f'{db_dir}/cache.db',
-                    'pipeline_path': f'{db_dir}/pipeline.db'
+                    'operations_path': f'{db_dir}/operations.db'
                 }
             }
 
@@ -119,7 +119,7 @@ class TestApplicationStartupE2E:
                     'schema_org_path': './old_schema.db',  # Deprecated
                     'reference_path': './reference.db',
                     'reference_cache_path': './cache.db',
-                    'pipeline_path': './pipeline.db'
+                    'operations_path': './operations.db'
                 }
             }
 
@@ -154,7 +154,7 @@ class TestApplicationStartupE2E:
             assert db_config.default_url
             assert db_config.reference_path
             assert db_config.reference_cache_path
-            assert db_config.pipeline_path
+            assert db_config.operations_path
 
     def test_multi_user_config_scenario(self):
         """Test scenario with multiple config files (e.g., dev, staging, prod)"""
@@ -170,7 +170,7 @@ class TestApplicationStartupE2E:
                         'default_url': f'sqlite:///./local_{env}.db',
                         'reference_path': f'./reference_{env}.db',
                         'reference_cache_path': f'./cache_{env}.db',
-                        'pipeline_path': f'./pipeline_{env}.db'
+                        'operations_path': f'./pipeline_{env}.db'
                     }
                 }
 
@@ -218,7 +218,7 @@ class TestApplicationStartupE2E:
                     'default_url': test_case['url'],
                     'reference_path': ':memory:',
                     'reference_cache_path': ':memory:',
-                    'pipeline_path': ':memory:'
+                    'operations_path': ':memory:'
                 }
             }
 
@@ -242,7 +242,7 @@ class TestApplicationStartupE2E:
                     'default_url': 'sqlite:///./local.db',
                     'reference_path': './reference.db',
                     'reference_cache_path': './cache.db',
-                    'pipeline_path': './pipeline.db'
+                    'operations_path': './operations.db'
                 }
             }
 
@@ -280,7 +280,7 @@ class TestApplicationStartupE2E:
                     'default_url': 'sqlite:///./original.db',
                     'reference_path': './original_ref.db',
                     'reference_cache_path': './original_cache.db',
-                    'pipeline_path': './original_pipeline.db'
+                    'operations_path': './original_pipeline.db'
                 }
             }
 
@@ -320,7 +320,7 @@ class TestApplicationStartupE2E:
                     'default_url': 'sqlite:///./test.db',
                     'reference_path': './reference.db',
                     'reference_cache_path': './cache.db',
-                    'pipeline_path': './pipeline.db'
+                    'operations_path': './operations.db'
                 }
             }
 
@@ -367,7 +367,7 @@ class TestApplicationStartupE2E:
                     'default_url': 'sqlite:///./local.db',
                     'reference_path': './reference.db',
                     'reference_cache_path': './cache.db',
-                    'pipeline_path': './pipeline.db'
+                    'operations_path': './operations.db'
                 }
             }
 
@@ -384,3 +384,97 @@ class TestApplicationStartupE2E:
             # Verify app can proceed
             assert manager.settings.database.default_url == 'sqlite:///./local.db'
             assert not hasattr(manager.settings.database, 'schema_org_path')
+
+    def test_migration_preserves_configuration(self):
+        """Test that migrating from old config preserves all non-deprecated settings"""
+        with tempfile.TemporaryDirectory() as tmpdir:
+            config_file = os.path.join(tmpdir, 'config.json')
+
+            # Create old config with deprecated field and other settings
+            old_config = {
+                'database': {
+                    'default_url': 'sqlite:///./custom_local.db',
+                    'schema_org_path': './deprecated_schema.db',  # Deprecated
+                    'reference_path': './custom_reference.db',
+                    'reference_cache_path': './custom_cache.db',
+                    'operations_path': './custom_operations.db'
+                }
+            }
+
+            with open(config_file, 'w') as f:
+                json.dump(old_config, f)
+
+            # Load config (triggers migration)
+            manager = ConfigurationManager(config_file)
+
+            # Verify deprecated field is removed
+            assert not hasattr(manager.settings.database, 'schema_org_path')
+
+            # Verify all non-deprecated fields are preserved with original values
+            assert manager.settings.database.default_url == 'sqlite:///./custom_local.db'
+            assert manager.settings.database.reference_path == './custom_reference.db'
+            assert manager.settings.database.reference_cache_path == './custom_cache.db'
+            assert manager.settings.database.operations_path == './custom_operations.db'
+
+            # Save config to persist migration
+            assert manager.save()
+
+            # Reload and verify all settings are still preserved
+            manager2 = ConfigurationManager(config_file)
+            assert manager2.settings.database.default_url == 'sqlite:///./custom_local.db'
+            assert manager2.settings.database.reference_path == './custom_reference.db'
+            assert manager2.settings.database.reference_cache_path == './custom_cache.db'
+            assert manager2.settings.database.operations_path == './custom_operations.db'
+            assert not hasattr(manager2.settings.database, 'schema_org_path')
+
+            # Verify saved config file doesn't contain deprecated field
+            with open(config_file, 'r') as f:
+                saved_config = json.load(f)
+
+            assert 'schema_org_path' not in saved_config.get('database', {})
+            assert saved_config['database']['default_url'] == 'sqlite:///./custom_local.db'
+
+    def test_api_reflects_config_changes(self):
+        """Test that API endpoints reflect configuration changes correctly"""
+        with tempfile.TemporaryDirectory() as tmpdir:
+            config_file = os.path.join(tmpdir, 'config.json')
+            db_dir = os.path.join(tmpdir, 'datafiles')
+            os.makedirs(db_dir, exist_ok=True)
+
+            # Create initial config
+            config_data = {
+                'database': {
+                    'default_url': f'sqlite:///{db_dir}/local.db',
+                    'reference_path': f'{db_dir}/reference.db',
+                    'reference_cache_path': f'{db_dir}/cache.db',
+                    'operations_path': f'{db_dir}/operations.db'
+                }
+            }
+
+            manager = ConfigurationManager(config_file)
+            manager.settings = Settings(**config_data)
+            assert manager.save()
+
+            # Verify initial config through API-like access
+            manager2 = ConfigurationManager(config_file)
+            assert manager2.settings.database.default_url == f'sqlite:///{db_dir}/local.db'
+            assert not hasattr(manager2.settings.database, 'schema_org_path')
+
+            # Modify config (simulating user changing settings)
+            new_db_dir = os.path.join(tmpdir, 'new_datafiles')
+            os.makedirs(new_db_dir, exist_ok=True)
+
+            manager2.settings.database.default_url = f'sqlite:///{new_db_dir}/local.db'
+            manager2.settings.database.reference_path = f'{new_db_dir}/reference.db'
+            assert manager2.save()
+
+            # Verify changes are reflected when config is reloaded
+            manager3 = ConfigurationManager(config_file)
+            assert manager3.settings.database.default_url == f'sqlite:///{new_db_dir}/local.db'
+            assert manager3.settings.database.reference_path == f'{new_db_dir}/reference.db'
+            assert manager3.settings.database.reference_cache_path == f'{db_dir}/cache.db'  # Unchanged
+            assert not hasattr(manager3.settings.database, 'schema_org_path')
+
+            # Validate config is still valid after changes
+            errors = manager3.validate()
+            assert not errors, f"Validation failed after config changes: {errors}"

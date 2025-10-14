@@ -6,8 +6,7 @@ from external knowledge sources (e.g., Schema.org, WikiData).
 """
 
 from sqlalchemy import Column, String, Integer, ForeignKey, UniqueConstraint, LargeBinary, Text
-from sqlalchemy.orm import relationship
-from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.orm import relationship, declarative_base
 from typing import Dict, Any
 
 Base = declarative_base()
@@ -117,4 +116,61 @@ class ReferenceLink(Base):
             f"ReferenceLink(id='{self.id}', "
             f"subject='{self.subject_node}', predicate='{self.predicate}', "
             f"object='{self.object_node}')"
+        )
+
+
+class ExternalPredicate(Base):
+    """
+    Represents metadata about predicates from external knowledge sources.
+
+    External predicates store information about relationship types defined in
+    external sources like Schema.org, allowing for semantic matching and mapping
+    to internal predicates.
+
+    Attributes:
+        id: Auto-generated UUID primary key
+        title: Human-readable predicate name (required)
+        definition: Detailed description of the predicate's meaning (required)
+        source: Source identifier (e.g., 'schema.org', 'wikidata') (required)
+        external_id: Source-specific identifier for the predicate (required)
+        attributes: JSON-serializable dictionary of additional metadata
+        title_embedding: Vector embedding of the title for semantic search
+        definition_embedding: Vector embedding of the definition for semantic search
+        created_at: Timestamp of record creation
+        updated_at: Timestamp of last update
+
+    Constraints:
+        UNIQUE(source, external_id): Prevents duplicate entries from the same source
+
+    Indexes:
+        - source: For filtering by source
+        - external_id: For lookups by external identifier
+        - title: For text-based searches
+        - title_embedding: For vector similarity searches
+        - definition_embedding: For vector similarity searches
+    """
+
+    __tablename__ = 'external_predicates'
+
+    id = Column(String, primary_key=True)
+    title = Column(String, nullable=False, index=True)
+    definition = Column(Text, nullable=False)
+    source = Column(String, nullable=False, index=True)
+    external_id = Column(String, nullable=False, index=True)
+    attributes = Column(Text, nullable=True)  # JSON-serialized Dict[str, Any]
+    title_embedding = Column(LargeBinary, nullable=True, index=True)  # BLOB for vector data
+    definition_embedding = Column(LargeBinary, nullable=True, index=True)  # BLOB for vector data
+    created_at = Column(String, nullable=False)
+    updated_at = Column(String, nullable=False)
+
+    # UNIQUE constraint on (source, external_id)
+    __table_args__ = (
+        UniqueConstraint('source', 'external_id', name='uq_external_predicate_source_external_id'),
+    )
+
+    def __repr__(self) -> str:
+        """Return a readable string representation of the external predicate."""
+        return (
+            f"ExternalPredicate(id='{self.id}', source='{self.source}', "
+            f"external_id='{self.external_id}', title='{self.title[:50]}...')"
         )

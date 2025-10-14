@@ -6,7 +6,7 @@
 
 // Get the correct localhost URL based on platform
 const getDefaultBaseURL = () => {
-  return "http://localhost:8001";
+  return "http://localhost:8100";
 };
 
 export const API_CONFIG = {
@@ -34,6 +34,7 @@ export const QUERY_KEYS = {
   LLM_TRACEABILITY: "llm_traceability",
   PIPELINE_FLAVORS: "pipeline-flavors",
   NLP_REFERENCE: "nlp-reference",
+  REFERENCE: "reference",
   STRUCTURE_NODES: "structure_nodes",
   NODE_LINKS: "node_links",
   CHANGE_EVENTS: "change_events",
@@ -57,6 +58,11 @@ export const ENDPOINTS = {
   },
   PIPELINE_FLAVORS: "/api/pipeline-flavors",
   NLP_REFERENCE: "/api/reference",
+  REFERENCE: {
+    BASE: "/api/reference/ref-db",
+    FILTER_STATISTICS: "/api/reference/ref-db/filter/statistics",
+    NODES: "/api/reference/ref-db/nodes",
+  },
   STRUCTURE_NODES: "/api/structure_nodes",
   NODE_LINKS: "/api/structure_nodes/links",
   CHANGE_EVENTS: "/api/change_events",

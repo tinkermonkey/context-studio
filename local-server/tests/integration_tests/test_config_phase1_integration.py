@@ -39,7 +39,7 @@ class TestConfigDatabaseIntegration:
                 'default_url': 'sqlite:///:memory:',  # Use in-memory for test
                 'reference_path': ':memory:',
                 'reference_cache_path': ':memory:',
-                'pipeline_path': ':memory:'
+                'operations_path': ':memory:'
             }
         }
 
@@ -68,7 +68,7 @@ class TestConfigDatabaseIntegration:
                     'default_url': f'sqlite:///{tmpdir}/local.db',
                     'reference_path': ref_db_path,
                     'reference_cache_path': f'{tmpdir}/cache.db',
-                    'pipeline_path': f'{tmpdir}/pipeline.db'
+                    'operations_path': f'{tmpdir}/operations.db'
                 }
             }
 
@@ -106,7 +106,7 @@ class TestConfigDatabaseIntegration:
                     'default_url': 'sqlite:///./test.db',
                     'reference_path': './reference.db',
                     'reference_cache_path': './cache.db',
-                    'pipeline_path': './pipeline.db'
+                    'operations_path': './operations.db'
                 }
             }
 
@@ -144,7 +144,7 @@ class TestConfigDatabaseIntegration:
                     'schema_org_path': './old_schema.db',  # Deprecated
                     'reference_path': './reference.db',
                     'reference_cache_path': './cache.db',
-                    'pipeline_path': './pipeline.db'
+                    'operations_path': './operations.db'
                 }
             }
 
@@ -182,7 +182,7 @@ class TestConfigDatabaseIntegration:
                     'default_url': 'sqlite:///./db1.db',
                     'reference_path': './ref1.db',
                     'reference_cache_path': './cache1.db',
-                    'pipeline_path': './pipeline1.db'
+                    'operations_path': './pipeline1.db'
                 }
             }
 
@@ -191,7 +191,7 @@ class TestConfigDatabaseIntegration:
                     'default_url': 'sqlite:///./db2.db',
                     'reference_path': './ref2.db',
                     'reference_cache_path': './cache2.db',
-                    'pipeline_path': './pipeline2.db'
+                    'operations_path': './pipeline2.db'
                 }
             }
 
@@ -224,7 +224,7 @@ class TestConfigDatabaseIntegration:
                     'default_url': f'sqlite:///{db_dir}/local.db',
                     'reference_path': f'{db_dir}/reference.db',
                     'reference_cache_path': f'{db_dir}/cache.db',
-                    'pipeline_path': f'{db_dir}/pipeline.db'
+                    'operations_path': f'{db_dir}/operations.db'
                 }
             }
 
@@ -245,7 +245,7 @@ class TestConfigDatabaseIntegration:
             for db_path in [
                 config_manager.settings.database.reference_path,
                 config_manager.settings.database.reference_cache_path,
-                config_manager.settings.database.pipeline_path
+                config_manager.settings.database.operations_path
             ]:
                 # Create database
                 conn = sqlite3.connect(db_path)
@@ -284,7 +284,7 @@ class TestConfigDatabaseIntegration:
                     'default_url': 'sqlite:///./local.db',
                     'reference_path': os.environ.get('TEST_DB_PATH', './default.db'),
                     'reference_cache_path': './cache.db',
-                    'pipeline_path': './pipeline.db'
+                    'operations_path': './operations.db'
                 }
             }
 
@@ -298,3 +298,127 @@ class TestConfigDatabaseIntegration:
             # Cleanup
             if 'TEST_DB_PATH' in os.environ:
                 del os.environ['TEST_DB_PATH']
+
+    def test_default_configuration_values(self):
+        """Test that default configuration values are correctly set"""
+        # Create settings with no overrides
+        settings = Settings()
+
+        # Test database defaults
+        assert settings.database.default_url == "sqlite:///./datafiles/local.db"
+        assert settings.database.reference_path == "./datafiles/reference.db"
+        assert settings.database.reference_cache_path == "./datafiles/reference_api_cache.db"
+        assert settings.database.operations_path == "./datafiles/operations.db"
+        assert not hasattr(settings.database, 'schema_org_path')
+
+        # Test server defaults
+        assert settings.server.host == "127.0.0.1"
+        assert settings.server.port == 8000
+        assert settings.server.reload == True
+
+        # Test LLM defaults
+        assert settings.llm.model_name == "gpt-3.5-turbo"
+        assert settings.llm.temperature == 0.0
+        assert settings.llm.timeout == 30
+
+        # Test NLP defaults
+        assert settings.nlp.model_name == "en_core_web_lg"
+        assert settings.nlp.max_text_length == 512
+
+        # Test proxy defaults
+        assert settings.proxy_server.enabled == True
+        assert settings.proxy_server.port == 18080
+
+    def test_update_llm_provider_settings(self):
+        """Test updating LLM provider settings"""
+        with tempfile.TemporaryDirectory() as tmpdir:
+            config_file = os.path.join(tmpdir, 'config.json')
+
+            # Create configuration manager
+            config_manager = ConfigurationManager(config_file)
+
+            # Update LLM settings using dot notation
+            assert config_manager.set('llm.model_name', 'gpt-4')
+            assert config_manager.set('llm.temperature', 0.7)
+            assert config_manager.set('llm.max_tokens', 2000)
+
+            # Verify updates
+            assert config_manager.settings.llm.model_name == 'gpt-4'
+            assert config_manager.settings.llm.temperature == 0.7
+            assert config_manager.settings.llm.max_tokens == 2000
+
+            # Reload config to verify persistence
+            config_manager2 = ConfigurationManager(config_file)
+            assert config_manager2.settings.llm.model_name == 'gpt-4'
+            assert config_manager2.settings.llm.temperature == 0.7
+            assert config_manager2.settings.llm.max_tokens == 2000
+
+            # Verify no schema_org_path in database config
+            assert not hasattr(config_manager2.settings.database, 'schema_org_path')
+
+    def test_validate_embedding_model_config(self):
+        """Test validation of embedding model configuration"""
+        with tempfile.TemporaryDirectory() as tmpdir:
+            config_file = os.path.join(tmpdir, 'config.json')
+
+            # Test valid NLP model configuration
+            valid_config = {
+                'nlp': {
+                    'model_name': 'en_core_web_sm',
+                    'max_text_length': 1000,
+                    'sense2vec_path': './models/s2v',
+                    'auto_download_models': True
+                }
+            }
+
+            settings = Settings(**valid_config)
+            assert settings.nlp.model_name == 'en_core_web_sm'
+            assert settings.nlp.max_text_length == 1000
+            assert settings.nlp.auto_download_models == True
+
+            # Test configuration manager validation
+            config_manager = ConfigurationManager(config_file)
+            config_manager.settings = Settings(**valid_config)
+            config_manager.save()
+
+            errors = config_manager.validate()
+            assert len(errors) == 0
+
+            # Verify no schema_org_path
+            assert not hasattr(config_manager.settings.database, 'schema_org_path')
+
+    def test_feature_flags_toggle(self):
+        """Test toggling feature flags like proxy server and reference sources"""
+        with tempfile.TemporaryDirectory() as tmpdir:
+            config_file = os.path.join(tmpdir, 'config.json')
+
+            config_manager = ConfigurationManager(config_file)
+
+            # Test proxy server toggle
+            original_proxy_state = config_manager.settings.proxy_server.enabled
+            assert config_manager.set('proxy_server.enabled', False)
+            assert config_manager.settings.proxy_server.enabled == False
+
+            # Toggle back
+            assert config_manager.set('proxy_server.enabled', True)
+            assert config_manager.settings.proxy_server.enabled == True
+
+            # Test reference source toggles
+            assert config_manager.set('reference_sources.dbpedia.enabled', False)
+            assert config_manager.settings.reference_sources.dbpedia.enabled == False
+
+            assert config_manager.set('reference_sources.conceptnet.enabled', False)
+            assert config_manager.settings.reference_sources.conceptnet.enabled == False
+
+            # Verify changes persist
+            config_manager2 = ConfigurationManager(config_file)
+            assert config_manager2.settings.reference_sources.dbpedia.enabled == False
+            assert config_manager2.settings.reference_sources.conceptnet.enabled == False
+
+            # Verify get_enabled_sources reflects changes
+            enabled_sources = config_manager2.settings.get_enabled_sources()
+            assert 'dbpedia' not in enabled_sources
+            assert 'conceptnet' not in enabled_sources
+
+            # Verify no schema_org_path in database config
+            assert not hasattr(config_manager2.settings.database, 'schema_org_path')
