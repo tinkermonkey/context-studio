@@ -169,12 +169,15 @@ class TestSearchBySimilarity:
         with pytest.raises(ValueError, match="query_text cannot be empty"):
             manager.search_by_similarity("   ", embedding_generator=embedding_gen)
 
-    def test_search_requires_embedding_generator(self, manager_with_data):
-        """Test that search_by_similarity requires embedding_generator."""
+    def test_search_with_default_embedding_generator(self, manager_with_data):
+        """Test that search_by_similarity uses default embedding generator when None is provided."""
         manager, db_path, create_embedding = manager_with_data
 
-        with pytest.raises(ValueError, match="embedding_generator must be provided"):
-            manager.search_by_similarity("test query", embedding_generator=None)
+        # Should not raise an error - uses default generator
+        results = manager.search_by_similarity("test query", embedding_generator=None, threshold=0.0)
+
+        # Should return valid results
+        assert isinstance(results, list), "Results should be a list"
 
     def test_search_with_threshold_filtering(self, manager_with_data):
         """
