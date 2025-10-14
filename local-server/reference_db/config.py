@@ -68,8 +68,6 @@ class ReferenceConfig(BaseModel):
 
     retry_count: int = Field(
         default=3,
-        ge=0,
-        le=10,
         description="Number of retry attempts for failed API requests"
     )
 
@@ -184,7 +182,7 @@ class ReferenceConfig(BaseModel):
             )
         return v
 
-    @field_validator('retry_count')
+    @field_validator('retry_count', mode='after')
     @classmethod
     def validate_retry_count(cls, v: int) -> int:
         """

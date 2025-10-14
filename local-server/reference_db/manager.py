@@ -458,20 +458,20 @@ class ReferenceManager:
             self._validate_embedding_dimensions(definition_embedding, embedding_dims)
 
         # Create node with transaction
-        with self.session.begin():
-            node = ReferenceNode(
-                id=str(uuid4()),
-                title=title,
-                definition=definition,
-                source=source,
-                external_id=external_id,
-                attributes=str(attributes) if attributes else None,
-                title_embedding=title_embedding,
-                definition_embedding=definition_embedding,
-                created_at=date.today().isoformat(),
-                updated_at=date.today().isoformat()
-            )
-            self.session.add(node)
+        node = ReferenceNode(
+            id=str(uuid4()),
+            title=title,
+            definition=definition,
+            source=source,
+            external_id=external_id,
+            attributes=str(attributes) if attributes else None,
+            title_embedding=title_embedding,
+            definition_embedding=definition_embedding,
+            created_at=date.today().isoformat(),
+            updated_at=date.today().isoformat()
+        )
+        self.session.add(node)
+        self.session.commit()
 
         logger.debug(
             f"Added reference node: source={source}, external_id={external_id}, title={title}"
@@ -508,17 +508,17 @@ class ReferenceManager:
             ... )
         """
         # Create link with transaction
-        with self.session.begin():
-            link = ReferenceLink(
-                id=str(uuid4()),
-                subject_node=subject_node,
-                predicate=predicate,
-                object_node=object_node,
-                attributes=str(attributes) if attributes else None,
-                created_at=date.today().isoformat(),
-                updated_at=date.today().isoformat()
-            )
-            self.session.add(link)
+        link = ReferenceLink(
+            id=str(uuid4()),
+            subject_node=subject_node,
+            predicate=predicate,
+            object_node=object_node,
+            attributes=str(attributes) if attributes else None,
+            created_at=date.today().isoformat(),
+            updated_at=date.today().isoformat()
+        )
+        self.session.add(link)
+        self.session.commit()
 
         logger.debug(
             f"Added reference link: {subject_node} --{predicate}--> {object_node}"

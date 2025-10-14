@@ -650,10 +650,9 @@ class TestReferenceManagerVector:
             # Create initial database
             with ReferenceManager(config, db_path=db_path) as manager:
                 # Verify schema version was written
+                from sqlalchemy import text
                 result = manager.session.execute(
-                    manager.engine.connect().execute(
-                        "SELECT schema_version FROM schema_version"
-                    )
+                    text("SELECT schema_version FROM schema_version")
                 ).first()
 
                 assert result is not None
