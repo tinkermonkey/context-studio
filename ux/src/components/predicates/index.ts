@@ -12,6 +12,8 @@ export { MappingConfigurationTab } from "./MappingConfigurationTab";
 export { MappingCreationWorkflow } from "./MappingCreationWorkflow";
 export { ManualMappingInterface } from "./ManualMappingInterface";
 export { RelevanceSelectionUI } from "./RelevanceSelectionUI";
+export { ExamplePredicateUses } from "./ExamplePredicateUses";
+export { PredicateUsage } from "./PredicateUsage";
 
 export type { PredicateMappingManagerProps } from "./PredicateMappingManager";
 export type { ExternalPredicatesTabProps } from "./ExternalPredicatesTab";
@@ -21,3 +23,5 @@ export type { MappingConfigurationTabProps } from "./MappingConfigurationTab";
 export type { MappingCreationWorkflowProps } from "./MappingCreationWorkflow";
 export type { ManualMappingInterfaceProps } from "./ManualMappingInterface";
 export type { RelevanceSelectionUIProps } from "./RelevanceSelectionUI";
+export type { ExamplePredicateUsesProps } from "./ExamplePredicateUses";
+export type { PredicateUsageProps } from "./PredicateUsage";

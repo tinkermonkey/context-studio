@@ -334,7 +334,9 @@ class PredicateDiscoveryService:
             async with ConceptNetSource(SourceType.CONCEPTNET, source_config) as source:
                 # Fetch relation definitions from ConceptNet
                 # ConceptNet provides relation info at /r/{relation}
-                for relation in CONCEPTNET_RELATIONS:
+                
+                # Define async function to fetch a single relation
+                async def fetch_relation(relation: str):
                     try:
                         relation_path = f"/r/{relation}"
                         logger.debug(f"Fetching ConceptNet relation: {relation_path}")
@@ -362,23 +364,31 @@ class PredicateDiscoveryService:
                                 'source_data': response.data
                             }
 
-                            # Add to batch
-                            predicates_to_upsert.append({
+                            # Return predicate data
+                            return {
                                 'title': label,
                                 'definition': definition,
                                 'external_id': external_id,
                                 'attributes': attributes
-                            })
-
+                            }
                         else:
                             error_msg = f"Failed to fetch {relation}: {response.error}"
                             logger.warning(error_msg)
                             errors.append(error_msg)
+                            return None
 
                     except Exception as e:
                         error_msg = f"Error processing relation {relation}: {str(e)}"
                         logger.error(error_msg, exc_info=True)
                         errors.append(error_msg)
+                        return None
+
+                # Fetch all relations concurrently
+                logger.info(f"Fetching {len(CONCEPTNET_RELATIONS)} ConceptNet relations concurrently")
+                results = await asyncio.gather(*[fetch_relation(rel) for rel in CONCEPTNET_RELATIONS])
+                
+                # Filter out None results and add to batch
+                predicates_to_upsert.extend([r for r in results if r is not None])
 
             # Batch upsert all predicates
             created, updated = self._upsert_predicates_batch(
@@ -669,6 +679,50 @@ class PredicateDiscoveryService:
 
         return (total_created, total_updated, errors)
 
+    async def discover_schema_org_predicates(self) -> Tuple[int, int, List[str]]:
+        """
+        Discover predicates from Schema.org by querying ExternalPredicates.
+        
+        Note: Schema.org properties are imported via the SchemaOrgImporter into the
+        external_predicates table. This method simply ensures they exist and reports
+        statistics. If no predicates are found, it suggests running the Schema.org import.
+        
+        Returns:
+            Tuple of (created, updated, errors) where:
+            - created: Number of new predicates (always 0, as they're imported separately)
+            - updated: Number of existing predicates
+            - errors: List of error messages
+        """
+        logger.info("Discovering Schema.org predicates")
+        errors = []
+        
+        try:
+            # Query existing Schema.org predicates
+            existing_count = self.manager.session.query(ExternalPredicate).filter_by(
+                source='schema.org'
+            ).count()
+            
+            if existing_count == 0:
+                error_msg = (
+                    "No Schema.org predicates found in database. "
+                    "Please run the Schema.org import first using the SchemaOrgImporter."
+                )
+                logger.warning(error_msg)
+                errors.append(error_msg)
+                return (0, 0, errors)
+            
+            logger.info(f"Found {existing_count} Schema.org predicates in database")
+            
+            # Schema.org predicates are imported via SchemaOrgImporter,
+            # so we just report what exists
+            return (0, existing_count, errors)
+            
+        except Exception as e:
+            error_msg = f"Error discovering Schema.org predicates: {str(e)}"
+            logger.error(error_msg, exc_info=True)
+            errors.append(error_msg)
+            return (0, 0, errors)
+
     async def discover_all_predicates(
         self,
         sources: Optional[List[str]] = None
@@ -679,13 +733,13 @@ class PredicateDiscoveryService:
         Args:
             sources: Optional list of source names to discover from.
                     If None, discovers from all enabled sources.
-                    Valid values: ['conceptnet', 'dbpedia', 'wikidata']
+                    Valid values: ['conceptnet', 'dbpedia', 'wikidata', 'schema_org']
 
         Returns:
             Dictionary mapping source name to (created, updated, errors) tuple
         """
         if sources is None:
-            sources = ['conceptnet', 'dbpedia', 'wikidata']
+            sources = ['conceptnet', 'dbpedia', 'wikidata', 'schema_org']
 
         logger.info(f"Starting discovery for sources: {sources}")
         results = {}
@@ -697,6 +751,8 @@ class PredicateDiscoveryService:
                 results['dbpedia'] = await self.discover_dbpedia_predicates()
             elif source == 'wikidata':
                 results['wikidata'] = await self.discover_wikidata_predicates()
+            elif source == 'schema_org':
+                results['schema_org'] = await self.discover_schema_org_predicates()
             else:
                 logger.warning(f"Unknown source: {source}")
                 results[source] = (0, 0, [f"Unknown source: {source}"])

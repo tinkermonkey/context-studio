@@ -120,9 +120,14 @@ class ReferenceSourcesConfig(BaseModel):
         rate_limit=ReferenceSourceRateLimitConfig(requests_per_hour=3600)
     ))
     
-    dbpedia: ReferenceSourceConfig = Field(default_factory=lambda: ReferenceSourceConfig(
+    # DBpedia has multiple services, so we configure them separately
+    dbpedia_lookup: ReferenceSourceConfig = Field(default_factory=lambda: ReferenceSourceConfig(
         upstream_url="https://lookup.dbpedia.org",
-        use_proxy=False,  # Temporarily disable proxy for testing
+        rate_limit=ReferenceSourceRateLimitConfig(requests_per_hour=3600)
+    ))
+    
+    dbpedia_sparql: ReferenceSourceConfig = Field(default_factory=lambda: ReferenceSourceConfig(
+        upstream_url="https://dbpedia.org",
         rate_limit=ReferenceSourceRateLimitConfig(requests_per_hour=3600)
     ))
     
@@ -201,21 +206,6 @@ class SourceConfig(BaseModel):
     base_url: Optional[str] = Field(None, description="Override base URL for source")
 
 
-class ReferenceConfig(BaseModel):
-    """Overall reference service configuration (legacy compatibility)"""
-    sources: Dict[SourceType, SourceConfig] = Field(default_factory=dict)
-    default_timeout: int = Field(30, ge=1, le=300, description="Default timeout for all sources")
-    concurrent_requests: int = Field(5, ge=1, le=20, description="Maximum concurrent requests per source")
-    cache_results: bool = Field(True, description="Whether to cache reference results")
-    cache_ttl: int = Field(3600, ge=60, description="Cache TTL in seconds")
-    
-    def get_source_config(self, source: SourceType) -> SourceConfig:
-        """Get configuration for a specific source with defaults"""
-        if source not in self.sources:
-            self.sources[source] = SourceConfig()
-        return self.sources[source]
-
-
 
 class Settings(BaseModel):
     """Centralized configuration settings"""
@@ -288,7 +278,16 @@ class Settings(BaseModel):
         )
     
     def get_source_config(self, source_name: str) -> ReferenceSourceConfig:
-        """Get configuration for a specific reference source"""
+        """
+        Get configuration for a specific reference source.
+        
+        Supports aliases for backwards compatibility:
+        - 'dbpedia' maps to 'dbpedia_sparql' (SPARQL endpoint used for discovery)
+        """
+        # Handle aliases
+        if source_name == 'dbpedia':
+            source_name = 'dbpedia_sparql'
+        
         if hasattr(self.reference_sources, source_name):
             return getattr(self.reference_sources, source_name)
         raise ValueError(f"Unknown reference source: {source_name}")
@@ -296,9 +295,9 @@ class Settings(BaseModel):
     def get_enabled_sources(self) -> List[str]:
         """Get list of enabled reference sources"""
         enabled = []
-        for source_name in ["conceptnet", "dbpedia", "dbpedia_spotlight", "wikidata", "schema_org"]:
-            config = getattr(self.reference_sources, source_name)
-            if config.enabled:
+        for source_name in ["conceptnet", "dbpedia_lookup", "dbpedia_sparql", "dbpedia_spotlight", "wikidata", "schema_org"]:
+            config = getattr(self.reference_sources, source_name, None)
+            if config and config.enabled:
                 enabled.append(source_name)
         return enabled
     
@@ -351,7 +350,8 @@ class Settings(BaseModel):
             legacy_keys = {
                 "conceptnet": ["concepcy", "conceptnet"],
                 "dbpedia_spotlight": ["spacy_dbpedia_spotlight", "dbpedia_spotlight"],
-                "dbpedia": ["dbpedia"],
+                "dbpedia_lookup": ["dbpedia", "dbpedia_lookup"],  # Map dbpedia_lookup to legacy 'dbpedia' key
+                "dbpedia_sparql": ["dbpedia_sparql"],
                 "wikidata": ["wikidata"]
             }
             domain_mappings[source_name] = {
@@ -375,7 +375,8 @@ class Settings(BaseModel):
                 "progressive_max_delay": self.proxy_server.progressive_max_delay,
                 "domain_limits": {
                     "conceptnet": self.reference_sources.conceptnet.rate_limit.requests_per_hour,
-                    "dbpedia": self.reference_sources.dbpedia.rate_limit.requests_per_hour,
+                    "dbpedia_lookup": self.reference_sources.dbpedia_lookup.rate_limit.requests_per_hour,
+                    "dbpedia_sparql": self.reference_sources.dbpedia_sparql.rate_limit.requests_per_hour,
                     "dbpedia_spotlight": self.reference_sources.dbpedia_spotlight.rate_limit.requests_per_hour,
                     "wikidata": self.reference_sources.wikidata.rate_limit.requests_per_hour
                 }
@@ -423,46 +424,6 @@ class Settings(BaseModel):
         return self.llm.timeout
     
     @property
-    def REFERENCE_CONFIG(self) -> Dict[str, Any]:
-        """Legacy compatibility property"""
-        return {
-            "sources": {
-                "dbpedia": {
-                    "enabled": self.reference_sources.dbpedia.enabled,
-                    "use_proxy": self.reference_sources.dbpedia.use_proxy,
-                    "timeout": self.reference_sources.dbpedia.timeout,
-                    "max_retries": self.reference_sources.dbpedia.max_retries,
-                    "base_url": None
-                },
-                "conceptnet": {
-                    "enabled": self.reference_sources.conceptnet.enabled,
-                    "use_proxy": self.reference_sources.conceptnet.use_proxy,
-                    "timeout": self.reference_sources.conceptnet.timeout,
-                    "max_retries": self.reference_sources.conceptnet.max_retries,
-                    "base_url": None
-                },
-                "wikidata": {
-                    "enabled": self.reference_sources.wikidata.enabled,
-                    "use_proxy": self.reference_sources.wikidata.use_proxy,
-                    "timeout": self.reference_sources.wikidata.timeout,
-                    "max_retries": self.reference_sources.wikidata.max_retries,
-                    "base_url": None
-                },
-                "schema_org": {
-                    "enabled": self.reference_sources.schema_org.enabled,
-                    "use_proxy": self.reference_sources.schema_org.use_proxy,
-                    "timeout": self.reference_sources.schema_org.timeout,
-                    "max_retries": self.reference_sources.schema_org.max_retries,
-                    "base_url": None
-                }
-            },
-            "default_timeout": 30,
-            "concurrent_requests": 5,
-            "cache_results": True,
-            "cache_ttl": 3600
-        }
-    
-    @property
     def ENABLE_CACHING_PROXY(self) -> Dict[str, bool]:
         """Legacy compatibility property"""
         return {
@@ -472,8 +433,13 @@ class Settings(BaseModel):
                                       self.reference_sources.dbpedia_spotlight.use_proxy),
             "conceptnet": (self.reference_sources.conceptnet.enabled and 
                           self.reference_sources.conceptnet.use_proxy),
-            "dbpedia": (self.reference_sources.dbpedia.enabled and 
-                       self.reference_sources.dbpedia.use_proxy),
+            # Map legacy 'dbpedia' to dbpedia_lookup for backward compatibility
+            "dbpedia": (self.reference_sources.dbpedia_lookup.enabled and 
+                       self.reference_sources.dbpedia_lookup.use_proxy),
+            "dbpedia_lookup": (self.reference_sources.dbpedia_lookup.enabled and 
+                              self.reference_sources.dbpedia_lookup.use_proxy),
+            "dbpedia_sparql": (self.reference_sources.dbpedia_sparql.enabled and 
+                              self.reference_sources.dbpedia_sparql.use_proxy),
             "wikidata": (self.reference_sources.wikidata.enabled and 
                         self.reference_sources.wikidata.use_proxy)
         }

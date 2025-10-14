@@ -6,11 +6,14 @@
  * Supports US-2.2: Cluster Related Predicates (visualization)
  */
 
-import React, { useState } from "react";
-import { Table, Button, TextInput, Spinner, Badge, Label, Select } from "flowbite-react";
+import React, { useState, useEffect } from "react";
+import { Table, TableHead, TableHeadCell, TableBody, TableRow, TableCell, Button, Spinner, Badge, Label, Select } from "flowbite-react";
 import { Search, X } from "lucide-react";
 import { useSimilarPredicates } from "@/api/hooks/predicates";
 import { useButterToast } from "@/hooks/useButterToast";
+import { getSourceBadgeColor } from "@/utils/sourceUtils";
+import { PredicateSelector } from "@/components/node_selectors/predicate_selector";
+import { PredicateOut } from "@/api/services/predicates";
 
 export interface SimilaritySearchTabProps {
   onClusterSelect?: (predicateIds: string[]) => void;
@@ -19,30 +22,35 @@ export interface SimilaritySearchTabProps {
 export const SimilaritySearchTab: React.FC<SimilaritySearchTabProps> = ({
   onClusterSelect,
 }) => {
-  const [predicateId, setPredicateId] = useState<string>("");
-  const [searchQuery, setSearchQuery] = useState<string>("");
+  const [selectedPredicate, setSelectedPredicate] = useState<PredicateOut | undefined>();
+  const [debouncedPredicateId, setDebouncedPredicateId] = useState<string>("");
   const [sourceFilter, setSourceFilter] = useState<string>("");
   const [thresholdFilter, setThresholdFilter] = useState<number>(0.7);
   const [topK, setTopK] = useState<number>(20);
   const toast = useButterToast();
 
-  // Query similar predicates
+  // Debounce the predicate ID to avoid searching immediately on selection
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedPredicateId(selectedPredicate?.id || "");
+    }, 500);
+
+    return () => {
+      clearTimeout(timer);
+    };
+  }, [selectedPredicate?.id]);
+
+  // Query similar predicates using the debounced predicate ID
   const {
     data,
     isLoading,
     error,
     isFetching,
-  } = useSimilarPredicates(
-    {
-      predicate_id: searchQuery || predicateId,
-      top_k: topK,
-      source_filter: sourceFilter || undefined,
-      similarity_threshold: thresholdFilter,
-    },
-    {
-      enabled: !!(searchQuery || predicateId),
-    },
-  );
+  } = useSimilarPredicates(debouncedPredicateId, {
+    limit: topK,
+    source: sourceFilter || undefined,
+    threshold: thresholdFilter,
+  });
 
   // Handle error display
   React.useEffect(() => {
@@ -51,37 +59,29 @@ export const SimilaritySearchTab: React.FC<SimilaritySearchTabProps> = ({
     }
   }, [error, toast]);
 
-  const handleSearch = () => {
-    if (!searchQuery.trim()) {
-      toast.warning("Please enter a predicate ID to search");
-      return;
-    }
-    setPredicateId(searchQuery);
-  };
-
   const handleClear = () => {
-    setSearchQuery("");
-    setPredicateId("");
+    setSelectedPredicate(undefined);
+    setDebouncedPredicateId("");
     setSourceFilter("");
     setThresholdFilter(0.7);
   };
 
   // Get unique sources from results
   const availableSources = React.useMemo(() => {
-    if (!data?.similar_predicates) return [];
+    if (!data?.results) return [];
     const sources = new Set(
-      data.similar_predicates.map((item) => item.predicate.source),
+      data.results.map((item) => item.source),
     );
     return Array.from(sources).sort();
-  }, [data?.similar_predicates]);
+  }, [data?.results]);
 
   // Filter results by threshold
   const filteredResults = React.useMemo(() => {
-    if (!data?.similar_predicates) return [];
-    return data.similar_predicates.filter(
+    if (!data?.results) return [];
+    return data.results.filter(
       (item) => item.similarity_score >= thresholdFilter,
     );
-  }, [data?.similar_predicates, thresholdFilter]);
+  }, [data?.results, thresholdFilter]);
 
   // Calculate quality indicator
   const getQualityColor = (score: number): string => {
@@ -115,28 +115,19 @@ export const SimilaritySearchTab: React.FC<SimilaritySearchTabProps> = ({
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
         <div>
           <Label htmlFor="predicate-search" className="mb-2 block">
-            Predicate ID
+            Select Predicate
           </Label>
-          <div className="flex gap-2">
-            <TextInput
-              id="predicate-search"
-              placeholder="Enter predicate ID..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              onKeyPress={(e) => e.key === "Enter" && handleSearch()}
-              className="flex-1"
-            />
-            <Button onClick={handleSearch} disabled={isLoading || !searchQuery.trim()}>
-              {isLoading ? (
-                <Spinner size="sm" />
-              ) : (
-                <>
-                  <Search className="mr-2 h-4 w-4" />
-                  Search
-                </>
-              )}
-            </Button>
-          </div>
+          <PredicateSelector
+            value={selectedPredicate?.id}
+            onSelect={(predicate) => setSelectedPredicate(predicate)}
+            placeholder="Search and select a predicate..."
+            disabled={isLoading}
+          />
+          {selectedPredicate && (
+            <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">
+              Selected: <span className="font-medium">{selectedPredicate.title}</span>
+            </p>
+          )}
         </div>
 
         <div>
@@ -204,6 +195,13 @@ export const SimilaritySearchTab: React.FC<SimilaritySearchTabProps> = ({
 
       {!isFetching && data && (
         <>
+          <div className="rounded-lg bg-blue-50 p-4 dark:bg-blue-900/20">
+            <p className="text-sm text-blue-800 dark:text-blue-200">
+              <span className="font-semibold">Searching for predicates similar to:</span>{" "}
+              {data.predicate_title}
+            </p>
+          </div>
+
           <div className="text-sm text-gray-600 dark:text-gray-400">
             Found {filteredResults.length} similar predicates
             {sourceFilter && ` from ${sourceFilter}`}
@@ -213,7 +211,7 @@ export const SimilaritySearchTab: React.FC<SimilaritySearchTabProps> = ({
                 color="light"
                 className="ml-4"
                 onClick={() =>
-                  onClusterSelect(filteredResults.map((item) => item.predicate.id))
+                  onClusterSelect(filteredResults.map((item) => item.predicate_id))
                 }
               >
                 Create Cluster from Results
@@ -228,47 +226,48 @@ export const SimilaritySearchTab: React.FC<SimilaritySearchTabProps> = ({
               </div>
             ) : (
               <Table hoverable>
-                <Table.Head>
-                  <Table.HeadCell>Similarity</Table.HeadCell>
-                  <Table.HeadCell>Quality</Table.HeadCell>
-                  <Table.HeadCell>Source</Table.HeadCell>
-                  <Table.HeadCell>External ID</Table.HeadCell>
-                  <Table.HeadCell>Title</Table.HeadCell>
-                  <Table.HeadCell>Definition</Table.HeadCell>
-                </Table.Head>
-                <Table.Body className="divide-y">
-                  {filteredResults.map((item, index) => (
-                    <Table.Row
-                      key={`${item.predicate.id}-${index}`}
+                <TableHead>
+                  <TableRow>
+                    <TableHeadCell>Similarity</TableHeadCell>
+                    <TableHeadCell>Quality</TableHeadCell>
+                    <TableHeadCell>Source</TableHeadCell>
+                    <TableHeadCell>External ID</TableHeadCell>
+                    <TableHeadCell>Title</TableHeadCell>
+                    <TableHeadCell>Definition</TableHeadCell>
+                  </TableRow>
+                </TableHead>
+                <TableBody className="divide-y">{filteredResults.map((item, index) => (
+                    <TableRow
+                      key={`${item.predicate_id}-${index}`}
                       className="bg-white dark:border-gray-700 dark:bg-gray-800"
                     >
-                      <Table.Cell>
+                      <TableCell>
                         <Badge color={getQualityColor(item.similarity_score)} size="sm">
                           {(item.similarity_score * 100).toFixed(1)}%
                         </Badge>
-                      </Table.Cell>
-                      <Table.Cell>
+                      </TableCell>
+                      <TableCell>
                         <Badge color={getQualityColor(item.similarity_score)} size="sm">
                           {getQualityLabel(item.similarity_score)}
                         </Badge>
-                      </Table.Cell>
-                      <Table.Cell>
-                        <Badge color="info">{item.predicate.source}</Badge>
-                      </Table.Cell>
-                      <Table.Cell className="font-mono text-sm">
-                        {item.predicate.external_id}
-                      </Table.Cell>
-                      <Table.Cell className="font-medium text-gray-900 dark:text-white">
-                        {item.predicate.title}
-                      </Table.Cell>
-                      <Table.Cell className="max-w-md truncate">
-                        {item.predicate.definition || (
+                      </TableCell>
+                      <TableCell>
+                        <Badge color={getSourceBadgeColor(item.source)}>{item.source}</Badge>
+                      </TableCell>
+                      <TableCell className="font-mono text-sm">
+                        {item.source_id}
+                      </TableCell>
+                      <TableCell className="font-medium text-gray-900 dark:text-white">
+                        {item.title}
+                      </TableCell>
+                      <TableCell className="max-w-md truncate">
+                        {item.definition || (
                           <span className="text-gray-400">—</span>
                         )}
-                      </Table.Cell>
-                    </Table.Row>
+                      </TableCell>
+                    </TableRow>
                   ))}
-                </Table.Body>
+                </TableBody>
               </Table>
             )}
           </div>
@@ -276,8 +275,14 @@ export const SimilaritySearchTab: React.FC<SimilaritySearchTabProps> = ({
       )}
 
       {!isFetching && !data && (
-        <div className="py-8 text-center text-gray-500">
-          Enter a predicate ID to search for similar predicates
+        <div className="py-12 text-center">
+          <Search className="mx-auto h-12 w-12 text-gray-400" />
+          <p className="mt-4 text-gray-500 dark:text-gray-400">
+            Select a predicate above to find similar external predicates
+          </p>
+          <p className="mt-2 text-sm text-gray-400 dark:text-gray-500">
+            Search across ConceptNet, DBpedia, Wikidata, and Schema.org
+          </p>
         </div>
       )}
     </div>

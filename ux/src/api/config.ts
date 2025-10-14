@@ -6,7 +6,7 @@
 
 // Get the correct localhost URL based on platform
 const getDefaultBaseURL = () => {
-  return "http://localhost:8001";
+  return "http://localhost:8100";
 };
 
 export const API_CONFIG = {

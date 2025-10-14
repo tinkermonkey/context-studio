@@ -272,18 +272,24 @@ def list_external_predicates(
 
     Returns predicates discovered from external knowledge sources with optional source filtering.
     """
-    from reference_db.manager import ReferenceManager
+    from reference_db.dependencies import reference_manager_context
     from reference_db.config import ReferenceConfig
 
     try:
         config = ReferenceConfig()
-        with ReferenceManager(config) as manager:
-            # Get predicates
-            predicates = manager.list_external_predicates(source=source, limit=limit + skip)
-
-            # Apply pagination
-            total = len(predicates)
-            paginated = predicates[skip:skip + limit]
+        with reference_manager_context(config) as manager:
+            # Get all predicates (we'll paginate in memory since we need the count anyway)
+            from reference_db.models import ExternalPredicate
+            query = manager.session.query(ExternalPredicate)
+            if source:
+                query = query.filter_by(source=source)
+            
+            # Get all matching predicates
+            all_predicates = query.all()
+            total = len(all_predicates)
+            
+            # Paginate in memory
+            paginated = all_predicates[skip:skip + limit]
 
             # Format response
             data = []
@@ -318,6 +324,103 @@ def list_external_predicates(
 
     except Exception as e:
         logger.error(f"Failed to list external predicates: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+class ExternalPredicateSearchResult(BaseModel):
+    """Search result for external predicates with similarity score."""
+    id: str
+    title: str
+    definition: str
+    source: str
+    external_id: str
+    attributes: Optional[Dict[str, Any]] = None
+    created_at: str
+    updated_at: str
+    similarity_score: float
+
+
+class ExternalPredicateSearchResponse(BaseModel):
+    """Response for external predicate search."""
+    data: List[ExternalPredicateSearchResult]
+    total: int
+    query: str
+    source: Optional[str] = None
+    threshold: float
+
+
+@router.get("/external/search", response_model=ExternalPredicateSearchResponse)
+def search_external_predicates(
+    query: str = Query(..., min_length=1, description="Search query text"),
+    source: Optional[str] = Query(None, description="Filter by source (conceptnet, dbpedia, wikidata, schema_org)"),
+    limit: int = Query(20, ge=1, le=100),
+    threshold: float = Query(0.6, ge=0.0, le=1.0, description="Minimum similarity threshold"),
+):
+    """
+    Search external predicates using vector similarity.
+
+    This endpoint performs semantic search across external predicates using embeddings.
+    Returns predicates ranked by similarity to the query text.
+
+    Args:
+        query: Search query text (required, min 1 character)
+        source: Optional source filter (conceptnet, dbpedia, wikidata, schema_org)
+        limit: Maximum number of results (default: 20, max: 100)
+        threshold: Minimum similarity threshold (default: 0.6, range: 0.0-1.0)
+
+    Returns:
+        ExternalPredicateSearchResponse with ranked similarity results
+    """
+    from reference_db.dependencies import reference_manager_context
+    from reference_db.config import ReferenceConfig
+
+    try:
+        config = ReferenceConfig()
+        with reference_manager_context(config) as manager:
+            # Perform vector similarity search
+            results = manager.search_external_predicates_by_similarity(
+                query_text=query,
+                source=source,
+                limit=limit,
+                threshold=threshold
+            )
+
+            # Format response
+            data = []
+            for predicate, similarity_score in results:
+                # Parse attributes if present
+                attrs = None
+                if predicate.attributes:
+                    try:
+                        import ast
+                        attrs = ast.literal_eval(predicate.attributes)
+                    except:
+                        attrs = {"raw": predicate.attributes}
+
+                data.append(ExternalPredicateSearchResult(
+                    id=predicate.id,
+                    title=predicate.title,
+                    definition=predicate.definition,
+                    source=predicate.source,
+                    external_id=predicate.external_id,
+                    attributes=attrs,
+                    created_at=predicate.created_at,
+                    updated_at=predicate.updated_at,
+                    similarity_score=similarity_score
+                ))
+
+            return ExternalPredicateSearchResponse(
+                data=data,
+                total=len(data),
+                query=query,
+                source=source,
+                threshold=threshold
+            )
+
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        logger.error(f"Failed to search external predicates: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail=str(e))
 
 
@@ -410,12 +513,12 @@ def update_predicate(
         # If relevance was updated, invalidate the reference filter cache
         if predicate.is_relevant is not None:
             try:
-                from reference_db.manager import ReferenceManager
+                from reference_db.dependencies import reference_manager_context
                 from reference_db.config import ReferenceConfig
                 from services.reference_filter_service import ReferenceFilterService
 
                 ref_config = ReferenceConfig()
-                with ReferenceManager(ref_config) as manager:
+                with reference_manager_context(ref_config) as manager:
                     filter_service = ReferenceFilterService(db, manager)
                     filter_service.invalidate_cache()
                     logger.info(f"Invalidated reference filter cache after updating predicate {id} relevance")
@@ -526,12 +629,18 @@ async def _run_discovery_task(task_id: str, sources: Optional[List[str]] = None)
         config_manager = get_config_manager()
         settings = config_manager.settings
 
-        # Prepare source configs
+        # Prepare source configs - only for sources that need API configuration
+        # (schema_org uses local database, doesn't need external API config)
         source_configs = {}
         for source_name in ['conceptnet', 'dbpedia', 'wikidata']:
-            source_config = settings.get_source_config(source_name)
-            if source_config:
-                source_configs[source_name] = source_config
+            try:
+                source_config = settings.get_source_config(source_name)
+                if source_config:
+                    source_configs[source_name] = source_config
+            except ValueError:
+                # Source not configured, skip it
+                logger.debug(f"Source {source_name} not configured, skipping")
+                pass
 
         # Create reference config
         ref_config = ReferenceConfig()
@@ -569,7 +678,7 @@ async def _run_discovery_task(task_id: str, sources: Optional[List[str]] = None)
 @router.post("/discover", response_model=PredicateDiscoveryResponse)
 async def discover_external_predicates(
     background_tasks: BackgroundTasks,
-    sources: Optional[List[str]] = Query(None, description="Sources to discover from (conceptnet, dbpedia, wikidata)")
+    sources: Optional[List[str]] = Query(None, description="Sources to discover from (conceptnet, dbpedia, wikidata, schema_org)")
 ):
     """
     Discover predicates from external knowledge sources.
@@ -578,6 +687,7 @@ async def discover_external_predicates(
     - ConceptNet (40 relations)
     - DBpedia (760 properties via SPARQL)
     - WikiData (10K properties via SPARQL)
+    - Schema.org (properties from imported data)
 
     Returns a task_id that can be used to check the status of the discovery process.
 
@@ -585,9 +695,10 @@ async def discover_external_predicates(
     - ConceptNet: <2s for 40 relations
     - DBpedia: <10s for 760 properties
     - WikiData: <30s for 10K properties
+    - Schema.org: <1s (reads from database)
     """
     # Validate sources if provided
-    valid_sources = ['conceptnet', 'dbpedia', 'wikidata']
+    valid_sources = ['conceptnet', 'dbpedia', 'wikidata', 'schema_org']
     if sources:
         invalid = [s for s in sources if s not in valid_sources]
         if invalid:
@@ -700,7 +811,7 @@ def find_similar_predicates(
     """
     import time
     from services.predicate_similarity import PredicateSimilarityService
-    from reference_db.manager import ReferenceManager
+    from reference_db.dependencies import reference_manager_context
     from reference_db.config import ReferenceConfig
 
     start_time = time.perf_counter()
@@ -733,24 +844,23 @@ def find_similar_predicates(
     try:
         # Initialize services
         ref_config = ReferenceConfig()
-        with ReferenceManager(ref_config) as manager:
+        with reference_manager_context(ref_config) as manager:
             similarity_service = PredicateSimilarityService(manager)
 
-            # Find similar predicates
+            # Find similar predicates (CACHING TEMPORARILY DISABLED FOR DEBUGGING)
+            logger.info(f"Finding similar predicates for: {predicate.title} (ID: {id})")
             results = similarity_service.find_similar_predicates(
                 predicate_title=predicate.title,
                 predicate_definition=predicate.definition,
                 source=source,
                 limit=limit,
                 threshold=threshold,
-                use_cache=use_cache
+                use_cache=False  # DISABLED: was use_cache
             )
+            logger.info(f"Found {len(results)} similar predicates")
 
-            # Check if results were cached
-            cache_key = similarity_service._get_cache_key(
-                predicate.title, source, limit, threshold
-            )
-            cached = cache_key in similarity_service._similarity_cache
+            # Check if results were cached (always False since caching disabled)
+            cached = False  # DISABLED: was checking cache
 
             # Convert to response models
             similar_predicates = []
@@ -840,7 +950,7 @@ def cluster_predicates(
     """
     import time
     from services.predicate_similarity import PredicateSimilarityService
-    from reference_db.manager import ReferenceManager
+    from reference_db.dependencies import reference_manager_context
     from reference_db.config import ReferenceConfig
 
     start_time = time.perf_counter()
@@ -907,7 +1017,7 @@ def cluster_predicates(
 
         # Initialize services and perform clustering
         ref_config = ReferenceConfig()
-        with ReferenceManager(ref_config) as manager:
+        with reference_manager_context(ref_config) as manager:
             similarity_service = PredicateSimilarityService(manager)
 
             cluster_results = similarity_service.cluster_predicates(
@@ -985,12 +1095,12 @@ def invalidate_similarity_cache():
         Success message with cache statistics
     """
     from services.predicate_similarity import PredicateSimilarityService
-    from reference_db.manager import ReferenceManager
+    from reference_db.dependencies import reference_manager_context
     from reference_db.config import ReferenceConfig
 
     try:
         ref_config = ReferenceConfig()
-        with ReferenceManager(ref_config) as manager:
+        with reference_manager_context(ref_config) as manager:
             similarity_service = PredicateSimilarityService(manager)
 
             # Get cache stats before invalidation

@@ -13,6 +13,11 @@ import {
   Label,
   Select,
   Table,
+  TableHead,
+  TableHeadCell,
+  TableBody,
+  TableRow,
+  TableCell,
   Badge,
   Spinner,
 } from "flowbite-react";
@@ -51,19 +56,18 @@ export const ManualMappingInterface: React.FC<ManualMappingInterfaceProps> = ({
       source: sourceFilter || undefined,
     });
 
-  // Filter external predicates by search query
+    // Filter external predicates by search query
   const filteredExternalPredicates = React.useMemo(() => {
-    if (!externalPredicates?.items) return [];
-    if (!searchQuery.trim()) return externalPredicates.items;
+    if (!externalPredicates?.data) return [];
+    if (!searchQuery.trim()) return externalPredicates.data;
 
     const query = searchQuery.toLowerCase();
-    return externalPredicates.items.filter(
+    return externalPredicates.data.filter(
       (p) =>
         p.title.toLowerCase().includes(query) ||
-        p.external_id.toLowerCase().includes(query) ||
-        p.definition?.toLowerCase().includes(query),
+        p.external_id.toLowerCase().includes(query),
     );
-  }, [externalPredicates?.items, searchQuery]);
+  }, [externalPredicates?.data, searchQuery]);
 
   const handleAddMapping = (externalPredicateId: string) => {
     if (!globalPredicateId) {
@@ -121,12 +125,12 @@ export const ManualMappingInterface: React.FC<ManualMappingInterfaceProps> = ({
 
   // Get unique sources
   const availableSources = React.useMemo(() => {
-    if (!externalPredicates?.items) return [];
-    const sources = new Set(externalPredicates.items.map((p) => p.source));
+    if (!externalPredicates?.data) return [];
+    const sources = new Set(externalPredicates.data.map((p) => p.source));
     return Array.from(sources).sort();
-  }, [externalPredicates?.items]);
+  }, [externalPredicates?.data]);
 
-  const selectedGlobalPredicate = globalPredicates?.find(
+  const selectedGlobalPredicate = globalPredicates?.data?.find(
     (p) => p.id === globalPredicateId,
   );
 
@@ -153,8 +157,8 @@ export const ManualMappingInterface: React.FC<ManualMappingInterfaceProps> = ({
           onChange={(e) => setGlobalPredicateId(e.target.value)}
           disabled={loadingGlobal}
         >
-          <option value="">Select a global predicate...</option>
-          {globalPredicates?.map((predicate) => (
+          <option value="">Select a global predicate</option>
+          {globalPredicates?.data?.map((predicate) => (
             <option key={predicate.id} value={predicate.id}>
               {predicate.title}
             </option>
@@ -250,29 +254,30 @@ export const ManualMappingInterface: React.FC<ManualMappingInterfaceProps> = ({
 
           {!loadingExternal && filteredExternalPredicates.length > 0 && (
             <Table hoverable>
-              <Table.Head>
-                <Table.HeadCell>Source</Table.HeadCell>
-                <Table.HeadCell>External ID</Table.HeadCell>
-                <Table.HeadCell>Title</Table.HeadCell>
-                <Table.HeadCell>
-                  <span className="sr-only">Actions</span>
-                </Table.HeadCell>
-              </Table.Head>
-              <Table.Body className="divide-y">
-                {filteredExternalPredicates.map((predicate) => (
-                  <Table.Row
+              <TableHead>
+                <TableRow>
+                  <TableHeadCell>Source</TableHeadCell>
+                  <TableHeadCell>External ID</TableHeadCell>
+                  <TableHeadCell>Title</TableHeadCell>
+                  <TableHeadCell>
+                    <span className="sr-only">Actions</span>
+                  </TableHeadCell>
+                </TableRow>
+              </TableHead>
+              <TableBody className="divide-y">{filteredExternalPredicates.map((predicate) => (
+                  <TableRow
                     key={predicate.id}
                     className="bg-white dark:border-gray-700 dark:bg-gray-800"
                   >
-                    <Table.Cell>
+                    <TableCell>
                       <Badge color="info" size="sm">
                         {predicate.source}
                       </Badge>
-                    </Table.Cell>
-                    <Table.Cell className="font-mono text-sm">
+                    </TableCell>
+                    <TableCell className="font-mono text-sm">
                       {predicate.external_id}
-                    </Table.Cell>
-                    <Table.Cell>
+                    </TableCell>
+                    <TableCell>
                       <div>
                         <p className="font-medium text-gray-900 dark:text-white">
                           {predicate.title}
@@ -285,8 +290,8 @@ export const ManualMappingInterface: React.FC<ManualMappingInterfaceProps> = ({
                           </p>
                         )}
                       </div>
-                    </Table.Cell>
-                    <Table.Cell>
+                    </TableCell>
+                    <TableCell>
                       <Button
                         size="xs"
                         onClick={() => handleAddMapping(predicate.id)}
@@ -299,10 +304,10 @@ export const ManualMappingInterface: React.FC<ManualMappingInterfaceProps> = ({
                       >
                         <Plus className="h-3 w-3" />
                       </Button>
-                    </Table.Cell>
-                  </Table.Row>
+                    </TableCell>
+                  </TableRow>
                 ))}
-              </Table.Body>
+              </TableBody>
             </Table>
           )}
         </div>
@@ -317,7 +322,7 @@ export const ManualMappingInterface: React.FC<ManualMappingInterfaceProps> = ({
 
           <div className="space-y-2">
             {selectedMappings.map((mapping) => {
-              const predicate = externalPredicates?.items.find(
+              const predicate = externalPredicates?.data.find(
                 (p) => p.id === mapping.externalPredicateId,
               );
               return (

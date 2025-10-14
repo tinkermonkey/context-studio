@@ -11,6 +11,7 @@ import {
   ReferenceNode,
   NodeLinksResponse,
   NodeLinksParams,
+  PredicateExamplesResponse,
 } from "@/api/services/reference";
 import { QUERY_KEYS } from "@/api/config";
 import { createQueryKey } from "@/api/utils/queryClient";
@@ -22,7 +23,7 @@ export const useFilterStatistics = (
   options?: UseQueryOptions<FilterStatistics, Error>,
 ) => {
   return useQuery({
-    queryKey: createQueryKey(QUERY_KEYS.REFERENCE, "filter", "statistics"),
+    queryKey: createQueryKey(QUERY_KEYS.REFERENCE, "filter", { type: "statistics" }),
     queryFn: () => referenceService.getFilterStatistics(),
     staleTime: 5 * 60 * 1000, // 5 minutes
     ...options,
@@ -37,7 +38,7 @@ export const useReferenceNode = (
   options?: UseQueryOptions<ReferenceNode, Error>,
 ) => {
   return useQuery({
-    queryKey: createQueryKey(QUERY_KEYS.REFERENCE, "nodes", nodeId),
+    queryKey: createQueryKey(QUERY_KEYS.REFERENCE, "nodes", { nodeId }),
     queryFn: () => referenceService.getNode(nodeId!),
     enabled: !!nodeId,
     staleTime: 10 * 60 * 1000, // 10 minutes
@@ -61,6 +62,28 @@ export const useNodeLinks = (
     queryFn: () => referenceService.getNodeLinks(nodeId!, params),
     enabled: !!nodeId,
     staleTime: 5 * 60 * 1000, // 5 minutes
+    ...options,
+  });
+};
+
+/**
+ * Hook to fetch example uses of a predicate
+ */
+export const usePredicateExamples = (
+  source?: string,
+  externalId?: string,
+  limit: number = 10,
+  options?: UseQueryOptions<PredicateExamplesResponse, Error>,
+) => {
+  return useQuery({
+    queryKey: createQueryKey(QUERY_KEYS.REFERENCE, "predicate-examples", {
+      source,
+      externalId,
+      limit,
+    } as Record<string, unknown>),
+    queryFn: () => referenceService.getPredicateExamples(source!, externalId!, limit),
+    enabled: !!source && !!externalId,
+    staleTime: 10 * 60 * 1000, // 10 minutes
     ...options,
   });
 };

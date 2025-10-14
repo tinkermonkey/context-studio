@@ -12,13 +12,13 @@
 import React, { useState } from "react";
 import { Card, Tabs, Modal } from "flowbite-react";
 import {
-  HiDatabase,
-  HiSearch,
-  HiCollection,
-  HiCog,
-  HiPlusCircle,
-  HiCheckCircle,
-} from "react-icons/hi";
+  Database,
+  Search,
+  Layers,
+  Settings,
+  PlusCircle,
+  CheckCircle,
+} from "lucide-react";
 import { ExternalPredicatesTab } from "./ExternalPredicatesTab";
 import { SimilaritySearchTab } from "./SimilaritySearchTab";
 import { ClusterVisualizationTab } from "./ClusterVisualizationTab";
@@ -70,22 +70,22 @@ export const PredicateMappingManager: React.FC<
           aria-label="Predicate mapping tabs"
           onActiveTabChange={setActiveTab}
         >
-          <Tabs.Item active title="External Predicates" icon={HiDatabase}>
+          <Tabs.Item active title="External Predicates" icon={Database}>
             <ExternalPredicatesTab />
           </Tabs.Item>
-          <Tabs.Item title="Similarity Search" icon={HiSearch}>
+          <Tabs.Item title="Similarity Search" icon={Search}>
             <SimilaritySearchTab onClusterSelect={handleClusterSelect} />
           </Tabs.Item>
-          <Tabs.Item title="Cluster Analysis" icon={HiCollection}>
+          <Tabs.Item title="Cluster Analysis" icon={Layers}>
             <ClusterVisualizationTab onCreateGlobalPredicate={handleClusterSelect} />
           </Tabs.Item>
-          <Tabs.Item title="Manual Mapping" icon={HiPlusCircle}>
+          <Tabs.Item title="Manual Mapping" icon={PlusCircle}>
             <ManualMappingInterface />
           </Tabs.Item>
-          <Tabs.Item title="Relevance Selection" icon={HiCheckCircle}>
+          <Tabs.Item title="Relevance Selection" icon={CheckCircle}>
             <RelevanceSelectionUI />
           </Tabs.Item>
-          <Tabs.Item title="Configuration" icon={HiCog}>
+          <Tabs.Item title="Configuration" icon={Settings}>
             <MappingConfigurationTab />
           </Tabs.Item>
         </Tabs>

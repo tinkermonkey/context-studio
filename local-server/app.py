@@ -163,6 +163,38 @@ def create_app(dataset_id=None, engine=None, session_local=None, service_factory
                 # Continue startup even if GraphService fails to warm up
                 logger.info("Continuing startup despite GraphService warmup failure")
 
+            # Preload Reference Database Manager and Embedding Model
+            logger.info("Warming up Reference Database and Embedding Model...")
+            try:
+                from reference_db.manager import get_reference_manager
+                from reference_db.config import ReferenceConfig
+                
+                # Initialize singleton reference manager (creates engine/session)
+                ref_config = ReferenceConfig()
+                ref_manager = get_reference_manager(ref_config)
+                
+                # Warm up embedding model with a test query
+                # This loads the SentenceTransformer model into memory (~1.5s first call)
+                logger.info("Loading embedding model (this may take a moment)...")
+                import time
+                warmup_start = time.perf_counter()
+                
+                # Test search to warm up both embedding model and vector search
+                ref_manager.search_external_predicates_by_similarity(
+                    query_text="test warmup query",
+                    limit=1,
+                    threshold=0.5
+                )
+                
+                warmup_time = (time.perf_counter() - warmup_start) * 1000
+                logger.info(f"Reference DB and Embedding Model warmed up successfully in {warmup_time:.0f}ms")
+                logger.info("Subsequent embedding/search operations will be fast (~20-50ms)")
+                
+            except Exception as e:
+                logger.error(f"Error warming up Reference DB/Embeddings: {e}")
+                # Continue startup even if warmup fails
+                logger.info("Continuing startup despite Reference DB warmup failure")
+
             # Phase 4: Initialize TaskManager for background task processing
             # This initializes the asyncio-based background task management system
             # that handles long-running operations like predicate discovery and mapping.
@@ -194,11 +226,21 @@ def create_app(dataset_id=None, engine=None, session_local=None, service_factory
 
             if hasattr(app.state, 'event_processor') and app.state.event_processor:
                 app.state.event_processor.stop()
+            
+            # Clean up reference database manager
+            try:
+                from reference_db.manager import cleanup_reference_manager
+                cleanup_reference_manager()
+                logger.info("Reference database manager cleaned up")
+            except Exception as e:
+                logger.warning(f"Error cleaning up reference manager: {e}")
+            
             # Clean up graph service cache
             try:
                 invalidate_graph_cache()
             except Exception as e:
                 logger.warning(f"Error invalidating graph cache: {e}")
+            
             # Clean up database resources and event listeners
             cleanup_database_resources()
             logger.info("Shutting down application.")

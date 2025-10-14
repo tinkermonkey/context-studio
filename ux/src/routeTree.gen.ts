@@ -13,13 +13,14 @@ import { Route as AppRouteImport } from './routes/app'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AppIndexRouteImport } from './routes/app/index'
 import { Route as AppTermsRouteImport } from './routes/app/terms'
-import { Route as AppReferenceRouteImport } from './routes/app/reference'
 import { Route as AppPredicatesRouteImport } from './routes/app/predicates'
 import { Route as AppLayersRouteImport } from './routes/app/layers'
 import { Route as AppDomainsRouteImport } from './routes/app/domains'
 import { Route as AppDatasetsRouteImport } from './routes/app/datasets'
 import { Route as AppConfigRouteImport } from './routes/app/config'
 import { Route as AppConfigIndexRouteImport } from './routes/app/config/index'
+import { Route as AppReferenceSearchRouteImport } from './routes/app/reference.search'
+import { Route as AppReferencePredicatesRouteImport } from './routes/app/reference.predicates'
 import { Route as AppConfigSystemRouteImport } from './routes/app/config/system'
 import { Route as AppConfigProcessingRouteImport } from './routes/app/config/processing'
 import { Route as AppConfigPipelinesRouteImport } from './routes/app/config/pipelines'
@@ -57,11 +58,6 @@ const AppTermsRoute = AppTermsRouteImport.update({
   path: '/terms',
   getParentRoute: () => AppRoute,
 } as any)
-const AppReferenceRoute = AppReferenceRouteImport.update({
-  id: '/reference',
-  path: '/reference',
-  getParentRoute: () => AppRoute,
-} as any)
 const AppPredicatesRoute = AppPredicatesRouteImport.update({
   id: '/predicates',
   path: '/predicates',
@@ -91,6 +87,16 @@ const AppConfigIndexRoute = AppConfigIndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => AppConfigRoute,
+} as any)
+const AppReferenceSearchRoute = AppReferenceSearchRouteImport.update({
+  id: '/reference/search',
+  path: '/reference/search',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppReferencePredicatesRoute = AppReferencePredicatesRouteImport.update({
+  id: '/reference/predicates',
+  path: '/reference/predicates',
+  getParentRoute: () => AppRoute,
 } as any)
 const AppConfigSystemRoute = AppConfigSystemRouteImport.update({
   id: '/system',
@@ -186,7 +192,6 @@ export interface FileRoutesByFullPath {
   '/app/domains': typeof AppDomainsRoute
   '/app/layers': typeof AppLayersRoute
   '/app/predicates': typeof AppPredicatesRoute
-  '/app/reference': typeof AppReferenceRoute
   '/app/terms': typeof AppTermsRoute
   '/app/': typeof AppIndexRoute
   '/app/config/advanced': typeof AppConfigAdvancedRoute
@@ -196,6 +201,8 @@ export interface FileRoutesByFullPath {
   '/app/config/pipelines': typeof AppConfigPipelinesRouteWithChildren
   '/app/config/processing': typeof AppConfigProcessingRoute
   '/app/config/system': typeof AppConfigSystemRoute
+  '/app/reference/predicates': typeof AppReferencePredicatesRoute
+  '/app/reference/search': typeof AppReferenceSearchRoute
   '/app/config/': typeof AppConfigIndexRoute
   '/app/config/pipelines/$pipelineType': typeof AppConfigPipelinesPipelineTypeRouteWithChildren
   '/app/nodes/domain/$domainId': typeof AppNodesDomainDomainIdRoute
@@ -213,7 +220,6 @@ export interface FileRoutesByTo {
   '/app/domains': typeof AppDomainsRoute
   '/app/layers': typeof AppLayersRoute
   '/app/predicates': typeof AppPredicatesRoute
-  '/app/reference': typeof AppReferenceRoute
   '/app/terms': typeof AppTermsRoute
   '/app': typeof AppIndexRoute
   '/app/config/advanced': typeof AppConfigAdvancedRoute
@@ -222,6 +228,8 @@ export interface FileRoutesByTo {
   '/app/config/network': typeof AppConfigNetworkRoute
   '/app/config/processing': typeof AppConfigProcessingRoute
   '/app/config/system': typeof AppConfigSystemRoute
+  '/app/reference/predicates': typeof AppReferencePredicatesRoute
+  '/app/reference/search': typeof AppReferenceSearchRoute
   '/app/config': typeof AppConfigIndexRoute
   '/app/nodes/domain/$domainId': typeof AppNodesDomainDomainIdRoute
   '/app/nodes/layer/$layerId': typeof AppNodesLayerLayerIdRoute
@@ -241,7 +249,6 @@ export interface FileRoutesById {
   '/app/domains': typeof AppDomainsRoute
   '/app/layers': typeof AppLayersRoute
   '/app/predicates': typeof AppPredicatesRoute
-  '/app/reference': typeof AppReferenceRoute
   '/app/terms': typeof AppTermsRoute
   '/app/': typeof AppIndexRoute
   '/app/config/advanced': typeof AppConfigAdvancedRoute
@@ -251,6 +258,8 @@ export interface FileRoutesById {
   '/app/config/pipelines': typeof AppConfigPipelinesRouteWithChildren
   '/app/config/processing': typeof AppConfigProcessingRoute
   '/app/config/system': typeof AppConfigSystemRoute
+  '/app/reference/predicates': typeof AppReferencePredicatesRoute
+  '/app/reference/search': typeof AppReferenceSearchRoute
   '/app/config/': typeof AppConfigIndexRoute
   '/app/config/pipelines/$pipelineType': typeof AppConfigPipelinesPipelineTypeRouteWithChildren
   '/app/nodes/domain/$domainId': typeof AppNodesDomainDomainIdRoute
@@ -272,7 +281,6 @@ export interface FileRouteTypes {
     | '/app/domains'
     | '/app/layers'
     | '/app/predicates'
-    | '/app/reference'
     | '/app/terms'
     | '/app/'
     | '/app/config/advanced'
@@ -282,6 +290,8 @@ export interface FileRouteTypes {
     | '/app/config/pipelines'
     | '/app/config/processing'
     | '/app/config/system'
+    | '/app/reference/predicates'
+    | '/app/reference/search'
     | '/app/config/'
     | '/app/config/pipelines/$pipelineType'
     | '/app/nodes/domain/$domainId'
@@ -299,7 +309,6 @@ export interface FileRouteTypes {
     | '/app/domains'
     | '/app/layers'
     | '/app/predicates'
-    | '/app/reference'
     | '/app/terms'
     | '/app'
     | '/app/config/advanced'
@@ -308,6 +317,8 @@ export interface FileRouteTypes {
     | '/app/config/network'
     | '/app/config/processing'
     | '/app/config/system'
+    | '/app/reference/predicates'
+    | '/app/reference/search'
     | '/app/config'
     | '/app/nodes/domain/$domainId'
     | '/app/nodes/layer/$layerId'
@@ -326,7 +337,6 @@ export interface FileRouteTypes {
     | '/app/domains'
     | '/app/layers'
     | '/app/predicates'
-    | '/app/reference'
     | '/app/terms'
     | '/app/'
     | '/app/config/advanced'
@@ -336,6 +346,8 @@ export interface FileRouteTypes {
     | '/app/config/pipelines'
     | '/app/config/processing'
     | '/app/config/system'
+    | '/app/reference/predicates'
+    | '/app/reference/search'
     | '/app/config/'
     | '/app/config/pipelines/$pipelineType'
     | '/app/nodes/domain/$domainId'
@@ -383,13 +395,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppTermsRouteImport
       parentRoute: typeof AppRoute
     }
-    '/app/reference': {
-      id: '/app/reference'
-      path: '/reference'
-      fullPath: '/app/reference'
-      preLoaderRoute: typeof AppReferenceRouteImport
-      parentRoute: typeof AppRoute
-    }
     '/app/predicates': {
       id: '/app/predicates'
       path: '/predicates'
@@ -431,6 +436,20 @@ declare module '@tanstack/react-router' {
       fullPath: '/app/config/'
       preLoaderRoute: typeof AppConfigIndexRouteImport
       parentRoute: typeof AppConfigRoute
+    }
+    '/app/reference/search': {
+      id: '/app/reference/search'
+      path: '/reference/search'
+      fullPath: '/app/reference/search'
+      preLoaderRoute: typeof AppReferenceSearchRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/app/reference/predicates': {
+      id: '/app/reference/predicates'
+      path: '/reference/predicates'
+      fullPath: '/app/reference/predicates'
+      preLoaderRoute: typeof AppReferencePredicatesRouteImport
+      parentRoute: typeof AppRoute
     }
     '/app/config/system': {
       id: '/app/config/system'
@@ -617,9 +636,10 @@ interface AppRouteChildren {
   AppDomainsRoute: typeof AppDomainsRoute
   AppLayersRoute: typeof AppLayersRoute
   AppPredicatesRoute: typeof AppPredicatesRoute
-  AppReferenceRoute: typeof AppReferenceRoute
   AppTermsRoute: typeof AppTermsRoute
   AppIndexRoute: typeof AppIndexRoute
+  AppReferencePredicatesRoute: typeof AppReferencePredicatesRoute
+  AppReferenceSearchRoute: typeof AppReferenceSearchRoute
   AppNodesDomainDomainIdRoute: typeof AppNodesDomainDomainIdRoute
   AppNodesLayerLayerIdRoute: typeof AppNodesLayerLayerIdRoute
   AppNodesTermTermIdRoute: typeof AppNodesTermTermIdRoute
@@ -631,9 +651,10 @@ const AppRouteChildren: AppRouteChildren = {
   AppDomainsRoute: AppDomainsRoute,
   AppLayersRoute: AppLayersRoute,
   AppPredicatesRoute: AppPredicatesRoute,
-  AppReferenceRoute: AppReferenceRoute,
   AppTermsRoute: AppTermsRoute,
   AppIndexRoute: AppIndexRoute,
+  AppReferencePredicatesRoute: AppReferencePredicatesRoute,
+  AppReferenceSearchRoute: AppReferenceSearchRoute,
   AppNodesDomainDomainIdRoute: AppNodesDomainDomainIdRoute,
   AppNodesLayerLayerIdRoute: AppNodesLayerLayerIdRoute,
   AppNodesTermTermIdRoute: AppNodesTermTermIdRoute,

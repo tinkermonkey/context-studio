@@ -56,6 +56,36 @@ export interface NodeLinksResponse {
   };
 }
 
+export interface PredicateExampleNode {
+  id: string;
+  title: string;
+  source: string;
+  external_id: string;
+}
+
+export interface PredicateExample {
+  link_id: string;
+  subject: PredicateExampleNode;
+  predicate: {
+    title: string;
+    source: string;
+    external_id: string;
+  };
+  object: PredicateExampleNode;
+}
+
+export interface PredicateExamplesResponse {
+  predicate: {
+    id: string;
+    title: string;
+    definition: string;
+    source: string;
+    external_id: string;
+  };
+  total_examples: number;
+  examples: PredicateExample[];
+}
+
 export class ReferenceService extends BaseService {
   /**
    * Get reference link filtering statistics
@@ -99,9 +129,33 @@ export class ReferenceService extends BaseService {
       this.validateRequired(nodeId, "Node ID");
       return this.getResource<NodeLinksResponse>(
         `${ENDPOINTS.REFERENCE.NODES}/${nodeId}/links`,
-        params,
+        params as Record<string, unknown>,
       );
     }, "get node links");
+  }
+
+  /**
+   * Get example uses of a predicate from the reference database
+   * @param {string} source - The source of the predicate (e.g., 'schema.org', 'dbpedia')
+   * @param {string} externalId - The external ID of the predicate (can contain slashes)
+   * @param {number} limit - Maximum number of examples to return (default: 10)
+   * @returns {Promise<PredicateExamplesResponse>} Example uses of the predicate
+   */
+  async getPredicateExamples(
+    source: string,
+    externalId: string,
+    limit: number = 10,
+  ): Promise<PredicateExamplesResponse> {
+    return this.withErrorContext(() => {
+      this.validateRequired(source, "Source");
+      this.validateRequired(externalId, "External ID");
+      // Note: external_id can contain slashes (e.g., '/r/RelatedTo' for ConceptNet)
+      // We encode the source but not the external_id since the backend endpoint uses :path
+      return this.getResource<PredicateExamplesResponse>(
+        `/api/reference/ref-db/predicates/${encodeURIComponent(source)}/${externalId}/examples`,
+        { limit },
+      );
+    }, "get predicate examples");
   }
 }
 

@@ -33,6 +33,13 @@ export interface ListExternalPredicatesParams extends Record<string, unknown> {
   limit?: number;
 }
 
+export interface SearchExternalPredicatesParams extends Record<string, unknown> {
+  query: string;
+  source?: string;
+  limit?: number;
+  threshold?: number;
+}
+
 export interface FindSimilarParams extends Record<string, unknown> {
   source?: string;
   limit?: number;
@@ -236,6 +243,29 @@ export class PredicateService extends BaseService {
         ),
       "list external predicates",
     );
+  }
+
+  /**
+   * Search external predicates using vector similarity
+   * @param {SearchExternalPredicatesParams} params - Search parameters
+   * @param {string} params.query - Search query text (required)
+   * @param {string} params.source - Optional source filter (e.g., 'conceptnet', 'dbpedia')
+   * @param {number} params.limit - Maximum number of results (default: 20, max: 100)
+   * @param {number} params.threshold - Minimum similarity threshold (0.0-1.0, default: 0.6)
+   * @returns {Promise<any>} Search results with similarity scores
+   */
+  async searchExternalPredicates(
+    params: SearchExternalPredicatesParams,
+  ): Promise<any> {
+    return this.withErrorContext(() => {
+      this.validateRequired(params, "Search parameters");
+      this.validateRequired(params.query, "Search query");
+
+      return this.getResource<any>(
+        `${ENDPOINTS.PREDICATES}/external/search`,
+        params,
+      );
+    }, "search external predicates");
   }
 
   // ================== Similarity Search ==================

@@ -8,6 +8,7 @@ including schema version detection, database rebuild, and embedding operations.
 import os
 import shutil
 import logging
+import threading
 from datetime import date
 from pathlib import Path
 from typing import Optional, List, Dict, Any, Literal
@@ -158,6 +159,8 @@ class ReferenceManager:
             # Convert file path to SQLAlchemy URL format
             db_url = f"sqlite:///{self.db_path}"
             self.engine = get_engine(db_url)
+            # Initialize database with sqlite-vec extension loading
+            self.engine = init_db(self.engine, db_url)
         except Exception as e:
             error_msg = str(e)
             if 'sqlite-vec' in error_msg or 'vec0' in error_msg:
@@ -178,9 +181,10 @@ class ReferenceManager:
                     f"Schema version mismatch detected. Expected schema={REFERENCE_SCHEMA_VERSION}"
                 )
             self._rebuild_database()
-
-        # Initialize database tables using existing utility
-        init_db(self.engine, Base)
+        else:
+            # Ensure all tables exist even if schema version is valid
+            # This is idempotent and safe to call multiple times
+            Base.metadata.create_all(bind=self.engine)
 
         # Create session factory
         self.SessionLocal = sessionmaker(bind=self.engine)
@@ -338,9 +342,12 @@ class ReferenceManager:
             logger.info("Creating new database with current schema")
             db_url = f"sqlite:///{self.db_path}"
             self.engine = get_engine(db_url)
+            # Initialize database with sqlite-vec extension loading
+            self.engine = init_db(self.engine, db_url)
 
             # Initialize tables and schema version in a transaction
             with self.engine.begin() as conn:
+                # Create all tables defined in Base metadata
                 Base.metadata.create_all(bind=self.engine)
 
                 # Create schema version table
@@ -1084,14 +1091,22 @@ class ReferenceManager:
         if limit > 10000:
             raise ValueError(f"limit must not exceed 10000, got {limit}")
 
+        # Performance tracking
+        import time
+        total_start = time.perf_counter()
+        
         try:
             # Generate embeddings for the query
+            embedding_start = time.perf_counter()
             query_embedding = embedding_generator(query_text)
+            embedding_time = (time.perf_counter() - embedding_start) * 1000
+            logger.info(f"Embedding generation: {embedding_time:.2f}ms for query '{query_text[:50]}'")
 
             if not query_embedding or len(query_embedding) == 0:
                 raise ValueError("embedding_generator returned empty embedding")
 
             # Convert embedding to the format expected by sqlite-vec
+            prep_start = time.perf_counter()
             import numpy as np
             if isinstance(query_embedding, bytes):
                 query_vec = np.frombuffer(query_embedding, dtype=np.float32)
@@ -1101,8 +1116,11 @@ class ReferenceManager:
             # Serialize to JSON array format for sqlite-vec
             import json
             query_vec_json = json.dumps(query_vec.tolist())
+            prep_time = (time.perf_counter() - prep_start) * 1000
+            logger.debug(f"Embedding prep: {prep_time:.2f}ms")
 
             # Build the vector search query using parameterized SQL to prevent injection
+            query_start = time.perf_counter()
             sql_query = """
             WITH similarities AS (
                 SELECT
@@ -1157,6 +1175,8 @@ class ReferenceManager:
             # Execute the query with explicit connection management
             with self.engine.connect() as conn:
                 result = conn.execute(text(sql_query), params)
+                query_time = (time.perf_counter() - query_start) * 1000
+                logger.info(f"Vector search query: {query_time:.2f}ms")
 
                 # Convert results to (ExternalPredicate, similarity) tuples
                 results = []
@@ -1176,6 +1196,9 @@ class ReferenceManager:
                     similarity = float(row.max_similarity)
                     results.append((predicate, similarity))
 
+            total_time = (time.perf_counter() - total_start) * 1000
+            logger.info(f"Total search time: {total_time:.2f}ms, found {len(results)} results")
+            
             return results
 
         except ValueError:
@@ -1342,3 +1365,115 @@ class ReferenceManager:
             status["connection_healthy"] = False
 
         return status
+
+
+# Singleton pattern for application-wide reference manager
+_reference_manager_instance: Optional[ReferenceManager] = None
+_reference_manager_lock = threading.Lock()
+
+
+def get_reference_manager(config: Optional[ReferenceConfig] = None, 
+                         force_new: bool = False) -> ReferenceManager:
+    """
+    Get or create a singleton ReferenceManager instance.
+    
+    This function maintains a single ReferenceManager instance across the application
+    lifecycle, avoiding repeated engine creation on each API call. Uses double-check
+    locking pattern consistent with other singletons in the application.
+    
+    Args:
+        config: Optional ReferenceConfig. If not provided, uses default config.
+        force_new: If True, creates a new instance even if one exists (for testing).
+    
+    Returns:
+        Shared ReferenceManager instance
+        
+    Thread Safety:
+        This function is thread-safe via double-check locking pattern.
+        
+    Example:
+        >>> # In API endpoints - reuses existing instance
+        >>> manager = get_reference_manager()
+        >>> results = manager.search_external_predicates_by_similarity(...)
+        
+        >>> # For testing - force new instance
+        >>> test_manager = get_reference_manager(test_config, force_new=True)
+    """
+    global _reference_manager_instance
+    
+    # Double-check locking pattern (consistent with DatabaseManager, NLPPipeline, etc.)
+    # First check without lock for fast path
+    if _reference_manager_instance is not None and not force_new:
+        return _reference_manager_instance
+    
+    # Acquire lock for initialization
+    with _reference_manager_lock:
+        # Double-check after acquiring lock
+        if _reference_manager_instance is not None and not force_new:
+            return _reference_manager_instance
+        
+        # Create new instance
+        if config is None:
+            config = ReferenceConfig()
+        
+        # Close old instance if replacing
+        if _reference_manager_instance is not None:
+            try:
+                _reference_manager_instance.close()
+            except Exception as e:
+                logger.warning(f"Error closing old ReferenceManager: {e}")
+        
+        # Create and cache new instance
+        _reference_manager_instance = ReferenceManager(config)
+        logger.info("Created singleton ReferenceManager instance")
+        
+        return _reference_manager_instance
+
+
+def get_reference_session():
+    """
+    FastAPI dependency function to get a reference database session.
+    
+    This function provides a database session from the singleton ReferenceManager,
+    ensuring the session is properly closed after use.
+    
+    Yields:
+        SQLAlchemy session for reference database
+        
+    Example:
+        >>> @app.get("/api/predicates/external")
+        >>> def list_predicates(session: Session = Depends(get_reference_session)):
+        ...     results = session.query(ExternalPredicate).all()
+        ...     return results
+    """
+    manager = get_reference_manager()
+    session = manager.SessionLocal()
+    try:
+        yield session
+    finally:
+        session.close()
+
+
+def cleanup_reference_manager():
+    """
+    Clean up the singleton ReferenceManager instance.
+    
+    This should be called during application shutdown to properly release
+    database resources.
+    
+    Example:
+        >>> # In FastAPI lifespan or shutdown event
+        >>> @app.on_event("shutdown")
+        >>> async def shutdown_event():
+        ...     cleanup_reference_manager()
+    """
+    global _reference_manager_instance
+    
+    if _reference_manager_instance is not None:
+        logger.info("Cleaning up singleton ReferenceManager instance")
+        try:
+            _reference_manager_instance.close()
+        except Exception as e:
+            logger.error(f"Error cleaning up ReferenceManager: {e}")
+        finally:
+            _reference_manager_instance = None

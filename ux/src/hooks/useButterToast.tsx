@@ -6,7 +6,7 @@
 
 import { useCallback } from "react";
 import { Toast } from "flowbite-react";
-import { HiCheck, HiX, HiExclamation, HiInformationCircle } from "react-icons/hi";
+import { Check, X, AlertTriangle, Info } from "lucide-react";
 
 export type ToastType = "success" | "error" | "warning" | "info";
 
@@ -37,10 +37,10 @@ export const useButterToast = () => {
 
     // Map type to icon and color
     const iconMap = {
-      success: HiCheck,
-      error: HiX,
-      warning: HiExclamation,
-      info: HiInformationCircle,
+      success: Check,
+      error: X,
+      warning: AlertTriangle,
+      info: Info,
     };
 
     const Icon = iconMap[type];

@@ -8,6 +8,7 @@ import {
   PredicateDiscoveryStatus,
   FindSimilarResponse,
   ListExternalPredicatesParams,
+  SearchExternalPredicatesParams,
   FindSimilarParams,
 } from "@/api/services/predicates";
 import { QUERY_KEYS } from "@/api/config";
@@ -124,6 +125,26 @@ export const useExternalPredicates = (
     ),
     queryFn: () => predicateService.listExternalPredicates(params),
     staleTime: 10 * 60 * 1000, // 10 minutes
+    ...options,
+  });
+};
+
+/**
+ * Hook to search external predicates using vector similarity
+ */
+export const useSearchExternalPredicates = (
+  params?: SearchExternalPredicatesParams,
+  options?: UseQueryOptions<any, Error>,
+) => {
+  return useQuery({
+    queryKey: createQueryKey(
+      QUERY_KEYS.PREDICATES,
+      "external-search",
+      params as Record<string, unknown>,
+    ),
+    queryFn: () => predicateService.searchExternalPredicates(params!),
+    enabled: !!params?.query && params.query.trim().length > 0,
+    staleTime: 5 * 60 * 1000, // 5 minutes
     ...options,
   });
 };

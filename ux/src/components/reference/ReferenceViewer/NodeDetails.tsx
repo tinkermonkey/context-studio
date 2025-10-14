@@ -22,6 +22,7 @@ import {
   useNodeDetails,
 } from "@/api/hooks/unifiedReference/useUnifiedReference";
 import { LinkExplorer } from "./LinkExplorer";
+import { getSourceBadgeColor, getSourceLabel } from "@/utils/sourceUtils";
 
 interface NodeDetailsProps {
   node?: UnifiedNode;
@@ -159,8 +160,8 @@ export const NodeDetails: React.FC<NodeDetailsProps> = ({
                   </div>
 
                   <div className="flex flex-wrap gap-2">
-                    <Badge color={sourceMetadata?.color as any} size="lg">
-                      {sourceMetadata?.label}
+                    <Badge color={getSourceBadgeColor(displayNode.source)} size="lg">
+                      {getSourceLabel(displayNode.source)}
                     </Badge>
 
                     {displayNode.relevance_score !== undefined && displayNode.relevance_score < 1 && (

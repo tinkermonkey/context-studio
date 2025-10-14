@@ -346,12 +346,12 @@ async def reference_db_search(
         )
 
     try:
-        from reference_db.manager import ReferenceManager
+        from reference_db.dependencies import reference_manager_context
         from reference_db.config import ReferenceConfig
         from embeddings.generate_embeddings import generate_embedding
 
         config = ReferenceConfig()
-        with ReferenceManager(config) as manager:
+        with reference_manager_context(config) as manager:
             # Create embedding generator
             def embedding_gen(text: str) -> bytes:
                 return generate_embedding(text)
@@ -407,12 +407,12 @@ async def reference_db_search_post(
     ranked by similarity score. Accepts a JSON body with search parameters.
     """
     try:
-        from reference_db.manager import ReferenceManager
+        from reference_db.dependencies import reference_manager_context
         from reference_db.config import ReferenceConfig
         from embeddings.generate_embeddings import generate_embedding
 
         config = ReferenceConfig()
-        with ReferenceManager(config) as manager:
+        with reference_manager_context(config) as manager:
             # Create embedding generator
             def embedding_gen(text: str) -> bytes:
                 return generate_embedding(text)
@@ -469,11 +469,11 @@ async def get_reference_entity(
     source identifier and external ID.
     """
     try:
-        from reference_db.manager import ReferenceManager
+        from reference_db.dependencies import reference_manager_context
         from reference_db.config import ReferenceConfig
 
         config = ReferenceConfig()
-        with ReferenceManager(config) as manager:
+        with reference_manager_context(config) as manager:
             node = manager.get_reference_node_by_source(source, external_id)
 
             if not node:
@@ -512,11 +512,11 @@ async def get_reference_property(
     with a type attribute indicating they are properties.
     """
     try:
-        from reference_db.manager import ReferenceManager
+        from reference_db.dependencies import reference_manager_context
         from reference_db.config import ReferenceConfig
 
         config = ReferenceConfig()
-        with ReferenceManager(config) as manager:
+        with reference_manager_context(config) as manager:
             node = manager.get_reference_node_by_source(source, external_id)
 
             if not node:
@@ -548,11 +548,11 @@ async def get_reference_node(
 ):
     """Get a reference node by ID."""
     try:
-        from reference_db.manager import ReferenceManager
+        from reference_db.dependencies import reference_manager_context
         from reference_db.config import ReferenceConfig
 
         config = ReferenceConfig()
-        with ReferenceManager(config) as manager:
+        with reference_manager_context(config) as manager:
             node = manager.get_reference_node(node_id)
 
             if not node:
@@ -575,6 +575,161 @@ async def get_reference_node(
         raise HTTPException(status_code=500, detail=str(e))
 
 
+@router.get("/ref-db/predicates/{source}/{external_id:path}/examples")
+async def get_predicate_examples(
+    source: str = Path(..., description="Predicate source (e.g., 'schema.org', 'dbpedia')"),
+    external_id: str = Path(..., description="External predicate ID (can contain slashes)"),
+    limit: int = Query(10, ge=1, le=100, description="Maximum number of example uses to return"),
+    service: ReferenceService = Depends(get_reference_service)
+):
+    """
+    Get example uses of a predicate from the reference database or external APIs.
+    
+    Returns example links that use this predicate, including information about
+    the subject and object nodes. This helps users understand how the predicate
+    is used in the knowledge graph.
+    
+    Note: The external_id parameter accepts paths with slashes (e.g., '/r/RelatedTo' for ConceptNet).
+    For DBpedia, uses SPARQL queries to fetch live examples from the public endpoint.
+    """
+    try:
+        from reference_db.dependencies import reference_manager_context
+        from reference_db.config import ReferenceConfig
+        from reference_db.models import ReferenceLink
+        
+        config = ReferenceConfig()
+        with reference_manager_context(config) as manager:
+            # Get the external predicate to verify it exists
+            predicate = manager.get_external_predicate_by_source(source, external_id)
+            if not predicate:
+                raise HTTPException(
+                    status_code=404, 
+                    detail=f"Predicate not found: {source}/{external_id}"
+                )
+            
+            examples = []
+            
+            # Use different strategies based on the source
+            if source.lower() == 'dbpedia':
+                # For DBpedia, query the live SPARQL endpoint directly
+                import httpx
+                
+                sparql_query = f"""
+                SELECT ?subject ?subjectLabel ?object ?objectLabel
+                WHERE {{
+                    ?subject <{external_id}> ?object .
+                    OPTIONAL {{ ?subject rdfs:label ?subjectLabel . FILTER(LANG(?subjectLabel) = "en") }}
+                    OPTIONAL {{ ?object rdfs:label ?objectLabel . FILTER(LANG(?objectLabel) = "en") }}
+                }}
+                LIMIT {limit}
+                """
+                
+                try:
+                    # Query DBpedia's public SPARQL endpoint directly
+                    async with httpx.AsyncClient(timeout=30.0) as client:
+                        response = await client.post(
+                            "https://dbpedia.org/sparql",
+                            data={
+                                "query": sparql_query,
+                                "format": "application/json"
+                            }
+                        )
+                        response.raise_for_status()
+                        sparql_result = response.json()
+                    
+                    # Parse SPARQL results
+                    if sparql_result.get("results") and sparql_result["results"].get("bindings"):
+                        for binding in sparql_result["results"]["bindings"][:limit]:
+                            subject_uri = binding.get("subject", {}).get("value", "")
+                            object_uri = binding.get("object", {}).get("value", "")
+                            subject_label = binding.get("subjectLabel", {}).get("value", subject_uri.split("/")[-1])
+                            object_label = binding.get("objectLabel", {}).get("value", object_uri.split("/")[-1])
+                            
+                            examples.append({
+                                "link_id": f"dbpedia-{len(examples)}",
+                                "subject": {
+                                    "id": subject_uri,
+                                    "title": subject_label,
+                                    "source": "dbpedia",
+                                    "external_id": subject_uri
+                                },
+                                "predicate": {
+                                    "title": predicate.title,
+                                    "source": predicate.source,
+                                    "external_id": predicate.external_id
+                                },
+                                "object": {
+                                    "id": object_uri,
+                                    "title": object_label,
+                                    "source": "dbpedia",
+                                    "external_id": object_uri
+                                }
+                            })
+                except Exception as e:
+                    logger.error(f"DBpedia SPARQL query failed: {e}")
+                    # Fall through to local database query
+            
+            # For other sources or if DBpedia query failed, use local reference database
+            if not examples:
+                # Try exact match first
+                links = manager.session.query(ReferenceLink).filter(
+                    ReferenceLink.predicate == external_id
+                ).limit(limit).all()
+                
+                # If no results and external_id looks like a URI, try extracting the predicate name
+                if not links and '/' in external_id:
+                    predicate_name = external_id.split('/')[-1]
+                    if predicate_name:
+                        links = manager.session.query(ReferenceLink).filter(
+                            ReferenceLink.predicate == predicate_name
+                        ).limit(limit).all()
+                
+                # Build response with node details
+                for link in links:
+                    subject = manager.get_reference_node(link.subject_node)
+                    obj = manager.get_reference_node(link.object_node)
+                    
+                    if subject and obj:
+                        examples.append({
+                            "link_id": link.id,
+                            "subject": {
+                                "id": subject.id,
+                                "title": subject.title,
+                                "source": subject.source,
+                                "external_id": subject.external_id
+                            },
+                            "predicate": {
+                                "title": predicate.title,
+                                "source": predicate.source,
+                                "external_id": predicate.external_id
+                            },
+                            "object": {
+                                "id": obj.id,
+                                "title": obj.title,
+                                "source": obj.source,
+                                "external_id": obj.external_id
+                            }
+                        })
+            
+            return {
+                "predicate": {
+                    "id": predicate.id,
+                    "title": predicate.title,
+                    "definition": predicate.definition,
+                    "source": predicate.source,
+                    "external_id": predicate.external_id
+                },
+                "total_examples": len(examples),
+                "examples": examples
+            }
+            
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Get predicate examples failed: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
 @router.get("/ref-db/nodes/{node_id}/links")
 async def get_node_links(
     node_id: str = Path(..., description="Reference node ID"),
@@ -594,7 +749,7 @@ async def get_node_links(
     enable_relevance_filtering setting from configuration.
     """
     try:
-        from reference_db.manager import ReferenceManager
+        from reference_db.dependencies import reference_manager_context
         from reference_db.config import ReferenceConfig
         from database.utils import get_db
         from services.reference_filter_service import ReferenceFilterService
@@ -604,7 +759,7 @@ async def get_node_links(
             apply_relevance_filter = settings.reference_sources.enable_relevance_filtering
 
         config = ReferenceConfig()
-        with ReferenceManager(config) as manager:
+        with reference_manager_context(config) as manager:
             # Verify node exists
             node = manager.get_reference_node(node_id)
             if not node:
@@ -699,11 +854,11 @@ async def reference_db_health_check():
     start_time = time.time()
 
     try:
-        from reference_db.manager import ReferenceManager
+        from reference_db.dependencies import reference_manager_context
         from reference_db.config import ReferenceConfig
 
         config = ReferenceConfig()
-        with ReferenceManager(config) as manager:
+        with reference_manager_context(config) as manager:
             status = manager.get_status()
 
             # Calculate execution time
@@ -748,13 +903,13 @@ async def get_filter_statistics():
     they enable relevance filtering on reference queries.
     """
     try:
-        from reference_db.manager import ReferenceManager
+        from reference_db.dependencies import reference_manager_context
         from reference_db.config import ReferenceConfig
         from database.utils import get_db
         from services.reference_filter_service import ReferenceFilterService
 
         config = ReferenceConfig()
-        with ReferenceManager(config) as manager:
+        with reference_manager_context(config) as manager:
             local_db = next(get_db())
             try:
                 filter_service = ReferenceFilterService(local_db, manager)

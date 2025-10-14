@@ -58,7 +58,8 @@ export const MappingConfigurationTab: React.FC<MappingConfigurationTabProps> = (
   };
 
   // Format large numbers
-  const formatNumber = (num: number): string => {
+  const formatNumber = (num: number | undefined): string => {
+    if (num === undefined || num === null) return "0";
     return num.toLocaleString();
   };
 

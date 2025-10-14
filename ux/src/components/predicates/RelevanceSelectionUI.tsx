@@ -10,6 +10,11 @@ import {
   Card,
   Button,
   Table,
+  TableHead,
+  TableHeadCell,
+  TableBody,
+  TableRow,
+  TableCell,
   Badge,
   Spinner,
   Select,
@@ -60,9 +65,9 @@ export const RelevanceSelectionUI: React.FC<RelevanceSelectionUIProps> = ({
 
   // Filter predicates
   const filteredPredicates = React.useMemo(() => {
-    if (!predicates) return [];
+    if (!predicates?.data) return [];
 
-    let filtered = predicates;
+    let filtered = predicates.data;
 
     // Apply search filter
     if (searchQuery.trim()) {
@@ -96,15 +101,15 @@ export const RelevanceSelectionUI: React.FC<RelevanceSelectionUIProps> = ({
 
   // Calculate statistics
   const stats = React.useMemo(() => {
-    if (!predicates) {
+    if (!predicates?.data) {
       return { relevant: 0, irrelevant: 0, unrated: 0, total: 0 };
     }
 
-    const relevant = predicates.filter((p) => relevanceMap[p.id] === true).length;
-    const irrelevant = predicates.filter(
+    const relevant = predicates.data.filter((p) => relevanceMap[p.id] === true).length;
+    const irrelevant = predicates.data.filter(
       (p) => relevanceMap[p.id] === false,
     ).length;
-    const unrated = predicates.filter(
+    const unrated = predicates.data.filter(
       (p) => relevanceMap[p.id] === undefined,
     ).length;
 
@@ -112,7 +117,7 @@ export const RelevanceSelectionUI: React.FC<RelevanceSelectionUIProps> = ({
       relevant,
       irrelevant,
       unrated,
-      total: predicates.length,
+      total: predicates.data.length,
     };
   }, [predicates, relevanceMap]);
 
@@ -235,30 +240,31 @@ export const RelevanceSelectionUI: React.FC<RelevanceSelectionUIProps> = ({
           </div>
         ) : (
           <Table hoverable>
-            <Table.Head>
-              <Table.HeadCell>Status</Table.HeadCell>
-              <Table.HeadCell>Identifier</Table.HeadCell>
-              <Table.HeadCell>Title</Table.HeadCell>
-              <Table.HeadCell>Definition</Table.HeadCell>
-              <Table.HeadCell className="text-center">Actions</Table.HeadCell>
-            </Table.Head>
-            <Table.Body className="divide-y">
-              {filteredPredicates.map((predicate) => (
-                <Table.Row
+            <TableHead>
+              <TableRow>
+                <TableHeadCell>Status</TableHeadCell>
+                <TableHeadCell>Identifier</TableHeadCell>
+                <TableHeadCell>Title</TableHeadCell>
+                <TableHeadCell>Definition</TableHeadCell>
+                <TableHeadCell className="text-center">Actions</TableHeadCell>
+              </TableRow>
+            </TableHead>
+            <TableBody className="divide-y">{filteredPredicates.map((predicate) => (
+                <TableRow
                   key={predicate.id}
                   className="bg-white dark:border-gray-700 dark:bg-gray-800"
                 >
-                  <Table.Cell>{getRelevanceBadge(predicate.id)}</Table.Cell>
-                  <Table.Cell className="font-mono text-sm">
+                  <TableCell>{getRelevanceBadge(predicate.id)}</TableCell>
+                  <TableCell className="font-mono text-sm">
                     {predicate.identifier || <span className="text-gray-400">—</span>}
-                  </Table.Cell>
-                  <Table.Cell className="font-medium text-gray-900 dark:text-white">
+                  </TableCell>
+                  <TableCell className="font-medium text-gray-900 dark:text-white">
                     {predicate.title}
-                  </Table.Cell>
-                  <Table.Cell className="max-w-md truncate">
+                  </TableCell>
+                  <TableCell className="max-w-md truncate">
                     {predicate.definition || <span className="text-gray-400">—</span>}
-                  </Table.Cell>
-                  <Table.Cell>
+                  </TableCell>
+                  <TableCell>
                     <div className="flex justify-center gap-2">
                       <Button
                         size="xs"
@@ -277,10 +283,10 @@ export const RelevanceSelectionUI: React.FC<RelevanceSelectionUIProps> = ({
                         <X className="h-3 w-3" />
                       </Button>
                     </div>
-                  </Table.Cell>
-                </Table.Row>
+                  </TableCell>
+                </TableRow>
               ))}
-            </Table.Body>
+            </TableBody>
           </Table>
         )}
       </div>

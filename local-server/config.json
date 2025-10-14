@@ -1,7 +1,7 @@
 {
   "server": {
-    "host": "0.0.0.0",
-    "port": 8001,
+    "host": "localhost",
+    "port": 8100,
     "reload": true,
     "cors_origins": [
       "*"
@@ -60,9 +60,23 @@
       "custom_headers": {},
       "custom_params": {}
     },
-    "dbpedia": {
+    "dbpedia_lookup": {
       "enabled": true,
       "upstream_url": "https://lookup.dbpedia.org",
+      "use_proxy": true,
+      "timeout": 30,
+      "max_retries": 3,
+      "rate_limit": {
+        "requests_per_hour": 3600,
+        "progressive_delay": true,
+        "max_delay": 300
+      },
+      "custom_headers": {},
+      "custom_params": {}
+    },
+    "dbpedia_sparql": {
+      "enabled": true,
+      "upstream_url": "https://dbpedia.org",
       "use_proxy": true,
       "timeout": 30,
       "max_retries": 3,
@@ -125,7 +139,7 @@
     "max_cache_entries": 10000,
     "default_cache_ttl": 3600,
     "default_max_response_size": 10485760,
-    "default_requests_per_hour": 1000,
+    "default_requests_per_hour": 3600,
     "progressive_max_delay": 300
   },
   "logging": {
