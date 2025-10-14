@@ -499,9 +499,15 @@ class SchemaOrgImporter:
                     "failed_ids": failed_items
                 }
             )
+            # Include first few failed IDs in error message for better debugging
+            failed_ids_preview = failed_items[:5]
+            failed_ids_str = ", ".join(failed_ids_preview)
+            if len(failed_items) > 5:
+                failed_ids_str += f", ... and {len(failed_items) - 5} more"
+
             raise EmbeddingError(
                 f"Embedding generation failed for {len(failed_items)} items. "
-                f"See logs for detailed failed IDs."
+                f"Failed IDs: {failed_ids_str}"
             )
 
         logger.info(f"Generated embeddings for {len(embedded_items)} items")
