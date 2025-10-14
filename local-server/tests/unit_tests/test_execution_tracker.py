@@ -232,6 +232,7 @@ class TestExecutionTracker:
         mock_execution.started_at = "2024-01-01T00:00:00"
         mock_execution.completed_at = "2024-01-01T00:00:01"
         mock_execution.error_message = None
+        mock_execution.structured_output = None
         
         # Mock selection data
         mock_selection = Mock()

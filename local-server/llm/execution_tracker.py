@@ -275,7 +275,7 @@ class ExecutionTracker:
                     if hasattr(row, 'structured_output') and row.structured_output:
                         try:
                             structured_output = json.loads(row.structured_output)
-                        except (json.JSONDecodeError, AttributeError):
+                        except (json.JSONDecodeError, AttributeError, TypeError):
                             structured_output = None
 
                     executions.append({
@@ -415,7 +415,7 @@ class ExecutionTracker:
                 if hasattr(execution_row, 'structured_output') and execution_row.structured_output:
                     try:
                         structured_output = json.loads(execution_row.structured_output)
-                    except (json.JSONDecodeError, AttributeError):
+                    except (json.JSONDecodeError, AttributeError, TypeError):
                         structured_output = None
 
                 # Get associated selections
