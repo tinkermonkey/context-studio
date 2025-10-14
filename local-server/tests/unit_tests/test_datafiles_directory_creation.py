@@ -68,7 +68,7 @@ class TestPipelineDatabaseManager:
             mock_settings = MagicMock()
             mock_settings.database.pipeline_path = os.path.join(temp_dir, "datafiles", "pipeline.db")
 
-            with patch('pipeline.manager.get_settings', return_value=mock_settings):
+            with patch('config.get_settings', return_value=mock_settings):
                 from pipeline.manager import PipelineDatabaseManager
 
                 manager = PipelineDatabaseManager()
@@ -204,7 +204,7 @@ class TestProxyManager:
             mock_settings.get_reference_api_buddy_config.return_value = mock_config
 
             with patch('nlp.proxy_manager.get_settings', return_value=mock_settings):
-                with patch('nlp.proxy_manager.CachingProxy') as mock_proxy_class:
+                with patch('reference_api_buddy.core.proxy.CachingProxy') as mock_proxy_class:
                     # Set up mock proxy instance
                     mock_proxy_instance = MagicMock()
                     mock_proxy_class.return_value = mock_proxy_instance
@@ -245,7 +245,7 @@ class TestProxyManager:
             mock_settings.get_reference_api_buddy_config.return_value = mock_config
 
             with patch('nlp.proxy_manager.get_settings', return_value=mock_settings):
-                with patch('nlp.proxy_manager.CachingProxy') as mock_proxy_class:
+                with patch('reference_api_buddy.core.proxy.CachingProxy') as mock_proxy_class:
                     mock_proxy_instance = MagicMock()
                     mock_proxy_class.return_value = mock_proxy_instance
 
