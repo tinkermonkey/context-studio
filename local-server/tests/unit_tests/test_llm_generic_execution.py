@@ -31,11 +31,13 @@ class TestGenericPipelineExecution:
     def mock_llm_service(self):
         """Create a mock LLM service with required dependencies"""
         with patch.dict("os.environ", {"OPENAI_API_KEY": "sk-test1234567890abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMN"}):
-            with patch.object(LLMService, '_initialize_llm'):
-                service = LLMService()
-                service.flavor_service = AsyncMock()
-                service.execution_tracker = MagicMock()
-                return service
+            with patch('llm.service.get_provider_router'):
+                with patch('llm.service.PipelineFlavorService'):
+                    with patch('llm.service.ExecutionTracker'):
+                        service = LLMService()
+                        service.flavor_service = AsyncMock()
+                        service.execution_tracker = MagicMock()
+                        return service
 
     @pytest.fixture
     def sample_request(self):
@@ -70,11 +72,14 @@ class TestGenericPipelineExecution:
         # Mock dependencies
         mock_llm_service.flavor_service.get_default_flavor.return_value = mock_flavor
         mock_llm_service.execution_tracker.start_execution.return_value = "exec-123"
-        
-        # Mock LLM response
+
+        # Mock LLM response with structured output attributes
         mock_llm = AsyncMock()
         mock_response = MagicMock()
-        mock_response.content = "Test response content"
+        # Set structured output attributes that match StructuredOutputDefinition
+        mock_response.definition = "Test definition"
+        mock_response.reasoning = "Test reasoning"
+        mock_response.discrepancies = "Test discrepancies"
         mock_response.response_metadata = {
             'token_usage': {
                 'prompt_tokens': 10,
@@ -83,20 +88,22 @@ class TestGenericPipelineExecution:
             }
         }
         mock_llm.ainvoke.return_value = mock_response
-        
+
         with patch.object(mock_llm_service, '_create_llm_from_flavor', return_value=mock_llm):
             with patch.object(mock_llm_service, '_get_flavor', return_value=mock_flavor):
                 result = await mock_llm_service.execute_pipeline_flavor(sample_request)
-        
+
         # Assertions
         assert isinstance(result, PipelineExecutionResponse)
-        assert result.response_content == "Test response content"
+        # The response_content should be formatted from the structured output
+        assert "Definition: Test definition" in result.response_content
+        assert "Reasoning: Test reasoning" in result.response_content
         assert result.execution_id == "exec-123"
         assert result.flavor_id == "test-flavor-id"
         assert result.pipeline_type == "suggest_term_definition"
         assert result.token_usage is not None
         assert result.token_usage['input_tokens'] == 10
-        
+
         # Verify execution tracking
         mock_llm_service.execution_tracker.start_execution.assert_called_once()
         mock_llm_service.execution_tracker.complete_execution.assert_called_once()
@@ -284,11 +291,13 @@ class TestGenericPipelineExecution:
         context_data = {
             "term": "apple"
         }
-        
-        with pytest.raises(LLMProcessingError) as exc_info:
-            mock_llm_service._render_user_prompt_generic(template, context_data)
-        
-        assert "Template rendering failed - missing variable" in str(exc_info.value)
+
+        # The SafeFormatter now provides default values for missing variables
+        result = mock_llm_service._render_user_prompt_generic(template, context_data)
+
+        # Missing variables should be replaced with "Not specified"
+        expected = "Term: apple, Missing: Not specified"
+        assert result == expected
 
     def test_generic_pipeline_request_validation(self):
         """Test GenericPipelineExecutionRequest model validation"""
