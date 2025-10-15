@@ -560,7 +560,10 @@ class ReferenceManager:
         Examples:
             >>> node = manager.get_reference_node("550e8400-e29b-41d4-a716-446655440000")
         """
-        return self.session.query(ReferenceNode).filter_by(id=node_id).first()
+        node = self.session.query(ReferenceNode).filter_by(id=node_id).first()
+        if node:
+            self.session.expunge(node)
+        return node
 
     def get_reference_node_by_source(self, source: str, external_id: str) -> ReferenceNode | None:
         """
@@ -852,33 +855,36 @@ class ReferenceManager:
         if direction not in ["inbound", "outbound", "both"]:
             raise ValueError(f"Invalid direction: '{direction}'. Must be 'inbound', 'outbound', or 'both'")
 
-        # Use explicit connection management
-        with self.engine.connect() as conn:
-            query = self.session.query(ReferenceLink)
+        query = self.session.query(ReferenceLink)
 
-            # Apply direction filter
-            if direction == "inbound":
-                query = query.filter(ReferenceLink.object_node == node_id)
-            elif direction == "outbound":
-                query = query.filter(ReferenceLink.subject_node == node_id)
-            else:  # both
-                query = query.filter(
-                    (ReferenceLink.subject_node == node_id) |
-                    (ReferenceLink.object_node == node_id)
-                )
+        # Apply direction filter
+        if direction == "inbound":
+            query = query.filter(ReferenceLink.object_node == node_id)
+        elif direction == "outbound":
+            query = query.filter(ReferenceLink.subject_node == node_id)
+        else:  # both
+            query = query.filter(
+                (ReferenceLink.subject_node == node_id) |
+                (ReferenceLink.object_node == node_id)
+            )
 
-            # Apply predicate filter if provided
-            if predicate:
-                query = query.filter(ReferenceLink.predicate == predicate)
+        # Apply predicate filter if provided
+        if predicate:
+            query = query.filter(ReferenceLink.predicate == predicate)
 
-            # Order by created_at DESC
-            query = query.order_by(ReferenceLink.created_at.desc())
+        # Order by created_at DESC
+        query = query.order_by(ReferenceLink.created_at.desc())
 
-            # Apply limit if provided
-            if limit:
-                query = query.limit(limit)
+        # Apply limit if provided
+        if limit:
+            query = query.limit(limit)
 
-            return query.all()
+        # Execute query and expunge results from session to avoid DetachedInstanceError
+        links = query.all()
+        for link in links:
+            self.session.expunge(link)
+
+        return links
 
     def get_status(self) -> Dict[str, Any]:
         """

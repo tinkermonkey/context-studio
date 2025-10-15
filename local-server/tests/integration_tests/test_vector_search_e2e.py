@@ -140,22 +140,27 @@ def e2e_test_database():
     ])
     manager.session.commit()
 
+    # Store IDs before closing the session to avoid DetachedInstanceError
+    node_ids = {
+        "person": person_node.id,
+        "organization": org_node.id,
+        "place": place_node.id,
+        "thing": thing_node.id
+    }
+
+    link_ids = {
+        "person_subclass": person_subclass_link.id,
+        "org_subclass": org_subclass_link.id,
+        "place_subclass": place_subclass_link.id,
+        "person_memberof": person_memberof_link.id,
+        "org_location": org_location_link.id
+    }
+
     manager.close()
 
     yield db_path, {
-        "nodes": {
-            "person": person_node,
-            "organization": org_node,
-            "place": place_node,
-            "thing": thing_node
-        },
-        "links": {
-            "person_subclass": person_subclass_link,
-            "org_subclass": org_subclass_link,
-            "place_subclass": place_subclass_link,
-            "person_memberof": person_memberof_link,
-            "org_location": org_location_link
-        },
+        "node_ids": node_ids,
+        "link_ids": link_ids,
         "create_embedding": create_embedding
     }
 
@@ -181,11 +186,11 @@ class TestSemanticDiscoveryWorkflow:
         This simulates a user discovering and navigating the knowledge graph.
         """
         db_path, data = e2e_test_database
-        person_node = data["nodes"]["person"]
+        person_id = data["node_ids"]["person"]
         create_embedding = data["create_embedding"]
 
-        with patch('reference_db.config.ReferenceConfig') as mock_config:
-            mock_config.return_value.db_path = db_path
+        with patch('reference_db.manager.ReferenceManager._get_default_db_path') as mock_db_path:
+            mock_db_path.return_value = db_path
 
             with patch('embeddings.generate_embeddings.generate_embedding') as mock_embed:
                 mock_embed.return_value = create_embedding(0.8)
@@ -243,17 +248,17 @@ class TestSemanticDiscoveryWorkflow:
         This tests multi-hop graph traversal.
         """
         db_path, data = e2e_test_database
-        person_node = data["nodes"]["person"]
-        org_node = data["nodes"]["organization"]
-        place_node = data["nodes"]["place"]
+        person_id = data["node_ids"]["person"]
+        org_id = data["node_ids"]["organization"]
+        place_id = data["node_ids"]["place"]
         create_embedding = data["create_embedding"]
 
-        with patch('reference_db.config.ReferenceConfig') as mock_config:
-            mock_config.return_value.db_path = db_path
+        with patch('reference_db.manager.ReferenceManager._get_default_db_path') as mock_db_path:
+            mock_db_path.return_value = db_path
 
             # Step 1: Get Person node links
             person_links_response = client.get(
-                f"/api/reference/ref-db/nodes/{person_node.id}/links",
+                f"/api/reference/ref-db/nodes/{person_id}/links",
                 params={
                     "direction": "outbound",
                     "predicate": "memberOf"
@@ -266,17 +271,17 @@ class TestSemanticDiscoveryWorkflow:
 
             # Extract the Organization node ID
             memberof_link = person_links["links"][0]
-            org_id = memberof_link["object_node"]
-            assert org_id == org_node.id
+            returned_org_id = memberof_link["object_node"]
+            assert returned_org_id == org_id
 
             # Step 2: Get Organization node details
-            org_response = client.get(f"/api/reference/ref-db/nodes/{org_id}")
+            org_response = client.get(f"/api/reference/ref-db/nodes/{returned_org_id}")
             assert org_response.status_code == 200
             assert org_response.json()["title"] == "Organization"
 
             # Step 3: Get Organization's outbound links
             org_links_response = client.get(
-                f"/api/reference/ref-db/nodes/{org_id}/links",
+                f"/api/reference/ref-db/nodes/{returned_org_id}/links",
                 params={
                     "direction": "outbound",
                     "predicate": "locatedIn"
@@ -289,11 +294,11 @@ class TestSemanticDiscoveryWorkflow:
 
             # Extract the Place node ID
             location_link = org_links["links"][0]
-            place_id = location_link["object_node"]
-            assert place_id == place_node.id
+            returned_place_id = location_link["object_node"]
+            assert returned_place_id == place_id
 
             # Step 4: Get Place node details
-            place_response = client.get(f"/api/reference/ref-db/nodes/{place_id}")
+            place_response = client.get(f"/api/reference/ref-db/nodes/{returned_place_id}")
             assert place_response.status_code == 200
             assert place_response.json()["title"] == "Place"
 
@@ -306,14 +311,14 @@ class TestSemanticDiscoveryWorkflow:
         This tests finding "what points to this node" (inverse relationships).
         """
         db_path, data = e2e_test_database
-        thing_node = data["nodes"]["thing"]
+        thing_id = data["node_ids"]["thing"]
 
-        with patch('reference_db.config.ReferenceConfig') as mock_config:
-            mock_config.return_value.db_path = db_path
+        with patch('reference_db.manager.ReferenceManager._get_default_db_path') as mock_db_path:
+            mock_db_path.return_value = db_path
 
             # Get all things that are subClassOf Thing
             links_response = client.get(
-                f"/api/reference/ref-db/nodes/{thing_node.id}/links",
+                f"/api/reference/ref-db/nodes/{thing_id}/links",
                 params={
                     "direction": "inbound",
                     "predicate": "subClassOf"
@@ -329,16 +334,16 @@ class TestSemanticDiscoveryWorkflow:
             # Verify all are subClassOf relationships
             for link in links_data["links"]:
                 assert link["predicate"] == "subClassOf"
-                assert link["object_node"] == thing_node.id
+                assert link["object_node"] == thing_id
 
             # Extract subject nodes (the subclasses)
             subclass_ids = [link["subject_node"] for link in links_data["links"]]
 
             # Verify we found all three subclasses
             expected_subclasses = {
-                data["nodes"]["person"].id,
-                data["nodes"]["organization"].id,
-                data["nodes"]["place"].id
+                data["node_ids"]["person"],
+                data["node_ids"]["organization"],
+                data["node_ids"]["place"]
             }
             assert set(subclass_ids) == expected_subclasses
 
@@ -355,8 +360,8 @@ class TestErrorRecoveryWorkflows:
         db_path, data = e2e_test_database
         create_embedding = data["create_embedding"]
 
-        with patch('reference_db.config.ReferenceConfig') as mock_config:
-            mock_config.return_value.db_path = db_path
+        with patch('reference_db.manager.ReferenceManager._get_default_db_path') as mock_db_path:
+            mock_db_path.return_value = db_path
 
             with patch('embeddings.generate_embeddings.generate_embedding') as mock_embed:
                 # Use an embedding very different from existing nodes
@@ -382,8 +387,8 @@ class TestErrorRecoveryWorkflows:
         """Test that invalid node IDs return proper 404 errors."""
         db_path, data = e2e_test_database
 
-        with patch('reference_db.config.ReferenceConfig') as mock_config:
-            mock_config.return_value.db_path = db_path
+        with patch('reference_db.manager.ReferenceManager._get_default_db_path') as mock_db_path:
+            mock_db_path.return_value = db_path
 
             # Try to get non-existent node
             response = client.get("/api/reference/ref-db/nodes/invalid-node-id")
@@ -402,8 +407,8 @@ class TestErrorRecoveryWorkflows:
         """Test retrieving links for a node with no relationships."""
         db_path, data = e2e_test_database
 
-        with patch('reference_db.config.ReferenceConfig') as mock_config:
-            mock_config.return_value.db_path = db_path
+        with patch('reference_db.manager.ReferenceManager._get_default_db_path') as mock_db_path:
+            mock_db_path.return_value = db_path
 
             # Create a new isolated node
             config = ReferenceConfig()
@@ -422,10 +427,12 @@ class TestErrorRecoveryWorkflows:
                     definition_embedding=create_embedding(0.5),
                     embedding_dims=384
                 )
+                # Store ID before closing session
+                isolated_node_id = isolated_node.id
 
             # Try to get links for isolated node
             response = client.get(
-                f"/api/reference/ref-db/nodes/{isolated_node.id}/links",
+                f"/api/reference/ref-db/nodes/{isolated_node_id}/links",
                 params={"direction": "both"}
             )
 
@@ -453,8 +460,8 @@ class TestPerformanceWorkflows:
         db_path, data = e2e_test_database
         create_embedding = data["create_embedding"]
 
-        with patch('reference_db.config.ReferenceConfig') as mock_config:
-            mock_config.return_value.db_path = db_path
+        with patch('reference_db.manager.ReferenceManager._get_default_db_path') as mock_db_path:
+            mock_db_path.return_value = db_path
 
             with patch('embeddings.generate_embeddings.generate_embedding') as mock_embed:
                 mock_embed.return_value = create_embedding(0.8)
@@ -483,16 +490,16 @@ class TestPerformanceWorkflows:
     def test_link_retrieval_performance(self, client, e2e_test_database):
         """Test that link retrieval completes in reasonable time."""
         db_path, data = e2e_test_database
-        thing_node = data["nodes"]["thing"]
+        thing_id = data["node_ids"]["thing"]
 
-        with patch('reference_db.config.ReferenceConfig') as mock_config:
-            mock_config.return_value.db_path = db_path
+        with patch('reference_db.manager.ReferenceManager._get_default_db_path') as mock_db_path:
+            mock_db_path.return_value = db_path
 
             import time
             start = time.perf_counter()
 
             response = client.get(
-                f"/api/reference/ref-db/nodes/{thing_node.id}/links",
+                f"/api/reference/ref-db/nodes/{thing_id}/links",
                 params={"direction": "both"}
             )
 

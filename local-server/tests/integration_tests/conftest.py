@@ -77,3 +77,21 @@ def pytest_unconfigure(config):
 
     if _provider_router_patcher:
         _provider_router_patcher.stop()
+
+
+@pytest.fixture
+def client():
+    """
+    Create a minimal FastAPI test client with just the reference router.
+
+    This avoids loading the full app and all its dependencies.
+    """
+    from fastapi import FastAPI
+    from fastapi.testclient import TestClient
+    from api.reference import router
+
+    app = FastAPI()
+    app.include_router(router)
+
+    with TestClient(app) as test_client:
+        yield test_client
