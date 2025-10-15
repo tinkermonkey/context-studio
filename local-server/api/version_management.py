@@ -253,12 +253,15 @@ def commit_staged_changes(
     Commit all staged changes.
 
     Updates canonical versions for all staged entities and marks them as merged.
-    Returns success even if no changes were committed (idempotent operation).
+    Returns 400 if there are no staged changes to commit.
     """
     try:
         committed_versions = working_tree_manager.commit_staged_changes(commit_request.author_id)
 
-        # Return success even if nothing to commit - commit is idempotent
+        # Return 400 if nothing to commit
+        if not committed_versions:
+            raise HTTPException(status_code=400, detail="No staged changes to commit")
+
         return {
             "success": True,
             "committed_count": len(committed_versions),
