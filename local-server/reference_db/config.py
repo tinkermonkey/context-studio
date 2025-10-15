@@ -54,15 +54,11 @@ class ReferenceConfig(BaseModel):
     # Operational parameters
     similarity_threshold: float = Field(
         default=0.7,
-        ge=0.0,
-        le=1.0,
         description="Minimum cosine similarity score for reference matching (0.0-1.0)"
     )
 
     batch_size: int = Field(
         default=100,
-        ge=1,
-        le=1000,
         description="Number of reference nodes to process in a single batch operation"
     )
 
