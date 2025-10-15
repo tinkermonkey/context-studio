@@ -661,24 +661,55 @@ def get_settings() -> Settings:
 def get_test_settings() -> Settings:
     """
     Get settings instance for testing with dependency injection support.
-    
+
     This function is designed to be overridden in tests using FastAPI's
     dependency injection system (app.dependency_overrides) or pytest fixtures.
-    
+
     By default, it returns the same settings as get_settings(), but tests
     can override this to provide isolated test configurations.
-    
+
     Example usage in tests:
         @pytest.fixture
         def test_settings():
             return create_test_settings(temp_dir, overrides)
-            
+
         app.dependency_overrides[get_test_settings] = lambda: test_settings
-        
+
     Returns:
         Settings instance (can be overridden for testing)
     """
     return get_settings()
+
+
+def get_config() -> ReferenceConfig:
+    """
+    Get legacy ReferenceConfig instance for backward compatibility.
+
+    This function provides backward compatibility for code that expects
+    a ReferenceConfig object. New code should use get_settings() instead.
+
+    Returns:
+        ReferenceConfig instance populated from current settings
+    """
+    settings = get_settings()
+
+    # Convert new settings to legacy ReferenceConfig format
+    config = ReferenceConfig()
+
+    # Map settings to legacy source configs
+    for source_type in SourceType:
+        source_name = source_type.value
+        if hasattr(settings.reference_sources, source_name):
+            source_config = getattr(settings.reference_sources, source_name)
+            config.sources[source_type] = SourceConfig(
+                enabled=source_config.enabled,
+                use_proxy=source_config.use_proxy,
+                timeout=source_config.timeout,
+                max_retries=source_config.max_retries,
+                base_url=source_config.upstream_url if source_config.upstream_url else None
+            )
+
+    return config
 
 
 class ConfigurationNotifier:
