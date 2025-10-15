@@ -45,13 +45,16 @@ def create_node(
 ):
     """
     Create a new structure_node.
-    
+
     This endpoint handles creation of layers, domains, and terms through
     the unified structure_nodes interface. Type-specific validation is enforced:
     - Layers cannot have parent structure_nodes
     - Domains must have a layer parent
     - Terms must have a domain parent
     """
+    from utils.logger import get_logger
+    logger = get_logger(__name__)
+
     try:
         # Convert API model to service data
         node_data = {
@@ -61,10 +64,10 @@ def create_node(
             "definition": structure_node.definition,
             "structural_predicate_id": uuid_to_str(structure_node.structural_predicate_id)
         }
-        
+
         created_node = node_service.create_node(node_data)
         return to_node_out(created_node)
-        
+
     except ValueError as e:
         error_msg = str(e)
         # Check if this is a uniqueness constraint violation
@@ -73,6 +76,7 @@ def create_node(
         else:
             raise HTTPException(status_code=400, detail=error_msg)
     except Exception as e:
+        logger.error(f"Unexpected error creating structure_node: {type(e).__name__}: {str(e)}", exc_info=True)
         raise HTTPException(status_code=500, detail=f"Internal server error: {str(e)}")
 
 
