@@ -70,9 +70,13 @@ def performance_test_database():
 
     manager.session.add_all(links)
     manager.session.commit()
+
+    # Extract node IDs before closing the session to avoid DetachedInstanceError
+    node_ids = [node.id for node in nodes]
+
     manager.close()
 
-    yield db_path, nodes
+    yield db_path, node_ids
 
     # Cleanup
     if os.path.exists(db_path):
@@ -88,7 +92,7 @@ class TestTC_P001_SearchPerformanceScaling:
 
     def test_search_baseline_performance(self, performance_test_database):
         """Establish baseline search performance on 100-node dataset."""
-        db_path, nodes = performance_test_database
+        db_path, node_ids = performance_test_database
 
         def mock_embedding(text: str) -> bytes:
             vec = np.full(384, 0.5, dtype=np.float32)
@@ -122,7 +126,7 @@ class TestTC_P001_SearchPerformanceScaling:
 
     def test_search_with_different_limits(self, performance_test_database):
         """Test search performance with different result limits."""
-        db_path, nodes = performance_test_database
+        db_path, node_ids = performance_test_database
 
         def mock_embedding(text: str) -> bytes:
             vec = np.full(384, 0.5, dtype=np.float32)
@@ -168,7 +172,7 @@ class TestTC_P002_ConcurrentRequestHandling:
 
     def test_concurrent_searches(self, performance_test_database):
         """Test concurrent search requests."""
-        db_path, nodes = performance_test_database
+        db_path, node_ids = performance_test_database
 
         def mock_embedding(text: str) -> bytes:
             vec = np.full(384, 0.5, dtype=np.float32)
@@ -211,7 +215,7 @@ class TestTC_P002_ConcurrentRequestHandling:
 
     def test_concurrent_link_retrievals(self, performance_test_database):
         """Test concurrent link retrieval requests."""
-        db_path, nodes = performance_test_database
+        db_path, node_ids = performance_test_database
 
         def run_link_retrieval(node_id: str):
             """Run a single link retrieval and return timing."""
@@ -223,12 +227,12 @@ class TestTC_P002_ConcurrentRequestHandling:
 
         # Run 30 concurrent link retrievals
         num_concurrent = 30
-        node_ids = [node.id for node in nodes[:num_concurrent]]
+        test_node_ids = node_ids[:num_concurrent]
 
         start_time = time.time()
 
         with ThreadPoolExecutor(max_workers=10) as executor:
-            futures = [executor.submit(run_link_retrieval, nid) for nid in node_ids]
+            futures = [executor.submit(run_link_retrieval, nid) for nid in test_node_ids]
             execution_times = [future.result() for future in as_completed(futures)]
 
         total_time = time.time() - start_time
@@ -250,7 +254,7 @@ class TestTC_P003_LargeResultSetPagination:
 
     def test_pagination_performance(self, performance_test_database):
         """Test pagination with different offsets."""
-        db_path, nodes = performance_test_database
+        db_path, node_ids = performance_test_database
 
         def mock_embedding(text: str) -> bytes:
             vec = np.full(384, 0.5, dtype=np.float32)
@@ -288,7 +292,7 @@ class TestTC_P003_LargeResultSetPagination:
 
     def test_large_limit_performance(self, performance_test_database):
         """Test performance with large limits."""
-        db_path, nodes = performance_test_database
+        db_path, node_ids = performance_test_database
 
         def mock_embedding(text: str) -> bytes:
             vec = np.full(384, 0.5, dtype=np.float32)
