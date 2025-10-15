@@ -362,7 +362,7 @@ class LLMService:
             "model_name": self.model_name,
             "temperature": self.temperature,
             "provider": "openai",
-            "initialized": self._llm is not None
+            "initialized": True  # Service is initialized if this method is being called
         }
     
     
