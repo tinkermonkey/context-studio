@@ -72,6 +72,10 @@ class PipelineDatabaseManager:
     
     def _create_schema(self):
         """Create pipeline database schema if it doesn't exist."""
+        # First create SQLAlchemy ORM tables
+        from pipeline.models import Base
+        Base.metadata.create_all(bind=self.engine)
+
         with self.engine.connect() as conn:
             # Create pipeline_flavors table
             conn.execute(text("""

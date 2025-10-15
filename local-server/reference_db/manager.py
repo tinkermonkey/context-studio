@@ -119,6 +119,28 @@ class ReferenceManager:
             self.engine.dispose()
             self.engine = None
 
+    def get_connection(self):
+        """
+        Get a raw database connection for direct SQL operations.
+
+        This method returns a SQLite connection object that can be used for
+        direct database operations outside of the SQLAlchemy ORM.
+
+        Returns:
+            sqlite3.Connection: Raw SQLite database connection
+
+        Examples:
+            >>> conn = manager.get_connection()
+            >>> cursor = conn.cursor()
+            >>> cursor.execute("SELECT * FROM reference_nodes LIMIT 1")
+            >>> conn.close()
+
+        Note:
+            The caller is responsible for closing the connection when done.
+        """
+        import sqlite3
+        return sqlite3.connect(self.db_path)
+
     def _get_default_db_path(self) -> str:
         """
         Get the default path for the reference database.
