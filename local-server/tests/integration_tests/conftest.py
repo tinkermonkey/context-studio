@@ -29,7 +29,13 @@ def minimal_reference_client():
     from fastapi import FastAPI
     from fastapi.testclient import TestClient
     from api.reference import router
-    from services.service_factory import ServiceFactory, set_service_factory
+    from services.service_factory import ServiceFactory, set_service_factory, get_service_factory
+
+    # Save the current service factory to restore it later
+    try:
+        original_factory = get_service_factory()
+    except RuntimeError:
+        original_factory = None
 
     # Create and set up a service factory for the tests
     factory = ServiceFactory(cache_ttl_seconds=30)
@@ -41,5 +47,5 @@ def minimal_reference_client():
     with TestClient(app) as test_client:
         yield test_client
 
-    # Clean up the service factory after tests
-    set_service_factory(None)
+    # Restore the original service factory instead of setting to None
+    set_service_factory(original_factory)

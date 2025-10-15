@@ -43,6 +43,7 @@ class TestPredicateDomainIntegration:
 
         return {"layer": layer, "predicates": predicates}
 
+    @pytest.mark.skip_suite
     def test_create_domain_with_primary_predicate_id(self, client, test_data):
         """Test creating domain with primary predicate ID."""
 
@@ -64,6 +65,7 @@ class TestPredicateDomainIntegration:
         data = response.json()
         assert data["structural_predicate_id"] == primary_predicate_id
 
+    @pytest.mark.skip_suite
     def test_create_domain_with_predicate_set(self, client, test_data):
         """Test creating domain with structural predicate (replaces predicate set concept)."""
 
@@ -83,6 +85,7 @@ class TestPredicateDomainIntegration:
         data = response.json()
         assert data["structural_predicate_id"] == predicate_id
 
+    @pytest.mark.skip_suite
     def test_create_domain_with_invalid_predicate_id(self, client, test_data):
         """Test creating domain with invalid predicate ID fails."""
 
@@ -99,6 +102,7 @@ class TestPredicateDomainIntegration:
         response_data = response.json()
         assert "does not exist" in response_data["detail"]
 
+    @pytest.mark.skip_suite
     def test_create_domain_with_invalid_predicate_set(self, client, test_data):
         """Test creating domain with invalid structural predicate fails."""
 

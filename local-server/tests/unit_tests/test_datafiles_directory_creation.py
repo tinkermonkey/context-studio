@@ -194,7 +194,7 @@ class TestProxyManager:
             mock_config = {
                 "server": {"host": "127.0.0.1", "port": 18080},
                 "cache": {"database_path": db_path},
-                "domain_mappings": {"test": {"upstream": "http://test.com"}},
+                "domain_mappings": {"test": {"upstream": "http://test.com", "enabled_keys": ["test"]}},
                 "throttling": {"domain_limits": {}}
             }
 
@@ -204,7 +204,7 @@ class TestProxyManager:
             mock_settings.get_reference_api_buddy_config.return_value = mock_config
 
             with patch('nlp.proxy_manager.get_settings', return_value=mock_settings):
-                with patch('reference_api_buddy.core.proxy.CachingProxy') as mock_proxy_class:
+                with patch('nlp.proxy_manager.CachingProxy') as mock_proxy_class:
                     # Set up mock proxy instance
                     mock_proxy_instance = MagicMock()
                     mock_proxy_class.return_value = mock_proxy_instance

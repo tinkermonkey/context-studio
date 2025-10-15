@@ -35,16 +35,6 @@ class ConcepcyData(BaseModel):
     """
     related_terms: Optional[List[ConcepcyRelation]] = Field(default_factory=list, description="Related terms from ConceptNet.")
 
-class Sense2VecData(BaseModel):
-    """
-    Sense2Vec data for a token.
-    """
-    in_s2v: bool = Field(default=False, description="Whether token is in sense2vec model")
-    key: Optional[str] = Field(None, description="Sense2vec key (e.g., 'duck NOUN')")
-    freq: Optional[int] = Field(None, description="Frequency in sense2vec corpus")
-    other_senses: List[str] = Field(default_factory=list, description="Other senses for this word")
-    most_similar: List[Dict[str, Any]] = Field(default_factory=list, description="Most similar words with scores")
-
 class WordNetData(BaseModel):
     """
     WordNet data for a token.
@@ -104,7 +94,6 @@ class TokenData(BaseModel):
     sentiment: Optional[float] = Field(None, description="Sentiment score.")
     concepcy: Optional[ConcepcyData] = Field(default_factory=ConcepcyData, description="Concepcy data.")
     wordnet: Optional[WordNetData] = Field(default_factory=WordNetData, description="WordNet data.")
-    sense2vec: Optional[Sense2VecData] = Field(default_factory=Sense2VecData, description="Sense2vec data.")
 
 class EntityData(BaseModel):
     """

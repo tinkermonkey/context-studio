@@ -709,30 +709,30 @@ class ServiceFactory:
         Returns:
             PerformanceMonitor instance
         """
-        def create_service():
-            # Use provided connections or create defaults for tests
-            sqlite_connection = db_connection
-            if sqlite_connection is None:
-                try:
-                    sqlite_connection = self.get_database_connection()
-                except Exception:
-                    # Use mock connection for tests
-                    sqlite_connection = None
+        # DON'T cache PerformanceMonitor - it holds database connections that become stale
+        # Create fresh instance each time to avoid session/connection issues
+        
+        # Use provided connections or create defaults for tests
+        sqlite_connection = db_connection
+        if sqlite_connection is None:
+            try:
+                sqlite_connection = self.get_database_connection()
+            except Exception:
+                # Use mock connection for tests
+                sqlite_connection = None
 
-            duckdb_connection = duckdb_conn
-            if duckdb_connection is None:
-                try:
-                    duckdb_service = self.create_duckdb_service()
-                    duckdb_connection = duckdb_service.connection
-                except Exception:
-                    # Use None for tests
-                    duckdb_connection = None
+        duckdb_connection = duckdb_conn
+        if duckdb_connection is None:
+            try:
+                duckdb_service = self.create_duckdb_service()
+                duckdb_connection = duckdb_service.connection
+            except Exception:
+                # Use None for tests
+                duckdb_connection = None
 
-            s3_sync = s3_sync_manager
+        s3_sync = s3_sync_manager
 
-            return PerformanceMonitor(sqlite_connection, duckdb_connection, s3_sync)
-
-        return self._create_service_with_factory(ServiceType.PERFORMANCE_MONITOR, create_service)
+        return PerformanceMonitor(sqlite_connection, duckdb_connection, s3_sync)
 
     def get_database_connection(self):
         """Get database connection using the database utilities."""

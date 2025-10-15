@@ -479,7 +479,7 @@ class ReferenceManager:
         else:
             self._validate_embedding_dimensions(definition_embedding, embedding_dims)
 
-        # Create node with transaction
+        # Create node with
         node = ReferenceNode(
             id=str(uuid4()),
             title=title,
@@ -529,7 +529,7 @@ class ReferenceManager:
             ...     object_node=thing_node.id
             ... )
         """
-        # Create link with transaction
+        # Create link with
         link = ReferenceLink(
             id=str(uuid4()),
             subject_node=subject_node,

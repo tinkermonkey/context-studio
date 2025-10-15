@@ -1,6 +1,9 @@
 import threading
 import spacy
 import spacy.tokens
+import concepcy
+import spacy_dbpedia_spotlight
+from spacy_wordnet.wordnet_annotator import WordnetAnnotator
 from typing import Optional
 from config import get_settings, get_config_manager
 from utils.logger import get_logger
@@ -9,39 +12,11 @@ from nlp.model_downloader import get_model_downloader
 
 logger = get_logger(__name__)
 
-# Optional imports for pipeline components
-# These are optional dependencies that may not be installed
-try:
-    import concepcy
-    _concepcy = concepcy
-except ImportError:
-    logger.warning("concepcy not available - ConceptNet integration will be disabled")
-    concepcy = None
-    _concepcy = None
-
-try:
-    import spacy_dbpedia_spotlight
-    _dbpedia_spotlight = spacy_dbpedia_spotlight
-except ImportError:
-    logger.warning("spacy_dbpedia_spotlight not available - DBpedia integration will be disabled")
-    spacy_dbpedia_spotlight = None
-    _dbpedia_spotlight = None
-
-try:
-    from spacy_wordnet.wordnet_annotator import WordnetAnnotator
-    _spacy_wordnet = WordnetAnnotator
-except ImportError:
-    logger.warning("spacy_wordnet not available - WordNet integration will be disabled")
-    WordnetAnnotator = None
-    _spacy_wordnet = None
-
-try:
-    import sense2vec
-    _sense2vec = sense2vec
-except ImportError:
-    logger.warning("sense2vec not available - Sense2Vec integration will be disabled")
-    sense2vec = None
-    _sense2vec = None
+## DO NOT REMOVE THESE - needed to register custom pipeline components
+_concepcy = concepcy
+_dbpedia_spotlight = spacy_dbpedia_spotlight
+_spacy_wordnet = WordnetAnnotator
+## DO NOT REMOVE THESE - needed to register custom pipeline components
 
 class NLPPipeline:
     """
@@ -51,7 +26,6 @@ class NLPPipeline:
     def __init__(self, model_name: str = "en_core_web_lg"):
         self.model_name = model_name
         self.nlp = None
-        self.s2v = None
         self._initialized = False
         self._error = None
         self._lock = threading.Lock()
@@ -98,7 +72,6 @@ class NLPPipeline:
         self._add_concepcy_component()
         self._add_dbpedia_spotlight_component()
         self._add_spacy_wordnet_component()
-        self._add_sense2vec_component()
         
         self._initialized = True
         logger.info("NLP pipeline initialization completed successfully")
@@ -207,41 +180,6 @@ class NLPPipeline:
             nltk.download('omw-1.4', quiet=True)  # For multilingual support
             logger.info("NLTK WordNet data downloaded successfully")
 
-    def _add_sense2vec_component(self):
-        """Add sense2vec component"""
-        if sense2vec is None:
-            logger.info("sense2vec library not available, skipping component")
-            return
-
-        try:
-            settings = get_settings()
-            logger.info("Adding sense2vec component...")
-
-            # Check if the _s2v extension already exists
-            if spacy.tokens.Doc.has_extension("_s2v") or "sense2vec" in self.nlp.pipe_names:
-                logger.debug("sense2vec component or _s2v extension already exists, skipping initialization")
-                return  # Skip initialization if already exists
-
-            # Ensure sense2vec model is available (download if necessary)
-            model_downloader = get_model_downloader()
-            success, error = model_downloader.ensure_sense2vec_model(
-                settings.nlp.sense2vec_path,
-                auto_download=settings.nlp.auto_download_models
-            )
-            if not success:
-                logger.warning(f"sense2vec model unavailable, skipping component: {error}")
-                return  # Skip sense2vec component if model is not available
-
-            self.s2v = self.nlp.add_pipe("sense2vec")
-            # Load the S2V dataset
-            logger.info(f"Loading sense2vec model from {settings.nlp.sense2vec_path}...")
-            self.s2v.from_disk(settings.nlp.sense2vec_path)
-            logger.info("sense2vec component loaded successfully")
-        except Exception as e:
-            self._error = f"Failed to add sense2vec: {e}"
-            logger.error(self._error)
-            raise
-
     def process(self, text: str):
         """Process text through the spaCy pipeline"""
         if not self.nlp:
@@ -275,7 +213,6 @@ class NLPPipeline:
             "initialized": self._initialized,
             "model_name": self.model_name,
             "has_nlp": self.nlp is not None,
-            "has_s2v": self.s2v is not None,
             "error": self._error
         }
 
@@ -286,7 +223,6 @@ class NLPPipeline:
         # Stop current pipeline
         self._initialized = False
         self.nlp = None
-        self.s2v = None
         self._error = None
         
         # Restart proxy with new configuration
@@ -307,7 +243,6 @@ class NLPPipeline:
         logger.info("Shutting down NLP pipeline...")
         self._initialized = False
         self.nlp = None
-        self.s2v = None
         
         # Stop the proxy
         self.proxy_manager.stop_proxy()

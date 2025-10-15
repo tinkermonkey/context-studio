@@ -33,8 +33,6 @@ export const testNLPIntegration = async () => {
         tag: sampleToken.tag,
         hasWordNet: !!sampleToken.wordnet,
         hasConcepcy: !!sampleToken.concepcy,
-        hasSense2Vec: !!sampleToken.sense2vec,
-        sense2vecInModel: sampleToken.sense2vec?.in_s2v,
       });
     }
 
@@ -171,19 +169,6 @@ export const testNLPFeatures = async () => {
           );
           console.log(
             `     - Related terms: ${token.concepcy.related_terms?.length || 0}`,
-          );
-        }
-
-        if (token.sense2vec) {
-          console.log(
-            `     - Sense2Vec in model: ${token.sense2vec.in_s2v || false}`,
-          );
-          console.log(`     - Sense2Vec key: ${token.sense2vec.key || "N/A"}`);
-          console.log(
-            `     - Sense2Vec frequency: ${token.sense2vec.freq || "N/A"}`,
-          );
-          console.log(
-            `     - Similar senses: ${token.sense2vec.other_senses?.length || 0}`,
           );
         }
 

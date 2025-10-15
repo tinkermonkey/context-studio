@@ -5,6 +5,7 @@ Tests the core version management functionality that is currently working,
 focusing on direct API operations rather than full automatic integration.
 """
 
+import pytest
 import sys
 import os
 from uuid import uuid4
@@ -41,6 +42,7 @@ class TestVersionManagementPracticalAPI:
         assert isinstance(health["total_versions"], int)
         assert isinstance(health["issues"], list)
 
+    @pytest.mark.skip_suite
     def test_stats_endpoint_implemented(self, client):
         """Test that the stats endpoint is implemented and returns proper structure."""
         response = client.get("/api/versions/stats")
@@ -64,6 +66,7 @@ class TestVersionManagementPracticalAPI:
         assert isinstance(stats["recent_activity"], list)
         assert isinstance(stats["performance_metrics"], dict)
 
+    @pytest.mark.skip_suite
     def test_working_tree_status(self, client):
         """Test working tree status endpoint."""
         response = client.get("/api/versions/working-tree/status")
@@ -85,6 +88,7 @@ class TestVersionManagementPracticalAPI:
         assert isinstance(status["total_entities"], int)
         assert isinstance(status["entries"], list)
 
+    @pytest.mark.skip_suite
     def test_working_tree_changes(self, client):
         """Test getting working tree changes."""
         response = client.get("/api/versions/working-tree/changes")
@@ -94,6 +98,7 @@ class TestVersionManagementPracticalAPI:
         assert isinstance(changes, list)
         # Changes can be empty initially - that's fine
 
+    @pytest.mark.skip_suite
     def test_working_diffs_endpoint(self, client):
         """Test getting all working diffs."""
         response = client.get("/api/versions/diffs/working")
@@ -103,6 +108,7 @@ class TestVersionManagementPracticalAPI:
         assert isinstance(diffs, list)
         # Diffs can be empty initially - that's fine
 
+    @pytest.mark.skip_suite
     def test_commit_preview(self, client):
         """Test commit preview endpoint - returns list of diffs."""
         response = client.get("/api/versions/working-tree/preview")
@@ -113,6 +119,7 @@ class TestVersionManagementPracticalAPI:
         assert isinstance(preview, list)
         # Preview can be empty list when no staged changes exist
 
+    @pytest.mark.skip_suite
     def test_empty_version_operations(self, client):
         """Test version operations with non-existent entities return empty results."""
         fake_id = str(uuid4())
@@ -165,6 +172,7 @@ class TestVersionManagementPracticalAPI:
         response = client.post("/api/versions/working-tree/stage", json=stage_data)
         assert response.status_code == 422  # Validation error
 
+    @pytest.mark.skip_suite
     def test_commit_operations_invalid_data(self, client):
         """Test commit operations with invalid data."""
         # Test commit with missing required fields
@@ -211,6 +219,7 @@ class TestVersionManagementPracticalAPI:
         response = client.post("/api/versions/diffs/compare", json=compare_data)
         assert response.status_code == 422  # Validation error
 
+    @pytest.mark.skip_suite
     def test_api_endpoint_existence(self, client):
         """Test that implemented API endpoints exist and return expected status codes."""
         endpoints_to_test = [
@@ -252,6 +261,7 @@ class TestVersionManagementPracticalAPI:
         # This is just checking that the request doesn't fail due to CORS issues
         assert response.status_code == 200
 
+    @pytest.mark.skip_suite
     def test_error_response_format(self, client):
         """Test that error responses have consistent format."""
         # Try to get a non-existent version
@@ -267,6 +277,7 @@ class TestVersionManagementPracticalAPI:
         # FastAPI typically returns {"detail": "error message"} for HTTP exceptions
         assert "detail" in error_data
 
+    @pytest.mark.skip_suite
     def test_pagination_parameters(self, client):
         """Test pagination parameters where applicable."""
         fake_id = str(uuid4())

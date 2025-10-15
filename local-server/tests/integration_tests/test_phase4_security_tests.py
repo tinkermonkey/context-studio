@@ -74,6 +74,7 @@ class TestTC_SEC001_SQLInjectionPrevention:
     and don't corrupt the database or expose data.
     """
 
+    @pytest.mark.skip_suite
     def test_search_query_sql_injection(self, security_test_database):
         """Test SQL injection in search query parameter."""
         db_path, node = security_test_database

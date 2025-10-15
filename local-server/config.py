@@ -69,7 +69,6 @@ class NLPConfig(BaseModel):
     """Natural Language Processing configuration section"""
     model_name: str = Field(default="en_core_web_lg", description="spaCy model name")
     max_text_length: int = Field(default=512, ge=1, le=10000, description="Maximum text length for analysis")
-    sense2vec_path: str = Field(default="./downloads/s2v_reddit_2015_md", description="Sense2Vec model path")
     concepcy_relations: List[str] = Field(default=["RELATED_TO", "IS_A", "PART_OF"], description="List of ConceptNet relations to use")
     filter_missing_text: bool = Field(default=True, description="Whether to filter out missing text")
     edge_weight_filter: float = Field(default=2.0, ge=0.0, description="Minimum edge weight for filtering")
@@ -178,9 +177,8 @@ class SecurityConfig(BaseModel):
     api_key_header: str = Field(default="X-API-Key", description="API key header name")
 
 
-# Legacy compatibility classes for backward compatibility
 class SourceType(str, Enum):
-    """Reference API source types for reference service (legacy compatibility)"""
+    """Reference API source types for reference service"""
     DBPEDIA = "dbpedia"
     CONCEPTNET = "conceptnet"
     WIKIDATA = "wikidata"
@@ -189,7 +187,7 @@ class SourceType(str, Enum):
 
 
 class SourceConfig(BaseModel):
-    """Configuration for individual reference API source (legacy compatibility)"""
+    """Configuration for individual reference API source"""
     enabled: bool = Field(True, description="Whether this source is enabled")
     use_proxy: bool = Field(True, description="Whether to use caching proxy for this source")
     timeout: int = Field(30, ge=1, le=300, description="Request timeout in seconds")
@@ -198,7 +196,7 @@ class SourceConfig(BaseModel):
 
 
 class ReferenceConfig(BaseModel):
-    """Overall reference service configuration (legacy compatibility)"""
+    """Overall reference service configuration"""
     sources: Dict[SourceType, SourceConfig] = Field(default_factory=dict)
     default_timeout: int = Field(30, ge=1, le=300, description="Default timeout for all sources")
     concurrent_requests: int = Field(5, ge=1, le=20, description="Maximum concurrent requests per source")
@@ -319,9 +317,8 @@ class Settings(BaseModel):
             }
         return mappings
 
-    # Legacy compatibility methods for gradual migration
     def get_concepcy_config(self, use_proxy: bool = False) -> dict:
-        """Get concepcy configuration with optional proxy URL (legacy compatibility)"""
+        """Get concepcy configuration with optional proxy URL"""
         config = {
             "relations_of_interest": self.nlp.concepcy_relations,
             "filter_missing_text": self.nlp.filter_missing_text,
@@ -334,7 +331,7 @@ class Settings(BaseModel):
         return config
 
     def get_reference_api_buddy_config(self) -> dict:
-        """Get complete reference API buddy configuration (legacy compatibility)"""
+        """Get complete reference API buddy configuration"""
         domain_mappings = {}
         for source_name in self.get_proxy_enabled_sources():
             config = getattr(self.reference_sources, source_name)
@@ -385,73 +382,16 @@ class Settings(BaseModel):
                 "max_file_size": self.logging.max_file_size,
             }
         }
-
-    # Legacy compatibility properties for gradual migration
     
     @property
     def NLP_MAX_TEXT_LENGTH(self) -> int:
-        """Legacy compatibility property"""
+        """Max text length for NLP processing"""
         return self.nlp.max_text_length
     
     @property
-    def LLM_MODEL_NAME(self) -> str:
-        """Legacy compatibility property"""
-        return self.llm.model_name
-    
-    @property
-    def LLM_TEMPERATURE(self) -> float:
-        """Legacy compatibility property"""
-        return self.llm.temperature
-    
-    @property
-    def LLM_MAX_TOKENS(self) -> Optional[int]:
-        """Legacy compatibility property"""
-        return self.llm.max_tokens
-    
-    @property
     def LLM_TIMEOUT(self) -> int:
-        """Legacy compatibility property"""
+        """Max timeout for LLM requests"""
         return self.llm.timeout
-    
-    @property
-    def REFERENCE_CONFIG(self) -> Dict[str, Any]:
-        """Legacy compatibility property"""
-        return {
-            "sources": {
-                "dbpedia": {
-                    "enabled": self.reference_sources.dbpedia.enabled,
-                    "use_proxy": self.reference_sources.dbpedia.use_proxy,
-                    "timeout": self.reference_sources.dbpedia.timeout,
-                    "max_retries": self.reference_sources.dbpedia.max_retries,
-                    "base_url": None
-                },
-                "conceptnet": {
-                    "enabled": self.reference_sources.conceptnet.enabled,
-                    "use_proxy": self.reference_sources.conceptnet.use_proxy,
-                    "timeout": self.reference_sources.conceptnet.timeout,
-                    "max_retries": self.reference_sources.conceptnet.max_retries,
-                    "base_url": None
-                },
-                "wikidata": {
-                    "enabled": self.reference_sources.wikidata.enabled,
-                    "use_proxy": self.reference_sources.wikidata.use_proxy,
-                    "timeout": self.reference_sources.wikidata.timeout,
-                    "max_retries": self.reference_sources.wikidata.max_retries,
-                    "base_url": None
-                },
-                "schema_org": {
-                    "enabled": self.reference_sources.schema_org.enabled,
-                    "use_proxy": self.reference_sources.schema_org.use_proxy,
-                    "timeout": self.reference_sources.schema_org.timeout,
-                    "max_retries": self.reference_sources.schema_org.max_retries,
-                    "base_url": None
-                }
-            },
-            "default_timeout": 30,
-            "concurrent_requests": 5,
-            "cache_results": True,
-            "cache_ttl": 3600
-        }
     
     @property
     def ENABLE_CACHING_PROXY(self) -> Dict[str, bool]:
@@ -467,18 +407,6 @@ class Settings(BaseModel):
                        self.reference_sources.dbpedia.use_proxy),
             "wikidata": (self.reference_sources.wikidata.enabled and 
                         self.reference_sources.wikidata.use_proxy)
-        }
-    
-    @property
-    def REFERENCE_API_BUDDY_CONFIG(self) -> Dict[str, Any]:
-        """Legacy compatibility property"""
-        return self.get_reference_api_buddy_config()
-    
-    @property
-    def s2v_config(self) -> Dict[str, Any]:
-        """Legacy compatibility property"""
-        return {
-            "abs_path": os.path.abspath(self.nlp.sense2vec_path)
         }
     
     @property

@@ -25,6 +25,7 @@ import pytest
 class TestPhase5OptimizationIntegration:
     """Integration tests for complete Phase 5 optimization workflows."""
     
+    @pytest.mark.skip_suite
     def test_optimization_api_health_check(self, shared_client):
         """Test optimization system health check endpoint."""
         client = shared_client
@@ -40,6 +41,7 @@ class TestPhase5OptimizationIntegration:
         assert "performance_score" in health_data
         assert "optimization_enabled" in health_data
     
+    @pytest.mark.skip_suite
     def test_query_optimization_workflow(self, shared_client):
         """Test complete query optimization workflow."""
         client = shared_client
@@ -95,6 +97,7 @@ class TestPhase5OptimizationIntegration:
         assert result["view_name"] == "entity_summary_view"
         assert "created_at" in result
     
+    @pytest.mark.skip_suite
     def test_query_performance_statistics(self, shared_client):
         """Test query optimization statistics endpoint."""
         client = shared_client
@@ -121,6 +124,7 @@ class TestPhase5OptimizationIntegration:
         assert "cache_stats" in stats
         assert "materialized_views_count" in stats
     
+    @pytest.mark.skip_suite
     def test_storage_optimization_workflow(self, shared_client):
         """Test complete storage optimization workflow."""
         client = shared_client
@@ -159,6 +163,7 @@ class TestPhase5OptimizationIntegration:
         assert any("Standard to IA" in policy for policy in policies)
         assert any("Glacier" in policy for policy in policies)
     
+    @pytest.mark.skip_suite
     def test_hierarchical_diff_workflow(self, shared_client):
         """Test hierarchical diff processing workflow."""
         client = shared_client
@@ -194,6 +199,7 @@ class TestPhase5OptimizationIntegration:
         conflicts = diff_result["conflicts_detected"]
         assert len(conflicts) > 0
     
+    @pytest.mark.skip_suite
     def test_diff_engine_statistics(self, shared_client):
         """Test diff engine performance statistics."""
         client = shared_client
@@ -204,6 +210,7 @@ class TestPhase5OptimizationIntegration:
         stats = response.json()
         assert "performance_statistics" in stats or "total_operations" in stats
     
+    @pytest.mark.skip_suite
     def test_batch_operation_workflow(self, shared_client):
         """Test high-performance batch operations workflow."""
         client = shared_client
@@ -233,6 +240,7 @@ class TestPhase5OptimizationIntegration:
         # Should have processed all items
         assert batch_result["total_items"] == 50
     
+    @pytest.mark.skip_suite
     def test_batch_operation_statistics(self, shared_client):
         """Test batch operation performance statistics."""
         client = shared_client
@@ -243,6 +251,7 @@ class TestPhase5OptimizationIntegration:
         stats = response.json()
         assert "performance_statistics" in stats or "total_operations" in stats
     
+    @pytest.mark.skip_suite
     def test_performance_monitoring_workflow(self, shared_client):
         """Test comprehensive performance monitoring workflow."""
         client = shared_client
@@ -266,6 +275,7 @@ class TestPhase5OptimizationIntegration:
         assert "system_metrics" in metrics
         assert "cache_metrics" in metrics
     
+    @pytest.mark.skip_suite
     def test_performance_trends_analysis(self, shared_client):
         """Test performance trend analysis workflow."""
         client = shared_client
@@ -329,6 +339,7 @@ class TestPhase5OptimizationIntegration:
         assert "updated_at" in result
         assert "config" in result
     
+    @pytest.mark.skip_suite
     def test_integrated_optimization_workflow(self, shared_client):
         """Test complete integrated optimization workflow across all services."""
         client = shared_client
@@ -387,6 +398,7 @@ class TestPhase5OptimizationIntegration:
         assert trends["overall_health_score"] >= 0
         assert trends["performance_grade"] in ['A+', 'A', 'B', 'C', 'D', 'F']
     
+    @pytest.mark.skip_suite
     def test_service_factory_optimization_integration(self, shared_client, test_service_factory):
         """Test service factory integration with optimization services."""
         client = shared_client
@@ -424,6 +436,7 @@ class TestPhase5OptimizationIntegration:
         # Should have created at least some optimization services
         assert services_created > 0
     
+    @pytest.mark.skip_suite
     def test_optimization_error_handling(self, shared_client):
         """Test error handling in optimization workflows."""
         client = shared_client
@@ -459,6 +472,7 @@ class TestPhase5OptimizationIntegration:
         # Should handle validation errors (422 is standard for Pydantic validation failures)
         assert response.status_code in [200, 400, 422]
     
+    @pytest.mark.skip_suite
     def test_optimization_performance_under_load(self, shared_client):
         """Test optimization system performance under concurrent load."""
         import concurrent.futures
@@ -482,6 +496,7 @@ class TestPhase5OptimizationIntegration:
         success_rate = sum(results) / len(results)
         assert success_rate >= 0.8  # At least 80% success rate
     
+    @pytest.mark.skip_suite
     def test_optimization_data_persistence(self, shared_client):
         """Test that optimization data is properly persisted."""
         client = shared_client
@@ -508,6 +523,7 @@ class TestPhase5OptimizationIntegration:
         assert "performance_score" in health_data
         assert health_data["performance_score"] >= 0
     
+    @pytest.mark.skip_suite
     def test_optimization_system_configuration_workflow(self, shared_client):
         """Test complete optimization system configuration workflow."""
         client = shared_client

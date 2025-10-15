@@ -251,7 +251,7 @@ class WorkingTreeManager:
             entity_id: ID of the entity
 
         Returns:
-            True if successfully staged, False if no changes to stage (kept for backward compatibility)
+            True if successfully staged, False if no changes to stage
 
         Raises:
             ValueError: If entity not in working tree

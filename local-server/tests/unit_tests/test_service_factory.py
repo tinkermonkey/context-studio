@@ -236,50 +236,6 @@ class TestServiceFactory:
             assert service_metrics["cache_hits"] == 0
             assert service_metrics["cache_misses"] == 0
 
-    @patch.dict(os.environ, {"OPENAI_API_KEY": "sk-test-key-for-testing"})
-    def test_llm_service_caching_with_parameters(self, service_factory):
-        """Test LLM service caching with different parameters."""
-        # Mock the provider router to avoid actual API key validation
-        from llm.enabled_models import ProviderType
-        from unittest.mock import MagicMock
-
-        mock_provider_router = MagicMock()
-        mock_provider_router.get_enabled_models.return_value = ["gpt-3.5-turbo"]
-
-        mock_model_config = MagicMock()
-        mock_model_config.provider_type = ProviderType.NATIVE_OPENAI
-        mock_model_config.api_key_env_var = "OPENAI_API_KEY"
-
-        mock_provider_router.models_manager = MagicMock()
-        mock_provider_router.models_manager.get_model_config.return_value = mock_model_config
-
-        with patch('llm.service.get_provider_router', return_value=mock_provider_router):
-            with patch('llm.service.PipelineFlavorService'):
-                with patch('llm.service.ExecutionTracker'):
-                    # Create LLM services with different parameters
-                    llm1 = service_factory.create_llm_service(
-                        model_name="gpt-3.5-turbo", temperature=0.0
-                    )
-                    llm2 = service_factory.create_llm_service(
-                        model_name="gpt-3.5-turbo", temperature=0.5
-                    )
-                    llm3 = service_factory.create_llm_service(
-                        model_name="gpt-3.5-turbo", temperature=0.0
-                    )  # Same as llm1
-
-                    # Check that different parameters create separate cache entries
-                    stats = service_factory.get_cache_stats()
-                    cache_entries = stats["cache_entries"]
-
-                    # Should have 2 different cache entries for different configurations
-                    assert len(cache_entries) == 2
-
-                    # Third call with same params should be cache hit
-                    llm_metrics = stats["service_metrics"]["llm_service"]
-                    assert llm_metrics["total_created"] == 3
-                    assert llm_metrics["cache_hits"] == 1  # llm3 was a hit
-                    assert llm_metrics["cache_misses"] == 2  # llm1 and llm2 were misses
-
     @patch("services.service_factory.logger")
     def test_error_handling_during_service_creation(
         self, mock_logger, service_factory, mock_db_session

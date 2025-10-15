@@ -3,7 +3,7 @@ NLP data processors for token and entity extraction.
 """
 
 from typing import List, Any
-from nlp.models import TokenData, EntityData, ConcepcyData, WordNetData, DBpediaData, Sense2VecData, NLPAnalysisResponse, TokenReference
+from nlp.models import TokenData, EntityData, ConcepcyData, WordNetData, DBpediaData, NLPAnalysisResponse, TokenReference
 from utils.logger import get_logger
 
 logger = get_logger("nlp_processors")
@@ -132,38 +132,6 @@ def extract_token_data(doc, filter: bool = False) -> List[TokenData]:
             except Exception as we:
                 logger.warning(f"WordNet extraction failed for '{token.text}': {we}")
 
-            # Sense2Vec extraction
-            sense2vec_data = Sense2VecData()
-            if hasattr(token._, 'in_s2v'):
-                try:
-                    sense2vec_data.in_s2v = bool(token._.in_s2v) if hasattr(token._, 'in_s2v') else False
-                    sense2vec_data.key = str(token._.s2v_key) if hasattr(token._, 's2v_key') and token._.s2v_key else None
-                    sense2vec_data.freq = int(token._.s2v_freq) if hasattr(token._, 's2v_freq') and token._.s2v_freq is not None else None
-                    sense2vec_data.other_senses = list(token._.s2v_other_senses) if hasattr(token._, 's2v_other_senses') and token._.s2v_other_senses else []
-                    sense2vec_data.most_similar = []
-                    if hasattr(token._, 's2v_most_similar'):
-                        most_similar = token._.s2v_most_similar(5)
-                        if isinstance(most_similar, list) and len(most_similar) > 0:
-                            for similar in most_similar:
-                                try:
-                                    if isinstance(similar, tuple) and len(similar) == 2:
-                                        word_sense_tuple, score = similar
-                                        if isinstance(word_sense_tuple, tuple) and len(word_sense_tuple) == 2:
-                                            word, sense = word_sense_tuple
-                                            score_val = float(score) if score is not None else 0.0
-                                            sense2vec_data.most_similar.append({
-                                                "word": str(word),
-                                                "sense": str(sense),
-                                                "score": score_val
-                                            })
-                                except Exception as sim_e:
-                                    logger.warning(f"Failed to process similar term {similar} for '{token.text}': {sim_e}")
-                        else:
-                            logger.debug(f"s2v found nothing similar for: {sense2vec_data.key}")
-                except Exception as s2v_e:
-                    logger.debug(f"Sense2Vec extraction failed for '{token.text}': {s2v_e}")
-                    sense2vec_data = Sense2VecData()
-
             # TokenData construction
             try:
                 text_val = str(token.text) if hasattr(token, 'text') else ""
@@ -234,7 +202,6 @@ def extract_token_data(doc, filter: bool = False) -> List[TokenData]:
                     sentiment=sentiment_val,
                     concepcy=concepcy,
                     wordnet=wordnet,
-                    sense2vec=sense2vec_data,
                 ))
             except Exception as te:
                 logger.warning(f"TokenData construction failed for '{token.text}': {te}")

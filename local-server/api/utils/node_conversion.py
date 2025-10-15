@@ -52,8 +52,30 @@ def to_node_out(structure_node: StructureNode, include_embeddings: bool = True) 
                 # If unpickling fails, leave as None
                 definition_embedding = None
     
+    # Handle the ID field - ensure it's properly converted to UUID
+    # During tests, if refresh() is mocked, the id field might not be populated correctly
+    try:
+        if isinstance(structure_node.id, UUID):
+            node_id = structure_node.id
+        elif isinstance(structure_node.id, str):
+            node_id = UUID(structure_node.id)
+        else:
+            # This case handles Mock objects or other unexpected types in test scenarios
+            # Try to convert to string first, then to UUID
+            id_str = str(structure_node.id)
+            node_id = UUID(id_str)
+    except (TypeError, ValueError, AttributeError) as e:
+        # Provide detailed error message for debugging
+        error_msg = (
+            f"Invalid structure_node ID: {repr(structure_node.id)} "
+            f"(type: {type(structure_node.id).__name__}). "
+            f"This may indicate that db.refresh() was mocked or the database default "
+            f"value generation failed."
+        )
+        raise ValueError(error_msg) from e
+    
     return NodeOut(
-        id=UUID(structure_node.id),
+        id=node_id,
         node_type=structure_node.node_type.value,  # Convert enum to string
         parent_node_id=UUID(structure_node.parent_node_id) if structure_node.parent_node_id else None,
         title=structure_node.title,

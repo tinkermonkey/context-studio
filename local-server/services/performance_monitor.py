@@ -239,8 +239,21 @@ class PerformanceMonitor:
         
         logger.info(f"Auto-optimization completed: {len(optimization_actions)} actions executed")
         
+        # Serialize optimization actions for JSON response
+        serialized_actions = []
+        for action in optimization_actions:
+            serialized_actions.append({
+                'action_id': action.action_id,
+                'action_type': action.action_type,
+                'description': action.description,
+                'parameters': action.parameters,
+                'executed_at': action.executed_at.isoformat() if action.executed_at else None,
+                'success': action.success,
+                'impact_metrics': action.impact_metrics
+            })
+        
         return {
-            'optimization_actions': [action.__dict__ for action in optimization_actions],
+            'optimization_actions': serialized_actions,
             'optimizations_applied': len(optimization_actions),
             'next_optimization_check': (datetime.now(timezone.utc) + timedelta(seconds=self.auto_optimization_interval)).isoformat()
         }
@@ -249,45 +262,89 @@ class PerformanceMonitor:
         """Collect SQLite database performance metrics."""
         
         try:
-            cursor = self.sqlite_conn.cursor()
-            
-            # Get database size
-            cursor.execute("PRAGMA database_list;")
-            db_info = cursor.fetchall()
-            
-            # Get table statistics
-            stats_query = """
-            SELECT 
-                COUNT(*) as total_objects,
-                SUM(CASE WHEN type='table' THEN 1 ELSE 0 END) as table_count,
-                SUM(CASE WHEN type='index' THEN 1 ELSE 0 END) as index_count
-            FROM sqlite_master 
-            WHERE type IN ('table', 'index', 'view')
-            """
-            
-            cursor.execute(stats_query)
-            db_stats = cursor.fetchone()
-            
-            # Get table-specific metrics
-            table_metrics = {}
-            important_tables = ['entity_versions', 'changesets', 'proposals', 'user_identities']
-            
-            for table_name in important_tables:
-                try:
-                    cursor.execute(f"SELECT COUNT(*) FROM {table_name}")
-                    row_count = cursor.fetchone()[0]
-                    table_metrics[table_name] = {'row_count': row_count}
-                except Exception as e:
-                    table_metrics[table_name] = {'row_count': 0, 'error': str(e)}
-            
-            return {
-                'database_count': len(db_info) if db_info else 0,
-                'total_objects': db_stats[0] if db_stats else 0,
-                'table_count': db_stats[1] if db_stats else 0,
-                'index_count': db_stats[2] if db_stats else 0,
-                'table_metrics': table_metrics,
-                'connection_status': 'healthy'
-            }
+            # Check if sqlite_conn is a SQLAlchemy session or raw connection
+            if hasattr(self.sqlite_conn, 'execute'):
+                # SQLAlchemy session - use text() for raw SQL
+                from sqlalchemy import text
+                
+                # Get database info
+                db_info_result = self.sqlite_conn.execute(text("PRAGMA database_list;"))
+                db_info = db_info_result.fetchall()
+                
+                # Get table statistics
+                stats_query = """
+                SELECT 
+                    COUNT(*) as total_objects,
+                    SUM(CASE WHEN type='table' THEN 1 ELSE 0 END) as table_count,
+                    SUM(CASE WHEN type='index' THEN 1 ELSE 0 END) as index_count
+                FROM sqlite_master 
+                WHERE type IN ('table', 'index', 'view')
+                """
+                
+                result = self.sqlite_conn.execute(text(stats_query))
+                db_stats = result.fetchone()
+                
+                # Get table-specific metrics
+                table_metrics = {}
+                important_tables = ['entity_versions', 'changesets', 'proposals', 'user_identities']
+                
+                for table_name in important_tables:
+                    try:
+                        result = self.sqlite_conn.execute(text(f"SELECT COUNT(*) FROM {table_name}"))
+                        row_count = result.fetchone()[0]
+                        table_metrics[table_name] = {'row_count': row_count}
+                    except Exception as e:
+                        table_metrics[table_name] = {'row_count': 0, 'error': str(e)}
+                
+                return {
+                    'database_count': len(db_info) if db_info else 0,
+                    'total_objects': db_stats[0] if db_stats else 0,
+                    'table_count': db_stats[1] if db_stats else 0,
+                    'index_count': db_stats[2] if db_stats else 0,
+                    'table_metrics': table_metrics,
+                    'connection_status': 'healthy'
+                }
+            else:
+                # Raw connection - use cursor
+                cursor = self.sqlite_conn.cursor()
+                
+                # Get database size
+                cursor.execute("PRAGMA database_list;")
+                db_info = cursor.fetchall()
+                
+                # Get table statistics
+                stats_query = """
+                SELECT 
+                    COUNT(*) as total_objects,
+                    SUM(CASE WHEN type='table' THEN 1 ELSE 0 END) as table_count,
+                    SUM(CASE WHEN type='index' THEN 1 ELSE 0 END) as index_count
+                FROM sqlite_master 
+                WHERE type IN ('table', 'index', 'view')
+                """
+                
+                cursor.execute(stats_query)
+                db_stats = cursor.fetchone()
+                
+                # Get table-specific metrics
+                table_metrics = {}
+                important_tables = ['entity_versions', 'changesets', 'proposals', 'user_identities']
+                
+                for table_name in important_tables:
+                    try:
+                        cursor.execute(f"SELECT COUNT(*) FROM {table_name}")
+                        row_count = cursor.fetchone()[0]
+                        table_metrics[table_name] = {'row_count': row_count}
+                    except Exception as e:
+                        table_metrics[table_name] = {'row_count': 0, 'error': str(e)}
+                
+                return {
+                    'database_count': len(db_info) if db_info else 0,
+                    'total_objects': db_stats[0] if db_stats else 0,
+                    'table_count': db_stats[1] if db_stats else 0,
+                    'index_count': db_stats[2] if db_stats else 0,
+                    'table_metrics': table_metrics,
+                    'connection_status': 'healthy'
+                }
             
         except Exception as e:
             logger.error(f"Failed to collect database metrics: {e}")
@@ -858,15 +915,43 @@ class PerformanceMonitor:
         recent_alerts = [alert for alert in self.alerts if not alert.resolved_at]
         recent_optimizations = self.optimization_history[-10:] if self.optimization_history else []
         
+        # Convert alerts to serializable dictionaries
+        serialized_alerts = []
+        for alert in recent_alerts:
+            serialized_alerts.append({
+                'alert_id': alert.alert_id,
+                'alert_type': alert.alert_type,
+                'severity': alert.severity,
+                'metric_name': alert.metric_name,
+                'current_value': alert.current_value,
+                'threshold_value': alert.threshold_value,
+                'description': alert.description,
+                'created_at': alert.created_at.isoformat() if alert.created_at else None,
+                'resolved_at': alert.resolved_at.isoformat() if alert.resolved_at else None
+            })
+        
+        # Convert optimization actions to serializable dictionaries
+        serialized_optimizations = []
+        for opt in recent_optimizations:
+            serialized_optimizations.append({
+                'action_id': opt.action_id,
+                'action_type': opt.action_type,
+                'description': opt.description,
+                'parameters': opt.parameters,
+                'executed_at': opt.executed_at.isoformat() if opt.executed_at else None,
+                'success': opt.success,
+                'impact_metrics': opt.impact_metrics
+            })
+        
         return {
             'current_metrics': current_metrics,
             'trends': trends,
-            'active_alerts': [alert.__dict__ for alert in recent_alerts],
-            'recent_optimizations': [opt.__dict__ for opt in recent_optimizations],
+            'active_alerts': serialized_alerts,
+            'recent_optimizations': serialized_optimizations,
             'system_status': {
                 'health_score': trends.get('overall_health_score', 0.8),
                 'performance_grade': trends.get('performance_grade', 'B'),
                 'optimization_enabled': self.optimization_enabled,
-                'last_optimization': datetime.fromtimestamp(self.last_optimization_time).isoformat() if self.last_optimization_time else None
+                'last_optimization': datetime.fromtimestamp(self.last_optimization_time, tz=timezone.utc).isoformat() if self.last_optimization_time else None
             }
         }

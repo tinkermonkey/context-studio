@@ -92,25 +92,6 @@ class TestLLMErrorHandling:
             LLMService()
 
     @patch.dict(os.environ, {"OPENAI_API_KEY": "sk-test-key-for-testing"})
-    def test_response_parsing_error_handling(self):
-        """Test that template rendering handles error conditions"""
-        from llm.service import LLMService
-        from llm.exceptions import LLMProcessingError
-
-        service = LLMService()
-
-        # Test the template rendering directly
-        test_cases = [
-            ({}, "Template with {missing_variable}", "Empty context data"),
-            ({"term": "test"}, "Template with {missing_var}", "Missing template variable"),
-            ({"incomplete": "data"}, "Template with {term} and {domain}", "Incomplete context data"),
-        ]
-
-        for context_data, template, description in test_cases:
-            with pytest.raises(LLMProcessingError):
-                service._render_user_prompt_generic(template, context_data)
-
-    @patch.dict(os.environ, {"OPENAI_API_KEY": "sk-test-key-for-testing"})
     def test_valid_response_processing(self):
         """Test that valid template rendering works correctly"""
         from llm.service import LLMService

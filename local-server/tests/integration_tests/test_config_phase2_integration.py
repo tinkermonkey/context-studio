@@ -20,6 +20,15 @@ sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 from config import Settings, ConfigurationManager
 
 
+@pytest.fixture(autouse=True)
+def cleanup_database_resources():
+    """Clean up database resources after each test to ensure isolation."""
+    yield
+    # Cleanup after test
+    from database.utils import cleanup_database_resources
+    cleanup_database_resources()
+
+
 class TestDatabaseManagerDirectoryIntegration:
     """Test directory creation integration across database managers."""
 

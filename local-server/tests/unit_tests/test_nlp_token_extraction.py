@@ -24,7 +24,6 @@ def nlp():
         mock_settings_obj = type('MockSettings', (), {
             'nlp': type('NLPSettings', (), {
                 'model_name': 'en_core_web_sm',  # Use smaller model for tests
-                'sense2vec_path': '/tmp/nonexistent',  # Non-existent path so component gets skipped
                 'concepcy_relations': [],
                 'filter_missing_text': True,
                 'edge_weight_filter': 0.1
@@ -51,15 +50,11 @@ def nlp():
         mock_config_mgr.return_value.settings = mock_settings_obj
 
         try:
-            # Patch the sense2vec component to prevent file loading errors
-            with patch('nlp.pipeline.NLPPipeline._add_sense2vec_component') as mock_sense2vec:
-                mock_sense2vec.return_value = None
-
-                pipeline = get_pipeline()
-                nlp_obj = pipeline.get_nlp()
-                if nlp_obj is None:
-                    pytest.skip("NLP pipeline could not be initialized - likely missing spaCy model")
-                return nlp_obj
+            pipeline = get_pipeline()
+            nlp_obj = pipeline.get_nlp()
+            if nlp_obj is None:
+                pytest.skip("NLP pipeline could not be initialized")
+            return nlp_obj
         except Exception as e:
             pytest.skip(f"NLP pipeline initialization failed: {e}")
 

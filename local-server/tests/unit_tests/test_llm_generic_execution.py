@@ -303,17 +303,17 @@ class TestGenericPipelineExecution:
         assert "key1" in result
 
     def test_render_user_prompt_generic_missing_variable(self, mock_llm_service):
-        """Test generic user prompt rendering with missing template variable"""
+        """Test generic user prompt rendering with missing template variable - now returns 'Not specified'"""
         template = "Term: {term}, Missing: {missing_var}"
         context_data = {
             "term": "apple"
         }
 
-        # Missing variables should raise LLMProcessingError
-        with pytest.raises(LLMProcessingError) as exc_info:
-            mock_llm_service._render_user_prompt_generic(template, context_data)
-
-        assert "missing required variables" in str(exc_info.value).lower()
+        # Missing variables should now return "Not specified" instead of raising an error
+        result = mock_llm_service._render_user_prompt_generic(template, context_data)
+        
+        assert "apple" in result
+        assert "Not specified" in result
 
     def test_generic_pipeline_request_validation(self):
         """Test GenericPipelineExecutionRequest model validation"""
