@@ -286,7 +286,7 @@ class TestVectorSearchAPI:
 
     def test_search_endpoint_fails_fast_on_error(self, client):
         """Test that search endpoint returns 500 on vector search errors."""
-        with patch('reference_db.manager.ReferenceManager') as mock_manager:
+        with patch('api.reference.ReferenceManager') as mock_manager:
             # Simulate database error
             mock_manager.return_value.__enter__.return_value.search_by_similarity.side_effect = \
                 RuntimeError("Vector search failed")
