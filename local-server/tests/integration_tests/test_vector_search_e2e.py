@@ -12,7 +12,7 @@ import tempfile
 import os
 import numpy as np
 from fastapi.testclient import TestClient
-from unittest.mock import patch
+from unittest.mock import patch, MagicMock
 
 from reference_db.config import ReferenceConfig
 from reference_db.manager import ReferenceManager
@@ -21,15 +21,19 @@ from reference_db.manager import ReferenceManager
 @pytest.fixture(scope="module")
 def e2e_test_database():
     """Create a comprehensive test database for E2E testing."""
-    with tempfile.NamedTemporaryFile(suffix=".db", delete=False) as tmp_file:
-        db_path = tmp_file.name
+    # Create a unique temporary database path (don't create the file yet)
+    import tempfile
+    temp_dir = tempfile.gettempdir()
+    db_path = os.path.join(temp_dir, f"test_ref_db_{os.getpid()}_{id(os)}.db")
 
     config = ReferenceConfig()
     manager = ReferenceManager(config, db_path=db_path)
 
-    # Create embeddings helper
+    # Create embeddings helper that creates distinct vectors
+    # Use a seed based on the value to get reproducible but different embeddings
     def create_embedding(value: float) -> bytes:
-        vec = np.full(384, value, dtype=np.float32)
+        rng = np.random.RandomState(seed=int(value * 1000))
+        vec = rng.randn(384).astype(np.float32)
         vec = vec / np.linalg.norm(vec)
         return vec.tobytes()
 
@@ -189,10 +193,14 @@ class TestSemanticDiscoveryWorkflow:
         person_id = data["node_ids"]["person"]
         create_embedding = data["create_embedding"]
 
-        with patch('reference_db.manager.ReferenceManager._get_default_db_path') as mock_db_path:
-            mock_db_path.return_value = db_path
+        # Mock get_settings to return settings with the test database path
+        with patch('config.get_settings') as mock_settings:
+            # Create a mock settings object with the test database path
+            mock_config = MagicMock()
+            mock_config.database.reference_path = db_path
+            mock_settings.return_value = mock_config
 
-            with patch('embeddings.generate_embeddings.generate_embedding') as mock_embed:
+            with patch('api.reference.generate_embedding') as mock_embed:
                 mock_embed.return_value = create_embedding(0.8)
 
                 # Step 1: User searches for "human being"
@@ -253,8 +261,11 @@ class TestSemanticDiscoveryWorkflow:
         place_id = data["node_ids"]["place"]
         create_embedding = data["create_embedding"]
 
-        with patch('reference_db.manager.ReferenceManager._get_default_db_path') as mock_db_path:
-            mock_db_path.return_value = db_path
+        # Mock get_settings to return settings with the test database path
+        with patch('config.get_settings') as mock_settings:
+            mock_config = MagicMock()
+            mock_config.database.reference_path = db_path
+            mock_settings.return_value = mock_config
 
             # Step 1: Get Person node links
             person_links_response = client.get(
@@ -313,8 +324,11 @@ class TestSemanticDiscoveryWorkflow:
         db_path, data = e2e_test_database
         thing_id = data["node_ids"]["thing"]
 
-        with patch('reference_db.manager.ReferenceManager._get_default_db_path') as mock_db_path:
-            mock_db_path.return_value = db_path
+        # Mock get_settings to return settings with the test database path
+        with patch('config.get_settings') as mock_settings:
+            mock_config = MagicMock()
+            mock_config.database.reference_path = db_path
+            mock_settings.return_value = mock_config
 
             # Get all things that are subClassOf Thing
             links_response = client.get(
@@ -360,10 +374,13 @@ class TestErrorRecoveryWorkflows:
         db_path, data = e2e_test_database
         create_embedding = data["create_embedding"]
 
-        with patch('reference_db.manager.ReferenceManager._get_default_db_path') as mock_db_path:
-            mock_db_path.return_value = db_path
+        # Mock get_settings to return settings with the test database path
+        with patch('config.get_settings') as mock_settings:
+            mock_config = MagicMock()
+            mock_config.database.reference_path = db_path
+            mock_settings.return_value = mock_config
 
-            with patch('embeddings.generate_embeddings.generate_embedding') as mock_embed:
+            with patch('api.reference.generate_embedding') as mock_embed:
                 # Use an embedding very different from existing nodes
                 mock_embed.return_value = create_embedding(0.99)
 
@@ -387,8 +404,11 @@ class TestErrorRecoveryWorkflows:
         """Test that invalid node IDs return proper 404 errors."""
         db_path, data = e2e_test_database
 
-        with patch('reference_db.manager.ReferenceManager._get_default_db_path') as mock_db_path:
-            mock_db_path.return_value = db_path
+        # Mock get_settings to return settings with the test database path
+        with patch('config.get_settings') as mock_settings:
+            mock_config = MagicMock()
+            mock_config.database.reference_path = db_path
+            mock_settings.return_value = mock_config
 
             # Try to get non-existent node
             response = client.get("/api/reference/ref-db/nodes/invalid-node-id")
@@ -407,8 +427,11 @@ class TestErrorRecoveryWorkflows:
         """Test retrieving links for a node with no relationships."""
         db_path, data = e2e_test_database
 
-        with patch('reference_db.manager.ReferenceManager._get_default_db_path') as mock_db_path:
-            mock_db_path.return_value = db_path
+        # Mock get_settings to return settings with the test database path
+        with patch('config.get_settings') as mock_settings:
+            mock_config = MagicMock()
+            mock_config.database.reference_path = db_path
+            mock_settings.return_value = mock_config
 
             # Create a new isolated node
             config = ReferenceConfig()
@@ -460,10 +483,13 @@ class TestPerformanceWorkflows:
         db_path, data = e2e_test_database
         create_embedding = data["create_embedding"]
 
-        with patch('reference_db.manager.ReferenceManager._get_default_db_path') as mock_db_path:
-            mock_db_path.return_value = db_path
+        # Mock get_settings to return settings with the test database path
+        with patch('config.get_settings') as mock_settings:
+            mock_config = MagicMock()
+            mock_config.database.reference_path = db_path
+            mock_settings.return_value = mock_config
 
-            with patch('embeddings.generate_embeddings.generate_embedding') as mock_embed:
+            with patch('api.reference.generate_embedding') as mock_embed:
                 mock_embed.return_value = create_embedding(0.8)
 
                 import time
@@ -492,8 +518,11 @@ class TestPerformanceWorkflows:
         db_path, data = e2e_test_database
         thing_id = data["node_ids"]["thing"]
 
-        with patch('reference_db.manager.ReferenceManager._get_default_db_path') as mock_db_path:
-            mock_db_path.return_value = db_path
+        # Mock get_settings to return settings with the test database path
+        with patch('config.get_settings') as mock_settings:
+            mock_config = MagicMock()
+            mock_config.database.reference_path = db_path
+            mock_settings.return_value = mock_config
 
             import time
             start = time.perf_counter()
