@@ -387,7 +387,10 @@ class TestNodeServiceCRUD:
         query_mock.filter.return_value = query_mock
         query_mock.order_by.return_value = query_mock
         query_mock.offset.return_value = query_mock
-        query_mock.limit.return_value.all.return_value = expected_nodes
+        query_mock.limit.return_value = query_mock
+        query_mock.all.return_value = expected_nodes
+        # Also need to mock options() for deferred loading
+        query_mock.options.return_value = query_mock
         mock_db.query.return_value = query_mock
 
         result = node_service.list_nodes(
