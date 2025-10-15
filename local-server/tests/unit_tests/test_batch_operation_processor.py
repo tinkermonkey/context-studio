@@ -164,11 +164,12 @@ class TestBatchOperationProcessor:
             for i in range(10)
         ]
         
-        # Make some operations fail
-        def failing_create_version(entity, author_id):
-            if entity['id'] in ['entity_3', 'entity_7']:
-                raise Exception(f"Simulated error for {entity['id']}")
-            return Mock(id=f"version_{entity['id']}")
+        # Make some operations fail - match actual create_version signature
+        def failing_create_version(entity_type, entity_id, content, author_id, state=None,
+                                  parent_version_id=None, changeset_id=None, metadata=None):
+            if entity_id in ['entity_3', 'entity_7']:
+                raise Exception(f"Simulated error for {entity_id}")
+            return Mock(id=f"version_{entity_id}")
         
         mock_version_manager.create_version.side_effect = failing_create_version
         
