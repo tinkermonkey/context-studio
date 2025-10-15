@@ -230,6 +230,39 @@ def create_app(dataset_id=None, engine=None, session_local=None, service_factory
     # Embeddings management
     app.include_router(embeddings.router, tags=["embeddings"])
 
+    # Add global exception handler to sanitize error messages
+    from fastapi import Request, status
+    from fastapi.responses import JSONResponse
+    import re
+
+    @app.exception_handler(Exception)
+    async def global_exception_handler(request: Request, exc: Exception):
+        """
+        Global exception handler to sanitize error messages.
+
+        Removes file system paths and other sensitive information from error messages
+        to prevent information disclosure.
+        """
+        logger.error(f"Unhandled exception: {exc}", exc_info=True)
+
+        # Get the error message
+        error_msg = str(exc)
+
+        # Sanitize file paths (Unix and Windows style)
+        # Remove absolute paths like /workspace/, /home/, C:\, etc.
+        error_msg = re.sub(r'/[\w\-/]+/[\w\-./]+\.py', '[REDACTED]', error_msg)
+        error_msg = re.sub(r'[A-Z]:\\[\w\-\\]+\\[\w\-.\\]+\.py', '[REDACTED]', error_msg)
+        error_msg = re.sub(r'/workspace/[\w\-./]+', '[REDACTED]', error_msg)
+        error_msg = re.sub(r'/home/[\w\-./]+', '[REDACTED]', error_msg)
+        error_msg = re.sub(r'/usr/[\w\-./]+', '[REDACTED]', error_msg)
+        error_msg = re.sub(r'/local-server/[\w\-./]+', '[REDACTED]', error_msg)
+
+        # Return generic error response
+        return JSONResponse(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            content={"detail": error_msg}
+        )
+
     return app
 
 # Default app for production

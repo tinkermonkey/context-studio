@@ -48,9 +48,18 @@ def security_test_database():
         embedding_dims=384
     )
 
+    # Extract node data before closing session to avoid DetachedInstanceError
+    node_data = {
+        'id': node.id,
+        'title': node.title,
+        'definition': node.definition,
+        'source': node.source,
+        'external_id': node.external_id
+    }
+
     manager.close()
 
-    yield db_path, node
+    yield db_path, node_data
 
     # Cleanup
     if os.path.exists(db_path):
@@ -112,7 +121,7 @@ class TestTC_SEC001_SQLInjectionPrevention:
         # Verify database integrity after injection attempts
         with ReferenceManager(config, db_path=db_path) as manager:
             # Should still be able to query
-            test_node = manager.get_reference_node(node.id)
+            test_node = manager.get_reference_node(node['id'])
             assert test_node is not None, "Database corrupted by injection"
             assert test_node.title == "TestEntity", "Data modified by injection"
 
@@ -132,7 +141,7 @@ class TestTC_SEC001_SQLInjectionPrevention:
                 try:
                     # Predicate filter should use parameterized query
                     links = manager.get_node_links(
-                        node_id=node.id,
+                        node_id=node['id'],
                         direction="both",
                         predicate=injection
                     )

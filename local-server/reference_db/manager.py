@@ -149,8 +149,8 @@ class ReferenceManager:
             Path to the reference database file
         """
         # This will be overridden by the application config
-        from config import get_config
-        app_config = get_config()
+        from config import get_settings
+        app_config = get_settings()
         return app_config.database.reference_path
 
     def _initialize_database(self):
