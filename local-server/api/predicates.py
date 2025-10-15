@@ -13,7 +13,6 @@ from database import models
 from database.utils import get_db
 from database.predicate_utils import generate_identifier_from_title, import_conceptnet_predicates, get_conceptnet_relation_for_predicate, validate_predicate_identifier
 from config import get_settings
-from api.api_errors import validation_error_response, conflict_error_response, bad_request_error_response
 from utils.logger import get_logger
 
 logger = get_logger("predicates_api")
@@ -88,29 +87,29 @@ def to_predicate_out(predicate: models.Predicate) -> PredicateOut:
 def create_predicate(predicate: PredicateCreate, db: Session = Depends(get_db)):
     """Create a new predicate."""
     if not predicate.title or not predicate.title.strip():
-        return validation_error_response("Predicate title must not be empty.", loc=["body", "title"])
-    
+        raise HTTPException(status_code=422, detail="Predicate title must not be empty.")
+
     # Generate identifier if not provided
     identifier = predicate.identifier
     if not identifier:
         identifier = generate_identifier_from_title(predicate.title)
-    
+
     # Validate identifier uniqueness
     if not validate_predicate_identifier(identifier, None, db):
-        return conflict_error_response(f"Predicate with identifier '{identifier}' already exists.")
-    
+        raise HTTPException(status_code=409, detail=f"Predicate with identifier '{identifier}' already exists.")
+
     # Validate title uniqueness
     if db.query(models.Predicate).filter_by(title=predicate.title).first():
-        return conflict_error_response(f"Predicate with title '{predicate.title}' already exists.")
-    
+        raise HTTPException(status_code=409, detail=f"Predicate with title '{predicate.title}' already exists.")
+
     # Serialize mapping to JSON if provided
     mapping_json = None
     if predicate.mapping:
         try:
             mapping_json = json.dumps(predicate.mapping)
         except (TypeError, ValueError) as e:
-            return validation_error_response(f"Invalid mapping format: {str(e)}", loc=["body", "mapping"])
-    
+            raise HTTPException(status_code=422, detail=f"Invalid mapping format: {str(e)}")
+
     try:
         db_predicate = models.Predicate(
             id=str(uuid4()),
@@ -124,12 +123,12 @@ def create_predicate(predicate: PredicateCreate, db: Session = Depends(get_db)):
         db.add(db_predicate)
         db.commit()
         db.refresh(db_predicate)
-        
+
         return to_predicate_out(db_predicate)
-        
+
     except IntegrityError:
         db.rollback()
-        return conflict_error_response("Predicate with this identifier or title already exists.")
+        raise HTTPException(status_code=409, detail="Predicate with this identifier or title already exists.")
 
 
 @router.get("/{id}", response_model=PredicateOut, responses={404: {"description": "Predicate not found"}})
@@ -188,24 +187,24 @@ def update_predicate(id: str, predicate: PredicateUpdate, db: Session = Depends(
     # Validate UUID format
     if not validate_uuid_format(id):
         raise HTTPException(status_code=400, detail="Invalid UUID format.")
-    
+
     db_predicate = db.query(models.Predicate).filter_by(id=id).first()
     if not db_predicate:
         raise HTTPException(status_code=404, detail="Predicate not found.")
-    
+
     # Update identifier if provided
     if predicate.identifier is not None:
         if predicate.identifier != db_predicate.identifier:
             # Validate identifier uniqueness
             if not validate_predicate_identifier(predicate.identifier, id, db):
-                return conflict_error_response(f"Predicate with identifier '{predicate.identifier}' already exists.")
+                raise HTTPException(status_code=409, detail=f"Predicate with identifier '{predicate.identifier}' already exists.")
             db_predicate.identifier = predicate.identifier
-    
+
     # Update title if provided
     if predicate.title is not None:
         if not predicate.title.strip():
-            return validation_error_response("Predicate title must not be empty.", loc=["body", "title"])
-        
+            raise HTTPException(status_code=422, detail="Predicate title must not be empty.")
+
         # Check title uniqueness (excluding current predicate)
         if predicate.title != db_predicate.title:
             existing = db.query(models.Predicate).filter(
@@ -213,33 +212,33 @@ def update_predicate(id: str, predicate: PredicateUpdate, db: Session = Depends(
                 models.Predicate.id != id
             ).first()
             if existing:
-                return conflict_error_response(f"Predicate with title '{predicate.title}' already exists.")
-        
+                raise HTTPException(status_code=409, detail=f"Predicate with title '{predicate.title}' already exists.")
+
         db_predicate.title = predicate.title
-    
+
     # Update definition if provided
     if predicate.definition is not None:
         db_predicate.definition = predicate.definition
-    
+
     # Update mapping if provided
     if predicate.mapping is not None:
         try:
             mapping_json = json.dumps(predicate.mapping)
             db_predicate.mapping = mapping_json
         except (TypeError, ValueError) as e:
-            return validation_error_response(f"Invalid mapping format: {str(e)}", loc=["body", "mapping"])
-    
+            raise HTTPException(status_code=422, detail=f"Invalid mapping format: {str(e)}")
+
     # Update modification timestamp
     db_predicate.date_modified = datetime.datetime.now(datetime.UTC)
-    
+
     try:
         db.commit()
         db.refresh(db_predicate)
         return to_predicate_out(db_predicate)
-        
+
     except IntegrityError:
         db.rollback()
-        return conflict_error_response("Update would create duplicate identifier or title.")
+        raise HTTPException(status_code=409, detail="Update would create duplicate identifier or title.")
 
 
 @router.delete("/{id}", status_code=200, responses={404: {"description": "Predicate not found"}})
@@ -295,19 +294,19 @@ def import_predicates_from_conceptnet(
     """Import predicates from ConceptNet relations."""
     settings = get_settings()
     available_relations = settings.concepcy_config["relations_of_interest"]
-    
+
     # If specific relations are requested, validate and filter
     if relations:
         # Validate that all requested relations are available
         invalid_relations = [r for r in relations if r not in available_relations]
         if invalid_relations:
-            return bad_request_error_response(f"Invalid ConceptNet relations: {invalid_relations}")
-        
+            raise HTTPException(status_code=400, detail=f"Invalid ConceptNet relations: {invalid_relations}")
+
         # Temporarily update the config to only import requested relations
         # We'll create a modified session for this specific import
         original_relations = settings.concepcy_config["relations_of_interest"]
         settings.concepcy_config["relations_of_interest"] = relations
-        
+
         try:
             imported_predicates = import_conceptnet_predicates(db)
         finally:
@@ -316,10 +315,10 @@ def import_predicates_from_conceptnet(
     else:
         # Import all configured relations
         imported_predicates = import_conceptnet_predicates(db)
-    
+
     # Convert to response models
     result = [to_predicate_out(predicate) for predicate in imported_predicates]
-    
+
     return result
 
 
