@@ -361,24 +361,24 @@ class LLMService:
     async def _get_flavor(self, pipeline: PipelineType, flavor_identifier: Optional[str]) -> PipelineFlavor:
         """Get flavor by ID, title, or default"""
         if not flavor_identifier:
-            return await self.flavor_service.get_default_flavor(pipeline)
+            return self.flavor_service.get_default_flavor(pipeline)
 
         # Check for default flavor by ID or title
         if flavor_identifier == "default" or flavor_identifier.lower() == "default":
-            return await self.flavor_service.get_default_flavor(pipeline)
+            return self.flavor_service.get_default_flavor(pipeline)
 
         # Try by ID first (for user-created flavors)
         try:
-            return await self.flavor_service.get_flavor_by_id(flavor_identifier)
+            return self.flavor_service.get_flavor_by_id(flavor_identifier)
         except FlavorNotFoundError:
             pass
 
         # Try by title (for user-created flavors)
         try:
-            return await self.flavor_service.get_flavor_by_title(pipeline, flavor_identifier)
+            return self.flavor_service.get_flavor_by_title(pipeline, flavor_identifier)
         except FlavorNotFoundError:
             self.logger.warning(f"Flavor '{flavor_identifier}' not found, using default")
-            return await self.flavor_service.get_default_flavor(pipeline)
+            return self.flavor_service.get_default_flavor(pipeline)
 
     def _create_llm_from_flavor(self, flavor: PipelineFlavor, structured_output_class=None):
         """Create LLM instance with automatic capability detection and parameter validation"""
