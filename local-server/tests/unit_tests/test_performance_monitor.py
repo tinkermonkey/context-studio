@@ -29,14 +29,27 @@ class TestPerformanceMonitor:
     @pytest.fixture
     def mock_sqlite_conn(self):
         """Create a mock SQLite connection."""
-        mock_conn = Mock()
-        cursor = Mock()
-        
-        # Mock cursor methods
-        cursor.fetchall.return_value = [('main', 'database', 'test.db', 2)]
-        cursor.fetchone.return_value = (150, 45, 12)  # total_objects, table_count, index_count
-        
-        mock_conn.cursor.return_value = cursor
+        mock_conn = Mock(spec=['cursor'])
+
+        def create_cursor():
+            """Create a fresh cursor for each call."""
+            cursor = Mock()
+            # Mock cursor methods for database queries
+            # First call: PRAGMA database_list
+            # Second call: stats query
+            # Subsequent calls: per-table row counts
+            cursor.fetchall.return_value = [('main', 'database', 'test.db', 2)]
+            cursor.fetchone.side_effect = [
+                (150, 45, 12),  # total_objects, table_count, index_count from stats query
+                (100,),  # entity_versions row count
+                (50,),   # changesets row count
+                (25,),   # proposals row count
+                (10,),   # user_identities row count
+            ]
+            cursor.execute = Mock()  # Mock execute method on cursor
+            return cursor
+
+        mock_conn.cursor.side_effect = create_cursor
         return mock_conn
     
     @pytest.fixture
