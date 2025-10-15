@@ -8,6 +8,7 @@ import { vi, describe, it, expect, beforeEach } from "vitest";
 // Mock the API hooks
 vi.mock("@/api/hooks/pipelineFlavors", () => ({
   usePipelineFlavors: vi.fn(),
+  usePipelineFlavor: vi.fn(),
 }));
 
 vi.mock("@/api/hooks/llm", () => ({
@@ -16,7 +17,7 @@ vi.mock("@/api/hooks/llm", () => ({
   useSuggestLayerDefinitionMutation: vi.fn(),
 }));
 
-import { usePipelineFlavors } from "@/api/hooks/pipelineFlavors";
+import { usePipelineFlavors, usePipelineFlavor } from "@/api/hooks/pipelineFlavors";
 import {
   useSuggestTermDefinitionMutation,
   useSuggestDomainDefinitionMutation,
@@ -24,6 +25,7 @@ import {
 } from "@/api/hooks/llm";
 
 const mockUsePipelineFlavors = usePipelineFlavors as any;
+const mockUsePipelineFlavor = usePipelineFlavor as any;
 const mockUseSuggestTermDefinitionMutation =
   useSuggestTermDefinitionMutation as any;
 const mockUseSuggestDomainDefinitionMutation =
@@ -47,6 +49,13 @@ const createWrapper = () => {
 describe("LlmPipelineRun", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+
+    // Default mock for usePipelineFlavor (not used in most tests)
+    mockUsePipelineFlavor.mockReturnValue({
+      data: undefined,
+      isLoading: false,
+      error: null,
+    });
   });
 
   it("renders loading state when fetching flavors", () => {
@@ -190,8 +199,9 @@ describe("LlmPipelineRun", () => {
 
     await waitFor(() => {
       expect(mockMutateAsync).toHaveBeenCalledWith({
-        term: "test",
-        flavor: "1",
+        pipeline_type: "suggest_term_definition",
+        flavor_id: "1",
+        context_data: { term: "test" },
       });
     });
 
