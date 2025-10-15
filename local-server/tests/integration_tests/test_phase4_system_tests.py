@@ -192,18 +192,19 @@ def test_database_with_schema_org():
     ])
     manager.session.commit()
 
+    # Extract node data BEFORE closing the session
+    node_data = {
+        "person": {"id": person_node.id, "title": person_node.title},
+        "thing": {"id": thing_node.id, "title": thing_node.title},
+        "book": {"id": book_node.id, "title": book_node.title},
+        "author": {"id": author_prop.id, "title": author_prop.title},
+        "name": {"id": name_prop.id, "title": name_prop.title},
+        "givenName": {"id": given_name_prop.id, "title": given_name_prop.title}
+    }
+
     manager.close()
 
-    yield db_path, {
-        "nodes": {
-            "person": person_node,
-            "thing": thing_node,
-            "book": book_node,
-            "author": author_prop,
-            "name": name_prop,
-            "givenName": given_name_prop
-        }
-    }
+    yield db_path, {"nodes": node_data}
 
     # Cleanup
     if os.path.exists(db_path):
@@ -268,7 +269,7 @@ class TestTC_S001_EndToEndWorkflow:
             return vec.tobytes()
 
         # Step 1: Search for "person who writes books"
-        with patch('embeddings.generate_embeddings.generate_embedding', side_effect=mock_embedding):
+        with patch('api.reference.generate_embedding', side_effect=mock_embedding):
             response = app_client.get(
                 "/api/reference/ref-db/search",
                 params={
@@ -418,7 +419,7 @@ class TestTC_S003_APIContractValidation:
             vec = vec / np.linalg.norm(vec)
             return vec.tobytes()
 
-        with patch('embeddings.generate_embeddings.generate_embedding', side_effect=mock_embedding):
+        with patch('api.reference.generate_embedding', side_effect=mock_embedding):
             response = app_client.get(
                 "/api/reference/ref-db/search",
                 params={"query": "test", "limit": 10}
@@ -448,7 +449,7 @@ class TestTC_S003_APIContractValidation:
     def test_node_retrieval_api_schema(self, app_client, test_database_with_schema_org):
         """Verify node retrieval API returns expected schema."""
         db_path, nodes = test_database_with_schema_org
-        person_id = nodes["nodes"]["person"].id
+        person_id = nodes["nodes"]["person"]["id"]
 
         response = app_client.get(f"/api/reference/ref-db/nodes/{person_id}")
 
@@ -467,7 +468,7 @@ class TestTC_S003_APIContractValidation:
     def test_links_api_response_schema(self, app_client, test_database_with_schema_org):
         """Verify links API returns expected response schema."""
         db_path, nodes = test_database_with_schema_org
-        person_id = nodes["nodes"]["person"].id
+        person_id = nodes["nodes"]["person"]["id"]
 
         response = app_client.get(
             f"/api/reference/ref-db/nodes/{person_id}/links",

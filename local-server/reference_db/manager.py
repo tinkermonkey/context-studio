@@ -921,6 +921,7 @@ class ReferenceManager:
             "node_count": 0,
             "vec_count": 0,
             "schema_version": None,
+            "model_version": "all-MiniLM-L6-v2",  # Embedding model version
             "last_import_at": None,
             "database_size": 0,
             "database_path": self.db_path,

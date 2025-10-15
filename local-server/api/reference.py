@@ -14,6 +14,9 @@ from reference_api.models import (
     MultiSourceSearchResponse
 )
 from reference_api.exceptions import ReferenceError, SourceError, SourceTimeoutError
+from reference_db.manager import ReferenceManager
+from reference_db.config import ReferenceConfig
+from embeddings.generate_embeddings import generate_embedding
 
 logger = logging.getLogger(__name__)
 
@@ -335,10 +338,6 @@ async def reference_db_search(
         )
 
     try:
-        from reference_db.manager import ReferenceManager
-        from reference_db.config import ReferenceConfig
-        from embeddings.generate_embeddings import generate_embedding
-
         config = ReferenceConfig()
         with ReferenceManager(config) as manager:
             # Create embedding generator
@@ -391,9 +390,6 @@ async def get_reference_node(
 ):
     """Get a reference node by ID."""
     try:
-        from reference_db.manager import ReferenceManager
-        from reference_db.config import ReferenceConfig
-
         config = ReferenceConfig()
         with ReferenceManager(config) as manager:
             node = manager.get_reference_node(node_id)
@@ -431,9 +427,6 @@ async def get_node_links(
     Returns links ordered by created_at (descending).
     """
     try:
-        from reference_db.manager import ReferenceManager
-        from reference_db.config import ReferenceConfig
-
         config = ReferenceConfig()
         with ReferenceManager(config) as manager:
             # Verify node exists
@@ -513,9 +506,6 @@ async def reference_db_health_check():
     start_time = time.time()
 
     try:
-        from reference_db.manager import ReferenceManager
-        from reference_db.config import ReferenceConfig
-
         config = ReferenceConfig()
         with ReferenceManager(config) as manager:
             status = manager.get_status()
