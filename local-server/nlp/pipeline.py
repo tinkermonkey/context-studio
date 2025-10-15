@@ -1,9 +1,6 @@
 import threading
 import spacy
 import spacy.tokens
-import concepcy
-import spacy_dbpedia_spotlight
-from spacy_wordnet.wordnet_annotator import WordnetAnnotator
 from typing import Optional
 from config import get_settings, get_config_manager
 from utils.logger import get_logger
@@ -12,11 +9,24 @@ from nlp.model_downloader import get_model_downloader
 
 logger = get_logger(__name__)
 
-## DO NOT REMOVE THESE - needed to register custom pipeline components
-_concepcy = concepcy
-_dbpedia_spotlight = spacy_dbpedia_spotlight
-_spacy_wordnet = WordnetAnnotator
-## DO NOT REMOVE THESE - needed to register custom pipeline components
+# Optional imports for NLP components
+try:
+    import concepcy
+except ImportError:
+    logger.info("concepcy library not available")
+    concepcy = None
+
+try:
+    import spacy_dbpedia_spotlight
+except ImportError:
+    logger.info("spacy_dbpedia_spotlight library not available")
+    spacy_dbpedia_spotlight = None
+
+try:
+    from spacy_wordnet.wordnet_annotator import WordnetAnnotator
+except ImportError:
+    logger.info("spacy_wordnet library not available")
+    WordnetAnnotator = None
 
 class NLPPipeline:
     """
