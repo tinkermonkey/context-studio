@@ -21,13 +21,19 @@ class PipelineDatabaseManager:
 
         Args:
             pipeline_db_path: Path to pipeline database file. If None, uses default location.
+
+        Raises:
+            ValueError: If pipeline_db_path is None and no valid default is available
         """
         if pipeline_db_path is None:
             # Use config path for pipeline database
             from config import get_settings
             settings = get_settings()
             pipeline_db_path = settings.database.pipeline_path
-        
+
+        if not pipeline_db_path:
+            raise ValueError("Pipeline database path cannot be None or empty")
+
         self.pipeline_db_path = pipeline_db_path
         self.engine = None
         self.session_local = None

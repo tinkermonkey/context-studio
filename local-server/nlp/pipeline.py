@@ -1,10 +1,6 @@
 import threading
 import spacy
 import spacy.tokens
-import concepcy
-import spacy_dbpedia_spotlight
-import sense2vec
-from spacy_wordnet.wordnet_annotator import WordnetAnnotator
 from typing import Optional
 from config import get_settings, get_config_manager
 from utils.logger import get_logger
@@ -13,12 +9,39 @@ from nlp.model_downloader import get_model_downloader
 
 logger = get_logger(__name__)
 
-## DO NOT REMOVE THESE - needed to register custom pipeline components
-_concepcy = concepcy
-_dbpedia_spotlight = spacy_dbpedia_spotlight
-_spacy_wordnet = WordnetAnnotator
-_sense2vec = sense2vec
-## DO NOT REMOVE THESE - needed to register custom pipeline components
+# Optional imports for pipeline components
+# These are optional dependencies that may not be installed
+try:
+    import concepcy
+    _concepcy = concepcy
+except ImportError:
+    logger.warning("concepcy not available - ConceptNet integration will be disabled")
+    concepcy = None
+    _concepcy = None
+
+try:
+    import spacy_dbpedia_spotlight
+    _dbpedia_spotlight = spacy_dbpedia_spotlight
+except ImportError:
+    logger.warning("spacy_dbpedia_spotlight not available - DBpedia integration will be disabled")
+    spacy_dbpedia_spotlight = None
+    _dbpedia_spotlight = None
+
+try:
+    from spacy_wordnet.wordnet_annotator import WordnetAnnotator
+    _spacy_wordnet = WordnetAnnotator
+except ImportError:
+    logger.warning("spacy_wordnet not available - WordNet integration will be disabled")
+    WordnetAnnotator = None
+    _spacy_wordnet = None
+
+try:
+    import sense2vec
+    _sense2vec = sense2vec
+except ImportError:
+    logger.warning("sense2vec not available - Sense2Vec integration will be disabled")
+    sense2vec = None
+    _sense2vec = None
 
 class NLPPipeline:
     """
@@ -82,12 +105,16 @@ class NLPPipeline:
 
     def _add_concepcy_component(self):
         """Add concepcy component using centralized reference source config"""
+        if concepcy is None:
+            logger.info("concepcy library not available, skipping concepcy component")
+            return
+
         conceptnet_config = self.settings.reference_sources.conceptnet
-        
+
         if not conceptnet_config.enabled:
             logger.info("ConceptNet disabled, skipping concepcy component")
             return
-            
+
         try:
             logger.info("Adding concepcy component...")
             
@@ -116,12 +143,16 @@ class NLPPipeline:
 
     def _add_dbpedia_spotlight_component(self):
         """Add DBpedia Spotlight component using centralized reference source config"""
+        if spacy_dbpedia_spotlight is None:
+            logger.info("spacy_dbpedia_spotlight library not available, skipping component")
+            return
+
         dbpedia_spotlight_config = self.settings.reference_sources.dbpedia_spotlight
-        
+
         if not dbpedia_spotlight_config.enabled:
             logger.info("DBpedia Spotlight disabled, skipping component")
             return
-            
+
         try:
             logger.info("Adding dbpedia_spotlight component...")
             
@@ -146,6 +177,10 @@ class NLPPipeline:
 
     def _add_spacy_wordnet_component(self):
         """Add spacy_wordnet component"""
+        if WordnetAnnotator is None:
+            logger.info("spacy_wordnet library not available, skipping component")
+            return
+
         try:
             logger.info("Adding spacy_wordnet component...")
             self.nlp.add_pipe("spacy_wordnet", after="tagger")
@@ -157,6 +192,10 @@ class NLPPipeline:
 
     def _add_sense2vec_component(self):
         """Add sense2vec component"""
+        if sense2vec is None:
+            logger.info("sense2vec library not available, skipping component")
+            return
+
         try:
             settings = get_settings()
             logger.info("Adding sense2vec component...")

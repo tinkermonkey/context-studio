@@ -10,11 +10,19 @@ import time
 import pandas as pd
 from typing import Dict, Any, Optional
 from datetime import datetime, timedelta
-from botocore.exceptions import ClientError
 
 from utils.logger import get_logger
 
 logger = get_logger(__name__)
+
+# Optional import for AWS integration
+try:
+    from botocore.exceptions import ClientError
+except ImportError:
+    logger.warning("botocore not available - S3 integration will be disabled")
+    # Create a dummy ClientError for type checking
+    class ClientError(Exception):
+        pass
 
 
 class S3StorageOptimizer:

@@ -583,10 +583,10 @@ class TestErrorHandlingIntegration:
 
     def test_invalid_path_handling(self):
         """Test handling of invalid paths during directory creation."""
-        # Test with None path
+        # Test with empty string path (invalid)
         with pytest.raises(Exception):
             from pipeline.manager import PipelineDatabaseManager
-            manager = PipelineDatabaseManager(pipeline_db_path=None)
+            manager = PipelineDatabaseManager(pipeline_db_path="")
 
     def test_directory_cleanup_on_error(self):
         """Test that resources are cleaned up properly if initialization fails."""
