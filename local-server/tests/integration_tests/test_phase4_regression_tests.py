@@ -160,21 +160,27 @@ class TestBackwardCompatibility:
         assert search_time < 200, f"Search should complete in <200ms (actual: {search_time:.2f}ms)"
 
 
-@pytest.fixture
-def test_db_with_data(tmpdir):
+@pytest.fixture(scope="class")
+def test_db_with_data(tmp_path_factory):
     """
     Create a test database with sample data for regression testing.
 
     This fixture ensures we have known data to test backward compatibility.
+    Uses class scope to share the database across all tests in the class.
     """
     # Import here to avoid circular dependencies
     from reference_db.manager import ReferenceManager
+    from reference_db.config import ReferenceConfig
     import json
     import os
 
-    # Create temporary database
+    # Create temporary database using tmp_path_factory for class-scoped fixtures
+    tmpdir = tmp_path_factory.mktemp("regression_tests")
     db_path = str(tmpdir / "test_regression.db")
-    manager = ReferenceManager(db_path)
+
+    # Create a minimal config for testing
+    config = ReferenceConfig(enable_embeddings=True)
+    manager = ReferenceManager(config=config, db_path=db_path)
 
     # Load schema.org sample data
     fixture_path = os.path.join(
@@ -190,22 +196,29 @@ def test_db_with_data(tmpdir):
             # Import the data (would use actual import logic here)
             # For now, create some basic test data
 
-    # Create test nodes directly
-    manager.add_reference_node(
-        title="Person",
-        definition="A person (alive, dead, undead, or fictional).",
-        source="schema.org",
-        external_id="Person",
-        attributes={"@type": "Class"}
-    )
+    # Check if nodes already exist before adding them
+    person_node = manager.get_reference_node_by_source("schema.org", "Person")
+    if not person_node:
+        manager.add_reference_node(
+            title="Person",
+            definition="A person (alive, dead, undead, or fictional).",
+            source="schema.org",
+            external_id="Person",
+            attributes={"@type": "Class"}
+        )
 
-    manager.add_reference_node(
-        title="name",
-        definition="The name of the item.",
-        source="schema.org",
-        external_id="name",
-        attributes={"@type": "Property"}
-    )
+    name_node = manager.get_reference_node_by_source("schema.org", "name")
+    if not name_node:
+        manager.add_reference_node(
+            title="name",
+            definition="The name of the item.",
+            source="schema.org",
+            external_id="name",
+            attributes={"@type": "Property"}
+        )
+
+    # Close the manager to release the session
+    manager.close()
 
     yield db_path
 
@@ -214,24 +227,36 @@ def test_db_with_data(tmpdir):
         os.remove(db_path)
 
 
-@pytest.fixture
+@pytest.fixture(scope="class")
 def client(test_db_with_data):
     """
     Create test client with test database.
+    Uses class scope to share the client across all tests in the class.
     """
     from fastapi.testclient import TestClient
     from api.reference import router
+    from unittest.mock import patch
+    import os
+
+    # Patch the ReferenceManager's _get_default_db_path method to return test db path
+    # This ensures all ReferenceManager instances in the API use the test database
     from reference_db.manager import ReferenceManager
 
-    # Override the reference manager to use test database
-    test_manager = ReferenceManager(test_db_with_data)
+    original_method = ReferenceManager._get_default_db_path
 
-    # Create app and inject test manager
-    from fastapi import FastAPI
-    app = FastAPI()
-    app.include_router(router)
+    def mock_get_default_db_path(self):
+        return test_db_with_data
 
-    # Override dependency
-    app.dependency_overrides = {}
+    # Apply the patch
+    ReferenceManager._get_default_db_path = mock_get_default_db_path
 
-    return TestClient(app)
+    try:
+        # Create app with the patched reference manager
+        from fastapi import FastAPI
+        app = FastAPI()
+        app.include_router(router)
+
+        yield TestClient(app)
+    finally:
+        # Restore original method
+        ReferenceManager._get_default_db_path = original_method

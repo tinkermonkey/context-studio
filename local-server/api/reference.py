@@ -3,6 +3,7 @@
 from fastapi import APIRouter, HTTPException, Depends, Query, Path
 from fastapi.responses import JSONResponse
 from typing import Optional, Literal
+from pydantic import BaseModel, Field
 import logging
 
 from api.dependencies.reference_services import get_reference_service
@@ -19,6 +20,14 @@ from reference_db.config import ReferenceConfig
 from embeddings.generate_embeddings import generate_embedding
 
 logger = logging.getLogger(__name__)
+
+
+class ReferenceSearchRequest(BaseModel):
+    """Request model for reference database search"""
+    query: str = Field(..., min_length=1, description="Search query text")
+    source: Optional[str] = Field(None, description="Filter by source (e.g., 'schema.org')")
+    limit: int = Field(20, ge=1, le=10000, description="Maximum results")
+    threshold: float = Field(0.7, ge=-1.0, le=1.0, description="Similarity threshold")
 
 router = APIRouter(prefix="/api/reference", tags=["reference"])
 
@@ -308,6 +317,138 @@ async def multi_source_search_get(
 
 
 # Reference database vector search endpoints
+@router.get("/ref-db/entity/{source}/{external_id}")
+async def get_reference_entity(
+    source: str = Path(..., description="Source identifier (e.g., 'schema.org')"),
+    external_id: str = Path(..., description="Source-specific identifier"),
+):
+    """
+    Look up a reference entity by source and external ID.
+
+    Returns the reference node if found, otherwise 404.
+    """
+    try:
+        config = ReferenceConfig()
+        with ReferenceManager(config) as manager:
+            node = manager.get_reference_node_by_source(source, external_id)
+
+            if not node:
+                raise HTTPException(
+                    status_code=404,
+                    detail=f"Entity not found: {source}/{external_id}"
+                )
+
+            return {
+                "id": node.id,
+                "title": node.title,
+                "definition": node.definition,
+                "source": node.source,
+                "external_id": node.external_id,
+                "created_at": node.created_at,
+                "updated_at": node.updated_at
+            }
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Get reference entity failed: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.get("/ref-db/property/{source}/{external_id}")
+async def get_reference_property(
+    source: str = Path(..., description="Source identifier (e.g., 'schema.org')"),
+    external_id: str = Path(..., description="Source-specific property identifier"),
+):
+    """
+    Look up a reference property by source and external ID.
+
+    Returns the reference node if found, otherwise 404.
+    Properties are stored as nodes with type='Property' in attributes.
+    """
+    try:
+        config = ReferenceConfig()
+        with ReferenceManager(config) as manager:
+            node = manager.get_reference_node_by_source(source, external_id)
+
+            if not node:
+                raise HTTPException(
+                    status_code=404,
+                    detail=f"Property not found: {source}/{external_id}"
+                )
+
+            return {
+                "id": node.id,
+                "title": node.title,
+                "definition": node.definition,
+                "source": node.source,
+                "external_id": node.external_id,
+                "created_at": node.created_at,
+                "updated_at": node.updated_at
+            }
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Get reference property failed: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.post("/ref-db/search")
+async def reference_db_search_post(request: ReferenceSearchRequest):
+    """
+    Search reference database using semantic vector similarity (POST).
+
+    This endpoint uses vector embeddings for semantic search and returns results
+    ranked by similarity score.
+    """
+    try:
+        config = ReferenceConfig()
+        with ReferenceManager(config) as manager:
+            # Create embedding generator
+            def embedding_gen(text: str) -> bytes:
+                return generate_embedding(text)
+
+            # Execute search
+            results_with_scores = manager.search_by_similarity(
+                query_text=request.query,
+                source=request.source,
+                limit=request.limit,
+                threshold=request.threshold,
+                embedding_generator=embedding_gen
+            )
+
+            # Format response
+            results = []
+            for node, score in results_with_scores:
+                results.append({
+                    "id": node.id,
+                    "title": node.title,
+                    "definition": node.definition,
+                    "source": node.source,
+                    "external_id": node.external_id,
+                    "similarity_score": score
+                })
+
+            return {
+                "query": request.query,
+                "total_results": len(results),
+                "results": results
+            }
+
+    except HTTPException:
+        # Re-raise HTTP exceptions (validation errors)
+        raise
+    except ValueError as e:
+        # Return 400 for validation errors from manager
+        logger.warning(f"Invalid search parameters: {e}")
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        # Return 500 for database/vector search errors (fail fast)
+        logger.error(f"Reference DB search failed: {e}")
+        raise HTTPException(status_code=500, detail=f"Vector search failed: {str(e)}")
+
+
 @router.get("/ref-db/search")
 async def reference_db_search(
     query: str = Query(..., description="Search query text", min_length=1),
