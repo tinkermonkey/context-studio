@@ -17,9 +17,9 @@ from reference_api.models import (
 class TestReferenceAPIIntegration:
     """Integration tests for reference API endpoints"""
 
-    def test_health_endpoint(self, client):
+    def test_health_endpoint(self, minimal_reference_client):
         """Test the reference health endpoint"""
-        response = client.get("/api/reference/health")
+        response = minimal_reference_client.get("/api/reference/health")
 
         assert response.status_code == 200
         data = response.json()
@@ -28,7 +28,7 @@ class TestReferenceAPIIntegration:
         assert "timestamp" in data
         assert isinstance(data["sources"], dict)
 
-    def test_dbpedia_search_endpoint_success(self, client):
+    def test_dbpedia_search_endpoint_success(self, minimal_reference_client):
         """Test DBpedia search endpoint with successful response"""
         with patch(
             "reference_api.service.ReferenceService.dbpedia_search"
@@ -57,7 +57,7 @@ class TestReferenceAPIIntegration:
                 search_time_ms=100.0
             )
 
-            response = client.get(
+            response = minimal_reference_client.get(
                 "/api/reference/dbpedia/search",
                 params={"query": "Apple", "limit": 5},
             )
@@ -70,16 +70,16 @@ class TestReferenceAPIIntegration:
             assert data["total_results"] == 1
             assert "dbpedia" in data["sources_queried"]
 
-    def test_dbpedia_search_endpoint_validation_error(self, client):
+    def test_dbpedia_search_endpoint_validation_error(self, minimal_reference_client):
         """Test DBpedia search endpoint with validation error"""
-        response = client.get(
+        response = minimal_reference_client.get(
             "/api/reference/dbpedia/search",
             params={"query": "Apple", "limit": 101},  # Exceeds max limit
         )
 
         assert response.status_code == 422  # Validation error
 
-    def test_dbpedia_resource_endpoint_success(self, client):
+    def test_dbpedia_resource_endpoint_success(self, minimal_reference_client):
         """Test DBpedia resource endpoint with successful response"""
         with patch(
             "reference_api.service.ReferenceService.dbpedia_get_resource"
@@ -108,7 +108,7 @@ class TestReferenceAPIIntegration:
                 search_time_ms=100.0
             )
 
-            response = client.get(
+            response = minimal_reference_client.get(
                 "/api/reference/dbpedia/resource",
                 params={"resource_url": "http://dbpedia.org/resource/Apple"},
             )
@@ -120,7 +120,7 @@ class TestReferenceAPIIntegration:
             assert len(data["results"]) == 1
             assert data["results"][0]["id"] == "dbpedia:http://dbpedia.org/resource/Apple"
 
-    def test_dbpedia_sparql_endpoint_success(self, client):
+    def test_dbpedia_sparql_endpoint_success(self, minimal_reference_client):
         """Test DBpedia SPARQL endpoint with successful response"""
         with patch(
             "reference_api.service.ReferenceService.dbpedia_sparql"
@@ -139,7 +139,7 @@ class TestReferenceAPIIntegration:
                 search_time_ms=100.0
             )
 
-            response = client.post(
+            response = minimal_reference_client.post(
                 "/api/reference/dbpedia/sparql",
                 json={
                     "query": "SELECT ?s WHERE { ?s a ?o } LIMIT 10",
@@ -153,7 +153,7 @@ class TestReferenceAPIIntegration:
             assert "dbpedia" in data["sources_queried"]
             assert data["total_results"] == 0
 
-    def test_conceptnet_query_endpoint_success(self, client):
+    def test_conceptnet_query_endpoint_success(self, minimal_reference_client):
         """Test ConceptNet query endpoint with successful response"""
         with patch(
             "reference_api.service.ReferenceService.conceptnet_query"
@@ -201,7 +201,7 @@ class TestReferenceAPIIntegration:
                 search_time_ms=150.0
             )
 
-            response = client.get(
+            response = minimal_reference_client.get(
                 "/api/reference/conceptnet/query",
                 params={"start": "/c/en/apple", "limit": 20},
             )
@@ -213,7 +213,7 @@ class TestReferenceAPIIntegration:
             assert len(data["results"]) == 2
             assert len(data["links"]) == 1
 
-    def test_conceptnet_concept_endpoint_success(self, client):
+    def test_conceptnet_concept_endpoint_success(self, minimal_reference_client):
         """Test ConceptNet concept endpoint with successful response"""
         with patch(
             "reference_api.service.ReferenceService.conceptnet_get_concept"
@@ -242,7 +242,7 @@ class TestReferenceAPIIntegration:
                 search_time_ms=100.0
             )
 
-            response = client.get(
+            response = minimal_reference_client.get(
                 "/api/reference/conceptnet/concept/c/en/apple"
             )
 
@@ -252,7 +252,7 @@ class TestReferenceAPIIntegration:
             assert "conceptnet" in data["sources_queried"]
             assert len(data["results"]) == 1
 
-    def test_conceptnet_related_endpoint_success(self, client):
+    def test_conceptnet_related_endpoint_success(self, minimal_reference_client):
         """Test ConceptNet related concepts endpoint with successful response"""
         with patch(
             "reference_api.service.ReferenceService.conceptnet_get_related"
@@ -281,7 +281,7 @@ class TestReferenceAPIIntegration:
                 search_time_ms=100.0
             )
 
-            response = client.get(
+            response = minimal_reference_client.get(
                 "/api/reference/conceptnet/related/c/en/apple",
                 params={"limit": 10},
             )
@@ -292,7 +292,7 @@ class TestReferenceAPIIntegration:
             assert "conceptnet" in data["sources_queried"]
             assert len(data["results"]) == 1
 
-    def test_wikidata_sparql_endpoint_success(self, client):
+    def test_wikidata_sparql_endpoint_success(self, minimal_reference_client):
         """Test Wikidata SPARQL endpoint with successful response"""
         with patch(
             "reference_api.service.ReferenceService.wikidata_sparql"
@@ -311,7 +311,7 @@ class TestReferenceAPIIntegration:
                 search_time_ms=200.0
             )
 
-            response = client.post(
+            response = minimal_reference_client.post(
                 "/api/reference/wikidata/sparql",
                 json={
                     "query": "SELECT ?item WHERE { ?item wdt:P31 wd:Q5 } LIMIT 10",
@@ -324,7 +324,7 @@ class TestReferenceAPIIntegration:
             assert data["query"] == "SELECT ?item WHERE { ?item wdt:P31 wd:Q5 } LIMIT 10"
             assert "wikidata" in data["sources_queried"]
 
-    def test_wikidata_entity_endpoint_success(self, client):
+    def test_wikidata_entity_endpoint_success(self, minimal_reference_client):
         """Test Wikidata entity endpoint with successful response"""
         with patch(
             "reference_api.service.ReferenceService.wikidata_get_entity"
@@ -353,7 +353,7 @@ class TestReferenceAPIIntegration:
                 search_time_ms=150.0
             )
 
-            response = client.get(
+            response = minimal_reference_client.get(
                 "/api/reference/wikidata/entity",
                 params={"entity_url": "http://www.wikidata.org/entity/Q312"},
             )
@@ -365,7 +365,7 @@ class TestReferenceAPIIntegration:
             assert len(data["results"]) == 1
             assert data["results"][0]["attributes"]["entity_id"] == "Q312"
 
-    def test_schema_org_entity_endpoint_success(self, client):
+    def test_schema_org_entity_endpoint_success(self, minimal_reference_client):
         """Test Schema.org entity endpoint with successful response"""
         with patch(
             "reference_api.service.ReferenceService.schema_org_get_entity"
@@ -394,7 +394,7 @@ class TestReferenceAPIIntegration:
                 search_time_ms=100.0
             )
 
-            response = client.get(
+            response = minimal_reference_client.get(
                 "/api/reference/schema-org/entity/Person"
             )
 
@@ -404,7 +404,7 @@ class TestReferenceAPIIntegration:
             assert "schema_org" in data["sources_queried"]
             assert len(data["results"]) == 1
 
-    def test_schema_org_property_endpoint_success(self, client):
+    def test_schema_org_property_endpoint_success(self, minimal_reference_client):
         """Test Schema.org property endpoint with successful response"""
         with patch(
             "reference_api.service.ReferenceService.schema_org_get_property"
@@ -433,7 +433,7 @@ class TestReferenceAPIIntegration:
                 search_time_ms=100.0
             )
 
-            response = client.get(
+            response = minimal_reference_client.get(
                 "/api/reference/schema-org/property/name"
             )
 
@@ -443,7 +443,7 @@ class TestReferenceAPIIntegration:
             assert "schema_org" in data["sources_queried"]
             assert len(data["results"]) == 1
 
-    def test_schema_org_search_endpoint_success(self, client):
+    def test_schema_org_search_endpoint_success(self, minimal_reference_client):
         """Test Schema.org search endpoint with successful response"""
         with patch(
             "reference_api.service.ReferenceService.schema_org_search"
@@ -472,7 +472,7 @@ class TestReferenceAPIIntegration:
                 search_time_ms=100.0
             )
 
-            response = client.get(
+            response = minimal_reference_client.get(
                 "/api/reference/schema-org/search",
                 params={"query": "person", "limit": 10},
             )
@@ -483,7 +483,7 @@ class TestReferenceAPIIntegration:
             assert "schema_org" in data["sources_queried"]
             assert len(data["results"]) == 1
 
-    def test_service_error_handling(self, client):
+    def test_service_error_handling(self, minimal_reference_client):
         """Test API error handling for service errors"""
         with patch(
             "reference_api.service.ReferenceService.dbpedia_search"
@@ -492,7 +492,7 @@ class TestReferenceAPIIntegration:
 
             mock_search.side_effect = SourceTimeoutError("Request timed out")
 
-            response = client.get(
+            response = minimal_reference_client.get(
                 "/api/reference/dbpedia/search",
                 params={"query": "Apple", "limit": 5},
             )
@@ -500,7 +500,7 @@ class TestReferenceAPIIntegration:
             assert response.status_code == 504  # Gateway timeout
             assert "Request timed out" in response.json()["detail"]
 
-    def test_source_unavailable_error_handling(self, client):
+    def test_source_unavailable_error_handling(self, minimal_reference_client):
         """Test API error handling for source unavailable errors"""
         with patch(
             "reference_api.service.ReferenceService.conceptnet_query"
@@ -509,7 +509,7 @@ class TestReferenceAPIIntegration:
 
             mock_query.side_effect = SourceError("ConceptNet unavailable")
 
-            response = client.get(
+            response = minimal_reference_client.get(
                 "/api/reference/conceptnet/query",
                 params={"start": "/c/en/apple"},
             )
@@ -517,7 +517,7 @@ class TestReferenceAPIIntegration:
             assert response.status_code == 503  # Service unavailable
             assert "ConceptNet unavailable" in response.json()["detail"]
 
-    def test_reference_error_handling(self, client):
+    def test_reference_error_handling(self, minimal_reference_client):
         """Test API error handling for reference errors"""
         with patch(
             "reference_api.service.ReferenceService.wikidata_get_entity"
@@ -526,7 +526,7 @@ class TestReferenceAPIIntegration:
 
             mock_entity.side_effect = ReferenceError("Invalid entity URL")
 
-            response = client.get(
+            response = minimal_reference_client.get(
                 "/api/reference/wikidata/entity",
                 params={"entity_url": "http://www.wikidata.org/entity/Q999999999"},
             )
@@ -534,94 +534,94 @@ class TestReferenceAPIIntegration:
             assert response.status_code == 400  # Bad request
             assert "Invalid entity URL" in response.json()["detail"]
 
-    def test_unexpected_error_handling(self, client):
+    def test_unexpected_error_handling(self, minimal_reference_client):
         """Test API error handling for unexpected errors"""
         with patch(
             "reference_api.service.ReferenceService.schema_org_get_entity"
         ) as mock_entity:
             mock_entity.side_effect = RuntimeError("Unexpected error")
 
-            response = client.get(
+            response = minimal_reference_client.get(
                 "/api/reference/schema-org/entity/Person"
             )
 
             assert response.status_code == 500  # Internal server error
             assert "Internal server error" in response.json()["detail"]
 
-    def test_health_endpoint_service_failure(self, client):
+    def test_health_endpoint_service_failure(self, minimal_reference_client):
         """Test health endpoint when service fails"""
         with patch("reference_api.service.ReferenceService.health_check") as mock_health:
             mock_health.side_effect = RuntimeError("Health check failed")
 
-            response = client.get("/api/reference/health")
+            response = minimal_reference_client.get("/api/reference/health")
 
             assert response.status_code == 503  # Service unavailable
             data = response.json()
             assert data["overall"] == "unhealthy"
             assert "Health check failed" in data["error"]
 
-    def test_endpoint_parameter_validation(self, client):
+    def test_endpoint_parameter_validation(self, minimal_reference_client):
         """Test endpoint parameter validation"""
         # Test negative limit
-        response = client.get(
+        response = minimal_reference_client.get(
             "/api/reference/dbpedia/search",
             params={"query": "Apple", "limit": -1},
         )
         assert response.status_code == 422
 
         # Test limit too high
-        response = client.get(
+        response = minimal_reference_client.get(
             "/api/reference/conceptnet/query",
             params={"start": "/c/en/apple", "limit": 101},
         )
         assert response.status_code == 422
 
         # Test negative offset
-        response = client.get(
+        response = minimal_reference_client.get(
             "/api/reference/dbpedia/search",
             params={"query": "Apple", "offset": -1},
         )
         assert response.status_code == 422
 
-    def test_missing_required_parameters(self, client):
+    def test_missing_required_parameters(self, minimal_reference_client):
         """Test endpoints with missing required parameters"""
         # Test DBpedia search without query
-        response = client.get("/api/reference/dbpedia/search")
+        response = minimal_reference_client.get("/api/reference/dbpedia/search")
         assert response.status_code == 422
 
         # Test DBpedia resource without resource_url
-        response = client.get("/api/reference/dbpedia/resource")
+        response = minimal_reference_client.get("/api/reference/dbpedia/resource")
         assert response.status_code == 422
 
         # Test Wikidata entity without entity_url
-        response = client.get("/api/reference/wikidata/entity")
+        response = minimal_reference_client.get("/api/reference/wikidata/entity")
         assert response.status_code == 422
 
-    def test_schema_org_search_type_validation(self, client):
+    def test_schema_org_search_type_validation(self, minimal_reference_client):
         """Test Schema.org search endpoint with invalid search type"""
-        response = client.get(
+        response = minimal_reference_client.get(
             "/api/reference/schema-org/search",
             params={"query": "person", "search_type": "invalid"},
         )
         assert response.status_code == 422
 
-    def test_similarity_threshold_validation(self, client):
+    def test_similarity_threshold_validation(self, minimal_reference_client):
         """Test Schema.org search endpoint with invalid similarity threshold"""
         # Test threshold too high
-        response = client.get(
+        response = minimal_reference_client.get(
             "/api/reference/schema-org/search",
             params={"query": "person", "similarity_threshold": 1.5},
         )
         assert response.status_code == 422
 
         # Test negative threshold
-        response = client.get(
+        response = minimal_reference_client.get(
             "/api/reference/schema-org/search",
             params={"query": "person", "similarity_threshold": -0.1},
         )
         assert response.status_code == 422
 
-    def test_multi_source_search_endpoint_success(self, client):
+    def test_multi_source_search_endpoint_success(self, minimal_reference_client):
         """Test multi-source search endpoint with successful response"""
         with patch("reference_api.service.ReferenceService.search") as mock_search:
             # Mock returns MultiSourceSearchResponse directly (already the correct format)
@@ -657,7 +657,7 @@ class TestReferenceAPIIntegration:
                 search_time_ms=150.5
             )
 
-            response = client.post(
+            response = minimal_reference_client.post(
                 "/api/reference/search",
                 json={
                     "query": "apple",
@@ -676,7 +676,7 @@ class TestReferenceAPIIntegration:
             assert "conceptnet" in data["sources_queried"]
             assert data["search_time_ms"] == 150.5
 
-    def test_multi_source_search_get_endpoint_success(self, client):
+    def test_multi_source_search_get_endpoint_success(self, minimal_reference_client):
         """Test multi-source search GET endpoint with successful response"""
         with patch("reference_api.service.ReferenceService.search") as mock_search:
             # Mock returns MultiSourceSearchResponse directly
@@ -703,7 +703,7 @@ class TestReferenceAPIIntegration:
                 search_time_ms=100.0
             )
 
-            response = client.get(
+            response = minimal_reference_client.get(
                 "/api/reference/search",
                 params={
                     "query": "apple",
@@ -720,7 +720,7 @@ class TestReferenceAPIIntegration:
             assert data["total_results"] == 1
             assert "dbpedia" in data["sources_queried"]
 
-    def test_multi_source_search_with_source_errors(self, client):
+    def test_multi_source_search_with_source_errors(self, minimal_reference_client):
         """Test multi-source search with some source errors"""
         with patch("reference_api.service.ReferenceService.search") as mock_search:
             # Mock returns MultiSourceSearchResponse with source errors
@@ -747,7 +747,7 @@ class TestReferenceAPIIntegration:
                 search_time_ms=200.0
             )
 
-            response = client.post(
+            response = minimal_reference_client.post(
                 "/api/reference/search",
                 json={
                     "query": "apple",
@@ -763,9 +763,9 @@ class TestReferenceAPIIntegration:
             assert "wikidata" in data["source_errors"]
             assert data["source_errors"]["wikidata"] == "Timeout error"
 
-    def test_multi_source_search_invalid_source(self, client):
+    def test_multi_source_search_invalid_source(self, minimal_reference_client):
         """Test multi-source search with invalid source"""
-        response = client.get(
+        response = minimal_reference_client.get(
             "/api/reference/search",
             params={
                 "query": "apple",
@@ -777,24 +777,24 @@ class TestReferenceAPIIntegration:
         assert response.status_code == 400
         assert "Invalid source: invalid_source" in response.json()["detail"]
 
-    def test_multi_source_search_validation_errors(self, client):
+    def test_multi_source_search_validation_errors(self, minimal_reference_client):
         """Test multi-source search parameter validation"""
         # Test empty query
-        response = client.post(
+        response = minimal_reference_client.post(
             "/api/reference/search",
             json={"query": "", "limit": 10}
         )
         assert response.status_code == 422
 
         # Test limit too high
-        response = client.post(
+        response = minimal_reference_client.post(
             "/api/reference/search",
             json={"query": "apple", "limit": 101}
         )
         assert response.status_code == 422
 
         # Test negative offset
-        response = client.post(
+        response = minimal_reference_client.post(
             "/api/reference/search",
             json={"query": "apple", "offset": -1}
         )

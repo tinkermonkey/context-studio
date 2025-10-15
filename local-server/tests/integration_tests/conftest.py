@@ -80,11 +80,12 @@ def pytest_unconfigure(config):
 
 
 @pytest.fixture
-def client():
+def minimal_reference_client():
     """
     Create a minimal FastAPI test client with just the reference router.
 
     This avoids loading the full app and all its dependencies.
+    Used by reference API tests that don't need the full application.
     """
     from fastapi import FastAPI
     from fastapi.testclient import TestClient
