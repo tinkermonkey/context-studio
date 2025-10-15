@@ -182,6 +182,9 @@ class NLPPipeline:
             return
 
         try:
+            # Ensure NLTK wordnet data is available
+            self._ensure_wordnet_data()
+
             logger.info("Adding spacy_wordnet component...")
             self.nlp.add_pipe("spacy_wordnet", after="tagger")
             logger.info("spacy_wordnet component added successfully")
@@ -189,6 +192,20 @@ class NLPPipeline:
             self._error = f"Failed to add spacy_wordnet: {e}"
             logger.error(self._error)
             raise
+
+    def _ensure_wordnet_data(self):
+        """Ensure NLTK WordNet data is downloaded"""
+        try:
+            import nltk
+            from nltk.corpus import wordnet as wn
+            # Try to access wordnet to see if it's available
+            list(wn.synsets('test'))
+        except LookupError:
+            logger.info("Downloading NLTK WordNet data...")
+            import nltk
+            nltk.download('wordnet', quiet=True)
+            nltk.download('omw-1.4', quiet=True)  # For multilingual support
+            logger.info("NLTK WordNet data downloaded successfully")
 
     def _add_sense2vec_component(self):
         """Add sense2vec component"""
