@@ -216,28 +216,25 @@ def app_client(test_database_with_schema_org):
     """Create FastAPI test client with test database."""
     db_path, nodes = test_database_with_schema_org
 
-    # Patch the ReferenceConfig to use our test database
-    with patch('reference_db.config.ReferenceConfig') as mock_config_class:
-        mock_config = MagicMock()
-        mock_config_class.return_value = mock_config
+    # Patch the reference_manager_context to use our test database
+    from reference_db.dependencies import reference_manager_context
 
+    # Create a custom context manager that uses our test database
+    from contextlib import contextmanager
+
+    @contextmanager
+    def test_reference_manager_context(config):
+        manager = ReferenceManager(config, db_path=db_path)
+        try:
+            yield manager
+        finally:
+            manager.close()
+
+    with patch('reference_db.dependencies.reference_manager_context', side_effect=test_reference_manager_context):
         # Import after patching
         from app import app
         client = TestClient(app)
-
-        # Patch the manager creation in the API endpoints
-        with patch('api.reference.ReferenceConfig') as api_config:
-            api_config.return_value = ReferenceConfig()
-
-            with patch('api.reference.ReferenceManager') as mock_manager_class:
-                # Create actual manager with test DB
-                def create_manager(*args, **kwargs):
-                    config = ReferenceConfig()
-                    return ReferenceManager(config, db_path=db_path)
-
-                mock_manager_class.side_effect = create_manager
-
-                yield client
+        yield client
 
 
 class TestTC_S001_EndToEndWorkflow:
@@ -269,7 +266,7 @@ class TestTC_S001_EndToEndWorkflow:
             return vec.tobytes()
 
         # Step 1: Search for "person who writes books"
-        with patch('api.reference.generate_embedding', side_effect=mock_embedding):
+        with patch('embeddings.generate_embeddings.generate_embedding', side_effect=mock_embedding):
             response = app_client.get(
                 "/api/reference/ref-db/search",
                 params={
@@ -387,22 +384,12 @@ class TestTC_S002_HealthCheck:
             # Use a manager with non-existent DB
             config = ReferenceConfig()
 
-            with patch('api.reference.ReferenceManager') as mock_manager_class:
-                # Create manager that points to non-existent DB
-                def create_manager(*args, **kwargs):
-                    return ReferenceManager(config, db_path=non_existent_db)
+            # Directly test the manager's get_status method with a non-existent database
+            # This is more direct than trying to patch the API
+            status = ReferenceManager(config, db_path=non_existent_db).get_status()
 
-                mock_manager_class.side_effect = create_manager
-
-                from app import app
-                client = TestClient(app)
-
-                # Before making the request, ensure the DB doesn't exist
-                # The manager will be created fresh and check the non-existent path
-                status = ReferenceManager(config, db_path=non_existent_db).get_status()
-
-                assert status["status"] == "missing", \
-                    f"Expected 'missing' status, got '{status['status']}'"
+            assert status["status"] == "missing", \
+                f"Expected 'missing' status, got '{status['status']}'"
 
 
 class TestTC_S003_APIContractValidation:
@@ -419,7 +406,7 @@ class TestTC_S003_APIContractValidation:
             vec = vec / np.linalg.norm(vec)
             return vec.tobytes()
 
-        with patch('api.reference.generate_embedding', side_effect=mock_embedding):
+        with patch('embeddings.generate_embeddings.generate_embedding', side_effect=mock_embedding):
             response = app_client.get(
                 "/api/reference/ref-db/search",
                 params={"query": "test", "limit": 10}
