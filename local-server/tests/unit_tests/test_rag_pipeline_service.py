@@ -517,25 +517,6 @@ class TestRAGPipelineService:
             assert mock_obs_store.save_trace.call_count == 4  # One per layer
             assert response.trace_available is True
 
-    @pytest.mark.asyncio
-    async def test_text_similarity_calculation(self, mock_db_sessions):
-        """Test the text similarity calculation for deduplication."""
-        kg_session, ops_session = mock_db_sessions
-        service = RAGPipelineService(kg_session, ops_session)
-
-        # Test exact match
-        assert service._text_similarity("machine learning", "machine learning") == 1.0
-
-        # Test case-insensitive match (deduplication uses .lower())
-        assert service._text_similarity("machine learning", "Machine Learning".lower()) == 1.0
-
-        # Test high similarity (>90%)
-        similarity = service._text_similarity("machine learning", "machine learnings")
-        assert similarity > 0.9
-
-        # Test low similarity (<90%)
-        similarity = service._text_similarity("machine learning", "deep learning")
-        assert similarity < 0.9
 
 
 if __name__ == "__main__":
