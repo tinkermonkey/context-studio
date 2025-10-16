@@ -271,9 +271,9 @@ class TestGenericPipelineExecution:
             "domain_title": None,
             "current_definition": "A fruit"
         }
-        
-        result = mock_llm_service._render_user_prompt_generic(template, context_data)
-        
+
+        result = mock_llm_service._render_user_prompt_generic(template, context_data, strict=False)
+
         expected = "Term: apple, Domain: Not specified, Definition: A fruit"
         assert result == expected
 
@@ -284,9 +284,9 @@ class TestGenericPipelineExecution:
             "terms": ["apple", "orange", "banana"],
             "numbers": [1, 2, 3]
         }
-        
-        result = mock_llm_service._render_user_prompt_generic(template, context_data)
-        
+
+        result = mock_llm_service._render_user_prompt_generic(template, context_data, strict=False)
+
         expected = "Terms: apple, orange, banana, Numbers: [1, 2, 3]"
         assert result == expected
 
@@ -310,8 +310,8 @@ class TestGenericPipelineExecution:
         }
 
         # Missing variables should now return "Not specified" instead of raising an error
-        result = mock_llm_service._render_user_prompt_generic(template, context_data)
-        
+        result = mock_llm_service._render_user_prompt_generic(template, context_data, strict=False)
+
         assert "apple" in result
         assert "Not specified" in result
 
