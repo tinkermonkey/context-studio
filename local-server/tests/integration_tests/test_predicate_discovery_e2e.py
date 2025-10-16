@@ -222,94 +222,94 @@ class TestPredicateDiscoveryE2E:
         - Source filtering works
         - Predicates have all required fields
         """
-        with patch('reference_db.manager.ReferenceManager') as MockManager, \
-             patch('reference_db.config.ReferenceConfig') as MockConfig:
-            # Mock the config
-            mock_config = Mock()
-            MockConfig.return_value = mock_config
+        from reference_db.dependencies import reference_manager_context
+        from reference_db.config import ReferenceConfig
 
-            # Mock the manager instance that will be returned by __enter__
-            mock_manager = Mock()
+        # Add test data directly to the reference database
+        config = ReferenceConfig()
+        with reference_manager_context(config) as manager:
+            # Clear any existing test data
+            from reference_db.models import ExternalPredicate
+            manager.session.query(ExternalPredicate).delete()
+            manager.session.commit()
 
-            # Create mock predicates
-            mock_predicates = []
+            # Add 100 test predicates
             for i in range(100):
-                predicate = Mock()
-                predicate.id = f"pred-{i}"
-                predicate.title = f"Predicate {i}"
-                predicate.definition = f"Definition {i}"
-                predicate.source = "conceptnet"
-                predicate.external_id = f"/r/Relation{i}"
-                predicate.attributes = None
-                predicate.created_at = "2025-01-01T00:00:00Z"
-                predicate.updated_at = "2025-01-01T00:00:00Z"
-                mock_predicates.append(predicate)
+                manager.add_external_predicate(
+                    title=f"Predicate {i}",
+                    definition=f"Definition for predicate {i}",
+                    source="conceptnet",
+                    external_id=f"/r/Relation{i}"
+                )
 
-            mock_manager.list_external_predicates.return_value = mock_predicates
+        # Test pagination
+        response = client.get("/api/predicates/external?skip=0&limit=50")
+        if response.status_code != 200:
+            print(f"Response status: {response.status_code}")
+            print(f"Response body: {response.text}")
+        assert response.status_code == 200
+        data = response.json()
 
-            # Set up the context manager to return the mock manager
-            MockManager.return_value.__enter__.return_value = mock_manager
-            MockManager.return_value.__exit__.return_value = None
+        assert data["total"] == 100
+        assert data["skip"] == 0
+        assert data["limit"] == 50
+        assert len(data["data"]) == 50
 
-            # Test pagination
-            response = client.get("/api/predicates/external?skip=0&limit=50")
-            if response.status_code != 200:
-                print(f"Response status: {response.status_code}")
-                print(f"Response body: {response.text}")
-            assert response.status_code == 200
-            data = response.json()
+        # Verify first predicate structure
+        first_pred = data["data"][0]
+        assert "id" in first_pred
+        assert "title" in first_pred
+        assert "definition" in first_pred
+        assert "source" in first_pred
+        assert "external_id" in first_pred
+        assert "created_at" in first_pred
+        assert "updated_at" in first_pred
 
-            assert data["total"] == 100
-            assert data["skip"] == 0
-            assert data["limit"] == 50
-            assert len(data["data"]) == 50
-
-            # Verify first predicate structure
-            first_pred = data["data"][0]
-            assert "id" in first_pred
-            assert "title" in first_pred
-            assert "definition" in first_pred
-            assert "source" in first_pred
-            assert "external_id" in first_pred
-            assert "created_at" in first_pred
-            assert "updated_at" in first_pred
+        # Clean up test data
+        with reference_manager_context(config) as manager:
+            manager.session.query(ExternalPredicate).delete()
+            manager.session.commit()
 
     def test_external_predicates_source_filtering(self, client):
         """Test filtering external predicates by source."""
-        with patch('reference_db.manager.ReferenceManager') as MockManager, \
-             patch('reference_db.config.ReferenceConfig') as MockConfig:
-            # Mock the config
-            mock_config = Mock()
-            MockConfig.return_value = mock_config
+        from reference_db.dependencies import reference_manager_context
+        from reference_db.config import ReferenceConfig
 
-            # Mock the manager instance that will be returned by __enter__
-            mock_manager = Mock()
+        # Add test data from different sources
+        config = ReferenceConfig()
+        with reference_manager_context(config) as manager:
+            # Clear any existing test data
+            from reference_db.models import ExternalPredicate
+            manager.session.query(ExternalPredicate).delete()
+            manager.session.commit()
 
-            # Mock predicates from different sources
-            conceptnet_preds = [Mock(
-                id="cn-1", title="CN1", definition="Def1", source="conceptnet",
-                external_id="/r/Rel1", attributes=None,
-                created_at="2025-01-01", updated_at="2025-01-01"
-            )]
+            # Add predicates from different sources
+            manager.add_external_predicate(
+                title="ConceptNet Predicate 1",
+                definition="Definition from ConceptNet",
+                source="conceptnet",
+                external_id="/r/Rel1"
+            )
+            manager.add_external_predicate(
+                title="DBpedia Predicate 1",
+                definition="Definition from DBpedia",
+                source="dbpedia",
+                external_id="dbo:property1"
+            )
 
-            def list_by_source(source=None, limit=None):
-                if source == "conceptnet":
-                    return conceptnet_preds
-                return []
+        # Test filtering by source
+        response = client.get("/api/predicates/external?source=conceptnet&limit=50")
+        assert response.status_code == 200
+        data = response.json()
 
-            mock_manager.list_external_predicates.side_effect = list_by_source
+        assert data["source"] == "conceptnet"
+        assert len(data["data"]) == 1
+        assert all(p["source"] == "conceptnet" for p in data["data"])
 
-            # Set up the context manager to return the mock manager
-            MockManager.return_value.__enter__.return_value = mock_manager
-            MockManager.return_value.__exit__.return_value = None
-
-            # Test filtering by source
-            response = client.get("/api/predicates/external?source=conceptnet&limit=50")
-            assert response.status_code == 200
-            data = response.json()
-
-            assert data["source"] == "conceptnet"
-            assert all(p["source"] == "conceptnet" for p in data["data"])
+        # Clean up test data
+        with reference_manager_context(config) as manager:
+            manager.session.query(ExternalPredicate).delete()
+            manager.session.commit()
 
     def test_incremental_discovery_updates(self, client):
         """
