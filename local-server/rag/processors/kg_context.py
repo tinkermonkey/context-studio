@@ -182,57 +182,83 @@ class KGContextProcessor:
             except Exception as e:
                 logger.warning(f"Failed to generate embedding for phrase '{phrase_text}': {e}")
 
-        # Query KG nodes with embeddings
-        kg_nodes_with_embeddings = self.db_session.query(StructureNode).filter(
+        # Count total nodes with embeddings
+        total_nodes = self.db_session.query(func.count(StructureNode.id)).filter(
             StructureNode.title_embedding.isnot(None)
-        ).all()
+        ).scalar()
 
-        logger.debug(f"Found {len(kg_nodes_with_embeddings)} KG nodes with embeddings")
+        logger.debug(f"Found {total_nodes} KG nodes with embeddings")
 
-        # Calculate similarity scores for each phrase-node pair
+        # Calculate similarity scores for each phrase-node pair using batch processing
         node_scores: Dict[str, float] = {}  # node_id -> max similarity score
         node_objects: Dict[str, StructureNode] = {}  # node_id -> StructureNode object
 
         if enable_trace:
             trace_data['vector_searches'] = []
 
-        for phrase_text, phrase_emb in phrase_embeddings.items():
-            phrase_trace = {
-                'phrase': phrase_text,
-                'matches': []
-            } if enable_trace else None
+        # Process nodes in batches to avoid loading all into memory
+        batch_size = 1000
+        offset = 0
 
-            for node in kg_nodes_with_embeddings:
-                try:
-                    # Convert BLOB to numpy array
-                    node_emb = np.frombuffer(node.title_embedding, dtype=np.float32)
+        while offset < total_nodes:
+            # Query batch of nodes
+            batch_nodes = self.db_session.query(StructureNode).filter(
+                StructureNode.title_embedding.isnot(None)
+            ).offset(offset).limit(batch_size).all()
 
-                    # Calculate cosine similarity
-                    similarity = self._cosine_similarity(phrase_emb, node_emb)
+            if not batch_nodes:
+                break
 
-                    # Track the best score for each node
-                    if node.id not in node_scores or similarity > node_scores[node.id]:
-                        node_scores[node.id] = float(similarity)
-                        node_objects[node.id] = node
+            logger.debug(f"Processing batch of {len(batch_nodes)} nodes (offset: {offset})")
 
-                    if enable_trace and phrase_trace:
-                        phrase_trace['matches'].append({
-                            'node_id': node.id,
-                            'node_title': node.title,
-                            'similarity': float(similarity)
-                        })
+            # Process each phrase against this batch
+            for phrase_text, phrase_emb in phrase_embeddings.items():
+                phrase_trace = {
+                    'phrase': phrase_text,
+                    'matches': []
+                } if enable_trace else None
 
-                except Exception as e:
-                    logger.debug(f"Error calculating similarity for node {node.id}: {e}")
+                for node in batch_nodes:
+                    try:
+                        # Convert BLOB to numpy array
+                        node_emb = np.frombuffer(node.title_embedding, dtype=np.float32)
 
-            if enable_trace and phrase_trace:
-                # Sort matches by similarity and keep top 5 for trace
-                phrase_trace['matches'] = sorted(
-                    phrase_trace['matches'],
-                    key=lambda x: x['similarity'],
-                    reverse=True
-                )[:5]
-                trace_data['vector_searches'].append(phrase_trace)
+                        # Validate embedding dimensions
+                        if phrase_emb.shape != node_emb.shape:
+                            logger.warning(
+                                f"Embedding dimension mismatch: phrase={phrase_emb.shape}, "
+                                f"node={node_emb.shape}. Expected 384 dimensions."
+                            )
+                            continue
+
+                        # Calculate cosine similarity
+                        similarity = self._cosine_similarity(phrase_emb, node_emb)
+
+                        # Track the best score for each node
+                        if node.id not in node_scores or similarity > node_scores[node.id]:
+                            node_scores[node.id] = float(similarity)
+                            node_objects[node.id] = node
+
+                        if enable_trace and phrase_trace:
+                            phrase_trace['matches'].append({
+                                'node_id': node.id,
+                                'node_title': node.title,
+                                'similarity': float(similarity)
+                            })
+
+                    except Exception as e:
+                        logger.debug(f"Error calculating similarity for node {node.id}: {e}")
+
+                if enable_trace and phrase_trace and offset == 0:  # Only add trace once per phrase
+                    # Sort matches by similarity and keep top 5 for trace
+                    phrase_trace['matches'] = sorted(
+                        phrase_trace['matches'],
+                        key=lambda x: x['similarity'],
+                        reverse=True
+                    )[:5]
+                    trace_data['vector_searches'].append(phrase_trace)
+
+            offset += batch_size
 
         # Sort nodes by score and take top-k
         sorted_node_ids = sorted(node_scores.keys(), key=lambda nid: node_scores[nid], reverse=True)

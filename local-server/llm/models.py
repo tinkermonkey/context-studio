@@ -10,6 +10,7 @@ class PipelineType(str, Enum):
     SUGGEST_TERM_DEFINITION = "suggest_term_definition"
     SUGGEST_LAYER_DEFINITION = "suggest_layer_definition"
     SUGGEST_DOMAIN_DEFINITION = "suggest_domain_definition"
+    EXTRACT_ENTITIES = "extract_entities"
 
 
 class LLMConfig(BaseModel):
@@ -206,12 +207,20 @@ class StructuredOutputDefinition(BaseModel):
     discrepancies: Optional[str] = Field(None, description="Any noted discrepancies between sources")
 
 
+# Structured output model for entity extraction
+class StructuredOutputEntities(BaseModel):
+    """Structured output model for entity extraction responses"""
+
+    entities: List[Dict[str, Any]] = Field(..., description="List of extracted entities with properties")
+
+
 # Static mapping from PipelineType to structured output types
 # All pipeline types currently use the same StructuredOutput model
 PIPELINE_STRUCTURED_OUTPUT_MAPPING = {
     PipelineType.SUGGEST_TERM_DEFINITION: StructuredOutputDefinition,
     PipelineType.SUGGEST_LAYER_DEFINITION: StructuredOutputDefinition,
     PipelineType.SUGGEST_DOMAIN_DEFINITION: StructuredOutputDefinition,
+    PipelineType.EXTRACT_ENTITIES: StructuredOutputEntities,
 }
 
 

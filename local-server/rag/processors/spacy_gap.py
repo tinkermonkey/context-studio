@@ -68,78 +68,108 @@ class SpaCyGapProcessor:
         logger.info("Starting spaCy gap analysis")
         trace_data = {} if input_data.enable_trace else {}
 
-        # Parse text with spaCy
-        doc = self.nlp_pipeline.process(input_data.text)
+        try:
+            # Parse text with spaCy
+            doc = self.nlp_pipeline.process(input_data.text)
 
-        # Get recognized entity texts from LLM output
-        recognized_texts = {entity.text.lower() for entity in llm_output.entities}
+            # Get recognized entity texts from LLM output
+            recognized_texts = {entity.text.lower() for entity in llm_output.entities}
 
-        # Extract all noun phrases
-        all_noun_phrases = []
-        for sent_idx, sent in enumerate(doc.sents):
-            for chunk in sent.noun_chunks:
-                all_noun_phrases.append((chunk, sent_idx, sent))
+            # Extract all noun phrases
+            all_noun_phrases = []
+            try:
+                for sent_idx, sent in enumerate(doc.sents):
+                    try:
+                        for chunk in sent.noun_chunks:
+                            all_noun_phrases.append((chunk, sent_idx, sent))
+                    except Exception as e:
+                        logger.warning(f"Error processing noun chunks in sentence {sent_idx}: {e}")
+                        continue
+            except Exception as e:
+                logger.error(f"Error iterating over sentences: {e}", exc_info=True)
+                # Return empty result on critical error
+                return SpaCyGapOutput(
+                    gaps=[],
+                    total_noun_phrases=0,
+                    filtered_count=0,
+                    trace_data=trace_data
+                )
 
-        logger.debug(f"Found {len(all_noun_phrases)} total noun phrases")
+            logger.debug(f"Found {len(all_noun_phrases)} total noun phrases")
 
-        # Filter noun phrases to find gaps (unrecognized concepts)
-        potential_gaps = []
-        for chunk, sent_idx, sent in all_noun_phrases:
-            chunk_text = chunk.text.strip().lower()
+            # Filter noun phrases to find gaps (unrecognized concepts)
+            potential_gaps = []
+            for chunk, sent_idx, sent in all_noun_phrases:
+                try:
+                    chunk_text = chunk.text.strip().lower()
 
-            # Skip if already recognized by LLM
-            if chunk_text in recognized_texts:
-                continue
+                    # Skip if already recognized by LLM
+                    if chunk_text in recognized_texts:
+                        continue
 
-            # Skip very short or stopword-only chunks
-            if len(chunk_text) < 3 or all(token.is_stop for token in chunk):
-                continue
+                    # Skip very short or stopword-only chunks
+                    if len(chunk_text) < 3 or all(token.is_stop for token in chunk):
+                        continue
 
-            # Get dependency information for the chunk root
-            root = chunk.root
-            dep_role = root.dep_
-            head_word = root.head.text if root.head != root else ""
-            connected_verb = self._find_connected_verb(root)
+                    # Get dependency information for the chunk root
+                    root = chunk.root
+                    dep_role = root.dep_
+                    head_word = root.head.text if root.head != root else ""
+                    connected_verb = self._find_connected_verb(root)
 
-            # Determine priority based on grammatical role
-            priority = self._determine_priority(dep_role)
+                    # Determine priority based on grammatical role
+                    priority = self._determine_priority(dep_role)
 
-            gap = GapConcept(
-                text=chunk.text.strip(),
-                sentence_index=sent_idx,
-                priority=priority,
-                dep_role=dep_role,
-                head_word=head_word,
-                connected_verb=connected_verb,
-                start_char=chunk.start_char,
-                end_char=chunk.end_char,
-                tf_idf_score=None  # Will be calculated later
+                    gap = GapConcept(
+                        text=chunk.text.strip(),
+                        sentence_index=sent_idx,
+                        priority=priority,
+                        dep_role=dep_role,
+                        head_word=head_word,
+                        connected_verb=connected_verb,
+                        start_char=chunk.start_char,
+                        end_char=chunk.end_char,
+                        tf_idf_score=None  # Will be calculated later
+                    )
+                    potential_gaps.append(gap)
+
+                except Exception as e:
+                    logger.warning(f"Error processing chunk '{chunk.text}': {e}")
+                    continue
+
+            logger.debug(f"Found {len(potential_gaps)} potential gaps (unrecognized noun phrases)")
+
+            # Apply TF-IDF filtering
+            gaps, filtered_count = self._apply_tfidf_filtering(potential_gaps, doc)
+
+            logger.info(f"Identified {len(gaps)} significant gaps after TF-IDF filtering ({filtered_count} filtered out)")
+
+            if input_data.enable_trace:
+                trace_data['total_noun_phrases_analyzed'] = len(all_noun_phrases)
+                trace_data['potential_gaps_found'] = len(potential_gaps)
+                trace_data['gaps_after_filtering'] = len(gaps)
+                trace_data['gaps_by_priority'] = {
+                    'critical': len([g for g in gaps if g.priority == GapPriority.CRITICAL]),
+                    'important': len([g for g in gaps if g.priority == GapPriority.IMPORTANT]),
+                    'contextual': len([g for g in gaps if g.priority == GapPriority.CONTEXTUAL])
+                }
+
+            return SpaCyGapOutput(
+                gaps=gaps,
+                total_noun_phrases=len(all_noun_phrases),
+                filtered_count=filtered_count,
+                trace_data=trace_data
             )
-            potential_gaps.append(gap)
 
-        logger.debug(f"Found {len(potential_gaps)} potential gaps (unrecognized noun phrases)")
-
-        # Apply TF-IDF filtering
-        gaps, filtered_count = self._apply_tfidf_filtering(potential_gaps, doc)
-
-        logger.info(f"Identified {len(gaps)} significant gaps after TF-IDF filtering ({filtered_count} filtered out)")
-
-        if input_data.enable_trace:
-            trace_data['total_noun_phrases_analyzed'] = len(all_noun_phrases)
-            trace_data['potential_gaps_found'] = len(potential_gaps)
-            trace_data['gaps_after_filtering'] = len(gaps)
-            trace_data['gaps_by_priority'] = {
-                'critical': len([g for g in gaps if g.priority == GapPriority.CRITICAL]),
-                'important': len([g for g in gaps if g.priority == GapPriority.IMPORTANT]),
-                'contextual': len([g for g in gaps if g.priority == GapPriority.CONTEXTUAL])
-            }
-
-        return SpaCyGapOutput(
-            gaps=gaps,
-            total_noun_phrases=len(all_noun_phrases),
-            filtered_count=filtered_count,
-            trace_data=trace_data
-        )
+        except Exception as e:
+            logger.error(f"Critical error in spaCy gap analysis: {e}", exc_info=True)
+            # Return empty result on critical error
+            return SpaCyGapOutput(
+                gaps=[],
+                total_noun_phrases=0,
+                filtered_count=0,
+                trace_data=trace_data
+            )
 
     def _find_connected_verb(self, token) -> str:
         """

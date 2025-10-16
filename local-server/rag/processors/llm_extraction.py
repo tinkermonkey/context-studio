@@ -5,8 +5,7 @@ This processor performs LLM-based entity extraction enhanced by knowledge graph 
 It uses the pipeline_flavors system to extract entities with confidence scores.
 """
 from typing import List, Dict, Any
-import re
-import asyncio
+import json
 
 from rag.processors.models import (
     ProcessorInput,
@@ -62,37 +61,42 @@ class LLMExtractionProcessor:
         logger.info("Starting LLM extraction with KG context")
         trace_data = {} if input_data.enable_trace else {}
 
-        # Format KG context for prompt
-        kg_context_text = self._format_kg_context(kg_context)
-
-        # Build extraction prompt
-        prompt_context = {
-            'text': input_data.text,
-            'kg_context': kg_context_text,
-            'kg_node_count': len(kg_context.kg_nodes)
-        }
-
-        if input_data.enable_trace:
-            trace_data['prompt_context'] = prompt_context
-
-        # Execute LLM extraction
         try:
+            # Format KG context for prompt
+            kg_context_text = self._format_kg_context(kg_context)
+
+            # Build extraction prompt
+            prompt_context = {
+                'text': input_data.text,
+                'kg_context': kg_context_text,
+                'kg_node_count': len(kg_context.kg_nodes),
+                'format_instructions': '''Return a JSON object with this structure:
+{
+  "entities": [
+    {
+      "text": "entity text as it appears",
+      "entity_type": "CONCEPT",
+      "confidence": 0.95,
+      "sentence_index": 0,
+      "matched_kg_node": "node_id_if_matched"
+    }
+  ]
+}'''
+            }
+
+            if input_data.enable_trace:
+                trace_data['prompt_context'] = prompt_context
+
+            # Execute LLM extraction
             # Create execution request
             execution_request = PipelineExecutionRequest(
                 flavor_id=self.flavor_id,
-                pipeline_type=PipelineType.SUGGEST_TERM_DEFINITION,  # Reusing existing pipeline type
+                pipeline_type=PipelineType.EXTRACT_ENTITIES,
                 context_data=prompt_context
             )
 
-            # Execute pipeline synchronously (wrap async call)
-            loop = asyncio.new_event_loop()
-            asyncio.set_event_loop(loop)
-            try:
-                response = loop.run_until_complete(
-                    self.llm_service.execute_pipeline_flavor(execution_request)
-                )
-            finally:
-                loop.close()
+            # Execute pipeline synchronously - LLMService handles async internally
+            response = self.llm_service.execute_pipeline_flavor_sync(execution_request)
 
             # Parse entities from response
             entities = self._parse_entities_from_response(
@@ -118,7 +122,7 @@ class LLMExtractionProcessor:
             )
 
         except Exception as e:
-            logger.error(f"LLM extraction failed: {e}")
+            logger.error(f"LLM extraction failed: {e}", exc_info=True)
             # Return empty result on error
             return LLMExtractionOutput(
                 entities=[],
@@ -167,13 +171,10 @@ class LLMExtractionProcessor:
         kg_context: KGContextOutput
     ) -> List[ExtractedEntity]:
         """
-        Parse entities from LLM response content.
-
-        This is a heuristic parser that attempts to extract entity mentions
-        from the LLM's response. In production, structured output would be preferred.
+        Parse entities from LLM response content using structured JSON output.
 
         Args:
-            response_content: LLM response text
+            response_content: LLM response text (expected to be JSON)
             original_text: Original input text
             kg_context: KG context for matching
 
@@ -183,35 +184,44 @@ class LLMExtractionProcessor:
         entities = []
 
         # Split text into sentences for sentence indexing
-        doc = self.llm_service.flavor_service  # Access through service
-        # Use simple sentence splitting for now
         sentences = [s.strip() for s in original_text.split('.') if s.strip()]
 
-        # Heuristic: Look for entity mentions in response
-        # This is a simplified parser - in production would use structured output
-        lines = response_content.split('\n')
-        current_entity = None
+        try:
+            # Try to parse as JSON first (structured output)
+            response_json = json.loads(response_content)
 
-        for line in lines:
-            line = line.strip()
-            if not line:
-                continue
+            if 'entities' in response_json and isinstance(response_json['entities'], list):
+                for entity_data in response_json['entities']:
+                    try:
+                        # Validate required fields
+                        if 'text' not in entity_data:
+                            logger.warning(f"Entity missing 'text' field: {entity_data}")
+                            continue
 
-            # Look for entity patterns like "Entity: <text>" or "- <text>"
-            entity_match = re.match(r'^(?:Entity|Concept|Term|-):\s*(.+)$', line, re.IGNORECASE)
-            if entity_match:
-                entity_text = entity_match.group(1).strip()
+                        entity_text = entity_data['text']
 
-                # Find entity in original text
-                for sent_idx, sentence in enumerate(sentences):
-                    if entity_text.lower() in sentence.lower():
-                        # Find character positions
+                        # Find entity in original text for character positions
                         start_char = original_text.lower().find(entity_text.lower())
-                        if start_char != -1:
-                            end_char = start_char + len(entity_text)
+                        if start_char == -1:
+                            logger.debug(f"Entity '{entity_text}' not found in original text")
+                            continue
 
-                            # Check if entity matches any KG node
-                            matched_kg_node = None
+                        end_char = start_char + len(entity_text)
+
+                        # Determine sentence index
+                        sentence_indices = []
+                        if 'sentence_index' in entity_data:
+                            sentence_indices = [entity_data['sentence_index']]
+                        else:
+                            # Find which sentence contains the entity
+                            for sent_idx, sentence in enumerate(sentences):
+                                if entity_text.lower() in sentence.lower():
+                                    sentence_indices.append(sent_idx)
+
+                        # Check for matched KG node
+                        matched_kg_node = entity_data.get('matched_kg_node')
+                        if not matched_kg_node:
+                            # Try to match against KG context
                             for node in kg_context.kg_nodes:
                                 if entity_text.lower() == node.title.lower() or \
                                    entity_text.lower() in node.title.lower() or \
@@ -219,43 +229,83 @@ class LLMExtractionProcessor:
                                     matched_kg_node = node.node_id
                                     break
 
-                            entity = ExtractedEntity(
-                                text=entity_text,
-                                entity_type="CONCEPT",  # Default type
-                                confidence=0.95 if matched_kg_node else 0.92,  # Explicit mention confidence
-                                sentence_indices=[sent_idx],
-                                matched_kg_node=matched_kg_node,
-                                start_char=start_char,
-                                end_char=end_char
-                            )
-                            entities.append(entity)
-                            break
+                        # Get confidence (explicit mentions: 0.9-1.0)
+                        confidence = float(entity_data.get('confidence', 0.95))
+                        confidence = max(0.9, min(1.0, confidence))  # Clamp to [0.9, 1.0]
+
+                        entity = ExtractedEntity(
+                            text=entity_text,
+                            entity_type=entity_data.get('entity_type', 'CONCEPT'),
+                            confidence=confidence,
+                            sentence_indices=sentence_indices,
+                            matched_kg_node=matched_kg_node,
+                            start_char=start_char,
+                            end_char=end_char
+                        )
+                        entities.append(entity)
+
+                    except (ValueError, TypeError) as e:
+                        logger.warning(f"Failed to parse entity data: {entity_data}, error: {e}")
+                        continue
+
+                logger.info(f"Parsed {len(entities)} entities from structured JSON response")
+                return entities
+
+        except json.JSONDecodeError:
+            logger.debug("Response is not valid JSON, falling back to heuristic parsing")
+
+        # Fallback: Use heuristic parsing if JSON parsing fails
+        entities = self._fallback_parse_entities(response_content, original_text, sentences, kg_context)
+
+        return entities
+
+    def _fallback_parse_entities(
+        self,
+        response_content: str,
+        original_text: str,
+        sentences: List[str],
+        kg_context: KGContextOutput
+    ) -> List[ExtractedEntity]:
+        """
+        Fallback heuristic parser for non-JSON responses.
+
+        Args:
+            response_content: LLM response text
+            original_text: Original input text
+            sentences: Sentences from original text
+            kg_context: KG context for matching
+
+        Returns:
+            List of extracted entities
+        """
+        entities = []
 
         # Fallback: Extract entities that appear in both KG context and original text
-        if not entities:
-            logger.debug("No entities found in response, falling back to KG matching")
-            for node in kg_context.kg_nodes[:10]:  # Check top 10 KG nodes
-                node_title_lower = node.title.lower()
-                if node_title_lower in original_text.lower():
-                    start_char = original_text.lower().find(node_title_lower)
-                    end_char = start_char + len(node.title)
+        logger.debug("Using fallback KG matching for entity extraction")
+        for node in kg_context.kg_nodes[:10]:  # Check top 10 KG nodes
+            node_title_lower = node.title.lower()
+            if node_title_lower in original_text.lower():
+                start_char = original_text.lower().find(node_title_lower)
+                if start_char == -1:
+                    continue
 
-                    # Find sentence index
-                    sent_idx = 0
-                    for idx, sentence in enumerate(sentences):
-                        if node_title_lower in sentence.lower():
-                            sent_idx = idx
-                            break
+                end_char = start_char + len(node.title)
 
-                    entity = ExtractedEntity(
-                        text=node.title,
-                        entity_type="CONCEPT",
-                        confidence=0.90,  # Explicit mention from KG
-                        sentence_indices=[sent_idx],
-                        matched_kg_node=node.node_id,
-                        start_char=start_char,
-                        end_char=end_char
-                    )
-                    entities.append(entity)
+                # Find sentence index
+                sent_indices = []
+                for idx, sentence in enumerate(sentences):
+                    if node_title_lower in sentence.lower():
+                        sent_indices.append(idx)
+
+                entity = ExtractedEntity(
+                    text=node.title,
+                    entity_type="CONCEPT",
+                    confidence=0.90,  # Explicit mention from KG
+                    sentence_indices=sent_indices if sent_indices else [0],
+                    matched_kg_node=node.node_id,
+                    start_char=start_char,
+                    end_char=end_char
+                )
+                entities.append(entity)
 
         return entities

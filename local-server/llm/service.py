@@ -99,6 +99,18 @@ class LLMService:
 
 
 
+    def execute_pipeline_flavor_sync(self, request: PipelineExecutionRequest) -> PipelineExecutionResponse:
+        """
+        Synchronous wrapper for execute_pipeline_flavor.
+        Creates and manages its own event loop for the async call.
+        """
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
+        try:
+            return loop.run_until_complete(self.execute_pipeline_flavor(request))
+        finally:
+            loop.close()
+
     async def execute_pipeline_flavor(self, request: PipelineExecutionRequest) -> PipelineExecutionResponse:
         """Generic pipeline execution method with arbitrary context data"""
         start_time = time.time()

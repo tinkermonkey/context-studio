@@ -458,7 +458,7 @@ class ConceptResolutionProcessor:
             vec2: Second vector
 
         Returns:
-            Cosine similarity score (0 to 1)
+            Cosine similarity score (0 to 1), clamped to non-negative values
         """
         dot_product = np.dot(vec1, vec2)
         norm1 = np.linalg.norm(vec1)
@@ -467,4 +467,6 @@ class ConceptResolutionProcessor:
         if norm1 == 0 or norm2 == 0:
             return 0.0
 
-        return float(dot_product / (norm1 * norm2))
+        similarity = float(dot_product / (norm1 * norm2))
+        # Clamp to [0, 1] range - cosine similarity can be negative but we want only positive matches
+        return max(0.0, min(1.0, similarity))
