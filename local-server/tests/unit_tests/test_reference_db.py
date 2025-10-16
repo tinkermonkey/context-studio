@@ -251,14 +251,14 @@ class TestReferenceConfig:
             ReferenceConfig(similarity_threshold=INVALID_SIMILARITY_THRESHOLD_HIGH)
 
         error = str(exc_info.value)
-        assert "less than or equal to 1" in error and "similarity_threshold" in error
+        assert "must be between 0.0 and 1.0" in error and "similarity_threshold" in error
 
         # Test value below min
         with pytest.raises(ValidationError) as exc_info:
             ReferenceConfig(similarity_threshold=INVALID_SIMILARITY_THRESHOLD_LOW)
 
         error = str(exc_info.value)
-        assert "greater than or equal to 0" in error and "similarity_threshold" in error
+        assert "must be between 0.0 and 1.0" in error and "similarity_threshold" in error
 
     def test_batch_size_validation(self):
         """
@@ -275,14 +275,14 @@ class TestReferenceConfig:
             ReferenceConfig(batch_size=INVALID_BATCH_SIZE_HIGH)
 
         error = str(exc_info.value)
-        assert "less than or equal to 1000" in error and "batch_size" in error
+        assert "must be between 1 and 1000" in error and "batch_size" in error
 
         # Test value below min
         with pytest.raises(ValidationError) as exc_info:
             ReferenceConfig(batch_size=INVALID_BATCH_SIZE_LOW)
 
         error = str(exc_info.value)
-        assert "greater than or equal to 1" in error and "batch_size" in error
+        assert "must be between 1 and 1000" in error and "batch_size" in error
 
     def test_retry_count_validation(self):
         """
@@ -299,14 +299,14 @@ class TestReferenceConfig:
             ReferenceConfig(retry_count=INVALID_RETRY_COUNT_HIGH)
 
         error = str(exc_info.value)
-        assert "less than or equal to 10" in error and "retry_count" in error
+        assert "must be between 0 and 10" in error and "retry_count" in error
 
         # Test value below min
         with pytest.raises(ValidationError) as exc_info:
             ReferenceConfig(retry_count=INVALID_RETRY_COUNT_LOW)
 
         error = str(exc_info.value)
-        assert "greater than or equal to 0" in error and "retry_count" in error
+        assert "must be between 0 and 10" in error and "retry_count" in error
 
 
 class TestReferenceManagerCore:
