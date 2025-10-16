@@ -5,8 +5,10 @@ This module provides scheduled cleanup of old RAG observability data
 based on retention policies (30 days for metrics, 7 days for traces).
 """
 import asyncio
+import sys
 from datetime import datetime
 from typing import Optional
+from concurrent.futures import ThreadPoolExecutor
 
 from sqlalchemy.orm import Session
 
@@ -14,6 +16,26 @@ from rag.observability_store import RAGObservabilityStore
 from utils.logger import get_logger
 
 logger = get_logger(__name__)
+
+# Python version compatibility check
+PYTHON_VERSION = sys.version_info
+HAS_ASYNCIO_TO_THREAD = PYTHON_VERSION >= (3, 9)
+
+# Thread pool executor for Python < 3.9 compatibility
+_thread_pool_executor = None if HAS_ASYNCIO_TO_THREAD else ThreadPoolExecutor(max_workers=2)
+
+
+async def _run_in_thread(func, *args):
+    """
+    Cross-version compatible way to run blocking code in a thread.
+
+    Uses asyncio.to_thread in Python 3.9+ and ThreadPoolExecutor for older versions.
+    """
+    if HAS_ASYNCIO_TO_THREAD:
+        return await asyncio.to_thread(func, *args)
+    else:
+        loop = asyncio.get_event_loop()
+        return await loop.run_in_executor(_thread_pool_executor, func, *args)
 
 
 class RAGCleanupScheduler:
@@ -61,9 +83,15 @@ class RAGCleanupScheduler:
         if self._task and not self._task.done():
             self._task.cancel()
             try:
-                await self._task
+                # Properly await task completion to avoid race condition
+                await asyncio.wait_for(self._task, timeout=5.0)
             except asyncio.CancelledError:
+                # Expected when task is cancelled
                 pass
+            except asyncio.TimeoutError:
+                logger.warning("Cleanup task did not complete within timeout, forcing termination")
+            except Exception as e:
+                logger.error(f"Error while stopping cleanup scheduler: {e}", exc_info=True)
         logger.info("RAG cleanup scheduler stopped")
 
     async def _cleanup_loop(self):
@@ -96,7 +124,7 @@ class RAGCleanupScheduler:
             start_time = datetime.now()
 
             # Run cleanup in thread to avoid blocking asyncio loop
-            result = await asyncio.to_thread(self.observability_store.cleanup_old_data)
+            result = await _run_in_thread(self.observability_store.cleanup_old_data)
 
             elapsed = (datetime.now() - start_time).total_seconds()
 
@@ -116,4 +144,4 @@ class RAGCleanupScheduler:
             Dictionary with cleanup results
         """
         logger.info("Running manual RAG observability cleanup...")
-        return await asyncio.to_thread(self.observability_store.cleanup_old_data)
+        return await _run_in_thread(self.observability_store.cleanup_old_data)

@@ -8,8 +8,10 @@ from typing import List, Dict, Any, Optional, Tuple
 from sqlalchemy.orm import Session
 import asyncio
 import time
+import sys
 from uuid import uuid4
 from difflib import SequenceMatcher
+from concurrent.futures import ThreadPoolExecutor
 
 from rag.models import RAGExtractionRequest, RAGExtractionResponse, ExtractedEntity, LayerMetrics, ProcessingMetrics
 from rag.processors.models import ProcessorInput
@@ -21,6 +23,26 @@ from rag.observability_store import RAGObservabilityStore
 from utils.logger import get_logger
 
 logger = get_logger(__name__)
+
+# Python version compatibility check
+PYTHON_VERSION = sys.version_info
+HAS_ASYNCIO_TO_THREAD = PYTHON_VERSION >= (3, 9)
+
+# Thread pool executor for Python < 3.9 compatibility
+_thread_pool_executor = None if HAS_ASYNCIO_TO_THREAD else ThreadPoolExecutor(max_workers=10)
+
+
+async def _run_in_thread(func, *args):
+    """
+    Cross-version compatible way to run blocking code in a thread.
+
+    Uses asyncio.to_thread in Python 3.9+ and ThreadPoolExecutor for older versions.
+    """
+    if HAS_ASYNCIO_TO_THREAD:
+        return await asyncio.to_thread(func, *args)
+    else:
+        loop = asyncio.get_event_loop()
+        return await loop.run_in_executor(_thread_pool_executor, func, *args)
 
 
 class RAGPipelineService:
@@ -41,22 +63,28 @@ class RAGPipelineService:
     - Observability tracking (metrics and optional traces)
     """
 
-    # Timeout budgets per layer (in seconds)
-    TIMEOUT_LAYER_0 = 0.5  # 500ms for KG context preparation
-    TIMEOUT_LAYER_1 = 30.0  # 30s for LLM extraction
-    TIMEOUT_LAYER_2 = 0.5  # 500ms for spaCy gap detection
-    TIMEOUT_LAYER_3 = 30.0  # 30s for concept resolution
-    TIMEOUT_TOTAL = 120.0  # 120s total pipeline timeout
+    # Default timeout budgets per layer (in seconds)
+    DEFAULT_TIMEOUT_LAYER_0 = 0.5  # 500ms for KG context preparation
+    DEFAULT_TIMEOUT_LAYER_1 = 30.0  # 30s for LLM extraction
+    DEFAULT_TIMEOUT_LAYER_2 = 0.5  # 500ms for spaCy gap detection
+    DEFAULT_TIMEOUT_LAYER_3 = 30.0  # 30s for concept resolution
+    DEFAULT_TIMEOUT_TOTAL = 120.0  # 120s total pipeline timeout
 
-    # Deduplication similarity threshold
-    DEDUP_SIMILARITY_THRESHOLD = 0.9  # 90% similarity
+    # Default deduplication similarity threshold
+    DEFAULT_DEDUP_SIMILARITY_THRESHOLD = 0.9  # 90% similarity
 
     def __init__(
         self,
         kg_db_session: Session,
         ops_db_session: Session,
         llm_flavor_id: str = "default",
-        kg_top_k: int = 50
+        kg_top_k: int = 50,
+        timeout_layer_0: float = DEFAULT_TIMEOUT_LAYER_0,
+        timeout_layer_1: float = DEFAULT_TIMEOUT_LAYER_1,
+        timeout_layer_2: float = DEFAULT_TIMEOUT_LAYER_2,
+        timeout_layer_3: float = DEFAULT_TIMEOUT_LAYER_3,
+        timeout_total: float = DEFAULT_TIMEOUT_TOTAL,
+        dedup_similarity_threshold: float = DEFAULT_DEDUP_SIMILARITY_THRESHOLD
     ):
         """
         Initialize RAG Pipeline Service.
@@ -66,9 +94,25 @@ class RAGPipelineService:
             ops_db_session: Database session for operations/observability (operations.db)
             llm_flavor_id: LLM pipeline flavor ID to use for extraction
             kg_top_k: Number of top KG nodes to retrieve (default: 50)
+            timeout_layer_0: Timeout for Layer 0 in seconds (default: 0.5)
+            timeout_layer_1: Timeout for Layer 1 in seconds (default: 30.0)
+            timeout_layer_2: Timeout for Layer 2 in seconds (default: 0.5)
+            timeout_layer_3: Timeout for Layer 3 in seconds (default: 30.0)
+            timeout_total: Total pipeline timeout in seconds (default: 120.0)
+            dedup_similarity_threshold: Similarity threshold for deduplication (default: 0.9)
         """
         self.kg_db_session = kg_db_session
         self.ops_db_session = ops_db_session
+
+        # Configurable timeouts
+        self.TIMEOUT_LAYER_0 = timeout_layer_0
+        self.TIMEOUT_LAYER_1 = timeout_layer_1
+        self.TIMEOUT_LAYER_2 = timeout_layer_2
+        self.TIMEOUT_LAYER_3 = timeout_layer_3
+        self.TIMEOUT_TOTAL = timeout_total
+
+        # Configurable deduplication threshold
+        self.DEDUP_SIMILARITY_THRESHOLD = dedup_similarity_threshold
 
         # Initialize processors
         self.kg_processor = KGContextProcessor(kg_db_session, top_k=kg_top_k)
@@ -80,7 +124,8 @@ class RAGPipelineService:
         self.observability_store = RAGObservabilityStore(ops_db_session)
 
         logger.info(
-            f"RAGPipelineService initialized with llm_flavor={llm_flavor_id}, kg_top_k={kg_top_k}"
+            f"RAGPipelineService initialized with llm_flavor={llm_flavor_id}, kg_top_k={kg_top_k}, "
+            f"timeouts=[L0:{self.TIMEOUT_LAYER_0}s, L1:{self.TIMEOUT_LAYER_1}s, L2:{self.TIMEOUT_LAYER_2}s, L3:{self.TIMEOUT_LAYER_3}s]"
         )
 
     async def extract_entities(
@@ -128,14 +173,14 @@ class RAGPipelineService:
 
             try:
                 kg_context_output = await asyncio.wait_for(
-                    asyncio.to_thread(self.kg_processor.process, processor_input),
+                    _run_in_thread(self.kg_processor.process, processor_input),
                     timeout=self.TIMEOUT_LAYER_0
                 )
                 layer_0_time = (time.time() - layer_0_start) * 1000  # Convert to ms
                 logger.info(f"Layer 0 completed in {layer_0_time:.2f}ms, found {len(kg_context_output.kg_nodes)} KG nodes")
 
                 if enable_trace:
-                    await asyncio.to_thread(
+                    await _run_in_thread(
                         self.observability_store.save_trace,
                         request_id,
                         -1,  # Paragraph-level
@@ -178,7 +223,7 @@ class RAGPipelineService:
 
             try:
                 llm_extraction_output = await asyncio.wait_for(
-                    asyncio.to_thread(
+                    _run_in_thread(
                         self.llm_processor.process,
                         processor_input,
                         kg_context_output
@@ -189,7 +234,7 @@ class RAGPipelineService:
                 logger.info(f"Layer 1 completed in {layer_1_time:.2f}ms, found {len(llm_extraction_output.entities)} entities")
 
                 if enable_trace:
-                    await asyncio.to_thread(
+                    await _run_in_thread(
                         self.observability_store.save_trace,
                         request_id,
                         -1,
@@ -231,7 +276,7 @@ class RAGPipelineService:
 
             try:
                 spacy_gap_output = await asyncio.wait_for(
-                    asyncio.to_thread(
+                    _run_in_thread(
                         self.spacy_processor.process,
                         processor_input,
                         llm_extraction_output
@@ -242,7 +287,7 @@ class RAGPipelineService:
                 logger.info(f"Layer 2 completed in {layer_2_time:.2f}ms, found {len(spacy_gap_output.gaps)} gaps")
 
                 if enable_trace:
-                    await asyncio.to_thread(
+                    await _run_in_thread(
                         self.observability_store.save_trace,
                         request_id,
                         -1,
@@ -284,7 +329,7 @@ class RAGPipelineService:
 
             try:
                 concept_resolution_output = await asyncio.wait_for(
-                    asyncio.to_thread(
+                    _run_in_thread(
                         self.concept_processor.process,
                         processor_input,
                         kg_context_output,
@@ -300,7 +345,7 @@ class RAGPipelineService:
                 )
 
                 if enable_trace:
-                    await asyncio.to_thread(
+                    await _run_in_thread(
                         self.observability_store.save_trace,
                         request_id,
                         -1,
@@ -386,7 +431,7 @@ class RAGPipelineService:
 
             # Save metrics to database
             try:
-                await asyncio.to_thread(
+                await _run_in_thread(
                     self.observability_store.save_metrics,
                     request_id,
                     total_time,
@@ -398,7 +443,7 @@ class RAGPipelineService:
                     len(spacy_gap_output.gaps) if spacy_gap_output else 0,
                     layer_3_time,
                     len(concept_resolution_output.resolved_concepts) if concept_resolution_output else 0,
-                    kg_context_output.total_sentences if kg_context_output else 0
+                    text
                 )
             except Exception as e:
                 logger.error(f"Failed to save observability metrics: {e}", exc_info=True)
@@ -467,24 +512,45 @@ class RAGPipelineService:
             )
 
         # Priority 2 & 3: Resolved concepts (from spaCy + web search)
+        # Optimize deduplication by sorting existing keys for better performance
+        existing_keys_sorted = sorted(entities_map.keys())
+
         for resolved in concept_output.resolved_concepts:
             entity_key = resolved.original_gap.text.lower().strip()
 
-            # Check for duplicates using 90% similarity
+            # Check for duplicates using 90% similarity with sorted keys (O(n log n) approach)
             is_duplicate = False
-            for existing_key in entities_map.keys():
-                similarity = self._text_similarity(entity_key, existing_key)
-                if similarity >= self.DEDUP_SIMILARITY_THRESHOLD:
-                    is_duplicate = True
-                    # Merge metadata if duplicate found
-                    existing_entity = entities_map[existing_key]
-                    existing_entity.metadata["also_found_by"] = existing_entity.metadata.get("also_found_by", [])
-                    existing_entity.metadata["also_found_by"].append(
-                        resolved.resolution_method.value
-                    )
-                    break
+            duplicate_key = None
 
-            if not is_duplicate:
+            # First check for exact match (O(1) lookup)
+            if entity_key in entities_map:
+                is_duplicate = True
+                duplicate_key = entity_key
+            else:
+                # Only check similarity for keys with similar length (optimization)
+                entity_key_len = len(entity_key)
+                for existing_key in existing_keys_sorted:
+                    existing_key_len = len(existing_key)
+
+                    # Skip if length difference is too large (can't be 90% similar)
+                    if abs(entity_key_len - existing_key_len) > max(entity_key_len, existing_key_len) * 0.1:
+                        continue
+
+                    similarity = self._text_similarity(entity_key, existing_key)
+                    if similarity >= self.DEDUP_SIMILARITY_THRESHOLD:
+                        is_duplicate = True
+                        duplicate_key = existing_key
+                        break
+
+            if is_duplicate and duplicate_key:
+                # Merge metadata if duplicate found
+                existing_entity = entities_map[duplicate_key]
+                existing_entity.metadata["also_found_by"] = existing_entity.metadata.get("also_found_by", [])
+                existing_entity.metadata["also_found_by"].append(
+                    resolved.resolution_method.value
+                )
+
+            elif not is_duplicate:
                 # Determine source layer based on resolution method
                 source_layer = "nlp"  # spaCy gap detected
                 if resolved.resolution_method.value == "web_search":

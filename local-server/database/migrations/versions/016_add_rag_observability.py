@@ -26,19 +26,19 @@ class Migration016(Migration):
                 request_id TEXT NOT NULL,
                 sentence_text TEXT NOT NULL,
 
-                -- Layer 0: Sentence segmentation
+                -- Layer 0: Knowledge Graph Context Preparation (vector search for relevant KG concepts)
                 layer_0_time_ms INTEGER,
                 layer_0_count INTEGER,
 
-                -- Layer 1: Semantic chunking
+                -- Layer 1: LLM-based Entity Extraction (primary concept extraction using LLM)
                 layer_1_time_ms INTEGER,
                 layer_1_count INTEGER,
 
-                -- Layer 2: Entity extraction
+                -- Layer 2: spaCy Syntactic Gap Analysis (grammatical analysis for unrecognized spans)
                 layer_2_time_ms INTEGER,
                 layer_2_count INTEGER,
 
-                -- Layer 3: Knowledge graph enrichment
+                -- Layer 3: Concept Resolution via KG and Web Search (resolve unrecognized concepts)
                 layer_3_time_ms INTEGER,
                 layer_3_count INTEGER,
 
@@ -86,8 +86,7 @@ class Migration016(Migration):
                 -- Retention period: 7 days for traces (more detailed, shorter retention)
                 retention_days INTEGER DEFAULT 7 NOT NULL,
 
-                -- Foreign key to metrics table
-                FOREIGN KEY (request_id) REFERENCES rag_processing_metrics(request_id)
+                -- Note: No foreign key constraint to allow independent trace storage
             )
         """))
 

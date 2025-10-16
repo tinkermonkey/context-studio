@@ -51,7 +51,7 @@ class RAGObservabilityStore:
         layer_2_count: int,
         layer_3_time_ms: float,
         layer_3_count: int,
-        total_sentences: int
+        input_text: str
     ) -> str:
         """
         Save RAG processing metrics to database.
@@ -67,7 +67,7 @@ class RAGObservabilityStore:
             layer_2_count: Number of gaps found in Layer 2
             layer_3_time_ms: Layer 3 (concept resolution) execution time in milliseconds
             layer_3_count: Number of concepts resolved in Layer 3
-            total_sentences: Total number of sentences processed
+            input_text: Input paragraph text that was processed
 
         Returns:
             Metrics record ID
@@ -75,8 +75,7 @@ class RAGObservabilityStore:
         metrics_id = str(uuid.uuid4())
 
         try:
-            # Note: The migration created sentence_text column but we're using this for paragraph-level
-            # metrics with sentence count, so we'll store the sentence count in that field
+            # Store input text in sentence_text column for reference
             self.db_session.execute(text("""
                 INSERT INTO rag_processing_metrics (
                     id, request_id, sentence_text,
@@ -86,7 +85,7 @@ class RAGObservabilityStore:
                     layer_3_time_ms, layer_3_count,
                     total_time_ms, timestamp, retention_days
                 ) VALUES (
-                    :id, :request_id, :sentence_count,
+                    :id, :request_id, :input_text,
                     :layer_0_time_ms, :layer_0_count,
                     :layer_1_time_ms, :layer_1_count,
                     :layer_2_time_ms, :layer_2_count,
@@ -96,7 +95,7 @@ class RAGObservabilityStore:
             """), {
                 "id": metrics_id,
                 "request_id": request_id,
-                "sentence_count": f"Total sentences: {total_sentences}",
+                "input_text": input_text[:500],  # Truncate to first 500 chars for storage efficiency
                 "layer_0_time_ms": int(layer_0_time_ms),
                 "layer_0_count": layer_0_count,
                 "layer_1_time_ms": int(layer_1_time_ms),
@@ -203,7 +202,7 @@ class RAGObservabilityStore:
             return {
                 "id": result[0],
                 "request_id": result[1],
-                "sentence_info": result[2],
+                "input_text": result[2],
                 "layer_0": {
                     "time_ms": result[3],
                     "count": result[4]
