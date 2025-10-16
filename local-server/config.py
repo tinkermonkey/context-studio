@@ -80,6 +80,39 @@ class NLPConfig(BaseModel):
     download_timeout: int = Field(default=600, ge=60, le=1800, description="Timeout for model downloads in seconds")
 
 
+class RAGPipelineConfig(BaseModel):
+    """RAG (Retrieval-Augmented Generation) pipeline configuration section"""
+
+    # Knowledge graph context retrieval settings
+    kg_context_top_k: int = Field(default=50, ge=1, le=1000, description="Top-k results for knowledge graph context retrieval")
+    kg_vector_threshold: float = Field(default=0.7, ge=0.0, le=1.0, description="Similarity threshold for vector search in knowledge graph")
+
+    # LLM pipeline settings
+    llm_pipeline_flavor: Optional[str] = Field(default=None, description="LLM pipeline flavor to use for RAG operations")
+    llm_timeout: int = Field(default=30, ge=1, le=300, description="LLM request timeout in seconds")
+
+    # Gap detection settings
+    gap_detection_deps: List[str] = Field(default_factory=list, description="Dependencies for gap detection layer")
+
+    # Web search settings
+    web_search_enabled: bool = Field(default=True, description="Enable web search for gap filling")
+    web_search_max_attempts: int = Field(default=3, ge=1, le=10, description="Maximum web search attempts per query")
+    web_search_rate_limit: int = Field(default=5, ge=1, le=100, description="Web search rate limit (searches per minute)")
+    web_search_max_per_session: int = Field(default=10, ge=1, le=100, description="Maximum web searches per session")
+
+    # Observability settings
+    enable_observability: bool = Field(default=True, description="Enable observability and metrics collection")
+    observability_retention_days: int = Field(default=30, ge=1, le=365, description="Retention period for metrics data in days")
+    trace_retention_days: int = Field(default=7, ge=1, le=90, description="Retention period for trace data in days")
+    trace_max_data_size_kb: int = Field(default=100, ge=1, le=10000, description="Maximum size of trace data per request in KB")
+
+    # Deduplication settings
+    deduplication_threshold: float = Field(default=0.9, ge=0.0, le=1.0, description="Similarity threshold for entity deduplication")
+
+    # Extraction decision thresholds
+    extraction_confidence_threshold: float = Field(default=0.7, ge=0.0, le=1.0, description="Minimum confidence threshold for entity extraction")
+
+
 class ReferenceSourceRateLimitConfig(BaseModel):
     """Rate limiting configuration for a specific reference source"""
     requests_per_hour: int = Field(default=1000, ge=1, description="Requests per hour limit")
@@ -222,6 +255,7 @@ class Settings(BaseModel):
     database: DatabaseConfig = Field(default_factory=DatabaseConfig)
     llm: LLMConfig = Field(default_factory=LLMConfig)
     nlp: NLPConfig = Field(default_factory=NLPConfig)
+    rag_pipeline: RAGPipelineConfig = Field(default_factory=RAGPipelineConfig)
     reference_sources: ReferenceSourcesConfig = Field(default_factory=ReferenceSourcesConfig)
     proxy_server: ProxyServerConfig = Field(default_factory=ProxyServerConfig)
     logging: LoggingConfig = Field(default_factory=LoggingConfig)
