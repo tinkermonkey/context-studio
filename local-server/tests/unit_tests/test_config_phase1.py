@@ -28,7 +28,7 @@ class TestSchemaOrgPathRemoval:
             "schema_org_path field still exists in DatabaseConfig"
 
         # Verify required fields exist
-        required_fields = ['default_url', 'reference_path', 'reference_cache_path', 'pipeline_path']
+        required_fields = ['default_url', 'reference_path', 'reference_cache_path', 'operations_path']
         for field in required_fields:
             assert hasattr(db_config, field), f"Required field '{field}' is missing"
 
@@ -41,7 +41,7 @@ class TestSchemaOrgPathRemoval:
                 'schema_org_path': './old_schemaorg.db',  # Deprecated field
                 'reference_path': './reference.db',
                 'reference_cache_path': './reference_api_cache.db',
-                'pipeline_path': './pipeline.db'
+                'operations_path': './operations.db'
             }
         }
 
@@ -64,7 +64,7 @@ class TestSchemaOrgPathRemoval:
                 'default_url': 'sqlite:///./local.db',
                 'reference_path': './reference.db',
                 'reference_cache_path': './reference_api_cache.db',
-                'pipeline_path': './pipeline.db'
+                'operations_path': './operations.db'
             }
         }
 
@@ -90,27 +90,41 @@ class TestSchemaOrgPathRemoval:
 
     def test_config_file_loading_from_project_root(self):
         """Test loading from actual config.json file"""
-        config_file = Path(__file__).parent.parent.parent.parent / 'config.json'
+        config_file = Path(__file__).parent.parent.parent / 'config.json'
 
         if not config_file.exists():
             pytest.skip(f"config.json not found at {config_file}")
 
-        config_manager = ConfigurationManager(str(config_file))
+        # Create a temporary copy to avoid modifying the actual config file
+        with tempfile.NamedTemporaryFile(mode='w', suffix='.json', delete=False) as f:
+            temp_config = f.name
+            # Copy the config content
+            with open(config_file, 'r') as original:
+                config_data = json.load(original)
+                json.dump(config_data, f)
 
-        # Validate
-        errors = config_manager.validate()
-        assert not errors, f"Config file validation errors: {errors}"
+        try:
+            config_manager = ConfigurationManager(temp_config)
 
-        # Verify schema_org_path is not in the loaded config
-        assert not hasattr(config_manager.settings.database, 'schema_org_path'), \
-            "schema_org_path found in loaded config"
+            # Validate
+            errors = config_manager.validate()
+            assert not errors, f"Config file validation errors: {errors}"
 
-        # Verify required fields
-        db_config = config_manager.settings.database
-        assert db_config.default_url
-        assert db_config.reference_path
-        assert db_config.reference_cache_path
-        assert db_config.pipeline_path
+            # Verify schema_org_path is not in the loaded config
+            assert not hasattr(config_manager.settings.database, 'schema_org_path'), \
+                "schema_org_path found in loaded config"
+
+            # Verify required fields
+            db_config = config_manager.settings.database
+            assert db_config.default_url
+            assert db_config.reference_path
+            assert db_config.reference_cache_path
+            assert db_config.operations_path
+        
+        finally:
+            # Cleanup temporary file
+            if os.path.exists(temp_config):
+                os.unlink(temp_config)
 
     def test_config_save_and_reload_cycle(self):
         """Test that config can be saved and reloaded"""
@@ -120,7 +134,7 @@ class TestSchemaOrgPathRemoval:
                 'default_url': 'sqlite:///./test.db',
                 'reference_path': './test_reference.db',
                 'reference_cache_path': './test_cache.db',
-                'pipeline_path': './test_pipeline.db'
+                'operations_path': './test_pipeline.db'
             }
         }
 
@@ -158,7 +172,7 @@ class TestSchemaOrgPathRemoval:
         assert db_config.default_dataset_filename == "default.db"
         assert db_config.reference_path == "./datafiles/reference.db"
         assert db_config.reference_cache_path == "./datafiles/reference_api_cache.db"
-        assert db_config.pipeline_path == "./datafiles/pipeline.db"
+        assert db_config.operations_path == "./datafiles/operations.db"
         assert db_config.check_same_thread == False
         assert db_config.pool_timeout == 30
 
@@ -171,7 +185,7 @@ class TestSchemaOrgPathRemoval:
                 'unknown_field': 'some_value',  # Another unknown field
                 'reference_path': './reference.db',
                 'reference_cache_path': './reference_api_cache.db',
-                'pipeline_path': './pipeline.db'
+                'operations_path': './operations.db'
             }
         }
 

@@ -1,8 +1,9 @@
-"""
-Pipeline module for managing pipeline configurations independently of datasets.
-"""
+"""Pipeline management module."""
 
-from .manager import (
+from pipeline.manager import (
+    OperationsDatabaseManager,
+    get_operations_database_manager,
+    # Backward compatibility
     PipelineDatabaseManager,
     get_pipeline_database_manager,
     get_pipeline_session,
@@ -11,6 +12,9 @@ from .manager import (
 from .models import Base, LLMPipeline
 
 __all__ = [
+    'OperationsDatabaseManager',
+    'get_operations_database_manager',
+    # Backward compatibility
     'PipelineDatabaseManager',
     'get_pipeline_database_manager',
     'get_pipeline_session',

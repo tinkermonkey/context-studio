@@ -11,7 +11,7 @@ const isTest = !!process.env.VITEST;
 export default defineConfig({
   server: {
     host: true, // Listen on all network interfaces
-    port: 3001,
+    port: 3100,
   },
   resolve: {
     alias: {

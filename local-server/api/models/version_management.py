@@ -5,7 +5,7 @@ This module contains the Pydantic models for the version management system,
 supporting entity versioning, working tree state, and diff operations.
 """
 
-from pydantic import BaseModel, Field, ConfigDict, validator
+from pydantic import BaseModel, Field, ConfigDict, field_validator
 from typing import Optional, List, Dict, Any
 from uuid import UUID
 from enum import Enum
@@ -189,10 +189,11 @@ class DiffRequest(BaseModel):
 
     model_config = ConfigDict(populate_by_name=True)
 
-    @validator('before_version_number')
-    def validate_before_version(cls, v, values):
-        if v is not None and 'after_version_number' in values:
-            if v >= values['after_version_number']:
+    @field_validator('before_version_number')
+    @classmethod
+    def validate_before_version(cls, v, info):
+        if v is not None and 'after_version_number' in info.data:
+            if v >= info.data['after_version_number']:
                 raise ValueError('before_version must be less than after_version')
         return v
 

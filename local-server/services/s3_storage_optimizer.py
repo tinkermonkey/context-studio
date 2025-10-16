@@ -11,18 +11,16 @@ import pandas as pd
 from typing import Dict, Any, Optional
 from datetime import datetime, timedelta
 
-from utils.logger import get_logger
-
-logger = get_logger(__name__)
-
-# Optional import for AWS integration
 try:
     from botocore.exceptions import ClientError
 except ImportError:
-    logger.warning("botocore not available - S3 integration will be disabled")
-    # Create a dummy ClientError for type checking
+    # Define a dummy ClientError for environments where boto3 is not installed
     class ClientError(Exception):
         pass
+
+from utils.logger import get_logger
+
+logger = get_logger(__name__)
 
 
 class S3StorageOptimizer:
@@ -198,17 +196,8 @@ class S3StorageOptimizer:
         checkpoint_path = f"s3://{self.bucket_name}/checkpoints/checkpoint_{checkpoint_date}.parquet"
         
         if not self.duckdb_conn:
-            logger.warning("DuckDB connection not available - creating checkpoint metadata only")
-            # Return a mock checkpoint result when DuckDB is not available
-            return {
-                'checkpoint_path': checkpoint_path,
-                'checkpoint_date': checkpoint_date,
-                'checkpoint_frequency': checkpoint_frequency,
-                'status': 'metadata_only',
-                'message': 'DuckDB connection not available, checkpoint metadata created',
-                'records_processed': 0,
-                'storage_size_bytes': 0
-            }
+            logger.error("DuckDB connection required for checkpoint creation")
+            return {'error': 'DuckDB connection not available'}
         
         try:
             # Determine date range based on frequency

@@ -1,7 +1,7 @@
 {
   "server": {
-    "host": "0.0.0.0",
-    "port": 8001,
+    "host": "localhost",
+    "port": 8100,
     "reload": true,
     "cors_origins": [
       "*"
@@ -14,7 +14,7 @@
     "default_dataset_filename": "default.db",
     "reference_path": "./datafiles/reference.db",
     "reference_cache_path": "./datafiles/reference_api_cache.db",
-    "pipeline_path": "./datafiles/pipeline.db",
+    "operations_path": "./datafiles/operations.db",
     "check_same_thread": true,
     "pool_timeout": 30
   },
@@ -44,9 +44,25 @@
   "reference_sources": {
     "default_language": "en",
     "search_timeout": 30,
+    "enable_relevance_filtering": false,
+    "filter_cache_ttl": 300,
     "conceptnet": {
       "enabled": true,
       "upstream_url": "https://api.conceptnet.io",
+      "use_proxy": true,
+      "timeout": 30,
+      "max_retries": 3,
+      "rate_limit": {
+        "requests_per_hour": 5000,
+        "progressive_delay": true,
+        "max_delay": 300
+      },
+      "custom_headers": {},
+      "custom_params": {}
+    },
+    "dbpedia_lookup": {
+      "enabled": true,
+      "upstream_url": "https://lookup.dbpedia.org",
       "use_proxy": true,
       "timeout": 30,
       "max_retries": 3,
@@ -58,9 +74,9 @@
       "custom_headers": {},
       "custom_params": {}
     },
-    "dbpedia": {
+    "dbpedia_sparql": {
       "enabled": true,
-      "upstream_url": "https://lookup.dbpedia.org",
+      "upstream_url": "https://dbpedia.org",
       "use_proxy": true,
       "timeout": 30,
       "max_retries": 3,
@@ -123,7 +139,7 @@
     "max_cache_entries": 10000,
     "default_cache_ttl": 3600,
     "default_max_response_size": 10485760,
-    "default_requests_per_hour": 1000,
+    "default_requests_per_hour": 3600,
     "progressive_max_delay": 300
   },
   "logging": {

@@ -11,7 +11,8 @@ from typing import Optional
 
 # Schema version for the reference database structure
 # Increment this when making breaking changes to the database schema
-REFERENCE_SCHEMA_VERSION = "1.0.0"
+# Version 1.1.0: Added external_predicates table for predicate mapping (Phase 1)
+REFERENCE_SCHEMA_VERSION = "1.1.0"
 
 
 class ReferenceConfig(BaseModel):

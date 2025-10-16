@@ -1,6 +1,6 @@
 """FastAPI router for reference endpoints"""
 
-from fastapi import APIRouter, HTTPException, Depends, Query, Path
+from fastapi import APIRouter, HTTPException, Depends, Query, Path, Body
 from fastapi.responses import JSONResponse
 from typing import Optional, Literal
 from pydantic import BaseModel, Field
@@ -15,21 +15,20 @@ from reference_api.models import (
     MultiSourceSearchResponse
 )
 from reference_api.exceptions import ReferenceError, SourceError, SourceTimeoutError
-from reference_db.manager import ReferenceManager
-from reference_db.config import ReferenceConfig
-from embeddings.generate_embeddings import generate_embedding
+from config import get_settings, Settings
 
 logger = logging.getLogger(__name__)
 
+router = APIRouter(prefix="/api/reference", tags=["reference"])
 
+
+# Request models for reference database endpoints
 class ReferenceSearchRequest(BaseModel):
     """Request model for reference database search"""
     query: str = Field(..., min_length=1, description="Search query text")
     source: Optional[str] = Field(None, description="Filter by source (e.g., 'schema.org')")
     limit: int = Field(20, ge=1, le=10000, description="Maximum results")
     threshold: float = Field(0.7, ge=-1.0, le=1.0, description="Similarity threshold")
-
-router = APIRouter(prefix="/api/reference", tags=["reference"])
 
 
 def handle_service_error(e: Exception) -> HTTPException:
@@ -317,138 +316,6 @@ async def multi_source_search_get(
 
 
 # Reference database vector search endpoints
-@router.get("/ref-db/entity/{source}/{external_id}")
-async def get_reference_entity(
-    source: str = Path(..., description="Source identifier (e.g., 'schema.org')"),
-    external_id: str = Path(..., description="Source-specific identifier"),
-):
-    """
-    Look up a reference entity by source and external ID.
-
-    Returns the reference node if found, otherwise 404.
-    """
-    try:
-        config = ReferenceConfig()
-        with ReferenceManager(config) as manager:
-            node = manager.get_reference_node_by_source(source, external_id)
-
-            if not node:
-                raise HTTPException(
-                    status_code=404,
-                    detail=f"Entity not found: {source}/{external_id}"
-                )
-
-            return {
-                "id": node.id,
-                "title": node.title,
-                "definition": node.definition,
-                "source": node.source,
-                "external_id": node.external_id,
-                "created_at": node.created_at,
-                "updated_at": node.updated_at
-            }
-
-    except HTTPException:
-        raise
-    except Exception as e:
-        logger.error(f"Get reference entity failed: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
-
-
-@router.get("/ref-db/property/{source}/{external_id}")
-async def get_reference_property(
-    source: str = Path(..., description="Source identifier (e.g., 'schema.org')"),
-    external_id: str = Path(..., description="Source-specific property identifier"),
-):
-    """
-    Look up a reference property by source and external ID.
-
-    Returns the reference node if found, otherwise 404.
-    Properties are stored as nodes with type='Property' in attributes.
-    """
-    try:
-        config = ReferenceConfig()
-        with ReferenceManager(config) as manager:
-            node = manager.get_reference_node_by_source(source, external_id)
-
-            if not node:
-                raise HTTPException(
-                    status_code=404,
-                    detail=f"Property not found: {source}/{external_id}"
-                )
-
-            return {
-                "id": node.id,
-                "title": node.title,
-                "definition": node.definition,
-                "source": node.source,
-                "external_id": node.external_id,
-                "created_at": node.created_at,
-                "updated_at": node.updated_at
-            }
-
-    except HTTPException:
-        raise
-    except Exception as e:
-        logger.error(f"Get reference property failed: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
-
-
-@router.post("/ref-db/search")
-async def reference_db_search_post(request: ReferenceSearchRequest):
-    """
-    Search reference database using semantic vector similarity (POST).
-
-    This endpoint uses vector embeddings for semantic search and returns results
-    ranked by similarity score.
-    """
-    try:
-        config = ReferenceConfig()
-        with ReferenceManager(config) as manager:
-            # Create embedding generator
-            def embedding_gen(text: str) -> bytes:
-                return generate_embedding(text)
-
-            # Execute search
-            results_with_scores = manager.search_by_similarity(
-                query_text=request.query,
-                source=request.source,
-                limit=request.limit,
-                threshold=request.threshold,
-                embedding_generator=embedding_gen
-            )
-
-            # Format response
-            results = []
-            for node, score in results_with_scores:
-                results.append({
-                    "id": node.id,
-                    "title": node.title,
-                    "definition": node.definition,
-                    "source": node.source,
-                    "external_id": node.external_id,
-                    "similarity_score": score
-                })
-
-            return {
-                "query": request.query,
-                "total_results": len(results),
-                "results": results
-            }
-
-    except HTTPException:
-        # Re-raise HTTP exceptions (validation errors)
-        raise
-    except ValueError as e:
-        # Return 400 for validation errors from manager
-        logger.warning(f"Invalid search parameters: {e}")
-        raise HTTPException(status_code=400, detail=str(e))
-    except Exception as e:
-        # Return 500 for database/vector search errors (fail fast)
-        logger.error(f"Reference DB search failed: {e}")
-        raise HTTPException(status_code=500, detail=f"Vector search failed: {str(e)}")
-
-
 @router.get("/ref-db/search")
 async def reference_db_search(
     query: str = Query(..., description="Search query text", min_length=1),
@@ -479,8 +346,12 @@ async def reference_db_search(
         )
 
     try:
+        from reference_db.dependencies import reference_manager_context
+        from reference_db.config import ReferenceConfig
+        from embeddings.generate_embeddings import generate_embedding
+
         config = ReferenceConfig()
-        with ReferenceManager(config) as manager:
+        with reference_manager_context(config) as manager:
             # Create embedding generator
             def embedding_gen(text: str) -> bytes:
                 return generate_embedding(text)
@@ -525,14 +396,163 @@ async def reference_db_search(
         raise HTTPException(status_code=500, detail=f"Vector search failed: {str(e)}")
 
 
+@router.post("/ref-db/search")
+async def reference_db_search_post(
+    request: ReferenceSearchRequest = Body(...),
+):
+    """
+    Search reference database using semantic vector similarity (POST version).
+
+    This endpoint uses vector embeddings for semantic search and returns results
+    ranked by similarity score. Accepts a JSON body with search parameters.
+    """
+    try:
+        from reference_db.dependencies import reference_manager_context
+        from reference_db.config import ReferenceConfig
+        from embeddings.generate_embeddings import generate_embedding
+
+        config = ReferenceConfig()
+        with reference_manager_context(config) as manager:
+            # Create embedding generator
+            def embedding_gen(text: str) -> bytes:
+                return generate_embedding(text)
+
+            # Execute search
+            results_with_scores = manager.search_by_similarity(
+                query_text=request.query,
+                source=request.source,
+                limit=request.limit,
+                threshold=request.threshold,
+                embedding_generator=embedding_gen
+            )
+
+            # Format response
+            results = []
+            for node, score in results_with_scores:
+                results.append({
+                    "id": node.id,
+                    "title": node.title,
+                    "definition": node.definition,
+                    "source": node.source,
+                    "external_id": node.external_id,
+                    "similarity_score": score
+                })
+
+            return {
+                "query": request.query,
+                "total_results": len(results),
+                "results": results
+            }
+
+    except HTTPException:
+        # Re-raise HTTP exceptions (validation errors)
+        raise
+    except ValueError as e:
+        # Return 400 for validation errors from manager
+        logger.warning(f"Invalid search parameters: {e}")
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        # Return 500 for database/vector search errors (fail fast)
+        logger.error(f"Reference DB search failed: {e}")
+        raise HTTPException(status_code=500, detail=f"Vector search failed: {str(e)}")
+
+
+@router.get("/ref-db/entity/{source}/{external_id}")
+async def get_reference_entity(
+    source: str = Path(..., description="Source identifier (e.g., 'schema.org')"),
+    external_id: str = Path(..., description="External identifier from source"),
+):
+    """
+    Get a reference entity by source and external ID.
+
+    This endpoint looks up entities from the reference database using their
+    source identifier and external ID.
+    """
+    try:
+        from reference_db.dependencies import reference_manager_context
+        from reference_db.config import ReferenceConfig
+
+        config = ReferenceConfig()
+        with reference_manager_context(config) as manager:
+            node = manager.get_reference_node_by_source(source, external_id)
+
+            if not node:
+                raise HTTPException(
+                    status_code=404,
+                    detail=f"Entity not found: {source}/{external_id}"
+                )
+
+            return {
+                "id": node.id,
+                "title": node.title,
+                "definition": node.definition,
+                "source": node.source,
+                "external_id": node.external_id,
+                "created_at": node.created_at,
+                "updated_at": node.updated_at
+            }
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Get reference entity failed: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.get("/ref-db/property/{source}/{external_id}")
+async def get_reference_property(
+    source: str = Path(..., description="Source identifier (e.g., 'schema.org')"),
+    external_id: str = Path(..., description="External identifier from source"),
+):
+    """
+    Get a reference property by source and external ID.
+
+    This endpoint looks up properties from the reference database using their
+    source identifier and external ID. Properties are stored as reference nodes
+    with a type attribute indicating they are properties.
+    """
+    try:
+        from reference_db.dependencies import reference_manager_context
+        from reference_db.config import ReferenceConfig
+
+        config = ReferenceConfig()
+        with reference_manager_context(config) as manager:
+            node = manager.get_reference_node_by_source(source, external_id)
+
+            if not node:
+                raise HTTPException(
+                    status_code=404,
+                    detail=f"Property not found: {source}/{external_id}"
+                )
+
+            return {
+                "id": node.id,
+                "title": node.title,
+                "definition": node.definition,
+                "source": node.source,
+                "external_id": node.external_id,
+                "created_at": node.created_at,
+                "updated_at": node.updated_at
+            }
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Get reference property failed: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
 @router.get("/ref-db/nodes/{node_id}")
 async def get_reference_node(
     node_id: str = Path(..., description="Reference node ID"),
 ):
     """Get a reference node by ID."""
     try:
+        from reference_db.dependencies import reference_manager_context
+        from reference_db.config import ReferenceConfig
+
         config = ReferenceConfig()
-        with ReferenceManager(config) as manager:
+        with reference_manager_context(config) as manager:
             node = manager.get_reference_node(node_id)
 
             if not node:
@@ -555,21 +575,191 @@ async def get_reference_node(
         raise HTTPException(status_code=500, detail=str(e))
 
 
+@router.get("/ref-db/predicates/{source}/{external_id:path}/examples")
+async def get_predicate_examples(
+    source: str = Path(..., description="Predicate source (e.g., 'schema.org', 'dbpedia')"),
+    external_id: str = Path(..., description="External predicate ID (can contain slashes)"),
+    limit: int = Query(10, ge=1, le=100, description="Maximum number of example uses to return"),
+    service: ReferenceService = Depends(get_reference_service)
+):
+    """
+    Get example uses of a predicate from the reference database or external APIs.
+    
+    Returns example links that use this predicate, including information about
+    the subject and object nodes. This helps users understand how the predicate
+    is used in the knowledge graph.
+    
+    Note: The external_id parameter accepts paths with slashes (e.g., '/r/RelatedTo' for ConceptNet).
+    For DBpedia, uses SPARQL queries to fetch live examples from the public endpoint.
+    """
+    try:
+        from reference_db.dependencies import reference_manager_context
+        from reference_db.config import ReferenceConfig
+        from reference_db.models import ReferenceLink
+        
+        config = ReferenceConfig()
+        with reference_manager_context(config) as manager:
+            # Get the external predicate to verify it exists
+            predicate = manager.get_external_predicate_by_source(source, external_id)
+            if not predicate:
+                raise HTTPException(
+                    status_code=404, 
+                    detail=f"Predicate not found: {source}/{external_id}"
+                )
+            
+            examples = []
+            
+            # Use different strategies based on the source
+            if source.lower() == 'dbpedia':
+                # For DBpedia, query the live SPARQL endpoint directly
+                import httpx
+                
+                sparql_query = f"""
+                SELECT ?subject ?subjectLabel ?object ?objectLabel
+                WHERE {{
+                    ?subject <{external_id}> ?object .
+                    OPTIONAL {{ ?subject rdfs:label ?subjectLabel . FILTER(LANG(?subjectLabel) = "en") }}
+                    OPTIONAL {{ ?object rdfs:label ?objectLabel . FILTER(LANG(?objectLabel) = "en") }}
+                }}
+                LIMIT {limit}
+                """
+                
+                try:
+                    # Query DBpedia's public SPARQL endpoint directly
+                    async with httpx.AsyncClient(timeout=30.0) as client:
+                        response = await client.post(
+                            "https://dbpedia.org/sparql",
+                            data={
+                                "query": sparql_query,
+                                "format": "application/json"
+                            }
+                        )
+                        response.raise_for_status()
+                        sparql_result = response.json()
+                    
+                    # Parse SPARQL results
+                    if sparql_result.get("results") and sparql_result["results"].get("bindings"):
+                        for binding in sparql_result["results"]["bindings"][:limit]:
+                            subject_uri = binding.get("subject", {}).get("value", "")
+                            object_uri = binding.get("object", {}).get("value", "")
+                            subject_label = binding.get("subjectLabel", {}).get("value", subject_uri.split("/")[-1])
+                            object_label = binding.get("objectLabel", {}).get("value", object_uri.split("/")[-1])
+                            
+                            examples.append({
+                                "link_id": f"dbpedia-{len(examples)}",
+                                "subject": {
+                                    "id": subject_uri,
+                                    "title": subject_label,
+                                    "source": "dbpedia",
+                                    "external_id": subject_uri
+                                },
+                                "predicate": {
+                                    "title": predicate.title,
+                                    "source": predicate.source,
+                                    "external_id": predicate.external_id
+                                },
+                                "object": {
+                                    "id": object_uri,
+                                    "title": object_label,
+                                    "source": "dbpedia",
+                                    "external_id": object_uri
+                                }
+                            })
+                except Exception as e:
+                    logger.error(f"DBpedia SPARQL query failed: {e}")
+                    # Fall through to local database query
+            
+            # For other sources or if DBpedia query failed, use local reference database
+            if not examples:
+                # Try exact match first
+                links = manager.session.query(ReferenceLink).filter(
+                    ReferenceLink.predicate == external_id
+                ).limit(limit).all()
+                
+                # If no results and external_id looks like a URI, try extracting the predicate name
+                if not links and '/' in external_id:
+                    predicate_name = external_id.split('/')[-1]
+                    if predicate_name:
+                        links = manager.session.query(ReferenceLink).filter(
+                            ReferenceLink.predicate == predicate_name
+                        ).limit(limit).all()
+                
+                # Build response with node details
+                for link in links:
+                    subject = manager.get_reference_node(link.subject_node)
+                    obj = manager.get_reference_node(link.object_node)
+                    
+                    if subject and obj:
+                        examples.append({
+                            "link_id": link.id,
+                            "subject": {
+                                "id": subject.id,
+                                "title": subject.title,
+                                "source": subject.source,
+                                "external_id": subject.external_id
+                            },
+                            "predicate": {
+                                "title": predicate.title,
+                                "source": predicate.source,
+                                "external_id": predicate.external_id
+                            },
+                            "object": {
+                                "id": obj.id,
+                                "title": obj.title,
+                                "source": obj.source,
+                                "external_id": obj.external_id
+                            }
+                        })
+            
+            return {
+                "predicate": {
+                    "id": predicate.id,
+                    "title": predicate.title,
+                    "definition": predicate.definition,
+                    "source": predicate.source,
+                    "external_id": predicate.external_id
+                },
+                "total_examples": len(examples),
+                "examples": examples
+            }
+            
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Get predicate examples failed: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
 @router.get("/ref-db/nodes/{node_id}/links")
 async def get_node_links(
     node_id: str = Path(..., description="Reference node ID"),
     direction: str = Query("both", description="Link direction: inbound, outbound, or both"),
     predicate: Optional[str] = Query(None, description="Filter by predicate (exact match)"),
     limit: Optional[int] = Query(None, ge=1, le=1000, description="Maximum results"),
+    apply_relevance_filter: Optional[bool] = Query(None, description="Apply predicate relevance filtering (defaults to config setting)"),
+    settings: Settings = Depends(get_settings),
 ):
     """
     Retrieve links connected to a reference node.
 
     Returns links ordered by created_at (descending).
+
+    When apply_relevance_filter=True, filters links based on predicate relevance
+    mappings from the global predicates table. If not specified, uses the
+    enable_relevance_filtering setting from configuration.
     """
     try:
+        from reference_db.dependencies import reference_manager_context
+        from reference_db.config import ReferenceConfig
+        from database.utils import get_db
+        from services.reference_filter_service import ReferenceFilterService
+
+        # Use configuration default if not explicitly provided
+        if apply_relevance_filter is None:
+            apply_relevance_filter = settings.reference_sources.enable_relevance_filtering
+
         config = ReferenceConfig()
-        with ReferenceManager(config) as manager:
+        with reference_manager_context(config) as manager:
             # Verify node exists
             node = manager.get_reference_node(node_id)
             if not node:
@@ -583,6 +773,17 @@ async def get_node_links(
                 limit=limit
             )
 
+            # Apply relevance filtering if requested
+            filter_stats = None
+            if apply_relevance_filter:
+                # Get local DB session for predicate access
+                local_db = next(get_db())
+                try:
+                    filter_service = ReferenceFilterService(local_db, manager)
+                    links, filter_stats = filter_service.filter_links(links)
+                finally:
+                    local_db.close()
+
             # Format response
             results = []
             for link in links:
@@ -594,13 +795,19 @@ async def get_node_links(
                     "created_at": link.created_at
                 })
 
-            return {
+            response = {
                 "node_id": node_id,
                 "direction": direction,
                 "predicate": predicate,
                 "total_links": len(results),
-                "links": results
+                "links": results,
+                "filtering_applied": apply_relevance_filter
             }
+
+            if filter_stats:
+                response["filter_statistics"] = filter_stats
+
+            return response
 
     except HTTPException:
         raise
@@ -647,8 +854,11 @@ async def reference_db_health_check():
     start_time = time.time()
 
     try:
+        from reference_db.dependencies import reference_manager_context
+        from reference_db.config import ReferenceConfig
+
         config = ReferenceConfig()
-        with ReferenceManager(config) as manager:
+        with reference_manager_context(config) as manager:
             status = manager.get_status()
 
             # Calculate execution time
@@ -676,4 +886,39 @@ async def reference_db_health_check():
                 "execution_time_ms": round(execution_time_ms, 2)
             }
         )
+
+
+# Reference filter endpoints
+@router.get("/ref-db/filter/statistics")
+async def get_filter_statistics():
+    """
+    Get reference link filtering statistics.
+
+    Returns information about the current predicate relevance configuration:
+    - Number of relevant/irrelevant predicates
+    - External predicate mappings
+    - Filtering readiness status
+
+    This endpoint helps users understand what will be filtered when
+    they enable relevance filtering on reference queries.
+    """
+    try:
+        from reference_db.dependencies import reference_manager_context
+        from reference_db.config import ReferenceConfig
+        from database.utils import get_db
+        from services.reference_filter_service import ReferenceFilterService
+
+        config = ReferenceConfig()
+        with reference_manager_context(config) as manager:
+            local_db = next(get_db())
+            try:
+                filter_service = ReferenceFilterService(local_db, manager)
+                stats = filter_service.get_filter_statistics()
+                return stats
+            finally:
+                local_db.close()
+
+    except Exception as e:
+        logger.error(f"Get filter statistics failed: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
 

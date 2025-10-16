@@ -6,6 +6,32 @@ import os
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 import pytest
+
+
+def pytest_collection_modifyitems(config, items):
+    """Modify test collection to skip utility classes that start with Test."""
+    # No need to modify items, just hook for future use
+    pass
+
+
+def pytest_ignore_collect(collection_path, config):
+    """Ignore collection from utility files that have non-test Test* classes."""
+    # Get the string representation of the path
+    path_str = str(collection_path)
+
+    # List of utility files that should not be collected
+    utility_files = [
+        'test_config.py',
+        'test_db_utils.py',
+        'test_environment.py'
+    ]
+
+    # Check if this is one of our utility files (not in subdirectories)
+    for util_file in utility_files:
+        if path_str.endswith(f'/tests/{util_file}') or path_str.endswith(f'\\tests\\{util_file}'):
+            return True
+
+    return False
 import tempfile
 from fastapi.testclient import TestClient
 from app import create_app
@@ -250,7 +276,11 @@ def test_service_factory():
     set_service_factory(factory)
     yield factory
     # Cleanup at end of session
-    factory.clear_cache()
+    try:
+        factory.clear_cache()
+    except Exception as e:
+        # Ignore errors during cleanup (e.g., closed file handles)
+        print(f"Warning: Error during service factory cleanup: {e}")
 
 
 @pytest.fixture(scope="session")
@@ -264,13 +294,26 @@ def test_database_manager():
 
 
 @pytest.fixture(autouse=True, scope="function")
-def reset_service_factory_cache(test_service_factory):
+def reset_service_factory_cache(request, test_service_factory):
     """Auto-reset service factory cache between each test for isolation."""
+    # Skip this fixture for integration tests
+    if "integration_tests" in str(request.fspath):
+        yield
+        return
+
     # Clear cache before test
-    test_service_factory.clear_cache()
+    try:
+        test_service_factory.clear_cache()
+    except Exception as e:
+        print(f"Warning: Error clearing service factory cache before test: {e}")
+
     yield
+
     # Clear cache after test
-    test_service_factory.clear_cache()
+    try:
+        test_service_factory.clear_cache()
+    except Exception as e:
+        print(f"Warning: Error clearing service factory cache after test: {e}")
 
 
 @pytest.fixture(scope="function")
@@ -515,6 +558,9 @@ def test_app(shared_app):
 
 
 @pytest.fixture(scope="function")
-def client(shared_client):
+def client(request, shared_client):
     """Legacy fixture name - now returns shared client for backwards compatibility."""
+    # Skip for integration tests to avoid fixture collisions
+    if "integration_tests" in str(request.fspath):
+        pytest.skip("Skipping conftest client fixture for integration tests")
     return shared_client

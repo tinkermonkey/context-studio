@@ -986,6 +986,250 @@
         }
       }
     },
+    "/api/predicates/conceptnet-relations": {
+      "get": {
+        "tags": [
+          "predicates"
+        ],
+        "summary": "Get Conceptnet Relations",
+        "description": "Get the list of ConceptNet relations configured in the system.",
+        "operationId": "get_conceptnet_relations_api_predicates_conceptnet_relations_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "type": "string"
+                  },
+                  "type": "array",
+                  "title": "Response Get Conceptnet Relations Api Predicates Conceptnet Relations Get"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/predicates/conceptnet-mapping": {
+      "get": {
+        "tags": [
+          "predicates"
+        ],
+        "summary": "Get Conceptnet Mapping",
+        "description": "Get a mapping of all predicate identifiers to their ConceptNet relations.",
+        "operationId": "get_conceptnet_mapping_api_predicates_conceptnet_mapping_get",
+        "parameters": [
+          {
+            "name": "SessionLocal",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "title": "Sessionlocal"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": {
+                    "type": "string"
+                  },
+                  "title": "Response Get Conceptnet Mapping Api Predicates Conceptnet Mapping Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/predicates/by-identifier/{identifier}": {
+      "get": {
+        "tags": [
+          "predicates"
+        ],
+        "summary": "Get Predicate By Identifier",
+        "description": "Get a predicate by its identifier.",
+        "operationId": "get_predicate_by_identifier_api_predicates_by_identifier__identifier__get",
+        "parameters": [
+          {
+            "name": "identifier",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Identifier"
+            }
+          },
+          {
+            "name": "SessionLocal",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "title": "Sessionlocal"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PredicateOut"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Predicate not found"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/predicates/discover/{task_id}": {
+      "get": {
+        "tags": [
+          "predicates"
+        ],
+        "summary": "Get Discovery Status",
+        "description": "Get the status of a predicate discovery task.\n\nReturns the current status and results (if completed) of the discovery task.",
+        "operationId": "get_discovery_status_api_predicates_discover__task_id__get",
+        "parameters": [
+          {
+            "name": "task_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Task Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PredicateDiscoveryStatus"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/predicates/external": {
+      "get": {
+        "tags": [
+          "predicates"
+        ],
+        "summary": "List External Predicates",
+        "description": "List external predicates with pagination.\n\nReturns predicates discovered from external knowledge sources with optional source filtering.",
+        "operationId": "list_external_predicates_api_predicates_external_get",
+        "parameters": [
+          {
+            "name": "source",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by source (conceptnet, dbpedia, wikidata)",
+              "title": "Source"
+            },
+            "description": "Filter by source (conceptnet, dbpedia, wikidata)"
+          },
+          {
+            "name": "skip",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "default": 0,
+              "title": "Skip"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 1000,
+              "minimum": 1,
+              "default": 50,
+              "title": "Limit"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PaginatedExternalPredicatesResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/predicates/{id}": {
       "get": {
         "tags": [
@@ -1044,7 +1288,7 @@
           "predicates"
         ],
         "summary": "Update Predicate",
-        "description": "Update an existing predicate.",
+        "description": "Update an existing predicate.\n\nThis endpoint implements JSON schema validation for mappings.",
         "operationId": "update_predicate_api_predicates__id__put",
         "parameters": [
           {
@@ -1145,86 +1389,6 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/predicates/by-identifier/{identifier}": {
-      "get": {
-        "tags": [
-          "predicates"
-        ],
-        "summary": "Get Predicate By Identifier",
-        "description": "Get a predicate by its identifier.",
-        "operationId": "get_predicate_by_identifier_api_predicates_by_identifier__identifier__get",
-        "parameters": [
-          {
-            "name": "identifier",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "title": "Identifier"
-            }
-          },
-          {
-            "name": "SessionLocal",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "title": "Sessionlocal"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/PredicateOut"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Predicate not found"
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/predicates/conceptnet-relations": {
-      "get": {
-        "tags": [
-          "predicates"
-        ],
-        "summary": "Get Conceptnet Relations",
-        "description": "Get the list of ConceptNet relations configured in the system.",
-        "operationId": "get_conceptnet_relations_api_predicates_conceptnet_relations_get",
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "items": {
-                    "type": "string"
-                  },
-                  "type": "array",
-                  "title": "Response Get Conceptnet Relations Api Predicates Conceptnet Relations Get"
                 }
               }
             }
@@ -1357,15 +1521,133 @@
         }
       }
     },
-    "/api/predicates/conceptnet-mapping": {
-      "get": {
+    "/api/predicates/discover": {
+      "post": {
         "tags": [
           "predicates"
         ],
-        "summary": "Get Conceptnet Mapping",
-        "description": "Get a mapping of all predicate identifiers to their ConceptNet relations.",
-        "operationId": "get_conceptnet_mapping_api_predicates_conceptnet_mapping_get",
+        "summary": "Discover External Predicates",
+        "description": "Discover predicates from external knowledge sources.\n\nThis endpoint starts a background task to fetch predicate metadata from:\n- ConceptNet (40 relations)\n- DBpedia (760 properties via SPARQL)\n- WikiData (10K properties via SPARQL)\n\nReturns a task_id that can be used to check the status of the discovery process.\n\n**Performance targets:**\n- ConceptNet: <2s for 40 relations\n- DBpedia: <10s for 760 properties\n- WikiData: <30s for 10K properties",
+        "operationId": "discover_external_predicates_api_predicates_discover_post",
         "parameters": [
+          {
+            "name": "sources",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Sources to discover from (conceptnet, dbpedia, wikidata)",
+              "title": "Sources"
+            },
+            "description": "Sources to discover from (conceptnet, dbpedia, wikidata)"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PredicateDiscoveryResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/predicates/{id}/find-similar": {
+      "post": {
+        "tags": [
+          "predicates"
+        ],
+        "summary": "Find Similar Predicates",
+        "description": "Find similar external predicates for a given predicate using vector similarity search.\n\nThis endpoint:\n1. Retrieves the predicate by ID\n2. Performs vector similarity search against external predicates\n3. Returns ranked results with confidence scores\n4. Caches results for 1 hour (TTL-based)\n\n**Performance targets:**\n- <200ms p95 for 10K-50K predicates (PT-VS-001, PT-VS-002)\n- <50ms p95 for cached searches (PT-VS-006)\n\n**Confidence scores:**\n- High: similarity >= 0.85\n- Medium: similarity >= 0.70\n- Low: similarity >= 0.60\n- Results below 0.60 are rejected\n\nArgs:\n    id: UUID of the predicate to find similar predicates for\n    source: Optional source filter\n    limit: Maximum number of results (default: 100, max: 100)\n    threshold: Minimum similarity threshold (default: 0.7)\n    use_cache: Whether to use cached results (default: True)\n\nReturns:\n    FindSimilarResponse with ranked similarity results",
+        "operationId": "find_similar_predicates_api_predicates__id__find_similar_post",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Id"
+            }
+          },
+          {
+            "name": "source",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by source (conceptnet, dbpedia, wikidata)",
+              "title": "Source"
+            },
+            "description": "Filter by source (conceptnet, dbpedia, wikidata)"
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 100,
+              "minimum": 1,
+              "default": 100,
+              "title": "Limit"
+            }
+          },
+          {
+            "name": "threshold",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "number",
+              "maximum": 1.0,
+              "minimum": 0.0,
+              "default": 0.7,
+              "title": "Threshold"
+            }
+          },
+          {
+            "name": "use_cache",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "description": "Use cached results if available",
+              "default": true,
+              "title": "Use Cache"
+            },
+            "description": "Use cached results if available"
+          },
           {
             "name": "SessionLocal",
             "in": "query",
@@ -1381,11 +1663,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object",
-                  "additionalProperties": {
-                    "type": "string"
-                  },
-                  "title": "Response Get Conceptnet Mapping Api Predicates Conceptnet Mapping Get"
+                  "$ref": "#/components/schemas/FindSimilarResponse"
                 }
               }
             }
@@ -1397,6 +1675,140 @@
                 "schema": {
                   "$ref": "#/components/schemas/HTTPValidationError"
                 }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/predicates/cluster-predicates": {
+      "post": {
+        "tags": [
+          "predicates"
+        ],
+        "summary": "Cluster Predicates",
+        "description": "Cluster similar predicates using DBSCAN algorithm.\n\nThis endpoint:\n1. Retrieves predicates (all or specified IDs)\n2. Generates embeddings for each predicate\n3. Performs density-based clustering (DBSCAN)\n4. Returns clusters with automatic count determination\n\n**Algorithm:** DBSCAN (Density-Based Spatial Clustering of Applications with Noise)\n- Automatically determines number of clusters\n- Handles noise points (outliers)\n- Does not require specifying cluster count in advance\n\n**Resource limits:**\n- Default max_predicates: 1000 (to prevent resource exhaustion)\n- For larger datasets, process in batches or increase max_predicates\n\nArgs:\n    predicate_ids: Optional list of specific predicate IDs to cluster\n    min_similarity: Minimum similarity for cluster membership (default: 0.7)\n    min_cluster_size: Minimum predicates per cluster (default: 2)\n    eps: DBSCAN epsilon parameter - lower values create tighter clusters (default: 0.3)\n    max_predicates: Maximum predicates to process (default: 1000, max: 10000)\n\nReturns:\n    ClusterPredicatesResponse with clusters and statistics",
+        "operationId": "cluster_predicates_api_predicates_cluster_predicates_post",
+        "parameters": [
+          {
+            "name": "predicate_ids",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Specific predicate IDs to cluster (if None, clusters all)",
+              "title": "Predicate Ids"
+            },
+            "description": "Specific predicate IDs to cluster (if None, clusters all)"
+          },
+          {
+            "name": "min_similarity",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "number",
+              "maximum": 1.0,
+              "minimum": 0.0,
+              "default": 0.7,
+              "title": "Min Similarity"
+            }
+          },
+          {
+            "name": "min_cluster_size",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 2,
+              "default": 2,
+              "title": "Min Cluster Size"
+            }
+          },
+          {
+            "name": "eps",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "number",
+              "maximum": 1.0,
+              "minimum": 0.1,
+              "description": "DBSCAN epsilon (distance threshold)",
+              "default": 0.3,
+              "title": "Eps"
+            },
+            "description": "DBSCAN epsilon (distance threshold)"
+          },
+          {
+            "name": "max_predicates",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 10000,
+              "minimum": 1,
+              "description": "Maximum predicates to process",
+              "default": 1000,
+              "title": "Max Predicates"
+            },
+            "description": "Maximum predicates to process"
+          },
+          {
+            "name": "SessionLocal",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "title": "Sessionlocal"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ClusterPredicatesResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/predicates/invalidate-similarity-cache": {
+      "post": {
+        "tags": [
+          "predicates"
+        ],
+        "summary": "Invalidate Similarity Cache",
+        "description": "Invalidate the similarity search cache.\n\nThis should be called when external predicates are updated to ensure\nfresh results in similarity searches.\n\n**Use cases:**\n- After running predicate discovery\n- After updating external predicate definitions\n- When stale cache results are suspected\n\nReturns:\n    Success message with cache statistics",
+        "operationId": "invalidate_similarity_cache_api_predicates_invalidate_similarity_cache_post",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
               }
             }
           }
@@ -4222,416 +4634,6 @@
         }
       }
     },
-    "/api/schema-org/status": {
-      "get": {
-        "tags": [
-          "schema-org"
-        ],
-        "summary": "Get Status",
-        "description": "Return schema.org database status.",
-        "operationId": "get_status_api_schema_org_status_get",
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/SchemaOrgStatus"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/schema-org/refresh": {
-      "post": {
-        "tags": [
-          "schema-org"
-        ],
-        "summary": "Refresh Schema Org",
-        "description": "Trigger a refresh of the schema.org database.",
-        "operationId": "refresh_schema_org_api_schema_org_refresh_post",
-        "parameters": [
-          {
-            "name": "force",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "boolean",
-              "default": false,
-              "title": "Force"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "additionalProperties": true,
-                  "title": "Response Refresh Schema Org Api Schema Org Refresh Post"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/schema-org/entities": {
-      "get": {
-        "tags": [
-          "schema-org"
-        ],
-        "summary": "List Entities",
-        "operationId": "list_entities_api_schema_org_entities_get",
-        "parameters": [
-          {
-            "name": "query",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "title": "Query"
-            }
-          },
-          {
-            "name": "parent_id",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "title": "Parent Id"
-            }
-          },
-          {
-            "name": "limit",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "integer",
-              "default": 50,
-              "title": "Limit"
-            }
-          },
-          {
-            "name": "offset",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "integer",
-              "default": 0,
-              "title": "Offset"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/SearchResult"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/schema-org/entities/{identifier}": {
-      "get": {
-        "tags": [
-          "schema-org"
-        ],
-        "summary": "Get Entity",
-        "operationId": "get_entity_api_schema_org_entities__identifier__get",
-        "parameters": [
-          {
-            "name": "identifier",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "title": "Identifier"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/SchemaOrgEntityOut"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/schema-org/properties": {
-      "get": {
-        "tags": [
-          "schema-org"
-        ],
-        "summary": "List Properties",
-        "operationId": "list_properties_api_schema_org_properties_get",
-        "parameters": [
-          {
-            "name": "query",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "title": "Query"
-            }
-          },
-          {
-            "name": "domain_includes",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "title": "Domain Includes"
-            }
-          },
-          {
-            "name": "range_includes",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "title": "Range Includes"
-            }
-          },
-          {
-            "name": "limit",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "integer",
-              "default": 50,
-              "title": "Limit"
-            }
-          },
-          {
-            "name": "offset",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "integer",
-              "default": 0,
-              "title": "Offset"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/SearchResult"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/schema-org/properties/{identifier}": {
-      "get": {
-        "tags": [
-          "schema-org"
-        ],
-        "summary": "Get Property",
-        "operationId": "get_property_api_schema_org_properties__identifier__get",
-        "parameters": [
-          {
-            "name": "identifier",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "title": "Identifier"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/SchemaOrgPropertyOut"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/schema-org/search": {
-      "get": {
-        "tags": [
-          "schema-org"
-        ],
-        "summary": "Semantic Search",
-        "operationId": "semantic_search_api_schema_org_search_get",
-        "parameters": [
-          {
-            "name": "query",
-            "in": "query",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "title": "Query"
-            }
-          },
-          {
-            "name": "search_type",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "string",
-              "default": "both",
-              "title": "Search Type"
-            }
-          },
-          {
-            "name": "limit",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "integer",
-              "default": 20,
-              "title": "Limit"
-            }
-          },
-          {
-            "name": "similarity_threshold",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "number",
-              "default": 0.7,
-              "title": "Similarity Threshold"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/SearchResult"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
     "/api/nlp_analysis": {
       "post": {
         "tags": [
@@ -7155,6 +7157,402 @@
         }
       }
     },
+    "/api/reference/ref-db/search": {
+      "get": {
+        "tags": [
+          "nlp-reference",
+          "reference"
+        ],
+        "summary": "Reference Db Search",
+        "description": "Search reference database using semantic vector similarity.\n\nThis endpoint uses vector embeddings for semantic search and returns results\nranked by similarity score.",
+        "operationId": "reference_db_search_api_reference_ref_db_search_get",
+        "parameters": [
+          {
+            "name": "query",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "description": "Search query text",
+              "title": "Query"
+            },
+            "description": "Search query text"
+          },
+          {
+            "name": "source",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by source (e.g., 'schema.org')",
+              "title": "Source"
+            },
+            "description": "Filter by source (e.g., 'schema.org')"
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 10000,
+              "minimum": 1,
+              "description": "Maximum results",
+              "default": 20,
+              "title": "Limit"
+            },
+            "description": "Maximum results"
+          },
+          {
+            "name": "threshold",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "number",
+              "maximum": 1.0,
+              "minimum": -1.0,
+              "description": "Similarity threshold",
+              "default": 0.7,
+              "title": "Threshold"
+            },
+            "description": "Similarity threshold"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "nlp-reference",
+          "reference"
+        ],
+        "summary": "Reference Db Search Post",
+        "description": "Search reference database using semantic vector similarity (POST version).\n\nThis endpoint uses vector embeddings for semantic search and returns results\nranked by similarity score. Accepts a JSON body with search parameters.",
+        "operationId": "reference_db_search_post_api_reference_ref_db_search_post",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReferenceSearchRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/reference/ref-db/entity/{source}/{external_id}": {
+      "get": {
+        "tags": [
+          "nlp-reference",
+          "reference"
+        ],
+        "summary": "Get Reference Entity",
+        "description": "Get a reference entity by source and external ID.\n\nThis endpoint looks up entities from the reference database using their\nsource identifier and external ID.",
+        "operationId": "get_reference_entity_api_reference_ref_db_entity__source___external_id__get",
+        "parameters": [
+          {
+            "name": "source",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Source identifier (e.g., 'schema.org')",
+              "title": "Source"
+            },
+            "description": "Source identifier (e.g., 'schema.org')"
+          },
+          {
+            "name": "external_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "External identifier from source",
+              "title": "External Id"
+            },
+            "description": "External identifier from source"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/reference/ref-db/property/{source}/{external_id}": {
+      "get": {
+        "tags": [
+          "nlp-reference",
+          "reference"
+        ],
+        "summary": "Get Reference Property",
+        "description": "Get a reference property by source and external ID.\n\nThis endpoint looks up properties from the reference database using their\nsource identifier and external ID. Properties are stored as reference nodes\nwith a type attribute indicating they are properties.",
+        "operationId": "get_reference_property_api_reference_ref_db_property__source___external_id__get",
+        "parameters": [
+          {
+            "name": "source",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Source identifier (e.g., 'schema.org')",
+              "title": "Source"
+            },
+            "description": "Source identifier (e.g., 'schema.org')"
+          },
+          {
+            "name": "external_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "External identifier from source",
+              "title": "External Id"
+            },
+            "description": "External identifier from source"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/reference/ref-db/nodes/{node_id}": {
+      "get": {
+        "tags": [
+          "nlp-reference",
+          "reference"
+        ],
+        "summary": "Get Reference Node",
+        "description": "Get a reference node by ID.",
+        "operationId": "get_reference_node_api_reference_ref_db_nodes__node_id__get",
+        "parameters": [
+          {
+            "name": "node_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Reference node ID",
+              "title": "Node Id"
+            },
+            "description": "Reference node ID"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/reference/ref-db/nodes/{node_id}/links": {
+      "get": {
+        "tags": [
+          "nlp-reference",
+          "reference"
+        ],
+        "summary": "Get Node Links",
+        "description": "Retrieve links connected to a reference node.\n\nReturns links ordered by created_at (descending).\n\nWhen apply_relevance_filter=True, filters links based on predicate relevance\nmappings from the global predicates table. If not specified, uses the\nenable_relevance_filtering setting from configuration.",
+        "operationId": "get_node_links_api_reference_ref_db_nodes__node_id__links_get",
+        "parameters": [
+          {
+            "name": "node_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Reference node ID",
+              "title": "Node Id"
+            },
+            "description": "Reference node ID"
+          },
+          {
+            "name": "direction",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "description": "Link direction: inbound, outbound, or both",
+              "default": "both",
+              "title": "Direction"
+            },
+            "description": "Link direction: inbound, outbound, or both"
+          },
+          {
+            "name": "predicate",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by predicate (exact match)",
+              "title": "Predicate"
+            },
+            "description": "Filter by predicate (exact match)"
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer",
+                  "maximum": 1000,
+                  "minimum": 1
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Maximum results",
+              "title": "Limit"
+            },
+            "description": "Maximum results"
+          },
+          {
+            "name": "apply_relevance_filter",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "boolean"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Apply predicate relevance filtering (defaults to config setting)",
+              "title": "Apply Relevance Filter"
+            },
+            "description": "Apply predicate relevance filtering (defaults to config setting)"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/reference/health": {
       "get": {
         "tags": [
@@ -7164,6 +7562,48 @@
         "summary": "Health Check",
         "description": "Check health status of all reference API sources",
         "operationId": "health_check_api_reference_health_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/reference/ref-db/health": {
+      "get": {
+        "tags": [
+          "nlp-reference",
+          "reference"
+        ],
+        "summary": "Reference Db Health Check",
+        "description": "Check health status of the reference database.\n\nReturns comprehensive status information including:\n- status: \"healthy\", \"degraded\", or \"missing\"\n- node_count: Total number of reference nodes\n- vec_count: Number of nodes with embeddings\n- schema_version: Current database schema version\n- model_version: Embedding model version\n- last_import_at: Timestamp of last import\n- database_size: Size of database file in bytes\n\nPerformance target: <200ms\n\nTest Case: TC-S002",
+        "operationId": "reference_db_health_check_api_reference_ref_db_health_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/reference/ref-db/filter/statistics": {
+      "get": {
+        "tags": [
+          "nlp-reference",
+          "reference"
+        ],
+        "summary": "Get Filter Statistics",
+        "description": "Get reference link filtering statistics.\n\nReturns information about the current predicate relevance configuration:\n- Number of relevant/irrelevant predicates\n- External predicate mappings\n- Filtering readiness status\n\nThis endpoint helps users understand what will be filtered when\nthey enable relevance filtering on reference queries.",
+        "operationId": "get_filter_statistics_api_reference_ref_db_filter_statistics_get",
         "responses": {
           "200": {
             "description": "Successful Response",
@@ -12419,6 +12859,205 @@
         }
       }
     },
+    "/api/tasks": {
+      "get": {
+        "tags": [
+          "background-tasks",
+          "background-tasks"
+        ],
+        "summary": "List Tasks",
+        "description": "List all background tasks with optional filtering.\n\nArgs:\n    status_filter: Optional status filter (pending, running, completed, failed, cancelled)\n    task_type: Optional task type filter\n\nReturns:\n    List of tasks matching the filters",
+        "operationId": "list_tasks_api_tasks_get",
+        "parameters": [
+          {
+            "name": "status_filter",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Status Filter"
+            }
+          },
+          {
+            "name": "task_type",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Task Type"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TaskListResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/tasks/stats/summary": {
+      "get": {
+        "tags": [
+          "background-tasks",
+          "background-tasks"
+        ],
+        "summary": "Get Task Stats",
+        "description": "Get task management statistics.\n\nReturns:\n    Statistics about task manager and tasks",
+        "operationId": "get_task_stats_api_tasks_stats_summary_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TaskStatsResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/tasks/dead-letter-queue": {
+      "get": {
+        "tags": [
+          "background-tasks",
+          "background-tasks"
+        ],
+        "summary": "Get Dead Letter Queue",
+        "description": "Get all failed tasks from the dead letter queue.\n\nReturns:\n    List of failed tasks requiring manual intervention",
+        "operationId": "get_dead_letter_queue_api_tasks_dead_letter_queue_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TaskListResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/tasks/{task_id}": {
+      "get": {
+        "tags": [
+          "background-tasks",
+          "background-tasks"
+        ],
+        "summary": "Get Task Status",
+        "description": "Get the status of a background task.\n\nArgs:\n    task_id: The unique task identifier\n\nReturns:\n    Task status information\n\nRaises:\n    HTTPException: 404 if task not found",
+        "operationId": "get_task_status_api_tasks__task_id__get",
+        "parameters": [
+          {
+            "name": "task_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Task Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TaskStatusResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "background-tasks",
+          "background-tasks"
+        ],
+        "summary": "Cancel Task",
+        "description": "Cancel a running or pending background task.\n\nArgs:\n    task_id: The unique task identifier\n\nReturns:\n    Cancellation result\n\nRaises:\n    HTTPException: 404 if task not found, 400 if task cannot be cancelled",
+        "operationId": "cancel_task_api_tasks__task_id__delete",
+        "parameters": [
+          {
+            "name": "task_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Task Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CancelTaskResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/optimization/health": {
       "get": {
         "tags": [
@@ -13396,6 +14035,30 @@
         "title": "BatchResolveRequest",
         "description": "API model for batch conflict resolution."
       },
+      "CancelTaskResponse": {
+        "properties": {
+          "task_id": {
+            "type": "string",
+            "title": "Task Id"
+          },
+          "cancelled": {
+            "type": "boolean",
+            "title": "Cancelled"
+          },
+          "message": {
+            "type": "string",
+            "title": "Message"
+          }
+        },
+        "type": "object",
+        "required": [
+          "task_id",
+          "cancelled",
+          "message"
+        ],
+        "title": "CancelTaskResponse",
+        "description": "Response model for task cancellation."
+      },
       "CentralityRequest": {
         "properties": {
           "method": {
@@ -13709,6 +14372,75 @@
         ],
         "title": "ChangesetVersionsResponse",
         "description": "Response model for changeset version details."
+      },
+      "ClusterOut": {
+        "properties": {
+          "cluster_id": {
+            "type": "integer",
+            "title": "Cluster Id"
+          },
+          "predicate_ids": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Predicate Ids"
+          },
+          "centroid_title": {
+            "type": "string",
+            "title": "Centroid Title"
+          },
+          "avg_similarity": {
+            "type": "number",
+            "title": "Avg Similarity"
+          },
+          "size": {
+            "type": "integer",
+            "title": "Size"
+          }
+        },
+        "type": "object",
+        "required": [
+          "cluster_id",
+          "predicate_ids",
+          "centroid_title",
+          "avg_similarity",
+          "size"
+        ],
+        "title": "ClusterOut",
+        "description": "Response model for predicate clusters."
+      },
+      "ClusterPredicatesResponse": {
+        "properties": {
+          "clusters": {
+            "items": {
+              "$ref": "#/components/schemas/ClusterOut"
+            },
+            "type": "array",
+            "title": "Clusters"
+          },
+          "total_clusters": {
+            "type": "integer",
+            "title": "Total Clusters"
+          },
+          "total_predicates": {
+            "type": "integer",
+            "title": "Total Predicates"
+          },
+          "cluster_time_ms": {
+            "type": "number",
+            "title": "Cluster Time Ms"
+          }
+        },
+        "type": "object",
+        "required": [
+          "clusters",
+          "total_clusters",
+          "total_predicates",
+          "cluster_time_ms"
+        ],
+        "title": "ClusterPredicatesResponse",
+        "description": "Response for cluster-predicates endpoint."
       },
       "CollaborationInsightsOut": {
         "properties": {
@@ -15043,6 +15775,104 @@
         "title": "ExecutiveSummaryOut",
         "description": "API model for executive summary output."
       },
+      "ExternalPredicateOut": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "title": {
+            "type": "string",
+            "title": "Title"
+          },
+          "definition": {
+            "type": "string",
+            "title": "Definition"
+          },
+          "source": {
+            "type": "string",
+            "title": "Source"
+          },
+          "external_id": {
+            "type": "string",
+            "title": "External Id"
+          },
+          "attributes": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Attributes"
+          },
+          "created_at": {
+            "type": "string",
+            "title": "Created At"
+          },
+          "updated_at": {
+            "type": "string",
+            "title": "Updated At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "title",
+          "definition",
+          "source",
+          "external_id",
+          "created_at",
+          "updated_at"
+        ],
+        "title": "ExternalPredicateOut",
+        "description": "Response model for external predicates."
+      },
+      "FindSimilarResponse": {
+        "properties": {
+          "predicate_id": {
+            "type": "string",
+            "title": "Predicate Id"
+          },
+          "predicate_title": {
+            "type": "string",
+            "title": "Predicate Title"
+          },
+          "results": {
+            "items": {
+              "$ref": "#/components/schemas/SimilarPredicateOut"
+            },
+            "type": "array",
+            "title": "Results"
+          },
+          "total_results": {
+            "type": "integer",
+            "title": "Total Results"
+          },
+          "search_time_ms": {
+            "type": "number",
+            "title": "Search Time Ms"
+          },
+          "cached": {
+            "type": "boolean",
+            "title": "Cached"
+          }
+        },
+        "type": "object",
+        "required": [
+          "predicate_id",
+          "predicate_title",
+          "results",
+          "total_results",
+          "search_time_ms",
+          "cached"
+        ],
+        "title": "FindSimilarResponse",
+        "description": "Response for find-similar endpoint."
+      },
       "FlavorAnalyticsResponse": {
         "properties": {
           "flavor_id": {
@@ -16309,6 +17139,49 @@
         "title": "OptimizationResultOut",
         "description": "API model for optimization result."
       },
+      "PaginatedExternalPredicatesResponse": {
+        "properties": {
+          "data": {
+            "items": {
+              "$ref": "#/components/schemas/ExternalPredicateOut"
+            },
+            "type": "array",
+            "title": "Data"
+          },
+          "total": {
+            "type": "integer",
+            "title": "Total"
+          },
+          "skip": {
+            "type": "integer",
+            "title": "Skip"
+          },
+          "limit": {
+            "type": "integer",
+            "title": "Limit"
+          },
+          "source": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Source"
+          }
+        },
+        "type": "object",
+        "required": [
+          "data",
+          "total",
+          "skip",
+          "limit"
+        ],
+        "title": "PaginatedExternalPredicatesResponse",
+        "description": "Paginated response for external predicates."
+      },
       "PaginatedNodesResponse": {
         "properties": {
           "data": {
@@ -16719,6 +17592,111 @@
         ],
         "title": "PredicateCreate"
       },
+      "PredicateDiscoveryResponse": {
+        "properties": {
+          "task_id": {
+            "type": "string",
+            "title": "Task Id"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status",
+            "default": "started"
+          },
+          "message": {
+            "type": "string",
+            "title": "Message"
+          }
+        },
+        "type": "object",
+        "required": [
+          "task_id",
+          "message"
+        ],
+        "title": "PredicateDiscoveryResponse",
+        "description": "Response for predicate discovery requests."
+      },
+      "PredicateDiscoveryStatus": {
+        "properties": {
+          "task_id": {
+            "type": "string",
+            "title": "Task Id"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status"
+          },
+          "sources": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sources"
+          },
+          "results": {
+            "anyOf": [
+              {
+                "additionalProperties": {
+                  "additionalProperties": true,
+                  "type": "object"
+                },
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Results"
+          },
+          "error": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Error"
+          },
+          "started_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Started At"
+          },
+          "completed_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Completed At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "task_id",
+          "status"
+        ],
+        "title": "PredicateDiscoveryStatus",
+        "description": "Status of a predicate discovery task."
+      },
       "PredicateOut": {
         "properties": {
           "title": {
@@ -16823,6 +17801,17 @@
               }
             ],
             "title": "Identifier"
+          },
+          "is_relevant": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Is Relevant"
           }
         },
         "type": "object",
@@ -17146,6 +18135,50 @@
         "title": "RecordSelectionRequest",
         "description": "Request model for recording user selection of LLM suggestions."
       },
+      "ReferenceSearchRequest": {
+        "properties": {
+          "query": {
+            "type": "string",
+            "minLength": 1,
+            "title": "Query",
+            "description": "Search query text"
+          },
+          "source": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Source",
+            "description": "Filter by source (e.g., 'schema.org')"
+          },
+          "limit": {
+            "type": "integer",
+            "maximum": 10000.0,
+            "minimum": 1.0,
+            "title": "Limit",
+            "description": "Maximum results",
+            "default": 20
+          },
+          "threshold": {
+            "type": "number",
+            "maximum": 1.0,
+            "minimum": -1.0,
+            "title": "Threshold",
+            "description": "Similarity threshold",
+            "default": 0.7
+          }
+        },
+        "type": "object",
+        "required": [
+          "query"
+        ],
+        "title": "ReferenceSearchRequest",
+        "description": "Request model for reference database search"
+      },
       "RegisterUserRequest": {
         "properties": {
           "email": {
@@ -17306,268 +18339,6 @@
         ],
         "title": "SPARQLQuery"
       },
-      "SchemaOrgEntityOut": {
-        "properties": {
-          "id": {
-            "type": "string",
-            "title": "Id"
-          },
-          "identifier": {
-            "type": "string",
-            "title": "Identifier"
-          },
-          "title": {
-            "type": "string",
-            "title": "Title"
-          },
-          "definition": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Definition"
-          },
-          "parent_identifier": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Parent Identifier"
-          },
-          "parent_id": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Parent Id"
-          },
-          "created_at": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Created At"
-          },
-          "children_count": {
-            "anyOf": [
-              {
-                "type": "integer"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Children Count"
-          },
-          "raw": {
-            "anyOf": [
-              {
-                "additionalProperties": true,
-                "type": "object"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Raw"
-          }
-        },
-        "type": "object",
-        "required": [
-          "id",
-          "identifier",
-          "title",
-          "definition",
-          "parent_identifier",
-          "parent_id",
-          "created_at",
-          "raw"
-        ],
-        "title": "SchemaOrgEntityOut"
-      },
-      "SchemaOrgPropertyOut": {
-        "properties": {
-          "id": {
-            "type": "string",
-            "title": "Id"
-          },
-          "identifier": {
-            "type": "string",
-            "title": "Identifier"
-          },
-          "title": {
-            "type": "string",
-            "title": "Title"
-          },
-          "definition": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Definition"
-          },
-          "contributors": {
-            "anyOf": [
-              {
-                "items": {
-                  "type": "string"
-                },
-                "type": "array"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Contributors"
-          },
-          "domain_includes": {
-            "anyOf": [
-              {
-                "items": {
-                  "type": "string"
-                },
-                "type": "array"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Domain Includes"
-          },
-          "range_includes": {
-            "anyOf": [
-              {
-                "items": {
-                  "type": "string"
-                },
-                "type": "array"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Range Includes"
-          },
-          "inverse_of": {
-            "anyOf": [
-              {
-                "items": {
-                  "type": "string"
-                },
-                "type": "array"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Inverse Of"
-          },
-          "created_at": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Created At"
-          },
-          "raw": {
-            "anyOf": [
-              {
-                "additionalProperties": true,
-                "type": "object"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Raw"
-          }
-        },
-        "type": "object",
-        "required": [
-          "id",
-          "identifier",
-          "title",
-          "definition",
-          "contributors",
-          "domain_includes",
-          "range_includes",
-          "inverse_of",
-          "created_at",
-          "raw"
-        ],
-        "title": "SchemaOrgPropertyOut"
-      },
-      "SchemaOrgStatus": {
-        "properties": {
-          "is_populated": {
-            "type": "boolean",
-            "title": "Is Populated"
-          },
-          "entity_count": {
-            "type": "integer",
-            "title": "Entity Count"
-          },
-          "property_count": {
-            "type": "integer",
-            "title": "Property Count"
-          },
-          "last_updated": {
-            "anyOf": [
-              {
-                "type": "number"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Last Updated"
-          },
-          "database_size": {
-            "anyOf": [
-              {
-                "type": "integer"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Database Size"
-          }
-        },
-        "type": "object",
-        "required": [
-          "is_populated",
-          "entity_count",
-          "property_count",
-          "last_updated",
-          "database_size"
-        ],
-        "title": "SchemaOrgStatus"
-      },
       "SearchLink": {
         "properties": {
           "id": {
@@ -17727,56 +18498,6 @@
         ],
         "title": "SearchRequest"
       },
-      "SearchResult": {
-        "properties": {
-          "items": {
-            "items": {
-              "anyOf": [
-                {
-                  "$ref": "#/components/schemas/SchemaOrgEntityOut"
-                },
-                {
-                  "$ref": "#/components/schemas/SchemaOrgPropertyOut"
-                }
-              ]
-            },
-            "type": "array",
-            "title": "Items"
-          },
-          "total_count": {
-            "type": "integer",
-            "title": "Total Count"
-          },
-          "limit": {
-            "type": "integer",
-            "title": "Limit"
-          },
-          "offset": {
-            "type": "integer",
-            "title": "Offset"
-          },
-          "query": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Query"
-          }
-        },
-        "type": "object",
-        "required": [
-          "items",
-          "total_count",
-          "limit",
-          "offset",
-          "query"
-        ],
-        "title": "SearchResult"
-      },
       "SelectionResponse": {
         "properties": {
           "success": {
@@ -17857,6 +18578,50 @@
         "type": "object",
         "title": "Sense2VecData",
         "description": "Sense2Vec data for a token."
+      },
+      "SimilarPredicateOut": {
+        "properties": {
+          "predicate_id": {
+            "type": "string",
+            "title": "Predicate Id"
+          },
+          "source": {
+            "type": "string",
+            "title": "Source"
+          },
+          "source_id": {
+            "type": "string",
+            "title": "Source Id"
+          },
+          "title": {
+            "type": "string",
+            "title": "Title"
+          },
+          "definition": {
+            "type": "string",
+            "title": "Definition"
+          },
+          "similarity_score": {
+            "type": "number",
+            "title": "Similarity Score"
+          },
+          "confidence": {
+            "type": "string",
+            "title": "Confidence"
+          }
+        },
+        "type": "object",
+        "required": [
+          "predicate_id",
+          "source",
+          "source_id",
+          "title",
+          "definition",
+          "similarity_score",
+          "confidence"
+        ],
+        "title": "SimilarPredicateOut",
+        "description": "Response model for similar predicates."
       },
       "SourceType": {
         "type": "string",
@@ -18287,6 +19052,159 @@
         ],
         "title": "SystemHealthOut",
         "description": "API model for system health output."
+      },
+      "TaskListResponse": {
+        "properties": {
+          "tasks": {
+            "items": {
+              "$ref": "#/components/schemas/TaskStatusResponse"
+            },
+            "type": "array",
+            "title": "Tasks"
+          },
+          "total": {
+            "type": "integer",
+            "title": "Total"
+          }
+        },
+        "type": "object",
+        "required": [
+          "tasks",
+          "total"
+        ],
+        "title": "TaskListResponse",
+        "description": "Response model for list of tasks."
+      },
+      "TaskStatsResponse": {
+        "properties": {
+          "total_tasks": {
+            "type": "integer",
+            "title": "Total Tasks"
+          },
+          "queue_size": {
+            "type": "integer",
+            "title": "Queue Size"
+          },
+          "max_queue_size": {
+            "type": "integer",
+            "title": "Max Queue Size"
+          },
+          "dead_letter_queue_size": {
+            "type": "integer",
+            "title": "Dead Letter Queue Size"
+          },
+          "status_counts": {
+            "additionalProperties": {
+              "type": "integer"
+            },
+            "type": "object",
+            "title": "Status Counts"
+          },
+          "is_running": {
+            "type": "boolean",
+            "title": "Is Running"
+          }
+        },
+        "type": "object",
+        "required": [
+          "total_tasks",
+          "queue_size",
+          "max_queue_size",
+          "dead_letter_queue_size",
+          "status_counts",
+          "is_running"
+        ],
+        "title": "TaskStatsResponse",
+        "description": "Response model for task statistics."
+      },
+      "TaskStatusResponse": {
+        "properties": {
+          "task_id": {
+            "type": "string",
+            "title": "Task Id"
+          },
+          "task_type": {
+            "type": "string",
+            "title": "Task Type"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status"
+          },
+          "progress": {
+            "type": "number",
+            "maximum": 1.0,
+            "minimum": 0.0,
+            "title": "Progress"
+          },
+          "result": {
+            "anyOf": [
+              {},
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Result"
+          },
+          "error": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Error"
+          },
+          "created_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Created At"
+          },
+          "started_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Started At"
+          },
+          "completed_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Completed At"
+          },
+          "metadata": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Metadata"
+          }
+        },
+        "type": "object",
+        "required": [
+          "task_id",
+          "task_type",
+          "status",
+          "progress"
+        ],
+        "title": "TaskStatusResponse",
+        "description": "Response model for task status."
       },
       "ThreeWayDiffOut": {
         "properties": {

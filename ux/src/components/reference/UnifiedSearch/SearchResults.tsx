@@ -11,6 +11,7 @@ import { UnifiedNode, SourceType } from "@/api/types/unified";
 import { SOURCE_METADATA } from "@/api/types/unified";
 import { StreamingSearchState, SourceSearchUpdate } from "@/api/types/streamingReference";
 import { useSourceLoadingStates } from "@/api/hooks/unifiedReference/useStreamingReference";
+import { getSourceBadgeColor, getSourceLabel } from "@/utils/sourceUtils";
 
 interface SearchResultsProps {
   results: UnifiedNode[];
@@ -37,12 +38,6 @@ const ResultCard: React.FC<ResultCardProps> = ({
   style,
   compact = false,
 }) => {
-  const sourceMetadata = SOURCE_METADATA[node.source] || {
-    label: node.source,
-    color: "gray",
-    description: "",
-  };
-
   const relevancePercent = Math.round((node.relevance_score || 0) * 100);
 
   return (
@@ -67,8 +62,8 @@ const ResultCard: React.FC<ResultCardProps> = ({
 
           {/* Metadata badges */}
           <div className="flex flex-wrap gap-2">
-            <Badge color={sourceMetadata.color as any}>
-              {sourceMetadata.label}
+            <Badge color={getSourceBadgeColor(node.source)}>
+              {getSourceLabel(node.source)}
             </Badge>
 
             {(node.relevance_score || 0) < 1 && (

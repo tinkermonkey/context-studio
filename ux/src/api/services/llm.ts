@@ -81,9 +81,8 @@ export class LLMService extends BaseService {
     return this.withErrorContext(async () => {
       // For backwards compatibility, support legacy request format
       if ((request as any).term !== undefined) {
-        // Legacy request format - validate term and convert to new format
+        // Legacy request format - validate and convert to new format
         const legacyRequest = request as any;
-        this.validateRequired(legacyRequest.term, "term");
         const newRequest: DefinitionSuggestionRequest = {
           pipeline_type: 'suggest_term_definition',
           flavor_id: legacyRequest.flavor || 'default',
@@ -102,10 +101,11 @@ export class LLMService extends BaseService {
         return this.executePipeline(newRequest);
       }
 
-      // New format - validate required fields and use directly
+      // New format - validate required fields
       this.validateRequired(request.pipeline_type, "pipeline_type");
       this.validateRequired(request.flavor_id, "flavor_id");
       this.validateRequired(request.context_data, "context_data");
+
       return this.executePipeline(request);
     }, "suggesting term definition");
   }

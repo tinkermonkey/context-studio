@@ -8,6 +8,7 @@ from api import graph, datasets, nlp_analysis, schema, predicates, llm, pipeline
 from api import reference, config, structure_nodes, version_management, sync, llm_traceability
 from api import changeset_management, proposal_management, identity_management
 from api import conflict_resolution, analytics, incremental_sync, optimization, embeddings, model_capabilities, enabled_models
+from api import background_tasks
 from api.admin import service_monitoring
 from api.graph import get_cached_graph_service, invalidate_graph_cache
 from database.migrations.migration_manager import MigrationManager
@@ -16,6 +17,7 @@ from database.utils import (
     get_database_manager, get_current_session_local
 )
 from services.service_factory import ServiceFactory, set_service_factory
+from services.task_manager import initialize_task_manager, shutdown_task_manager
 from pipeline.manager import get_pipeline_database_manager
 from nlp.pipeline import get_pipeline
 from utils.access_log_middleware import AccessLogMiddleware
@@ -77,10 +79,10 @@ def create_app(dataset_id=None, engine=None, session_local=None, service_factory
             init_db(engine=engine or get_current_engine())
             logger.info("Database initialized.")
             
-            # Initialize pipeline database (independent of datasets)
-            logger.info("Initializing pipeline database...")
-            pipeline_db_manager = get_pipeline_database_manager()
-            logger.info("Pipeline database initialized.")
+            # Initialize operations database (independent of datasets)
+            logger.info("Initializing operations database...")
+            operations_db_manager = get_pipeline_database_manager()
+            logger.info("Operations database initialized.")
             
             # Run migrations to ensure schema is up to date
             active_dataset = dataset_manager.get_active_dataset()
@@ -160,16 +162,85 @@ def create_app(dataset_id=None, engine=None, session_local=None, service_factory
                 logger.error(f"Error warming up GraphService: {e}")
                 # Continue startup even if GraphService fails to warm up
                 logger.info("Continuing startup despite GraphService warmup failure")
-            
+
+            # Preload Reference Database Manager and Embedding Model
+            logger.info("Warming up Reference Database and Embedding Model...")
+            try:
+                from reference_db.manager import get_reference_manager
+                from reference_db.config import ReferenceConfig
+                
+                # Initialize singleton reference manager (creates engine/session)
+                ref_config = ReferenceConfig()
+                ref_manager = get_reference_manager(ref_config)
+                
+                # Warm up embedding model with a test query
+                # This loads the SentenceTransformer model into memory (~1.5s first call)
+                logger.info("Loading embedding model (this may take a moment)...")
+                import time
+                warmup_start = time.perf_counter()
+                
+                # Test search to warm up both embedding model and vector search
+                ref_manager.search_external_predicates_by_similarity(
+                    query_text="test warmup query",
+                    limit=1,
+                    threshold=0.5
+                )
+                
+                warmup_time = (time.perf_counter() - warmup_start) * 1000
+                logger.info(f"Reference DB and Embedding Model warmed up successfully in {warmup_time:.0f}ms")
+                logger.info("Subsequent embedding/search operations will be fast (~20-50ms)")
+                
+            except Exception as e:
+                logger.error(f"Error warming up Reference DB/Embeddings: {e}")
+                # Continue startup even if warmup fails
+                logger.info("Continuing startup despite Reference DB warmup failure")
+
+            # Phase 4: Initialize TaskManager for background task processing
+            # This initializes the asyncio-based background task management system
+            # that handles long-running operations like predicate discovery and mapping.
+            # The TaskManager provides:
+            # - Asyncio queue for task submission (max 100 pending tasks)
+            # - Progress tracking and task cancellation support
+            # - Dead letter queue for failed tasks (max 1000 entries)
+            # - Sequential task processing to control resource usage
+            logger.info("Initializing TaskManager for background task processing...")
+            try:
+                task_manager = initialize_task_manager(max_queue_size=100, max_dlq_size=1000)
+                await task_manager.start()
+                app.state.task_manager = task_manager
+                logger.info("TaskManager initialized and started successfully")
+            except Exception as e:
+                logger.error(f"Failed to initialize TaskManager: {e}")
+                # Continue startup even if TaskManager fails
+                app.state.task_manager = None
+
             yield
         finally:
+            # Shutdown TaskManager
+            if hasattr(app.state, 'task_manager') and app.state.task_manager:
+                try:
+                    await shutdown_task_manager()
+                    logger.info("TaskManager shut down successfully")
+                except Exception as e:
+                    logger.warning(f"Error shutting down TaskManager: {e}")
+
             if hasattr(app.state, 'event_processor') and app.state.event_processor:
                 app.state.event_processor.stop()
+            
+            # Clean up reference database manager
+            try:
+                from reference_db.manager import cleanup_reference_manager
+                cleanup_reference_manager()
+                logger.info("Reference database manager cleaned up")
+            except Exception as e:
+                logger.warning(f"Error cleaning up reference manager: {e}")
+            
             # Clean up graph service cache
             try:
                 invalidate_graph_cache()
             except Exception as e:
                 logger.warning(f"Error invalidating graph cache: {e}")
+            
             # Clean up database resources and event listeners
             cleanup_database_resources()
             logger.info("Shutting down application.")
@@ -223,7 +294,10 @@ def create_app(dataset_id=None, engine=None, session_local=None, service_factory
     app.include_router(conflict_resolution.router, tags=["conflict-resolution"])
     app.include_router(analytics.router, tags=["analytics"])
     app.include_router(incremental_sync.router, tags=["incremental-sync"])
-    
+
+    # Phase 4: Background task management
+    app.include_router(background_tasks.router, tags=["background-tasks"])
+
     # Phase 5: Enterprise-scale optimization features
     app.include_router(optimization.router, tags=["optimization"])
 

@@ -15,12 +15,12 @@ from sqlalchemy import text
 class TestLLMTraceabilityIntegration:
     
     def setup_method(self):
-        """Set up test fixtures with temporary pipeline database."""
-        # Create temporary pipeline database for testing
+        """Set up test fixtures with temporary operations database."""
+        # Create temporary operations database for testing
         self.temp_db = tempfile.NamedTemporaryFile(suffix='.db', delete=False)
         self.temp_db.close()
         
-        # Initialize pipeline database manager with temp file
+        # Initialize operations database manager with temp file
         self.pipeline_manager = PipelineDatabaseManager(self.temp_db.name)
         
         # Patch get_pipeline_session to use our test database
@@ -306,7 +306,7 @@ class TestLLMTraceabilityIntegration:
         assert analytics["total_tokens_used"] == 45  # 3 * 15
     
     def test_database_schema_creation(self):
-        """Test that the pipeline database schema is created correctly."""
+        """Test that the operations database schema is created correctly."""
         
         # Verify tables exist
         engine = self.pipeline_manager.get_engine()

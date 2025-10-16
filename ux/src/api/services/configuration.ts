@@ -20,7 +20,7 @@ export interface ConfigurationData {
     default_dataset_filename: string;
     schema_org_path: string;
     reference_cache_path: string;
-    pipeline_path: string;
+    operations_path: string;
     check_same_thread: boolean;
     pool_timeout: number;
   };

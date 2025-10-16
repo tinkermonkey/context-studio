@@ -389,10 +389,10 @@ function DatabaseSettingsSection({ config }: { config: any }) {
           </div>
 
           <div>
-            <Label htmlFor="pipeline_path">Pipeline Database Path</Label>
+            <Label htmlFor="operations_path">Operations database Path</Label>
             <TextInput
-              id="pipeline_path"
-              value={config.pipeline_path || ''}
+              id="operations_path"
+              value={config.operations_path || ''}
               disabled
             />
           </div>

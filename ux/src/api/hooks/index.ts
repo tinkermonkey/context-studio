@@ -14,5 +14,6 @@ export * from "./nlp";
 export * from "./nlpReference";
 export * from "./pipelineFlavors";
 export * from "./predicates";
+export * from "./reference";
 export * from "./schema";
 export * from "./schemaOrg";

@@ -239,19 +239,48 @@ class Migration006(Migration):
                 END;
             """))
 
-            # StructureNode update trigger
+            # StructureNode update trigger - generates specific event types based on what changed
             connection.execute(text("""
                 CREATE TRIGGER IF NOT EXISTS trg_structure_node_update AFTER UPDATE ON structure_nodes
                 BEGIN
+                  -- Generate update-type event if node_type changed
                   INSERT INTO change_events (event_type, record_type, record_id, old_data, new_data, timestamp, processed)
-                  VALUES ('update', 'structure_node', NEW.id, 
-                          json_object('id', OLD.id, 'node_type', OLD.node_type, 'parent_node_id', OLD.parent_node_id, 
-                                     'title', OLD.title, 'definition', OLD.definition, 'structural_predicate_id', OLD.structural_predicate_id, 
-                                     'created_at', OLD.created_at, 'version', OLD.version, 'last_modified', OLD.last_modified), 
-                          json_object('id', NEW.id, 'node_type', NEW.node_type, 'parent_node_id', NEW.parent_node_id, 
-                                     'title', NEW.title, 'definition', NEW.definition, 'structural_predicate_id', NEW.structural_predicate_id, 
-                                     'created_at', NEW.created_at, 'version', NEW.version, 'last_modified', NEW.last_modified), 
-                          CURRENT_TIMESTAMP, 0);
+                  SELECT 'update-type', 'structure_node', NEW.id,
+                         json_object('id', OLD.id, 'node_type', OLD.node_type, 'parent_node_id', OLD.parent_node_id,
+                                    'title', OLD.title, 'definition', OLD.definition, 'structural_predicate_id', OLD.structural_predicate_id,
+                                    'created_at', OLD.created_at, 'version', OLD.version, 'last_modified', OLD.last_modified),
+                         json_object('id', NEW.id, 'node_type', NEW.node_type, 'parent_node_id', NEW.parent_node_id,
+                                    'title', NEW.title, 'definition', NEW.definition, 'structural_predicate_id', NEW.structural_predicate_id,
+                                    'created_at', NEW.created_at, 'version', NEW.version, 'last_modified', NEW.last_modified),
+                         CURRENT_TIMESTAMP, 0
+                  WHERE OLD.node_type != NEW.node_type;
+
+                  -- Generate move event if parent_node_id changed
+                  INSERT INTO change_events (event_type, record_type, record_id, old_data, new_data, timestamp, processed)
+                  SELECT 'move', 'structure_node', NEW.id,
+                         json_object('id', OLD.id, 'node_type', OLD.node_type, 'parent_node_id', OLD.parent_node_id,
+                                    'title', OLD.title, 'definition', OLD.definition, 'structural_predicate_id', OLD.structural_predicate_id,
+                                    'created_at', OLD.created_at, 'version', OLD.version, 'last_modified', OLD.last_modified),
+                         json_object('id', NEW.id, 'node_type', NEW.node_type, 'parent_node_id', NEW.parent_node_id,
+                                    'title', NEW.title, 'definition', NEW.definition, 'structural_predicate_id', NEW.structural_predicate_id,
+                                    'created_at', NEW.created_at, 'version', NEW.version, 'last_modified', NEW.last_modified),
+                         CURRENT_TIMESTAMP, 0
+                  WHERE (OLD.parent_node_id IS NULL AND NEW.parent_node_id IS NOT NULL)
+                     OR (OLD.parent_node_id IS NOT NULL AND NEW.parent_node_id IS NULL)
+                     OR (OLD.parent_node_id != NEW.parent_node_id);
+
+                  -- Generate generic update event for other field changes (if neither node_type nor parent_node_id changed)
+                  INSERT INTO change_events (event_type, record_type, record_id, old_data, new_data, timestamp, processed)
+                  SELECT 'update', 'structure_node', NEW.id,
+                         json_object('id', OLD.id, 'node_type', OLD.node_type, 'parent_node_id', OLD.parent_node_id,
+                                    'title', OLD.title, 'definition', OLD.definition, 'structural_predicate_id', OLD.structural_predicate_id,
+                                    'created_at', OLD.created_at, 'version', OLD.version, 'last_modified', OLD.last_modified),
+                         json_object('id', NEW.id, 'node_type', NEW.node_type, 'parent_node_id', NEW.parent_node_id,
+                                    'title', NEW.title, 'definition', NEW.definition, 'structural_predicate_id', NEW.structural_predicate_id,
+                                    'created_at', NEW.created_at, 'version', NEW.version, 'last_modified', NEW.last_modified),
+                         CURRENT_TIMESTAMP, 0
+                  WHERE OLD.node_type = NEW.node_type
+                    AND (OLD.parent_node_id IS NEW.parent_node_id OR (OLD.parent_node_id = NEW.parent_node_id));
                 END;
             """))
 
