@@ -402,7 +402,7 @@ class VersionManager:
                 logger.info(f"Updated version {version_id} state to {new_state.value}")
                 return True
             else:
-                logger.warning(f"Version {version_id} not found for state update")
+                logger.debug(f"Version {version_id} not found for state update")
                 return False
 
         except Exception as e:
