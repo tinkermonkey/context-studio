@@ -123,17 +123,18 @@ class TestLLMExtractionProcessor:
             response.response_content = "Entity: test concept"
             response.execution_id = "test-exec-id"
             response.token_usage = {'input_tokens': 10, 'output_tokens': 5}
-            service.execute_pipeline_flavor = Mock(return_value=response)
+            service.execute_pipeline_flavor_sync = Mock(return_value=response)
             service.flavor_service = Mock()
             mock.return_value = service
             yield mock
 
-    def test_processor_initialization(self):
+    def test_processor_initialization(self, mock_llm_service):
         """Test processor initializes correctly"""
         from rag.processors.llm_extraction import LLMExtractionProcessor
 
         processor = LLMExtractionProcessor(flavor_id="test-flavor")
         assert processor.flavor_id == "test-flavor"
+        assert processor.llm_service is not None
 
     def test_process_with_kg_context(self, mock_llm_service):
         """Test processing with KG context"""
@@ -157,29 +158,26 @@ class TestLLMExtractionProcessor:
             trace_data={}
         )
 
-        # Mock asyncio to avoid event loop issues in tests
-        with patch('rag.processors.llm_extraction.asyncio.new_event_loop') as mock_loop:
-            loop = Mock()
-            mock_loop.return_value = loop
+        # Create a mock response
+        from llm.models import PipelineExecutionResponse
+        mock_response = PipelineExecutionResponse(
+            response_content="Entity: test concept",
+            execution_id="test-id",
+            flavor_id="default",
+            pipeline_type="extract_entities",
+            token_usage={'input_tokens': 10, 'output_tokens': 5}
+        )
 
-            # Create a mock response
-            from llm.models import PipelineExecutionResponse
-            mock_response = PipelineExecutionResponse(
-                response_content="Entity: test concept",
-                execution_id="test-id",
-                flavor_id="default",
-                pipeline_type="suggest_term_definition",
-                token_usage={'input_tokens': 10, 'output_tokens': 5}
-            )
-            loop.run_until_complete.return_value = mock_response
+        # Mock the execute_pipeline_flavor_sync method
+        processor.llm_service.execute_pipeline_flavor_sync.return_value = mock_response
 
-            output = processor.process(input_data, kg_context)
+        output = processor.process(input_data, kg_context)
 
         assert isinstance(output, LLMExtractionOutput)
         assert output.kg_context_size == 1
         assert isinstance(output.entities, list)
 
-    def test_format_kg_context(self):
+    def test_format_kg_context(self, mock_llm_service):
         """Test KG context formatting"""
         from rag.processors.llm_extraction import LLMExtractionProcessor
 
