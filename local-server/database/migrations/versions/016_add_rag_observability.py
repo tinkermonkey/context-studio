@@ -1,4 +1,4 @@
-"""Migration 014: Add RAG observability tables for metrics and trace capture"""
+"""Migration 016: Add RAG observability tables for metrics and trace capture"""
 
 from sqlalchemy.engine import Connection
 from sqlalchemy import text
@@ -8,10 +8,10 @@ import logging
 logger = logging.getLogger(__name__)
 
 
-class Migration014(Migration):
+class Migration016(Migration):
     """Add RAG processing metrics and observability trace tables."""
 
-    version = 14
+    version = 16
     description = "Add RAG observability tables"
 
     def up(self, connection: Connection) -> None:

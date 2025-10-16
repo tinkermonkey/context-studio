@@ -38,7 +38,7 @@ class TestDatasetManager:
         assert dataset.title == "Test Dataset"
         assert dataset.filename == "test.db"
         assert (
-            dataset.schema_version == 14
+            dataset.schema_version == 16
         )  # Should match current migration target version
         assert isinstance(dataset.metrics, DatasetMetrics)
 
