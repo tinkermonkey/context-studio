@@ -8,10 +8,11 @@ import React from "react";
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { PredicateMappingManager } from "../PredicateMappingManager";
+import { vi, describe, it, expect } from "vitest";
 import "@testing-library/jest-dom";
 
 // Mock react-icons
-jest.mock("react-icons/hi", () => ({
+vi.mock("react-icons/hi", () => ({
   HiDatabase: () => <div>HiDatabase</div>,
   HiSearch: () => <div>HiSearch</div>,
   HiCollection: () => <div>HiCollection</div>,
@@ -25,7 +26,7 @@ jest.mock("react-icons/hi", () => ({
 }));
 
 // Mock lucide-react
-jest.mock("lucide-react", () => ({
+vi.mock("lucide-react", () => ({
   Search: () => <div>Search Icon</div>,
   RefreshCw: () => <div>RefreshCw Icon</div>,
   X: () => <div>X Icon</div>,
@@ -38,6 +39,72 @@ jest.mock("lucide-react", () => ({
   ArrowLeft: () => <div>ArrowLeft Icon</div>,
   ArrowRight: () => <div>ArrowRight Icon</div>,
   Trash2: () => <div>Trash2 Icon</div>,
+  Database: () => <div>Database Icon</div>,
+  Layers: () => <div>Layers Icon</div>,
+  Settings: () => <div>Settings Icon</div>,
+  PlusCircle: () => <div>PlusCircle Icon</div>,
+  ChevronDown: () => <div>ChevronDown Icon</div>,
+  Info: () => <div>Info Icon</div>,
+  ExternalLink: () => <div>ExternalLink Icon</div>,
+  AlertCircle: () => <div>AlertCircle Icon</div>,
+  BookOpen: () => <div>BookOpen Icon</div>,
+}));
+
+// Mock API hooks
+vi.mock("@/api/hooks/predicates", () => ({
+  useExternalPredicates: vi.fn(() => ({
+    data: { data: [], total: 0 },
+    isLoading: false,
+    error: null,
+    refetch: vi.fn(),
+  })),
+  useDiscoverPredicates: vi.fn(() => ({
+    mutate: vi.fn(),
+    isPending: false,
+  })),
+  useSearchExternalPredicates: vi.fn(() => ({
+    data: null,
+    isLoading: false,
+    error: null,
+  })),
+  useSimilarPredicates: vi.fn(() => ({
+    data: null,
+    isLoading: false,
+    error: null,
+  })),
+  useClusterPredicates: vi.fn(() => ({
+    mutate: vi.fn(),
+    data: null,
+    isLoading: false,
+    isPending: false,
+  })),
+  usePredicates: vi.fn(() => ({
+    data: { data: [], total: 0 },
+    isLoading: false,
+    error: null,
+  })),
+  useCreatePredicateMutation: vi.fn(() => ({
+    mutateAsync: vi.fn(),
+    isPending: false,
+  })),
+  useUpdatePredicateMutation: vi.fn(() => ({
+    mutateAsync: vi.fn(),
+    isPending: false,
+  })),
+  useBulkUpdateRelevanceMutation: vi.fn(() => ({
+    mutate: vi.fn(),
+    isPending: false,
+  })),
+}));
+
+// Mock useButterToast
+vi.mock("@/hooks/useButterToast", () => ({
+  useButterToast: vi.fn(() => ({
+    success: vi.fn(),
+    error: vi.fn(),
+    info: vi.fn(),
+    warning: vi.fn(),
+  })),
 }));
 
 // Create QueryClient for testing
@@ -94,12 +161,14 @@ describe("PredicateMappingManager", () => {
       </Wrapper>,
     );
 
-    expect(screen.getByText("External Predicates")).toBeInTheDocument();
-    expect(screen.getByText("Similarity Search")).toBeInTheDocument();
-    expect(screen.getByText("Cluster Analysis")).toBeInTheDocument();
-    expect(screen.getByText("Manual Mapping")).toBeInTheDocument();
-    expect(screen.getByText("Relevance Selection")).toBeInTheDocument();
-    expect(screen.getByText("Configuration")).toBeInTheDocument();
+    const tabs = screen.getAllByRole("tab");
+    expect(tabs).toHaveLength(6);
+    expect(screen.getAllByText("External Predicates")[0]).toBeInTheDocument();
+    expect(screen.getAllByText("Similarity Search")[0]).toBeInTheDocument();
+    expect(screen.getAllByText("Cluster Analysis")[0]).toBeInTheDocument();
+    expect(screen.getAllByText("Manual Mapping")[0]).toBeInTheDocument();
+    expect(screen.getAllByText("Relevance Selection")[0]).toBeInTheDocument();
+    expect(screen.getAllByText("Configuration")[0]).toBeInTheDocument();
   });
 
   it("should show ExternalPredicatesTab by default", async () => {
@@ -111,7 +180,7 @@ describe("PredicateMappingManager", () => {
     );
 
     await waitFor(() => {
-      expect(screen.getByText("External Predicates")).toBeInTheDocument();
+      expect(screen.getAllByText("External Predicates")[0]).toBeInTheDocument();
     });
   });
 });
@@ -154,11 +223,12 @@ describe("SimilaritySearchTab", () => {
       </Wrapper>,
     );
 
-    const similarityTab = screen.getByText("Similarity Search");
-    fireEvent.click(similarityTab);
+    const tabs = screen.getAllByRole("tab");
+    const similarityTab = tabs.find(tab => tab.textContent?.includes("Similarity Search"));
+    fireEvent.click(similarityTab!);
 
     await waitFor(() => {
-      expect(screen.getByText(/Enter a predicate ID/i)).toBeInTheDocument();
+      expect(screen.getByText(/Select a predicate above to find similar/i)).toBeInTheDocument();
     });
   });
 
@@ -170,11 +240,12 @@ describe("SimilaritySearchTab", () => {
       </Wrapper>,
     );
 
-    const similarityTab = screen.getByText("Similarity Search");
-    fireEvent.click(similarityTab);
+    const tabs = screen.getAllByRole("tab");
+    const similarityTab = tabs.find(tab => tab.textContent?.includes("Similarity Search"));
+    fireEvent.click(similarityTab!);
 
     await waitFor(() => {
-      expect(screen.getByText("Predicate ID")).toBeInTheDocument();
+      expect(screen.getByText("Select Predicate")).toBeInTheDocument();
     });
   });
 });
@@ -188,8 +259,9 @@ describe("ClusterVisualizationTab", () => {
       </Wrapper>,
     );
 
-    const clusterTab = screen.getByText("Cluster Analysis");
-    fireEvent.click(clusterTab);
+    const tabs = screen.getAllByRole("tab");
+    const clusterTab = tabs.find(tab => tab.textContent?.includes("Cluster Analysis"));
+    fireEvent.click(clusterTab!);
 
     await waitFor(() => {
       expect(screen.getByText("Clustering Parameters")).toBeInTheDocument();
@@ -204,8 +276,9 @@ describe("ClusterVisualizationTab", () => {
       </Wrapper>,
     );
 
-    const clusterTab = screen.getByText("Cluster Analysis");
-    fireEvent.click(clusterTab);
+    const tabs = screen.getAllByRole("tab");
+    const clusterTab = tabs.find(tab => tab.textContent?.includes("Cluster Analysis"));
+    fireEvent.click(clusterTab!);
 
     await waitFor(() => {
       expect(screen.getByText("Run Clustering")).toBeInTheDocument();
@@ -222,8 +295,9 @@ describe("MappingConfigurationTab", () => {
       </Wrapper>,
     );
 
-    const configTab = screen.getByText("Configuration");
-    fireEvent.click(configTab);
+    const tabs = screen.getAllByRole("tab");
+    const configTab = tabs.find(tab => tab.textContent?.includes("Configuration"));
+    fireEvent.click(configTab!);
 
     await waitFor(() => {
       expect(screen.getByText("Relevance Filtering")).toBeInTheDocument();
@@ -238,8 +312,9 @@ describe("MappingConfigurationTab", () => {
       </Wrapper>,
     );
 
-    const configTab = screen.getByText("Configuration");
-    fireEvent.click(configTab);
+    const tabs = screen.getAllByRole("tab");
+    const configTab = tabs.find(tab => tab.textContent?.includes("Configuration"));
+    fireEvent.click(configTab!);
 
     await waitFor(() => {
       expect(
@@ -258,8 +333,9 @@ describe("ManualMappingInterface", () => {
       </Wrapper>,
     );
 
-    const manualTab = screen.getByText("Manual Mapping");
-    fireEvent.click(manualTab);
+    const tabs = screen.getAllByRole("tab");
+    const manualTab = tabs.find(tab => tab.textContent?.includes("Manual Mapping"));
+    fireEvent.click(manualTab!);
 
     await waitFor(() => {
       expect(screen.getByText("Global Predicate")).toBeInTheDocument();
@@ -274,8 +350,9 @@ describe("ManualMappingInterface", () => {
       </Wrapper>,
     );
 
-    const manualTab = screen.getByText("Manual Mapping");
-    fireEvent.click(manualTab);
+    const tabs = screen.getAllByRole("tab");
+    const manualTab = tabs.find(tab => tab.textContent?.includes("Manual Mapping"));
+    fireEvent.click(manualTab!);
 
     await waitFor(() => {
       expect(screen.getByText(/Mapping Confidence:/i)).toBeInTheDocument();
@@ -292,11 +369,12 @@ describe("RelevanceSelectionUI", () => {
       </Wrapper>,
     );
 
-    const relevanceTab = screen.getByText("Relevance Selection");
-    fireEvent.click(relevanceTab);
+    const tabs = screen.getAllByRole("tab");
+    const relevanceTab = tabs.find(tab => tab.textContent?.includes("Relevance Selection"));
+    fireEvent.click(relevanceTab!);
 
     await waitFor(() => {
-      expect(screen.getByText("Relevance Selection")).toBeInTheDocument();
+      expect(screen.getAllByText("Relevance Selection")[0]).toBeInTheDocument();
     });
   });
 
@@ -308,8 +386,9 @@ describe("RelevanceSelectionUI", () => {
       </Wrapper>,
     );
 
-    const relevanceTab = screen.getByText("Relevance Selection");
-    fireEvent.click(relevanceTab);
+    const tabs = screen.getAllByRole("tab");
+    const relevanceTab = tabs.find(tab => tab.textContent?.includes("Relevance Selection"));
+    fireEvent.click(relevanceTab!);
 
     await waitFor(() => {
       // Look for statistics labels
@@ -331,16 +410,18 @@ describe("Component Integration", () => {
     // Start with External Predicates tab
     expect(screen.getByText("Discover Predicates")).toBeInTheDocument();
 
+    const tabs = screen.getAllByRole("tab");
+
     // Switch to Similarity Search
-    const similarityTab = screen.getByText("Similarity Search");
-    fireEvent.click(similarityTab);
+    const similarityTab = tabs.find(tab => tab.textContent?.includes("Similarity Search"));
+    fireEvent.click(similarityTab!);
     await waitFor(() => {
-      expect(screen.getByText(/Enter a predicate ID/i)).toBeInTheDocument();
+      expect(screen.getByText(/Select a predicate above to find similar/i)).toBeInTheDocument();
     });
 
     // Switch to Configuration
-    const configTab = screen.getByText("Configuration");
-    fireEvent.click(configTab);
+    const configTab = tabs.find(tab => tab.textContent?.includes("Configuration"));
+    fireEvent.click(configTab!);
     await waitFor(() => {
       expect(screen.getByText("Relevance Filtering")).toBeInTheDocument();
     });
@@ -354,16 +435,18 @@ describe("Component Integration", () => {
       </Wrapper>,
     );
 
+    const tabs = screen.getAllByRole("tab");
+
     // Go to configuration and toggle filter
-    const configTab = screen.getByText("Configuration");
-    fireEvent.click(configTab);
+    const configTab = tabs.find(tab => tab.textContent?.includes("Configuration"));
+    fireEvent.click(configTab!);
 
     // Switch to another tab
-    const similarityTab = screen.getByText("Similarity Search");
-    fireEvent.click(similarityTab);
+    const similarityTab = tabs.find(tab => tab.textContent?.includes("Similarity Search"));
+    fireEvent.click(similarityTab!);
 
     // Switch back to configuration
-    fireEvent.click(configTab);
+    fireEvent.click(configTab!);
 
     // Filter toggle should still be there
     await waitFor(() => {
