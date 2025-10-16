@@ -11,11 +11,17 @@ from rag.models import (
     LayerMetrics,
     ProcessingMetrics
 )
+from rag.rag_pipeline_service import RAGPipelineService
+from rag.observability_store import RAGObservabilityStore
+from rag.cleanup_scheduler import RAGCleanupScheduler
 
 __all__ = [
     'RAGExtractionRequest',
     'RAGExtractionResponse',
     'ExtractedEntity',
     'LayerMetrics',
-    'ProcessingMetrics'
+    'ProcessingMetrics',
+    'RAGPipelineService',
+    'RAGObservabilityStore',
+    'RAGCleanupScheduler'
 ]
