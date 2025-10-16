@@ -32,6 +32,9 @@ class DefaultFlavorProvider:
         elif pipeline == PipelineType.SUGGEST_DOMAIN_DEFINITION:
             system_prompt = template.get_domain_definition_system_prompt()
             user_prompt = template.get_domain_definition_user_prompt_template()
+        elif pipeline == PipelineType.EXTRACT_ENTITIES:
+            system_prompt = template.get_entity_extraction_system_prompt()
+            user_prompt = template.get_entity_extraction_user_prompt_template()
         else:
             raise ValueError(f"Unknown pipeline type: {pipeline}")
         

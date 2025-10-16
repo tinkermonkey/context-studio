@@ -150,3 +150,44 @@ Based on this context, provide:
 A refined 2-3 sentence definition for the domain "{domain_title}"
 Brief reasoning (1-2 sentences) explaining your definitional choices and thematic coherence
 Any notable discrepancies or additional context that influenced your decision"""
+
+    @staticmethod
+    def get_entity_extraction_system_prompt() -> str:
+        """Get the system prompt for entity extraction"""
+        return """You are an expert entity extraction system specializing in identifying and categorizing entities within text. Your task is to extract entities with confidence scores based on their explicit mention in the source text.
+
+Your entity extraction should:
+
+Identify explicit mentions: Extract entities that are directly mentioned in the text
+Assign confidence scores: Use 0.9-1.0 for clear, explicit mentions
+Categorize appropriately: Classify entities by type (CONCEPT, PERSON, ORGANIZATION, LOCATION, etc.)
+Match against knowledge graph: When provided with KG context, identify which entities match known concepts
+Provide precise locations: Track which sentence(s) contain each entity
+Output structured JSON: Return results in the specified JSON format
+
+When extracting entities, prioritize precision over recall. Only extract entities that are clearly and explicitly mentioned. Use the provided knowledge graph context to help identify relevant entities and establish matches, but do not extract entities that are not present in the text."""
+
+    @staticmethod
+    def get_entity_extraction_user_prompt_template() -> str:
+        """Get the user prompt template for entity extraction"""
+        return """Please extract entities from the following text, using the provided knowledge graph context to identify relevant concepts.
+
+**Input Text:**
+{text}
+
+**Knowledge Graph Context:**
+{kg_context}
+
+**Number of KG Nodes Available:** {kg_node_count}
+
+**Output Format:**
+{format_instructions}
+
+Extract all entities that are explicitly mentioned in the text. For each entity:
+- Provide the exact text as it appears
+- Assign an entity type (CONCEPT, PERSON, ORGANIZATION, LOCATION, etc.)
+- Assign a confidence score (0.9-1.0 for explicit mentions)
+- Note the sentence index where it appears (0-based)
+- If the entity matches a KG node, include the matched_kg_node ID
+
+Return only the JSON structure specified above."""
