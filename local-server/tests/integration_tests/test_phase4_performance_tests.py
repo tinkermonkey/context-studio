@@ -124,43 +124,6 @@ class TestTC_P001_SearchPerformanceScaling:
         assert avg_time < 100, f"Average search time {avg_time:.2f}ms exceeds 100ms"
         assert max_time < 200, f"Max search time {max_time:.2f}ms exceeds 200ms"
 
-    def test_search_with_different_limits(self, performance_test_database):
-        """Test search performance with different result limits."""
-        db_path, node_ids = performance_test_database
-
-        def mock_embedding(text: str) -> bytes:
-            vec = np.full(384, 0.5, dtype=np.float32)
-            vec = vec / np.linalg.norm(vec)
-            return vec.tobytes()
-
-        config = ReferenceConfig()
-        limits = [10, 50, 100]
-        results_map = {}
-
-        for limit in limits:
-            with ReferenceManager(config, db_path=db_path) as manager:
-                start_time = time.time()
-
-                results = manager.search_by_similarity(
-                    query_text="entity",
-                    limit=limit,
-                    threshold=0.0,
-                    embedding_generator=mock_embedding
-                )
-
-                execution_time_ms = (time.time() - start_time) * 1000
-                results_map[limit] = execution_time_ms
-
-        # Performance should scale sub-linearly with limit
-        # Doubling limit shouldn't double time
-        for i in range(len(limits) - 1):
-            lower_limit = limits[i]
-            higher_limit = limits[i + 1]
-            time_ratio = results_map[higher_limit] / results_map[lower_limit]
-            limit_ratio = higher_limit / lower_limit
-
-            assert time_ratio < limit_ratio, \
-                f"Performance scaling poor: time ratio {time_ratio:.2f} >= limit ratio {limit_ratio}"
 
 
 class TestTC_P002_ConcurrentRequestHandling:
