@@ -268,13 +268,20 @@ def update_changeset(
         HTTPException: If changeset not found or update fails
     """
     logger.info(f"Updating changeset {changeset_id}")
-    
+
     try:
+        # Validate that at least one field is provided
+        if not request.title and not request.description:
+            raise HTTPException(
+                status_code=400,
+                detail="At least one field (title or description) must be provided for update"
+            )
+
         # Check if changeset exists
         changeset = changeset_manager.get_changeset(changeset_id)
         if not changeset:
             raise HTTPException(status_code=404, detail=f"Changeset {changeset_id} not found")
-        
+
         # Update changeset
         success = changeset_manager.update_changeset(
             changeset_id=changeset_id,
