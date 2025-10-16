@@ -303,7 +303,7 @@ class TestDirectoryCreationPatterns:
         init_method_source = inspect.getsource(ReferenceManager._initialize_database)
 
         makedirs_pos = init_method_source.find('os.makedirs')
-        engine_pos = init_method_source.find('get_engine')
+        engine_pos = init_method_source.find('create_engine')
 
         assert makedirs_pos < engine_pos, "Reference manager should create directory before creating engine"
 
