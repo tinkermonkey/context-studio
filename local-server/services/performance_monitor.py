@@ -64,11 +64,21 @@ class PerformanceMonitor:
         self.optimization_history = []
         self._metrics_lock = Lock()
         
+        # Get total system memory for percentage-based threshold
+        try:
+            import psutil
+            total_memory_mb = psutil.virtual_memory().total / (1024 * 1024)
+            # Alert when memory usage exceeds 85% of total system memory
+            memory_threshold_mb = total_memory_mb * 0.85
+        except (ImportError, Exception):
+            # Fallback to a reasonable default (16GB * 85%)
+            memory_threshold_mb = 16384 * 0.85
+
         # Performance thresholds
         self.performance_thresholds = {
             'query_metrics.avg_execution_time_ms': 5000,
             'sync_time_ms': 10000,
-            'system_metrics.memory_usage_mb': 1000,
+            'system_metrics.memory_usage_mb': memory_threshold_mb,
             'system_metrics.error_rate_percent': 1.0,
             'throughput_per_second': 10,
             'cache_metrics.hit_rate': 0.8,
@@ -534,9 +544,11 @@ class PerformanceMonitor:
                 'trend': query_trend.get('trend')
             })
         
-        # Check memory usage
+        # Check memory usage - use 80% of threshold as warning level for trends
         memory_trend = trends.get('memory_usage_trend', {})
-        if memory_trend.get('trend') == 'increasing' and memory_trend.get('current_value', 0) > 800:
+        memory_threshold = self.performance_thresholds.get('system_metrics.memory_usage_mb', 16384 * 0.85)
+        memory_warning_level = memory_threshold * 0.8  # 80% of threshold (which is 68% of total memory)
+        if memory_trend.get('trend') == 'increasing' and memory_trend.get('current_value', 0) > memory_warning_level:
             issues.append({
                 'type': 'memory_usage_high',
                 'severity': 'high',
@@ -621,39 +633,41 @@ class PerformanceMonitor:
     
     def _calculate_health_score(self, trends: Dict[str, Any]) -> float:
         """Calculate overall system health score (0-1)."""
-        
+
         scores = []
-        
+
         # Query performance score
         query_trend = trends.get('query_time_trend', {})
         query_time = query_trend.get('current_value', 5000)
         query_score = max(0, min(1, (10000 - query_time) / 10000))  # 0-10s range
         scores.append(query_score * 0.25)  # 25% weight
-        
-        # Memory usage score
+
+        # Memory usage score - use threshold (85% of total memory)
         memory_trend = trends.get('memory_usage_trend', {})
         memory_usage = memory_trend.get('current_value', 500)
-        memory_score = max(0, min(1, (1000 - memory_usage) / 1000))  # 0-1000MB range
+        memory_threshold = self.performance_thresholds.get('system_metrics.memory_usage_mb', 16384 * 0.85)
+        # Score is good if usage is below threshold, degrades as it approaches/exceeds threshold
+        memory_score = max(0, min(1, (memory_threshold - memory_usage) / memory_threshold))
         scores.append(memory_score * 0.2)  # 20% weight
-        
+
         # Error rate score
         error_trend = trends.get('error_rate_trend', {})
         error_rate = error_trend.get('current_value', 0)
         error_score = max(0, min(1, (5.0 - error_rate) / 5.0))  # 0-5% range
         scores.append(error_score * 0.3)  # 30% weight
-        
+
         # Cache hit rate score
         cache_trend = trends.get('cache_hit_rate_trend', {})
         cache_hit_rate = cache_trend.get('current_value', 0.8)
         cache_score = cache_hit_rate  # Already 0-1
         scores.append(cache_score * 0.15)  # 15% weight
-        
+
         # Throughput score
         throughput_trend = trends.get('throughput_trend', {})
         throughput = throughput_trend.get('current_value', 100)
         throughput_score = max(0, min(1, throughput / 1000))  # 0-1000 items/sec range
         scores.append(throughput_score * 0.1)  # 10% weight
-        
+
         return sum(scores)
     
     def _calculate_performance_grade(self, health_score: float) -> str:
