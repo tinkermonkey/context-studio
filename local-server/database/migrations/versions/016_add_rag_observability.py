@@ -84,7 +84,7 @@ class Migration016(Migration):
                 timestamp DATETIME DEFAULT CURRENT_TIMESTAMP NOT NULL,
 
                 -- Retention period: 7 days for traces (more detailed, shorter retention)
-                retention_days INTEGER DEFAULT 7 NOT NULL,
+                retention_days INTEGER DEFAULT 7 NOT NULL
 
                 -- Note: No foreign key constraint to allow independent trace storage
             )
