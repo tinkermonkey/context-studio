@@ -18,6 +18,7 @@ import sqlite3
 from sqlalchemy import create_engine, text
 from sqlalchemy.orm import sessionmaker, Session
 from sqlalchemy.exc import OperationalError
+from sqlalchemy.pool import NullPool
 
 from database.utils import get_engine, init_db
 from reference_db.models import Base, ReferenceNode, ReferenceLink, ExternalPredicate
@@ -153,12 +154,22 @@ class ReferenceManager:
         if db_dir:
             os.makedirs(db_dir, exist_ok=True)
 
-        # Use existing database utilities for engine creation
-        # This ensures sqlite-vec extension is loaded properly
+        # Create engine directly to avoid caching issues during testing
+        # This ensures we get a fresh engine for each database file
         try:
             # Convert file path to SQLAlchemy URL format
             db_url = f"sqlite:///{self.db_path}"
-            self.engine = get_engine(db_url)
+            # Create fresh engine with NullPool to avoid threading issues
+            self.engine = create_engine(
+                db_url,
+                connect_args={
+                    "check_same_thread": False,
+                    "timeout": 30,
+                    "isolation_level": None,
+                },
+                poolclass=NullPool,
+                echo=False
+            )
             # Initialize database with sqlite-vec extension loading
             self.engine = init_db(self.engine, db_url)
         except Exception as e:
@@ -339,9 +350,19 @@ class ReferenceManager:
                 os.remove(self.db_path)
 
             # Create new database with schema
+            # Create a fresh engine directly without caching to avoid reusing disposed engines
             logger.info("Creating new database with current schema")
             db_url = f"sqlite:///{self.db_path}"
-            self.engine = get_engine(db_url)
+            self.engine = create_engine(
+                db_url,
+                connect_args={
+                    "check_same_thread": False,
+                    "timeout": 30,
+                    "isolation_level": None,
+                },
+                poolclass=NullPool,
+                echo=False
+            )
             # Initialize database with sqlite-vec extension loading
             self.engine = init_db(self.engine, db_url)
 
