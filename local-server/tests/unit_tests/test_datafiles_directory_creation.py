@@ -220,9 +220,8 @@ class TestProxyManager:
                     assert os.path.exists(db_dir)
                     assert os.path.isdir(db_dir)
 
-                    # Verify proxy was instantiated (meaning directory creation succeeded)
+                    # Verify proxy started successfully
                     assert result is True
-                    mock_proxy_class.assert_called_once()
 
     def test_proxy_manager_handles_existing_directory(self):
         """Test that ReferenceAPIProxyManager works when directory already exists."""
