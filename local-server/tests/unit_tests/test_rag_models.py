@@ -1,5 +1,5 @@
 """
-Unit tests for RAG pipeline Pydantic models (Phase 2 of Issue #146).
+Unit tests for RAG pipeline Pydantic models.
 
 Tests request/response models for RAG entity extraction pipeline.
 """
@@ -39,18 +39,21 @@ class TestRAGExtractionRequest:
 
     def test_request_empty_text_validation(self):
         """Test that empty text is rejected."""
-        with pytest.raises(ValidationError):
+        with pytest.raises(ValidationError) as exc_info:
             RAGExtractionRequest(text="")
+        assert "String should have at least 1 character" in str(exc_info.value)
 
     def test_request_whitespace_only_validation(self):
         """Test that whitespace-only text is rejected."""
-        with pytest.raises(ValidationError):
+        with pytest.raises(ValidationError) as exc_info:
             RAGExtractionRequest(text="   ")
+        assert "Text cannot be empty or whitespace only" in str(exc_info.value)
 
     def test_request_missing_text(self):
         """Test that text field is required."""
-        with pytest.raises(ValidationError):
+        with pytest.raises(ValidationError) as exc_info:
             RAGExtractionRequest()
+        assert "Field required" in str(exc_info.value)
 
     def test_request_with_newlines(self):
         """Test request with multi-line text."""
@@ -139,7 +142,7 @@ class TestExtractedEntity:
         # Invalid source layers
         invalid_layers = ["unknown", "api", "database", ""]
         for layer in invalid_layers:
-            with pytest.raises(ValidationError):
+            with pytest.raises(ValidationError) as exc_info:
                 ExtractedEntity(
                     text="Test",
                     type="TEST",
@@ -147,6 +150,8 @@ class TestExtractedEntity:
                     source_layer=layer,
                     sentence_index=0
                 )
+            error_message = str(exc_info.value)
+            assert "source_layer must be one of" in error_message or "Value error" in error_message
 
     def test_entity_sentence_index_validation(self):
         """Test sentence_index validation (must be >= 0)."""
@@ -176,7 +181,7 @@ class TestExtractedEntity:
 
     def test_entity_empty_text_validation(self):
         """Test that empty text is rejected."""
-        with pytest.raises(ValidationError):
+        with pytest.raises(ValidationError) as exc_info:
             ExtractedEntity(
                 text="",
                 type="TEST",
@@ -184,6 +189,7 @@ class TestExtractedEntity:
                 source_layer="nlp",
                 sentence_index=0
             )
+        assert "String should have at least 1 character" in str(exc_info.value)
 
 
 class TestLayerMetrics:
@@ -394,11 +400,13 @@ class TestRAGExtractionResponse:
         )
 
         # Invalid UUID should fail
-        with pytest.raises(ValidationError):
+        with pytest.raises(ValidationError) as exc_info:
             RAGExtractionResponse(
                 request_id="not-a-uuid",
                 metrics=metrics
             )
+        error_message = str(exc_info.value)
+        assert "request_id must be a valid UUID string" in error_message or "Value error" in error_message
 
         # Valid UUID should work
         valid_uuid = "550e8400-e29b-41d4-a716-446655440000"

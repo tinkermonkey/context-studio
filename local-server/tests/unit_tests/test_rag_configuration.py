@@ -1,5 +1,5 @@
 """
-Unit tests for RAG pipeline configuration (Phase 2 of Issue #146).
+Unit tests for RAG pipeline configuration.
 
 Tests configuration defaults, field types, and validation for RAGPipelineConfig.
 """

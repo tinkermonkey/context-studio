@@ -503,7 +503,7 @@ class Settings(BaseModel):
     def reference_sources_dict(self) -> Dict[str, str]:
         """Legacy compatibility property for reference sources URLs"""
         return {
-            "dbpedia": self.reference_sources.dbpedia.upstream_url,
+            "dbpedia": self.reference_sources.dbpedia_sparql.upstream_url,  # Map legacy 'dbpedia' to dbpedia_sparql
             "conceptnet": self.reference_sources.conceptnet.upstream_url,
             "wikidata": self.reference_sources.wikidata.upstream_url,
             "dbpedia_spotlight": self.reference_sources.dbpedia_spotlight.upstream_url,
