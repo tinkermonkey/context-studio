@@ -163,6 +163,9 @@ class RAGPipelineService:
         # Layer error tracking
         layer_errors = []
 
+        # Calculate total sentences upfront (independent of Layer 0 success)
+        total_sentences = self._count_sentences(text)
+
         # Create processor input
         processor_input = ProcessorInput(text=text, enable_trace=enable_trace)
 
@@ -199,7 +202,7 @@ class RAGPipelineService:
                 kg_context_output = KGContextOutput(
                     extracted_phrases=[],
                     kg_nodes=[],
-                    total_sentences=0,
+                    total_sentences=total_sentences,
                     trace_data={}
                 )
 
@@ -213,7 +216,7 @@ class RAGPipelineService:
                 kg_context_output = KGContextOutput(
                     extracted_phrases=[],
                     kg_nodes=[],
-                    total_sentences=0,
+                    total_sentences=total_sentences,
                     trace_data={}
                 )
 
@@ -426,7 +429,7 @@ class RAGPipelineService:
                 ),
                 total_execution_time_ms=total_time,
                 total_entities=len(all_entities),
-                total_sentences=kg_context_output.total_sentences if kg_context_output else 0
+                total_sentences=total_sentences
             )
 
             # Save metrics to database
@@ -577,6 +580,32 @@ class RAGPipelineService:
 
         logger.info(f"Deduplication complete: {len(entities_map)} unique entities")
         return list(entities_map.values())
+
+    def _count_sentences(self, text: str) -> int:
+        """
+        Count the number of sentences in the input text.
+
+        Args:
+            text: Input text to analyze
+
+        Returns:
+            Number of sentences in the text
+        """
+        try:
+            # Use spaCy's sentence segmentation
+            from nlp.pipeline import get_pipeline
+            nlp = get_pipeline()
+            doc = nlp.process(text)
+            sentences = list(doc.sents)
+            return len(sentences)
+        except Exception as e:
+            logger.warning(f"Failed to count sentences using spaCy: {e}")
+            # Fallback: simple sentence splitting by common punctuation
+            import re
+            sentences = re.split(r'[.!?]+', text)
+            # Filter out empty sentences
+            sentences = [s.strip() for s in sentences if s.strip()]
+            return len(sentences)
 
     @staticmethod
     def _text_similarity(text1: str, text2: str) -> float:
