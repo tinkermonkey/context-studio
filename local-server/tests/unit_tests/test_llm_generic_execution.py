@@ -225,22 +225,23 @@ class TestGenericPipelineExecution:
         # Mock dependencies
         mock_llm_service.flavor_service.get_default_flavor.return_value = mock_flavor
         mock_llm_service.execution_tracker.start_execution.return_value = "exec-123"
-        
+
         # Mock streaming LLM error
         mock_llm = AsyncMock()
-        
-        async def mock_astream_error():
+
+        async def mock_astream_error(*args, **kwargs):
             yield MagicMock(content="Start")
             raise Exception("Streaming error")
-        
-        mock_llm.astream.return_value = mock_astream_error()
-        
+
+        # Assign the function itself, not call it
+        mock_llm.astream = mock_astream_error
+
         with patch.object(mock_llm_service, '_create_llm_from_flavor', return_value=mock_llm):
             with patch.object(mock_llm_service, '_get_flavor', return_value=mock_flavor):
                 chunks = []
                 async for chunk in mock_llm_service.execute_pipeline_flavor_streaming(sample_request):
                     chunks.append(chunk)
-        
+
         # Verify error response
         assert len(chunks) > 0
         final_chunk = chunks[-1]
