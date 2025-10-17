@@ -143,5 +143,19 @@ class RAGCleanupScheduler:
         Returns:
             Dictionary with cleanup results
         """
-        logger.info("Running manual RAG observability cleanup...")
-        return await _run_in_thread(self.observability_store.cleanup_old_data)
+        try:
+            start_time = datetime.now()
+            logger.info("Running manual RAG observability cleanup...")
+
+            result = await _run_in_thread(self.observability_store.cleanup_old_data)
+
+            elapsed = (datetime.now() - start_time).total_seconds()
+            logger.info(
+                f"Manual RAG cleanup completed in {elapsed:.2f}s: "
+                f"{result['metrics_deleted']} metrics, {result['traces_deleted']} traces deleted"
+            )
+
+            return result
+        except Exception as e:
+            logger.error(f"Manual cleanup operation failed: {e}", exc_info=True)
+            raise

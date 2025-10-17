@@ -44,7 +44,8 @@ class TestRAGCleanupScheduler:
         scheduler = RAGCleanupScheduler(ops_db_session=mock_db_session)
         assert scheduler.cleanup_interval_hours == 24
 
-    def test_start_scheduler(self, mock_db_session):
+    @pytest.mark.asyncio
+    async def test_start_scheduler(self, mock_db_session):
         """Test starting the scheduler."""
         scheduler = RAGCleanupScheduler(
             ops_db_session=mock_db_session,
@@ -58,9 +59,10 @@ class TestRAGCleanupScheduler:
         assert isinstance(scheduler._task, asyncio.Task)
 
         # Cleanup
-        asyncio.create_task(scheduler.stop())
+        await scheduler.stop()
 
-    def test_start_already_running(self, mock_db_session):
+    @pytest.mark.asyncio
+    async def test_start_already_running(self, mock_db_session):
         """Test starting scheduler when already running does nothing."""
         scheduler = RAGCleanupScheduler(
             ops_db_session=mock_db_session,
@@ -77,7 +79,7 @@ class TestRAGCleanupScheduler:
         assert scheduler._task is first_task
 
         # Cleanup
-        asyncio.create_task(scheduler.stop())
+        await scheduler.stop()
 
     @pytest.mark.asyncio
     async def test_stop_scheduler(self, mock_db_session):
