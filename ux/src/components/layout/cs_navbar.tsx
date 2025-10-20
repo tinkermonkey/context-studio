@@ -66,6 +66,9 @@ export function CsNavbar() {
               <DropdownItem href="/app/reference/predicates">
                 Predicates
               </DropdownItem>
+              <DropdownItem href="/app/reference/rag-test">
+                RAG Test
+              </DropdownItem>
             </Dropdown>
             <Dropdown label="Data" className="hidden lg:block" inline={true}>
               <DropdownItem href="/app/data/sources">Sources</DropdownItem>

@@ -1,0 +1,148 @@
+/**
+ * RAG Service
+ *
+ * Service for RAG (Retrieval-Augmented Generation) pipeline operations
+ */
+
+import { BaseService } from "./base";
+import { ENDPOINTS } from "../config";
+import { components, operations } from "../client/types";
+
+// Type definitions from OpenAPI schema
+export type RAGExtractionRequest = components["schemas"]["RAGExtractionRequest"];
+export type RAGExtractionResponse = components["schemas"]["RAGExtractionResponse"];
+export type ExtractedEntity = components["schemas"]["ExtractedEntity"];
+export type ProcessingMetrics = components["schemas"]["ProcessingMetrics"];
+export type LayerMetrics = components["schemas"]["LayerMetrics"];
+
+// Infer response types from operations
+type ExtractEntitiesResponse = operations["extract_entities_api_rag_extract_post"]["responses"]["200"]["content"]["application/json"];
+type GetMetricsResponse = operations["get_metrics_api_rag_metrics__request_id__get"]["responses"]["200"]["content"]["application/json"];
+type GetTraceResponse = operations["get_trace_api_rag_trace__request_id__get"]["responses"]["200"]["content"]["application/json"];
+type GetTraceByLayerResponse = operations["get_trace_by_layer_api_rag_trace__request_id__layer__layer_name__get"]["responses"]["200"]["content"]["application/json"];
+type DeleteTraceResponse = operations["delete_trace_api_rag_trace__request_id__delete"]["responses"]["200"]["content"]["application/json"];
+type UpdateConfigResponse = operations["update_config_api_rag_config_update_post"]["responses"]["200"]["content"]["application/json"];
+
+export interface RAGConfigUpdate {
+  timeout_layer_0?: number;
+  timeout_layer_1?: number;
+  timeout_layer_2?: number;
+  timeout_layer_3?: number;
+  dedup_similarity_threshold?: number;
+  kg_top_k?: number;
+}
+
+export class RAGService extends BaseService {
+  /**
+   * Extract entities from text using the RAG pipeline
+   * @param text The text to analyze and extract entities from
+   * @param enableTrace Enable detailed tracing for observability (default: false)
+   * @returns RAG extraction response with entities, metrics, and request ID
+   */
+  async extractEntities(
+    text: string,
+    enableTrace: boolean = false,
+  ): Promise<ExtractEntitiesResponse> {
+    const sanitizedText = this.sanitizeString(text, "text");
+
+    return this.withErrorContext(async () => {
+      const response = await this.postResource<ExtractEntitiesResponse>(
+        ENDPOINTS.RAG.EXTRACT,
+        {
+          text: sanitizedText,
+          enable_trace: enableTrace,
+        } as RAGExtractionRequest,
+      );
+      return response;
+    }, "extracting entities");
+  }
+
+  /**
+   * Retrieve processing metrics for a specific RAG extraction request
+   * @param requestId Unique identifier for the extraction request
+   * @returns Processing metrics for all pipeline layers
+   */
+  async getMetrics(requestId: string): Promise<GetMetricsResponse> {
+    this.validateRequired(requestId, "requestId");
+
+    return this.withErrorContext(async () => {
+      const response = await this.getResource<GetMetricsResponse>(
+        ENDPOINTS.RAG.METRICS(requestId),
+      );
+      return response;
+    }, "retrieving metrics");
+  }
+
+  /**
+   * Retrieve all trace entries for a specific RAG extraction request
+   * @param requestId Unique identifier for the extraction request
+   * @returns List of trace entries ordered by sentence index and timestamp
+   */
+  async getTrace(requestId: string): Promise<GetTraceResponse> {
+    this.validateRequired(requestId, "requestId");
+
+    return this.withErrorContext(async () => {
+      const response = await this.getResource<GetTraceResponse>(
+        ENDPOINTS.RAG.TRACE(requestId),
+      );
+      return response;
+    }, "retrieving trace");
+  }
+
+  /**
+   * Retrieve trace entries for a specific layer of a RAG extraction request
+   * @param requestId Unique identifier for the extraction request
+   * @param layerName Name of the layer (kg_context, llm_extraction, nlp_gap, web_resolution)
+   * @returns List of trace entries for the specified layer
+   */
+  async getTraceByLayer(
+    requestId: string,
+    layerName: string,
+  ): Promise<GetTraceByLayerResponse> {
+    this.validateRequired(requestId, "requestId");
+    this.validateRequired(layerName, "layerName");
+
+    return this.withErrorContext(async () => {
+      const response = await this.getResource<GetTraceByLayerResponse>(
+        ENDPOINTS.RAG.TRACE_BY_LAYER(requestId, layerName),
+      );
+      return response;
+    }, `retrieving trace for layer ${layerName}`);
+  }
+
+  /**
+   * Delete trace data for a specific RAG extraction request
+   * @param requestId Unique identifier for the extraction request
+   * @returns Deletion confirmation with count of traces deleted
+   */
+  async deleteTrace(requestId: string): Promise<DeleteTraceResponse> {
+    this.validateRequired(requestId, "requestId");
+
+    return this.withErrorContext(async () => {
+      const response = await this.deleteResource<DeleteTraceResponse>(
+        ENDPOINTS.RAG.TRACE(requestId),
+      );
+      return response;
+    }, "deleting trace");
+  }
+
+  /**
+   * Update RAG pipeline configuration settings
+   * @param config Configuration updates (timeouts, thresholds, etc.)
+   * @returns Updated configuration response
+   */
+  async updateConfig(config: RAGConfigUpdate): Promise<UpdateConfigResponse> {
+    this.validateRequired(config, "config");
+
+    return this.withErrorContext(async () => {
+      const response = await this.postResource<UpdateConfigResponse>(
+        ENDPOINTS.RAG.CONFIG_UPDATE,
+        config,
+      );
+      return response;
+    }, "updating configuration");
+  }
+}
+
+// Export a singleton instance
+export const ragService = new RAGService();
