@@ -404,20 +404,20 @@ class TestConfigDatabaseIntegration:
             assert config_manager.settings.proxy_server.enabled == True
 
             # Test reference source toggles
-            assert config_manager.set('reference_sources.dbpedia.enabled', False)
-            assert config_manager.settings.reference_sources.dbpedia.enabled == False
+            assert config_manager.set('reference_sources.dbpedia_sparql.enabled', False)
+            assert config_manager.settings.reference_sources.dbpedia_sparql.enabled == False
 
             assert config_manager.set('reference_sources.conceptnet.enabled', False)
             assert config_manager.settings.reference_sources.conceptnet.enabled == False
 
             # Verify changes persist
             config_manager2 = ConfigurationManager(config_file)
-            assert config_manager2.settings.reference_sources.dbpedia.enabled == False
+            assert config_manager2.settings.reference_sources.dbpedia_sparql.enabled == False
             assert config_manager2.settings.reference_sources.conceptnet.enabled == False
 
             # Verify get_enabled_sources reflects changes
             enabled_sources = config_manager2.settings.get_enabled_sources()
-            assert 'dbpedia' not in enabled_sources
+            assert 'dbpedia_sparql' not in enabled_sources
             assert 'conceptnet' not in enabled_sources
 
             # Verify no schema_org_path in database config

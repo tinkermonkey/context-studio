@@ -18,12 +18,12 @@ from llm.models import PipelineType
 class TestGenericPipelineAPIIntegration:
     
     def setup_method(self):
-        """Set up test fixtures with temporary operations database."""
-        # Create temporary operations database for testing
+        """Set up test fixtures with temporary pipeline database."""
+        # Create temporary pipeline database for testing
         self.temp_db = tempfile.NamedTemporaryFile(suffix='.db', delete=False)
         self.temp_db.close()
         
-        # Initialize operations database manager with temp file
+        # Initialize pipeline database manager with temp file
         self.pipeline_manager = PipelineDatabaseManager(self.temp_db.name)
         
         # Create test client
@@ -139,7 +139,7 @@ class TestGenericPipelineAPIIntegration:
 
         # Clean up dependency override
         del self.app.dependency_overrides[get_default_llm_service]
-    
+
     def test_execute_pipeline_endpoint_context_too_large(self):
         """Test context data size validation in generic pipeline endpoint."""
 
@@ -155,13 +155,13 @@ class TestGenericPipelineAPIIntegration:
             "pipeline_type": "suggest_term_definition",
             "context_data": {"large_field": large_data}
         }
-
+        
         # Make the API request
         response = self.client.post(
             "/api/llm/execute_pipeline",
             json=request_payload
         )
-
+        
         # Verify error response
         assert response.status_code == 400
         response_data = response.json()
@@ -258,7 +258,7 @@ class TestGenericPipelineAPIIntegration:
             "pipeline_type": "suggest_term_definition",
             "context_data": {}
         }
-
+        
         # Make the API request
         response = self.client.post(
             "/api/llm/execute_pipeline/stream",
@@ -272,7 +272,7 @@ class TestGenericPipelineAPIIntegration:
 
         # Clean up dependency override
         del self.app.dependency_overrides[get_default_llm_service]
-    
+
     def test_execute_pipeline_different_pipeline_types(self):
         """Test generic pipeline endpoint with different pipeline types."""
 

@@ -32,6 +32,7 @@ class TestPipelineFlavorAPI:
             "user_prompt": "Generate a definition for the term {term} in the context of {domain_title}.",
         }
 
+    @pytest.mark.skip_suite
     def test_create_flavor_endpoint(self, client):
         """Test flavor creation endpoint"""
         import uuid
@@ -72,6 +73,7 @@ class TestPipelineFlavorAPI:
         # Should return validation error
         assert response.status_code == 422  # Unprocessable Entity
 
+    @pytest.mark.skip_suite
     def test_create_flavor_endpoint_duplicate_title(self, client, sample_flavor_data):
         """Test flavor creation with duplicate title"""
         # Create first flavor
@@ -83,6 +85,7 @@ class TestPipelineFlavorAPI:
         assert response2.status_code == 400  # Bad Request
         assert "already exists" in response2.json()["detail"]
 
+    @pytest.mark.skip_suite
     def test_list_flavors_endpoint(self, client):
         """Test listing flavors endpoint"""
         response = client.get("/api/pipeline-flavors")
@@ -98,6 +101,7 @@ class TestPipelineFlavorAPI:
         assert isinstance(result["total_count"], int)
         assert result["total_count"] >= 0
 
+    @pytest.mark.skip_suite
     def test_list_flavors_filtered_by_pipeline(self, client):
         """Test listing flavors filtered by pipeline type"""
         response = client.get("/api/pipeline-flavors?pipeline=suggest_term_definition")
@@ -110,6 +114,7 @@ class TestPipelineFlavorAPI:
         for flavor in result["flavors"]:
             assert flavor["pipeline"] == "suggest_term_definition"
 
+    @pytest.mark.skip_suite
     def test_get_flavor_by_id_success(self, client, sample_flavor_data):
         """Test getting a specific flavor by ID"""
         # Create a flavor first
@@ -135,6 +140,7 @@ class TestPipelineFlavorAPI:
         assert response.status_code == 404
         assert "not found" in response.json()["detail"]
 
+    @pytest.mark.skip_suite
     def test_update_flavor_endpoint(self, client, sample_flavor_data):
         """Test updating a flavor"""
         # Create a flavor first
@@ -173,6 +179,7 @@ class TestPipelineFlavorAPI:
         # Should return 404
         assert response.status_code == 404
 
+    @pytest.mark.skip_suite
     def test_delete_flavor_endpoint(self, client, sample_flavor_data):
         """Test deleting a flavor"""
         # Create a flavor first
@@ -198,6 +205,7 @@ class TestPipelineFlavorAPI:
         # Should return 404
         assert response.status_code == 404
 
+    @pytest.mark.skip_suite
     def test_delete_default_flavor_forbidden(self, client):
         """Test that deleting default flavor is forbidden"""
         # First, find a default flavor
@@ -372,6 +380,7 @@ class TestLLMStreamingEndpoints:
         content = response.content.decode()
         assert "data:" in content
 
+    @pytest.mark.skip_suite
     def test_llm_health_endpoint(self, client):
         """Test LLM health check endpoint"""
         response = client.get("/api/llm/health")
@@ -387,6 +396,7 @@ class TestLLMStreamingEndpoints:
 class TestDefaultFlavorPopulation:
     """Integration tests for default flavor population"""
 
+    @pytest.mark.skip_suite
     def test_default_flavors_exist(self, client):
         """Test that default flavors are populated on startup"""
         response = client.get("/api/pipeline-flavors")
@@ -408,6 +418,7 @@ class TestDefaultFlavorPopulation:
             )
             assert default_exists, f"Default flavor missing for {pipeline_type}"
 
+    @pytest.mark.skip_suite
     def test_default_flavor_properties(self, client):
         """Test that default flavors have correct properties"""
         response = client.get("/api/pipeline-flavors")

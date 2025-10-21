@@ -1230,6 +1230,96 @@
         }
       }
     },
+    "/api/predicates/external/search": {
+      "get": {
+        "tags": [
+          "predicates"
+        ],
+        "summary": "Search External Predicates",
+        "description": "Search external predicates using vector similarity.\n\nThis endpoint performs semantic search across external predicates using embeddings.\nReturns predicates ranked by similarity to the query text.\n\nArgs:\n    query: Search query text (required, min 1 character)\n    source: Optional source filter (conceptnet, dbpedia, wikidata, schema_org)\n    limit: Maximum number of results (default: 20, max: 100)\n    threshold: Minimum similarity threshold (default: 0.6, range: 0.0-1.0)\n\nReturns:\n    ExternalPredicateSearchResponse with ranked similarity results",
+        "operationId": "search_external_predicates_api_predicates_external_search_get",
+        "parameters": [
+          {
+            "name": "query",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "description": "Search query text",
+              "title": "Query"
+            },
+            "description": "Search query text"
+          },
+          {
+            "name": "source",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by source (conceptnet, dbpedia, wikidata, schema_org)",
+              "title": "Source"
+            },
+            "description": "Filter by source (conceptnet, dbpedia, wikidata, schema_org)"
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 100,
+              "minimum": 1,
+              "default": 20,
+              "title": "Limit"
+            }
+          },
+          {
+            "name": "threshold",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "number",
+              "maximum": 1.0,
+              "minimum": 0.0,
+              "description": "Minimum similarity threshold",
+              "default": 0.6,
+              "title": "Threshold"
+            },
+            "description": "Minimum similarity threshold"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ExternalPredicateSearchResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/predicates/{id}": {
       "get": {
         "tags": [
@@ -1527,7 +1617,7 @@
           "predicates"
         ],
         "summary": "Discover External Predicates",
-        "description": "Discover predicates from external knowledge sources.\n\nThis endpoint starts a background task to fetch predicate metadata from:\n- ConceptNet (40 relations)\n- DBpedia (760 properties via SPARQL)\n- WikiData (10K properties via SPARQL)\n\nReturns a task_id that can be used to check the status of the discovery process.\n\n**Performance targets:**\n- ConceptNet: <2s for 40 relations\n- DBpedia: <10s for 760 properties\n- WikiData: <30s for 10K properties",
+        "description": "Discover predicates from external knowledge sources.\n\nThis endpoint starts a background task to fetch predicate metadata from:\n- ConceptNet (40 relations)\n- DBpedia (760 properties via SPARQL)\n- WikiData (10K properties via SPARQL)\n- Schema.org (properties from imported data)\n\nReturns a task_id that can be used to check the status of the discovery process.\n\n**Performance targets:**\n- ConceptNet: <2s for 40 relations\n- DBpedia: <10s for 760 properties\n- WikiData: <30s for 10K properties\n- Schema.org: <1s (reads from database)",
         "operationId": "discover_external_predicates_api_predicates_discover_post",
         "parameters": [
           {
@@ -1546,10 +1636,10 @@
                   "type": "null"
                 }
               ],
-              "description": "Sources to discover from (conceptnet, dbpedia, wikidata)",
+              "description": "Sources to discover from (conceptnet, dbpedia, wikidata, schema_org)",
               "title": "Sources"
             },
-            "description": "Sources to discover from (conceptnet, dbpedia, wikidata)"
+            "description": "Sources to discover from (conceptnet, dbpedia, wikidata, schema_org)"
           }
         ],
         "responses": {
@@ -2205,7 +2295,7 @@
           "version_management"
         ],
         "summary": "Stage Entity",
-        "description": "Stage an entity for commit.\n\nMarks the entity as staged, meaning its changes will be included in the next commit.",
+        "description": "Stage an entity for commit.\n\nMarks the entity as staged, meaning its changes will be included in the next commit.\nReturns success even if there are no changes (idempotent operation).",
         "operationId": "stage_entity_api_versions_working_tree_stage_post",
         "parameters": [
           {
@@ -2307,7 +2397,7 @@
           "version_management"
         ],
         "summary": "Commit Staged Changes",
-        "description": "Commit all staged changes.\n\nUpdates canonical versions for all staged entities and marks them as merged.",
+        "description": "Commit all staged changes.\n\nUpdates canonical versions for all staged entities and marks them as merged.\nReturns 400 if there are no staged changes to commit.",
         "operationId": "commit_staged_changes_api_versions_working_tree_commit_post",
         "parameters": [
           {
@@ -7417,6 +7507,75 @@
               "title": "Node Id"
             },
             "description": "Reference node ID"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/reference/ref-db/predicates/{source}/{external_id}/examples": {
+      "get": {
+        "tags": [
+          "nlp-reference",
+          "reference"
+        ],
+        "summary": "Get Predicate Examples",
+        "description": "Get example uses of a predicate from the reference database or external APIs.\n\nReturns example links that use this predicate, including information about\nthe subject and object nodes. This helps users understand how the predicate\nis used in the knowledge graph.\n\nNote: The external_id parameter accepts paths with slashes (e.g., '/r/RelatedTo' for ConceptNet).\nFor DBpedia, uses SPARQL queries to fetch live examples from the public endpoint.",
+        "operationId": "get_predicate_examples_api_reference_ref_db_predicates__source___external_id__examples_get",
+        "parameters": [
+          {
+            "name": "source",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Predicate source (e.g., 'schema.org', 'dbpedia')",
+              "title": "Source"
+            },
+            "description": "Predicate source (e.g., 'schema.org', 'dbpedia')"
+          },
+          {
+            "name": "external_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "External predicate ID (can contain slashes)",
+              "title": "External Id"
+            },
+            "description": "External predicate ID (can contain slashes)"
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 100,
+              "minimum": 1,
+              "description": "Maximum number of example uses to return",
+              "default": 10,
+              "title": "Limit"
+            },
+            "description": "Maximum number of example uses to return"
           }
         ],
         "responses": {
@@ -13656,6 +13815,317 @@
           }
         }
       }
+    },
+    "/api/rag/extract": {
+      "post": {
+        "tags": [
+          "rag-pipeline"
+        ],
+        "summary": "Extract Entities",
+        "description": "Extract entities from text using the RAG pipeline.\n\nThe pipeline processes text through four layers:\n- Layer 0: Knowledge Graph Context Preparation\n- Layer 1: LLM-based Entity Extraction\n- Layer 2: spaCy Syntactic Gap Analysis\n- Layer 3: Concept Resolution via KG and Web Search\n\nArgs:\n    request: RAGExtractionRequest containing text and trace enablement flag\n    pipeline_service: Injected RAG pipeline service\n\nReturns:\n    RAGExtractionResponse with extracted entities, metrics, and request ID\n\nRaises:\n    HTTPException 400: If text is empty or invalid\n    HTTPException 500: If pipeline execution fails",
+        "operationId": "extract_entities_api_rag_extract_post",
+        "parameters": [
+          {
+            "name": "SessionLocal",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "title": "Sessionlocal"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RAGExtractionRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RAGExtractionResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request parameters"
+          },
+          "500": {
+            "description": "Pipeline execution failed"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/rag/metrics/{request_id}": {
+      "get": {
+        "tags": [
+          "rag-pipeline"
+        ],
+        "summary": "Get Metrics",
+        "description": "Retrieve processing metrics for a specific RAG extraction request.\n\nReturns timing data and entity counts for all pipeline layers.\n\nArgs:\n    request_id: Unique identifier for the extraction request\n    observability_store: Injected observability store\n\nReturns:\n    Dictionary containing metrics for all layers and total execution time\n\nRaises:\n    HTTPException 404: If request_id is not found\n    HTTPException 500: If metrics retrieval fails",
+        "operationId": "get_metrics_api_rag_metrics__request_id__get",
+        "parameters": [
+          {
+            "name": "request_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Request Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "404": {
+            "description": "Request ID not found"
+          },
+          "500": {
+            "description": "Failed to retrieve metrics"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/rag/trace/{request_id}": {
+      "get": {
+        "tags": [
+          "rag-pipeline"
+        ],
+        "summary": "Get Trace",
+        "description": "Retrieve all trace entries for a specific RAG extraction request.\n\nTrace data includes detailed input/output information for each layer,\nuseful for debugging and algorithm tuning.\n\nArgs:\n    request_id: Unique identifier for the extraction request\n    observability_store: Injected observability store\n\nReturns:\n    List of trace entries ordered by sentence index and timestamp\n\nRaises:\n    HTTPException 404: If request_id has no trace data\n    HTTPException 500: If trace retrieval fails",
+        "operationId": "get_trace_api_rag_trace__request_id__get",
+        "parameters": [
+          {
+            "name": "request_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Request Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "404": {
+            "description": "Request ID not found or trace not enabled"
+          },
+          "500": {
+            "description": "Failed to retrieve trace data"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "rag-pipeline"
+        ],
+        "summary": "Delete Trace",
+        "description": "Manually delete trace data for a specific RAG extraction request.\n\nThis is useful for immediate cleanup of sensitive data or testing purposes.\nNote that trace data is automatically cleaned up after the retention period.\n\nArgs:\n    request_id: Unique identifier for the extraction request\n    observability_store: Injected observability store\n\nReturns:\n    Success message with deletion confirmation\n\nRaises:\n    HTTPException 404: If request_id has no trace data\n    HTTPException 500: If deletion fails",
+        "operationId": "delete_trace_api_rag_trace__request_id__delete",
+        "parameters": [
+          {
+            "name": "request_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Request Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "404": {
+            "description": "Request ID not found"
+          },
+          "500": {
+            "description": "Failed to delete trace data"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/rag/trace/{request_id}/layer/{layer_name}": {
+      "get": {
+        "tags": [
+          "rag-pipeline"
+        ],
+        "summary": "Get Trace By Layer",
+        "description": "Retrieve trace entries for a specific layer of a RAG extraction request.\n\nArgs:\n    request_id: Unique identifier for the extraction request\n    layer_name: Name of the layer (kg_context, llm_extraction, spacy_gap, concept_resolution)\n    observability_store: Injected observability store\n\nReturns:\n    List of trace entries for the specified layer\n\nRaises:\n    HTTPException 404: If request_id or layer has no trace data\n    HTTPException 500: If trace retrieval fails",
+        "operationId": "get_trace_by_layer_api_rag_trace__request_id__layer__layer_name__get",
+        "parameters": [
+          {
+            "name": "request_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Request Id"
+            }
+          },
+          {
+            "name": "layer_name",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Layer Name"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "404": {
+            "description": "Request ID or layer not found"
+          },
+          "500": {
+            "description": "Failed to retrieve trace data"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/rag/config/update": {
+      "post": {
+        "tags": [
+          "rag-pipeline"
+        ],
+        "summary": "Update Config",
+        "description": "Update RAG pipeline configuration settings.\n\nAccepts partial updates to pipeline configuration, including:\n- timeout_layer_0: Timeout for Layer 0 (KG context) in seconds\n- timeout_layer_1: Timeout for Layer 1 (LLM extraction) in seconds\n- timeout_layer_2: Timeout for Layer 2 (spaCy gap) in seconds\n- timeout_layer_3: Timeout for Layer 3 (concept resolution) in seconds\n- timeout_total: Total pipeline timeout in seconds\n- dedup_similarity_threshold: Entity deduplication similarity threshold (0.0-1.0)\n- kg_top_k: Number of top KG nodes to retrieve\n\nArgs:\n    config_updates: Dictionary of configuration parameters to update\n    pipeline_service: Injected RAG pipeline service\n\nReturns:\n    Updated configuration values\n\nRaises:\n    HTTPException 400: If configuration parameters are invalid\n    HTTPException 500: If configuration update fails",
+        "operationId": "update_config_api_rag_config_update_post",
+        "parameters": [
+          {
+            "name": "SessionLocal",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "title": "Sessionlocal"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": true,
+                "title": "Config Updates"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid configuration parameters"
+          },
+          "500": {
+            "description": "Failed to update configuration"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
@@ -15831,6 +16301,159 @@
         "title": "ExternalPredicateOut",
         "description": "Response model for external predicates."
       },
+      "ExternalPredicateSearchResponse": {
+        "properties": {
+          "data": {
+            "items": {
+              "$ref": "#/components/schemas/ExternalPredicateSearchResult"
+            },
+            "type": "array",
+            "title": "Data"
+          },
+          "total": {
+            "type": "integer",
+            "title": "Total"
+          },
+          "query": {
+            "type": "string",
+            "title": "Query"
+          },
+          "source": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Source"
+          },
+          "threshold": {
+            "type": "number",
+            "title": "Threshold"
+          }
+        },
+        "type": "object",
+        "required": [
+          "data",
+          "total",
+          "query",
+          "threshold"
+        ],
+        "title": "ExternalPredicateSearchResponse",
+        "description": "Response for external predicate search."
+      },
+      "ExternalPredicateSearchResult": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "title": {
+            "type": "string",
+            "title": "Title"
+          },
+          "definition": {
+            "type": "string",
+            "title": "Definition"
+          },
+          "source": {
+            "type": "string",
+            "title": "Source"
+          },
+          "external_id": {
+            "type": "string",
+            "title": "External Id"
+          },
+          "attributes": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Attributes"
+          },
+          "created_at": {
+            "type": "string",
+            "title": "Created At"
+          },
+          "updated_at": {
+            "type": "string",
+            "title": "Updated At"
+          },
+          "similarity_score": {
+            "type": "number",
+            "title": "Similarity Score"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "title",
+          "definition",
+          "source",
+          "external_id",
+          "created_at",
+          "updated_at",
+          "similarity_score"
+        ],
+        "title": "ExternalPredicateSearchResult",
+        "description": "Search result for external predicates with similarity score."
+      },
+      "ExtractedEntity": {
+        "properties": {
+          "text": {
+            "type": "string",
+            "minLength": 1,
+            "title": "Text",
+            "description": "The entity text as it appears in the source."
+          },
+          "type": {
+            "type": "string",
+            "title": "Type",
+            "description": "The entity type (e.g., 'PERSON', 'ORG', 'LOCATION', 'CONCEPT')."
+          },
+          "confidence": {
+            "type": "number",
+            "maximum": 1.0,
+            "minimum": 0.0,
+            "title": "Confidence",
+            "description": "Confidence score for this entity extraction (0.0 to 1.0)."
+          },
+          "source_layer": {
+            "type": "string",
+            "title": "Source Layer",
+            "description": "The pipeline layer that extracted this entity ('kg', 'nlp', 'llm', 'web')."
+          },
+          "sentence_index": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Sentence Index",
+            "description": "Index of the sentence containing this entity (0-based)."
+          },
+          "metadata": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Metadata",
+            "description": "Additional metadata about the entity (e.g., KB IDs, relations, context)."
+          }
+        },
+        "type": "object",
+        "required": [
+          "text",
+          "type",
+          "confidence",
+          "source_layer",
+          "sentence_index"
+        ],
+        "title": "ExtractedEntity",
+        "description": "Represents a single entity extracted from text.\n\nEntities are extracted through one or more layers of the RAG pipeline,\nwith each entity containing metadata about its source, position, and confidence."
+      },
       "FindSimilarResponse": {
         "properties": {
           "predicate_id": {
@@ -16129,6 +16752,43 @@
         ],
         "title": "LLMHealthResponse",
         "description": "Health check response for LLM service"
+      },
+      "LayerMetrics": {
+        "properties": {
+          "execution_time_ms": {
+            "type": "number",
+            "minimum": 0.0,
+            "title": "Execution Time Ms",
+            "description": "Execution time for this layer in milliseconds."
+          },
+          "entities_found": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Entities Found",
+            "description": "Number of entities found by this layer."
+          },
+          "entities_deduplicated": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Entities Deduplicated",
+            "description": "Number of entities removed as duplicates in this layer.",
+            "default": 0
+          },
+          "operations_performed": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Operations Performed",
+            "description": "Number of operations/searches performed (e.g., vector searches, web searches).",
+            "default": 0
+          }
+        },
+        "type": "object",
+        "required": [
+          "execution_time_ms",
+          "entities_found"
+        ],
+        "title": "LayerMetrics",
+        "description": "Performance metrics for a single pipeline layer.\n\nTracks timing, entity counts, and operation counts for each layer of the RAG pipeline."
       },
       "MaterializedViewRequest": {
         "properties": {
@@ -17538,7 +18198,8 @@
         "enum": [
           "suggest_term_definition",
           "suggest_layer_definition",
-          "suggest_domain_definition"
+          "suggest_domain_definition",
+          "extract_entities"
         ],
         "title": "PipelineType",
         "description": "Enumeration of supported pipeline types"
@@ -17816,6 +18477,56 @@
         },
         "type": "object",
         "title": "PredicateUpdate"
+      },
+      "ProcessingMetrics": {
+        "properties": {
+          "kg_layer": {
+            "$ref": "#/components/schemas/LayerMetrics",
+            "description": "Metrics for knowledge graph layer."
+          },
+          "nlp_layer": {
+            "$ref": "#/components/schemas/LayerMetrics",
+            "description": "Metrics for NLP processing layer."
+          },
+          "llm_layer": {
+            "$ref": "#/components/schemas/LayerMetrics",
+            "description": "Metrics for LLM enrichment layer."
+          },
+          "web_layer": {
+            "$ref": "#/components/schemas/LayerMetrics",
+            "description": "Metrics for web search layer."
+          },
+          "total_execution_time_ms": {
+            "type": "number",
+            "minimum": 0.0,
+            "title": "Total Execution Time Ms",
+            "description": "Total pipeline execution time in milliseconds."
+          },
+          "total_entities": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Total Entities",
+            "description": "Total number of unique entities after deduplication."
+          },
+          "total_sentences": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Total Sentences",
+            "description": "Total number of sentences processed."
+          }
+        },
+        "type": "object",
+        "required": [
+          "kg_layer",
+          "nlp_layer",
+          "llm_layer",
+          "web_layer",
+          "total_execution_time_ms",
+          "total_entities",
+          "total_sentences"
+        ],
+        "title": "ProcessingMetrics",
+        "description": "Comprehensive metrics for RAG pipeline execution.\n\nCaptures timing and entity counts for all four layers of the pipeline,\nplus overall execution metrics."
       },
       "ProposalListResponse": {
         "properties": {
@@ -18095,6 +18806,73 @@
         ],
         "title": "QueryOptimizationRequest",
         "description": "API model for query optimization request."
+      },
+      "RAGExtractionRequest": {
+        "properties": {
+          "text": {
+            "type": "string",
+            "minLength": 1,
+            "title": "Text",
+            "description": "Text to analyze and extract entities from."
+          },
+          "enable_trace": {
+            "type": "boolean",
+            "title": "Enable Trace",
+            "description": "Enable detailed tracing for observability. Defaults to false per architect requirement.",
+            "default": false
+          },
+          "enable_llm_layer": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Enable Llm Layer",
+            "description": "Enable Layer 1 LLM extraction. If None, uses config default."
+          }
+        },
+        "type": "object",
+        "required": [
+          "text"
+        ],
+        "title": "RAGExtractionRequest",
+        "description": "Request model for RAG entity extraction.\n\nThis model represents a request to extract entities from text using the\nRAG pipeline, which processes text through multiple layers (KG, NLP, LLM, Web)\nto identify and enrich entities with context."
+      },
+      "RAGExtractionResponse": {
+        "properties": {
+          "request_id": {
+            "type": "string",
+            "title": "Request Id",
+            "description": "Unique identifier for this extraction request."
+          },
+          "entities": {
+            "items": {
+              "$ref": "#/components/schemas/ExtractedEntity"
+            },
+            "type": "array",
+            "title": "Entities",
+            "description": "List of extracted entities with enrichment data."
+          },
+          "metrics": {
+            "$ref": "#/components/schemas/ProcessingMetrics",
+            "description": "Performance metrics for the extraction pipeline."
+          },
+          "trace_available": {
+            "type": "boolean",
+            "title": "Trace Available",
+            "description": "Indicates whether detailed trace data is available for this request.",
+            "default": false
+          }
+        },
+        "type": "object",
+        "required": [
+          "metrics"
+        ],
+        "title": "RAGExtractionResponse",
+        "description": "Response model for RAG entity extraction.\n\nContains extracted entities, processing metrics, and trace availability information."
       },
       "RecordSelectionRequest": {
         "properties": {
@@ -18524,60 +19302,6 @@
         ],
         "title": "SelectionResponse",
         "description": "Response model for selection recording."
-      },
-      "Sense2VecData": {
-        "properties": {
-          "in_s2v": {
-            "type": "boolean",
-            "title": "In S2V",
-            "description": "Whether token is in sense2vec model",
-            "default": false
-          },
-          "key": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Key",
-            "description": "Sense2vec key (e.g., 'duck NOUN')"
-          },
-          "freq": {
-            "anyOf": [
-              {
-                "type": "integer"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Freq",
-            "description": "Frequency in sense2vec corpus"
-          },
-          "other_senses": {
-            "items": {
-              "type": "string"
-            },
-            "type": "array",
-            "title": "Other Senses",
-            "description": "Other senses for this word"
-          },
-          "most_similar": {
-            "items": {
-              "additionalProperties": true,
-              "type": "object"
-            },
-            "type": "array",
-            "title": "Most Similar",
-            "description": "Most similar words with scores"
-          }
-        },
-        "type": "object",
-        "title": "Sense2VecData",
-        "description": "Sense2Vec data for a token."
       },
       "SimilarPredicateOut": {
         "properties": {
@@ -19553,17 +20277,6 @@
               }
             ],
             "description": "WordNet data."
-          },
-          "sense2vec": {
-            "anyOf": [
-              {
-                "$ref": "#/components/schemas/Sense2VecData"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "description": "Sense2vec data."
           }
         },
         "type": "object",

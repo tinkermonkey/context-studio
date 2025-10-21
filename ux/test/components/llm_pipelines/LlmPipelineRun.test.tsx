@@ -50,7 +50,7 @@ describe("LlmPipelineRun", () => {
   beforeEach(() => {
     vi.clearAllMocks();
 
-    // Default mock for usePipelineFlavor (returns disabled/loading state by default)
+    // Default mock for usePipelineFlavor (not used in most tests)
     mockUsePipelineFlavor.mockReturnValue({
       data: undefined,
       isLoading: false,
@@ -201,9 +201,7 @@ describe("LlmPipelineRun", () => {
       expect(mockMutateAsync).toHaveBeenCalledWith({
         pipeline_type: "suggest_term_definition",
         flavor_id: "1",
-        context_data: {
-          term: "test",
-        },
+        context_data: { term: "test" },
       });
     });
 

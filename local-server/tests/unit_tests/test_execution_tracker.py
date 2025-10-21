@@ -215,7 +215,7 @@ class TestExecutionTracker:
         mock_session = Mock()
         mock_get_session.return_value = mock_session
         
-        # Mock execution data - use strings for JSON fields
+        # Mock execution data
         mock_execution = Mock()
         mock_execution.id = "exec-123"
         mock_execution.pipeline_type = "suggest_term_definition"
@@ -232,7 +232,6 @@ class TestExecutionTracker:
         mock_execution.started_at = "2024-01-01T00:00:00"
         mock_execution.completed_at = "2024-01-01T00:00:01"
         mock_execution.error_message = None
-        # Make sure structured_output is None or a valid JSON string
         mock_execution.structured_output = None
         
         # Mock selection data
@@ -244,16 +243,13 @@ class TestExecutionTracker:
         mock_selection.selected_content = "Selected text"
         mock_selection.date_created = "2024-01-01T00:01:00"
         
-        # Mock execution result with fetchone()
+        # Mock execution result
         mock_execution_result = Mock()
         mock_execution_result.fetchone.return_value = mock_execution
         
         # Mock selections result that's iterable
-        # Note: The actual code does "for selection_row in selections_result"
-        # so we need to return an iterable directly, not a Mock object
-        mock_selections_result = iter([mock_selection])
+        mock_selections_result = [mock_selection]
         
-        # Set up side_effect for the two execute() calls
         mock_session.execute.side_effect = [
             mock_execution_result,
             mock_selections_result

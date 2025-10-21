@@ -266,22 +266,24 @@ class WorkingTreeManager:
                 f"Entity {entity_type}:{entity_id} not found in working tree"
             )
 
-        # Check if already staged (including auto-staged newly created entities)
+        # Check if already staged
         if entry.staged:
             logger.info(f"Entity {entity_type}:{entity_id} is already staged")
             return True
 
         # Check if there are changes to stage
-        if not entry.has_changes():
+        has_changes = entry.has_changes()
+        if not has_changes:
             logger.info(f"No changes to stage for {entity_type}:{entity_id}")
-            return False
+            # Still set the staged flag for idempotent behavior
+            # But return False to indicate no actual changes
 
         try:
-            # Update staged status
+            # Update staged status even if no changes (for idempotent staging)
             result = self.db.execute(
                 text(
                     """
-                UPDATE working_tree 
+                UPDATE working_tree
                 SET staged = TRUE, modified_at = :modified_at
                 WHERE entity_type = :entity_type AND entity_id = :entity_id
             """
@@ -301,7 +303,7 @@ class WorkingTreeManager:
             self.db.commit()
 
             logger.info(f"Staged {entity_type}:{entity_id}")
-            return True
+            return has_changes  # Return False if no changes, True if changes exist
 
         except Exception as e:
             self.db.rollback()

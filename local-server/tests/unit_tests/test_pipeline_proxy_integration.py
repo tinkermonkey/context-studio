@@ -38,7 +38,6 @@ class TestPipelineProxyIntegration:
         }
         # Mock nlp config properly
         mock_nlp_config = Mock()
-        mock_nlp_config.sense2vec_path = "/test/path"
         mock_nlp_config.auto_download_models = False
         mock_settings.nlp = mock_nlp_config
         mock_get_settings.return_value = mock_settings
@@ -51,7 +50,6 @@ class TestPipelineProxyIntegration:
         # Mock model downloader
         mock_model_downloader = Mock()
         mock_model_downloader.ensure_spacy_model.return_value = (True, None)
-        mock_model_downloader.ensure_sense2vec_model.return_value = (True, None)
         mock_get_model_downloader.return_value = mock_model_downloader
 
         # Mock spaCy
@@ -81,7 +79,6 @@ class TestPipelineProxyIntegration:
         }
         # Mock nlp config properly
         mock_nlp_config = Mock()
-        mock_nlp_config.sense2vec_path = "/test/path"
         mock_nlp_config.auto_download_models = False
         mock_settings.nlp = mock_nlp_config
         mock_settings.get_concepcy_config.return_value = {"test": "config"}
@@ -96,7 +93,6 @@ class TestPipelineProxyIntegration:
         # Mock model downloader
         mock_model_downloader = Mock()
         mock_model_downloader.ensure_spacy_model.return_value = (True, None)
-        mock_model_downloader.ensure_sense2vec_model.return_value = (True, None)
         mock_get_model_downloader.return_value = mock_model_downloader
 
         # Mock spaCy
@@ -167,7 +163,6 @@ class TestPipelineProxyIntegration:
         mock_nlp_config.concepcy_relations = ["RELATED_TO", "IS_A", "PART_OF"]
         mock_nlp_config.filter_missing_text = True
         mock_nlp_config.edge_weight_filter = 2.0
-        mock_nlp_config.sense2vec_path = "/test/path"
 
         # Mock reference sources
         mock_reference_sources = Mock()
@@ -244,7 +239,6 @@ class TestPipelineProxyIntegration:
 
         # Mock NLP config
         mock_nlp_config = Mock()
-        mock_nlp_config.sense2vec_path = "/test/path"
 
         # Mock reference sources
         mock_reference_sources = Mock()
@@ -313,7 +307,6 @@ class TestPipelineProxyIntegration:
 
         # Mock NLP config
         mock_nlp_config = Mock()
-        mock_nlp_config.sense2vec_path = "/test/path"
 
         # Mock proxy server config
         mock_proxy_server_config = Mock()
@@ -369,7 +362,6 @@ class TestPipelineProxyIntegration:
         }
         # Mock nlp config properly
         mock_nlp_config = Mock()
-        mock_nlp_config.sense2vec_path = "/test/path"
         mock_nlp_config.auto_download_models = False
         mock_settings.nlp = mock_nlp_config
         mock_settings.get_concepcy_config.return_value = {"test": "config"}
@@ -383,7 +375,6 @@ class TestPipelineProxyIntegration:
         # Mock model downloader
         mock_model_downloader = Mock()
         mock_model_downloader.ensure_spacy_model.return_value = (True, None)
-        mock_model_downloader.ensure_sense2vec_model.return_value = (True, None)
         mock_get_model_downloader.return_value = mock_model_downloader
 
         # Mock spaCy
@@ -413,7 +404,6 @@ class TestPipelineProxyIntegration:
         }
         # Mock nlp config properly
         mock_nlp_config = Mock()
-        mock_nlp_config.sense2vec_path = "/test/path"
         mock_nlp_config.auto_download_models = False
         mock_settings.nlp = mock_nlp_config
         mock_settings.get_concepcy_config.return_value = {"test": "config"}
@@ -427,7 +417,6 @@ class TestPipelineProxyIntegration:
         # Mock model downloader
         mock_model_downloader = Mock()
         mock_model_downloader.ensure_spacy_model.return_value = (True, None)
-        mock_model_downloader.ensure_sense2vec_model.return_value = (True, None)
         mock_get_model_downloader.return_value = mock_model_downloader
 
         # Mock spaCy
@@ -442,7 +431,6 @@ class TestPipelineProxyIntegration:
 
         assert not pipeline._initialized
         assert pipeline.nlp is None
-        assert pipeline.s2v is None
         mock_proxy_manager.stop_proxy.assert_called()
 
 

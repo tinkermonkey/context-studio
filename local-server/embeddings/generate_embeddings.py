@@ -28,7 +28,7 @@ def get_model():
                 # Explicitly set device to CPU and avoid meta tensor issues
                 device = 'cpu'
                 # Load model with explicit device specification to avoid meta tensor issues
-                _model = SentenceTransformer('all-MiniLM-L6-v2', device=device)
+                _model = SentenceTransformer('all-MiniLM-L12-v2', device=device)
     
     return _model
 

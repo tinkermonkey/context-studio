@@ -49,7 +49,7 @@ def test_proxy_basic_functionality(test_settings):
         print(f"   Scenario {i}: {scenario}")
 
         # Manually create config to test logic
-        base_config = settings.REFERENCE_API_BUDDY_CONFIG.copy()
+        base_config = settings.get_reference_api_buddy_config().copy()
         domain_mappings = {}
 
         if scenario.get("concepcy", False):
@@ -71,7 +71,7 @@ def test_proxy_basic_functionality(test_settings):
 
     # Test 4: Test DBpedia endpoint generation
     print("\n4. Testing DBpedia endpoint generation...")
-    proxy_config = settings.REFERENCE_API_BUDDY_CONFIG
+    proxy_config = settings.get_reference_api_buddy_config()
     host = proxy_config["server"]["host"]
     port = proxy_config["server"]["port"]
     endpoint = f"http://{host}:{port}/dbpedia_spotlight"

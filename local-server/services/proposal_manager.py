@@ -492,20 +492,25 @@ class ProposalManager:
     def _push_proposal_to_s3(self, proposal: Proposal):
         """
         Push proposal metadata to S3.
-        
+
         Args:
             proposal: Proposal instance to push
         """
+        # Skip S3 push if S3 is not configured
+        if not self.s3_sync.s3_config:
+            logger.debug(f"Skipping S3 push for proposal {proposal.id} - S3 not configured")
+            return
+
         logger.debug(f"Pushing proposal {proposal.id} to S3")
-        
+
         try:
             proposal_data = proposal.to_dict()
-            
+
             s3_path = f"s3://{self.s3_sync.s3_config['bucket']}/proposals/{proposal.id}/metadata.parquet"
-            
+
             self.s3_sync.parquet_writer.write_metadata(proposal_data, s3_path)
             logger.debug(f"Successfully pushed proposal {proposal.id} to S3")
-            
+
         except Exception as e:
             logger.warning(f"Failed to push proposal {proposal.id} to S3: {e}")
             # Don't fail the operation if S3 push fails
@@ -513,20 +518,25 @@ class ProposalManager:
     def _push_vote_to_s3(self, vote: ProposalVote):
         """
         Push vote to S3.
-        
+
         Args:
             vote: ProposalVote instance to push
         """
+        # Skip S3 push if S3 is not configured
+        if not self.s3_sync.s3_config:
+            logger.debug("Skipping S3 push for vote - S3 not configured")
+            return
+
         logger.debug("Pushing vote to S3")
-        
+
         try:
             vote_data = vote.to_dict()
-            
+
             s3_path = f"s3://{self.s3_sync.s3_config['bucket']}/proposals/{vote.proposal_id}/votes/vote_{vote.user_id}.parquet"
-            
+
             self.s3_sync.parquet_writer.write_metadata(vote_data, s3_path)
             logger.debug("Successfully pushed vote to S3")
-            
+
         except Exception as e:
             logger.warning(f"Failed to push vote to S3: {e}")
             # Don't fail the operation if S3 push fails

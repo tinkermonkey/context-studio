@@ -34,10 +34,10 @@ async def create_flavor(
     """Create a new pipeline flavor"""
     try:
         logger.info(f"Creating new flavor '{request.title}' for pipeline '{request.pipeline.value}'")
-        flavor = await flavor_service.create_flavor(request)
+        flavor = flavor_service.create_flavor(request)
         logger.info(f"Successfully created flavor with ID: {flavor.id}")
         return flavor
-        
+
     except FlavorValidationError as e:
         logger.warning(f"Flavor validation error: {e}")
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
@@ -54,7 +54,7 @@ async def list_flavors(
     """List all flavors, optionally filtered by pipeline"""
     try:
         logger.info(f"Listing flavors for pipeline: {pipeline.value if pipeline else 'all'}")
-        flavors = await flavor_service.list_flavors(pipeline)
+        flavors = flavor_service.list_flavors(pipeline)
         return PipelineFlavorListResponse(
             flavors=flavors,
             total_count=len(flavors)
@@ -77,14 +77,14 @@ async def get_flavor(
         if flavor_id == "default":
             if not pipeline:
                 raise HTTPException(
-                    status_code=status.HTTP_400_BAD_REQUEST, 
+                    status_code=status.HTTP_400_BAD_REQUEST,
                     detail="Pipeline parameter required when requesting default flavor"
                 )
-            return await flavor_service.get_default_flavor(pipeline)
-        
-        flavor = await flavor_service.get_flavor_by_id(flavor_id)
+            return flavor_service.get_default_flavor(pipeline)
+
+        flavor = flavor_service.get_flavor_by_id(flavor_id)
         return flavor
-        
+
     except FlavorNotFoundError as e:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
     except HTTPException:
@@ -108,13 +108,13 @@ async def update_flavor(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Cannot update default flavor. Create a new flavor instead."
         )
-        
+
     try:
         logger.info(f"Updating flavor {flavor_id}")
-        flavor = await flavor_service.update_flavor(flavor_id, request)
+        flavor = flavor_service.update_flavor(flavor_id, request)
         logger.info(f"Successfully updated flavor {flavor_id}")
         return flavor
-        
+
     except FlavorNotFoundError as e:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
     except FlavorValidationError as e:
@@ -137,12 +137,12 @@ async def delete_flavor(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Cannot delete default flavor"
         )
-        
+
     try:
         logger.info(f"Deleting flavor {flavor_id}")
-        await flavor_service.delete_flavor(flavor_id)
+        flavor_service.delete_flavor(flavor_id)
         logger.info(f"Successfully deleted flavor {flavor_id}")
-        
+
     except FlavorNotFoundError as e:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
     except FlavorValidationError as e:

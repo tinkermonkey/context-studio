@@ -423,14 +423,18 @@ class TestSchemaOrgImporterRelationships:
             node_map = importer._insert_nodes_transaction(embedded_nodes)
 
             # Extract relationships
-            items = [
+            entities = [
                 {
                     "@id": "https://schema.org/Person",
                     "rdfs:subClassOf": {"@id": "https://schema.org/Thing"}
                 }
             ]
+            properties = []
+            predicate_map = {}
 
-            link_count = importer._insert_relationships_transaction(items, node_map)
+            link_count = importer._insert_relationships_transaction(
+                entities, properties, node_map, predicate_map
+            )
 
             assert link_count == 1
 
@@ -480,17 +484,25 @@ class TestSchemaOrgImporterRelationships:
             node_map = importer._insert_nodes_transaction(embedded_nodes)
 
             # Extract relationships
-            items = [
+            # Note: domainIncludes and rangeIncludes are property metadata relationships
+            # which are stored in ExternalPredicate.attributes, not as ReferenceLinks.
+            # Only subClassOf relationships between entities are stored as ReferenceLinks.
+            entities = []
+            properties = [
                 {
                     "@id": "https://schema.org/name",
                     "schema:domainIncludes": {"@id": "https://schema.org/Thing"},
                     "schema:rangeIncludes": {"@id": "https://schema.org/Text"}
                 }
             ]
+            predicate_map = {"https://schema.org/name": node_map["https://schema.org/name"]}
 
-            link_count = importer._insert_relationships_transaction(items, node_map)
+            link_count = importer._insert_relationships_transaction(
+                entities, properties, node_map, predicate_map
+            )
 
-            assert link_count == 2  # domain + range
+            # Property relationships are not stored as links, only in predicate attributes
+            assert link_count == 0
 
     def test_relationship_metadata_stored(self, tmp_path):
         """Test relationship metadata stored in link attributes JSON column."""
@@ -520,14 +532,18 @@ class TestSchemaOrgImporterRelationships:
             ]
             node_map = importer._insert_nodes_transaction(embedded_nodes)
 
-            items = [
+            entities = [
                 {
                     "@id": "https://schema.org/Person",
                     "rdfs:subClassOf": {"@id": "https://schema.org/Thing"}
                 }
             ]
+            properties = []
+            predicate_map = {}
 
-            importer._insert_relationships_transaction(items, node_map)
+            importer._insert_relationships_transaction(
+                entities, properties, node_map, predicate_map
+            )
 
             # Verify metadata
             person_node = manager.get_reference_node_by_source(
@@ -624,7 +640,7 @@ class TestSchemaOrgImporterIdempotency:
                 # First import - should succeed
                 result1 = importer.import_schema_org(batch_size=10)
                 assert result1["success"] is True
-                node_count_1 = result1["nodes_imported"]
+                entity_count_1 = result1["entities_imported"]
 
                 # Second import - should also succeed (replacing data)
                 result2 = importer.import_schema_org(batch_size=10)
@@ -635,7 +651,7 @@ class TestSchemaOrgImporterIdempotency:
                 # Note: Due to UNIQUE constraint on (source, external_id),
                 # re-import will fail on duplicates. This tests that the
                 # import can be re-run after clearing the data.
-                assert len(nodes) >= node_count_1
+                assert len(nodes) >= entity_count_1
 
 
 class TestSchemaOrgImporterPerformance:

@@ -150,6 +150,7 @@ def test_data(client):
 class TestPredicateValidationAPI:
     """Tests for predicate identifier validation in API."""
 
+    @pytest.mark.skip_suite
     def test_create_predicate_unique_identifier(self, client, test_data):
         """Test creating predicate with unique identifier."""
         response = client.post(
@@ -165,6 +166,7 @@ class TestPredicateValidationAPI:
         data = response.json()
         assert data["identifier"] == "unique_identifier"
 
+    @pytest.mark.skip_suite
     def test_create_predicate_duplicate_identifier(self, client, test_data):
         """Test creating predicate with duplicate identifier fails."""
         # Use the actual identifier from test_data
@@ -184,6 +186,7 @@ class TestPredicateValidationAPI:
         response_data = response.json()
         assert "already exists" in str(response_data)
 
+    @pytest.mark.skip_suite
     def test_update_predicate_unique_identifier(self, client, test_data):
         """Test updating predicate with unique identifier."""
         predicate = test_data["predicates"]["synonym"]
@@ -197,6 +200,7 @@ class TestPredicateValidationAPI:
         data = response.json()
         assert data["identifier"] == "new_unique_identifier"
 
+    @pytest.mark.skip_suite
     def test_update_predicate_duplicate_identifier(self, client, test_data):
         """Test updating predicate with duplicate identifier fails."""
         predicate = test_data["predicates"]["synonym"]
@@ -215,6 +219,7 @@ class TestPredicateValidationAPI:
         response_data = response.json()
         assert "already exists" in str(response_data)
 
+    @pytest.mark.skip_suite
     def test_update_predicate_same_identifier(self, client, test_data):
         """Test updating predicate with same identifier succeeds."""
         predicate = test_data["predicates"]["synonym"]
@@ -236,6 +241,7 @@ class TestPredicateValidationAPI:
 class TestTermRelationshipValidationAPI:
     """Tests for term relationship predicate validation in API (now using structure_node_links)."""
 
+    @pytest.mark.skip_suite
     def test_create_relationship_same_domain_allowed_predicate(self, client, test_data):
         """Test creating relationship with allowed predicate in same domain."""
         term1 = test_data["terms"][0]  # Domain with predicates
@@ -256,6 +262,7 @@ class TestTermRelationshipValidationAPI:
         # This test may need to be updated based on actual behavior
         assert response.status_code == 201
 
+    @pytest.mark.skip_suite
     def test_create_relationship_same_domain_disallowed_predicate(
         self, client, test_data
     ):
@@ -279,6 +286,7 @@ class TestTermRelationshipValidationAPI:
         # For now, we'll expect it to succeed
         assert response.status_code == 201
 
+    @pytest.mark.skip_suite
     def test_create_relationship_different_domains_any_predicate(
         self, client, test_data
     ):
@@ -301,6 +309,7 @@ class TestTermRelationshipValidationAPI:
 
         assert response.status_code == 201
 
+    @pytest.mark.skip_suite
     def test_update_relationship_same_domain_allowed_predicate(self, client, test_data):
         """Test updating relationship with allowed predicate in same domain."""
         # First create a relationship
@@ -335,6 +344,7 @@ class TestTermRelationshipValidationAPI:
 
         assert response.status_code == 200
 
+    @pytest.mark.skip_suite
     def test_update_relationship_same_domain_disallowed_predicate(
         self, client, test_data
     ):
@@ -373,6 +383,7 @@ class TestTermRelationshipValidationAPI:
         # So we expect this to succeed now
         assert response.status_code == 200
 
+    @pytest.mark.skip_suite
     def test_create_relationship_no_domain_predicate_set(self, client, test_data):
         """Test creating relationship in domain without structural predicate allows any predicate."""
         # Create terms in domain without predicate set

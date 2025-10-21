@@ -1,0 +1,185 @@
+
+> flowbite-react-template-tanstack-router@0.0.0 test:run
+> vitest run --no-coverage --reporter=verbose --reporter=junit --outputFile=/workspace/ux_unit_test_results.xml
+
+
+ RUN  v1.6.1 /workspace/ux
+
+ ✓ test/integration/hooks.useDomains.integration.test.tsx > useDomains integration > fetches domains and renders at least one item
+ ✓ test/integration/llm-integration.test.tsx > LLM Service Integration > should export LLM service with all methods
+ ✓ test/integration/llm-integration.test.tsx > LLM Service Integration > should export LLM hooks
+ ✓ test/integration/llm-integration.test.tsx > LLM Service Integration > should export TypeScript types
+ ✓ test/integration/llm-integration.test.tsx > LLM Service Integration > should validate required parameters in service methods
+ ✓ test/integration/llm-integration.test.tsx > LLM Service Integration > should handle minimal definition request
+ ✓ test/integration/llm-integration.test.tsx > LLM Service Integration > should handle comprehensive definition request
+ ✓ test/components/llm_traceability/SelectionTracker.test.tsx > SelectionTracker > Basic Functionality > should render children without modification when no selection occurs
+ ✓ test/components/llm_traceability/SelectionTracker.test.tsx > SelectionTracker > Basic Functionality > should add tracking attributes to wrapper
+ ✓ test/components/llm_traceability/SelectionTracker.test.tsx > SelectionTracker > Basic Functionality > should apply custom className
+ ✓ test/components/llm_traceability/SelectionTracker.test.tsx > SelectionTracker > Selection Tracking > should track selection via onSelect callback
+ ✓ test/components/llm_traceability/SelectionTracker.test.tsx > SelectionTracker > Selection Tracking > should track selection via onAccept callback
+ ✓ test/components/llm_traceability/SelectionTracker.test.tsx > SelectionTracker > Selection Tracking > should track selection via onApply callback
+ ✓ test/components/llm_traceability/SelectionTracker.test.tsx > SelectionTracker > Selection Tracking > should track selection via data-content attribute
+ ✓ test/components/llm_traceability/SelectionTracker.test.tsx > SelectionTracker > Selection Tracking > should preserve original callbacks when wrapping
+ ✓ test/components/llm_traceability/SelectionTracker.test.tsx > SelectionTracker > Error Handling > should handle missing parameters gracefully
+ ✓ test/components/llm_traceability/SelectionTracker.test.tsx > SelectionTracker > Error Handling > should call onTrackingError when tracking fails
+ ✓ test/components/llm_traceability/SelectionTracker.test.tsx > SelectionTracker > Visual Feedback > should show tracking indicator when showFeedback is true and tracking
+ ✓ test/components/llm_traceability/SelectionTracker.test.tsx > SelectionTracker > Visual Feedback > should not show tracking indicator when showFeedback is false
+ ✓ test/components/llm_traceability/SelectionTracker.test.tsx > SelectionTracker > Optimistic vs Non-optimistic Recording > should use optimistic recording by default
+ ✓ test/components/llm_traceability/SelectionTracker.test.tsx > SelectionTracker > Optimistic vs Non-optimistic Recording > should use regular recording when optimistic is disabled
+ ✓ test/components/llm_traceability/SelectionTracker.test.tsx > SelectionTracker > Higher-Order Component > should work with withSelectionTracking HOC
+ ✓ test/components/llm_traceability/SelectionTracker.test.tsx > SelectionTracker > Manual Selection Tracking Hook > should provide manual tracking functionality
+ ✓ test/components/llm_traceability/SelectionTracker.test.tsx > SelectionTracker > Multiple Children > should handle multiple child elements
+ ✓ test/components/llm_traceability/SelectionTracker.test.tsx > SelectionTracker > Edge Cases > should handle non-React element children gracefully
+ ✓ test/components/llm_traceability/SelectionTracker.test.tsx > SelectionTracker > Edge Cases > should handle empty children
+stderr | src/components/panels/TreeChartPanel.test.tsx > TreeChartPanel > displays error state when data loading fails
+[API ERROR] TreeChartPanel error {
+  error: Error: Failed to load data
+      at /workspace/ux/src/components/panels/TreeChartPanel.test.tsx:99:23
+      at file:///workspace/ux/node_modules/@vitest/runner/dist/index.js:135:14
+      at file:///workspace/ux/node_modules/@vitest/runner/dist/index.js:60:26
+      at runTest (file:///workspace/ux/node_modules/@vitest/runner/dist/index.js:781:17)
+      at runSuite (file:///workspace/ux/node_modules/@vitest/runner/dist/index.js:909:15)
+      at runSuite (file:///workspace/ux/node_modules/@vitest/runner/dist/index.js:909:15)
+      at runFiles (file:///workspace/ux/node_modules/@vitest/runner/dist/index.js:958:5)
+      at startTests (file:///workspace/ux/node_modules/@vitest/runner/dist/index.js:967:3)
+      at file:///workspace/ux/node_modules/vitest/dist/chunks/runtime-runBaseTests.oAvMKtQC.js:116:7
+      at withEnv (file:///workspace/ux/node_modules/vitest/dist/chunks/runtime-runBaseTests.oAvMKtQC.js:83:5),
+  termId: undefined
+}
+
+stdout | src/components/panels/TreeChartPanel.test.tsx > TreeChartPanel > renders TreeChart when data is successfully loaded
+[API INFO] Final tree structure generated {
+  rootNode: {
+    id: 'dataset',
+    title: 'Data Set',
+    type: 'dataset',
+    children: [ [Object] ],
+    depth: 0
+  }
+}
+
+stdout | src/components/panels/TreeChartPanel.test.tsx > TreeChartPanel > loads specific term when termId is provided
+[API INFO] Final tree structure generated {
+  rootNode: {
+    id: 'dataset',
+    title: 'Data Set',
+    type: 'dataset',
+    children: [ [Object] ],
+    depth: 0
+  }
+}
+[API INFO] Filtering tree by term {
+  termId: 'test-term-id',
+  targetTerm: {
+    id: 'test-term-id',
+    domain_id: '1',
+    title: 'Target Term',
+    definition: 'Target term definition'
+  }
+}
+
+stderr | src/components/panels/TreeChartPanel.test.tsx > TreeChartPanel > loads specific term when termId is provided
+[API WARN] Term not found in tree { termId: 'test-term-id' }
+
+ ✓ src/components/panels/TreeChartPanel.test.tsx > TreeChartPanel > displays loading state while data is being fetched
+ ✓ src/components/panels/TreeChartPanel.test.tsx > TreeChartPanel > displays error state when data loading fails
+ ✓ src/components/panels/TreeChartPanel.test.tsx > TreeChartPanel > renders TreeChart when data is successfully loaded
+ ✓ src/components/panels/TreeChartPanel.test.tsx > TreeChartPanel > loads specific term when termId is provided
+ ✓ src/components/panels/TreeChartPanel.test.tsx > TreeChartPanel > displays custom loading component when provided
+ ✓ src/components/panels/TreeChartPanel.test.tsx > TreeChartPanel > displays custom error component when provided
+ ✓ src/components/panels/TreeChartPanel.test.tsx > TreeChartPanel > applies custom className when provided
+stderr | src/components/panels/TreeChartPanel.test.tsx > TreeChartPanel > displays custom error component when provided
+[API ERROR] TreeChartPanel error {
+  error: Error: Failed to load
+      at /workspace/ux/src/components/panels/TreeChartPanel.test.tsx:234:23
+      at file:///workspace/ux/node_modules/@vitest/runner/dist/index.js:135:14
+      at file:///workspace/ux/node_modules/@vitest/runner/dist/index.js:60:26
+      at runTest (file:///workspace/ux/node_modules/@vitest/runner/dist/index.js:781:17)
+      at runSuite (file:///workspace/ux/node_modules/@vitest/runner/dist/index.js:909:15)
+      at runSuite (file:///workspace/ux/node_modules/@vitest/runner/dist/index.js:909:15)
+      at runFiles (file:///workspace/ux/node_modules/@vitest/runner/dist/index.js:958:5)
+      at startTests (file:///workspace/ux/node_modules/@vitest/runner/dist/index.js:967:3)
+      at file:///workspace/ux/node_modules/vitest/dist/chunks/runtime-runBaseTests.oAvMKtQC.js:116:7
+      at withEnv (file:///workspace/ux/node_modules/vitest/dist/chunks/runtime-runBaseTests.oAvMKtQC.js:83:5),
+  termId: undefined
+}
+
+stdout | src/components/panels/TreeChartPanel.test.tsx > TreeChartPanel > applies custom className when provided
+[API INFO] Final tree structure generated {
+  rootNode: {
+    id: 'dataset',
+    title: 'Data Set',
+    type: 'dataset',
+    children: [ [Object] ],
+    depth: 0
+  }
+}
+
+ ✓ test/components/llm_pipelines/LlmPipelineRun.test.tsx > LlmPipelineRun > renders loading state when fetching flavors
+ ✓ test/components/llm_pipelines/LlmPipelineRun.test.tsx > LlmPipelineRun > renders error state when flavor loading fails
+ ✓ test/components/llm_pipelines/LlmPipelineRun.test.tsx > LlmPipelineRun > renders no flavors message when no enabled flavors exist
+ ✓ test/components/llm_pipelines/LlmPipelineRun.test.tsx > LlmPipelineRun > renders pipeline interface with enabled flavors
+ ✓ test/components/llm_pipelines/LlmPipelineRun.test.tsx > LlmPipelineRun > executes pipeline when button is clicked
+ ✓ test/components/nlp/NlpAnalysisPanel.test.tsx > NlpAnalysisPanel > shows tokens and entities when analysis is available
+ ✓ test/components/llm_pipelines/LlmPipelineRun.test.tsx > LlmPipelineRun > displays custom result template when provided
+ ✓ test/components/llm_pipelines/PipelineFlavorEditor.test.tsx > PipelineFlavorEditor - Default Population > populates default values from existing flavor when creating new
+ ✓ test/components/llm_pipelines/PipelineFlavorEditor.test.tsx > PipelineFlavorEditor - Default Population > does not fetch defaults when editing existing flavor
+ ✓ test/components/llm_pipelines/PipelineFlavorEditor.test.tsx > PipelineFlavorEditor - Default Population > shows loading state when fetching defaults
+ ✓ test/components/llm_pipelines/PipelineFlavorEditor.test.tsx > PipelineFlavorEditor - Default Population > handles case when no existing flavors exist
+ ✓ src/components/misc/__tests__/create_child_button.test.tsx > CreateChildButton > renders create domain button for layer parent
+ ✓ src/components/misc/__tests__/create_child_button.test.tsx > CreateChildButton > opens modal when button is clicked
+ ✓ src/components/misc/__tests__/create_child_button.test.tsx > CreateChildButton > renders create term button for domain parent
+ ✓ src/components/misc/__tests__/create_child_button.test.tsx > CreateChildButton > calls onSuccess when form is submitted
+ ✓ test/integration/llm-traceability.test.tsx > LLM Traceability Integration > Service Integration > should export traceability service with all methods
+ ✓ test/integration/llm-traceability.test.tsx > LLM Traceability Integration > Service Integration > should handle health check correctly
+ ✓ test/integration/llm-traceability.test.tsx > LLM Traceability Integration > Service Integration > should handle analytics fetching correctly
+ ✓ test/integration/llm-traceability.test.tsx > LLM Traceability Integration > Service Integration > should handle execution history fetching correctly
+ ✓ test/integration/llm-traceability.test.tsx > LLM Traceability Integration > Hook Integration > should export all traceability hooks
+ ✓ src/components/node_selectors/__tests__/portal_record_selector.test.tsx > PortalRecordSelector > renders placeholder and opens portal showing items
+ ✓ src/components/node_selectors/__tests__/portal_record_selector.test.tsx > PortalRecordSelector > filters items using search input
+ ✓ src/components/node_selectors/__tests__/portal_record_selector.test.tsx > PortalRecordSelector > calls onSelect when an item is clicked (single select)
+ ✓ src/components/node_selectors/__tests__/portal_record_selector.test.tsx > PortalRecordSelector > supports multi-select and onSelectionChange
+ ✓ test/components/llm_traceability/AnalyticsDashboard.test.tsx > AnalyticsDashboard > Rendering > should render dashboard with title and description
+ ✓ test/components/llm_traceability/AnalyticsDashboard.test.tsx > AnalyticsDashboard > Rendering > should render all metric cards with data
+ ✓ test/components/llm_traceability/AnalyticsDashboard.test.tsx > AnalyticsDashboard > Rendering > should render health status indicator
+ ✓ test/components/llm_traceability/AnalyticsDashboard.test.tsx > AnalyticsDashboard > Rendering > should render time range selector
+ ✓ test/components/llm_traceability/AnalyticsDashboard.test.tsx > AnalyticsDashboard > Rendering > should render refresh button
+ ✓ test/components/llm_traceability/AnalyticsDashboard.test.tsx > AnalyticsDashboard > Loading States > should show loading spinner when analytics are loading
+ ✓ test/components/llm_traceability/AnalyticsDashboard.test.tsx > AnalyticsDashboard > Loading States > should show loading spinner in refresh button when refreshing
+ ✓ test/components/llm_traceability/AnalyticsDashboard.test.tsx > AnalyticsDashboard > Loading States > should show health loading state
+ ✓ test/components/llm_traceability/AnalyticsDashboard.test.tsx > AnalyticsDashboard > Error States > should show error alert when analytics fail to load
+ ✓ test/components/llm_traceability/AnalyticsDashboard.test.tsx > AnalyticsDashboard > Error States > should show degraded health status
+ ✓ test/components/llm_traceability/AnalyticsDashboard.test.tsx > AnalyticsDashboard > Error States > should show unhealthy status with red indicator
+ ✓ test/components/llm_traceability/AnalyticsDashboard.test.tsx > AnalyticsDashboard > User Interactions > should change time range when selector is used
+ ✓ src/components/node_selectors/__tests__/portal_record_selector.test.tsx > PortalRecordSelector > supports keyboard navigation and exposes ARIA attributes
+ ✓ test/integration/llm-traceability.test.tsx > LLM Traceability Integration > Hook Integration > should handle health check hook correctly
+ ✓ test/integration/llm-traceability.test.tsx > LLM Traceability Integration > Hook Integration > should handle analytics hook correctly
+ ✓ test/components/llm_traceability/AnalyticsDashboard.test.tsx > AnalyticsDashboard > User Interactions > should call refetch when refresh button is clicked
+ ✓ test/components/llm_traceability/AnalyticsDashboard.test.tsx > AnalyticsDashboard > User Interactions > should show export button when configured
+ ✓ test/integration/llm-traceability.test.tsx > LLM Traceability Integration > Selection Recording > should record selections without blocking user workflow
+ ✓ test/integration/llm-traceability.test.tsx > LLM Traceability Integration > Selection Recording > should gracefully handle tracking failures without affecting UX
+ ✓ test/integration/llm-traceability.test.tsx > LLM Traceability Integration > Selection Recording > should handle custom selection tracking hook correctly
+ ✓ test/integration/llm-traceability.test.tsx > LLM Traceability Integration > Component Integration > should render AnalyticsDashboard without errors
+ ✓ test/integration/llm-traceability.test.tsx > LLM Traceability Integration > Component Integration > should render ExecutionHistory without errors
+ ✓ test/integration/llm-traceability.test.tsx > LLM Traceability Integration > Component Integration > should handle SelectionTracker with different child types
+ ✓ test/integration/llm-traceability.test.tsx > LLM Traceability Integration > Error Handling and Graceful Degradation > should handle network failures gracefully in analytics
+ ✓ test/integration/llm-traceability.test.tsx > LLM Traceability Integration > Error Handling and Graceful Degradation > should handle service unavailable scenarios
+ ✓ test/integration/llm-traceability.test.tsx > LLM Traceability Integration > Performance and Caching > should cache analytics queries appropriately
+ ✓ test/components/llm_traceability/AnalyticsDashboard.test.tsx > AnalyticsDashboard > User Interactions > should handle export functionality
+ ✓ test/components/llm_traceability/AnalyticsDashboard.test.tsx > AnalyticsDashboard > Configuration Options > should handle auto-refresh configuration
+ ✓ test/components/llm_traceability/AnalyticsDashboard.test.tsx > AnalyticsDashboard > Configuration Options > should handle custom default time range
+ ✓ test/components/llm_traceability/AnalyticsDashboard.test.tsx > AnalyticsDashboard > Configuration Options > should hide health status when configured
+ ✓ test/components/llm_traceability/AnalyticsDashboard.test.tsx > AnalyticsDashboard > Configuration Options > should call onDataUpdate callback when data changes
+ ✓ test/components/llm_traceability/AnalyticsDashboard.test.tsx > AnalyticsDashboard > Configuration Options > should apply custom className
+ ✓ test/components/llm_traceability/AnalyticsDashboard.test.tsx > AnalyticsDashboard > No Data State > should show no data message when analytics data is empty
+ ✓ test/components/llm_traceability/AnalyticsDashboard.test.tsx > AnalyticsDashboard > Performance Overview > should render performance overview card with progress bars
+ ✓ test/components/llm_traceability/AnalyticsDashboard.test.tsx > AnalyticsDashboard > Usage Summary > should render usage summary card with execution details
+ ✓ test/components/llm_traceability/AnalyticsDashboard.test.tsx > AnalyticsDashboard > Usage Summary > should show pipeline type in usage summary when filtered
+ ✓ test/integration/domain_edit.integration.test.tsx > DomainDetails edit flow > opens edit modal, submits form, and invalidates queries on success 603ms
+
+ Test Files  12 passed (12)
+      Tests  94 passed (94)
+   Start at  23:33:39
+   Duration  2.63s (transform 1.95s, setup 2.69s, collect 7.03s, tests 3.16s, environment 5.57s, prepare 1.21s)
+
+JUNIT report written to /workspace/ux_unit_test_results.xml

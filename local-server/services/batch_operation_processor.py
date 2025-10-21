@@ -562,7 +562,28 @@ class BatchOperationProcessor:
                     batch_failed = 0
                     for item in batch_data:
                         try:
-                            version = self.version_manager.create_version(item, author_id)
+                            # Extract required parameters for VersionManager.create_version()
+                            entity_id = item.get('entity_id', item.get('id', str(uuid.uuid4())))
+                            content = item.get('content', item)  # Use full item as content if not specified
+                            state_str = item.get('state', 'WORKING')
+                            
+                            # Convert state string to ChangeState enum if needed
+                            from services.version_manager import ChangeState
+                            if isinstance(state_str, str):
+                                state = ChangeState[state_str.upper()] if hasattr(ChangeState, state_str.upper()) else ChangeState.WORKING
+                            else:
+                                state = state_str
+                            
+                            version = self.version_manager.create_version(
+                                entity_type=entity_type,
+                                entity_id=entity_id,
+                                content=content,
+                                author_id=author_id,
+                                state=state,
+                                parent_version_id=item.get('parent_version_id'),
+                                changeset_id=item.get('changeset_id'),
+                                metadata=item.get('metadata')
+                            )
                             if version:
                                 batch_created += 1
                         except Exception as e:

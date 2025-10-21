@@ -55,22 +55,16 @@ class ReferenceConfig(BaseModel):
     # Operational parameters
     similarity_threshold: float = Field(
         default=0.7,
-        ge=0.0,
-        le=1.0,
         description="Minimum cosine similarity score for reference matching (0.0-1.0)"
     )
 
     batch_size: int = Field(
         default=100,
-        ge=1,
-        le=1000,
         description="Number of reference nodes to process in a single batch operation"
     )
 
     retry_count: int = Field(
         default=3,
-        ge=0,
-        le=10,
         description="Number of retry attempts for failed API requests"
     )
 
@@ -185,7 +179,7 @@ class ReferenceConfig(BaseModel):
             )
         return v
 
-    @field_validator('retry_count')
+    @field_validator('retry_count', mode='after')
     @classmethod
     def validate_retry_count(cls, v: int) -> int:
         """

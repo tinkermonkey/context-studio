@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
+import { API_CONFIG } from '@/api/config';
 
 export interface EmbeddingProgress {
   total_nodes: number;
@@ -27,7 +28,8 @@ export function useEmbeddingRegeneration() {
       return; // Already connected
     }
 
-    const ws = new WebSocket(`ws://localhost:8001/api/embeddings/regenerate?force=${force}`);
+    const wsUrl = API_CONFIG.baseURL.replace('http', 'ws');
+    const ws = new WebSocket(`${wsUrl}/api/embeddings/regenerate?force=${force}`);
     wsRef.current = ws;
 
     ws.onopen = () => setStatus('connected');

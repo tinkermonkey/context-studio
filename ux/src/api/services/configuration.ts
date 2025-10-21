@@ -35,7 +35,6 @@ export interface ConfigurationData {
   nlp: {
     model_name: string;
     max_text_length: number;
-    sense2vec_path: string;
     concepcy_relations: string[];
     filter_missing_text: boolean;
     edge_weight_filter: number;

@@ -161,6 +161,9 @@ describe("TreeChartPanel", () => {
       definition: "Target term definition",
     };
 
+    // Include the target term in the terms array so it exists in the tree
+    const mockTermsWithTarget = [...mockTerms, mockTargetTerm];
+
     mockUseLayerNodes.mockReturnValue({
       data: mockLayers,
       isLoading: false,
@@ -172,7 +175,7 @@ describe("TreeChartPanel", () => {
       error: null,
     } as any);
     mockUseStructureNodeNodes.mockReturnValue({
-      data: mockTerms,
+      data: mockTermsWithTarget,
       isLoading: false,
       error: null,
     } as any);

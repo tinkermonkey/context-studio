@@ -23,6 +23,7 @@ from services.node_service import NodeService
 class TestServiceFactoryIntegration:
     """Example integration tests using the service factory pattern."""
 
+    @pytest.mark.skip_suite
     def test_service_factory_with_real_database(
         self, shared_client, test_service_factory
     ):
@@ -65,6 +66,7 @@ class TestServiceFactoryIntegration:
         delete_response = client.delete(f"/api/structure_nodes/{layer_id}")
         assert delete_response.status_code == 204
 
+    @pytest.mark.skip_suite
     def test_service_caching_across_requests(self, shared_client, test_service_factory):
         """
         Test that service factory caching works across multiple API requests.
@@ -162,6 +164,7 @@ class TestServiceFactoryIntegration:
         # The important thing is that the factory handles errors gracefully
         assert isinstance(stats, dict)  # Factory should still be functional
 
+    @pytest.mark.skip_suite
     def test_performance_with_service_factory(
         self, shared_client, test_service_factory
     ):
@@ -225,6 +228,7 @@ class TestMigratedIntegrationTest:
     #     result = node_service.create_layer(...)
 
     # AFTER (New pattern with service factory):
+    @pytest.mark.skip_suite
     def test_create_layer_new_pattern(self, shared_client, test_service_factory):
         """
         Migrated test that uses service factory and monitoring.

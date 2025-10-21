@@ -81,7 +81,8 @@ class StructureNode(Base):
     )
 
     # Self-referential relationship for hierarchy
-    parent = relationship("StructureNode", remote_side=[id], backref=backref("children", lazy="noload"))
+    # Note: Using lazy="noload" prevents automatic loading of parent to avoid circular reference issues with JSON serialization
+    parent = relationship("StructureNode", remote_side=[id], lazy="noload")
 
     # Relationship to predicates
     structural_predicate_ref = relationship("Predicate", back_populates="structure_nodes", lazy="select")

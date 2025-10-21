@@ -10,6 +10,13 @@ from utils.logger import get_logger
 
 logger = get_logger(__name__)
 
+# Import CachingProxy at module level for patching in tests
+# This will be None if reference_api_buddy is not installed
+try:
+    from reference_api_buddy.core.proxy import CachingProxy
+except ImportError:
+    CachingProxy = None
+
 
 class ReferenceAPIProxyManager:
     """
@@ -81,8 +88,9 @@ class ReferenceAPIProxyManager:
                     os.makedirs(db_dir, exist_ok=True)
                     logger.debug(f"Ensured proxy cache directory exists: {db_dir}")
 
-                # Import here to avoid dependency issues when not using proxy
-                from reference_api_buddy.core.proxy import CachingProxy
+                # Use module-level import (allows for test mocking)
+                if CachingProxy is None:
+                    raise ImportError("reference_api_buddy is not installed")
 
                 logger.info("Starting reference API caching proxy...")
                 self.proxy = CachingProxy(config)

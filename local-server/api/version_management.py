@@ -197,20 +197,21 @@ def stage_entity(
 ):
     """
     Stage an entity for commit.
-    
+
     Marks the entity as staged, meaning its changes will be included in the next commit.
+    Returns success even if there are no changes (idempotent operation).
     """
     try:
         success = working_tree_manager.stage_entity(
-            stage_request.entity_type.value, 
+            stage_request.entity_type.value,
             str(stage_request.entity_id)
         )
-        
-        if not success:
-            raise HTTPException(status_code=400, detail="No changes to stage")
-        
-        return {"success": True, "message": "Entity staged successfully"}
-        
+
+        # Return success even if no changes - staging is idempotent
+        message = "Entity staged successfully" if success else "No changes to stage"
+
+        return {"success": True, "message": message}
+
     except ValueError as e:
         raise HTTPException(status_code=404, detail=str(e))
     except HTTPException:
@@ -250,17 +251,23 @@ def commit_staged_changes(
 ):
     """
     Commit all staged changes.
-    
+
     Updates canonical versions for all staged entities and marks them as merged.
+    Returns 400 if there are no staged changes to commit.
     """
     try:
         committed_versions = working_tree_manager.commit_staged_changes(commit_request.author_id)
-        
+
+        # Return 400 if nothing to commit
         if not committed_versions:
             raise HTTPException(status_code=400, detail="No staged changes to commit")
-        
-        return {"success": True, "committed_count": len(committed_versions), "versions": [_entity_version_to_summary(version) for version in committed_versions]}
-        
+
+        return {
+            "success": True,
+            "committed_count": len(committed_versions),
+            "versions": [_entity_version_to_summary(version) for version in committed_versions]
+        }
+
     except HTTPException:
         raise
     except Exception as e:

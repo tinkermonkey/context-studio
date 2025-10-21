@@ -17,7 +17,6 @@ export interface TokenData {
   end?: number;
   concepcy?: ConcepcyData;
   wordnet?: WordNetData;
-  sense2vec?: Sense2VecData;
 }
 
 export interface EntityData {
@@ -36,14 +35,6 @@ export interface WordNetData {
   synsets?: object[];
   lemmas?: object[];
   definitions?: string[];
-}
-
-export interface Sense2VecData {
-  in_s2v?: boolean;
-  key?: string;
-  freq?: number;
-  other_senses?: string[];
-  most_similar?: object[];
 }
 
 export interface DBpediaData {

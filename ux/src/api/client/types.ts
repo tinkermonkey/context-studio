@@ -360,6 +360,38 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/predicates/external/search": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Search External Predicates
+         * @description Search external predicates using vector similarity.
+         *
+         *     This endpoint performs semantic search across external predicates using embeddings.
+         *     Returns predicates ranked by similarity to the query text.
+         *
+         *     Args:
+         *         query: Search query text (required, min 1 character)
+         *         source: Optional source filter (conceptnet, dbpedia, wikidata, schema_org)
+         *         limit: Maximum number of results (default: 20, max: 100)
+         *         threshold: Minimum similarity threshold (default: 0.6, range: 0.0-1.0)
+         *
+         *     Returns:
+         *         ExternalPredicateSearchResponse with ranked similarity results
+         */
+        get: operations["search_external_predicates_api_predicates_external_search_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/predicates/{id}": {
         parameters: {
             query?: never;
@@ -447,6 +479,7 @@ export interface paths {
          *     - ConceptNet (40 relations)
          *     - DBpedia (760 properties via SPARQL)
          *     - WikiData (10K properties via SPARQL)
+         *     - Schema.org (properties from imported data)
          *
          *     Returns a task_id that can be used to check the status of the discovery process.
          *
@@ -454,6 +487,7 @@ export interface paths {
          *     - ConceptNet: <2s for 40 relations
          *     - DBpedia: <10s for 760 properties
          *     - WikiData: <30s for 10K properties
+         *     - Schema.org: <1s (reads from database)
          */
         post: operations["discover_external_predicates_api_predicates_discover_post"];
         delete?: never;
@@ -732,6 +766,7 @@ export interface paths {
          * @description Stage an entity for commit.
          *
          *     Marks the entity as staged, meaning its changes will be included in the next commit.
+         *     Returns success even if there are no changes (idempotent operation).
          */
         post: operations["stage_entity_api_versions_working_tree_stage_post"];
         delete?: never;
@@ -776,6 +811,7 @@ export interface paths {
          * @description Commit all staged changes.
          *
          *     Updates canonical versions for all staged entities and marks them as merged.
+         *     Returns 400 if there are no staged changes to commit.
          */
         post: operations["commit_staged_changes_api_versions_working_tree_commit_post"];
         delete?: never;
@@ -2698,6 +2734,33 @@ export interface paths {
          * @description Get a reference node by ID.
          */
         get: operations["get_reference_node_api_reference_ref_db_nodes__node_id__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/reference/ref-db/predicates/{source}/{external_id}/examples": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Predicate Examples
+         * @description Get example uses of a predicate from the reference database or external APIs.
+         *
+         *     Returns example links that use this predicate, including information about
+         *     the subject and object nodes. This helps users understand how the predicate
+         *     is used in the knowledge graph.
+         *
+         *     Note: The external_id parameter accepts paths with slashes (e.g., '/r/RelatedTo' for ConceptNet).
+         *     For DBpedia, uses SPARQL queries to fetch live examples from the public endpoint.
+         */
+        get: operations["get_predicate_examples_api_reference_ref_db_predicates__source___external_id__examples_get"];
         put?: never;
         post?: never;
         delete?: never;
@@ -5364,6 +5427,200 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/rag/extract": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Extract Entities
+         * @description Extract entities from text using the RAG pipeline.
+         *
+         *     The pipeline processes text through four layers:
+         *     - Layer 0: Knowledge Graph Context Preparation
+         *     - Layer 1: LLM-based Entity Extraction
+         *     - Layer 2: spaCy Syntactic Gap Analysis
+         *     - Layer 3: Concept Resolution via KG and Web Search
+         *
+         *     Args:
+         *         request: RAGExtractionRequest containing text and trace enablement flag
+         *         pipeline_service: Injected RAG pipeline service
+         *
+         *     Returns:
+         *         RAGExtractionResponse with extracted entities, metrics, and request ID
+         *
+         *     Raises:
+         *         HTTPException 400: If text is empty or invalid
+         *         HTTPException 500: If pipeline execution fails
+         */
+        post: operations["extract_entities_api_rag_extract_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/rag/metrics/{request_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Metrics
+         * @description Retrieve processing metrics for a specific RAG extraction request.
+         *
+         *     Returns timing data and entity counts for all pipeline layers.
+         *
+         *     Args:
+         *         request_id: Unique identifier for the extraction request
+         *         observability_store: Injected observability store
+         *
+         *     Returns:
+         *         Dictionary containing metrics for all layers and total execution time
+         *
+         *     Raises:
+         *         HTTPException 404: If request_id is not found
+         *         HTTPException 500: If metrics retrieval fails
+         */
+        get: operations["get_metrics_api_rag_metrics__request_id__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/rag/trace/{request_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Trace
+         * @description Retrieve all trace entries for a specific RAG extraction request.
+         *
+         *     Trace data includes detailed input/output information for each layer,
+         *     useful for debugging and algorithm tuning.
+         *
+         *     Args:
+         *         request_id: Unique identifier for the extraction request
+         *         observability_store: Injected observability store
+         *
+         *     Returns:
+         *         List of trace entries ordered by sentence index and timestamp
+         *
+         *     Raises:
+         *         HTTPException 404: If request_id has no trace data
+         *         HTTPException 500: If trace retrieval fails
+         */
+        get: operations["get_trace_api_rag_trace__request_id__get"];
+        put?: never;
+        post?: never;
+        /**
+         * Delete Trace
+         * @description Manually delete trace data for a specific RAG extraction request.
+         *
+         *     This is useful for immediate cleanup of sensitive data or testing purposes.
+         *     Note that trace data is automatically cleaned up after the retention period.
+         *
+         *     Args:
+         *         request_id: Unique identifier for the extraction request
+         *         observability_store: Injected observability store
+         *
+         *     Returns:
+         *         Success message with deletion confirmation
+         *
+         *     Raises:
+         *         HTTPException 404: If request_id has no trace data
+         *         HTTPException 500: If deletion fails
+         */
+        delete: operations["delete_trace_api_rag_trace__request_id__delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/rag/trace/{request_id}/layer/{layer_name}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Trace By Layer
+         * @description Retrieve trace entries for a specific layer of a RAG extraction request.
+         *
+         *     Args:
+         *         request_id: Unique identifier for the extraction request
+         *         layer_name: Name of the layer (kg_context, llm_extraction, spacy_gap, concept_resolution)
+         *         observability_store: Injected observability store
+         *
+         *     Returns:
+         *         List of trace entries for the specified layer
+         *
+         *     Raises:
+         *         HTTPException 404: If request_id or layer has no trace data
+         *         HTTPException 500: If trace retrieval fails
+         */
+        get: operations["get_trace_by_layer_api_rag_trace__request_id__layer__layer_name__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/rag/config/update": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Update Config
+         * @description Update RAG pipeline configuration settings.
+         *
+         *     Accepts partial updates to pipeline configuration, including:
+         *     - timeout_layer_0: Timeout for Layer 0 (KG context) in seconds
+         *     - timeout_layer_1: Timeout for Layer 1 (LLM extraction) in seconds
+         *     - timeout_layer_2: Timeout for Layer 2 (spaCy gap) in seconds
+         *     - timeout_layer_3: Timeout for Layer 3 (concept resolution) in seconds
+         *     - timeout_total: Total pipeline timeout in seconds
+         *     - dedup_similarity_threshold: Entity deduplication similarity threshold (0.0-1.0)
+         *     - kg_top_k: Number of top KG nodes to retrieve
+         *
+         *     Args:
+         *         config_updates: Dictionary of configuration parameters to update
+         *         pipeline_service: Injected RAG pipeline service
+         *
+         *     Returns:
+         *         Updated configuration values
+         *
+         *     Raises:
+         *         HTTPException 400: If configuration parameters are invalid
+         *         HTTPException 500: If configuration update fails
+         */
+        post: operations["update_config_api_rag_config_update_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -6422,6 +6679,89 @@ export interface components {
             updated_at: string;
         };
         /**
+         * ExternalPredicateSearchResponse
+         * @description Response for external predicate search.
+         */
+        ExternalPredicateSearchResponse: {
+            /** Data */
+            data: components["schemas"]["ExternalPredicateSearchResult"][];
+            /** Total */
+            total: number;
+            /** Query */
+            query: string;
+            /** Source */
+            source?: string | null;
+            /** Threshold */
+            threshold: number;
+        };
+        /**
+         * ExternalPredicateSearchResult
+         * @description Search result for external predicates with similarity score.
+         */
+        ExternalPredicateSearchResult: {
+            /** Id */
+            id: string;
+            /** Title */
+            title: string;
+            /** Definition */
+            definition: string;
+            /** Source */
+            source: string;
+            /** External Id */
+            external_id: string;
+            /** Attributes */
+            attributes?: {
+                [key: string]: unknown;
+            } | null;
+            /** Created At */
+            created_at: string;
+            /** Updated At */
+            updated_at: string;
+            /** Similarity Score */
+            similarity_score: number;
+        };
+        /**
+         * ExtractedEntity
+         * @description Represents a single entity extracted from text.
+         *
+         *     Entities are extracted through one or more layers of the RAG pipeline,
+         *     with each entity containing metadata about its source, position, and confidence.
+         */
+        ExtractedEntity: {
+            /**
+             * Text
+             * @description The entity text as it appears in the source.
+             */
+            text: string;
+            /**
+             * Type
+             * @description The entity type (e.g., 'PERSON', 'ORG', 'LOCATION', 'CONCEPT').
+             */
+            type: string;
+            /**
+             * Confidence
+             * @description Confidence score for this entity extraction (0.0 to 1.0).
+             */
+            confidence: number;
+            /**
+             * Source Layer
+             * @description The pipeline layer that extracted this entity ('kg', 'nlp', 'llm', 'web').
+             */
+            source_layer: string;
+            /**
+             * Sentence Index
+             * @description Index of the sentence containing this entity (0-based).
+             */
+            sentence_index: number;
+            /**
+             * Metadata
+             * @description Additional metadata about the entity (e.g., KB IDs, relations, context).
+             */
+            metadata?: {
+                [key: string]: unknown;
+            };
+        };
+        /**
          * FindSimilarResponse
          * @description Response for find-similar endpoint.
          */
@@ -6593,6 +6933,36 @@ export interface components {
              * @description Timestamp of the health check
              */
             timestamp: string;
+        };
+        /**
+         * LayerMetrics
+         * @description Performance metrics for a single pipeline layer.
+         *
+         *     Tracks timing, entity counts, and operation counts for each layer of the RAG pipeline.
+         */
+        LayerMetrics: {
+            /**
+             * Execution Time Ms
+             * @description Execution time for this layer in milliseconds.
+             */
+            execution_time_ms: number;
+            /**
+             * Entities Found
+             * @description Number of entities found by this layer.
+             */
+            entities_found: number;
+            /**
+             * Entities Deduplicated
+             * @description Number of entities removed as duplicates in this layer.
+             * @default 0
+             */
+            entities_deduplicated: number;
+            /**
+             * Operations Performed
+             * @description Number of operations/searches performed (e.g., vector searches, web searches).
+             * @default 0
+             */
+            operations_performed: number;
         };
         /**
          * MaterializedViewRequest
@@ -7298,7 +7668,7 @@ export interface components {
          * @description Enumeration of supported pipeline types
          * @enum {string}
          */
-        PipelineType: "suggest_term_definition" | "suggest_layer_definition" | "suggest_domain_definition";
+        PipelineType: "suggest_term_definition" | "suggest_layer_definition" | "suggest_domain_definition" | "extract_entities";
         /** PredicateCreate */
         PredicateCreate: {
             /** Title */
@@ -7384,6 +7754,38 @@ export interface components {
             identifier?: string | null;
             /** Is Relevant */
             is_relevant?: boolean | null;
+        };
+        /**
+         * ProcessingMetrics
+         * @description Comprehensive metrics for RAG pipeline execution.
+         *
+         *     Captures timing and entity counts for all four layers of the pipeline,
+         *     plus overall execution metrics.
+         */
+        ProcessingMetrics: {
+            /** @description Metrics for knowledge graph layer. */
+            kg_layer: components["schemas"]["LayerMetrics"];
+            /** @description Metrics for NLP processing layer. */
+            nlp_layer: components["schemas"]["LayerMetrics"];
+            /** @description Metrics for LLM enrichment layer. */
+            llm_layer: components["schemas"]["LayerMetrics"];
+            /** @description Metrics for web search layer. */
+            web_layer: components["schemas"]["LayerMetrics"];
+            /**
+             * Total Execution Time Ms
+             * @description Total pipeline execution time in milliseconds.
+             */
+            total_execution_time_ms: number;
+            /**
+             * Total Entities
+             * @description Total number of unique entities after deduplication.
+             */
+            total_entities: number;
+            /**
+             * Total Sentences
+             * @description Total number of sentences processed.
+             */
+            total_sentences: number;
         };
         /**
          * ProposalListResponse
@@ -7511,6 +7913,58 @@ export interface components {
             context?: {
                 [key: string]: unknown;
             } | null;
+        };
+        /**
+         * RAGExtractionRequest
+         * @description Request model for RAG entity extraction.
+         *
+         *     This model represents a request to extract entities from text using the
+         *     RAG pipeline, which processes text through multiple layers (KG, NLP, LLM, Web)
+         *     to identify and enrich entities with context.
+         */
+        RAGExtractionRequest: {
+            /**
+             * Text
+             * @description Text to analyze and extract entities from.
+             */
+            text: string;
+            /**
+             * Enable Trace
+             * @description Enable detailed tracing for observability. Defaults to false per architect requirement.
+             * @default false
+             */
+            enable_trace: boolean;
+            /**
+             * Enable Llm Layer
+             * @description Enable Layer 1 LLM extraction. If None, uses config default.
+             */
+            enable_llm_layer?: boolean | null;
+        };
+        /**
+         * RAGExtractionResponse
+         * @description Response model for RAG entity extraction.
+         *
+         *     Contains extracted entities, processing metrics, and trace availability information.
+         */
+        RAGExtractionResponse: {
+            /**
+             * Request Id
+             * @description Unique identifier for this extraction request.
+             */
+            request_id?: string;
+            /**
+             * Entities
+             * @description List of extracted entities with enrichment data.
+             */
+            entities?: components["schemas"]["ExtractedEntity"][];
+            /** @description Performance metrics for the extraction pipeline. */
+            metrics: components["schemas"]["ProcessingMetrics"];
+            /**
+             * Trace Available
+             * @description Indicates whether detailed trace data is available for this request.
+             * @default false
+             */
+            trace_available: boolean;
         };
         /**
          * RecordSelectionRequest
@@ -7771,40 +8225,6 @@ export interface components {
              * @description Status message
              */
             message: string;
-        };
-        /**
-         * Sense2VecData
-         * @description Sense2Vec data for a token.
-         */
-        Sense2VecData: {
-            /**
-             * In S2V
-             * @description Whether token is in sense2vec model
-             * @default false
-             */
-            in_s2v: boolean;
-            /**
-             * Key
-             * @description Sense2vec key (e.g., 'duck NOUN')
-             */
-            key?: string | null;
-            /**
-             * Freq
-             * @description Frequency in sense2vec corpus
-             */
-            freq?: number | null;
-            /**
-             * Other Senses
-             * @description Other senses for this word
-             */
-            other_senses?: string[];
-            /**
-             * Most Similar
-             * @description Most similar words with scores
-             */
-            most_similar?: {
-                [key: string]: unknown;
-            }[];
         };
         /**
          * SimilarPredicateOut
@@ -8229,8 +8649,6 @@ export interface components {
             concepcy?: components["schemas"]["ConcepcyData"] | null;
             /** @description WordNet data. */
             wordnet?: components["schemas"]["WordNetData"] | null;
-            /** @description Sense2vec data. */
-            sense2vec?: components["schemas"]["Sense2VecData"] | null;
         };
         /**
          * TokenReference
@@ -9371,6 +9789,43 @@ export interface operations {
             };
         };
     };
+    search_external_predicates_api_predicates_external_search_get: {
+        parameters: {
+            query: {
+                /** @description Search query text */
+                query: string;
+                /** @description Filter by source (conceptnet, dbpedia, wikidata, schema_org) */
+                source?: string | null;
+                limit?: number;
+                /** @description Minimum similarity threshold */
+                threshold?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ExternalPredicateSearchResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     get_predicate_api_predicates__id__get: {
         parameters: {
             query?: {
@@ -9566,7 +10021,7 @@ export interface operations {
     discover_external_predicates_api_predicates_discover_post: {
         parameters: {
             query?: {
-                /** @description Sources to discover from (conceptnet, dbpedia, wikidata) */
+                /** @description Sources to discover from (conceptnet, dbpedia, wikidata, schema_org) */
                 sources?: string[] | null;
             };
             header?: never;
@@ -13277,6 +13732,43 @@ export interface operations {
             path: {
                 /** @description Reference node ID */
                 node_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_predicate_examples_api_reference_ref_db_predicates__source___external_id__examples_get: {
+        parameters: {
+            query?: {
+                /** @description Maximum number of example uses to return */
+                limit?: number;
+            };
+            header?: never;
+            path: {
+                /** @description Predicate source (e.g., 'schema.org', 'dbpedia') */
+                source: string;
+                /** @description External predicate ID (can contain slashes) */
+                external_id: string;
             };
             cookie?: never;
         };
@@ -17027,6 +17519,287 @@ export interface operations {
                 content: {
                     "application/json": unknown;
                 };
+            };
+        };
+    };
+    extract_entities_api_rag_extract_post: {
+        parameters: {
+            query?: {
+                SessionLocal?: unknown;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RAGExtractionRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RAGExtractionResponse"];
+                };
+            };
+            /** @description Invalid request parameters */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+            /** @description Pipeline execution failed */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    get_metrics_api_rag_metrics__request_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                request_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Request ID not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+            /** @description Failed to retrieve metrics */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    get_trace_api_rag_trace__request_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                request_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Request ID not found or trace not enabled */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+            /** @description Failed to retrieve trace data */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    delete_trace_api_rag_trace__request_id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                request_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Request ID not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+            /** @description Failed to delete trace data */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    get_trace_by_layer_api_rag_trace__request_id__layer__layer_name__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                request_id: string;
+                layer_name: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Request ID or layer not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+            /** @description Failed to retrieve trace data */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    update_config_api_rag_config_update_post: {
+        parameters: {
+            query?: {
+                SessionLocal?: unknown;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    [key: string]: unknown;
+                };
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Invalid configuration parameters */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+            /** @description Failed to update configuration */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
         };
     };

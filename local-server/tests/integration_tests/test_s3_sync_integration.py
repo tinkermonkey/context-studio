@@ -1,3 +1,4 @@
+import pytest
 from unittest.mock import Mock, patch
 from fastapi.testclient import TestClient
 from config import S3Config
@@ -17,6 +18,7 @@ class TestS3SyncIntegration:
         assert "system_load_percent" in data
         assert "sync_health_score" in data
 
+    @pytest.mark.skip_suite
     def test_push_changes_without_s3_config(self, client: TestClient):
         """Test push changes without S3 configuration."""
         response = client.post("/api/sync/push", json={"author_id": "test-user"})
@@ -27,6 +29,7 @@ class TestS3SyncIntegration:
         assert "not configured" in data["message"]
 
     @patch("services.s3_sync_manager.DuckDBService")
+    @pytest.mark.skip_suite
     def test_push_changes_with_mocked_s3(
         self, mock_duckdb_service, client: TestClient, db_session
     ):

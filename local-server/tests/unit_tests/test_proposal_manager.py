@@ -403,6 +403,53 @@ class TestProposalManager:
         # Should not raise exception
         proposal_manager._push_vote_to_s3(mock_vote)
 
+    def test_push_vote_to_s3_when_not_configured(self, mock_db_session, mock_changeset_manager):
+        """Test S3 push is skipped when S3 is not configured."""
+        # Create mock S3 sync manager with s3_config = None
+        mock_s3_sync = Mock(spec=S3SyncManager)
+        mock_s3_sync.s3_config = None
+        mock_s3_sync.parquet_writer = Mock()
+
+        proposal_manager = ProposalManager(
+            db=mock_db_session,
+            s3_sync_manager=mock_s3_sync,
+            changeset_manager=mock_changeset_manager
+        )
+
+        mock_vote = Mock()
+        mock_vote.proposal_id = "proposal123"
+        mock_vote.user_id = "user456"
+        mock_vote.to_dict.return_value = {"proposal_id": "proposal123", "user_id": "user456"}
+
+        # Should not raise exception and should not call parquet_writer
+        proposal_manager._push_vote_to_s3(mock_vote)
+
+        # Verify parquet_writer was never called
+        mock_s3_sync.parquet_writer.write_metadata.assert_not_called()
+
+    def test_push_proposal_to_s3_when_not_configured(self, mock_db_session, mock_changeset_manager):
+        """Test S3 push is skipped when S3 is not configured."""
+        # Create mock S3 sync manager with s3_config = None
+        mock_s3_sync = Mock(spec=S3SyncManager)
+        mock_s3_sync.s3_config = None
+        mock_s3_sync.parquet_writer = Mock()
+
+        proposal_manager = ProposalManager(
+            db=mock_db_session,
+            s3_sync_manager=mock_s3_sync,
+            changeset_manager=mock_changeset_manager
+        )
+
+        mock_proposal = Mock()
+        mock_proposal.id = "proposal123"
+        mock_proposal.to_dict.return_value = {"id": "proposal123"}
+
+        # Should not raise exception and should not call parquet_writer
+        proposal_manager._push_proposal_to_s3(mock_proposal)
+
+        # Verify parquet_writer was never called
+        mock_s3_sync.parquet_writer.write_metadata.assert_not_called()
+
     def test_database_transaction_rollback_on_error(self, proposal_manager, mock_db_session, mock_changeset_manager, mock_changeset):
         """Test database rollback on error."""
         mock_changeset_manager.get_changeset.return_value = mock_changeset

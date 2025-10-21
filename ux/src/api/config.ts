@@ -38,6 +38,7 @@ export const QUERY_KEYS = {
   STRUCTURE_NODES: "structure_nodes",
   NODE_LINKS: "node_links",
   CHANGE_EVENTS: "change_events",
+  RAG: "rag",
 } as const;
 
 export const ENDPOINTS = {
@@ -66,4 +67,12 @@ export const ENDPOINTS = {
   STRUCTURE_NODES: "/api/structure_nodes",
   NODE_LINKS: "/api/structure_nodes/links",
   CHANGE_EVENTS: "/api/change_events",
+  RAG: {
+    EXTRACT: "/api/rag/extract",
+    METRICS: (requestId: string) => `/api/rag/metrics/${requestId}`,
+    TRACE: (requestId: string) => `/api/rag/trace/${requestId}`,
+    TRACE_BY_LAYER: (requestId: string, layerName: string) =>
+      `/api/rag/trace/${requestId}/layer/${layerName}`,
+    CONFIG_UPDATE: "/api/rag/config/update",
+  },
 } as const;

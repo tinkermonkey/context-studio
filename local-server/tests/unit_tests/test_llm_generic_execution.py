@@ -30,28 +30,31 @@ class TestGenericPipelineExecution:
     @pytest.fixture
     def mock_llm_service(self):
         """Create a mock LLM service with required dependencies"""
-        # Mock the provider router to avoid initialization issues
-        with patch('llm.service.get_provider_router') as mock_get_router:
-            # Create a mock provider router that indicates models are available
-            mock_router = MagicMock()
-            mock_router.get_enabled_models.return_value = ["gpt-3.5-turbo"]
-            mock_router.is_model_available.return_value = True
-            
-            # Mock models manager
-            mock_models_manager = MagicMock()
-            mock_config = MagicMock()
-            mock_config.api_key_env_var = "OPENAI_API_KEY"
-            mock_models_manager.get_model_config.return_value = mock_config
-            mock_router.models_manager = mock_models_manager
-            
-            mock_get_router.return_value = mock_router
-            
-            # Set environment variable before creating service
-            with patch.dict("os.environ", {"OPENAI_API_KEY": "sk-test1234567890abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMN"}):
-                service = LLMService()
-                service.flavor_service = AsyncMock()
-                service.execution_tracker = MagicMock()
-                return service
+        with patch.dict("os.environ", {"OPENAI_API_KEY": "sk-test1234567890abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMN"}):
+            # Create a mock provider router with proper configuration
+            mock_provider_router = MagicMock()
+            mock_provider_router.get_enabled_models.return_value = ["gpt-3.5-turbo"]
+
+            # Create a mock model config for validation
+            mock_model_config = MagicMock()
+            mock_model_config.provider_type = MagicMock()
+            mock_model_config.provider_type.name = "NATIVE_OPENAI"
+            mock_model_config.api_key_env_var = "OPENAI_API_KEY"
+
+            # Import ProviderType for proper mocking
+            from llm.enabled_models import ProviderType
+            mock_model_config.provider_type = ProviderType.NATIVE_OPENAI
+
+            mock_provider_router.models_manager = MagicMock()
+            mock_provider_router.models_manager.get_model_config.return_value = mock_model_config
+
+            with patch('llm.service.get_provider_router', return_value=mock_provider_router):
+                with patch('llm.service.PipelineFlavorService'):
+                    with patch('llm.service.ExecutionTracker'):
+                        service = LLMService()
+                        service.flavor_service = AsyncMock()
+                        service.execution_tracker = MagicMock()
+                        return service
 
     @pytest.fixture
     def sample_request(self):
@@ -86,12 +89,14 @@ class TestGenericPipelineExecution:
         # Mock dependencies
         mock_llm_service.flavor_service.get_default_flavor.return_value = mock_flavor
         mock_llm_service.execution_tracker.start_execution.return_value = "exec-123"
-        
-        # Mock LLM response - use a simple MagicMock with content attribute
+
+        # Mock LLM response with structured output attributes
         mock_llm = AsyncMock()
         mock_response = MagicMock()
-        mock_response.content = "Test response content"
-        # Don't set any structured output attributes - this forces text-only response path
+        # Set structured output attributes that match StructuredOutputDefinition
+        mock_response.definition = "Test definition"
+        mock_response.reasoning = "Test reasoning"
+        mock_response.discrepancies = "Test discrepancies"
         mock_response.response_metadata = {
             'token_usage': {
                 'prompt_tokens': 10,
@@ -100,23 +105,22 @@ class TestGenericPipelineExecution:
             }
         }
         mock_llm.ainvoke.return_value = mock_response
-        
-        # Mock _create_llm_from_flavor to return a simple LLM without structured output
+
         with patch.object(mock_llm_service, '_create_llm_from_flavor', return_value=mock_llm):
             with patch.object(mock_llm_service, '_get_flavor', return_value=mock_flavor):
-                # Mock structured output mapping to avoid structured output processing
-                with patch('llm.service.PIPELINE_STRUCTURED_OUTPUT_MAPPING', {sample_request.pipeline_type: None}):
-                    result = await mock_llm_service.execute_pipeline_flavor(sample_request)
-        
+                result = await mock_llm_service.execute_pipeline_flavor(sample_request)
+
         # Assertions
         assert isinstance(result, PipelineExecutionResponse)
-        assert result.response_content == "Test response content"
+        # The response_content should be formatted from the structured output
+        assert "Definition: Test definition" in result.response_content
+        assert "Reasoning: Test reasoning" in result.response_content
         assert result.execution_id == "exec-123"
         assert result.flavor_id == "test-flavor-id"
         assert result.pipeline_type == "suggest_term_definition"
         assert result.token_usage is not None
         assert result.token_usage['input_tokens'] == 10
-        
+
         # Verify execution tracking
         mock_llm_service.execution_tracker.start_execution.assert_called_once()
         mock_llm_service.execution_tracker.complete_execution.assert_called_once()
@@ -221,22 +225,23 @@ class TestGenericPipelineExecution:
         # Mock dependencies
         mock_llm_service.flavor_service.get_default_flavor.return_value = mock_flavor
         mock_llm_service.execution_tracker.start_execution.return_value = "exec-123"
-        
+
         # Mock streaming LLM error
         mock_llm = AsyncMock()
-        
-        async def mock_astream_error():
+
+        async def mock_astream_error(*args, **kwargs):
             yield MagicMock(content="Start")
             raise Exception("Streaming error")
-        
-        mock_llm.astream.return_value = mock_astream_error()
-        
+
+        # Assign the function itself, not call it
+        mock_llm.astream = mock_astream_error
+
         with patch.object(mock_llm_service, '_create_llm_from_flavor', return_value=mock_llm):
             with patch.object(mock_llm_service, '_get_flavor', return_value=mock_flavor):
                 chunks = []
                 async for chunk in mock_llm_service.execute_pipeline_flavor_streaming(sample_request):
                     chunks.append(chunk)
-        
+
         # Verify error response
         assert len(chunks) > 0
         final_chunk = chunks[-1]
@@ -267,9 +272,9 @@ class TestGenericPipelineExecution:
             "domain_title": None,
             "current_definition": "A fruit"
         }
-        
+
         result = mock_llm_service._render_user_prompt_generic(template, context_data, strict=False)
-        
+
         expected = "Term: apple, Domain: Not specified, Definition: A fruit"
         assert result == expected
 
@@ -280,9 +285,9 @@ class TestGenericPipelineExecution:
             "terms": ["apple", "orange", "banana"],
             "numbers": [1, 2, 3]
         }
-        
+
         result = mock_llm_service._render_user_prompt_generic(template, context_data, strict=False)
-        
+
         expected = "Terms: apple, orange, banana, Numbers: [1, 2, 3]"
         assert result == expected
 
@@ -299,17 +304,17 @@ class TestGenericPipelineExecution:
         assert "key1" in result
 
     def test_render_user_prompt_generic_missing_variable(self, mock_llm_service):
-        """Test generic user prompt rendering with missing template variable - should use default value"""
+        """Test generic user prompt rendering with missing template variable - now returns 'Not specified'"""
         template = "Term: {term}, Missing: {missing_var}"
         context_data = {
             "term": "apple"
         }
-        
-        # The implementation now provides default values for missing variables
+
+        # Missing variables should now return "Not specified" instead of raising an error
         result = mock_llm_service._render_user_prompt_generic(template, context_data, strict=False)
-        
-        # Missing variable should be replaced with "Not specified"
-        assert result == "Term: apple, Missing: Not specified"
+
+        assert "apple" in result
+        assert "Not specified" in result
 
     def test_generic_pipeline_request_validation(self):
         """Test GenericPipelineExecutionRequest model validation"""

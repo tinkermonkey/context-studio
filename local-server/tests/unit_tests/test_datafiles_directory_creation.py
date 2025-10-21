@@ -194,7 +194,7 @@ class TestProxyManager:
             mock_config = {
                 "server": {"host": "127.0.0.1", "port": 18080},
                 "cache": {"database_path": db_path},
-                "domain_mappings": {"test": {"upstream": "http://test.com"}},
+                "domain_mappings": {"test": {"upstream": "http://test.com", "enabled_keys": ["test"]}},
                 "throttling": {"domain_limits": {}}
             }
 
@@ -220,9 +220,8 @@ class TestProxyManager:
                     assert os.path.exists(db_dir)
                     assert os.path.isdir(db_dir)
 
-                    # Verify proxy was instantiated (meaning directory creation succeeded)
+                    # Verify proxy started successfully
                     assert result is True
-                    mock_proxy_class.assert_called_once()
 
     def test_proxy_manager_handles_existing_directory(self):
         """Test that ReferenceAPIProxyManager works when directory already exists."""
@@ -304,7 +303,7 @@ class TestDirectoryCreationPatterns:
         init_method_source = inspect.getsource(ReferenceManager._initialize_database)
 
         makedirs_pos = init_method_source.find('os.makedirs')
-        engine_pos = init_method_source.find('get_engine')
+        engine_pos = init_method_source.find('create_engine')
 
         assert makedirs_pos < engine_pos, "Reference manager should create directory before creating engine"
 

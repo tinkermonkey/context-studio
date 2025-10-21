@@ -37,13 +37,16 @@ class TestDatasetManager:
 
         assert dataset.title == "Test Dataset"
         assert dataset.filename == "test.db"
-        assert (
-            dataset.schema_version == 15
-        )  # Should match current migration target version
+
+        # Verify schema version matches the target version from migration manager
+        dataset_path = self.manager.get_dataset_file_path("test.db")
+        migration_manager = MigrationManager(dataset_path)
+        assert dataset.schema_version == migration_manager.target_version, \
+            f"Expected schema version {migration_manager.target_version}, got {dataset.schema_version}"
+
         assert isinstance(dataset.metrics, DatasetMetrics)
 
         # Verify file was created
-        dataset_path = self.manager.get_dataset_file_path("test.db")
         assert os.path.exists(dataset_path)
 
     def test_list_datasets(self):

@@ -1,0 +1,195 @@
+
+> flowbite-react-template-tanstack-router@0.0.0 test
+> vitest run
+
+
+ RUN  v1.6.1 /workspace/ux
+
+ ✓ test/integration/hooks.useDomains.integration.test.tsx  (1 test) 34ms
+ ✓ test/integration/llm-integration.test.tsx  (6 tests) 15ms
+stderr | src/components/panels/TreeChartPanel.test.tsx > TreeChartPanel > displays error state when data loading fails
+[API ERROR] TreeChartPanel error {
+  error: Error: Failed to load data
+      at /workspace/ux/src/components/panels/TreeChartPanel.test.tsx:99:23
+      at file:///workspace/ux/node_modules/@vitest/runner/dist/index.js:135:14
+      at file:///workspace/ux/node_modules/@vitest/runner/dist/index.js:60:26
+      at runTest (file:///workspace/ux/node_modules/@vitest/runner/dist/index.js:781:17)
+      at runSuite (file:///workspace/ux/node_modules/@vitest/runner/dist/index.js:909:15)
+      at runSuite (file:///workspace/ux/node_modules/@vitest/runner/dist/index.js:909:15)
+      at runFiles (file:///workspace/ux/node_modules/@vitest/runner/dist/index.js:958:5)
+      at startTests (file:///workspace/ux/node_modules/@vitest/runner/dist/index.js:967:3)
+      at file:///workspace/ux/node_modules/vitest/dist/chunks/runtime-runBaseTests.oAvMKtQC.js:116:7
+      at withEnv (file:///workspace/ux/node_modules/vitest/dist/chunks/runtime-runBaseTests.oAvMKtQC.js:83:5),
+  termId: undefined
+}
+
+stdout | src/components/panels/TreeChartPanel.test.tsx > TreeChartPanel > renders TreeChart when data is successfully loaded
+[API INFO] Final tree structure generated {
+  rootNode: {
+    id: 'dataset',
+    title: 'Data Set',
+    type: 'dataset',
+    children: [ [Object] ],
+    depth: 0
+  }
+}
+
+stdout | src/components/panels/TreeChartPanel.test.tsx > TreeChartPanel > loads specific term when termId is provided
+[API INFO] Final tree structure generated {
+  rootNode: {
+    id: 'dataset',
+    title: 'Data Set',
+    type: 'dataset',
+    children: [ [Object] ],
+    depth: 0
+  }
+}
+[API INFO] Filtering tree by term {
+  termId: 'test-term-id',
+  targetTerm: {
+    id: 'test-term-id',
+    domain_id: '1',
+    title: 'Target Term',
+    definition: 'Target term definition'
+  }
+}
+
+stderr | src/components/panels/TreeChartPanel.test.tsx > TreeChartPanel > loads specific term when termId is provided
+[API WARN] Term not found in tree { termId: 'test-term-id' }
+
+stderr | src/components/panels/TreeChartPanel.test.tsx > TreeChartPanel > displays custom error component when provided
+[API ERROR] TreeChartPanel error {
+  error: Error: Failed to load
+      at /workspace/ux/src/components/panels/TreeChartPanel.test.tsx:234:23
+      at file:///workspace/ux/node_modules/@vitest/runner/dist/index.js:135:14
+      at file:///workspace/ux/node_modules/@vitest/runner/dist/index.js:60:26
+      at runTest (file:///workspace/ux/node_modules/@vitest/runner/dist/index.js:781:17)
+      at runSuite (file:///workspace/ux/node_modules/@vitest/runner/dist/index.js:909:15)
+      at runSuite (file:///workspace/ux/node_modules/@vitest/runner/dist/index.js:909:15)
+      at runFiles (file:///workspace/ux/node_modules/@vitest/runner/dist/index.js:958:5)
+      at startTests (file:///workspace/ux/node_modules/@vitest/runner/dist/index.js:967:3)
+      at file:///workspace/ux/node_modules/vitest/dist/chunks/runtime-runBaseTests.oAvMKtQC.js:116:7
+      at withEnv (file:///workspace/ux/node_modules/vitest/dist/chunks/runtime-runBaseTests.oAvMKtQC.js:83:5),
+  termId: undefined
+}
+
+stdout | src/components/panels/TreeChartPanel.test.tsx > TreeChartPanel > applies custom className when provided
+[API INFO] Final tree structure generated {
+  rootNode: {
+    id: 'dataset',
+    title: 'Data Set',
+    type: 'dataset',
+    children: [ [Object] ],
+    depth: 0
+  }
+}
+
+ ✓ src/components/panels/TreeChartPanel.test.tsx  (7 tests) 159ms
+ ✓ test/components/llm_traceability/SelectionTracker.test.tsx  (19 tests) 330ms
+ ❯ src/api/hooks/predicates/__tests__/usePredicateMappingHooks.test.tsx  (12 tests | 4 failed) 294ms
+   ❯ src/api/hooks/predicates/__tests__/usePredicateMappingHooks.test.tsx > useExternalPredicates > should fetch external predicates with pagination
+     → expected undefined to be an instance of Array
+   ❯ src/api/hooks/predicates/__tests__/usePredicateMappingHooks.test.tsx > useDiscoveryStatus > should fetch discovery status by task ID
+     → expected {} to have property "status"
+   ❯ src/api/hooks/predicates/__tests__/usePredicateMappingHooks.test.tsx > useSimilarPredicates > should fetch similar predicates
+     → expected undefined to be true // Object.is equality
+   ❯ src/api/hooks/predicates/__tests__/usePredicateMappingHooks.test.tsx > useSimilarPredicates > should apply source filter
+     → expected undefined to be true // Object.is equality
+ ❯ src/components/predicates/__tests__/PredicateMappingManager.test.tsx  (0 test)
+ ✓ test/components/llm_pipelines/PipelineFlavorEditor.test.tsx  (4 tests) 239ms
+ ✓ test/components/llm_pipelines/LlmPipelineRun.test.tsx  (6 tests) 277ms
+ ✓ test/components/nlp/NlpAnalysisPanel.test.tsx  (1 test) 128ms
+ ✓ src/components/misc/__tests__/create_child_button.test.tsx  (4 tests) 274ms
+ ✓ src/components/node_selectors/__tests__/portal_record_selector.test.tsx  (5 tests) 394ms
+ ✓ test/components/llm_traceability/AnalyticsDashboard.test.tsx  (24 tests) 672ms
+ ✓ test/integration/llm-traceability.test.tsx  (16 tests) 243ms
+ ✓ test/integration/domain_edit.integration.test.tsx  (1 test) 582ms
+
+⎯⎯⎯⎯⎯⎯ Failed Suites 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/components/predicates/__tests__/PredicateMappingManager.test.tsx [ src/components/predicates/__tests__/PredicateMappingManager.test.tsx ]
+ReferenceError: jest is not defined
+ ❯ src/components/predicates/__tests__/PredicateMappingManager.test.tsx:14:1
+     12| 
+     13| // Mock react-icons
+     14| jest.mock("react-icons/hi", () => ({
+       | ^
+     15|   HiDatabase: () => <div>HiDatabase</div>,
+     16|   HiSearch: () => <div>HiSearch</div>,
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/5]⎯
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 4 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/api/hooks/predicates/__tests__/usePredicateMappingHooks.test.tsx > useExternalPredicates > should fetch external predicates with pagination
+AssertionError: expected undefined to be an instance of Array
+ ❯ src/api/hooks/predicates/__tests__/usePredicateMappingHooks.test.tsx:54:42
+     52|     if (result.current.isSuccess) {
+     53|       expect(result.current.data).toBeDefined();
+     54|       expect(result.current.data?.items).toBeInstanceOf(Array);
+       |                                          ^
+     55|     }
+     56|   });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/5]⎯
+
+ FAIL  src/api/hooks/predicates/__tests__/usePredicateMappingHooks.test.tsx > useDiscoveryStatus > should fetch discovery status by task ID
+AssertionError: expected {} to have property "status"
+ ❯ src/api/hooks/predicates/__tests__/usePredicateMappingHooks.test.tsx:97:35
+     95|     if (result.current.isSuccess) {
+     96|       expect(result.current.data).toBeDefined();
+     97|       expect(result.current.data).toHaveProperty("status");
+       |                                   ^
+     98|     }
+     99|   });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/5]⎯
+
+ FAIL  src/api/hooks/predicates/__tests__/usePredicateMappingHooks.test.tsx > useSimilarPredicates > should fetch similar predicates
+AssertionError: expected undefined to be true // Object.is equality
+
+- Expected: 
+true
+
++ Received: 
+undefined
+
+ ❯ src/api/hooks/predicates/__tests__/usePredicateMappingHooks.test.tsx:123:35
+    121| 
+    122|     // Hook should be in idle state when disabled
+    123|     expect(result.current.isIdle).toBe(true);
+       |                                   ^
+    124|   });
+    125| 
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/5]⎯
+
+ FAIL  src/api/hooks/predicates/__tests__/usePredicateMappingHooks.test.tsx > useSimilarPredicates > should apply source filter
+AssertionError: expected undefined to be true // Object.is equality
+
+- Expected: 
+true
+
++ Received: 
+undefined
+
+ ❯ src/api/hooks/predicates/__tests__/usePredicateMappingHooks.test.tsx:145:35
+    143|     );
+    144| 
+    145|     expect(result.current.isIdle).toBe(true);
+       |                                   ^
+    146|   });
+    147| });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/5]⎯
+
+ Test Files  2 failed | 12 passed (14)
+      Tests  4 failed | 102 passed (106)
+   Start at  10:28:25
+   Duration  2.88s (transform 2.83s, setup 3.19s, collect 7.79s, tests 3.64s, environment 7.88s, prepare 1.72s)
+
+npm notice
+npm notice New major version of npm available! 10.9.3 -> 11.6.2
+npm notice Changelog: https://github.com/npm/cli/releases/tag/v11.6.2
+npm notice To update run: npm install -g npm@11.6.2
+npm notice

@@ -141,8 +141,8 @@ async def get_proxy_status():
             "proxy_running": proxy_manager.is_running,
             "configuration": settings.ENABLE_CACHING_PROXY,
             "proxy_config": {
-                "host": settings.REFERENCE_API_BUDDY_CONFIG["server"]["host"],
-                "port": settings.REFERENCE_API_BUDDY_CONFIG["server"]["port"]
+                "host": settings.get_reference_api_buddy_config()["server"]["host"],
+                "port": settings.get_reference_api_buddy_config()["server"]["port"]
             }
         })
         

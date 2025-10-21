@@ -1,54 +1,51 @@
 """
 Minimal conftest for Phase 1 integration tests
-Avoids loading full app dependencies
+
+Note: This file inherits fixtures from the root conftest.py.
+The 'client' fixture is provided by tests/conftest.py.
 """
 
 import sys
-import gc
-import time
-from pathlib import Path
+import os
 import pytest
-from sqlalchemy import pool
+from pathlib import Path
+from unittest.mock import MagicMock, patch, AsyncMock
+
+# Set up mock environment BEFORE any imports
+os.environ["OPENAI_API_KEY"] = "sk-test1234567890abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMN"
 
 # Add local-server to path
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
 
-@pytest.fixture(autouse=True)
-def test_cleanup_database_resources():
+@pytest.fixture
+def minimal_reference_client():
     """
-    Auto-use fixture to ensure proper cleanup of database resources
-    between tests to prevent test isolation issues.
-    """
-    yield
-    
-    # Use the built-in cleanup function
-    try:
-        from database.utils import cleanup_database_resources
-        cleanup_database_resources()
-    except Exception:
-        pass
-    
-    # Force garbage collection to clean up any remaining references
-    gc.collect()
-    
-    # Small delay to ensure resources are fully released
-    time.sleep(0.01)
+    Create a minimal FastAPI test client with just the reference router.
 
+    This avoids loading the full app and all its dependencies.
+    Used by reference API tests that don't need the full application.
+    """
+    from fastapi import FastAPI
+    from fastapi.testclient import TestClient
+    from api.reference import router
+    from services.service_factory import ServiceFactory, set_service_factory, get_service_factory
 
-@pytest.fixture(autouse=True)
-def reset_service_factory():
-    """
-    Auto-use fixture to reset the service factory between tests
-    to prevent cached services from interfering.
-    """
-    yield
-    
+    # Save the current service factory to restore it later
     try:
-        from services.service_factory import ServiceFactory
-        # Clear any cached instances
-        for factory in ServiceFactory._instances.values():
-            factory.clear_cache()
-        ServiceFactory._instances.clear()
-    except Exception:
-        pass
+        original_factory = get_service_factory()
+    except RuntimeError:
+        original_factory = None
+
+    # Create and set up a service factory for the tests
+    factory = ServiceFactory(cache_ttl_seconds=30)
+    set_service_factory(factory)
+
+    app = FastAPI()
+    app.include_router(router)
+
+    with TestClient(app) as test_client:
+        yield test_client
+
+    # Restore the original service factory instead of setting to None
+    set_service_factory(original_factory)

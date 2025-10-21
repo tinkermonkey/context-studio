@@ -110,6 +110,17 @@ class NodeService:
             self.db.commit()
             self.db.refresh(structure_node)
 
+            # Verify the ID was properly generated after refresh
+            if not structure_node.id or not isinstance(structure_node.id, str):
+                logger.error(
+                    f"Invalid ID after db.refresh(): {repr(structure_node.id)} "
+                    f"(type: {type(structure_node.id).__name__})"
+                )
+                raise ValueError(
+                    f"Database failed to generate valid ID for structure_node. "
+                    f"Got: {repr(structure_node.id)} (type: {type(structure_node.id).__name__})"
+                )
+
             logger.info(
                 f"Successfully created structure_node: {structure_node.id} ({structure_node.node_type})"
             )

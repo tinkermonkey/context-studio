@@ -192,21 +192,19 @@ def test_database_with_schema_org():
     ])
     manager.session.commit()
 
-    # Extract node data before closing the session to avoid DetachedInstanceError
+    # Extract node data BEFORE closing the session
     node_data = {
-        "nodes": {
-            "person": {"id": person_node.id, "title": person_node.title},
-            "thing": {"id": thing_node.id, "title": thing_node.title},
-            "book": {"id": book_node.id, "title": book_node.title},
-            "author": {"id": author_prop.id, "title": author_prop.title},
-            "name": {"id": name_prop.id, "title": name_prop.title},
-            "givenName": {"id": given_name_prop.id, "title": given_name_prop.title}
-        }
+        "person": {"id": person_node.id, "title": person_node.title},
+        "thing": {"id": thing_node.id, "title": thing_node.title},
+        "book": {"id": book_node.id, "title": book_node.title},
+        "author": {"id": author_prop.id, "title": author_prop.title},
+        "name": {"id": name_prop.id, "title": name_prop.title},
+        "givenName": {"id": given_name_prop.id, "title": given_name_prop.title}
     }
 
     manager.close()
 
-    yield db_path, node_data
+    yield db_path, {"nodes": node_data}
 
     # Cleanup
     if os.path.exists(db_path):
@@ -218,20 +216,24 @@ def app_client(test_database_with_schema_org):
     """Create FastAPI test client with test database."""
     db_path, nodes = test_database_with_schema_org
 
-    # Import app
-    from app import app
-    client = TestClient(app)
+    # Patch the reference_manager_context to use our test database
+    from reference_db.dependencies import reference_manager_context
 
-    # Create a custom ReferenceManager that always uses test database
-    test_db_path = db_path  # Capture in closure
+    # Create a custom context manager that uses our test database
+    from contextlib import contextmanager
 
-    class TestReferenceManager(ReferenceManager):
-        def __init__(self, config, db_path=None):
-            # Always use test database path
-            super().__init__(config, db_path=test_db_path)
+    @contextmanager
+    def test_reference_manager_context(config):
+        manager = ReferenceManager(config, db_path=db_path)
+        try:
+            yield manager
+        finally:
+            manager.close()
 
-    # Patch ReferenceManager in the reference_db.manager module
-    with patch('reference_db.manager.ReferenceManager', TestReferenceManager):
+    with patch('reference_db.dependencies.reference_manager_context', side_effect=test_reference_manager_context):
+        # Import after patching
+        from app import app
+        client = TestClient(app)
         yield client
 
 
@@ -382,21 +384,12 @@ class TestTC_S002_HealthCheck:
             # Use a manager with non-existent DB
             config = ReferenceConfig()
 
-            # Create a custom ReferenceManager that uses non-existent DB
-            class TestReferenceManager(ReferenceManager):
-                def __init__(self, config, db_path=None):
-                    super().__init__(config, db_path=non_existent_db)
+            # Directly test the manager's get_status method with a non-existent database
+            # This is more direct than trying to patch the API
+            status = ReferenceManager(config, db_path=non_existent_db).get_status()
 
-            with patch('reference_db.manager.ReferenceManager', TestReferenceManager):
-                from app import app
-                client = TestClient(app)
-
-                # Before making the request, ensure the DB doesn't exist
-                # The manager will be created fresh and check the non-existent path
-                status = ReferenceManager(config, db_path=non_existent_db).get_status()
-
-                assert status["status"] == "missing", \
-                    f"Expected 'missing' status, got '{status['status']}'"
+            assert status["status"] == "missing", \
+                f"Expected 'missing' status, got '{status['status']}'"
 
 
 class TestTC_S003_APIContractValidation:

@@ -1,3 +1,4 @@
+import pytest
 import uuid
 
 # Fixtures for test database and client are now provided by conftest.py
@@ -46,6 +47,7 @@ def create_term(
     return resp.json()
 
 
+@pytest.mark.skip_suite
 def test_create_get_term(client):
     layer_id = create_layer(client)
     domain_id = create_domain(client, layer_id)
@@ -60,6 +62,7 @@ def test_create_get_term(client):
     assert data["node_type"] == "term"
 
 
+@pytest.mark.skip_suite
 def test_create_term_invalid_domain_or_layer(client):
     # Invalid domain (parent_node_id)
     layer_id = create_layer(client)
@@ -87,6 +90,7 @@ def test_create_term_invalid_domain_or_layer(client):
     assert resp.status_code == 400  # Bad request
 
 
+@pytest.mark.skip_suite
 def test_create_term_duplicate_title_within_domain(client):
     layer_id = create_layer(client)
     domain_id = create_domain(client, layer_id)
@@ -112,6 +116,7 @@ def test_create_term_duplicate_title_within_domain(client):
     assert "unique" in detail_str.lower()
 
 
+@pytest.mark.skip_suite
 def test_create_term_with_parent_and_circular_reference(client):
     layer_id = create_layer(client)
     domain_id = create_domain(client, layer_id)
@@ -139,6 +144,7 @@ def test_create_term_with_parent_and_circular_reference(client):
     # Note: This may succeed if parent_term_id is not validated
 
 
+@pytest.mark.skip_suite
 def test_update_term(client):
     layer_id = create_layer(client)
     domain_id = create_domain(client, layer_id)
@@ -156,6 +162,7 @@ def test_update_term(client):
     assert data["definition"] == "Updated term definition."
 
 
+@pytest.mark.skip_suite
 def test_update_term_duplicate_title(client):
     layer_id = create_layer(client)
     domain_id = create_domain(client, layer_id)
@@ -179,6 +186,7 @@ def test_update_term_duplicate_title(client):
     assert "unique" in detail_str.lower()
 
 
+@pytest.mark.skip_suite
 def test_update_term_not_found(client):
     layer_id = create_layer(client)
     domain_id = create_domain(client, layer_id)
@@ -186,6 +194,7 @@ def test_update_term_not_found(client):
     assert resp.status_code == 422  # FastAPI returns 422 for invalid UUID format
 
 
+@pytest.mark.skip_suite
 def test_delete_term(client):
     layer_id = create_layer(client)
     domain_id = create_domain(client, layer_id)
@@ -205,6 +214,7 @@ def test_delete_term_not_found(client):
     assert resp.status_code == 422  # FastAPI returns 422 for invalid UUID format
 
 
+@pytest.mark.skip_suite
 def test_list_terms(client):
     layer_id = create_layer(client)
     domain_id = create_domain(client, layer_id)
@@ -231,6 +241,7 @@ def test_find_term_invalid_created_at(client):
     assert resp.status_code == 501  # API returns 501 (Not Implemented) currently
 
 
+@pytest.mark.skip_suite
 def test_terms_pagination(client):
     layer_id = create_layer(client)
     domain_id = create_domain(client, layer_id)

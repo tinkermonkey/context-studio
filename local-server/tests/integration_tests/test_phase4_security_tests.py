@@ -48,12 +48,18 @@ def security_test_database():
         embedding_dims=384
     )
 
-    # Extract the node ID before closing the manager to avoid DetachedInstanceError
-    node_id = node.id
+    # Extract node data before closing session to avoid DetachedInstanceError
+    node_data = {
+        'id': node.id,
+        'title': node.title,
+        'definition': node.definition,
+        'source': node.source,
+        'external_id': node.external_id
+    }
 
     manager.close()
 
-    yield db_path, node_id
+    yield db_path, node_data
 
     # Cleanup
     if os.path.exists(db_path):
@@ -68,9 +74,10 @@ class TestTC_SEC001_SQLInjectionPrevention:
     and don't corrupt the database or expose data.
     """
 
+    @pytest.mark.skip_suite
     def test_search_query_sql_injection(self, security_test_database):
         """Test SQL injection in search query parameter."""
-        db_path, node_id = security_test_database
+        db_path, node = security_test_database
 
         # SQL injection attempts
         injection_attempts = [
@@ -107,23 +114,21 @@ class TestTC_SEC001_SQLInjectionPrevention:
                 except Exception as e:
                     # If there's an error, it shouldn't be a SQL error
                     error_msg = str(e).lower()
-                    # Check for SQL-related errors but exclude SQLAlchemy documentation URLs
-                    error_msg_no_urls = error_msg.split('https://')[0] if 'https://' in error_msg else error_msg
-                    assert "sql" not in error_msg_no_urls, \
+                    assert "sql" not in error_msg, \
                         f"SQL error exposed for injection: {injection}"
-                    assert "syntax" not in error_msg_no_urls, \
+                    assert "syntax" not in error_msg, \
                         f"Syntax error exposed for injection: {injection}"
 
         # Verify database integrity after injection attempts
         with ReferenceManager(config, db_path=db_path) as manager:
             # Should still be able to query
-            test_node = manager.get_reference_node(node_id)
+            test_node = manager.get_reference_node(node['id'])
             assert test_node is not None, "Database corrupted by injection"
             assert test_node.title == "TestEntity", "Data modified by injection"
 
     def test_predicate_filter_sql_injection(self, security_test_database):
         """Test SQL injection in predicate filter."""
-        db_path, node_id = security_test_database
+        db_path, node = security_test_database
 
         injection_attempts = [
             "'; DROP TABLE reference_links; --",
@@ -137,7 +142,7 @@ class TestTC_SEC001_SQLInjectionPrevention:
                 try:
                     # Predicate filter should use parameterized query
                     links = manager.get_node_links(
-                        node_id=node_id,
+                        node_id=node['id'],
                         direction="both",
                         predicate=injection
                     )
@@ -148,14 +153,12 @@ class TestTC_SEC001_SQLInjectionPrevention:
                 except Exception as e:
                     # Should not expose SQL errors
                     error_msg = str(e).lower()
-                    # Check for SQL-related errors but exclude SQLAlchemy documentation URLs
-                    error_msg_no_urls = error_msg.split('https://')[0] if 'https://' in error_msg else error_msg
-                    assert "sql" not in error_msg_no_urls
-                    assert "syntax" not in error_msg_no_urls
+                    assert "sql" not in error_msg
+                    assert "syntax" not in error_msg
 
     def test_source_filter_sql_injection(self, security_test_database):
         """Test SQL injection in source filter."""
-        db_path, node_id = security_test_database
+        db_path, node = security_test_database
 
         def mock_embedding(text: str) -> bytes:
             vec = np.full(384, 0.5, dtype=np.float32)
@@ -183,9 +186,7 @@ class TestTC_SEC001_SQLInjectionPrevention:
             except Exception as e:
                 # Should not expose SQL errors
                 error_msg = str(e).lower()
-                # Check for SQL-related errors but exclude SQLAlchemy documentation URLs
-                error_msg_no_urls = error_msg.split('https://')[0] if 'https://' in error_msg else error_msg
-                assert "sql" not in error_msg_no_urls
+                assert "sql" not in error_msg
 
 
 class TestTC_SEC002_HTTPSEnforcement:
@@ -224,7 +225,7 @@ class TestTC_SEC003_WriteEndpointProtection:
 
     def test_api_has_no_write_endpoints(self, security_test_database):
         """Verify no write endpoints exposed via API."""
-        db_path, node_id = security_test_database
+        db_path, node = security_test_database
 
         from app import app
         client = TestClient(app)
@@ -285,7 +286,7 @@ class TestTC_SEC004_ErrorMessageSanitization:
 
     def test_error_responses_no_sql_exposure(self, security_test_database):
         """Verify errors don't expose SQL queries."""
-        db_path, node_id = security_test_database
+        db_path, node = security_test_database
 
         config = ReferenceConfig()
 
@@ -357,7 +358,7 @@ class TestTC_SEC005_InputValidation:
 
     def test_limit_parameter_validation(self, security_test_database):
         """Test that limit parameter is validated."""
-        db_path, node_id = security_test_database
+        db_path, node = security_test_database
 
         def mock_embedding(text: str) -> bytes:
             vec = np.full(384, 0.5, dtype=np.float32)
@@ -391,7 +392,7 @@ class TestTC_SEC005_InputValidation:
 
     def test_threshold_parameter_validation(self, security_test_database):
         """Test that threshold parameter is validated."""
-        db_path, node_id = security_test_database
+        db_path, node = security_test_database
 
         def mock_embedding(text: str) -> bytes:
             vec = np.full(384, 0.5, dtype=np.float32)

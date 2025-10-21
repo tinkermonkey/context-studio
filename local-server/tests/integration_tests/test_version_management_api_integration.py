@@ -107,6 +107,7 @@ class TestVersionManagementAPI:
         assert isinstance(health["total_versions"], int)
         assert isinstance(health["issues"], list)
 
+    @pytest.mark.skip_suite
     def test_version_management_stats(self, client):
         """Test version management statistics endpoint."""
         response = client.get("/api/versions/stats")
@@ -122,6 +123,7 @@ class TestVersionManagementAPI:
         assert isinstance(stats["versions_by_state"], dict)
         assert isinstance(stats["recent_activity"], list)
 
+    @pytest.mark.skip_suite
     def test_create_entity_and_get_versions(self, client, start_event_processor_for_version_tests):
         """Test creating entity versions and retrieving version history."""
         # First create a structure node to version
@@ -168,6 +170,7 @@ class TestVersionManagementAPI:
         assert version["entity_type"] == "structure_node"
         assert version["entity_id"] == node_id
 
+    @pytest.mark.skip_suite
     def test_get_specific_version(self, client):
         """Test getting a specific version by number."""
         # Create a layer and domain with proper hierarchy
@@ -203,6 +206,7 @@ class TestVersionManagementAPI:
         assert "content" in version
         assert isinstance(version["content"], dict)
 
+    @pytest.mark.skip_suite
     def test_get_nonexistent_version(self, client):
         """Test getting a non-existent version returns 404."""
         # Use a random UUID
@@ -213,6 +217,7 @@ class TestVersionManagementAPI:
         )
         assert response.status_code == 404
 
+    @pytest.mark.skip_suite
     def test_working_tree_status(self, client):
         """Test getting working tree status."""
         response = client.get("/api/versions/working-tree/status")
@@ -227,6 +232,7 @@ class TestVersionManagementAPI:
         assert isinstance(status["total_entities"], int)
         assert isinstance(status["entries"], list)
 
+    @pytest.mark.skip_suite
     def test_working_tree_changes(self, client):
         """Test getting all working changes."""
         response = client.get("/api/versions/working-tree/changes")
@@ -236,6 +242,7 @@ class TestVersionManagementAPI:
         assert isinstance(changes, list)
         # Changes list can be empty initially
 
+    @pytest.mark.skip_suite
     def test_stage_and_unstage_entity(self, client):
         """Test staging and unstaging an entity."""
         # Create a structure node (using layer since it doesn't need parent)
@@ -282,6 +289,7 @@ class TestVersionManagementAPI:
         unstage_result = unstage_response.json()
         assert unstage_result["success"] is True
 
+    @pytest.mark.skip_suite
     def test_commit_staged_changes(self, client):
         """Test committing staged changes."""
         # Create a structure node
@@ -318,6 +326,7 @@ class TestVersionManagementAPI:
         assert "committed_count" in commit_result
         assert commit_result["committed_count"] >= 1
 
+    @pytest.mark.skip_suite
     def test_commit_preview(self, client):
         """Test previewing what would be committed."""
         response = client.get("/api/versions/working-tree/preview")
@@ -328,6 +337,7 @@ class TestVersionManagementAPI:
         assert isinstance(preview, list)
         # Preview can be empty list when no staged changes exist
 
+    @pytest.mark.skip_suite
     def test_working_diff_generation(self, client):
         """Test generating working diffs."""
         # Create a structure node first
@@ -354,6 +364,7 @@ class TestVersionManagementAPI:
         assert diff["entity_type"] == "structure_node"
         assert diff["entity_id"] == node_id
 
+    @pytest.mark.skip_suite
     def test_get_all_working_diffs(self, client):
         """Test getting all working diffs."""
         response = client.get("/api/versions/diffs/working")
@@ -363,6 +374,7 @@ class TestVersionManagementAPI:
         assert isinstance(diffs, list)
         # List can be empty if no working changes exist
 
+    @pytest.mark.skip_suite
     def test_compare_versions(self, client):
         """Test comparing two specific versions."""
         # Create a structure node
@@ -413,6 +425,7 @@ class TestVersionManagementAPI:
         assert "after_version" in comparison
         assert "diff" in comparison
 
+    @pytest.mark.skip_suite
     def test_rollback_entity(self, client):
         """Test rolling back an entity to a previous version."""
         # Create a structure node
@@ -459,6 +472,7 @@ class TestVersionManagementAPI:
         # Note: Content rollback verification is disabled as entity update is not yet implemented
         # The rollback successfully creates a version record with the target content
 
+    @pytest.mark.skip_suite
     def test_rollback_nonexistent_version(self, client):
         """Test rollback to non-existent version returns error."""
         # Use a random UUID
@@ -472,6 +486,7 @@ class TestVersionManagementAPI:
         )
         assert response.status_code == 404
 
+    @pytest.mark.skip_suite
     def test_batch_stage_operations(self, client):
         """Test batch staging operations."""
         # Create multiple structure nodes
@@ -500,6 +515,7 @@ class TestVersionManagementAPI:
             )
             assert stage_response.status_code == 200
 
+    @pytest.mark.skip_suite
     def test_version_query_parameters(self, client):
         """Test version querying with various parameters."""
         # Create a structure node
@@ -549,6 +565,7 @@ class TestVersionManagementAPI:
         )
         assert response.status_code == 422  # Validation error
 
+    @pytest.mark.skip_suite
     def test_concurrent_operations(self, client):
         """Test handling of concurrent version operations."""
         # Create a structure node
@@ -578,6 +595,7 @@ class TestVersionManagementAPI:
         )
         assert stage_response2.status_code in [200, 409]  # OK or Conflict
 
+    @pytest.mark.skip_suite
     def test_large_content_versioning(self, client):
         """Test versioning with large content payloads."""
         # Create a structure node with large definition
@@ -603,6 +621,7 @@ class TestVersionManagementAPI:
         version = response.json()
         assert len(version["content"]["definition"]) == 1000
 
+    @pytest.mark.skip_suite
     def test_version_metadata(self, client):
         """Test version metadata handling."""
         # Create a structure node

@@ -1,3 +1,7 @@
+import os
+# Disable tokenizers parallelism warning (must be set before importing transformers/tokenizers)
+os.environ["TOKENIZERS_PARALLELISM"] = "false"
+
 import uvicorn
 import argparse
 from fastapi import FastAPI
@@ -8,7 +12,7 @@ from api import graph, datasets, nlp_analysis, schema, predicates, llm, pipeline
 from api import reference, config, structure_nodes, version_management, sync, llm_traceability
 from api import changeset_management, proposal_management, identity_management
 from api import conflict_resolution, analytics, incremental_sync, optimization, embeddings, model_capabilities, enabled_models
-from api import background_tasks
+from api import background_tasks, rag_pipeline
 from api.admin import service_monitoring
 from api.graph import get_cached_graph_service, invalidate_graph_cache
 from database.migrations.migration_manager import MigrationManager
@@ -83,7 +87,20 @@ def create_app(dataset_id=None, engine=None, session_local=None, service_factory
             logger.info("Initializing operations database...")
             operations_db_manager = get_pipeline_database_manager()
             logger.info("Operations database initialized.")
-            
+
+            # Configure LLM response caching to reduce API calls and costs
+            # Note: This is separate from the reference-api-buddy proxy which handles
+            # reference data sources (ConceptNet, DBpedia, etc.) but not LLM APIs
+            try:
+                from langchain_community.cache import SQLiteCache
+                from langchain.globals import set_llm_cache
+
+                cache_path = operations_db_manager.operations_db_path.replace('.db', '_llm_cache.db')
+                set_llm_cache(SQLiteCache(database_path=cache_path))
+                logger.info(f"LLM response caching enabled: {cache_path}")
+            except Exception as e:
+                logger.warning(f"Failed to enable LLM caching: {e}")
+
             # Run migrations to ensure schema is up to date
             active_dataset = dataset_manager.get_active_dataset()
             if active_dataset:
@@ -303,6 +320,42 @@ def create_app(dataset_id=None, engine=None, session_local=None, service_factory
 
     # Embeddings management
     app.include_router(embeddings.router, tags=["embeddings"])
+
+    # Phase 5: RAG Pipeline for entity extraction
+    app.include_router(rag_pipeline.router, prefix="/api/rag", tags=["rag-pipeline"])
+
+    # Add global exception handler to sanitize error messages
+    from fastapi import Request, status
+    from fastapi.responses import JSONResponse
+    import re
+
+    @app.exception_handler(Exception)
+    async def global_exception_handler(request: Request, exc: Exception):
+        """
+        Global exception handler to sanitize error messages.
+
+        Removes file system paths and other sensitive information from error messages
+        to prevent information disclosure.
+        """
+        logger.error(f"Unhandled exception: {exc}", exc_info=True)
+
+        # Get the error message
+        error_msg = str(exc)
+
+        # Sanitize file paths (Unix and Windows style)
+        # Remove absolute paths like /workspace/, /home/, C:\, etc.
+        error_msg = re.sub(r'/[\w\-/]+/[\w\-./]+\.py', '[REDACTED]', error_msg)
+        error_msg = re.sub(r'[A-Z]:\\[\w\-\\]+\\[\w\-.\\]+\.py', '[REDACTED]', error_msg)
+        error_msg = re.sub(r'/workspace/[\w\-./]+', '[REDACTED]', error_msg)
+        error_msg = re.sub(r'/home/[\w\-./]+', '[REDACTED]', error_msg)
+        error_msg = re.sub(r'/usr/[\w\-./]+', '[REDACTED]', error_msg)
+        error_msg = re.sub(r'/local-server/[\w\-./]+', '[REDACTED]', error_msg)
+
+        # Return generic error response
+        return JSONResponse(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            content={"detail": error_msg}
+        )
 
     return app
 

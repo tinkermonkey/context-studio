@@ -55,28 +55,57 @@ interface TermPageProps {
 export const TermDetails: React.FC<TermPageProps> = ({ term }) => {
   const queryClient = useQueryClient();
   const [isEditOpen, setIsEditOpen] = React.useState(false);
-  // For now, assume direct parent is domain (simplified approach)
-  // TODO: Implement full hierarchy traversal when needed
-  const { data: parentNode } = useStructureNode(term.parent_node_id ?? "");
 
-  // Try to get domain - either the parent is a domain, or we need to traverse further
-  const isDomainParent = parentNode?.node_type === NodeType.DOMAIN;
-  const { data: domain, isLoading: domainLoading } = useStructureNode(
-    isDomainParent ? (parentNode?.id ?? "") : "",
-  );
-
-  // Get layer from domain if we have it
-  const { data: layer, isLoading: layerLoading } = useStructureNode(
-    domain?.parent_node_id ?? "",
-  );
-  // Use parentNode for both domain and term parents
-  const parentTerm = !isDomainParent ? (parentNode as any) : null;
-  const parentTermLoading = false; // Already loaded via parentNode
-  const { data: relationships, isLoading: relationshipsLoading } = useNodeLinks(
-    { source_node_id: term.id },
-  );
+  // Load term hierarchy to get ancestors
   const { data: termHierarchy, isLoading: hierarchyLoading } = useTermHierarchy(
     term.id,
+  );
+
+  // Extract layer, domain, and parent term from hierarchy
+  const hierarchyData = React.useMemo(() => {
+    if (!termHierarchy) {
+      return {
+        layerId: null,
+        domainId: null,
+        parentTermId: null,
+      };
+    }
+
+    const ancestors = (termHierarchy.ancestors as Array<{
+      id: string;
+      type: string;
+      title: string;
+      distance: number;
+    }>) || [];
+
+    // Find layer (farthest ancestor of type layer)
+    const layer = ancestors.find((a) => a.type === "layer");
+
+    // Find domain (should be between layer and terms)
+    const domain = ancestors.find((a) => a.type === "domain");
+
+    // Find parent term (closest ancestor of type term, distance = 1)
+    const parentTerm = ancestors.find((a) => a.type === "term" && a.distance === 1);
+
+    return {
+      layerId: layer?.id || null,
+      domainId: domain?.id || null,
+      parentTermId: parentTerm?.id || null,
+    };
+  }, [termHierarchy]);
+
+  // Load the actual nodes
+  const { data: layer, isLoading: layerLoading } = useStructureNode(
+    hierarchyData.layerId ?? "",
+  );
+  const { data: domain, isLoading: domainLoading } = useStructureNode(
+    hierarchyData.domainId ?? "",
+  );
+  const { data: parentTerm, isLoading: parentTermLoading } = useStructureNode(
+    hierarchyData.parentTermId ?? "",
+  );
+  const { data: relationships, isLoading: relationshipsLoading } = useNodeLinks(
+    { source_node_id: term.id },
   );
   const { data: childTerms, isLoading: childTermsLoading } = useTermNodes(
     term.id,
@@ -221,7 +250,7 @@ export const TermDetails: React.FC<TermPageProps> = ({ term }) => {
         </CsSidebarSection>
 
         {/* Parent Term */}
-        {term.parent_node_id && (
+        {parentTerm && (
           <CsSidebarSection>
             <CsSidebarSectionTitle icon={Hash}>
               Parent Term
@@ -229,7 +258,7 @@ export const TermDetails: React.FC<TermPageProps> = ({ term }) => {
 
             {parentTermLoading ? (
               <Spinner size="sm" />
-            ) : parentTerm ? (
+            ) : (
               <div className="mx-2">
                 <div className="flex items-center font-semibold">
                   <TermRenderer term_id={parentTerm.id} />
@@ -245,8 +274,6 @@ export const TermDetails: React.FC<TermPageProps> = ({ term }) => {
                   {parentTerm.definition}
                 </div>
               </div>
-            ) : (
-              <span className="text-gray-500 italic">Unknown parent term</span>
             )}
           </CsSidebarSection>
         )}
@@ -574,7 +601,7 @@ const TermEditModal: React.FC<{
 }> = ({ term, isOpen, onClose }) => {
   const queryClient = useQueryClient();
 
-  const handleSuccess = (updated: any) => {
+  const handleSuccess = () => {
     onClose();
 
     try {
