@@ -315,43 +315,60 @@ class NetworkService:
         
         return terms
     
-    def get_term_hierarchy(self, term_id: str) -> Dict[str, Any]:
+    def get_node_hierarchy(self, node_id: str, node_type: str = None) -> Dict[str, Any]:
         """
-        Get the full hierarchy for a term (ancestors and descendants).
-        
+        Get the full hierarchy for any structure node (ancestors and descendants).
+        This is node-type agnostic.
+
         Args:
-            term_id: Term ID
-            
+            node_id: Node ID
+            node_type: Node type (layer, domain, term). If not provided, will try all types.
+
         Returns:
             Dictionary with ancestors and descendants
         """
-        term_node = f"term:{term_id}"
-        
-        if term_node not in self.graph:
-            return {"ancestors": [], "descendants": []}
-        
+        # Try to find the node in the graph
+        if node_type:
+            graph_node_id = f"{node_type}:{node_id}"
+            if graph_node_id not in self.graph:
+                return {"ancestors": [], "descendants": []}
+        else:
+            # Try all types if not specified
+            graph_node_id = None
+            for ntype in ["layer", "domain", "term"]:
+                candidate = f"{ntype}:{node_id}"
+                if candidate in self.graph:
+                    graph_node_id = candidate
+                    break
+
+            if not graph_node_id:
+                return {"ancestors": [], "descendants": []}
+
         # Use NetworkX built-in functions to find ancestors and descendants
-        # In our graph structure, edges go from child to parent, so:
-        # - Ancestors are reachable by following outgoing edges (descendants in NetworkX terms)
-        # - Descendants are structure_nodes that can reach this term (ancestors in NetworkX terms)
-        
-        ancestor_nodes = nx.descendants(self.graph, term_node)
-        descendant_nodes = nx.ancestors(self.graph, term_node)
+        # In our graph structure, edges go from parent to child (see _add_hierarchical_edges), so:
+        # - Ancestors are nodes that can reach this node (ancestors in NetworkX terms)
+        # - Descendants are reachable by following outgoing edges (descendants in NetworkX terms)
+
+        ancestor_nodes = nx.ancestors(self.graph, graph_node_id)
+        descendant_nodes = nx.descendants(self.graph, graph_node_id)
         
         # Build ancestor list with distances
         ancestors = []
         for structure_node in ancestor_nodes:
             node_data = self.graph.nodes[structure_node]
             try:
-                distance = nx.shortest_path_length(self.graph, term_node, structure_node)
+                # Distance from ancestor to node (following parent→child edges)
+                distance = nx.shortest_path_length(self.graph, structure_node, graph_node_id)
                 ancestors.append({
                     "id": structure_node.split(":", 1)[1],
                     "type": node_data.get("type"),
                     "title": node_data.get("title"),
+                    "definition": node_data.get("definition"),
+                    "parent_node_id": node_data.get("parent_node_id"),
                     "distance": distance
                 })
             except nx.NetworkXNoPath:
-                # This shouldn't happen since we got the structure_node from descendants
+                # This shouldn't happen since we got the structure_node from ancestors
                 continue
 
         # Build descendant list with distances
@@ -359,25 +376,40 @@ class NetworkService:
         for structure_node in descendant_nodes:
             node_data = self.graph.nodes[structure_node]
             try:
-                distance = nx.shortest_path_length(self.graph, structure_node, term_node)
+                # Distance from node to descendant (following parent→child edges)
+                distance = nx.shortest_path_length(self.graph, graph_node_id, structure_node)
                 descendants.append({
                     "id": structure_node.split(":", 1)[1],
                     "type": node_data.get("type"),
                     "title": node_data.get("title"),
+                    "definition": node_data.get("definition"),
+                    "parent_node_id": node_data.get("parent_node_id"),
                     "distance": distance
                 })
             except nx.NetworkXNoPath:
-                # This shouldn't happen since we got the structure_node from ancestors
+                # This shouldn't happen since we got the structure_node from descendants
                 continue
-        
+
         # Sort by distance
         ancestors.sort(key=lambda x: x["distance"])
         descendants.sort(key=lambda x: x["distance"])
-        
+
         return {
             "ancestors": ancestors,
             "descendants": descendants
         }
+
+    def get_term_hierarchy(self, term_id: str) -> Dict[str, Any]:
+        """
+        Get the full hierarchy for a term (backwards compatibility wrapper).
+
+        Args:
+            term_id: Term ID
+
+        Returns:
+            Dictionary with ancestors and descendants
+        """
+        return self.get_node_hierarchy(term_id, "term")
     
     def export_to_graphml(self, filepath: str):
         """

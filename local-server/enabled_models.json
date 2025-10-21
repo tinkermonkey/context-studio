@@ -16,6 +16,23 @@
         "cost-effective"
       ]
     },
+    "gpt-4o-mini": {
+      "model_name": "gpt-4o-mini",
+      "provider_type": "native_openai",
+      "display_name": "GPT-4o Mini",
+      "enabled": true,
+      "api_key_env_var": "OPENAI_API_KEY",
+      "custom_endpoint": null,
+      "model_override": null,
+      "description": "Efficient GPT-4 class model with strong performance",
+      "cost_tier": "low",
+      "tags": [
+        "openai",
+        "fast",
+        "cost-effective",
+        "gpt4-class"
+      ]
+    },
     "gpt-4": {
       "model_name": "gpt-4",
       "provider_type": "native_openai",

@@ -37,11 +37,13 @@ export class RAGService extends BaseService {
    * Extract entities from text using the RAG pipeline
    * @param text The text to analyze and extract entities from
    * @param enableTrace Enable detailed tracing for observability (default: false)
+   * @param enableLlmLayer Enable Layer 1 LLM extraction (optional, uses config default if not provided)
    * @returns RAG extraction response with entities, metrics, and request ID
    */
   async extractEntities(
     text: string,
     enableTrace: boolean = false,
+    enableLlmLayer?: boolean,
   ): Promise<ExtractEntitiesResponse> {
     const sanitizedText = this.sanitizeString(text, "text");
 
@@ -51,6 +53,7 @@ export class RAGService extends BaseService {
         {
           text: sanitizedText,
           enable_trace: enableTrace,
+          enable_llm_layer: enableLlmLayer,
         } as RAGExtractionRequest,
       );
       return response;

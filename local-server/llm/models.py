@@ -207,11 +207,23 @@ class StructuredOutputDefinition(BaseModel):
     discrepancies: Optional[str] = Field(None, description="Any noted discrepancies between sources")
 
 
+# Entity model for structured output
+class ExtractedEntitySchema(BaseModel):
+    """Schema for a single extracted entity"""
+    model_config = {"extra": "forbid"}  # Forbid additional properties
+
+    text: str = Field(..., description="Entity text as it appears")
+    entity_type: str = Field(..., description="Type of entity (CONCEPT, PERSON, etc.)")
+    confidence: float = Field(..., description="Confidence score 0.0-1.0")
+    sentence_index: int = Field(..., description="Index of sentence where entity was found")
+    reasoning: Optional[str] = Field(None, description="Brief reasoning for extraction")
+
 # Structured output model for entity extraction
 class StructuredOutputEntities(BaseModel):
     """Structured output model for entity extraction responses"""
+    model_config = {"extra": "forbid"}  # Forbid additional properties
 
-    entities: List[Dict[str, Any]] = Field(..., description="List of extracted entities with properties")
+    entities: List[ExtractedEntitySchema] = Field(default_factory=list, description="List of extracted entities with properties")
 
 
 # Static mapping from PipelineType to structured output types

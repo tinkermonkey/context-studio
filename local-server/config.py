@@ -57,7 +57,7 @@ class DatabaseConfig(BaseModel):
 
 class LLMConfig(BaseModel):
     """Large Language Model configuration section"""
-    model_name: str = Field(default="gpt-3.5-turbo", description="OpenAI model name")
+    model_name: str = Field(default="gpt-4o-mini", description="OpenAI model name")
     temperature: float = Field(default=0.0, ge=0.0, le=2.0, description="Model temperature")
     max_tokens: Optional[int] = Field(default=None, ge=1, le=32000, description="Maximum tokens for response")
     timeout: int = Field(default=30, ge=1, le=300, description="Request timeout in seconds")
@@ -85,11 +85,12 @@ class RAGPipelineConfig(BaseModel):
 
     # Knowledge graph context retrieval settings
     kg_context_top_k: int = Field(default=50, ge=1, le=1000, description="Top-k results for knowledge graph context retrieval")
-    kg_vector_threshold: float = Field(default=0.7, ge=0.0, le=1.0, description="Similarity threshold for vector search in knowledge graph")
+    kg_vector_threshold: float = Field(default=0.6, ge=0.0, le=1.0, description="Minimum similarity threshold for vector search in knowledge graph (Layer 0 and Layer 3)")
 
     # LLM pipeline settings
     llm_pipeline_flavor: Optional[str] = Field(default=None, description="LLM pipeline flavor to use for RAG operations")
     llm_timeout: int = Field(default=30, ge=1, le=300, description="LLM request timeout in seconds")
+    enable_llm_layer: bool = Field(default=True, description="Enable Layer 1 LLM extraction (can be disabled for testing or cost reduction)")
 
     # Gap detection settings
     gap_detection_deps: List[str] = Field(default_factory=list, description="Dependencies for gap detection layer")
@@ -116,6 +117,8 @@ class RAGPipelineConfig(BaseModel):
 class ReferenceSourceRateLimitConfig(BaseModel):
     """Rate limiting configuration for a specific reference source"""
     requests_per_hour: int = Field(default=1000, ge=1, description="Requests per hour limit")
+    requests_per_minute: Optional[int] = Field(default=None, ge=1, description="Requests per minute limit (optional)")
+    requests_per_second: Optional[int] = Field(default=None, ge=1, description="Requests per second limit (optional)")
     progressive_delay: bool = Field(default=True, description="Enable progressive delay on rate limit")
     max_delay: int = Field(default=300, ge=1, description="Maximum delay in seconds")
 
@@ -150,36 +153,99 @@ class ReferenceSourcesConfig(BaseModel):
     # Individual source configurations
     conceptnet: ReferenceSourceConfig = Field(default_factory=lambda: ReferenceSourceConfig(
         upstream_url="https://api.conceptnet.io",
-        rate_limit=ReferenceSourceRateLimitConfig(requests_per_hour=3600)
+        rate_limit=ReferenceSourceRateLimitConfig(
+            requests_per_hour=3600,
+            requests_per_minute=60,  # Conservative: ~1/sec to avoid 30-60s hangs reported by users
+            requests_per_second=1    # Very conservative to avoid API hangs
+        )
     ))
     
     # DBpedia has multiple services, so we configure them separately
     dbpedia_lookup: ReferenceSourceConfig = Field(default_factory=lambda: ReferenceSourceConfig(
         upstream_url="https://lookup.dbpedia.org",
-        rate_limit=ReferenceSourceRateLimitConfig(requests_per_hour=3600)
+        rate_limit=ReferenceSourceRateLimitConfig(
+            requests_per_hour=360000,  # 100 req/sec * 3600 sec
+            requests_per_minute=6000,   # 100 req/sec * 60 sec
+            requests_per_second=100     # Official limit: 100 req/sec per IP
+        )
     ))
-    
+
     dbpedia_sparql: ReferenceSourceConfig = Field(default_factory=lambda: ReferenceSourceConfig(
         upstream_url="https://dbpedia.org",
-        rate_limit=ReferenceSourceRateLimitConfig(requests_per_hour=3600)
+        rate_limit=ReferenceSourceRateLimitConfig(
+            requests_per_hour=360000,  # 100 req/sec * 3600 sec
+            requests_per_minute=6000,   # 100 req/sec * 60 sec
+            requests_per_second=100     # Official limit: 100 req/sec per IP
+        )
     ))
-    
+
     dbpedia_spotlight: ReferenceSourceConfig = Field(default_factory=lambda: ReferenceSourceConfig(
         upstream_url="https://api.dbpedia-spotlight.org/en/",
-        rate_limit=ReferenceSourceRateLimitConfig(requests_per_hour=3600)
+        rate_limit=ReferenceSourceRateLimitConfig(
+            requests_per_hour=100000,  # No official limit, but be reasonable
+            requests_per_minute=1800,   # ~30 req/sec (documented self-hosted performance)
+            requests_per_second=30      # Conservative based on documented performance
+        )
     ))
     
     wikidata: ReferenceSourceConfig = Field(default_factory=lambda: ReferenceSourceConfig(
         upstream_url="https://query.wikidata.org",
-        rate_limit=ReferenceSourceRateLimitConfig(requests_per_hour=1000)  # Lower limit for Wikidata
+        rate_limit=ReferenceSourceRateLimitConfig(
+            requests_per_hour=3000,     # Conservative hourly limit
+            requests_per_minute=50,     # 60 seconds of query time per minute, be conservative
+            requests_per_second=2       # Conservative: allow short bursts but avoid overwhelming
+        )
     ))
     
+    duckduckgo: ReferenceSourceConfig = Field(default_factory=lambda: ReferenceSourceConfig(
+        upstream_url="https://api.duckduckgo.com",
+        rate_limit=ReferenceSourceRateLimitConfig(
+            requests_per_hour=3600,  # Free API, conservative limit
+            requests_per_minute=60,   # ~1 per second
+            requests_per_second=1     # Conservative to avoid overwhelming free service
+        )
+    ))
+
     schema_org: ReferenceSourceConfig = Field(default_factory=lambda: ReferenceSourceConfig(
         upstream_url="https://schema.org",
         use_proxy=False,  # Local database, no proxy needed
         timeout=10,
         max_retries=1,
         rate_limit=ReferenceSourceRateLimitConfig(requests_per_hour=10000)  # Local, no real limit
+    ))
+
+    # LLM API endpoints - NOTE: Currently disabled for proxy routing
+    # The reference-api-buddy proxy is a reverse proxy and doesn't support
+    # HTTPS CONNECT tunneling required by OpenAI/Anthropic clients.
+    # LLM response caching is handled by LangChain's built-in cache instead.
+    openai: ReferenceSourceConfig = Field(default_factory=lambda: ReferenceSourceConfig(
+        upstream_url="https://api.openai.com",
+        use_proxy=False,  # Disabled: requires CONNECT proxy, not reverse proxy
+        enabled=True,
+        timeout=60,
+        max_retries=2,
+        rate_limit=ReferenceSourceRateLimitConfig(
+            requests_per_hour=500,      # Tier 1: 500 RPM for most models
+            requests_per_minute=10,     # Conservative for free tier (3 RPM) / Tier 1
+            requests_per_second=1,      # Avoid bursts, smooth rate limiting
+            progressive_delay=True,
+            max_delay=60
+        )
+    ))
+
+    anthropic: ReferenceSourceConfig = Field(default_factory=lambda: ReferenceSourceConfig(
+        upstream_url="https://api.anthropic.com",
+        use_proxy=False,  # Disabled: requires CONNECT proxy, not reverse proxy
+        enabled=True,
+        timeout=60,
+        max_retries=2,
+        rate_limit=ReferenceSourceRateLimitConfig(
+            requests_per_hour=3000,     # Tier 1: 50 RPM, being conservative at hourly level
+            requests_per_minute=50,     # Tier 1: 50 RPM official limit
+            requests_per_second=1,      # Smoothed: 1 request per second (60 RPM spread evenly)
+            progressive_delay=True,
+            max_delay=60
+        )
     ))
 
 
@@ -386,7 +452,10 @@ class Settings(BaseModel):
                 "dbpedia_spotlight": ["spacy_dbpedia_spotlight", "dbpedia_spotlight"],
                 "dbpedia_lookup": ["dbpedia", "dbpedia_lookup"],  # Map dbpedia_lookup to legacy 'dbpedia' key
                 "dbpedia_sparql": ["dbpedia_sparql"],
-                "wikidata": ["wikidata"]
+                "wikidata": ["wikidata"],
+                "duckduckgo": ["duckduckgo"],
+                "openai": ["openai"],
+                "anthropic": ["anthropic"]
             }
             domain_mappings[source_name] = {
                 "upstream": config.upstream_url,
@@ -412,7 +481,10 @@ class Settings(BaseModel):
                     "dbpedia_lookup": self.reference_sources.dbpedia_lookup.rate_limit.requests_per_hour,
                     "dbpedia_sparql": self.reference_sources.dbpedia_sparql.rate_limit.requests_per_hour,
                     "dbpedia_spotlight": self.reference_sources.dbpedia_spotlight.rate_limit.requests_per_hour,
-                    "wikidata": self.reference_sources.wikidata.rate_limit.requests_per_hour
+                    "wikidata": self.reference_sources.wikidata.rate_limit.requests_per_hour,
+                    "duckduckgo": self.reference_sources.duckduckgo.rate_limit.requests_per_hour,
+                    "openai": self.reference_sources.openai.rate_limit.requests_per_hour,
+                    "anthropic": self.reference_sources.anthropic.rate_limit.requests_per_hour
                 }
             },
             "security": {
@@ -461,21 +533,27 @@ class Settings(BaseModel):
     def ENABLE_CACHING_PROXY(self) -> Dict[str, bool]:
         """Legacy compatibility property"""
         return {
-            "concepcy": (self.reference_sources.conceptnet.enabled and 
+            "concepcy": (self.reference_sources.conceptnet.enabled and
                         self.reference_sources.conceptnet.use_proxy),
-            "spacy_dbpedia_spotlight": (self.reference_sources.dbpedia_spotlight.enabled and 
+            "spacy_dbpedia_spotlight": (self.reference_sources.dbpedia_spotlight.enabled and
                                       self.reference_sources.dbpedia_spotlight.use_proxy),
-            "conceptnet": (self.reference_sources.conceptnet.enabled and 
+            "conceptnet": (self.reference_sources.conceptnet.enabled and
                           self.reference_sources.conceptnet.use_proxy),
             # Map legacy 'dbpedia' to dbpedia_lookup for backward compatibility
-            "dbpedia": (self.reference_sources.dbpedia_lookup.enabled and 
+            "dbpedia": (self.reference_sources.dbpedia_lookup.enabled and
                        self.reference_sources.dbpedia_lookup.use_proxy),
-            "dbpedia_lookup": (self.reference_sources.dbpedia_lookup.enabled and 
+            "dbpedia_lookup": (self.reference_sources.dbpedia_lookup.enabled and
                               self.reference_sources.dbpedia_lookup.use_proxy),
-            "dbpedia_sparql": (self.reference_sources.dbpedia_sparql.enabled and 
+            "dbpedia_sparql": (self.reference_sources.dbpedia_sparql.enabled and
                               self.reference_sources.dbpedia_sparql.use_proxy),
-            "wikidata": (self.reference_sources.wikidata.enabled and 
-                        self.reference_sources.wikidata.use_proxy)
+            "wikidata": (self.reference_sources.wikidata.enabled and
+                        self.reference_sources.wikidata.use_proxy),
+            "duckduckgo": (self.reference_sources.duckduckgo.enabled and
+                          self.reference_sources.duckduckgo.use_proxy),
+            "openai": (self.reference_sources.openai.enabled and
+                      self.reference_sources.openai.use_proxy),
+            "anthropic": (self.reference_sources.anthropic.enabled and
+                         self.reference_sources.anthropic.use_proxy)
         }
     
     @property

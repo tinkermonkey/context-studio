@@ -58,12 +58,18 @@ async def extract_entities(
         HTTPException 500: If pipeline execution fails
     """
     try:
-        logger.info(f"Received RAG extraction request, text_length={len(request.text)}, enable_trace={request.enable_trace}")
+        # Determine if LLM layer should be enabled (request overrides config default)
+        from config import get_settings
+        settings = get_settings()
+        enable_llm_layer = request.enable_llm_layer if request.enable_llm_layer is not None else settings.rag_pipeline.enable_llm_layer
+
+        logger.info(f"Received RAG extraction request, text_length={len(request.text)}, enable_trace={request.enable_trace}, enable_llm_layer={enable_llm_layer}")
 
         # Execute pipeline
         response = await pipeline_service.extract_entities(
             text=request.text,
-            enable_trace=request.enable_trace
+            enable_trace=request.enable_trace,
+            enable_llm_layer=enable_llm_layer
         )
 
         logger.info(

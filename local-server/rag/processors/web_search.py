@@ -2,7 +2,8 @@
 Rate-limited web search client for concept resolution.
 
 Implements token bucket algorithm for rate limiting and provides
-context-aware search queries.
+context-aware search queries. Uses the reference API caching proxy
+when available for improved performance.
 """
 from typing import Optional, Dict, Any
 import time
@@ -12,6 +13,8 @@ from datetime import datetime
 import requests
 
 from utils.logger import get_logger
+from nlp.proxy_manager import get_proxy_manager
+from config import get_settings
 
 logger = get_logger(__name__)
 
@@ -147,13 +150,20 @@ class RateLimitedWebSearchClient:
             grammatical_context: Optional grammatical hints (verb relationships)
 
         Returns:
-            SearchResult if successful, None if rate limited or failed
+            SearchResult if successful (with query field populated),
+            SearchResult with only query field if failed/rate-limited,
+            None only if session limit exceeded
         """
+        # Build context-aware query first (so we can always return it in trace)
+        enriched_query = self._build_context_aware_query(
+            query, domain_context, grammatical_context
+        )
+
         # Check session limit
         if not self.can_search():
             logger.warning(
                 f"Web search session limit reached ({self.max_attempts_per_session}), "
-                f"skipping query: {query}"
+                f"skipping query: {enriched_query}"
             )
             return None
 
@@ -163,17 +173,19 @@ class RateLimitedWebSearchClient:
             logger.info(f"Rate limit reached, waiting {wait_time:.2f}s before search")
             time.sleep(wait_time)
             if not self.rate_limiter.consume():
-                logger.warning(f"Failed to acquire rate limit token for query: {query}")
-                return None
+                logger.warning(f"Failed to acquire rate limit token for query: {enriched_query}")
+                # Return SearchResult with just the query so it can be traced
+                return SearchResult(
+                    query=enriched_query,
+                    title="",
+                    snippet="",
+                    url="",
+                    timestamp=datetime.now()
+                )
 
         # Increment session counter
         with self.session_lock:
             self.session_attempt_count += 1
-
-        # Build context-aware query
-        enriched_query = self._build_context_aware_query(
-            query, domain_context, grammatical_context
-        )
 
         logger.info(f"Performing web search (attempt {self.session_attempt_count}): {enriched_query}")
 
@@ -187,11 +199,25 @@ class RateLimitedWebSearchClient:
                 return result
             else:
                 logger.debug(f"Web search returned no results for: {enriched_query}")
-                return None
+                # Return SearchResult with just the query so it can be traced
+                return SearchResult(
+                    query=enriched_query,
+                    title="",
+                    snippet="",
+                    url="",
+                    timestamp=datetime.now()
+                )
 
         except Exception as e:
             logger.error(f"Web search failed for query '{enriched_query}': {e}")
-            return None
+            # Return SearchResult with just the query so it can be traced
+            return SearchResult(
+                query=enriched_query,
+                title="",
+                snippet="",
+                url="",
+                timestamp=datetime.now()
+            )
 
     def _build_context_aware_query(
         self,
@@ -200,32 +226,66 @@ class RateLimitedWebSearchClient:
         grammatical_context: Optional[str]
     ) -> str:
         """
-        Build context-aware search query.
+        Build context-aware search query optimized for definition retrieval.
+
+        DuckDuckGo Instant Answer API works best with simple, direct queries.
+        The "definition of" prefix actually reduces results, so we use the term directly
+        with optional domain context for disambiguation.
 
         Args:
-            query: Base query
-            domain_context: Domain context from recognized entities
-            grammatical_context: Grammatical hints
+            query: Base query (the term to define)
+            domain_context: Domain context from recognized entities (for disambiguation)
+            grammatical_context: Grammatical hints (verb relationships) - not currently used
 
         Returns:
-            Enriched query string
+            Enriched query string optimized for DuckDuckGo Instant Answer API
         """
-        parts = [query]
+        # DuckDuckGo works better with simple queries, not "definition of" prefix
+        base_query = query
 
-        if domain_context:
-            parts.append(domain_context)
+        # Add domain context only if provided (helps with disambiguation)
+        # e.g., "python programming" vs "python snake"
+        if domain_context and domain_context.strip():
+            # Use first entity from domain context to avoid overly long queries
+            context_words = domain_context.split(',')[0].strip()
+            if context_words:
+                base_query = f"{query} {context_words}"
 
-        if grammatical_context:
-            parts.append(f"related to {grammatical_context}")
+        return base_query
 
-        # Add "definition" to get better results
-        parts.append("definition")
+    def _get_base_url(self) -> str:
+        """
+        Get the base URL for DuckDuckGo API, using proxy if available.
 
-        return " ".join(parts)
+        Returns:
+            Base URL (proxy URL if proxy is running, otherwise upstream URL)
+        """
+        settings = get_settings()
+        duckduckgo_config = settings.get_source_config('duckduckgo')
+
+        # Check if proxy should be used
+        if duckduckgo_config.use_proxy:
+            proxy_manager = get_proxy_manager()
+            if proxy_manager.is_running:
+                proxy_config = proxy_manager.get_proxy_config()
+                if proxy_config and 'domain_mappings' in proxy_config:
+                    if 'duckduckgo' in proxy_config['domain_mappings']:
+                        server_config = proxy_config.get('server', {})
+                        host = server_config.get('host', '127.0.0.1')
+                        port = server_config.get('port', 18080)
+                        proxy_url = f"http://{host}:{port}/duckduckgo"
+                        logger.debug(f"Using proxy for DuckDuckGo: {proxy_url}")
+                        return proxy_url
+
+        # Fallback to upstream URL
+        return duckduckgo_config.upstream_url
 
     def _search_duckduckgo(self, query: str) -> Optional[SearchResult]:
         """
         Search using DuckDuckGo Instant Answer API.
+
+        Uses the reference API caching proxy when available for improved
+        performance and reduced API calls.
 
         Args:
             query: Search query
@@ -234,8 +294,10 @@ class RateLimitedWebSearchClient:
             SearchResult if found, None otherwise
         """
         try:
-            # DuckDuckGo Instant Answer API
-            url = "https://api.duckduckgo.com/"
+            # Get base URL (proxy or upstream)
+            base_url = self._get_base_url()
+
+            # Build full URL with query parameters
             params = {
                 'q': query,
                 'format': 'json',
@@ -244,14 +306,15 @@ class RateLimitedWebSearchClient:
             }
 
             response = requests.get(
-                url,
+                base_url,
                 params=params,
                 timeout=self.timeout_seconds,
                 headers={'User-Agent': 'ContextStudio/1.0 (Educational RAG System)'}
             )
 
-            if response.status_code != 200:
-                logger.warning(f"DuckDuckGo API returned status {response.status_code}")
+            # DuckDuckGo returns 202 (Accepted) for many queries, not 200
+            if response.status_code not in [200, 202]:
+                logger.warning(f"DuckDuckGo API returned status {response.status_code} from {base_url}")
                 return None
 
             data = response.json()

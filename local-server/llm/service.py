@@ -339,24 +339,24 @@ class LLMService:
     async def _get_flavor(self, pipeline: PipelineType, flavor_identifier: Optional[str]) -> PipelineFlavor:
         """Get flavor by ID, title, or default"""
         if not flavor_identifier:
-            return await self.flavor_service.get_default_flavor(pipeline)
-        
+            return self.flavor_service.get_default_flavor(pipeline)
+
         # Check for default flavor by ID or title
         if flavor_identifier == "default" or flavor_identifier.lower() == "default":
-            return await self.flavor_service.get_default_flavor(pipeline)
-        
+            return self.flavor_service.get_default_flavor(pipeline)
+
         # Try by ID first (for user-created flavors)
         try:
-            return await self.flavor_service.get_flavor_by_id(flavor_identifier)
+            return self.flavor_service.get_flavor_by_id(flavor_identifier)
         except FlavorNotFoundError:
             pass
-        
+
         # Try by title (for user-created flavors)
         try:
-            return await self.flavor_service.get_flavor_by_title(pipeline, flavor_identifier)
+            return self.flavor_service.get_flavor_by_title(pipeline, flavor_identifier)
         except FlavorNotFoundError:
             self.logger.warning(f"Flavor '{flavor_identifier}' not found, using default")
-            return await self.flavor_service.get_default_flavor(pipeline)
+            return self.flavor_service.get_default_flavor(pipeline)
     
     def _create_llm_from_flavor(self, flavor: PipelineFlavor, structured_output_class=None):
         """Create LLM instance with automatic capability detection and parameter validation"""
@@ -474,30 +474,45 @@ class LLMService:
             if not structured_output_class:
                 return None
 
+            # Log the response type for debugging
+            self.logger.debug(f"Response type: {type(response)}, Response: {response}")
+
             # Get field names from the Pydantic model
             field_names = list(structured_output_class.model_fields.keys())
 
             # Check if response has the expected structured output attributes
             if not any(hasattr(response, field_name) for field_name in field_names):
+                self.logger.debug(f"Response does not have expected fields: {field_names}")
                 return None
 
             # Extract all fields defined in the structured output class
             extracted_data = {}
             for field_name in field_names:
                 value = getattr(response, field_name, None)
+
+                # Convert Pydantic objects to dicts for JSON serialization
+                if hasattr(value, 'model_dump'):
+                    value = value.model_dump()
+                elif isinstance(value, list) and value and hasattr(value[0], 'model_dump'):
+                    value = [item.model_dump() for item in value]
                 # Convert empty strings to None for optional fields
-                if value == "":
+                elif value == "":
                     value = None
+
                 extracted_data[field_name] = value
+                self.logger.debug(f"Extracted field '{field_name}': {value}")
 
             # Validate that at least one required field has content
+            # Note: After changing entities to have a default, this may no longer be needed
             required_fields = [
                 name for name, field in structured_output_class.model_fields.items()
                 if field.is_required()
             ]
 
             if required_fields and not any(extracted_data.get(field) for field in required_fields):
-                return None
+                self.logger.warning(f"No required fields have content. Required: {required_fields}, Extracted: {extracted_data}")
+                # Don't return None - let the default_factory handle empty lists
+                # return None
 
             return extracted_data
 

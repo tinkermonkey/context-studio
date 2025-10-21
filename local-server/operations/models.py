@@ -90,3 +90,75 @@ class PipelineFlavorSelection(OperationsBase):
 
     def __repr__(self):
         return f"<PipelineFlavorSelection(id='{self.id}', record_id='{self.record_id}')>"
+
+
+class RAGProcessingMetrics(OperationsBase):
+    """Performance metrics for RAG pipeline requests."""
+
+    __tablename__ = "rag_processing_metrics"
+    __table_args__ = (
+        Index('idx_rag_metrics_request_id', 'request_id'),
+        Index('idx_rag_metrics_timestamp', 'timestamp'),
+    )
+
+    id = Column(String, primary_key=True)
+    request_id = Column(String, nullable=False)
+    sentence_text = Column(Text, nullable=False)
+
+    # Layer 0: Knowledge Graph Context Preparation
+    layer_0_time_ms = Column(Integer, nullable=True)
+    layer_0_count = Column(Integer, nullable=True)
+
+    # Layer 1: LLM-based Entity Extraction
+    layer_1_time_ms = Column(Integer, nullable=True)
+    layer_1_count = Column(Integer, nullable=True)
+
+    # Layer 2: spaCy Syntactic Gap Analysis
+    layer_2_time_ms = Column(Integer, nullable=True)
+    layer_2_count = Column(Integer, nullable=True)
+
+    # Layer 3: Concept Resolution via KG and Web Search
+    layer_3_time_ms = Column(Integer, nullable=True)
+    layer_3_count = Column(Integer, nullable=True)
+
+    # Total processing time
+    total_time_ms = Column(Integer, nullable=False)
+
+    # Timestamp for retention management
+    timestamp = Column(DateTime, nullable=False, default=datetime.datetime.utcnow)
+
+    # Retention period: 30 days for metrics
+    retention_days = Column(Integer, nullable=False, default=30)
+
+    def __repr__(self):
+        return f"<RAGProcessingMetrics(request_id='{self.request_id}', total_time_ms={self.total_time_ms})>"
+
+
+class RAGObservabilityTrace(OperationsBase):
+    """Detailed trace data for RAG pipeline debugging."""
+
+    __tablename__ = "rag_observability_trace"
+    __table_args__ = (
+        Index('idx_rag_trace_request_id', 'request_id'),
+        Index('idx_rag_trace_layer_name', 'layer_name'),
+        Index('idx_rag_trace_timestamp', 'timestamp'),
+        Index('idx_rag_trace_request_sentence', 'request_id', 'sentence_index'),
+    )
+
+    id = Column(String, primary_key=True)
+    request_id = Column(String, nullable=False)
+    sentence_index = Column(Integer, nullable=False)
+    layer_name = Column(String, nullable=False)
+    operation_type = Column(String, nullable=False)
+
+    # JSON data containing full layer input/output
+    trace_data = Column(Text, nullable=False)
+
+    # Timestamp for retention management
+    timestamp = Column(DateTime, nullable=False, default=datetime.datetime.utcnow)
+
+    # Retention period: 7 days for traces (more detailed, shorter retention)
+    retention_days = Column(Integer, nullable=False, default=7)
+
+    def __repr__(self):
+        return f"<RAGObservabilityTrace(request_id='{self.request_id}', layer_name='{self.layer_name}')>"

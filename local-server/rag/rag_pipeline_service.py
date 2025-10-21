@@ -79,6 +79,7 @@ class RAGPipelineService:
         ops_db_session: Session,
         llm_flavor_id: str = "default",
         kg_top_k: int = 50,
+        kg_vector_threshold: float = 0.6,
         timeout_layer_0: float = DEFAULT_TIMEOUT_LAYER_0,
         timeout_layer_1: float = DEFAULT_TIMEOUT_LAYER_1,
         timeout_layer_2: float = DEFAULT_TIMEOUT_LAYER_2,
@@ -94,6 +95,7 @@ class RAGPipelineService:
             ops_db_session: Database session for operations/observability (operations.db)
             llm_flavor_id: LLM pipeline flavor ID to use for extraction
             kg_top_k: Number of top KG nodes to retrieve (default: 50)
+            kg_vector_threshold: Minimum similarity threshold for KG vector search (default: 0.4)
             timeout_layer_0: Timeout for Layer 0 in seconds (default: 0.5)
             timeout_layer_1: Timeout for Layer 1 in seconds (default: 30.0)
             timeout_layer_2: Timeout for Layer 2 in seconds (default: 0.5)
@@ -114,24 +116,26 @@ class RAGPipelineService:
         # Configurable deduplication threshold
         self.DEDUP_SIMILARITY_THRESHOLD = dedup_similarity_threshold
 
-        # Initialize processors
-        self.kg_processor = KGContextProcessor(kg_db_session, top_k=kg_top_k)
+        # Initialize processors with shared vector similarity threshold
+        self.kg_processor = KGContextProcessor(kg_db_session, top_k=kg_top_k, similarity_threshold=kg_vector_threshold)
         self.llm_processor = LLMExtractionProcessor(flavor_id=llm_flavor_id)
         self.spacy_processor = SpaCyGapProcessor(tf_idf_threshold=0.1)
-        self.concept_processor = ConceptResolutionProcessor(kg_db_session, similarity_threshold=0.6)
+        self.concept_processor = ConceptResolutionProcessor(kg_db_session, similarity_threshold=kg_vector_threshold)
 
         # Initialize observability store
         self.observability_store = RAGObservabilityStore(ops_db_session)
 
         logger.info(
             f"RAGPipelineService initialized with llm_flavor={llm_flavor_id}, kg_top_k={kg_top_k}, "
+            f"kg_vector_threshold={kg_vector_threshold}, "
             f"timeouts=[L0:{self.TIMEOUT_LAYER_0}s, L1:{self.TIMEOUT_LAYER_1}s, L2:{self.TIMEOUT_LAYER_2}s, L3:{self.TIMEOUT_LAYER_3}s]"
         )
 
     async def extract_entities(
         self,
         text: str,
-        enable_trace: bool = False
+        enable_trace: bool = False,
+        enable_llm_layer: bool = True
     ) -> RAGExtractionResponse:
         """
         Extract entities from text using the full RAG pipeline.
@@ -139,6 +143,7 @@ class RAGPipelineService:
         Args:
             text: Input text to analyze and extract entities from
             enable_trace: Enable detailed tracing for observability (default: False)
+            enable_llm_layer: Enable Layer 1 LLM extraction (default: True)
 
         Returns:
             RAGExtractionResponse with extracted entities, metrics, and trace info
@@ -220,51 +225,62 @@ class RAGPipelineService:
                     trace_data={}
                 )
 
-            # LAYER 1: LLM Entity Extraction
-            logger.info("Executing Layer 1: LLM Extraction")
-            layer_1_start = time.time()
+            # LAYER 1: LLM Entity Extraction (conditional)
+            if enable_llm_layer:
+                logger.info("Executing Layer 1: LLM Extraction")
+                layer_1_start = time.time()
 
-            try:
-                llm_extraction_output = await asyncio.wait_for(
-                    _run_in_thread(
-                        self.llm_processor.process,
-                        processor_input,
-                        kg_context_output
-                    ),
-                    timeout=self.TIMEOUT_LAYER_1
-                )
-                layer_1_time = (time.time() - layer_1_start) * 1000
-                logger.info(f"Layer 1 completed in {layer_1_time:.2f}ms, found {len(llm_extraction_output.entities)} entities")
+                try:
+                    llm_extraction_output = await asyncio.wait_for(
+                        _run_in_thread(
+                            self.llm_processor.process,
+                            processor_input,
+                            kg_context_output
+                        ),
+                        timeout=self.TIMEOUT_LAYER_1
+                    )
+                    layer_1_time = (time.time() - layer_1_start) * 1000
+                    logger.info(f"Layer 1 completed in {layer_1_time:.2f}ms, found {len(llm_extraction_output.entities)} entities")
 
-                if enable_trace:
-                    await _run_in_thread(
-                        self.observability_store.save_trace,
-                        request_id,
-                        -1,
-                        "llm_extraction",
-                        "output",
-                        llm_extraction_output.trace_data
+                    if enable_trace:
+                        await _run_in_thread(
+                            self.observability_store.save_trace,
+                            request_id,
+                            -1,
+                            "llm_extraction",
+                            "output",
+                            llm_extraction_output.trace_data
+                        )
+
+                except asyncio.TimeoutError:
+                    layer_1_time = (time.time() - layer_1_start) * 1000
+                    error_msg = f"Layer 1 timeout after {layer_1_time:.2f}ms (limit: {self.TIMEOUT_LAYER_1 * 1000}ms)"
+                    logger.warning(error_msg)
+                    layer_errors.append({"layer": "Layer 1", "error": error_msg})
+                    # Create empty LLM output
+                    from rag.processors.models import LLMExtractionOutput
+                    llm_extraction_output = LLMExtractionOutput(
+                        entities=[],
+                        kg_context_size=len(kg_context_output.kg_nodes),
+                        token_usage=None,
+                        trace_data={}
                     )
 
-            except asyncio.TimeoutError:
-                layer_1_time = (time.time() - layer_1_start) * 1000
-                error_msg = f"Layer 1 timeout after {layer_1_time:.2f}ms (limit: {self.TIMEOUT_LAYER_1 * 1000}ms)"
-                logger.warning(error_msg)
-                layer_errors.append({"layer": "Layer 1", "error": error_msg})
-                # Create empty LLM output
-                from rag.processors.models import LLMExtractionOutput
-                llm_extraction_output = LLMExtractionOutput(
-                    entities=[],
-                    kg_context_size=len(kg_context_output.kg_nodes),
-                    token_usage=None,
-                    trace_data={}
-                )
-
-            except Exception as e:
-                layer_1_time = (time.time() - layer_1_start) * 1000
-                error_msg = f"Layer 1 error: {str(e)}"
-                logger.error(error_msg, exc_info=True)
-                layer_errors.append({"layer": "Layer 1", "error": error_msg})
+                except Exception as e:
+                    layer_1_time = (time.time() - layer_1_start) * 1000
+                    error_msg = f"Layer 1 error: {str(e)}"
+                    logger.error(error_msg, exc_info=True)
+                    layer_errors.append({"layer": "Layer 1", "error": error_msg})
+                    from rag.processors.models import LLMExtractionOutput
+                    llm_extraction_output = LLMExtractionOutput(
+                        entities=[],
+                        kg_context_size=len(kg_context_output.kg_nodes),
+                        token_usage=None,
+                        trace_data={}
+                    )
+            else:
+                logger.info("Layer 1 (LLM Extraction) disabled - skipping")
+                layer_1_time = 0.0
                 from rag.processors.models import LLMExtractionOutput
                 llm_extraction_output = LLMExtractionOutput(
                     entities=[],
@@ -282,7 +298,8 @@ class RAGPipelineService:
                     _run_in_thread(
                         self.spacy_processor.process,
                         processor_input,
-                        llm_extraction_output
+                        llm_extraction_output,
+                        kg_context_output  # Pass KG context to exclude high-confidence matches
                     ),
                     timeout=self.TIMEOUT_LAYER_2
                 )
@@ -391,6 +408,7 @@ class RAGPipelineService:
             # DEDUPLICATION: Merge entities from all layers
             logger.info("Performing entity deduplication")
             all_entities = self._collect_and_deduplicate_entities(
+                kg_context_output,
                 llm_extraction_output,
                 concept_resolution_output
             )
@@ -406,26 +424,36 @@ class RAGPipelineService:
                 logger.warning(f"Pipeline completed with {len(layer_errors)} layer errors: {layer_errors}")
 
             # Build metrics
+            # Calculate operation counts for each layer
+            kg_operations = len(kg_context_output.extracted_phrases) if kg_context_output else 0  # Vector searches performed
+            llm_operations = 1 if llm_extraction_output and len(llm_extraction_output.entities) > 0 else 0  # LLM calls
+            nlp_operations = len(spacy_gap_output.gaps) if spacy_gap_output else 0  # Gap detections
+            web_operations = concept_resolution_output.web_searches_performed if concept_resolution_output else 0  # Web searches
+
             metrics = ProcessingMetrics(
                 kg_layer=LayerMetrics(
                     execution_time_ms=layer_0_time,
                     entities_found=len(kg_context_output.kg_nodes) if kg_context_output else 0,
-                    entities_deduplicated=0
+                    entities_deduplicated=0,
+                    operations_performed=kg_operations
                 ),
                 nlp_layer=LayerMetrics(
                     execution_time_ms=layer_2_time,
                     entities_found=len(spacy_gap_output.gaps) if spacy_gap_output else 0,
-                    entities_deduplicated=0
+                    entities_deduplicated=0,
+                    operations_performed=nlp_operations
                 ),
                 llm_layer=LayerMetrics(
                     execution_time_ms=layer_1_time,
                     entities_found=len(llm_extraction_output.entities) if llm_extraction_output else 0,
-                    entities_deduplicated=0
+                    entities_deduplicated=0,
+                    operations_performed=llm_operations
                 ),
                 web_layer=LayerMetrics(
                     execution_time_ms=layer_3_time,
                     entities_found=len(concept_resolution_output.resolved_concepts) if concept_resolution_output else 0,
-                    entities_deduplicated=0
+                    entities_deduplicated=0,
+                    operations_performed=web_operations
                 ),
                 total_execution_time_ms=total_time,
                 total_entities=len(all_entities),
@@ -468,10 +496,10 @@ class RAGPipelineService:
                 request_id=request_id,
                 entities=[],
                 metrics=ProcessingMetrics(
-                    kg_layer=LayerMetrics(execution_time_ms=layer_0_time, entities_found=0, entities_deduplicated=0),
-                    nlp_layer=LayerMetrics(execution_time_ms=layer_2_time, entities_found=0, entities_deduplicated=0),
-                    llm_layer=LayerMetrics(execution_time_ms=layer_1_time, entities_found=0, entities_deduplicated=0),
-                    web_layer=LayerMetrics(execution_time_ms=layer_3_time, entities_found=0, entities_deduplicated=0),
+                    kg_layer=LayerMetrics(execution_time_ms=layer_0_time, entities_found=0, entities_deduplicated=0, operations_performed=0),
+                    nlp_layer=LayerMetrics(execution_time_ms=layer_2_time, entities_found=0, entities_deduplicated=0, operations_performed=0),
+                    llm_layer=LayerMetrics(execution_time_ms=layer_1_time, entities_found=0, entities_deduplicated=0, operations_performed=0),
+                    web_layer=LayerMetrics(execution_time_ms=layer_3_time, entities_found=0, entities_deduplicated=0, operations_performed=0),
                     total_execution_time_ms=total_time,
                     total_entities=0,
                     total_sentences=0
@@ -481,15 +509,17 @@ class RAGPipelineService:
 
     def _collect_and_deduplicate_entities(
         self,
+        kg_output,
         llm_output,
         concept_output
     ) -> List[ExtractedEntity]:
         """
         Collect entities from all layers and deduplicate using 90% similarity threshold.
 
-        Priority order: LLM extraction > spaCy pattern match > web search
+        Priority order: LLM extraction > KG context matches > spaCy pattern match > web search
 
         Args:
+            kg_output: KG context output from Layer 0
             llm_output: LLM extraction output
             concept_output: Concept resolution output
 
@@ -499,8 +529,19 @@ class RAGPipelineService:
         entities_map: Dict[str, ExtractedEntity] = {}
 
         # Priority 1: LLM extracted entities
+        # Build KG node lookup map
+        kg_node_map = {node.node_id: node for node in kg_output.kg_nodes}
+
         for llm_entity in llm_output.entities:
             entity_key = llm_entity.text.lower().strip()
+
+            # Look up KG node title if matched
+            matched_kg_node_title = None
+            if llm_entity.matched_kg_node:
+                kg_node = kg_node_map.get(llm_entity.matched_kg_node)
+                if kg_node:
+                    matched_kg_node_title = kg_node.title
+
             entities_map[entity_key] = ExtractedEntity(
                 text=llm_entity.text,
                 type=llm_entity.entity_type,
@@ -509,12 +550,49 @@ class RAGPipelineService:
                 sentence_index=llm_entity.sentence_indices[0] if llm_entity.sentence_indices else 0,
                 metadata={
                     "matched_kg_node": llm_entity.matched_kg_node,
+                    "matched_kg_node_title": matched_kg_node_title,
                     "sentence_indices": llm_entity.sentence_indices,
                     "char_range": [llm_entity.start_char, llm_entity.end_char]
                 }
             )
 
-        # Priority 2 & 3: Resolved concepts (from spaCy + web search)
+        # Priority 2: KG context matches from Layer 0
+        # Include KG nodes that were matched via vector search and have phrase mappings
+        if kg_output.phrase_to_kg_map:
+            for phrase_text, matches in kg_output.phrase_to_kg_map.items():
+                if not matches:
+                    continue
+
+                # Get the best match for this phrase
+                best_match = matches[0]
+                entity_key = phrase_text.lower().strip()
+
+                # Skip if already added by LLM layer
+                if entity_key in entities_map:
+                    continue
+
+                # Find the corresponding extracted phrase to get char positions
+                phrase_obj = next((p for p in kg_output.extracted_phrases if p.text == phrase_text), None)
+                sentence_index = phrase_obj.sentence_index if phrase_obj else 0
+                start_char = phrase_obj.start_char if phrase_obj else 0
+                end_char = phrase_obj.end_char if phrase_obj else 0
+
+                # Add as KG-sourced entity
+                entities_map[entity_key] = ExtractedEntity(
+                    text=phrase_text,
+                    type="CONCEPT",  # KG matches are concepts
+                    confidence=best_match['similarity'],  # Use KG similarity as confidence
+                    source_layer="kg",
+                    sentence_index=sentence_index,
+                    metadata={
+                        "matched_kg_node": best_match['node_id'],
+                        "matched_kg_node_title": best_match['node_title'],
+                        "kg_similarity": best_match['similarity'],
+                        "char_range": [start_char, end_char]
+                    }
+                )
+
+        # Priority 3 & 4: Resolved concepts (from spaCy + web search)
         # Optimize deduplication by sorting existing keys for better performance
         existing_keys_sorted = sorted(entities_map.keys())
 
@@ -570,6 +648,7 @@ class RAGPipelineService:
                     metadata={
                         "resolution_method": resolved.resolution_method.value,
                         "matched_kg_node": resolved.matched_kg_node.node_id if resolved.matched_kg_node else None,
+                        "matched_kg_node_title": resolved.matched_kg_node.title if resolved.matched_kg_node else None,
                         "web_definition": resolved.web_definition,
                         "dep_role": resolved.original_gap.dep_role,
                         "priority": resolved.original_gap.priority.value,

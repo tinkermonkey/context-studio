@@ -1,3 +1,7 @@
+import os
+# Disable tokenizers parallelism warning (must be set before importing transformers/tokenizers)
+os.environ["TOKENIZERS_PARALLELISM"] = "false"
+
 import uvicorn
 import argparse
 from fastapi import FastAPI
@@ -83,7 +87,20 @@ def create_app(dataset_id=None, engine=None, session_local=None, service_factory
             logger.info("Initializing operations database...")
             operations_db_manager = get_pipeline_database_manager()
             logger.info("Operations database initialized.")
-            
+
+            # Configure LLM response caching to reduce API calls and costs
+            # Note: This is separate from the reference-api-buddy proxy which handles
+            # reference data sources (ConceptNet, DBpedia, etc.) but not LLM APIs
+            try:
+                from langchain_community.cache import SQLiteCache
+                from langchain.globals import set_llm_cache
+
+                cache_path = operations_db_manager.operations_db_path.replace('.db', '_llm_cache.db')
+                set_llm_cache(SQLiteCache(database_path=cache_path))
+                logger.info(f"LLM response caching enabled: {cache_path}")
+            except Exception as e:
+                logger.warning(f"Failed to enable LLM caching: {e}")
+
             # Run migrations to ensure schema is up to date
             active_dataset = dataset_manager.get_active_dataset()
             if active_dataset:

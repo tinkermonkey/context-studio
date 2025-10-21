@@ -19,6 +19,7 @@ type DeleteTraceResponse = operations["delete_trace_api_rag_trace__request_id__d
 export interface ExtractEntitiesParams {
   text: string;
   enableTrace?: boolean;
+  enableLlmLayer?: boolean;
 }
 
 /**
@@ -32,8 +33,8 @@ export const useExtractEntities = (
   >,
 ) => {
   return useMutation({
-    mutationFn: ({ text, enableTrace = false }: ExtractEntitiesParams) =>
-      ragService.extractEntities(text, enableTrace),
+    mutationFn: ({ text, enableTrace = false, enableLlmLayer }: ExtractEntitiesParams) =>
+      ragService.extractEntities(text, enableTrace, enableLlmLayer),
     ...options,
   });
 };

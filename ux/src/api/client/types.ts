@@ -6938,7 +6938,7 @@ export interface components {
          * LayerMetrics
          * @description Performance metrics for a single pipeline layer.
          *
-         *     Tracks timing and entity counts for each layer of the RAG pipeline.
+         *     Tracks timing, entity counts, and operation counts for each layer of the RAG pipeline.
          */
         LayerMetrics: {
             /**
@@ -6957,6 +6957,12 @@ export interface components {
              * @default 0
              */
             entities_deduplicated: number;
+            /**
+             * Operations Performed
+             * @description Number of operations/searches performed (e.g., vector searches, web searches).
+             * @default 0
+             */
+            operations_performed: number;
         };
         /**
          * MaterializedViewRequest
@@ -7928,6 +7934,11 @@ export interface components {
              * @default false
              */
             enable_trace: boolean;
+            /**
+             * Enable Llm Layer
+             * @description Enable Layer 1 LLM extraction. If None, uses config default.
+             */
+            enable_llm_layer?: boolean | null;
         };
         /**
          * RAGExtractionResponse

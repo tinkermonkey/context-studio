@@ -16773,6 +16773,13 @@
             "title": "Entities Deduplicated",
             "description": "Number of entities removed as duplicates in this layer.",
             "default": 0
+          },
+          "operations_performed": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Operations Performed",
+            "description": "Number of operations/searches performed (e.g., vector searches, web searches).",
+            "default": 0
           }
         },
         "type": "object",
@@ -16781,7 +16788,7 @@
           "entities_found"
         ],
         "title": "LayerMetrics",
-        "description": "Performance metrics for a single pipeline layer.\n\nTracks timing and entity counts for each layer of the RAG pipeline."
+        "description": "Performance metrics for a single pipeline layer.\n\nTracks timing, entity counts, and operation counts for each layer of the RAG pipeline."
       },
       "MaterializedViewRequest": {
         "properties": {
@@ -18813,6 +18820,18 @@
             "title": "Enable Trace",
             "description": "Enable detailed tracing for observability. Defaults to false per architect requirement.",
             "default": false
+          },
+          "enable_llm_layer": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Enable Llm Layer",
+            "description": "Enable Layer 1 LLM extraction. If None, uses config default."
           }
         },
         "type": "object",

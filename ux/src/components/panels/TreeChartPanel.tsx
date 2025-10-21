@@ -7,6 +7,7 @@ import {
   useTermNodes,
   useStructureNode,
 } from "@/api/hooks/structure_nodes/useStructureNodes";
+import { useTermHierarchy } from "@/api/hooks/graph/useGraph";
 import {
   buildHierarchicalTree,
   filterTreeByTerm,
@@ -14,6 +15,7 @@ import {
 } from "@/utils/treeBuilder";
 import { ChartData } from "@/components/graphs/hierarchy/tree_data";
 import { apiLogger } from "@/api/utils/logger";
+import { NodeType } from "@/api/types/structureNodes";
 
 export interface TreeChartPanelProps {
   /**
@@ -78,13 +80,26 @@ export function TreeChartPanel({
     error: termError,
   } = useStructureNode(termId || "");
 
+  // Load term hierarchy to get all ancestors
+  const {
+    data: termHierarchy,
+    isLoading: hierarchyLoading,
+    error: hierarchyError,
+  } = useTermHierarchy(termId || "");
+
   // Determine loading state
   const isLoading =
-    layersLoading || domainsLoading || termsLoading || (termId && termLoading);
+    layersLoading ||
+    domainsLoading ||
+    termsLoading ||
+    (termId && (termLoading || hierarchyLoading));
 
   // Determine error state
   const error =
-    layersError || domainsError || termsError || (termId && termError);
+    layersError ||
+    domainsError ||
+    termsError ||
+    (termId && (termError || hierarchyError));
 
   // Build chart data and collect initial expand state
   const { chartData, initialExpandState } = React.useMemo((): {
@@ -96,12 +111,108 @@ export function TreeChartPanel({
     }
 
     try {
-      // Build the complete tree first
-      const completeTree = buildHierarchicalTree({ layers, domains, terms });
+      // Ensure targetTerm and all its ancestors are included in the appropriate arrays
+      let allTerms = terms;
+      let allDomains = domains;
+      let allLayers = layers;
+
+      if (termId && targetTerm) {
+        // Add targetTerm if not present
+        if (!terms.some((t) => t.id === termId)) {
+          allTerms = [...terms, targetTerm];
+        }
+
+        // Process ancestors from hierarchy to ensure they're in the tree
+        if (termHierarchy) {
+          const ancestors = (termHierarchy.ancestors as Array<{
+            id: string;
+            type: string;
+            title: string;
+            definition?: string;
+            parent_node_id?: string;
+            distance: number;
+          }>) || [];
+
+          // Add missing ancestor terms
+          const ancestorTerms = ancestors.filter((a) => a.type === "term");
+          for (const ancestorTerm of ancestorTerms) {
+            if (!allTerms.some((t) => t.id === ancestorTerm.id)) {
+              allTerms = [
+                ...allTerms,
+                {
+                  id: ancestorTerm.id,
+                  title: ancestorTerm.title,
+                  definition: ancestorTerm.definition || "",
+                  node_type: NodeType.TERM,
+                  parent_node_id: ancestorTerm.parent_node_id,
+                  structural_predicate_id: undefined,
+                  title_embedding: undefined,
+                  definition_embedding: undefined,
+                  created_at: "",
+                  version: 1,
+                  last_modified: "",
+                },
+              ];
+            }
+          }
+
+          // Add missing ancestor domains
+          const ancestorDomains = ancestors.filter((a) => a.type === "domain");
+          for (const ancestorDomain of ancestorDomains) {
+            if (!allDomains.some((d) => d.id === ancestorDomain.id)) {
+              allDomains = [
+                ...allDomains,
+                {
+                  id: ancestorDomain.id,
+                  title: ancestorDomain.title,
+                  definition: ancestorDomain.definition || "",
+                  node_type: NodeType.DOMAIN,
+                  parent_node_id: ancestorDomain.parent_node_id,
+                  structural_predicate_id: undefined,
+                  title_embedding: undefined,
+                  definition_embedding: undefined,
+                  created_at: "",
+                  version: 1,
+                  last_modified: "",
+                },
+              ];
+            }
+          }
+
+          // Add missing ancestor layers
+          const ancestorLayers = ancestors.filter((a) => a.type === "layer");
+          for (const ancestorLayer of ancestorLayers) {
+            if (!allLayers.some((l) => l.id === ancestorLayer.id)) {
+              allLayers = [
+                ...allLayers,
+                {
+                  id: ancestorLayer.id,
+                  title: ancestorLayer.title,
+                  definition: ancestorLayer.definition || "",
+                  node_type: NodeType.LAYER,
+                  parent_node_id: ancestorLayer.parent_node_id,
+                  structural_predicate_id: undefined,
+                  title_embedding: undefined,
+                  definition_embedding: undefined,
+                  created_at: "",
+                  version: 1,
+                  last_modified: "",
+                },
+              ];
+            }
+          }
+        }
+      }
+
+      // Build the complete tree
+      const completeTree = buildHierarchicalTree({
+        layers: allLayers,
+        domains: allDomains,
+        terms: allTerms,
+      });
 
       // If termId is provided, filter the tree and expand all nodes
       if (termId && targetTerm) {
-        apiLogger.info("Filtering tree by term", { termId, targetTerm });
         const filteredTree = filterTreeByTerm(completeTree, termId);
 
         // Collect all node IDs from the filtered tree for initial expansion
@@ -125,7 +236,7 @@ export function TreeChartPanel({
       apiLogger.error("Error building chart data", { error: err, termId });
       return { chartData: null };
     }
-  }, [layers, domains, terms, termId, targetTerm]);
+  }, [layers, domains, terms, termId, targetTerm, termHierarchy]);
 
   // Handle loading state
   if (isLoading) {

@@ -4,24 +4,111 @@
  * Test interface for the RAG entity extraction API endpoint
  */
 
-import { useState } from "react";
-import { Button, Card, Label, Textarea, Spinner, Alert } from "flowbite-react";
-import { useExtractEntities } from "@/api/hooks/rag";
-import { Info } from "lucide-react";
+import { useState, useEffect, useMemo } from "react";
+import { Button, Card, Label, Textarea, Spinner, Alert, Checkbox, Badge } from "flowbite-react";
+import { useExtractEntities, useRAGTrace } from "@/api/hooks/rag";
+import { useStructureNode } from "@/api/hooks/structure_nodes/useStructureNodes";
+import { Info, ExternalLink } from "lucide-react";
+import { Link } from "@tanstack/react-router";
+
+// Component to render a single entity with its matched node link
+function EntityItem({ entity }: { entity: any }) {
+  const { data: node, isLoading } = useStructureNode(
+    entity.metadata?.matched_kg_node,
+    {
+      enabled: !!entity.metadata?.matched_kg_node,
+    }
+  );
+
+  const linkProps = useMemo(() => {
+    if (!node?.id || !node?.node_type) return null;
+
+    switch (node.node_type) {
+      case 'layer':
+        return { to: '/app/nodes/layer/$layerId' as const, params: { layerId: node.id } };
+      case 'domain':
+        return { to: '/app/nodes/domain/$domainId' as const, params: { domainId: node.id } };
+      case 'term':
+        return { to: '/app/nodes/term/$termId' as const, params: { termId: node.id } };
+      default:
+        return null;
+    }
+  }, [node]);
+
+  return (
+    <div className="flex items-center justify-between rounded-lg border border-gray-200 p-3 dark:border-gray-700">
+      <div className="flex-1">
+        <div className="flex items-center gap-2">
+          <span className="font-semibold text-gray-900 dark:text-white">
+            {entity.text}
+          </span>
+          {entity.type && (
+            <Badge color="info" size="sm">
+              {entity.type}
+            </Badge>
+          )}
+        </div>
+        {entity.metadata?.matched_kg_node && (
+          <div className="mt-1 text-sm text-gray-600 dark:text-gray-400">
+            <span className="font-medium">Matched to:</span>{" "}
+            {isLoading ? (
+              <span className="italic">Loading...</span>
+            ) : (
+              node?.title || entity.metadata.matched_kg_node_title || "Unknown"
+            )}
+          </div>
+        )}
+        {entity.context && (
+          <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
+            {entity.context}
+          </p>
+        )}
+        {entity.source_layer && (
+          <p className="mt-1 text-xs text-gray-500 dark:text-gray-500">
+            Source: {entity.source_layer}
+          </p>
+        )}
+      </div>
+      {linkProps && (
+        <Link
+          {...linkProps}
+          className="ml-4 flex items-center gap-1 text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300"
+        >
+          <span className="text-sm">View Node</span>
+          <ExternalLink className="h-4 w-4" />
+        </Link>
+      )}
+    </div>
+  );
+}
 
 export default function RAGTestPage() {
   const [inputText, setInputText] = useState("");
-  const [enableTrace, setEnableTrace] = useState(false);
+  const [enableTrace, setEnableTrace] = useState(true);
+  const [enableLlmLayer, setEnableLlmLayer] = useState(false);
   const [result, setResult] = useState<any>(null);
+  const [requestId, setRequestId] = useState<string | null>(null);
 
   const { mutate: extractEntities, isPending, error } = useExtractEntities({
     onSuccess: (data) => {
       setResult(data);
+      // Set request ID to trigger trace fetch if trace is available
+      if (data.trace_available && data.request_id) {
+        setRequestId(data.request_id);
+      }
     },
     onError: (err) => {
       console.error("RAG extraction failed:", err);
     },
   });
+
+  // Fetch trace data when request ID is set and trace is available
+  const { data: traceData, isLoading: isLoadingTrace, error: traceError } = useRAGTrace(
+    requestId,
+    {
+      enabled: !!requestId && result?.trace_available === true,
+    }
+  );
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -29,12 +116,13 @@ export default function RAGTestPage() {
       return;
     }
     setResult(null);
-    extractEntities({ text: inputText, enableTrace });
+    extractEntities({ text: inputText, enableTrace, enableLlmLayer });
   };
 
   const handleClear = () => {
     setInputText("");
     setResult(null);
+    setRequestId(null);
   };
 
   return (
@@ -54,15 +142,23 @@ export default function RAGTestPage() {
           <div className="mb-4">
             <div className="mb-2 flex items-center justify-between">
               <Label htmlFor="input-text" value="Input Text" />
-              <div className="flex items-center gap-2">
-                <input
-                  type="checkbox"
-                  id="enable-trace"
-                  checked={enableTrace}
-                  onChange={(e) => setEnableTrace(e.target.checked)}
-                  className="h-4 w-4 rounded border-gray-300 bg-gray-100 text-blue-600 focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:ring-offset-gray-800 dark:focus:ring-blue-600"
-                />
-                <Label htmlFor="enable-trace" value="Enable Trace" />
+              <div className="flex items-center gap-4">
+                <div className="flex items-center gap-2">
+                  <Checkbox
+                    id="enable-llm-layer"
+                    checked={enableLlmLayer}
+                    onChange={(e) => setEnableLlmLayer(e.target.checked)}
+                  />
+                  <Label htmlFor="enable-llm-layer">Enable LLM Layer</Label>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Checkbox
+                    id="enable-trace"
+                    checked={enableTrace}
+                    onChange={(e) => setEnableTrace(e.target.checked)}
+                  />
+                  <Label htmlFor="enable-trace">Enable Trace</Label>
+                </div>
               </div>
             </div>
             <Textarea
@@ -151,7 +247,7 @@ export default function RAGTestPage() {
                 Execution Time
               </div>
               <div className="text-2xl font-bold text-gray-900 dark:text-white">
-                {result.metrics.total_execution_time_ms}ms
+                {(result.metrics.total_execution_time_ms / 1000).toFixed(1)}s
               </div>
             </div>
             <div className="rounded-lg bg-yellow-50 p-4 dark:bg-yellow-900/20">
@@ -190,7 +286,15 @@ export default function RAGTestPage() {
                             Time:
                           </span>
                           <span className="font-mono text-gray-900 dark:text-white">
-                            {layerMetrics.execution_time_ms}ms
+                            {(layerMetrics.execution_time_ms / 1000).toFixed(1)}s
+                          </span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-gray-600 dark:text-gray-400">
+                            Operations:
+                          </span>
+                          <span className="font-mono text-gray-900 dark:text-white">
+                            {layerMetrics.operations_performed ?? 0}
                           </span>
                         </div>
                         <div className="flex justify-between">
@@ -218,6 +322,19 @@ export default function RAGTestPage() {
             </div>
           </div>
 
+          {result.entities && result.entities.length > 0 && (
+            <div className="mb-4">
+              <h3 className="mb-2 text-lg font-semibold text-gray-900 dark:text-white">
+                Extracted Entities ({result.entities.length})
+              </h3>
+              <div className="space-y-2">
+                {result.entities.map((entity: any, index: number) => (
+                  <EntityItem key={index} entity={entity} />
+                ))}
+              </div>
+            </div>
+          )}
+
           <div>
             <h3 className="mb-2 text-lg font-semibold text-gray-900 dark:text-white">
               Full Response (JSON)
@@ -228,6 +345,41 @@ export default function RAGTestPage() {
               </code>
             </pre>
           </div>
+        </Card>
+      )}
+
+      {result?.trace_available && (
+        <Card className="mt-6">
+          <div className="mb-4">
+            <h2 className="text-xl font-bold text-gray-900 dark:text-white">
+              Trace Data
+            </h2>
+          </div>
+
+          {isLoadingTrace && (
+            <div className="flex items-center justify-center py-8">
+              <Spinner size="lg" />
+              <span className="ml-3 text-gray-600 dark:text-gray-400">
+                Loading trace data...
+              </span>
+            </div>
+          )}
+
+          {traceError && (
+            <Alert color="failure">
+              <span className="font-medium">Error loading trace:</span> {traceError.message}
+            </Alert>
+          )}
+
+          {traceData && (
+            <div>
+              <pre className="overflow-auto rounded-lg bg-gray-50 p-4 text-xs dark:bg-gray-900">
+                <code className="text-gray-900 dark:text-white">
+                  {JSON.stringify(traceData, null, 2)}
+                </code>
+              </pre>
+            </div>
+          )}
         </Card>
       )}
     </div>

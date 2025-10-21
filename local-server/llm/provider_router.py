@@ -129,6 +129,17 @@ class ProviderRouter:
             # Add custom endpoint if specified
             if config.custom_endpoint:
                 llm_params['openai_api_base'] = config.custom_endpoint
+            else:
+                # Check if caching proxy is enabled for OpenAI
+                from config import get_settings
+                settings = get_settings()
+                if (settings.reference_sources.openai.enabled and
+                    settings.reference_sources.openai.use_proxy and
+                    settings.proxy_server.enabled):
+                    # Route through caching proxy
+                    proxy_url = f"http://{settings.proxy_server.host}:{settings.proxy_server.port}"
+                    llm_params['openai_proxy'] = proxy_url
+                    self.logger.info(f"OpenAI LLM configured to use caching proxy: {proxy_url}")
 
             # Suppress LangChain warnings about JSON schema
             with warnings.catch_warnings():
@@ -173,6 +184,17 @@ class ProviderRouter:
             # Add custom endpoint if specified
             if config.custom_endpoint:
                 llm_params['anthropic_api_url'] = config.custom_endpoint
+            else:
+                # Check if caching proxy is enabled for Anthropic
+                from config import get_settings
+                settings = get_settings()
+                if (settings.reference_sources.anthropic.enabled and
+                    settings.reference_sources.anthropic.use_proxy and
+                    settings.proxy_server.enabled):
+                    # Route through caching proxy
+                    proxy_url = f"http://{settings.proxy_server.host}:{settings.proxy_server.port}"
+                    llm_params['anthropic_proxy'] = proxy_url
+                    self.logger.info(f"Anthropic LLM configured to use caching proxy: {proxy_url}")
 
             llm = init_chat_model(**llm_params)
 

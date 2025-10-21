@@ -13,7 +13,6 @@ import { DomainForm } from "@/components/forms/domain_form";
 import { DomainMoveForm } from "@/components/forms/domain_move_form";
 import { usePredicates } from "@/api/hooks/predicates";
 import type { FieldDefinition } from "@/components/misc/query_filters";
-import type { StructureNode } from "@/api/types/structureNodes";
 
 const columnHelper = createColumnHelper<StructureNode>();
 

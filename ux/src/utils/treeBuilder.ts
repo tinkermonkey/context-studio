@@ -40,75 +40,18 @@ export function buildHierarchicalTree(input: TreeBuilderInput): HierarchyNode {
       depth: 0,
     };
 
-    // Group domains by parent_node_id (which is the layer_id for domains) for efficient lookup
-    const domainsByLayer = new Map<string, any[]>();
-    domains.forEach((domain: any) => {
-      // For domains, parent_node_id contains the layer ID
-      const layerId = domain.parent_node_id || domain.layer_id;
-      if (layerId == null) {
-        console.warn("Domain missing parent_node_id (layer_id):", domain);
-        return;
-      }
-      const layerIdStr = String(layerId);
-      if (!domainsByLayer.has(layerIdStr)) {
-        domainsByLayer.set(layerIdStr, []);
-      }
-      domainsByLayer.get(layerIdStr)!.push(domain);
-    });
+    // Combine all nodes into a single array for generic processing
+    const allNodes = [
+      ...layers.map((n: any) => ({ ...n, node_type: n.node_type || "layer" })),
+      ...domains.map((n: any) => ({ ...n, node_type: n.node_type || "domain" })),
+      ...terms.map((n: any) => ({ ...n, node_type: n.node_type || "term" })),
+    ];
 
-    // Build layer nodes with their domains
-    rootNode.children = layers
-      .filter((layer: any) => layer.id != null)
-      .map((layer: any) => {
-        const layerIdStr = String(layer.id);
-        const layerDomains = domainsByLayer.get(layerIdStr) || [];
+    // Build the hierarchy generically
+    const nodeHierarchy = buildNodeHierarchy(allNodes);
 
-        if (layerDomains.length === 0) {
-          apiLogger.debug("Layer has no domains", {
-            layer,
-            availableKeys: Array.from(domainsByLayer.keys()),
-          });
-        }
-
-        const layerNode: HierarchyNode = {
-          id: `${layer.id}`,
-          title: layer.title || layer.name || `Layer ${layer.id}`,
-          definition: layer.definition || "",
-          type: "layer",
-          children: [],
-          depth: rootNode.depth + 1,
-        };
-
-        // Build domain nodes with their terms
-        layerNode.children = layerDomains
-          .filter((domain: any) => domain.id != null)
-          .map((domain: any) => {
-            const domainTerms = terms.filter(
-              (term: any) => {
-                // For terms at domain level, parent_node_id should be the domain ID
-                const termParentId = term.parent_node_id || term.domain_id;
-                return String(termParentId) === String(domain.id);
-              }
-            );
-
-            const domainNode: HierarchyNode = {
-              id: `${domain.id}`,
-              title: domain.title || domain.name || `Domain ${domain.id}`,
-              definition: domain.definition || "",
-              type: "domain",
-              children: [],
-              depth: layerNode.depth + 1,
-            };
-
-            // Build hierarchical term structure
-            const { topLevelTerms } = buildTermHierarchy(domainTerms);
-            domainNode.children = topLevelTerms;
-
-            return domainNode;
-          });
-
-        return layerNode;
-      });
+    // Attach top-level nodes (layers) to root
+    rootNode.children = nodeHierarchy.topLevelNodes;
 
     apiLogger.info("Final tree structure generated", { rootNode });
     return rootNode;
@@ -119,55 +62,62 @@ export function buildHierarchicalTree(input: TreeBuilderInput): HierarchyNode {
 }
 
 /**
- * Builds a hierarchical structure from a flat array of terms
- * by organizing them based on parent_term_id relationships.
+ * Builds a hierarchical structure from a flat array of nodes
+ * by organizing them based on parent_node_id relationships.
+ * This is completely node-type agnostic and can be used for any hierarchical data.
  *
- * @param terms - Array of term objects with potential parent_term_id relationships
- * @returns Object containing the top-level terms and a map of all terms
+ * @param nodes - Array of all node objects (layers, domains, terms, etc.)
+ * @returns Object containing the top-level nodes and a map of all nodes
  */
-function buildTermHierarchy(terms: any[]): {
-  topLevelTerms: HierarchyNode[];
-  termMap: Map<string, HierarchyNode>;
+export function buildNodeHierarchy(nodes: any[]): {
+  topLevelNodes: HierarchyNode[];
+  nodeMap: Map<string, HierarchyNode>;
 } {
-  const termMap = new Map<string, HierarchyNode>();
-  const topLevelTerms: HierarchyNode[] = [];
+  const nodeMap = new Map<string, HierarchyNode>();
+  const topLevelNodes: HierarchyNode[] = [];
 
-  // First pass: create all term nodes
-  terms.forEach((term: any) => {
-    if (!term.id) {
-      console.warn("Term missing id:", term);
+  // First pass: create all node entries
+  nodes.forEach((node: any) => {
+    if (!node.id) {
+      console.warn("Node missing id:", node);
       return;
     }
-    termMap.set(term.id, {
-      id: `${term.id}`,
-      title: term.title || term.name || `Term ${term.id}`,
-      definition: term.definition || "",
-      type: "term",
+
+    const hierarchyNode: HierarchyNode = {
+      id: `${node.id}`,
+      title: node.title || node.name || `Node ${node.id}`,
+      definition: node.definition || "",
+      type: node.node_type || "unknown",
       children: [],
-      depth: 0,
-    });
+      depth: 0, // Will be set during parent-child linking
+    };
+
+    nodeMap.set(node.id, hierarchyNode);
   });
 
   // Second pass: establish parent-child relationships
-  terms.forEach((term: any) => {
-    const termNode = termMap.get(term.id);
-    if (!termNode) return;
+  nodes.forEach((node: any) => {
+    const hierarchyNode = nodeMap.get(node.id);
+    if (!hierarchyNode) return;
 
-    // Check if this term has a parent term (parent_node_id points to another term in this set)
-    const parentTermId = term.parent_term_id || (termMap.has(term.parent_node_id) ? term.parent_node_id : null);
-    if (parentTermId && termMap.has(parentTermId)) {
-      // This term has a parent - add it to parent's children
-      const parentNode = termMap.get(parentTermId)!
+    const parentId = node.parent_node_id;
+
+    if (parentId && nodeMap.has(parentId)) {
+      // This node has a parent - add it to parent's children
+      const parentNode = nodeMap.get(parentId)!;
       if (parentNode.children) {
-        parentNode.children.push(termNode);
+        parentNode.children.push(hierarchyNode);
+        // Set depth based on parent
+        hierarchyNode.depth = parentNode.depth + 1;
       }
     } else {
-      // This is a top-level term
-      topLevelTerms.push(termNode);
+      // This is a top-level node (no parent or parent not in set)
+      topLevelNodes.push(hierarchyNode);
+      hierarchyNode.depth = 0;
     }
   });
 
-  return { topLevelTerms, termMap };
+  return { topLevelNodes, nodeMap };
 }
 
 /**

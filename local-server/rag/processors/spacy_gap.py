@@ -13,7 +13,8 @@ from rag.processors.models import (
     SpaCyGapOutput,
     GapConcept,
     GapPriority,
-    LLMExtractionOutput
+    LLMExtractionOutput,
+    KGContextOutput
 )
 from nlp.pipeline import get_pipeline
 from utils.logger import get_logger
@@ -53,7 +54,8 @@ class SpaCyGapProcessor:
     def process(
         self,
         input_data: ProcessorInput,
-        llm_output: LLMExtractionOutput
+        llm_output: LLMExtractionOutput,
+        kg_output: KGContextOutput = None
     ) -> SpaCyGapOutput:
         """
         Process input text to identify syntactic gaps.
@@ -61,6 +63,7 @@ class SpaCyGapProcessor:
         Args:
             input_data: Input containing text and trace settings
             llm_output: LLM extraction output from Layer 1
+            kg_output: KG context output from Layer 0 (optional, for excluding high-confidence matches)
 
         Returns:
             SpaCyGapOutput with detected gaps
@@ -74,6 +77,20 @@ class SpaCyGapProcessor:
 
             # Get recognized entity texts from LLM output
             recognized_texts = {entity.text.lower() for entity in llm_output.entities}
+
+            # Also exclude phrases already matched in Layer 0 with high confidence
+            # This avoids redundant processing in Layer 3
+            kg_excluded_count = 0
+            if kg_output and kg_output.phrase_to_kg_map:
+                for phrase_text, matches in kg_output.phrase_to_kg_map.items():
+                    if matches and matches[0]['similarity'] >= 0.6:  # High confidence threshold
+                        recognized_texts.add(phrase_text.lower())
+                        kg_excluded_count += 1
+                logger.debug(f"Excluded {kg_excluded_count} high-confidence KG matches from gap analysis")
+
+            if input_data.enable_trace:
+                trace_data['kg_matches_excluded'] = kg_excluded_count
+                trace_data['llm_entities_excluded'] = len(llm_output.entities)
 
             # Extract all noun phrases
             all_noun_phrases = []

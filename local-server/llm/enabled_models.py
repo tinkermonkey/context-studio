@@ -139,6 +139,15 @@ class EnabledModelsManager:
                 tags=["openai", "fast", "cost-effective"]
             ),
             EnabledModelConfig(
+                model_name="gpt-4o-mini",
+                provider_type=ProviderType.NATIVE_OPENAI,
+                display_name="GPT-4o Mini",
+                api_key_env_var="OPENAI_API_KEY",
+                description="Efficient GPT-4 class model with strong performance",
+                cost_tier="low",
+                tags=["openai", "fast", "cost-effective", "gpt4-class"]
+            ),
+            EnabledModelConfig(
                 model_name="gpt-4",
                 provider_type=ProviderType.NATIVE_OPENAI,
                 display_name="GPT-4",

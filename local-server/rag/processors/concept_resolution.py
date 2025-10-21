@@ -6,6 +6,7 @@ and strategic web search with rate limiting.
 """
 from typing import List, Dict, Any, Optional
 from sqlalchemy.orm import Session
+from sqlalchemy import text
 import numpy as np
 
 from rag.processors.models import (
@@ -20,7 +21,6 @@ from rag.processors.models import (
     LLMExtractionOutput
 )
 from rag.processors.web_search import RateLimitedWebSearchClient
-from database.models import StructureNode
 from embeddings.generate_embeddings import get_model
 from utils.logger import get_logger
 
@@ -47,7 +47,7 @@ class ConceptResolutionProcessor:
         self,
         db_session: Session,
         web_search_client: Optional[RateLimitedWebSearchClient] = None,
-        similarity_threshold: float = 0.6
+        similarity_threshold: float = 0.4
     ):
         """
         Initialize Concept Resolution Processor.
@@ -100,9 +100,20 @@ class ConceptResolutionProcessor:
         # Build domain context from LLM entities
         domain_context = self._build_domain_context(llm_output)
 
+        # Build phrase-to-KG mapping from Layer 0 for reuse
+        phrase_kg_map = self._build_phrase_kg_map(kg_context, input_data.enable_trace)
+
         if input_data.enable_trace:
             trace_data['domain_context'] = domain_context
+            trace_data['phrase_kg_map_size'] = len(phrase_kg_map)
+            trace_data['phrase_kg_map_keys'] = list(phrase_kg_map.keys())
+            trace_data['gaps_to_resolve'] = [g.text for g in gap_output.gaps]
             trace_data['resolutions'] = []
+
+        logger.info(
+            f"Starting gap resolution with {len(phrase_kg_map)} cached phrase mappings "
+            f"and {len(gap_output.gaps)} gaps to resolve"
+        )
 
         for gap in gap_output.gaps:
             logger.debug(f"Resolving gap: '{gap.text}' (priority: {gap.priority.value})")
@@ -113,8 +124,8 @@ class ConceptResolutionProcessor:
                 'attempts': []
             } if input_data.enable_trace else None
 
-            # Try 1: Search cached KG subset
-            resolved = self._try_cached_kg(gap, kg_context, resolution_trace)
+            # Try 1: Check if gap matches a phrase from Layer 0 using vector similarity
+            resolved = self._try_phrase_match(gap, phrase_kg_map, kg_context, resolution_trace)
             if resolved:
                 resolved_concepts.append(resolved)
                 cached_kg_hits += 1
@@ -179,17 +190,94 @@ class ConceptResolutionProcessor:
         entity_texts = [e.text for e in llm_output.entities[:5]]
         return ", ".join(entity_texts)
 
-    def _try_cached_kg(
+    def _build_phrase_kg_map(
+        self,
+        kg_context: KGContextOutput,
+        enable_trace: bool
+    ) -> Dict[str, tuple]:
+        """
+        Build a mapping of phrase embeddings to their best-matching KG nodes from Layer 0.
+
+        This allows us to reuse Layer 0's vector search results instead of re-searching.
+
+        Args:
+            kg_context: KG context output from Layer 0
+            enable_trace: Whether tracing is enabled
+
+        Returns:
+            Dict mapping phrase_text -> (phrase_embedding, best_kg_node, kg_similarity)
+        """
+        phrase_map = {}
+
+        # Create a lookup map for KG nodes by ID for fast access
+        kg_node_map = {node.node_id: node for node in kg_context.kg_nodes}
+
+        # Use the phrase_to_kg_map from Layer 0 if available
+        if kg_context.phrase_to_kg_map:
+            for phrase_text, matches in kg_context.phrase_to_kg_map.items():
+                if not matches:
+                    continue  # No KG matches for this phrase
+
+                try:
+                    # Generate embedding for this phrase
+                    phrase_embedding = self.embedding_model.encode([phrase_text])[0]
+                    phrase_emb_array = np.array(phrase_embedding, dtype=np.float32)
+
+                    # Get the best match from Layer 0's results (already sorted by similarity)
+                    best_match = matches[0]
+                    best_kg_node = kg_node_map.get(best_match['node_id'])
+
+                    if best_kg_node:
+                        phrase_map[phrase_text] = (
+                            phrase_emb_array,
+                            best_kg_node,
+                            best_match['similarity']
+                        )
+                        logger.debug(
+                            f"Mapped phrase '{phrase_text}' -> KG '{best_kg_node.title}' "
+                            f"(similarity: {best_match['similarity']:.2f})"
+                        )
+
+                except Exception as e:
+                    logger.warning(f"Failed to process phrase '{phrase_text}' from Layer 0 mapping: {e}")
+                    continue
+
+        else:
+            # Fallback: Generate embeddings for phrases without KG matches
+            # This happens when Layer 0 didn't provide the phrase_to_kg_map
+            logger.debug("phrase_to_kg_map not available from Layer 0, building phrase embeddings only")
+
+            for phrase in kg_context.extracted_phrases:
+                try:
+                    # Generate embedding for this phrase
+                    phrase_embedding = self.embedding_model.encode([phrase.text])[0]
+                    phrase_emb_array = np.array(phrase_embedding, dtype=np.float32)
+
+                    # Store phrase embedding without KG node (will try full KG search later)
+                    phrase_map[phrase.text] = (phrase_emb_array, None, 0.0)
+
+                except Exception as e:
+                    logger.warning(f"Failed to process phrase '{phrase.text}': {e}")
+                    continue
+
+        logger.debug(f"Built phrase-KG map with {len(phrase_map)} phrases")
+        return phrase_map
+
+    def _try_phrase_match(
         self,
         gap: GapConcept,
+        phrase_kg_map: Dict[str, tuple],
         kg_context: KGContextOutput,
         resolution_trace: Optional[Dict]
     ) -> Optional[ResolvedConcept]:
         """
-        Try to resolve gap using cached KG subset.
+        Try to resolve gap by matching it to Layer 0 phrases using vector similarity.
+
+        This reuses Layer 0's vector search results to avoid redundant searches.
 
         Args:
             gap: Gap to resolve
+            phrase_kg_map: Mapping of phrases to their embeddings and KG nodes
             kg_context: Cached KG context
             resolution_trace: Trace dictionary to update
 
@@ -197,37 +285,76 @@ class ConceptResolutionProcessor:
             ResolvedConcept if matched, None otherwise
         """
         if resolution_trace:
-            resolution_trace['attempts'].append({'method': 'cached_kg', 'result': None})
+            resolution_trace['attempts'].append({'method': 'phrase_match', 'result': None})
 
-        # Simple text matching first
-        gap_text_lower = gap.text.lower()
-        for node in kg_context.kg_nodes:
-            if gap_text_lower == node.title.lower() or \
-               gap_text_lower in node.title.lower() or \
-               node.title.lower() in gap_text_lower:
+        try:
+            # Generate embedding for gap text
+            gap_embedding = self.embedding_model.encode([gap.text])[0]
+            gap_emb_array = np.array(gap_embedding, dtype=np.float32)
 
+            # Find best matching phrase from Layer 0 using cosine similarity
+            best_phrase = None
+            best_phrase_similarity = 0.0
+            best_kg_node = None
+
+            logger.debug(f"Checking gap '{gap.text}' against {len(phrase_kg_map)} cached phrases")
+
+            for phrase_text, (phrase_emb, kg_node, kg_similarity) in phrase_kg_map.items():
+                # Calculate cosine similarity between gap and phrase
+                phrase_similarity = self._cosine_similarity(gap_emb_array, phrase_emb)
+
+                logger.debug(
+                    f"  Gap '{gap.text}' vs phrase '{phrase_text}': "
+                    f"similarity={phrase_similarity:.3f}, kg_node={kg_node.title if kg_node else 'None'}"
+                )
+
+                # If gap is very similar to a Layer 0 phrase, reuse that phrase's KG results
+                if phrase_similarity >= 0.85:  # High similarity threshold for phrase reuse
+                    if phrase_similarity > best_phrase_similarity:
+                        best_phrase_similarity = phrase_similarity
+                        best_phrase = phrase_text
+                        best_kg_node = kg_node
+
+            # If we found a matching phrase with a KG node, use it
+            if best_kg_node and best_phrase_similarity >= 0.85:
                 confidence = self._calculate_confidence(
                     ResolutionMethod.CACHED_KG,
-                    similarity=0.9  # High confidence for text match
+                    similarity=best_kg_node.similarity_score  # Use the KG similarity from Layer 0
                 )
 
                 if resolution_trace:
                     resolution_trace['attempts'][-1]['result'] = 'matched'
-                    resolution_trace['attempts'][-1]['node_id'] = node.node_id
+                    resolution_trace['attempts'][-1]['matched_phrase'] = best_phrase
+                    resolution_trace['attempts'][-1]['phrase_similarity'] = best_phrase_similarity
+                    resolution_trace['attempts'][-1]['node_id'] = best_kg_node.node_id
+                    resolution_trace['attempts'][-1]['node_title'] = best_kg_node.title
+                    resolution_trace['attempts'][-1]['kg_similarity'] = best_kg_node.similarity_score
                     resolution_trace['attempts'][-1]['confidence'] = confidence
 
-                logger.debug(f"Cached KG match: '{gap.text}' -> '{node.title}' (confidence: {confidence:.2f})")
+                logger.debug(
+                    f"Phrase match: '{gap.text}' -> phrase '{best_phrase}' ({best_phrase_similarity:.2f}) "
+                    f"-> KG '{best_kg_node.title}' (confidence: {confidence:.2f})"
+                )
 
                 return ResolvedConcept(
                     original_gap=gap,
                     resolution_method=ResolutionMethod.CACHED_KG,
-                    matched_kg_node=node,
+                    matched_kg_node=best_kg_node,
                     web_definition=None,
                     confidence=confidence
                 )
 
-        if resolution_trace:
-            resolution_trace['attempts'][-1]['result'] = 'no_match'
+            if resolution_trace:
+                resolution_trace['attempts'][-1]['result'] = 'no_match'
+                if best_phrase:
+                    resolution_trace['attempts'][-1]['best_phrase'] = best_phrase
+                    resolution_trace['attempts'][-1]['best_phrase_similarity'] = best_phrase_similarity
+
+        except Exception as e:
+            logger.warning(f"Phrase matching failed for gap '{gap.text}': {e}")
+            if resolution_trace:
+                resolution_trace['attempts'][-1]['result'] = 'error'
+                resolution_trace['attempts'][-1]['error'] = str(e)
 
         return None
 
@@ -237,7 +364,7 @@ class ConceptResolutionProcessor:
         resolution_trace: Optional[Dict]
     ) -> Optional[ResolvedConcept]:
         """
-        Try to resolve gap using full KG vector search.
+        Try to resolve gap using full KG vector search with SQLite-vec.
 
         Args:
             gap: Gap to resolve
@@ -253,49 +380,71 @@ class ConceptResolutionProcessor:
             # Generate embedding for gap text
             gap_embedding = self.embedding_model.encode([gap.text])[0]
             gap_emb_array = np.array(gap_embedding, dtype=np.float32)
+            query_vec_bytes = gap_emb_array.tobytes()
 
-            # Query all KG nodes with embeddings
-            kg_nodes = self.db_session.query(StructureNode).filter(
-                StructureNode.title_embedding.isnot(None)
-            ).all()
+            # Use SQLite-vec for native vector search
+            # Search against both title and definition embeddings, taking the max similarity
+            # Use a CTE to compute similarity, then filter in outer query
+            query = text("""
+                WITH similarities AS (
+                    SELECT
+                        id,
+                        title,
+                        node_type,
+                        definition,
+                        CASE
+                            WHEN title_embedding IS NOT NULL AND definition_embedding IS NOT NULL THEN
+                                MAX(
+                                    (1.0 - vec_distance_cosine(title_embedding, :query_vec)),
+                                    (1.0 - vec_distance_cosine(definition_embedding, :query_vec))
+                                )
+                            WHEN title_embedding IS NOT NULL THEN
+                                (1.0 - vec_distance_cosine(title_embedding, :query_vec))
+                            WHEN definition_embedding IS NOT NULL THEN
+                                (1.0 - vec_distance_cosine(definition_embedding, :query_vec))
+                            ELSE 0.0
+                        END as similarity
+                    FROM structure_nodes
+                    WHERE (title_embedding IS NOT NULL OR definition_embedding IS NOT NULL)
+                )
+                SELECT id, title, node_type, definition, similarity
+                FROM similarities
+                WHERE similarity >= :threshold
+                ORDER BY similarity DESC
+                LIMIT 1
+            """)
 
-            best_match = None
-            best_similarity = 0.0
+            result = self.db_session.execute(
+                query,
+                {
+                    'query_vec': query_vec_bytes,
+                    'threshold': self.similarity_threshold
+                }
+            ).fetchone()
 
-            for node in kg_nodes:
-                try:
-                    node_emb = np.frombuffer(node.title_embedding, dtype=np.float32)
-                    similarity = self._cosine_similarity(gap_emb_array, node_emb)
-
-                    if similarity > best_similarity:
-                        best_similarity = similarity
-                        best_match = node
-
-                except Exception as e:
-                    logger.debug(f"Error calculating similarity for node {node.id}: {e}")
-
-            if best_match and best_similarity >= self.similarity_threshold:
+            if result:
+                best_similarity = float(result.similarity)
                 confidence = self._calculate_confidence(
                     ResolutionMethod.FULL_KG,
                     similarity=best_similarity
                 )
 
                 matched_kg_node = KGNode(
-                    node_id=best_match.id,
-                    title=best_match.title,
-                    node_type=best_match.node_type.value,
+                    node_id=result.id,
+                    title=result.title,
+                    node_type=result.node_type,
                     similarity_score=best_similarity,
-                    definition=best_match.definition
+                    definition=result.definition
                 )
 
                 if resolution_trace:
                     resolution_trace['attempts'][-1]['result'] = 'matched'
-                    resolution_trace['attempts'][-1]['node_id'] = best_match.id
-                    resolution_trace['attempts'][-1]['similarity'] = float(best_similarity)
+                    resolution_trace['attempts'][-1]['node_id'] = result.id
+                    resolution_trace['attempts'][-1]['similarity'] = best_similarity
                     resolution_trace['attempts'][-1]['confidence'] = confidence
 
                 logger.debug(
-                    f"Full KG match: '{gap.text}' -> '{best_match.title}' "
+                    f"Full KG match: '{gap.text}' -> '{result.title}' "
                     f"(similarity: {best_similarity:.2f}, confidence: {confidence:.2f})"
                 )
 
@@ -309,8 +458,6 @@ class ConceptResolutionProcessor:
 
             if resolution_trace:
                 resolution_trace['attempts'][-1]['result'] = 'no_match'
-                if best_match:
-                    resolution_trace['attempts'][-1]['best_similarity'] = float(best_similarity)
 
         except Exception as e:
             logger.warning(f"Full KG search failed for gap '{gap.text}': {e}")
@@ -363,7 +510,13 @@ class ConceptResolutionProcessor:
             ResolvedConcept if found, None otherwise
         """
         if resolution_trace:
-            resolution_trace['attempts'].append({'method': 'web_search', 'result': None})
+            resolution_trace['attempts'].append({
+                'method': 'web_search',
+                'result': None,
+                'input_query': gap.text,
+                'domain_context': domain_context,
+                'grammatical_context': gap.connected_verb
+            })
 
         # Perform web search
         search_result = self.web_search_client.search(
@@ -380,9 +533,13 @@ class ConceptResolutionProcessor:
 
             if resolution_trace:
                 resolution_trace['attempts'][-1]['result'] = 'found'
-                resolution_trace['attempts'][-1]['query'] = search_result.query
-                resolution_trace['attempts'][-1]['snippet'] = search_result.snippet[:200]
+                resolution_trace['attempts'][-1]['enriched_query'] = search_result.query
+                resolution_trace['attempts'][-1]['title'] = search_result.title
+                resolution_trace['attempts'][-1]['snippet'] = search_result.snippet
+                resolution_trace['attempts'][-1]['url'] = search_result.url
+                resolution_trace['attempts'][-1]['snippet_length'] = len(search_result.snippet)
                 resolution_trace['attempts'][-1]['confidence'] = confidence
+                resolution_trace['attempts'][-1]['timestamp'] = search_result.timestamp.isoformat()
 
             logger.debug(
                 f"Web search match: '{gap.text}' -> definition found "
@@ -399,6 +556,9 @@ class ConceptResolutionProcessor:
 
         if resolution_trace:
             resolution_trace['attempts'][-1]['result'] = 'no_results'
+            # Still capture the enriched query even if no results
+            if search_result:
+                resolution_trace['attempts'][-1]['enriched_query'] = search_result.query
 
         return None
 

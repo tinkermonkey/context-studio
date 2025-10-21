@@ -54,6 +54,10 @@ class KGContextOutput(ProcessorOutput):
     extracted_phrases: List[ExtractedPhrase] = Field(default_factory=list, description="Phrases extracted from text")
     kg_nodes: List[KGNode] = Field(default_factory=list, description="Top-k KG nodes from vector search")
     total_sentences: int = Field(..., description="Total number of sentences processed")
+    phrase_to_kg_map: Optional[Dict[str, List[Dict[str, Any]]]] = Field(
+        None,
+        description="Mapping of phrase text to list of matched KG nodes with similarities (for Layer 3 reuse)"
+    )
 
 
 class ExtractedEntity(BaseModel):

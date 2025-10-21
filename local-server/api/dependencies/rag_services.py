@@ -45,9 +45,22 @@ def get_rag_pipeline_service(
     Returns:
         RAGPipelineService instance configured with database sessions
     """
+    from config import get_settings
+    settings = get_settings()
+
+    # Get configuration from RAG pipeline settings
+    llm_flavor_id = settings.rag_pipeline.llm_pipeline_flavor or "default"
+    kg_top_k = settings.rag_pipeline.kg_context_top_k
+    kg_vector_threshold = settings.rag_pipeline.kg_vector_threshold
+    dedup_threshold = settings.rag_pipeline.deduplication_threshold
+
     return RAGPipelineService(
         kg_db_session=kg_db,
-        ops_db_session=ops_db
+        ops_db_session=ops_db,
+        llm_flavor_id=llm_flavor_id,
+        kg_top_k=kg_top_k,
+        kg_vector_threshold=kg_vector_threshold,
+        dedup_similarity_threshold=dedup_threshold
     )
 
 

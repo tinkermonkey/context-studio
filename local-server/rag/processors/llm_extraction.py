@@ -188,7 +188,18 @@ class LLMExtractionProcessor:
 
         try:
             # Try to parse as JSON first (structured output)
-            response_json = json.loads(response_content)
+            # Handle case where LLM returns "Entities: [...]" format
+            content_to_parse = response_content.strip()
+
+            # If response starts with "Entities:", extract the list
+            if content_to_parse.startswith('Entities:'):
+                content_to_parse = content_to_parse[len('Entities:'):].strip()
+                # Wrap in JSON object format
+                content_to_parse = f'{{"entities": {content_to_parse}}}'
+                # Replace single quotes with double quotes for valid JSON
+                content_to_parse = content_to_parse.replace("'", '"')
+
+            response_json = json.loads(content_to_parse)
 
             if 'entities' in response_json and isinstance(response_json['entities'], list):
                 for entity_data in response_json['entities']:
@@ -289,7 +300,9 @@ class LLMExtractionProcessor:
                 if start_char == -1:
                     continue
 
-                end_char = start_char + len(node.title)
+                # Extract the actual text from the original document (preserves case)
+                actual_text = original_text[start_char:start_char + len(node.title)]
+                end_char = start_char + len(actual_text)
 
                 # Find sentence index
                 sent_indices = []
@@ -298,7 +311,7 @@ class LLMExtractionProcessor:
                         sent_indices.append(idx)
 
                 entity = ExtractedEntity(
-                    text=node.title,
+                    text=actual_text,  # Use text as it appears in original, not KG node title
                     entity_type="CONCEPT",
                     confidence=0.90,  # Explicit mention from KG
                     sentence_indices=sent_indices if sent_indices else [0],

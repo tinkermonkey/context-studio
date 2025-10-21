@@ -16,6 +16,7 @@ class RAGExtractionRequest(BaseModel):
     """
     text: str = Field(..., description="Text to analyze and extract entities from.", min_length=1)
     enable_trace: bool = Field(default=False, description="Enable detailed tracing for observability. Defaults to false per architect requirement.")
+    enable_llm_layer: Optional[bool] = Field(default=None, description="Enable Layer 1 LLM extraction. If None, uses config default.")
 
     @field_validator('text')
     @classmethod
@@ -54,11 +55,12 @@ class LayerMetrics(BaseModel):
     """
     Performance metrics for a single pipeline layer.
 
-    Tracks timing and entity counts for each layer of the RAG pipeline.
+    Tracks timing, entity counts, and operation counts for each layer of the RAG pipeline.
     """
     execution_time_ms: float = Field(..., ge=0.0, description="Execution time for this layer in milliseconds.")
     entities_found: int = Field(..., ge=0, description="Number of entities found by this layer.")
     entities_deduplicated: int = Field(default=0, ge=0, description="Number of entities removed as duplicates in this layer.")
+    operations_performed: int = Field(default=0, ge=0, description="Number of operations/searches performed (e.g., vector searches, web searches).")
 
 
 class ProcessingMetrics(BaseModel):
