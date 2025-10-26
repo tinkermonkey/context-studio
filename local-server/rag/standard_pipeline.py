@@ -48,6 +48,9 @@ class StandardRAGPipeline(BaseRAGPipeline):
             kg_db_session: Database session for knowledge graph (local.db)
             ops_db_session: Database session for operations/observability (operations.db)
             config: Pipeline-specific configuration parameters
+
+        Raises:
+            ValueError: If configuration parameters are invalid
         """
         super().__init__(kg_db_session, ops_db_session, config)
 
@@ -63,6 +66,12 @@ class StandardRAGPipeline(BaseRAGPipeline):
         dedup_similarity_threshold = self.config.get(
             "dedup_similarity_threshold",
             RAGPipelineService.DEFAULT_DEDUP_SIMILARITY_THRESHOLD
+        )
+
+        # Validate configuration parameters
+        self._validate_config(
+            kg_top_k, kg_vector_threshold, timeout_layer_0, timeout_layer_1,
+            timeout_layer_2, timeout_layer_3, timeout_total, dedup_similarity_threshold
         )
 
         # Initialize the underlying RAGPipelineService

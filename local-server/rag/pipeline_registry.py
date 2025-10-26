@@ -6,6 +6,7 @@ RAG pipeline variants. Pipelines register themselves using a decorator pattern,
 allowing for easy discovery and comparison.
 """
 
+import threading
 from typing import Dict, Type, List, Any, Optional
 from sqlalchemy.orm import Session
 
@@ -24,13 +25,17 @@ class PipelineRegistry:
     """
 
     _instance: Optional['PipelineRegistry'] = None
+    _lock = threading.Lock()
     _pipelines: Dict[str, Type[BaseRAGPipeline]] = {}
 
     def __new__(cls):
-        """Ensure singleton pattern."""
+        """Ensure singleton pattern with thread safety."""
         if cls._instance is None:
-            cls._instance = super().__new__(cls)
-            logger.info("PipelineRegistry singleton created")
+            with cls._lock:
+                # Double-check locking pattern
+                if cls._instance is None:
+                    cls._instance = super().__new__(cls)
+                    logger.info("PipelineRegistry singleton created")
         return cls._instance
 
     @classmethod
