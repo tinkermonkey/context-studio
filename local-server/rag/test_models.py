@@ -80,6 +80,24 @@ class RunPipelineTestRequest(BaseModel):
     enable_trace: bool = Field(False, description="Enable detailed trace logging")
     enable_llm_layer: bool = Field(True, description="Enable LLM extraction layer")
 
+    @field_validator('pipeline_names')
+    @classmethod
+    def validate_pipeline_names(cls, v):
+        """Validate that pipeline class names exist in the registry."""
+        from rag.pipeline_registry import PipelineRegistry
+
+        registry = PipelineRegistry()
+        available_pipelines = registry.list_pipelines()
+
+        invalid_pipelines = [name for name in v if name not in available_pipelines]
+        if invalid_pipelines:
+            raise ValueError(
+                f"Invalid pipeline names: {', '.join(invalid_pipelines)}. "
+                f"Available pipelines: {', '.join(available_pipelines)}"
+            )
+
+        return v
+
     model_config = {
         "json_schema_extra": {
             "examples": [

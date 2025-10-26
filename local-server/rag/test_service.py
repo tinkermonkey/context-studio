@@ -82,7 +82,7 @@ class RAGTestManagementService:
             TestParagraph.id == paragraph_id
         ).first()
 
-    def list_test_paragraphs(self, limit: int = 100, offset: int = 0) -> List[TestParagraph]:
+    def list_test_paragraphs(self, limit: int = 100, offset: int = 0) -> tuple[List[TestParagraph], int]:
         """
         List test paragraphs with pagination.
 
@@ -91,11 +91,14 @@ class RAGTestManagementService:
             offset: Number of paragraphs to skip
 
         Returns:
-            List of TestParagraph instances
+            Tuple of (paragraphs list, total_count)
         """
-        return self.ops_db_session.query(TestParagraph).order_by(
+        query = self.ops_db_session.query(TestParagraph)
+        total_count = query.count()
+        paragraphs = query.order_by(
             TestParagraph.created_at.desc()
         ).limit(limit).offset(offset).all()
+        return paragraphs, total_count
 
     def update_test_paragraph(
         self,

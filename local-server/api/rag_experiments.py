@@ -7,6 +7,7 @@ annotations, and executing parallel pipeline tests for systematic comparison.
 
 from typing import List, Optional
 from fastapi import APIRouter, HTTPException, Depends, Query, status
+from sqlalchemy.exc import DatabaseError, IntegrityError
 
 from api.dependencies.rag_services import get_operations_db
 from database.utils import get_db
@@ -83,8 +84,20 @@ async def create_test_paragraph(
             annotations=[]
         )
 
+    except DatabaseError as e:
+        logger.error(f"Database error creating test paragraph: {e}", exc_info=True)
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Database error while creating test paragraph"
+        )
+    except ValueError as e:
+        logger.error(f"Validation error creating test paragraph: {e}", exc_info=True)
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(e)
+        )
     except Exception as e:
-        logger.error(f"Error creating test paragraph: {e}", exc_info=True)
+        logger.error(f"Unexpected error creating test paragraph: {e}", exc_info=True)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Failed to create test paragraph"
@@ -104,7 +117,7 @@ async def list_test_paragraphs(
     """
     try:
         logger.info(f"Listing test paragraphs with limit={limit}, offset={offset}")
-        paragraphs = test_service.list_test_paragraphs(limit=limit, offset=offset)
+        paragraphs, total_count = test_service.list_test_paragraphs(limit=limit, offset=offset)
 
         # Build response with annotations
         paragraph_responses = []
@@ -133,16 +146,22 @@ async def list_test_paragraphs(
                 )
             )
 
-        logger.info(f"Successfully retrieved {len(paragraph_responses)} test paragraphs")
+        logger.info(f"Successfully retrieved {len(paragraph_responses)} of {total_count} test paragraphs")
         return TestParagraphListResponse(
             paragraphs=paragraph_responses,
-            total_count=len(paragraph_responses),
+            total_count=total_count,
             limit=limit,
             offset=offset
         )
 
+    except DatabaseError as e:
+        logger.error(f"Database error listing test paragraphs: {e}", exc_info=True)
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Database error while listing test paragraphs"
+        )
     except Exception as e:
-        logger.error(f"Error listing test paragraphs: {e}", exc_info=True)
+        logger.error(f"Unexpected error listing test paragraphs: {e}", exc_info=True)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Failed to list test paragraphs"
@@ -262,8 +281,20 @@ async def update_test_paragraph(
 
     except HTTPException:
         raise
+    except DatabaseError as e:
+        logger.error(f"Database error updating test paragraph {paragraph_id}: {e}", exc_info=True)
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Database error while updating test paragraph"
+        )
+    except ValueError as e:
+        logger.error(f"Validation error updating test paragraph {paragraph_id}: {e}", exc_info=True)
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(e)
+        )
     except Exception as e:
-        logger.error(f"Error updating test paragraph {paragraph_id}: {e}", exc_info=True)
+        logger.error(f"Unexpected error updating test paragraph {paragraph_id}: {e}", exc_info=True)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Failed to update test paragraph"
@@ -331,6 +362,7 @@ async def create_annotation(
             f"[{request.start_char}:{request.end_char}] -> {request.structure_node_id}"
         )
 
+        # Create annotation with proper transaction handling
         annotation = test_service.create_test_annotation(
             paragraph_id=paragraph_id,
             start_char=request.start_char,
@@ -373,8 +405,26 @@ async def create_annotation(
 
     except HTTPException:
         raise
+    except IntegrityError as e:
+        logger.error(f"Integrity error creating annotation: {e}", exc_info=True)
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid structure_node_id or annotation violates database constraints"
+        )
+    except DatabaseError as e:
+        logger.error(f"Database error creating annotation: {e}", exc_info=True)
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Database error while creating annotation"
+        )
+    except ValueError as e:
+        logger.error(f"Validation error creating annotation: {e}", exc_info=True)
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(e)
+        )
     except Exception as e:
-        logger.error(f"Error creating annotation: {e}", exc_info=True)
+        logger.error(f"Unexpected error creating annotation: {e}", exc_info=True)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Failed to create annotation"
@@ -508,8 +558,28 @@ async def run_pipeline_test(
             failed_runs=failed_runs
         )
 
+    except HTTPException:
+        raise
+    except DatabaseError as e:
+        logger.error(f"Database error running pipeline test: {e}", exc_info=True)
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Database error while running pipeline test"
+        )
+    except ValueError as e:
+        logger.error(f"Validation error running pipeline test: {e}", exc_info=True)
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(e)
+        )
+    except TimeoutError as e:
+        logger.error(f"Pipeline execution timeout: {e}", exc_info=True)
+        raise HTTPException(
+            status_code=status.HTTP_504_GATEWAY_TIMEOUT,
+            detail="Pipeline execution timed out"
+        )
     except Exception as e:
-        logger.error(f"Error running pipeline test: {e}", exc_info=True)
+        logger.error(f"Unexpected error running pipeline test: {e}", exc_info=True)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to run pipeline test: {str(e)}"
