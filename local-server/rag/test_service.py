@@ -14,9 +14,9 @@ from sqlalchemy.orm import Session
 from sqlalchemy import text
 
 from operations.models import TestParagraph, TestAnnotation, RAGPipelineRun
+from database.models import StructureNode
 from rag.pipeline_registry import get_pipeline_registry
 from rag.test_scoring import RAGTestScoringService, AnnotationSpan
-from rag.models import ExtractedEntity
 from utils.logger import get_logger
 
 logger = get_logger(__name__)
@@ -143,21 +143,19 @@ class RAGTestManagementService:
             logger.warning(f"Test paragraph not found: {paragraph_id}")
             return False
 
-        # Delete associated annotations and runs (cascade should handle this,
-        # but we'll be explicit for safety)
-        self.ops_db_session.query(TestAnnotation).filter(
-            TestAnnotation.paragraph_id == paragraph_id
-        ).delete()
+        try:
+            # SQLAlchemy relationships with cascade="all, delete-orphan" handle this automatically,
+            # but we can rely on the cascade behavior
+            self.ops_db_session.delete(paragraph)
+            self.ops_db_session.commit()
 
-        self.ops_db_session.query(RAGPipelineRun).filter(
-            RAGPipelineRun.paragraph_id == paragraph_id
-        ).delete()
+            logger.info(f"Deleted test paragraph: {paragraph_id}")
+            return True
 
-        self.ops_db_session.delete(paragraph)
-        self.ops_db_session.commit()
-
-        logger.info(f"Deleted test paragraph: {paragraph_id}")
-        return True
+        except Exception as e:
+            logger.error(f"Error deleting test paragraph {paragraph_id}: {e}", exc_info=True)
+            self.ops_db_session.rollback()
+            return False
 
     # ==================== Test Annotation CRUD ====================
 
@@ -261,11 +259,10 @@ class RAGTestManagementService:
             True if exists, False otherwise
         """
         try:
-            result = self.kg_db_session.execute(
-                text("SELECT COUNT(*) FROM structure_nodes WHERE id = :id"),
-                {"id": structure_node_id}
-            ).scalar()
-            return result > 0
+            node = self.kg_db_session.query(StructureNode).filter(
+                StructureNode.id == structure_node_id
+            ).first()
+            return node is not None
         except Exception as e:
             logger.error(f"Error validating structure_node_id: {e}", exc_info=True)
             return False
@@ -375,86 +372,148 @@ class RAGTestManagementService:
             semaphore: Semaphore for concurrency control
 
         Returns:
-            Dictionary with run results and scores
+            Dictionary with run results and scores, or error details if pipeline fails
         """
         async with semaphore:
             logger.info(f"Starting pipeline {pipeline_name} for paragraph {paragraph.id}")
             start_time = datetime.utcnow()
 
-            # Create pipeline instance
-            pipeline = self.pipeline_registry.create_pipeline(
-                pipeline_name=pipeline_name,
-                kg_db_session=self.kg_db_session,
-                ops_db_session=self.ops_db_session,
-                config={}
-            )
+            try:
+                # Create pipeline instance
+                pipeline = self.pipeline_registry.create_pipeline(
+                    pipeline_name=pipeline_name,
+                    kg_db_session=self.kg_db_session,
+                    ops_db_session=self.ops_db_session,
+                    config={}
+                )
 
-            if not pipeline:
-                raise ValueError(f"Pipeline {pipeline_name} not found in registry")
+                if not pipeline:
+                    raise ValueError(f"Pipeline {pipeline_name} not found in registry")
 
-            # Execute extraction
-            extraction_start = datetime.utcnow()
-            extraction_response = await pipeline.extract_entities(
-                text=paragraph.text,
-                enable_trace=enable_trace,
-                enable_llm_layer=enable_llm_layer
-            )
-            execution_time_ms = int((datetime.utcnow() - extraction_start).total_seconds() * 1000)
+                # Execute extraction
+                extraction_start = datetime.utcnow()
+                extraction_response = await pipeline.extract_entities(
+                    text=paragraph.text,
+                    enable_trace=enable_trace,
+                    enable_llm_layer=enable_llm_layer
+                )
+                execution_time_ms = int((datetime.utcnow() - extraction_start).total_seconds() * 1000)
 
-            # Score the results
-            scoring_result = self.scoring_service.score_extraction(
-                extracted_entities=extraction_response.entities,
-                ground_truth_annotations=annotation_spans,
-                paragraph_text=paragraph.text
-            )
+            except Exception as e:
+                # Log error and create error run record
+                logger.error(
+                    f"Pipeline {pipeline_name} failed during execution: {e}",
+                    exc_info=True
+                )
 
-            # Save pipeline run to database
-            run_id = str(uuid.uuid4())
-            pipeline_run = RAGPipelineRun(
-                id=run_id,
-                paragraph_id=paragraph.id,
-                pipeline_class=pipeline_name,
-                executed_at=start_time,
-                execution_time_ms=execution_time_ms,
-                entities_extracted=len(extraction_response.entities),
-                precision_score=int(scoring_result.precision * 100),  # Store as percentage
-                recall_score=int(scoring_result.recall * 100),
-                f1_score=int(scoring_result.f1_score * 100),
-                result_data=json.dumps({
-                    "entities": [
-                        {
-                            "text": e.text,
-                            "type": e.type,
-                            "confidence": e.confidence,
-                            "source_layer": e.source_layer,
-                            "metadata": e.metadata
-                        }
-                        for e in extraction_response.entities
-                    ],
-                    "scoring_details": scoring_result.to_dict()
-                })
-            )
+                # Save error run to database
+                run_id = str(uuid.uuid4())
+                error_run = RAGPipelineRun(
+                    id=run_id,
+                    paragraph_id=paragraph.id,
+                    pipeline_class=pipeline_name,
+                    executed_at=start_time,
+                    execution_time_ms=int((datetime.utcnow() - start_time).total_seconds() * 1000),
+                    entities_extracted=0,
+                    precision_score=None,
+                    recall_score=None,
+                    f1_score=None,
+                    result_data=json.dumps({
+                        "error": str(e),
+                        "error_type": type(e).__name__
+                    })
+                )
 
-            self.ops_db_session.add(pipeline_run)
-            self.ops_db_session.commit()
+                try:
+                    self.ops_db_session.add(error_run)
+                    self.ops_db_session.commit()
+                except Exception as db_error:
+                    logger.error(f"Failed to save error run to database: {db_error}", exc_info=True)
+                    self.ops_db_session.rollback()
 
-            logger.info(
-                f"Pipeline {pipeline_name} completed: "
-                f"F1={scoring_result.f1_score:.2f}, "
-                f"P={scoring_result.precision:.2f}, "
-                f"R={scoring_result.recall:.2f}, "
-                f"time={execution_time_ms}ms"
-            )
+                return {
+                    "run_id": run_id,
+                    "pipeline_name": pipeline_name,
+                    "paragraph_id": paragraph.id,
+                    "error": str(e),
+                    "error_type": type(e).__name__,
+                    "executed_at": start_time.isoformat()
+                }
 
-            return {
-                "run_id": run_id,
-                "pipeline_name": pipeline_name,
-                "paragraph_id": paragraph.id,
-                "execution_time_ms": execution_time_ms,
-                "entities_extracted": len(extraction_response.entities),
-                "scoring": scoring_result.to_dict(),
-                "executed_at": start_time.isoformat()
-            }
+            # If we got here, extraction succeeded - continue with scoring
+            try:
+                # Score the results
+                scoring_result = self.scoring_service.score_extraction(
+                    extracted_entities=extraction_response.entities,
+                    ground_truth_annotations=annotation_spans,
+                    paragraph_text=paragraph.text
+                )
+
+                # Save pipeline run to database
+                run_id = str(uuid.uuid4())
+                pipeline_run = RAGPipelineRun(
+                    id=run_id,
+                    paragraph_id=paragraph.id,
+                    pipeline_class=pipeline_name,
+                    executed_at=start_time,
+                    execution_time_ms=execution_time_ms,
+                    entities_extracted=len(extraction_response.entities),
+                    precision_score=int(scoring_result.precision * 100),  # Store as percentage
+                    recall_score=int(scoring_result.recall * 100),
+                    f1_score=int(scoring_result.f1_score * 100),
+                    result_data=json.dumps({
+                        "entities": [
+                            {
+                                "text": e.text,
+                                "type": e.type,
+                                "confidence": e.confidence,
+                                "source_layer": e.source_layer,
+                                "metadata": e.metadata
+                            }
+                            for e in extraction_response.entities
+                        ],
+                        "scoring_details": scoring_result.to_dict()
+                    })
+                )
+
+                self.ops_db_session.add(pipeline_run)
+                self.ops_db_session.commit()
+
+                logger.info(
+                    f"Pipeline {pipeline_name} completed: "
+                    f"F1={scoring_result.f1_score:.2f}, "
+                    f"P={scoring_result.precision:.2f}, "
+                    f"R={scoring_result.recall:.2f}, "
+                    f"time={execution_time_ms}ms"
+                )
+
+                return {
+                    "run_id": run_id,
+                    "pipeline_name": pipeline_name,
+                    "paragraph_id": paragraph.id,
+                    "execution_time_ms": execution_time_ms,
+                    "entities_extracted": len(extraction_response.entities),
+                    "scoring": scoring_result.to_dict(),
+                    "executed_at": start_time.isoformat()
+                }
+
+            except Exception as e:
+                # Handle scoring or database errors
+                logger.error(
+                    f"Failed to score or save results for pipeline {pipeline_name}: {e}",
+                    exc_info=True
+                )
+                self.ops_db_session.rollback()
+
+                # Return partial results with error
+                return {
+                    "run_id": str(uuid.uuid4()),
+                    "pipeline_name": pipeline_name,
+                    "paragraph_id": paragraph.id,
+                    "error": f"Scoring/save failed: {str(e)}",
+                    "error_type": type(e).__name__,
+                    "executed_at": start_time.isoformat()
+                }
 
     # ==================== Results Retrieval ====================
 

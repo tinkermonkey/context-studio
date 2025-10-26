@@ -137,3 +137,54 @@ class StandardRAGPipeline(BaseRAGPipeline):
                 RAGPipelineService.DEFAULT_DEDUP_SIMILARITY_THRESHOLD
             )
         }
+
+    def _validate_config(
+        self,
+        kg_top_k: int,
+        kg_vector_threshold: float,
+        timeout_layer_0: float,
+        timeout_layer_1: float,
+        timeout_layer_2: float,
+        timeout_layer_3: float,
+        timeout_total: float,
+        dedup_similarity_threshold: float
+    ) -> None:
+        """
+        Validate configuration parameters.
+
+        Args:
+            kg_top_k: Number of top KG nodes
+            kg_vector_threshold: KG vector similarity threshold
+            timeout_layer_0: Layer 0 timeout
+            timeout_layer_1: Layer 1 timeout
+            timeout_layer_2: Layer 2 timeout
+            timeout_layer_3: Layer 3 timeout
+            timeout_total: Total timeout
+            dedup_similarity_threshold: Deduplication threshold
+
+        Raises:
+            ValueError: If any parameter is invalid
+        """
+        if kg_top_k <= 0:
+            raise ValueError(f"kg_top_k must be positive, got {kg_top_k}")
+
+        if not 0.0 <= kg_vector_threshold <= 1.0:
+            raise ValueError(f"kg_vector_threshold must be between 0 and 1, got {kg_vector_threshold}")
+
+        if timeout_layer_0 <= 0:
+            raise ValueError(f"timeout_layer_0 must be positive, got {timeout_layer_0}")
+
+        if timeout_layer_1 <= 0:
+            raise ValueError(f"timeout_layer_1 must be positive, got {timeout_layer_1}")
+
+        if timeout_layer_2 <= 0:
+            raise ValueError(f"timeout_layer_2 must be positive, got {timeout_layer_2}")
+
+        if timeout_layer_3 <= 0:
+            raise ValueError(f"timeout_layer_3 must be positive, got {timeout_layer_3}")
+
+        if timeout_total <= 0:
+            raise ValueError(f"timeout_total must be positive, got {timeout_total}")
+
+        if not 0.0 <= dedup_similarity_threshold <= 1.0:
+            raise ValueError(f"dedup_similarity_threshold must be between 0 and 1, got {dedup_similarity_threshold}")

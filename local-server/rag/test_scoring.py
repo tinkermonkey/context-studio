@@ -174,6 +174,11 @@ class RAGTestScoringService:
         """
         Match extraction spans against annotation spans using overlap threshold.
 
+        Uses a greedy matching algorithm where each annotation is matched to the best
+        overlapping extraction. Time complexity: O(n*m) where n=annotations, m=extractions.
+        For large-scale testing with many spans, could be optimized using interval trees,
+        but current approach is simple and sufficient for typical RAG extraction sizes.
+
         Returns:
             Tuple of (matches, unmatched_extractions, unmatched_annotations)
         """
@@ -181,15 +186,22 @@ class RAGTestScoringService:
         matched_extraction_indices = set()
         matched_annotation_indices = set()
 
+        # Sort spans by start position for potential early exit optimization
+        sorted_extractions = sorted(enumerate(extraction_spans), key=lambda x: x[1].start_char)
+
         # For each annotation, find best matching extraction
         for ann_idx, annotation in enumerate(annotation_spans):
             best_match = None
             best_overlap = 0.0
             best_ext_idx = None
 
-            for ext_idx, extraction in enumerate(extraction_spans):
+            for ext_idx, extraction in sorted_extractions:
                 if ext_idx in matched_extraction_indices:
                     continue
+
+                # Early exit if extraction starts after annotation ends (since sorted)
+                if extraction.start_char >= annotation.end_char:
+                    break
 
                 # Calculate overlap
                 overlap = self._calculate_overlap(
