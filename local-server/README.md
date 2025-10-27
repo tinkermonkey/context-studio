@@ -200,6 +200,13 @@ local-server/
 2. **Import errors**: Verify all dependencies are installed with `pip install -r requirements.txt`
 3. **Port conflicts**: Use `--port` argument to specify a different port
 4. **Vector extension issues**: The sqlite-vec extension should install automatically with the requirements
+5. **Git package installation failures**: If `pip install` fails when installing packages from git repositories (like concepcy) with an error about `.gitconfig`, this is typically due to a corrupted git configuration. Workaround:
+   ```bash
+   export GIT_CONFIG_GLOBAL=/tmp/gitconfig
+   git config --global user.name "Context Studio"
+   git config --global user.email "noreply@contextstudio.local"
+   pip install -r requirements.txt
+   ```
 
 #### Logs
 
