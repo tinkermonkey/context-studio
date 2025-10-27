@@ -5621,6 +5621,187 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/rag-experiments/paragraphs": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Test Paragraphs
+         * @description List test paragraphs with pagination.
+         *
+         *     Returns a paginated list of test paragraphs, each with its annotations.
+         */
+        get: operations["list_test_paragraphs_api_rag_experiments_paragraphs_get"];
+        put?: never;
+        /**
+         * Create Test Paragraph
+         * @description Create a new test paragraph.
+         *
+         *     Creates a test paragraph that can be annotated with ground truth entities
+         *     and used for pipeline testing.
+         */
+        post: operations["create_test_paragraph_api_rag_experiments_paragraphs_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/rag-experiments/paragraphs/{paragraph_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Test Paragraph
+         * @description Get a specific test paragraph by ID.
+         *
+         *     Returns the paragraph with all its annotations.
+         */
+        get: operations["get_test_paragraph_api_rag_experiments_paragraphs__paragraph_id__get"];
+        /**
+         * Update Test Paragraph
+         * @description Update a test paragraph.
+         *
+         *     Can update the text content and/or notes. At least one field must be provided.
+         */
+        put: operations["update_test_paragraph_api_rag_experiments_paragraphs__paragraph_id__put"];
+        post?: never;
+        /**
+         * Delete Test Paragraph
+         * @description Delete a test paragraph.
+         *
+         *     Deletes the paragraph and all associated annotations and pipeline runs
+         *     (cascade delete handled by database relationships).
+         */
+        delete: operations["delete_test_paragraph_api_rag_experiments_paragraphs__paragraph_id__delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/rag-experiments/paragraphs/{paragraph_id}/annotations": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Create Annotation
+         * @description Create a new annotation for a test paragraph.
+         *
+         *     Annotations define ground truth entity spans for testing pipeline accuracy.
+         *     Validates that:
+         *     - The paragraph exists
+         *     - The structure_node_id exists in local.db
+         *     - The character positions are valid
+         */
+        post: operations["create_annotation_api_rag_experiments_paragraphs__paragraph_id__annotations_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/rag-experiments/annotations/{annotation_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /**
+         * Delete Annotation
+         * @description Delete a specific annotation.
+         */
+        delete: operations["delete_annotation_api_rag_experiments_annotations__annotation_id__delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/rag-experiments/run": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Run Pipeline Test
+         * @description Execute multiple pipelines against test paragraphs.
+         *
+         *     Runs the specified pipelines in parallel (with controlled concurrency)
+         *     against each test paragraph, scores the results against ground truth
+         *     annotations, and returns execution metrics.
+         *
+         *     Supports testing multiple pipeline variants simultaneously for comparison.
+         */
+        post: operations["run_pipeline_test_api_rag_experiments_run_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/rag-experiments/results/paragraphs/{paragraph_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Pipeline Comparison
+         * @description Compare pipeline results for a specific test paragraph.
+         *
+         *     Returns the most recent run for each pipeline, sorted by F1 score.
+         *     Optionally filter by specific pipeline names.
+         */
+        get: operations["get_pipeline_comparison_api_rag_experiments_results_paragraphs__paragraph_id__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/rag-experiments/results/runs/{run_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Pipeline Run Details
+         * @description Get detailed results for a specific pipeline run.
+         *
+         *     Returns full extraction results, entities, and scoring details.
+         */
+        get: operations["get_pipeline_run_details_api_rag_experiments_results_runs__run_id__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -5716,6 +5897,48 @@ export interface components {
             query_performance_ms: number | null;
             /** System Version */
             system_version: string;
+        };
+        /**
+         * AnnotationResponse
+         * @description Response model for an annotation.
+         */
+        AnnotationResponse: {
+            /**
+             * Id
+             * @description Annotation ID
+             */
+            id: string;
+            /**
+             * Paragraph Id
+             * @description Test paragraph ID
+             */
+            paragraph_id: string;
+            /**
+             * Start Char
+             * @description Starting character position
+             */
+            start_char: number;
+            /**
+             * End Char
+             * @description Ending character position
+             */
+            end_char: number;
+            /**
+             * Structure Node Id
+             * @description Structure node ID
+             */
+            structure_node_id: string;
+            /**
+             * Text
+             * @description Annotated text span
+             */
+            text: string;
+            /**
+             * Created At
+             * Format: date-time
+             * @description Creation timestamp
+             */
+            created_at: string;
         };
         /**
          * AutoResolveRequest
@@ -6172,6 +6395,27 @@ export interface components {
          */
         ConflictTypeEnum: "concurrent_modification" | "structural_conflict" | "dependency_conflict" | "semantic_conflict";
         /**
+         * CreateAnnotationRequest
+         * @description Request model for creating an annotation on a test paragraph.
+         */
+        CreateAnnotationRequest: {
+            /**
+             * Start Char
+             * @description Starting character position (inclusive)
+             */
+            start_char: number;
+            /**
+             * End Char
+             * @description Ending character position (exclusive)
+             */
+            end_char: number;
+            /**
+             * Structure Node Id
+             * @description ID of the structure node in local.db
+             */
+            structure_node_id: string;
+        };
+        /**
          * CreateChangesetRequest
          * @description Request model for creating a changeset.
          */
@@ -6257,6 +6501,22 @@ export interface components {
              * @default 1
              */
             required_approvals: number;
+        };
+        /**
+         * CreateTestParagraphRequest
+         * @description Request model for creating a test paragraph.
+         */
+        CreateTestParagraphRequest: {
+            /**
+             * Text
+             * @description Text content of the test paragraph
+             */
+            text: string;
+            /**
+             * Notes
+             * @description Optional notes about this test paragraph
+             */
+            notes?: string | null;
         };
         /**
          * DBpediaData
@@ -7525,6 +7785,91 @@ export interface components {
             performance_grade: string;
         };
         /**
+         * PipelineComparisonItem
+         * @description Response model for a single pipeline in comparison results.
+         */
+        PipelineComparisonItem: {
+            /**
+             * Pipeline Name
+             * @description Pipeline class name
+             */
+            pipeline_name: string;
+            /**
+             * Run Id
+             * @description Most recent run ID
+             */
+            run_id: string;
+            /**
+             * F1 Score
+             * @description F1 score as percentage (0-100)
+             */
+            f1_score?: number | null;
+            /**
+             * Precision Score
+             * @description Precision score as percentage (0-100)
+             */
+            precision_score?: number | null;
+            /**
+             * Recall Score
+             * @description Recall score as percentage (0-100)
+             */
+            recall_score?: number | null;
+            /**
+             * Entities Extracted
+             * @description Number of entities extracted
+             */
+            entities_extracted: number;
+            /**
+             * Execution Time Ms
+             * @description Execution time in milliseconds
+             */
+            execution_time_ms: number;
+            /**
+             * Executed At
+             * @description Execution timestamp (ISO format)
+             */
+            executed_at: string;
+        };
+        /**
+         * PipelineComparisonResponse
+         * @description Response model for pipeline comparison results.
+         */
+        PipelineComparisonResponse: {
+            /**
+             * Paragraph Id
+             * @description Test paragraph ID
+             */
+            paragraph_id: string;
+            /**
+             * Runs
+             * @description Pipeline comparison results
+             */
+            runs: components["schemas"]["PipelineComparisonItem"][];
+            /** @description Comparison summary */
+            summary: components["schemas"]["PipelineComparisonSummary"];
+        };
+        /**
+         * PipelineComparisonSummary
+         * @description Summary statistics for pipeline comparison.
+         */
+        PipelineComparisonSummary: {
+            /**
+             * Total Pipelines
+             * @description Number of pipelines compared
+             */
+            total_pipelines: number;
+            /**
+             * Best Pipeline
+             * @description Name of best performing pipeline
+             */
+            best_pipeline?: string | null;
+            /**
+             * Best F1 Score
+             * @description Best F1 score as percentage
+             */
+            best_f1_score?: number | null;
+        };
+        /**
          * PipelineExecutionRequest
          * @description Generic request model for pipeline execution with arbitrary context data
          */
@@ -7662,6 +8007,112 @@ export interface components {
              * @description Total number of flavors
              */
             total_count: number;
+        };
+        /**
+         * PipelineRunDetailsResponse
+         * @description Response model for detailed pipeline run information.
+         */
+        PipelineRunDetailsResponse: {
+            /**
+             * Run Id
+             * @description Pipeline run ID
+             */
+            run_id: string;
+            /**
+             * Paragraph Id
+             * @description Test paragraph ID
+             */
+            paragraph_id: string;
+            /**
+             * Pipeline Class
+             * @description Pipeline class name
+             */
+            pipeline_class: string;
+            /**
+             * Executed At
+             * @description Execution timestamp (ISO format)
+             */
+            executed_at: string;
+            /**
+             * Execution Time Ms
+             * @description Execution time in milliseconds
+             */
+            execution_time_ms: number;
+            /**
+             * Entities Extracted
+             * @description Number of entities extracted
+             */
+            entities_extracted: number;
+            /**
+             * Precision Score
+             * @description Precision score as percentage
+             */
+            precision_score?: number | null;
+            /**
+             * Recall Score
+             * @description Recall score as percentage
+             */
+            recall_score?: number | null;
+            /**
+             * F1 Score
+             * @description F1 score as percentage
+             */
+            f1_score?: number | null;
+            /**
+             * Result Data
+             * @description Full result data including entities and scoring details
+             */
+            result_data: {
+                [key: string]: unknown;
+            };
+        };
+        /**
+         * PipelineRunResultResponse
+         * @description Response model for a single pipeline run result.
+         */
+        PipelineRunResultResponse: {
+            /**
+             * Run Id
+             * @description Pipeline run ID
+             */
+            run_id: string;
+            /**
+             * Pipeline Name
+             * @description Pipeline class name
+             */
+            pipeline_name: string;
+            /**
+             * Paragraph Id
+             * @description Test paragraph ID
+             */
+            paragraph_id: string;
+            /**
+             * Execution Time Ms
+             * @description Execution time in milliseconds
+             */
+            execution_time_ms?: number | null;
+            /**
+             * Entities Extracted
+             * @description Number of entities extracted
+             */
+            entities_extracted?: number | null;
+            /** @description Scoring details */
+            scoring?: components["schemas"]["ScoringDetailsResponse"] | null;
+            /**
+             * Executed At
+             * @description Execution timestamp (ISO format)
+             */
+            executed_at: string;
+            /**
+             * Error
+             * @description Error message if pipeline failed
+             */
+            error?: string | null;
+            /**
+             * Error Type
+             * @description Error type if pipeline failed
+             */
+            error_type?: string | null;
         };
         /**
          * PipelineType
@@ -8099,6 +8550,60 @@ export interface components {
             /** Author Id */
             author_id: string;
         };
+        /**
+         * RunPipelineTestRequest
+         * @description Request model for executing pipeline tests.
+         */
+        RunPipelineTestRequest: {
+            /**
+             * Paragraph Ids
+             * @description List of test paragraph IDs to test
+             */
+            paragraph_ids: string[];
+            /**
+             * Pipeline Names
+             * @description List of pipeline class names to execute
+             */
+            pipeline_names: string[];
+            /**
+             * Enable Trace
+             * @description Enable detailed trace logging
+             * @default false
+             */
+            enable_trace: boolean;
+            /**
+             * Enable Llm Layer
+             * @description Enable LLM extraction layer
+             * @default true
+             */
+            enable_llm_layer: boolean;
+        };
+        /**
+         * RunPipelineTestResponse
+         * @description Response model for pipeline test execution.
+         */
+        RunPipelineTestResponse: {
+            /**
+             * Results
+             * @description List of pipeline run results
+             */
+            results: components["schemas"]["PipelineRunResultResponse"][];
+            /**
+             * Total Runs
+             * @description Total number of runs completed
+             */
+            total_runs: number;
+            /**
+             * Successful Runs
+             * @description Number of successful runs
+             */
+            successful_runs: number;
+            /**
+             * Failed Runs
+             * @description Number of failed runs
+             */
+            failed_runs: number;
+        };
         /** SPARQLQuery */
         SPARQLQuery: {
             /** Query */
@@ -8108,6 +8613,42 @@ export interface components {
              * @default json
              */
             format: string | null;
+        };
+        /**
+         * ScoringDetailsResponse
+         * @description Response model for scoring details.
+         */
+        ScoringDetailsResponse: {
+            /**
+             * Precision
+             * @description Precision score (0-1)
+             */
+            precision: number;
+            /**
+             * Recall
+             * @description Recall score (0-1)
+             */
+            recall: number;
+            /**
+             * F1 Score
+             * @description F1 score (0-1)
+             */
+            f1_score: number;
+            /**
+             * True Positives
+             * @description Number of true positives
+             */
+            true_positives: number;
+            /**
+             * False Positives
+             * @description Number of false positives
+             */
+            false_positives: number;
+            /**
+             * False Negatives
+             * @description Number of false negatives
+             */
+            false_negatives: number;
         };
         /**
          * SearchLink
@@ -8486,6 +9027,64 @@ export interface components {
             };
         };
         /**
+         * TestParagraphListResponse
+         * @description Response model for list of test paragraphs.
+         */
+        TestParagraphListResponse: {
+            /**
+             * Paragraphs
+             * @description List of test paragraphs
+             */
+            paragraphs: components["schemas"]["TestParagraphResponse"][];
+            /**
+             * Total Count
+             * @description Total count of paragraphs returned
+             */
+            total_count: number;
+            /**
+             * Limit
+             * @description Limit used for pagination
+             */
+            limit: number;
+            /**
+             * Offset
+             * @description Offset used for pagination
+             */
+            offset: number;
+        };
+        /**
+         * TestParagraphResponse
+         * @description Response model for a test paragraph.
+         */
+        TestParagraphResponse: {
+            /**
+             * Id
+             * @description Test paragraph ID
+             */
+            id: string;
+            /**
+             * Text
+             * @description Paragraph text
+             */
+            text: string;
+            /**
+             * Notes
+             * @description Optional notes
+             */
+            notes?: string | null;
+            /**
+             * Created At
+             * Format: date-time
+             * @description Creation timestamp
+             */
+            created_at: string;
+            /**
+             * Annotations
+             * @description List of annotations
+             */
+            annotations?: components["schemas"]["AnnotationResponse"][];
+        };
+        /**
          * ThreeWayDiffOut
          * @description API model for three-way diff output.
          */
@@ -8803,6 +9402,22 @@ export interface components {
              * @description Whether flavor is enabled
              */
             enabled?: boolean | null;
+        };
+        /**
+         * UpdateTestParagraphRequest
+         * @description Request model for updating a test paragraph.
+         */
+        UpdateTestParagraphRequest: {
+            /**
+             * Text
+             * @description Updated text content
+             */
+            text?: string | null;
+            /**
+             * Notes
+             * @description Updated notes
+             */
+            notes?: string | null;
         };
         /**
          * UserActivityOut
@@ -17800,6 +18415,348 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+        };
+    };
+    list_test_paragraphs_api_rag_experiments_paragraphs_get: {
+        parameters: {
+            query?: {
+                /** @description Maximum number of paragraphs to return */
+                limit?: number;
+                /** @description Number of paragraphs to skip */
+                offset?: number;
+                SessionLocal?: unknown;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TestParagraphListResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_test_paragraph_api_rag_experiments_paragraphs_post: {
+        parameters: {
+            query?: {
+                SessionLocal?: unknown;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateTestParagraphRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TestParagraphResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_test_paragraph_api_rag_experiments_paragraphs__paragraph_id__get: {
+        parameters: {
+            query?: {
+                SessionLocal?: unknown;
+            };
+            header?: never;
+            path: {
+                paragraph_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TestParagraphResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_test_paragraph_api_rag_experiments_paragraphs__paragraph_id__put: {
+        parameters: {
+            query?: {
+                SessionLocal?: unknown;
+            };
+            header?: never;
+            path: {
+                paragraph_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateTestParagraphRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TestParagraphResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    delete_test_paragraph_api_rag_experiments_paragraphs__paragraph_id__delete: {
+        parameters: {
+            query?: {
+                SessionLocal?: unknown;
+            };
+            header?: never;
+            path: {
+                paragraph_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_annotation_api_rag_experiments_paragraphs__paragraph_id__annotations_post: {
+        parameters: {
+            query?: {
+                SessionLocal?: unknown;
+            };
+            header?: never;
+            path: {
+                paragraph_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateAnnotationRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AnnotationResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    delete_annotation_api_rag_experiments_annotations__annotation_id__delete: {
+        parameters: {
+            query?: {
+                SessionLocal?: unknown;
+            };
+            header?: never;
+            path: {
+                annotation_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    run_pipeline_test_api_rag_experiments_run_post: {
+        parameters: {
+            query?: {
+                SessionLocal?: unknown;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RunPipelineTestRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RunPipelineTestResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_pipeline_comparison_api_rag_experiments_results_paragraphs__paragraph_id__get: {
+        parameters: {
+            query?: {
+                /** @description Filter by pipeline names */
+                pipeline_names?: string[] | null;
+                SessionLocal?: unknown;
+            };
+            header?: never;
+            path: {
+                paragraph_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PipelineComparisonResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_pipeline_run_details_api_rag_experiments_results_runs__run_id__get: {
+        parameters: {
+            query?: {
+                SessionLocal?: unknown;
+            };
+            header?: never;
+            path: {
+                run_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PipelineRunDetailsResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
             };
         };
     };

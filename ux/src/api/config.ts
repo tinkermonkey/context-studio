@@ -39,6 +39,7 @@ export const QUERY_KEYS = {
   NODE_LINKS: "node_links",
   CHANGE_EVENTS: "change_events",
   RAG: "rag",
+  RAG_EXPERIMENTS: "rag_experiments",
 } as const;
 
 export const ENDPOINTS = {
@@ -74,5 +75,19 @@ export const ENDPOINTS = {
     TRACE_BY_LAYER: (requestId: string, layerName: string) =>
       `/api/rag/trace/${requestId}/layer/${layerName}`,
     CONFIG_UPDATE: "/api/rag/config/update",
+  },
+  RAG_EXPERIMENTS: {
+    PARAGRAPHS: "/api/rag-experiments/paragraphs",
+    PARAGRAPH: (paragraphId: string) =>
+      `/api/rag-experiments/paragraphs/${paragraphId}`,
+    ANNOTATIONS: (paragraphId: string) =>
+      `/api/rag-experiments/paragraphs/${paragraphId}/annotations`,
+    DELETE_ANNOTATION: (annotationId: string) =>
+      `/api/rag-experiments/annotations/${annotationId}`,
+    RUN: "/api/rag-experiments/run",
+    COMPARISON: (paragraphId: string) =>
+      `/api/rag-experiments/results/paragraphs/${paragraphId}`,
+    RUN_DETAILS: (runId: string) =>
+      `/api/rag-experiments/results/runs/${runId}`,
   },
 } as const;
