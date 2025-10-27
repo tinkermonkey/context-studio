@@ -85,13 +85,11 @@ class NodeLinkOut(NodeLinkBase):
 
 class NodeSearchRequest(BaseModel):
     """Model for structure_node search requests."""
-    title: Optional[str] = None
-    definition: Optional[str] = None
-    node_type: Optional[NodeTypeEnum] = None
-    parent_node_id: Optional[UUID] = None
-    created_at: Optional[str] = None  # ISO8601 string
-    minimum_score: Optional[float] = Field(0.7, ge=0.0, le=1.0)
-    limit: Optional[int] = Field(10, ge=1, le=100)
+    query: str = Field(..., min_length=1, description="Search query text")
+    node_type: Optional[NodeTypeEnum] = Field(None, description="Filter by node type")
+    parent_node_id: Optional[UUID] = Field(None, description="Filter by parent node")
+    threshold: Optional[float] = Field(0.0, ge=0.0, le=1.0, description="Minimum similarity score")
+    limit: Optional[int] = Field(20, ge=1, le=100, description="Maximum number of results")
 
 
 class NodeSearchResult(NodeOut):

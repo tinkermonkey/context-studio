@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from "react";
-import { Checkbox, Label, TextInput, Spinner } from "flowbite-react";
+import { Checkbox, Label, Spinner } from "flowbite-react";
 import ReactDOM from "react-dom";
-import { CircleX, Search } from "lucide-react";
+import { CircleX } from "lucide-react";
 import SearchHighlight from "@/components/misc/search_highlight";
 
 interface FieldMap {
@@ -18,6 +18,8 @@ interface RecordSelectorProps {
   onSelect?: (record: any) => void;
   value?: string;
   className?: string;
+  search?: string;
+  onSearchChange?: (search: string) => void;
 }
 
 const defaultFieldMap: FieldMap = {
@@ -34,13 +36,20 @@ export const RecordSelector: React.FC<RecordSelectorProps> = ({
   onSelect,
   value,
   className = "",
+  search: externalSearch,
+  onSearchChange,
 }) => {
   const [showDefinitions, setShowDefinitions] = useState(false);
-  const [search, setSearch] = useState("");
+  const [internalSearch, setInternalSearch] = useState("");
   const [open, setOpen] = useState(false);
   const triggerRef = useRef<HTMLButtonElement | null>(null);
   const menuRef = useRef<HTMLDivElement | null>(null);
+  const searchInputRef = useRef<HTMLInputElement | null>(null);
   const [menuStyle, setMenuStyle] = useState<React.CSSProperties>({});
+
+  // Use external search if provided, otherwise use internal state
+  const search = externalSearch !== undefined ? externalSearch : internalSearch;
+  const setSearch = onSearchChange || setInternalSearch;
 
   const selectedRecord = value
     ? records.find((r) => r[fieldMap.value] === value)
@@ -87,6 +96,16 @@ export const RecordSelector: React.FC<RecordSelectorProps> = ({
     return () => document.removeEventListener("mousedown", onDocClick);
   }, [open]);
 
+  // Focus the search input when dropdown opens
+  useEffect(() => {
+    if (open && searchInputRef.current) {
+      // Small delay to ensure the portal has rendered
+      setTimeout(() => {
+        searchInputRef.current?.focus();
+      }, 0);
+    }
+  }, [open]);
+
   const toggleOpen = () => {
     setOpen((s) => !s);
   };
@@ -100,17 +119,12 @@ export const RecordSelector: React.FC<RecordSelectorProps> = ({
     >
       <div className="p-3">
         {error && <div className="text-red-500">{error}</div>}
-        {loading && (
-          <div>
-            <Spinner /> Loading records...
-          </div>
-        )}
-        {!loading && (
-          <div className="pb-2">
-            <TextInput
+        <div className="pb-2">
+          <div className="relative">
+            <input
+              ref={searchInputRef}
               id="record-selector-search"
-              className="flex min-w-48 lg:flex"
-              sizing="sm"
+              className="block w-full rounded-lg border border-gray-300 bg-gray-50 p-2 pr-10 text-sm text-gray-900 focus:border-blue-500 focus:ring-blue-500"
               placeholder="Search..."
               type="search"
               aria-label="Search"
@@ -118,25 +132,35 @@ export const RecordSelector: React.FC<RecordSelectorProps> = ({
               onChange={(e) => setSearch(e.target.value)}
               onClick={(e) => e.stopPropagation()}
             />
-            <div className="flex items-center pt-2">
-              <Checkbox
-                id="record-selector-show-definitions"
-                checked={showDefinitions}
-                onChange={() => setShowDefinitions(!showDefinitions)}
-              />
-              <Label
-                htmlFor="record-selector-show-definitions"
-                className="flex pl-2"
-              >
-                Show Definitions
-              </Label>
-            </div>
+            {loading && (
+              <div className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2">
+                <Spinner size="sm" />
+              </div>
+            )}
           </div>
-        )}
+          <div className="flex items-center pt-2">
+            <Checkbox
+              id="record-selector-show-definitions"
+              checked={showDefinitions}
+              onChange={() => setShowDefinitions(!showDefinitions)}
+            />
+            <Label
+              htmlFor="record-selector-show-definitions"
+              className="flex pl-2"
+            >
+              Show Definitions
+            </Label>
+          </div>
+        </div>
       </div>
       <div className="max-h-64 overflow-auto">
         {records
           .filter((record) => {
+            // Skip client-side filtering if using external search (server-side filtering)
+            if (externalSearch !== undefined) {
+              return true;
+            }
+            // Client-side filtering for internal search
             const title = record[fieldMap.title]?.toLowerCase() || "";
             const def = fieldMap.definition
               ? record[fieldMap.definition]?.toLowerCase() || ""

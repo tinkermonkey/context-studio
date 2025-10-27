@@ -13,12 +13,12 @@ import {
   useCreateAnnotation,
   useDeleteAnnotation,
 } from "@/api/hooks/ragExperiments";
-import { useStructureNodes } from "@/api/hooks/structure_nodes/useStructureNodes";
+import { useStructureNodeSearch } from "@/api/hooks/structure_nodes/useStructureNodes";
 import type {
   TestParagraphResponse,
   AnnotationResponse,
 } from "@/api/services/ragExperiments";
-import type { StructureNode } from "@/api/types/structureNodes";
+import type { StructureNode, FindStructureNodeResult } from "@/api/types/structureNodes";
 
 export interface AnnotationSelectorProps {
   paragraph: TestParagraphResponse;
@@ -37,15 +37,40 @@ export const AnnotationSelector: React.FC<AnnotationSelectorProps> = ({
 }) => {
   const [selection, setSelection] = useState<TextSelection | null>(null);
   const [selectedNodeId, setSelectedNodeId] = useState<string>("");
+  const [searchInput, setSearchInput] = useState<string>("");
+  const [debouncedSearchQuery, setDebouncedSearchQuery] = useState<string>("");
   const textRef = useRef<HTMLDivElement>(null);
 
   const createAnnotationMutation = useCreateAnnotation();
   const deleteAnnotationMutation = useDeleteAnnotation();
 
-  // Fetch structure nodes for the selector
-  const { data: structureNodes, isLoading: nodesLoading } = useStructureNodes({
-    limit: 1000,
-  });
+  // Debounce the search query
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearchQuery(searchInput);
+    }, 300); // 300ms debounce
+
+    return () => clearTimeout(timer);
+  }, [searchInput]);
+
+  // Use vector search for structure nodes based on debounced search query
+  const { data: searchResults, isLoading: nodesLoading } = useStructureNodeSearch(
+    { query: debouncedSearchQuery || " ", limit: 100, threshold: 0.0 },
+    { enabled: debouncedSearchQuery.length > 0 }
+  );
+
+  // Convert search results to StructureNode format for RecordSelector
+  const structureNodes: StructureNode[] = searchResults?.map((result: FindStructureNodeResult) => ({
+    id: result.id,
+    node_type: result.node_type,
+    parent_node_id: result.parent_node_id,
+    title: result.title,
+    definition: result.definition,
+    structural_predicate_id: result.structural_predicate_id,
+    created_at: result.created_at,
+    version: result.version,
+    last_modified: result.last_modified,
+  })) || [];
 
   // Handle text selection
   const handleTextSelection = () => {
@@ -214,21 +239,17 @@ export const AnnotationSelector: React.FC<AnnotationSelectorProps> = ({
           <div className="space-y-3">
             <div>
               <label className="mb-1 block text-sm font-medium text-gray-700">
-                Link to Structure Node
+                Link to Structure Node (search to find nodes)
               </label>
-              {nodesLoading ? (
-                <div className="flex items-center gap-2">
-                  <Spinner size="sm" />
-                  <span className="text-sm text-gray-500">Loading nodes...</span>
-                </div>
-              ) : (
-                <RecordSelector
-                  records={structureNodes || []}
-                  fieldMap={{ value: "id", title: "title", definition: "definition" }}
-                  value={selectedNodeId}
-                  onSelect={(node: StructureNode) => setSelectedNodeId(node?.id || "")}
-                />
-              )}
+              <RecordSelector
+                records={structureNodes || []}
+                fieldMap={{ value: "id", title: "title", definition: "definition" }}
+                value={selectedNodeId}
+                onSelect={(node: StructureNode) => setSelectedNodeId(node?.id || "")}
+                search={searchInput}
+                onSearchChange={setSearchInput}
+                loading={nodesLoading}
+              />
             </div>
 
             <div className="flex items-center gap-2">
