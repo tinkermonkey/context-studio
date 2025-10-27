@@ -23,7 +23,14 @@ import { Route as AppConfigIndexRouteImport } from './routes/app/config/index'
 import { Route as AppReferenceSearchRouteImport } from './routes/app/reference/search'
 import { Route as AppReferenceRagTestRouteImport } from './routes/app/reference/rag-test'
 import { Route as AppReferencePredicatesRouteImport } from './routes/app/reference/predicates'
+import { Route as AppRagTestRunnerRouteImport } from './routes/app/rag/test-runner'
+import { Route as AppRagPipelineComparisonRouteImport } from './routes/app/rag/pipeline-comparison'
 import { Route as AppRagExperimentsRouteImport } from './routes/app/rag/experiments'
+import { Route as AppMonitoringTasksRouteImport } from './routes/app/monitoring/tasks'
+import { Route as AppMonitoringSystemRouteImport } from './routes/app/monitoring/system'
+import { Route as AppMonitoringPerformanceRouteImport } from './routes/app/monitoring/performance'
+import { Route as AppMonitoringLlmRouteImport } from './routes/app/monitoring/llm'
+import { Route as AppMonitoringAnalyticsRouteImport } from './routes/app/monitoring/analytics'
 import { Route as AppConfigSystemRouteImport } from './routes/app/config/system'
 import { Route as AppConfigProcessingRouteImport } from './routes/app/config/processing'
 import { Route as AppConfigPipelinesRouteImport } from './routes/app/config/pipelines'
@@ -109,9 +116,46 @@ const AppReferencePredicatesRoute = AppReferencePredicatesRouteImport.update({
   path: '/reference/predicates',
   getParentRoute: () => AppRoute,
 } as any)
+const AppRagTestRunnerRoute = AppRagTestRunnerRouteImport.update({
+  id: '/rag/test-runner',
+  path: '/rag/test-runner',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppRagPipelineComparisonRoute =
+  AppRagPipelineComparisonRouteImport.update({
+    id: '/rag/pipeline-comparison',
+    path: '/rag/pipeline-comparison',
+    getParentRoute: () => AppRoute,
+  } as any)
 const AppRagExperimentsRoute = AppRagExperimentsRouteImport.update({
   id: '/rag/experiments',
   path: '/rag/experiments',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppMonitoringTasksRoute = AppMonitoringTasksRouteImport.update({
+  id: '/monitoring/tasks',
+  path: '/monitoring/tasks',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppMonitoringSystemRoute = AppMonitoringSystemRouteImport.update({
+  id: '/monitoring/system',
+  path: '/monitoring/system',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppMonitoringPerformanceRoute =
+  AppMonitoringPerformanceRouteImport.update({
+    id: '/monitoring/performance',
+    path: '/monitoring/performance',
+    getParentRoute: () => AppRoute,
+  } as any)
+const AppMonitoringLlmRoute = AppMonitoringLlmRouteImport.update({
+  id: '/monitoring/llm',
+  path: '/monitoring/llm',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppMonitoringAnalyticsRoute = AppMonitoringAnalyticsRouteImport.update({
+  id: '/monitoring/analytics',
+  path: '/monitoring/analytics',
   getParentRoute: () => AppRoute,
 } as any)
 const AppConfigSystemRoute = AppConfigSystemRouteImport.update({
@@ -206,7 +250,14 @@ export interface FileRoutesByFullPath {
   '/app/config/pipelines': typeof AppConfigPipelinesRouteWithChildren
   '/app/config/processing': typeof AppConfigProcessingRoute
   '/app/config/system': typeof AppConfigSystemRoute
+  '/app/monitoring/analytics': typeof AppMonitoringAnalyticsRoute
+  '/app/monitoring/llm': typeof AppMonitoringLlmRoute
+  '/app/monitoring/performance': typeof AppMonitoringPerformanceRoute
+  '/app/monitoring/system': typeof AppMonitoringSystemRoute
+  '/app/monitoring/tasks': typeof AppMonitoringTasksRoute
   '/app/rag/experiments': typeof AppRagExperimentsRoute
+  '/app/rag/pipeline-comparison': typeof AppRagPipelineComparisonRoute
+  '/app/rag/test-runner': typeof AppRagTestRunnerRoute
   '/app/reference/predicates': typeof AppReferencePredicatesRoute
   '/app/reference/rag-test': typeof AppReferenceRagTestRoute
   '/app/reference/search': typeof AppReferenceSearchRoute
@@ -235,7 +286,14 @@ export interface FileRoutesByTo {
   '/app/config/pipelines': typeof AppConfigPipelinesRouteWithChildren
   '/app/config/processing': typeof AppConfigProcessingRoute
   '/app/config/system': typeof AppConfigSystemRoute
+  '/app/monitoring/analytics': typeof AppMonitoringAnalyticsRoute
+  '/app/monitoring/llm': typeof AppMonitoringLlmRoute
+  '/app/monitoring/performance': typeof AppMonitoringPerformanceRoute
+  '/app/monitoring/system': typeof AppMonitoringSystemRoute
+  '/app/monitoring/tasks': typeof AppMonitoringTasksRoute
   '/app/rag/experiments': typeof AppRagExperimentsRoute
+  '/app/rag/pipeline-comparison': typeof AppRagPipelineComparisonRoute
+  '/app/rag/test-runner': typeof AppRagTestRunnerRoute
   '/app/reference/predicates': typeof AppReferencePredicatesRoute
   '/app/reference/rag-test': typeof AppReferenceRagTestRoute
   '/app/reference/search': typeof AppReferenceSearchRoute
@@ -267,7 +325,14 @@ export interface FileRoutesById {
   '/app/config/pipelines': typeof AppConfigPipelinesRouteWithChildren
   '/app/config/processing': typeof AppConfigProcessingRoute
   '/app/config/system': typeof AppConfigSystemRoute
+  '/app/monitoring/analytics': typeof AppMonitoringAnalyticsRoute
+  '/app/monitoring/llm': typeof AppMonitoringLlmRoute
+  '/app/monitoring/performance': typeof AppMonitoringPerformanceRoute
+  '/app/monitoring/system': typeof AppMonitoringSystemRoute
+  '/app/monitoring/tasks': typeof AppMonitoringTasksRoute
   '/app/rag/experiments': typeof AppRagExperimentsRoute
+  '/app/rag/pipeline-comparison': typeof AppRagPipelineComparisonRoute
+  '/app/rag/test-runner': typeof AppRagTestRunnerRoute
   '/app/reference/predicates': typeof AppReferencePredicatesRoute
   '/app/reference/rag-test': typeof AppReferenceRagTestRoute
   '/app/reference/search': typeof AppReferenceSearchRoute
@@ -300,7 +365,14 @@ export interface FileRouteTypes {
     | '/app/config/pipelines'
     | '/app/config/processing'
     | '/app/config/system'
+    | '/app/monitoring/analytics'
+    | '/app/monitoring/llm'
+    | '/app/monitoring/performance'
+    | '/app/monitoring/system'
+    | '/app/monitoring/tasks'
     | '/app/rag/experiments'
+    | '/app/rag/pipeline-comparison'
+    | '/app/rag/test-runner'
     | '/app/reference/predicates'
     | '/app/reference/rag-test'
     | '/app/reference/search'
@@ -329,7 +401,14 @@ export interface FileRouteTypes {
     | '/app/config/pipelines'
     | '/app/config/processing'
     | '/app/config/system'
+    | '/app/monitoring/analytics'
+    | '/app/monitoring/llm'
+    | '/app/monitoring/performance'
+    | '/app/monitoring/system'
+    | '/app/monitoring/tasks'
     | '/app/rag/experiments'
+    | '/app/rag/pipeline-comparison'
+    | '/app/rag/test-runner'
     | '/app/reference/predicates'
     | '/app/reference/rag-test'
     | '/app/reference/search'
@@ -360,7 +439,14 @@ export interface FileRouteTypes {
     | '/app/config/pipelines'
     | '/app/config/processing'
     | '/app/config/system'
+    | '/app/monitoring/analytics'
+    | '/app/monitoring/llm'
+    | '/app/monitoring/performance'
+    | '/app/monitoring/system'
+    | '/app/monitoring/tasks'
     | '/app/rag/experiments'
+    | '/app/rag/pipeline-comparison'
+    | '/app/rag/test-runner'
     | '/app/reference/predicates'
     | '/app/reference/rag-test'
     | '/app/reference/search'
@@ -480,11 +566,60 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppReferencePredicatesRouteImport
       parentRoute: typeof AppRoute
     }
+    '/app/rag/test-runner': {
+      id: '/app/rag/test-runner'
+      path: '/rag/test-runner'
+      fullPath: '/app/rag/test-runner'
+      preLoaderRoute: typeof AppRagTestRunnerRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/app/rag/pipeline-comparison': {
+      id: '/app/rag/pipeline-comparison'
+      path: '/rag/pipeline-comparison'
+      fullPath: '/app/rag/pipeline-comparison'
+      preLoaderRoute: typeof AppRagPipelineComparisonRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/app/rag/experiments': {
       id: '/app/rag/experiments'
       path: '/rag/experiments'
       fullPath: '/app/rag/experiments'
       preLoaderRoute: typeof AppRagExperimentsRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/app/monitoring/tasks': {
+      id: '/app/monitoring/tasks'
+      path: '/monitoring/tasks'
+      fullPath: '/app/monitoring/tasks'
+      preLoaderRoute: typeof AppMonitoringTasksRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/app/monitoring/system': {
+      id: '/app/monitoring/system'
+      path: '/monitoring/system'
+      fullPath: '/app/monitoring/system'
+      preLoaderRoute: typeof AppMonitoringSystemRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/app/monitoring/performance': {
+      id: '/app/monitoring/performance'
+      path: '/monitoring/performance'
+      fullPath: '/app/monitoring/performance'
+      preLoaderRoute: typeof AppMonitoringPerformanceRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/app/monitoring/llm': {
+      id: '/app/monitoring/llm'
+      path: '/monitoring/llm'
+      fullPath: '/app/monitoring/llm'
+      preLoaderRoute: typeof AppMonitoringLlmRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/app/monitoring/analytics': {
+      id: '/app/monitoring/analytics'
+      path: '/monitoring/analytics'
+      fullPath: '/app/monitoring/analytics'
+      preLoaderRoute: typeof AppMonitoringAnalyticsRouteImport
       parentRoute: typeof AppRoute
     }
     '/app/config/system': {
@@ -655,7 +790,14 @@ interface AppRouteChildren {
   AppPredicatesRoute: typeof AppPredicatesRoute
   AppTermsRoute: typeof AppTermsRoute
   AppIndexRoute: typeof AppIndexRoute
+  AppMonitoringAnalyticsRoute: typeof AppMonitoringAnalyticsRoute
+  AppMonitoringLlmRoute: typeof AppMonitoringLlmRoute
+  AppMonitoringPerformanceRoute: typeof AppMonitoringPerformanceRoute
+  AppMonitoringSystemRoute: typeof AppMonitoringSystemRoute
+  AppMonitoringTasksRoute: typeof AppMonitoringTasksRoute
   AppRagExperimentsRoute: typeof AppRagExperimentsRoute
+  AppRagPipelineComparisonRoute: typeof AppRagPipelineComparisonRoute
+  AppRagTestRunnerRoute: typeof AppRagTestRunnerRoute
   AppReferencePredicatesRoute: typeof AppReferencePredicatesRoute
   AppReferenceRagTestRoute: typeof AppReferenceRagTestRoute
   AppReferenceSearchRoute: typeof AppReferenceSearchRoute
@@ -673,7 +815,14 @@ const AppRouteChildren: AppRouteChildren = {
   AppPredicatesRoute: AppPredicatesRoute,
   AppTermsRoute: AppTermsRoute,
   AppIndexRoute: AppIndexRoute,
+  AppMonitoringAnalyticsRoute: AppMonitoringAnalyticsRoute,
+  AppMonitoringLlmRoute: AppMonitoringLlmRoute,
+  AppMonitoringPerformanceRoute: AppMonitoringPerformanceRoute,
+  AppMonitoringSystemRoute: AppMonitoringSystemRoute,
+  AppMonitoringTasksRoute: AppMonitoringTasksRoute,
   AppRagExperimentsRoute: AppRagExperimentsRoute,
+  AppRagPipelineComparisonRoute: AppRagPipelineComparisonRoute,
+  AppRagTestRunnerRoute: AppRagTestRunnerRoute,
   AppReferencePredicatesRoute: AppReferencePredicatesRoute,
   AppReferenceRagTestRoute: AppReferenceRagTestRoute,
   AppReferenceSearchRoute: AppReferenceSearchRoute,
