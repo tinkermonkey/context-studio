@@ -7,24 +7,32 @@ import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { TestParagraphEditor } from "../TestParagraphEditor";
 import type { TestParagraphResponse } from "@/api/services/ragExperiments";
+import { vi, describe, it, expect, beforeEach } from "vitest";
+import "@testing-library/jest-dom";
+import * as ragExperimentsHooks from "@/api/hooks/ragExperiments";
 
 // Mock the hooks
-jest.mock("@/api/hooks/ragExperiments", () => ({
-  useCreateTestParagraph: () => ({
-    mutate: jest.fn(),
-    isPending: false,
-    isSuccess: false,
-    error: null,
-    data: null,
-  }),
-  useUpdateTestParagraph: () => ({
-    mutate: jest.fn(),
-    isPending: false,
-    isSuccess: false,
-    error: null,
-    data: null,
-  }),
+vi.mock("@/api/hooks/ragExperiments", () => ({
+  useCreateTestParagraph: vi.fn(),
+  useUpdateTestParagraph: vi.fn(),
 }));
+
+// Default mock implementations
+const defaultCreateMock = {
+  mutate: vi.fn(),
+  isPending: false,
+  isSuccess: false,
+  error: null,
+  data: null,
+};
+
+const defaultUpdateMock = {
+  mutate: vi.fn(),
+  isPending: false,
+  isSuccess: false,
+  error: null,
+  data: null,
+};
 
 const createWrapper = () => {
   const queryClient = new QueryClient({
@@ -39,6 +47,13 @@ const createWrapper = () => {
 };
 
 describe("TestParagraphEditor", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    // Reset to default mocks
+    vi.mocked(ragExperimentsHooks.useCreateTestParagraph).mockReturnValue(defaultCreateMock);
+    vi.mocked(ragExperimentsHooks.useUpdateTestParagraph).mockReturnValue(defaultUpdateMock);
+  });
+
   it("renders create form when no paragraph provided", () => {
     render(<TestParagraphEditor />, { wrapper: createWrapper() });
 
@@ -92,9 +107,8 @@ describe("TestParagraphEditor", () => {
   });
 
   it("shows loading state during submission", () => {
-    const { useCreateTestParagraph } = require("@/api/hooks/ragExperiments");
-    useCreateTestParagraph.mockReturnValue({
-      mutate: jest.fn(),
+    vi.mocked(ragExperimentsHooks.useCreateTestParagraph).mockReturnValue({
+      mutate: vi.fn(),
       isPending: true,
       isSuccess: false,
       error: null,
@@ -110,9 +124,8 @@ describe("TestParagraphEditor", () => {
   });
 
   it("shows error state on submission failure", () => {
-    const { useCreateTestParagraph } = require("@/api/hooks/ragExperiments");
-    useCreateTestParagraph.mockReturnValue({
-      mutate: jest.fn(),
+    vi.mocked(ragExperimentsHooks.useCreateTestParagraph).mockReturnValue({
+      mutate: vi.fn(),
       isPending: false,
       isSuccess: false,
       error: new Error("Submission failed"),
@@ -125,9 +138,8 @@ describe("TestParagraphEditor", () => {
   });
 
   it("clears form after successful creation", async () => {
-    const mutateFn = jest.fn();
-    const { useCreateTestParagraph } = require("@/api/hooks/ragExperiments");
-    useCreateTestParagraph.mockReturnValue({
+    const mutateFn = vi.fn();
+    vi.mocked(ragExperimentsHooks.useCreateTestParagraph).mockReturnValue({
       mutate: mutateFn,
       isPending: false,
       isSuccess: false,
@@ -144,8 +156,7 @@ describe("TestParagraphEditor", () => {
     fireEvent.click(submitButton);
 
     expect(mutateFn).toHaveBeenCalledWith(
-      expect.objectContaining({ text: "Test text" }),
-      expect.any(Object)
+      expect.objectContaining({ text: "Test text" })
     );
   });
 

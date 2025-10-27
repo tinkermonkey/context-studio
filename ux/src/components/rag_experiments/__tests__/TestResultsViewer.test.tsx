@@ -6,8 +6,32 @@ import React from "react";
 import { render, screen, fireEvent } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { TestResultsViewer } from "../TestResultsViewer";
+import { vi, describe, it, expect, beforeEach } from "vitest";
+import "@testing-library/jest-dom";
+import * as ragExperimentsHooks from "@/api/hooks/ragExperiments";
 
-// Mock the hooks
+// Mock the hooks module
+vi.mock("@/api/hooks/ragExperiments");
+
+// Mock useButterToast
+vi.mock("@/hooks/useButterToast", () => ({
+  useButterToast: vi.fn(() => ({
+    success: vi.fn(),
+    error: vi.fn(),
+    warning: vi.fn(),
+    info: vi.fn(),
+  })),
+}));
+
+// Mock lucide-react icons
+vi.mock("lucide-react", () => ({
+  Download: () => <div>Download Icon</div>,
+  ChevronDown: () => <div>ChevronDown Icon</div>,
+  ChevronUp: () => <div>ChevronUp Icon</div>,
+  ChevronLeft: () => <div>ChevronLeft Icon</div>,
+  ChevronRight: () => <div>ChevronRight Icon</div>,
+}));
+
 const mockComparisonData = {
   paragraph_id: "test-para",
   runs: [
@@ -29,14 +53,6 @@ const mockComparisonData = {
   },
 };
 
-jest.mock("@/api/hooks/ragExperiments", () => ({
-  usePipelineComparison: jest.fn(() => ({
-    data: mockComparisonData,
-    isLoading: false,
-    error: null,
-  })),
-}));
-
 const createWrapper = () => {
   const queryClient = new QueryClient({
     defaultOptions: {
@@ -50,6 +66,16 @@ const createWrapper = () => {
 };
 
 describe("TestResultsViewer", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    // Default mock implementation
+    vi.mocked(ragExperimentsHooks.usePipelineComparison).mockReturnValue({
+      data: mockComparisonData,
+      isLoading: false,
+      error: null,
+    } as any);
+  });
+
   it("renders results summary", () => {
     render(<TestResultsViewer paragraphId="test-para" />, {
       wrapper: createWrapper(),
@@ -57,7 +83,9 @@ describe("TestResultsViewer", () => {
 
     expect(screen.getByText(/Results Summary/i)).toBeInTheDocument();
     expect(screen.getByText(/Best Pipeline/i)).toBeInTheDocument();
-    expect(screen.getByText(/StandardRAGPipeline/i)).toBeInTheDocument();
+    // Use getAllByText since the pipeline name appears in both summary and table
+    const pipelineNames = screen.getAllByText(/StandardRAGPipeline/i);
+    expect(pipelineNames.length).toBeGreaterThan(0);
   });
 
   it("renders results table", () => {
@@ -68,7 +96,9 @@ describe("TestResultsViewer", () => {
     expect(screen.getByText(/Pipeline Name/i)).toBeInTheDocument();
     expect(screen.getByText(/Precision/i)).toBeInTheDocument();
     expect(screen.getByText(/Recall/i)).toBeInTheDocument();
-    expect(screen.getByText(/F1 Score/i)).toBeInTheDocument();
+    // F1 Score appears in both the summary and table header, so use getAllByText
+    const f1ScoreElements = screen.getAllByText(/F1 Score/i);
+    expect(f1ScoreElements.length).toBeGreaterThan(0);
   });
 
   it("displays metric badges", () => {
@@ -76,8 +106,9 @@ describe("TestResultsViewer", () => {
       wrapper: createWrapper(),
     });
 
-    // F1 score: 85%
-    expect(screen.getByText(/85.0%/i)).toBeInTheDocument();
+    // F1 score: 85% - appears in both summary and table, so use getAllByText
+    const f1Scores = screen.getAllByText(/85.0%/i);
+    expect(f1Scores.length).toBeGreaterThan(0);
     // Precision: 90%
     expect(screen.getByText(/90.0%/i)).toBeInTheDocument();
     // Recall: 80%
@@ -94,12 +125,11 @@ describe("TestResultsViewer", () => {
   });
 
   it("shows loading state", () => {
-    const { usePipelineComparison } = require("@/api/hooks/ragExperiments");
-    usePipelineComparison.mockReturnValue({
+    vi.mocked(ragExperimentsHooks.usePipelineComparison).mockReturnValue({
       data: null,
       isLoading: true,
       error: null,
-    });
+    } as any);
 
     render(<TestResultsViewer paragraphId="test-para" />, {
       wrapper: createWrapper(),
@@ -109,12 +139,11 @@ describe("TestResultsViewer", () => {
   });
 
   it("shows empty state when no results", () => {
-    const { usePipelineComparison } = require("@/api/hooks/ragExperiments");
-    usePipelineComparison.mockReturnValue({
+    vi.mocked(ragExperimentsHooks.usePipelineComparison).mockReturnValue({
       data: { runs: [], summary: null },
       isLoading: false,
       error: null,
-    });
+    } as any);
 
     render(<TestResultsViewer paragraphId="test-para" />, {
       wrapper: createWrapper(),
@@ -126,12 +155,11 @@ describe("TestResultsViewer", () => {
   });
 
   it("shows error state", () => {
-    const { usePipelineComparison } = require("@/api/hooks/ragExperiments");
-    usePipelineComparison.mockReturnValue({
+    vi.mocked(ragExperimentsHooks.usePipelineComparison).mockReturnValue({
       data: null,
       isLoading: false,
       error: new Error("Test error"),
-    });
+    } as any);
 
     render(<TestResultsViewer paragraphId="test-para" />, {
       wrapper: createWrapper(),
@@ -142,12 +170,11 @@ describe("TestResultsViewer", () => {
   });
 
   it("handles export CSV with empty results", () => {
-    const { usePipelineComparison } = require("@/api/hooks/ragExperiments");
-    usePipelineComparison.mockReturnValue({
+    vi.mocked(ragExperimentsHooks.usePipelineComparison).mockReturnValue({
       data: { runs: [], summary: null },
       isLoading: false,
       error: null,
-    });
+    } as any);
 
     render(<TestResultsViewer paragraphId="test-para" />, {
       wrapper: createWrapper(),
@@ -179,12 +206,11 @@ describe("TestResultsViewer", () => {
       },
     };
 
-    const { usePipelineComparison } = require("@/api/hooks/ragExperiments");
-    usePipelineComparison.mockReturnValue({
+    vi.mocked(ragExperimentsHooks.usePipelineComparison).mockReturnValue({
       data: largeDataset,
       isLoading: false,
       error: null,
-    });
+    } as any);
 
     render(<TestResultsViewer paragraphId="test-para" />, {
       wrapper: createWrapper(),
@@ -201,7 +227,10 @@ describe("TestResultsViewer", () => {
       wrapper: createWrapper(),
     });
 
-    const f1Header = screen.getByText(/F1 Score/i);
+    // F1 Score appears in both summary and table header, get the one in the table
+    const f1Headers = screen.getAllByText(/F1 Score/i);
+    // The table header is the second occurrence (first is in summary)
+    const f1Header = f1Headers[f1Headers.length - 1];
     expect(f1Header).toBeInTheDocument();
 
     // F1 score should be sortable
@@ -238,12 +267,11 @@ describe("TestResultsViewer", () => {
       },
     };
 
-    const { usePipelineComparison } = require("@/api/hooks/ragExperiments");
-    usePipelineComparison.mockReturnValue({
+    vi.mocked(ragExperimentsHooks.usePipelineComparison).mockReturnValue({
       data: dataWithNulls,
       isLoading: false,
       error: null,
-    });
+    } as any);
 
     render(<TestResultsViewer paragraphId="test-para" />, {
       wrapper: createWrapper(),
@@ -272,12 +300,11 @@ describe("TestResultsViewer", () => {
       summary: null,
     };
 
-    const { usePipelineComparison } = require("@/api/hooks/ragExperiments");
-    usePipelineComparison.mockReturnValue({
+    vi.mocked(ragExperimentsHooks.usePipelineComparison).mockReturnValue({
       data: multipleRuns,
       isLoading: false,
       error: null,
-    });
+    } as any);
 
     render(<TestResultsViewer paragraphId="test-para" />, {
       wrapper: createWrapper(),
@@ -290,18 +317,19 @@ describe("TestResultsViewer", () => {
   });
 
   it("displays total result count", () => {
-    const { usePipelineComparison } = require("@/api/hooks/ragExperiments");
-    usePipelineComparison.mockReturnValue({
+    vi.mocked(ragExperimentsHooks.usePipelineComparison).mockReturnValue({
       data: mockComparisonData,
       isLoading: false,
       error: null,
-    });
+    } as any);
 
     render(<TestResultsViewer paragraphId="test-para" />, {
       wrapper: createWrapper(),
     });
 
     expect(screen.getByText(/Total Pipelines/i)).toBeInTheDocument();
-    expect(screen.getByText(/1/)).toBeInTheDocument();
+    // Look for "1" in the specific context - there might be multiple "1"s on the page
+    const totalPipelines = screen.getByText(/Total Pipelines/i).parentElement;
+    expect(totalPipelines).toHaveTextContent("1");
   });
 });

@@ -131,6 +131,7 @@ class TestPipelineProxyIntegration:
         assert not pipeline._initialized
         assert "Failed to start reference API caching proxy" in pipeline._error
 
+    @patch("nlp.pipeline.concepcy", Mock())  # Mock concepcy module as available
     @patch("nlp.pipeline.get_settings")
     @patch("nlp.pipeline.get_config_manager")
     @patch("nlp.pipeline.get_proxy_manager")
