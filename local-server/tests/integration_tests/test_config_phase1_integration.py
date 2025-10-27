@@ -317,7 +317,7 @@ class TestConfigDatabaseIntegration:
         assert settings.server.reload == True
 
         # Test LLM defaults
-        assert settings.llm.model_name == "gpt-3.5-turbo"
+        assert settings.llm.model_name == "gpt-4o-mini"
         assert settings.llm.temperature == 0.0
         assert settings.llm.timeout == 30
 

@@ -104,10 +104,11 @@ def test_client(test_kg_db, test_ops_db):
     ops_engine, ops_session_maker = test_ops_db
 
     # Mock the embedding model to avoid loading it
-    with patch('embeddings.embedding_model.EmbeddingModel') as mock_embedding:
-        # Configure mock to avoid actual model loading
-        mock_embedding.return_value = Mock()
+    # Create a mock model that returns dummy embeddings
+    mock_model = Mock()
+    mock_model.encode.return_value = [[0.1] * 384]  # Mock embedding vector
 
+    with patch('embeddings.generate_embeddings.get_model', return_value=mock_model):
         # Create app with test database sessions
         app = create_app(session_local=kg_session_maker)
 
@@ -576,8 +577,10 @@ class TestPipelineExecution:
         mock_run.return_value = asyncio.run(mock_async_result())
 
         # Mock the pipeline registry validation
-        with patch('rag.test_models.PipelineRegistry') as mock_registry:
-            mock_registry.return_value.list_pipelines.return_value = ["StandardRAGPipeline"]
+        with patch('rag.pipeline_registry.get_pipeline_registry') as mock_get_registry:
+            mock_registry = Mock()
+            mock_registry.list_pipelines.return_value = ["StandardRAGPipeline"]
+            mock_get_registry.return_value = mock_registry
 
             # Execute pipeline test
             response = test_client.post(
@@ -612,8 +615,10 @@ class TestPipelineExecution:
         paragraph_id = paragraph_response.json()["id"]
 
         # Mock the pipeline registry validation to return empty list
-        with patch('rag.test_models.PipelineRegistry') as mock_registry:
-            mock_registry.return_value.list_pipelines.return_value = []
+        with patch('rag.pipeline_registry.get_pipeline_registry') as mock_get_registry:
+            mock_registry = Mock()
+            mock_registry.list_pipelines.return_value = []
+            mock_get_registry.return_value = mock_registry
 
             response = test_client.post(
                 "/api/rag-experiments/run",

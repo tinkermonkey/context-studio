@@ -586,7 +586,11 @@ class RAGTestManagementService:
             return {
                 "paragraph_id": paragraph_id,
                 "runs": [],
-                "summary": {}
+                "summary": {
+                    "total_pipelines": 0,
+                    "best_pipeline": None,
+                    "best_f1_score": None
+                }
             }
 
         # Group runs by pipeline class (use most recent run for each)

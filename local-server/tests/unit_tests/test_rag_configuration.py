@@ -22,7 +22,7 @@ def test_rag_config_defaults():
 
     # Knowledge graph settings
     assert config.kg_context_top_k == 50
-    assert config.kg_vector_threshold == 0.7
+    assert config.kg_vector_threshold == 0.6
 
     # LLM pipeline settings
     assert config.llm_pipeline_flavor is None
