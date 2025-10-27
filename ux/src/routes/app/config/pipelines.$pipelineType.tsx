@@ -6,7 +6,7 @@ import type { PipelineType } from "@/api/services/pipelineFlavors";
 import { PipelineTypes } from "@/components/llm_pipelines/pipelineTypes";
 import { PipelineFlavorsList } from "@/components/llm_pipelines/PipelineFlavorsList";
 
-export const Route = createFileRoute("/app/config/pipelines/$pipelineType/")({
+export const Route = createFileRoute("/app/config/pipelines/$pipelineType")({
   component: PipelineTypeConfigPage,
 });
 
