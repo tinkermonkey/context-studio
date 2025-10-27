@@ -9,7 +9,7 @@ import os
 import warnings
 from typing import Optional, Dict, Any, Union
 from langchain.chat_models import init_chat_model
-from langchain.schema import BaseMessage
+from langchain_core.messages import BaseMessage
 
 from .enabled_models import (
     EnabledModelsManager,

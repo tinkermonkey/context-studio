@@ -22,6 +22,7 @@ import { Route as AppConfigIndexRouteImport } from './routes/app/config/index'
 import { Route as AppReferenceSearchRouteImport } from './routes/app/reference.search'
 import { Route as AppReferenceRagTestRouteImport } from './routes/app/reference.rag-test'
 import { Route as AppReferencePredicatesRouteImport } from './routes/app/reference.predicates'
+import { Route as AppRagExperimentsRouteImport } from './routes/app/rag/experiments'
 import { Route as AppConfigSystemRouteImport } from './routes/app/config/system'
 import { Route as AppConfigProcessingRouteImport } from './routes/app/config/processing'
 import { Route as AppConfigPipelinesRouteImport } from './routes/app/config/pipelines'
@@ -102,6 +103,11 @@ const AppReferenceRagTestRoute = AppReferenceRagTestRouteImport.update({
 const AppReferencePredicatesRoute = AppReferencePredicatesRouteImport.update({
   id: '/reference/predicates',
   path: '/reference/predicates',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppRagExperimentsRoute = AppRagExperimentsRouteImport.update({
+  id: '/rag/experiments',
+  path: '/rag/experiments',
   getParentRoute: () => AppRoute,
 } as any)
 const AppConfigSystemRoute = AppConfigSystemRouteImport.update({
@@ -207,6 +213,7 @@ export interface FileRoutesByFullPath {
   '/app/config/pipelines': typeof AppConfigPipelinesRouteWithChildren
   '/app/config/processing': typeof AppConfigProcessingRoute
   '/app/config/system': typeof AppConfigSystemRoute
+  '/app/rag/experiments': typeof AppRagExperimentsRoute
   '/app/reference/predicates': typeof AppReferencePredicatesRoute
   '/app/reference/rag-test': typeof AppReferenceRagTestRoute
   '/app/reference/search': typeof AppReferenceSearchRoute
@@ -235,6 +242,7 @@ export interface FileRoutesByTo {
   '/app/config/network': typeof AppConfigNetworkRoute
   '/app/config/processing': typeof AppConfigProcessingRoute
   '/app/config/system': typeof AppConfigSystemRoute
+  '/app/rag/experiments': typeof AppRagExperimentsRoute
   '/app/reference/predicates': typeof AppReferencePredicatesRoute
   '/app/reference/rag-test': typeof AppReferenceRagTestRoute
   '/app/reference/search': typeof AppReferenceSearchRoute
@@ -266,6 +274,7 @@ export interface FileRoutesById {
   '/app/config/pipelines': typeof AppConfigPipelinesRouteWithChildren
   '/app/config/processing': typeof AppConfigProcessingRoute
   '/app/config/system': typeof AppConfigSystemRoute
+  '/app/rag/experiments': typeof AppRagExperimentsRoute
   '/app/reference/predicates': typeof AppReferencePredicatesRoute
   '/app/reference/rag-test': typeof AppReferenceRagTestRoute
   '/app/reference/search': typeof AppReferenceSearchRoute
@@ -299,6 +308,7 @@ export interface FileRouteTypes {
     | '/app/config/pipelines'
     | '/app/config/processing'
     | '/app/config/system'
+    | '/app/rag/experiments'
     | '/app/reference/predicates'
     | '/app/reference/rag-test'
     | '/app/reference/search'
@@ -327,6 +337,7 @@ export interface FileRouteTypes {
     | '/app/config/network'
     | '/app/config/processing'
     | '/app/config/system'
+    | '/app/rag/experiments'
     | '/app/reference/predicates'
     | '/app/reference/rag-test'
     | '/app/reference/search'
@@ -357,6 +368,7 @@ export interface FileRouteTypes {
     | '/app/config/pipelines'
     | '/app/config/processing'
     | '/app/config/system'
+    | '/app/rag/experiments'
     | '/app/reference/predicates'
     | '/app/reference/rag-test'
     | '/app/reference/search'
@@ -468,6 +480,13 @@ declare module '@tanstack/react-router' {
       path: '/reference/predicates'
       fullPath: '/app/reference/predicates'
       preLoaderRoute: typeof AppReferencePredicatesRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/app/rag/experiments': {
+      id: '/app/rag/experiments'
+      path: '/rag/experiments'
+      fullPath: '/app/rag/experiments'
+      preLoaderRoute: typeof AppRagExperimentsRouteImport
       parentRoute: typeof AppRoute
     }
     '/app/config/system': {
@@ -657,6 +676,7 @@ interface AppRouteChildren {
   AppPredicatesRoute: typeof AppPredicatesRoute
   AppTermsRoute: typeof AppTermsRoute
   AppIndexRoute: typeof AppIndexRoute
+  AppRagExperimentsRoute: typeof AppRagExperimentsRoute
   AppReferencePredicatesRoute: typeof AppReferencePredicatesRoute
   AppReferenceRagTestRoute: typeof AppReferenceRagTestRoute
   AppReferenceSearchRoute: typeof AppReferenceSearchRoute
@@ -673,6 +693,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppPredicatesRoute: AppPredicatesRoute,
   AppTermsRoute: AppTermsRoute,
   AppIndexRoute: AppIndexRoute,
+  AppRagExperimentsRoute: AppRagExperimentsRoute,
   AppReferencePredicatesRoute: AppReferencePredicatesRoute,
   AppReferenceRagTestRoute: AppReferenceRagTestRoute,
   AppReferenceSearchRoute: AppReferenceSearchRoute,

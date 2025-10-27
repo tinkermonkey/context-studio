@@ -96,6 +96,9 @@ describe("TreeChartPanel", () => {
   });
 
   it("displays error state when data loading fails", () => {
+    // Suppress expected error logs during this test
+    const consoleErrorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+
     const testError = new Error("Failed to load data");
 
     mockUseLayerNodes.mockReturnValue({
@@ -122,6 +125,13 @@ describe("TreeChartPanel", () => {
 
     expect(screen.getByText("Error loading data")).toBeInTheDocument();
     expect(screen.getByText("Failed to load data")).toBeInTheDocument();
+
+    // Verify error was logged and restore console.error
+    expect(consoleErrorSpy).toHaveBeenCalledWith(
+      expect.stringContaining("[API ERROR] TreeChartPanel error"),
+      expect.objectContaining({ error: testError })
+    );
+    consoleErrorSpy.mockRestore();
   });
 
   it("renders TreeChart when data is successfully loaded", async () => {
@@ -231,6 +241,9 @@ describe("TreeChartPanel", () => {
   });
 
   it("displays custom error component when provided", () => {
+    // Suppress expected error logs during this test
+    const consoleErrorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+
     const customErrorComponent = (
       <div data-testid="custom-error">Custom error message</div>
     );
@@ -260,6 +273,13 @@ describe("TreeChartPanel", () => {
 
     expect(screen.getByTestId("custom-error")).toBeInTheDocument();
     expect(screen.getByText("Custom error message")).toBeInTheDocument();
+
+    // Verify error was logged and restore console.error
+    expect(consoleErrorSpy).toHaveBeenCalledWith(
+      expect.stringContaining("[API ERROR] TreeChartPanel error"),
+      expect.objectContaining({ error: testError })
+    );
+    consoleErrorSpy.mockRestore();
   });
 
   it("applies custom className when provided", () => {

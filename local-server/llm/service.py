@@ -9,7 +9,7 @@ import asyncio
 import string
 import json
 from langchain.chat_models import init_chat_model
-from langchain.schema import HumanMessage, SystemMessage
+from langchain_core.messages import HumanMessage, SystemMessage
 from openai import RateLimitError, APITimeoutError, APIError, AuthenticationError
 
 from .models import (

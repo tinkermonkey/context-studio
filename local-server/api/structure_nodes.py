@@ -85,7 +85,7 @@ def list_nodes(
     node_type: Optional[NodeTypeEnum] = Query(None, description="Filter by structure_node type"),
     parent_node_id: Optional[UUID] = Query(None, description="Filter by parent structure_node ID"),
     skip: int = Query(0, ge=0, description="Number of structure_nodes to skip"),
-    limit: int = Query(50, ge=1, le=100, description="Maximum number of structure_nodes to return"),
+    limit: int = Query(50, ge=1, le=1000, description="Maximum number of structure_nodes to return"),
     sort_by: str = Query("title", pattern="^(title|created_at)$", description="Sort field"),
     node_service: NodeService = Depends(get_node_service_simple)
 ):
@@ -160,23 +160,110 @@ def search_nodes(
 ):
     """
     Vector search across structure_nodes.
-    
+
     This endpoint replaces the separate find endpoints for layers, domains, and terms.
     Supports semantic search across structure_node titles and definitions with optional
     type filtering and configurable similarity thresholds.
-    
-    Note: Implementation depends on vector search infrastructure being available.
     """
-    # TODO: Implement vector search functionality
-    # This would integrate with the existing vector search infrastructure
-    # and work with the structure_nodes_vec virtual table
-    
-    # Placeholder implementation - would need to be completed based on
-    # existing vector search patterns in the codebase
-    raise HTTPException(
-        status_code=501, 
-        detail="Vector search implementation pending - requires integration with existing vector search infrastructure"
-    )
+    from utils.logger import get_logger
+    from sqlalchemy import text
+    from embeddings.generate_embeddings import generate_embedding
+    from api.utils.node_conversion import convert_api_node_type_to_db
+
+    logger = get_logger(__name__)
+
+    try:
+        # Generate embedding for query
+        query_embedding = generate_embedding(search_request.query)
+
+        # Build query with optional node_type filter
+        type_filter = ""
+        params = {
+            'query_vec': query_embedding,
+            'threshold': search_request.threshold,
+            'limit': search_request.limit
+        }
+
+        if search_request.node_type:
+            db_node_type = convert_api_node_type_to_db(search_request.node_type.value)
+            type_filter = "AND node_type = :node_type"
+            params['node_type'] = db_node_type
+
+        query = text(f"""
+            WITH similarities AS (
+                SELECT
+                    id,
+                    title,
+                    node_type,
+                    definition,
+                    parent_node_id,
+                    structural_predicate_id,
+                    created_at,
+                    last_modified,
+                    title_embedding,
+                    definition_embedding,
+                    CASE
+                        WHEN title_embedding IS NOT NULL AND definition_embedding IS NOT NULL THEN
+                            MAX(
+                                (1.0 - vec_distance_cosine(title_embedding, :query_vec)),
+                                (1.0 - vec_distance_cosine(definition_embedding, :query_vec))
+                            )
+                        WHEN title_embedding IS NOT NULL THEN
+                            (1.0 - vec_distance_cosine(title_embedding, :query_vec))
+                        WHEN definition_embedding IS NOT NULL THEN
+                            (1.0 - vec_distance_cosine(definition_embedding, :query_vec))
+                        ELSE 0.0
+                    END as similarity
+                FROM structure_nodes
+                WHERE (title_embedding IS NOT NULL OR definition_embedding IS NOT NULL)
+                {type_filter}
+            )
+            SELECT
+                id,
+                title,
+                node_type,
+                definition,
+                parent_node_id,
+                structural_predicate_id,
+                created_at,
+                last_modified,
+                similarity
+            FROM similarities
+            WHERE similarity >= :threshold
+            ORDER BY similarity DESC
+            LIMIT :limit
+        """)
+
+        results = node_service.db.execute(query, params).fetchall()
+
+        # Convert results to NodeSearchResult objects
+        search_results = []
+        for row in results:
+            result = NodeSearchResult(
+                id=row.id,
+                node_type=row.node_type,
+                parent_node_id=row.parent_node_id,
+                title=row.title,
+                definition=row.definition,
+                structural_predicate_id=row.structural_predicate_id,
+                created_at=row.created_at.isoformat() if hasattr(row.created_at, 'isoformat') else str(row.created_at),
+                version=1,  # Version tracking would come from working tree
+                last_modified=row.last_modified.isoformat() if hasattr(row.last_modified, 'isoformat') else str(row.last_modified),
+                score=float(row.similarity),
+                distance=1.0 - float(row.similarity)  # distance is inverse of similarity
+            )
+            search_results.append(result)
+
+        return search_results
+
+    except HTTPException:
+        raise
+    except ValueError as e:
+        logger.warning(f"Invalid search parameters: {e}")
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        logger.error(f"Vector search failed: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail=f"Vector search failed: {str(e)}")
 
 
 # StructureNode Links endpoints

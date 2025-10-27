@@ -10,8 +10,8 @@ SQLAlchemy's metadata.create_all() handles schema updates automatically.
 Note: For change tracking, use the ChangeEvent model in database.models instead.
 """
 
-from sqlalchemy import Column, String, Text, Integer, DateTime, Boolean, Index
-from sqlalchemy.orm import declarative_base
+from sqlalchemy import Column, String, Text, Integer, DateTime, Boolean, Index, ForeignKey
+from sqlalchemy.orm import declarative_base, relationship
 import datetime
 
 # Separate base for operations database
@@ -162,3 +162,72 @@ class RAGObservabilityTrace(OperationsBase):
 
     def __repr__(self):
         return f"<RAGObservabilityTrace(request_id='{self.request_id}', layer_name='{self.layer_name}')>"
+
+
+class TestParagraph(OperationsBase):
+    """Test paragraph for RAG pipeline experimentation."""
+
+    __tablename__ = "test_paragraphs"
+
+    id = Column(String, primary_key=True)
+    text = Column(Text, nullable=False)
+    notes = Column(Text, nullable=True)
+    created_at = Column(DateTime, nullable=False, default=datetime.datetime.utcnow)
+
+    # Relationships with cascade delete
+    annotations = relationship("TestAnnotation", back_populates="paragraph", cascade="all, delete-orphan")
+    pipeline_runs = relationship("RAGPipelineRun", back_populates="paragraph", cascade="all, delete-orphan")
+
+    def __repr__(self):
+        return f"<TestParagraph(id='{self.id}')>"
+
+
+class TestAnnotation(OperationsBase):
+    """Ground truth annotation for test paragraph entities."""
+
+    __tablename__ = "test_annotations"
+    __table_args__ = (
+        Index('idx_test_annotation_paragraph_id', 'paragraph_id'),
+        Index('idx_test_annotation_structure_node_id', 'structure_node_id'),
+    )
+
+    id = Column(String, primary_key=True)
+    paragraph_id = Column(String, ForeignKey('test_paragraphs.id'), nullable=False)
+    start_char = Column(Integer, nullable=False)
+    end_char = Column(Integer, nullable=False)
+    structure_node_id = Column(String, nullable=False)  # Soft FK to structure_nodes in local.db
+    created_at = Column(DateTime, nullable=False, default=datetime.datetime.utcnow)
+
+    # Relationship back to paragraph
+    paragraph = relationship("TestParagraph", back_populates="annotations")
+
+    def __repr__(self):
+        return f"<TestAnnotation(id='{self.id}', paragraph_id='{self.paragraph_id}')>"
+
+
+class RAGPipelineRun(OperationsBase):
+    """Execution result for a RAG pipeline test run."""
+
+    __tablename__ = "rag_pipeline_runs"
+    __table_args__ = (
+        Index('idx_rag_run_paragraph_id', 'paragraph_id'),
+        Index('idx_rag_run_pipeline_class', 'pipeline_class'),
+        Index('idx_rag_run_executed_at', 'executed_at'),
+    )
+
+    id = Column(String, primary_key=True)
+    paragraph_id = Column(String, ForeignKey('test_paragraphs.id'), nullable=False)
+    pipeline_class = Column(String, nullable=False)  # Pipeline class name (e.g., "StandardRAGPipeline")
+    executed_at = Column(DateTime, nullable=False, default=datetime.datetime.utcnow)
+    execution_time_ms = Column(Integer, nullable=False)
+    entities_extracted = Column(Integer, nullable=False)
+    precision_score = Column(Integer, nullable=True)  # Stored as percentage (0-100)
+    recall_score = Column(Integer, nullable=True)  # Stored as percentage (0-100)
+    f1_score = Column(Integer, nullable=True)  # Stored as percentage (0-100)
+    result_data = Column(Text, nullable=True)  # JSON blob with full extraction results
+
+    # Relationship back to paragraph
+    paragraph = relationship("TestParagraph", back_populates="pipeline_runs")
+
+    def __repr__(self):
+        return f"<RAGPipelineRun(id='{self.id}', pipeline_class='{self.pipeline_class}', f1_score={self.f1_score})>"

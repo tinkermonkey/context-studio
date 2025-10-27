@@ -12,7 +12,7 @@ from api import graph, datasets, nlp_analysis, schema, predicates, llm, pipeline
 from api import reference, config, structure_nodes, version_management, sync, llm_traceability
 from api import changeset_management, proposal_management, identity_management
 from api import conflict_resolution, analytics, incremental_sync, optimization, embeddings, model_capabilities, enabled_models
-from api import background_tasks, rag_pipeline
+from api import background_tasks, rag_pipeline, rag_experiments
 from api.admin import service_monitoring
 from api.graph import get_cached_graph_service, invalidate_graph_cache
 from database.migrations.migration_manager import MigrationManager
@@ -323,6 +323,9 @@ def create_app(dataset_id=None, engine=None, session_local=None, service_factory
 
     # Phase 5: RAG Pipeline for entity extraction
     app.include_router(rag_pipeline.router, prefix="/api/rag", tags=["rag-pipeline"])
+
+    # Phase 5: RAG Experiments for pipeline testing and comparison
+    app.include_router(rag_experiments.router, tags=["rag-experiments"])
 
     # Add global exception handler to sanitize error messages
     from fastapi import Request, status

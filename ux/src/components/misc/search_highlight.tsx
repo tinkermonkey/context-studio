@@ -1,5 +1,4 @@
 import React from "react";
-import { Badge } from "flowbite-react";
 
 interface SearchHighlightProps {
   content?: string;
@@ -19,9 +18,9 @@ const SearchHighlight: React.FC<SearchHighlightProps> = ({
     <>
       {parts.map((part, idx) =>
         part.toLowerCase() === searchText.toLowerCase() ? (
-          <Badge color="info" key={idx} className="inline px-0">
+          <span key={idx} className="bg-yellow-200 rounded px-0.5">
             {part}
-          </Badge>
+          </span>
         ) : (
           <React.Fragment key={idx}>{part}</React.Fragment>
         ),

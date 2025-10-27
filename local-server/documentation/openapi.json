@@ -14126,6 +14126,567 @@
           }
         }
       }
+    },
+    "/api/rag-experiments/paragraphs": {
+      "post": {
+        "tags": [
+          "rag-experiments",
+          "RAG Experiments"
+        ],
+        "summary": "Create Test Paragraph",
+        "description": "Create a new test paragraph.\n\nCreates a test paragraph that can be annotated with ground truth entities\nand used for pipeline testing.",
+        "operationId": "create_test_paragraph_api_rag_experiments_paragraphs_post",
+        "parameters": [
+          {
+            "name": "SessionLocal",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "title": "Sessionlocal"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateTestParagraphRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TestParagraphResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "rag-experiments",
+          "RAG Experiments"
+        ],
+        "summary": "List Test Paragraphs",
+        "description": "List test paragraphs with pagination.\n\nReturns a paginated list of test paragraphs, each with its annotations.",
+        "operationId": "list_test_paragraphs_api_rag_experiments_paragraphs_get",
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 500,
+              "minimum": 1,
+              "description": "Maximum number of paragraphs to return",
+              "default": 100,
+              "title": "Limit"
+            },
+            "description": "Maximum number of paragraphs to return"
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "description": "Number of paragraphs to skip",
+              "default": 0,
+              "title": "Offset"
+            },
+            "description": "Number of paragraphs to skip"
+          },
+          {
+            "name": "SessionLocal",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "title": "Sessionlocal"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TestParagraphListResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/rag-experiments/paragraphs/{paragraph_id}": {
+      "get": {
+        "tags": [
+          "rag-experiments",
+          "RAG Experiments"
+        ],
+        "summary": "Get Test Paragraph",
+        "description": "Get a specific test paragraph by ID.\n\nReturns the paragraph with all its annotations.",
+        "operationId": "get_test_paragraph_api_rag_experiments_paragraphs__paragraph_id__get",
+        "parameters": [
+          {
+            "name": "paragraph_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Paragraph Id"
+            }
+          },
+          {
+            "name": "SessionLocal",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "title": "Sessionlocal"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TestParagraphResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "rag-experiments",
+          "RAG Experiments"
+        ],
+        "summary": "Update Test Paragraph",
+        "description": "Update a test paragraph.\n\nCan update the text content and/or notes. At least one field must be provided.",
+        "operationId": "update_test_paragraph_api_rag_experiments_paragraphs__paragraph_id__put",
+        "parameters": [
+          {
+            "name": "paragraph_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Paragraph Id"
+            }
+          },
+          {
+            "name": "SessionLocal",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "title": "Sessionlocal"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateTestParagraphRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TestParagraphResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "rag-experiments",
+          "RAG Experiments"
+        ],
+        "summary": "Delete Test Paragraph",
+        "description": "Delete a test paragraph.\n\nDeletes the paragraph and all associated annotations and pipeline runs\n(cascade delete handled by database relationships).",
+        "operationId": "delete_test_paragraph_api_rag_experiments_paragraphs__paragraph_id__delete",
+        "parameters": [
+          {
+            "name": "paragraph_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Paragraph Id"
+            }
+          },
+          {
+            "name": "SessionLocal",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "title": "Sessionlocal"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/rag-experiments/paragraphs/{paragraph_id}/annotations": {
+      "post": {
+        "tags": [
+          "rag-experiments",
+          "RAG Experiments"
+        ],
+        "summary": "Create Annotation",
+        "description": "Create a new annotation for a test paragraph.\n\nAnnotations define ground truth entity spans for testing pipeline accuracy.\nValidates that:\n- The paragraph exists\n- The structure_node_id exists in local.db\n- The character positions are valid",
+        "operationId": "create_annotation_api_rag_experiments_paragraphs__paragraph_id__annotations_post",
+        "parameters": [
+          {
+            "name": "paragraph_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Paragraph Id"
+            }
+          },
+          {
+            "name": "SessionLocal",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "title": "Sessionlocal"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateAnnotationRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AnnotationResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/rag-experiments/annotations/{annotation_id}": {
+      "delete": {
+        "tags": [
+          "rag-experiments",
+          "RAG Experiments"
+        ],
+        "summary": "Delete Annotation",
+        "description": "Delete a specific annotation.",
+        "operationId": "delete_annotation_api_rag_experiments_annotations__annotation_id__delete",
+        "parameters": [
+          {
+            "name": "annotation_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Annotation Id"
+            }
+          },
+          {
+            "name": "SessionLocal",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "title": "Sessionlocal"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/rag-experiments/run": {
+      "post": {
+        "tags": [
+          "rag-experiments",
+          "RAG Experiments"
+        ],
+        "summary": "Run Pipeline Test",
+        "description": "Execute multiple pipelines against test paragraphs.\n\nRuns the specified pipelines in parallel (with controlled concurrency)\nagainst each test paragraph, scores the results against ground truth\nannotations, and returns execution metrics.\n\nSupports testing multiple pipeline variants simultaneously for comparison.",
+        "operationId": "run_pipeline_test_api_rag_experiments_run_post",
+        "parameters": [
+          {
+            "name": "SessionLocal",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "title": "Sessionlocal"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RunPipelineTestRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RunPipelineTestResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/rag-experiments/results/paragraphs/{paragraph_id}": {
+      "get": {
+        "tags": [
+          "rag-experiments",
+          "RAG Experiments"
+        ],
+        "summary": "Get Pipeline Comparison",
+        "description": "Compare pipeline results for a specific test paragraph.\n\nReturns the most recent run for each pipeline, sorted by F1 score.\nOptionally filter by specific pipeline names.",
+        "operationId": "get_pipeline_comparison_api_rag_experiments_results_paragraphs__paragraph_id__get",
+        "parameters": [
+          {
+            "name": "paragraph_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Paragraph Id"
+            }
+          },
+          {
+            "name": "pipeline_names",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by pipeline names",
+              "title": "Pipeline Names"
+            },
+            "description": "Filter by pipeline names"
+          },
+          {
+            "name": "SessionLocal",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "title": "Sessionlocal"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PipelineComparisonResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/rag-experiments/results/runs/{run_id}": {
+      "get": {
+        "tags": [
+          "rag-experiments",
+          "RAG Experiments"
+        ],
+        "summary": "Get Pipeline Run Details",
+        "description": "Get detailed results for a specific pipeline run.\n\nReturns full extraction results, entities, and scoring details.",
+        "operationId": "get_pipeline_run_details_api_rag_experiments_results_runs__run_id__get",
+        "parameters": [
+          {
+            "name": "run_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Run Id"
+            }
+          },
+          {
+            "name": "SessionLocal",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "title": "Sessionlocal"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PipelineRunDetailsResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
@@ -14362,6 +14923,69 @@
         ],
         "title": "AnalyticsHealthOut",
         "description": "API model for analytics system health."
+      },
+      "AnnotationResponse": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id",
+            "description": "Annotation ID"
+          },
+          "paragraph_id": {
+            "type": "string",
+            "title": "Paragraph Id",
+            "description": "Test paragraph ID"
+          },
+          "start_char": {
+            "type": "integer",
+            "title": "Start Char",
+            "description": "Starting character position"
+          },
+          "end_char": {
+            "type": "integer",
+            "title": "End Char",
+            "description": "Ending character position"
+          },
+          "structure_node_id": {
+            "type": "string",
+            "title": "Structure Node Id",
+            "description": "Structure node ID"
+          },
+          "text": {
+            "type": "string",
+            "title": "Text",
+            "description": "Annotated text span"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At",
+            "description": "Creation timestamp"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "paragraph_id",
+          "start_char",
+          "end_char",
+          "structure_node_id",
+          "text",
+          "created_at"
+        ],
+        "title": "AnnotationResponse",
+        "description": "Response model for an annotation.",
+        "examples": [
+          {
+            "created_at": "2025-01-15T10:00:00Z",
+            "end_char": 5,
+            "id": "550e8400-e29b-41d4-a716-446655440000",
+            "paragraph_id": "660e8400-e29b-41d4-a716-446655440001",
+            "start_char": 0,
+            "structure_node_id": "770e8400-e29b-41d4-a716-446655440002",
+            "text": "Apple"
+          }
+        ]
       },
       "AutoResolveRequest": {
         "properties": {
@@ -15330,6 +15954,43 @@
         "title": "ConflictTypeEnum",
         "description": "Enumeration of conflict types."
       },
+      "CreateAnnotationRequest": {
+        "properties": {
+          "start_char": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Start Char",
+            "description": "Starting character position (inclusive)"
+          },
+          "end_char": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "End Char",
+            "description": "Ending character position (exclusive)"
+          },
+          "structure_node_id": {
+            "type": "string",
+            "minLength": 1,
+            "title": "Structure Node Id",
+            "description": "ID of the structure node in local.db"
+          }
+        },
+        "type": "object",
+        "required": [
+          "start_char",
+          "end_char",
+          "structure_node_id"
+        ],
+        "title": "CreateAnnotationRequest",
+        "description": "Request model for creating an annotation on a test paragraph.",
+        "examples": [
+          {
+            "end_char": 5,
+            "start_char": 0,
+            "structure_node_id": "550e8400-e29b-41d4-a716-446655440000"
+          }
+        ]
+      },
       "CreateChangesetRequest": {
         "properties": {
           "title": {
@@ -15469,6 +16130,40 @@
         ],
         "title": "CreateProposalRequest",
         "description": "Request model for creating a proposal."
+      },
+      "CreateTestParagraphRequest": {
+        "properties": {
+          "text": {
+            "type": "string",
+            "minLength": 1,
+            "title": "Text",
+            "description": "Text content of the test paragraph"
+          },
+          "notes": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Notes",
+            "description": "Optional notes about this test paragraph"
+          }
+        },
+        "type": "object",
+        "required": [
+          "text"
+        ],
+        "title": "CreateTestParagraphRequest",
+        "description": "Request model for creating a test paragraph.",
+        "examples": [
+          {
+            "notes": "Test paragraph for entity extraction",
+            "text": "Apple is a technology company founded by Steve Jobs."
+          }
+        ]
       },
       "DBpediaData": {
         "properties": {
@@ -17995,6 +18690,149 @@
         "title": "PerformanceTrendsOut",
         "description": "API model for performance trends output."
       },
+      "PipelineComparisonItem": {
+        "properties": {
+          "pipeline_name": {
+            "type": "string",
+            "title": "Pipeline Name",
+            "description": "Pipeline class name"
+          },
+          "run_id": {
+            "type": "string",
+            "title": "Run Id",
+            "description": "Most recent run ID"
+          },
+          "f1_score": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "F1 Score",
+            "description": "F1 score as percentage (0-100)"
+          },
+          "precision_score": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Precision Score",
+            "description": "Precision score as percentage (0-100)"
+          },
+          "recall_score": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Recall Score",
+            "description": "Recall score as percentage (0-100)"
+          },
+          "entities_extracted": {
+            "type": "integer",
+            "title": "Entities Extracted",
+            "description": "Number of entities extracted"
+          },
+          "execution_time_ms": {
+            "type": "integer",
+            "title": "Execution Time Ms",
+            "description": "Execution time in milliseconds"
+          },
+          "executed_at": {
+            "type": "string",
+            "title": "Executed At",
+            "description": "Execution timestamp (ISO format)"
+          }
+        },
+        "type": "object",
+        "required": [
+          "pipeline_name",
+          "run_id",
+          "entities_extracted",
+          "execution_time_ms",
+          "executed_at"
+        ],
+        "title": "PipelineComparisonItem",
+        "description": "Response model for a single pipeline in comparison results."
+      },
+      "PipelineComparisonResponse": {
+        "properties": {
+          "paragraph_id": {
+            "type": "string",
+            "title": "Paragraph Id",
+            "description": "Test paragraph ID"
+          },
+          "runs": {
+            "items": {
+              "$ref": "#/components/schemas/PipelineComparisonItem"
+            },
+            "type": "array",
+            "title": "Runs",
+            "description": "Pipeline comparison results"
+          },
+          "summary": {
+            "$ref": "#/components/schemas/PipelineComparisonSummary",
+            "description": "Comparison summary"
+          }
+        },
+        "type": "object",
+        "required": [
+          "paragraph_id",
+          "runs",
+          "summary"
+        ],
+        "title": "PipelineComparisonResponse",
+        "description": "Response model for pipeline comparison results."
+      },
+      "PipelineComparisonSummary": {
+        "properties": {
+          "total_pipelines": {
+            "type": "integer",
+            "title": "Total Pipelines",
+            "description": "Number of pipelines compared"
+          },
+          "best_pipeline": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Best Pipeline",
+            "description": "Name of best performing pipeline"
+          },
+          "best_f1_score": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Best F1 Score",
+            "description": "Best F1 score as percentage"
+          }
+        },
+        "type": "object",
+        "required": [
+          "total_pipelines"
+        ],
+        "title": "PipelineComparisonSummary",
+        "description": "Summary statistics for pipeline comparison."
+      },
       "PipelineExecutionRequest": {
         "properties": {
           "flavor_id": {
@@ -18192,6 +19030,186 @@
         ],
         "title": "PipelineFlavorListResponse",
         "description": "Response model for listing pipeline flavors"
+      },
+      "PipelineRunDetailsResponse": {
+        "properties": {
+          "run_id": {
+            "type": "string",
+            "title": "Run Id",
+            "description": "Pipeline run ID"
+          },
+          "paragraph_id": {
+            "type": "string",
+            "title": "Paragraph Id",
+            "description": "Test paragraph ID"
+          },
+          "pipeline_class": {
+            "type": "string",
+            "title": "Pipeline Class",
+            "description": "Pipeline class name"
+          },
+          "executed_at": {
+            "type": "string",
+            "title": "Executed At",
+            "description": "Execution timestamp (ISO format)"
+          },
+          "execution_time_ms": {
+            "type": "integer",
+            "title": "Execution Time Ms",
+            "description": "Execution time in milliseconds"
+          },
+          "entities_extracted": {
+            "type": "integer",
+            "title": "Entities Extracted",
+            "description": "Number of entities extracted"
+          },
+          "precision_score": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Precision Score",
+            "description": "Precision score as percentage"
+          },
+          "recall_score": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Recall Score",
+            "description": "Recall score as percentage"
+          },
+          "f1_score": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "F1 Score",
+            "description": "F1 score as percentage"
+          },
+          "result_data": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Result Data",
+            "description": "Full result data including entities and scoring details"
+          }
+        },
+        "type": "object",
+        "required": [
+          "run_id",
+          "paragraph_id",
+          "pipeline_class",
+          "executed_at",
+          "execution_time_ms",
+          "entities_extracted",
+          "result_data"
+        ],
+        "title": "PipelineRunDetailsResponse",
+        "description": "Response model for detailed pipeline run information."
+      },
+      "PipelineRunResultResponse": {
+        "properties": {
+          "run_id": {
+            "type": "string",
+            "title": "Run Id",
+            "description": "Pipeline run ID"
+          },
+          "pipeline_name": {
+            "type": "string",
+            "title": "Pipeline Name",
+            "description": "Pipeline class name"
+          },
+          "paragraph_id": {
+            "type": "string",
+            "title": "Paragraph Id",
+            "description": "Test paragraph ID"
+          },
+          "execution_time_ms": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Execution Time Ms",
+            "description": "Execution time in milliseconds"
+          },
+          "entities_extracted": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Entities Extracted",
+            "description": "Number of entities extracted"
+          },
+          "scoring": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ScoringDetailsResponse"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Scoring details"
+          },
+          "executed_at": {
+            "type": "string",
+            "title": "Executed At",
+            "description": "Execution timestamp (ISO format)"
+          },
+          "error": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Error",
+            "description": "Error message if pipeline failed"
+          },
+          "error_type": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Error Type",
+            "description": "Error type if pipeline failed"
+          }
+        },
+        "type": "object",
+        "required": [
+          "run_id",
+          "pipeline_name",
+          "paragraph_id",
+          "executed_at"
+        ],
+        "title": "PipelineRunResultResponse",
+        "description": "Response model for a single pipeline run result."
       },
       "PipelineType": {
         "type": "string",
@@ -19092,6 +20110,96 @@
         "title": "RollbackRequest",
         "description": "Model for rollback operation request."
       },
+      "RunPipelineTestRequest": {
+        "properties": {
+          "paragraph_ids": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "minItems": 1,
+            "title": "Paragraph Ids",
+            "description": "List of test paragraph IDs to test"
+          },
+          "pipeline_names": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "minItems": 1,
+            "title": "Pipeline Names",
+            "description": "List of pipeline class names to execute"
+          },
+          "enable_trace": {
+            "type": "boolean",
+            "title": "Enable Trace",
+            "description": "Enable detailed trace logging",
+            "default": false
+          },
+          "enable_llm_layer": {
+            "type": "boolean",
+            "title": "Enable Llm Layer",
+            "description": "Enable LLM extraction layer",
+            "default": true
+          }
+        },
+        "type": "object",
+        "required": [
+          "paragraph_ids",
+          "pipeline_names"
+        ],
+        "title": "RunPipelineTestRequest",
+        "description": "Request model for executing pipeline tests.",
+        "examples": [
+          {
+            "enable_llm_layer": true,
+            "enable_trace": false,
+            "paragraph_ids": [
+              "550e8400-e29b-41d4-a716-446655440000"
+            ],
+            "pipeline_names": [
+              "StandardRAGPipeline",
+              "FastRAGPipeline"
+            ]
+          }
+        ]
+      },
+      "RunPipelineTestResponse": {
+        "properties": {
+          "results": {
+            "items": {
+              "$ref": "#/components/schemas/PipelineRunResultResponse"
+            },
+            "type": "array",
+            "title": "Results",
+            "description": "List of pipeline run results"
+          },
+          "total_runs": {
+            "type": "integer",
+            "title": "Total Runs",
+            "description": "Total number of runs completed"
+          },
+          "successful_runs": {
+            "type": "integer",
+            "title": "Successful Runs",
+            "description": "Number of successful runs"
+          },
+          "failed_runs": {
+            "type": "integer",
+            "title": "Failed Runs",
+            "description": "Number of failed runs"
+          }
+        },
+        "type": "object",
+        "required": [
+          "results",
+          "total_runs",
+          "successful_runs",
+          "failed_runs"
+        ],
+        "title": "RunPipelineTestResponse",
+        "description": "Response model for pipeline test execution."
+      },
       "SPARQLQuery": {
         "properties": {
           "query": {
@@ -19116,6 +20224,60 @@
           "query"
         ],
         "title": "SPARQLQuery"
+      },
+      "ScoringDetailsResponse": {
+        "properties": {
+          "precision": {
+            "type": "number",
+            "maximum": 1.0,
+            "minimum": 0.0,
+            "title": "Precision",
+            "description": "Precision score (0-1)"
+          },
+          "recall": {
+            "type": "number",
+            "maximum": 1.0,
+            "minimum": 0.0,
+            "title": "Recall",
+            "description": "Recall score (0-1)"
+          },
+          "f1_score": {
+            "type": "number",
+            "maximum": 1.0,
+            "minimum": 0.0,
+            "title": "F1 Score",
+            "description": "F1 score (0-1)"
+          },
+          "true_positives": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "True Positives",
+            "description": "Number of true positives"
+          },
+          "false_positives": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "False Positives",
+            "description": "Number of false positives"
+          },
+          "false_negatives": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "False Negatives",
+            "description": "Number of false negatives"
+          }
+        },
+        "type": "object",
+        "required": [
+          "precision",
+          "recall",
+          "f1_score",
+          "true_positives",
+          "false_positives",
+          "false_negatives"
+        ],
+        "title": "ScoringDetailsResponse",
+        "description": "Response model for scoring details."
       },
       "SearchLink": {
         "properties": {
@@ -19930,6 +21092,99 @@
         "title": "TaskStatusResponse",
         "description": "Response model for task status."
       },
+      "TestParagraphListResponse": {
+        "properties": {
+          "paragraphs": {
+            "items": {
+              "$ref": "#/components/schemas/TestParagraphResponse"
+            },
+            "type": "array",
+            "title": "Paragraphs",
+            "description": "List of test paragraphs"
+          },
+          "total_count": {
+            "type": "integer",
+            "title": "Total Count",
+            "description": "Total count of paragraphs returned"
+          },
+          "limit": {
+            "type": "integer",
+            "title": "Limit",
+            "description": "Limit used for pagination"
+          },
+          "offset": {
+            "type": "integer",
+            "title": "Offset",
+            "description": "Offset used for pagination"
+          }
+        },
+        "type": "object",
+        "required": [
+          "paragraphs",
+          "total_count",
+          "limit",
+          "offset"
+        ],
+        "title": "TestParagraphListResponse",
+        "description": "Response model for list of test paragraphs."
+      },
+      "TestParagraphResponse": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id",
+            "description": "Test paragraph ID"
+          },
+          "text": {
+            "type": "string",
+            "title": "Text",
+            "description": "Paragraph text"
+          },
+          "notes": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Notes",
+            "description": "Optional notes"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At",
+            "description": "Creation timestamp"
+          },
+          "annotations": {
+            "items": {
+              "$ref": "#/components/schemas/AnnotationResponse"
+            },
+            "type": "array",
+            "title": "Annotations",
+            "description": "List of annotations"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "text",
+          "created_at"
+        ],
+        "title": "TestParagraphResponse",
+        "description": "Response model for a test paragraph.",
+        "examples": [
+          {
+            "annotations": [],
+            "created_at": "2025-01-15T10:00:00Z",
+            "id": "550e8400-e29b-41d4-a716-446655440000",
+            "notes": "Test paragraph",
+            "text": "Apple is a technology company."
+          }
+        ]
+      },
       "ThreeWayDiffOut": {
         "properties": {
           "diff_result": {
@@ -20682,6 +21937,38 @@
         "type": "object",
         "title": "UpdatePipelineFlavorRequest",
         "description": "Request model for updating a pipeline flavor"
+      },
+      "UpdateTestParagraphRequest": {
+        "properties": {
+          "text": {
+            "anyOf": [
+              {
+                "type": "string",
+                "minLength": 1
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Text",
+            "description": "Updated text content"
+          },
+          "notes": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Notes",
+            "description": "Updated notes"
+          }
+        },
+        "type": "object",
+        "title": "UpdateTestParagraphRequest",
+        "description": "Request model for updating a test paragraph."
       },
       "UserActivityOut": {
         "properties": {
