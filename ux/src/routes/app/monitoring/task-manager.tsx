@@ -1,49 +1,188 @@
+import { useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { CsMain, CsMainTitle } from "@/components/layout/cs_main";
 import { CsSidebar } from "@/components/layout/cs_sidebar";
-
-// TODO: Add access control/route guards before production deployment
-// This is an admin/developer tool that should be protected
+import { Card, Button, Spinner, Select, Tabs } from "flowbite-react";
+import { ListTodo, AlertCircle, Activity } from "lucide-react";
+import {
+  useTaskList,
+  useTaskStats,
+  useDeadLetterQueue,
+  useCancelTask,
+} from "@/api/hooks/backgroundTasks";
+import {
+  SystemHealthCard,
+  TaskStatusViewer,
+  PerformanceMetricsPanel,
+} from "@/components/monitoring";
+import type { MetricGroup } from "@/components/monitoring/PerformanceMetricsPanel";
 
 export const Route = createFileRoute("/app/monitoring/task-manager")({
   component: RouteComponent,
 });
 
 function RouteComponent() {
+  const [statusFilter, setStatusFilter] = useState<string | undefined>(undefined);
+
+  const { data: tasks, isLoading: tasksLoading, refetch: refetchTasks } = useTaskList({ status_filter: statusFilter });
+  const { data: stats, isLoading: statsLoading } = useTaskStats();
+  const { data: deadLetterQueue, isLoading: dlqLoading } = useDeadLetterQueue();
+  const cancelTask = useCancelTask();
+
+  const isLoading = tasksLoading || statsLoading || dlqLoading;
+
+  const handleCancelTask = (taskId: string) => {
+    if (confirm("Are you sure you want to cancel this task?")) {
+      cancelTask.mutate(taskId, {
+        onSuccess: () => {
+          refetchTasks();
+        },
+      });
+    }
+  };
+
+  const statsMetrics: MetricGroup[] = stats
+    ? [
+        {
+          title: "Task Manager Statistics",
+          metrics: [
+            {
+              label: "Total Tasks",
+              value: stats.total_tasks,
+              icon: <ListTodo className="h-5 w-5" />,
+            },
+            {
+              label: "Queue Size",
+              value: stats.queue_size,
+              icon: <Activity className="h-5 w-5" />,
+            },
+            {
+              label: "Failed Tasks",
+              value: stats.dead_letter_queue_size,
+              icon: <AlertCircle className="h-5 w-5" />,
+            },
+            {
+              label: "Running",
+              value: stats.status_counts.running || 0,
+            },
+            {
+              label: "Pending",
+              value: stats.status_counts.pending || 0,
+            },
+            {
+              label: "Completed",
+              value: stats.status_counts.completed || 0,
+            },
+          ],
+        },
+      ]
+    : [];
+
   return (
     <>
       <CsSidebar></CsSidebar>
       <CsMain>
-        <CsMainTitle>Task Manager</CsMainTitle>
-        <div className="rounded-lg border border-gray-200 bg-white p-6 dark:border-gray-700 dark:bg-gray-800">
-          <h2 className="mb-4 text-xl font-semibold text-gray-900 dark:text-white">
-            Coming Soon
-          </h2>
-          <div className="mb-6 space-y-2 text-gray-600 dark:text-gray-400">
-            <p className="font-medium">
-              Background task monitoring and management interface for tracking asynchronous operations.
-            </p>
-            <p>Planned features include:</p>
-            <ul className="ml-6 list-disc space-y-1">
-              <li>Real-time task queue status and depth</li>
-              <li>Task execution history and logs</li>
-              <li>Failed task retry management</li>
-              <li>Task priority and scheduling controls</li>
-              <li>Resource utilization per task type</li>
-            </ul>
-          </div>
-          <p className="text-sm text-gray-500 dark:text-gray-500">
-            Expected availability: Version 0.3.0 •{" "}
-            <a
-              href="https://github.com/your-org/context-studio/issues"
-              className="text-blue-600 hover:underline dark:text-blue-400"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              Track progress
-            </a>
-          </p>
+        <div className="mb-4 flex items-center justify-between">
+          <CsMainTitle>Task Manager</CsMainTitle>
+          <Select
+            value={statusFilter || "all"}
+            onChange={(e) => setStatusFilter(e.target.value === "all" ? undefined : e.target.value)}
+          >
+            <option value="all">All Tasks</option>
+            <option value="pending">Pending</option>
+            <option value="running">Running</option>
+            <option value="completed">Completed</option>
+            <option value="failed">Failed</option>
+            <option value="cancelled">Cancelled</option>
+          </Select>
         </div>
+
+        {stats && (
+          <div className="mb-6">
+            <SystemHealthCard
+              title="Task Manager"
+              status={stats.is_running ? "healthy" : "error"}
+              healthScore={
+                stats.total_tasks > 0
+                  ? ((stats.status_counts.completed || 0) / stats.total_tasks) * 100
+                  : 100
+              }
+              metrics={[
+                {
+                  label: "Manager Status",
+                  value: stats.is_running ? "Running" : "Stopped",
+                  status: stats.is_running ? "healthy" : "error",
+                },
+                {
+                  label: "Queue Capacity",
+                  value: `${stats.queue_size} / ${stats.max_queue_size}`,
+                },
+              ]}
+              issues={
+                !stats.is_running
+                  ? ["Task manager is not running"]
+                  : stats.dead_letter_queue_size > 0
+                  ? [`${stats.dead_letter_queue_size} failed tasks in dead letter queue`]
+                  : []
+              }
+            />
+          </div>
+        )}
+
+        {isLoading ? (
+          <div className="flex items-center justify-center py-12">
+            <Spinner size="xl" />
+          </div>
+        ) : (
+          <Tabs aria-label="Task manager tabs">
+            <Tabs.Item active title="Overview" icon={Activity}>
+              <div className="space-y-6">
+                {statsMetrics.length > 0 && (
+                  <PerformanceMetricsPanel groups={statsMetrics} />
+                )}
+
+                {tasks && tasks.tasks.length > 0 ? (
+                  <TaskStatusViewer
+                    tasks={tasks.tasks}
+                    onCancel={handleCancelTask}
+                  />
+                ) : (
+                  <Card>
+                    <p className="text-center text-gray-500">No tasks found</p>
+                  </Card>
+                )}
+              </div>
+            </Tabs.Item>
+
+            <Tabs.Item title="Failed Tasks" icon={AlertCircle}>
+              <div className="space-y-6">
+                {deadLetterQueue && deadLetterQueue.tasks.length > 0 ? (
+                  <>
+                    <Card>
+                      <h5 className="mb-2 text-lg font-semibold text-gray-900 dark:text-white">
+                        Dead Letter Queue
+                      </h5>
+                      <p className="text-sm text-gray-600 dark:text-gray-400">
+                        Tasks that have failed and require manual intervention.
+                        Total: {deadLetterQueue.total}
+                      </p>
+                    </Card>
+                    <TaskStatusViewer
+                      tasks={deadLetterQueue.tasks}
+                      showActions={false}
+                    />
+                  </>
+                ) : (
+                  <Card>
+                    <p className="text-center text-gray-500">
+                      No failed tasks in dead letter queue
+                    </p>
+                  </Card>
+                )}
+              </div>
+            </Tabs.Item>
+          </Tabs>
+        )}
       </CsMain>
     </>
   );

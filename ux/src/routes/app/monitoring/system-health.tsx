@@ -1,49 +1,261 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { CsMain, CsMainTitle } from "@/components/layout/cs_main";
 import { CsSidebar } from "@/components/layout/cs_sidebar";
-
-// TODO: Add access control/route guards before production deployment
-// This is an admin/developer tool that should be protected
+import { Card, Spinner, Tabs, Button } from "flowbite-react";
+import { Server, Database, Activity, Cpu, RefreshCw } from "lucide-react";
+import {
+  useDatabaseHealth,
+  useDatabaseDashboard,
+  useServiceFactoryDashboard,
+  useServiceFactoryHealth,
+} from "@/api/hooks/admin";
+import {
+  SystemHealthCard,
+  PerformanceMetricsPanel,
+  AnalyticsChart,
+} from "@/components/monitoring";
+import type { MetricGroup } from "@/components/monitoring/PerformanceMetricsPanel";
 
 export const Route = createFileRoute("/app/monitoring/system-health")({
   component: RouteComponent,
 });
 
 function RouteComponent() {
+  const { data: dbHealth, isLoading: dbHealthLoading, refetch: refetchDbHealth } = useDatabaseHealth();
+  const { data: dbDashboard, isLoading: dbDashboardLoading } = useDatabaseDashboard();
+  const { data: serviceHealth, isLoading: serviceHealthLoading, refetch: refetchServiceHealth } = useServiceFactoryHealth();
+  const { data: serviceDashboard, isLoading: serviceDashboardLoading } = useServiceFactoryDashboard();
+
+  const isLoading = dbHealthLoading || dbDashboardLoading || serviceHealthLoading || serviceDashboardLoading;
+
+  const handleRefresh = () => {
+    refetchDbHealth();
+    refetchServiceHealth();
+  };
+
+  // Database metrics
+  const dbMetrics: MetricGroup[] = dbDashboard
+    ? [
+        {
+          title: "Database Performance",
+          metrics: Object.entries(dbDashboard.performance_metrics).slice(0, 6).map(
+            ([key, value]: [string, any]) => ({
+              label: key.replace(/_/g, " ").replace(/\b\w/g, (l) => l.toUpperCase()),
+              value: typeof value === "number" ? value.toFixed(2) : value.toString(),
+            })
+          ),
+        },
+      ]
+    : [];
+
+  // Service factory metrics
+  const serviceMetrics: MetricGroup[] = serviceDashboard
+    ? [
+        {
+          title: "Service Factory Performance",
+          metrics: [
+            {
+              label: "Cache Hit Rate",
+              value: serviceDashboard.performance.overall_hit_rate_percent.toFixed(1),
+              unit: "%",
+              icon: <Activity className="h-5 w-5" />,
+            },
+            {
+              label: "Services Created",
+              value: serviceDashboard.performance.total_services_created,
+              icon: <Server className="h-5 w-5" />,
+            },
+            {
+              label: "Total Requests",
+              value: serviceDashboard.performance.total_requests,
+              icon: <Cpu className="h-5 w-5" />,
+            },
+            {
+              label: "Cache Entries",
+              value: serviceDashboard.factory_info.total_cache_entries,
+            },
+          ],
+        },
+      ]
+    : [];
+
   return (
     <>
       <CsSidebar></CsSidebar>
       <CsMain>
-        <CsMainTitle>System Health</CsMainTitle>
-        <div className="rounded-lg border border-gray-200 bg-white p-6 dark:border-gray-700 dark:bg-gray-800">
-          <h2 className="mb-4 text-xl font-semibold text-gray-900 dark:text-white">
-            Coming Soon
-          </h2>
-          <div className="mb-6 space-y-2 text-gray-600 dark:text-gray-400">
-            <p className="font-medium">
-              System health monitoring dashboard for tracking application stability and service status.
-            </p>
-            <p>Planned features include:</p>
-            <ul className="ml-6 list-disc space-y-1">
-              <li>Database connection status and health checks</li>
-              <li>Event processor operational status</li>
-              <li>Service uptime and availability metrics</li>
-              <li>System resource utilization (CPU, memory, disk)</li>
-              <li>Error rate tracking and alerting</li>
-            </ul>
-          </div>
-          <p className="text-sm text-gray-500 dark:text-gray-500">
-            Expected availability: Version 0.3.0 •{" "}
-            <a
-              href="https://github.com/your-org/context-studio/issues"
-              className="text-blue-600 hover:underline dark:text-blue-400"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              Track progress
-            </a>
-          </p>
+        <div className="mb-4 flex items-center justify-between">
+          <CsMainTitle>System Health</CsMainTitle>
+          <Button size="sm" onClick={handleRefresh}>
+            <RefreshCw className="mr-2 h-4 w-4" />
+            Refresh
+          </Button>
         </div>
+
+        {isLoading ? (
+          <div className="flex items-center justify-center py-12">
+            <Spinner size="xl" />
+          </div>
+        ) : (
+          <Tabs aria-label="System health tabs">
+            <Tabs.Item active title="Overview" icon={Activity}>
+              <div className="space-y-6">
+                <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+                  {dbHealth && (
+                    <SystemHealthCard
+                      title="Database"
+                      status={dbHealth.status}
+                      metrics={[
+                        {
+                          label: "Total Engines",
+                          value: Object.keys(dbHealth.engines).length,
+                        },
+                        {
+                          label: "Healthy Engines",
+                          value: Object.values(dbHealth.engines).filter((e: any) => e.status === "healthy").length,
+                        },
+                      ]}
+                      issues={dbHealth.issues || []}
+                    />
+                  )}
+
+                  {serviceHealth && (
+                    <SystemHealthCard
+                      title="Service Factory"
+                      status={serviceHealth.status}
+                      metrics={[
+                        {
+                          label: "Cache Size",
+                          value: serviceHealth.cache_size,
+                        },
+                      ]}
+                      issues={serviceHealth.issues}
+                    />
+                  )}
+                </div>
+
+                {serviceMetrics.length > 0 && (
+                  <PerformanceMetricsPanel groups={serviceMetrics} />
+                )}
+
+                {dbMetrics.length > 0 && (
+                  <PerformanceMetricsPanel groups={dbMetrics} />
+                )}
+              </div>
+            </Tabs.Item>
+
+            <Tabs.Item title="Database" icon={Database}>
+              <div className="space-y-6">
+                {dbDashboard ? (
+                  <>
+                    <SystemHealthCard
+                      title="Database Health"
+                      status={dbDashboard.health_status.status}
+                      healthScore={dbDashboard.dashboard_info.health_score}
+                      metrics={[
+                        {
+                          label: "Total Engines",
+                          value: dbDashboard.engines_summary.total_engines,
+                        },
+                        {
+                          label: "Healthy",
+                          value: dbDashboard.engines_summary.healthy_engines,
+                          status: "healthy",
+                        },
+                        {
+                          label: "Warning",
+                          value: dbDashboard.engines_summary.warning_engines,
+                          status: dbDashboard.engines_summary.warning_engines > 0 ? "warning" : undefined,
+                        },
+                        {
+                          label: "Error",
+                          value: dbDashboard.engines_summary.error_engines,
+                          status: dbDashboard.engines_summary.error_engines > 0 ? "error" : undefined,
+                        },
+                      ]}
+                    />
+
+                    {dbDashboard.recommendations && dbDashboard.recommendations.length > 0 && (
+                      <Card>
+                        <h5 className="mb-4 text-lg font-semibold text-gray-900 dark:text-white">
+                          Recommendations
+                        </h5>
+                        <ul className="space-y-2">
+                          {dbDashboard.recommendations.map((rec: string, index: number) => (
+                            <li
+                              key={index}
+                              className="text-sm text-gray-700 dark:text-gray-300"
+                            >
+                              • {rec}
+                            </li>
+                          ))}
+                        </ul>
+                      </Card>
+                    )}
+
+                    {dbMetrics.length > 0 && (
+                      <PerformanceMetricsPanel groups={dbMetrics} />
+                    )}
+                  </>
+                ) : (
+                  <Card>
+                    <p className="text-center text-gray-500">No database health data available</p>
+                  </Card>
+                )}
+              </div>
+            </Tabs.Item>
+
+            <Tabs.Item title="Services" icon={Server}>
+              <div className="space-y-6">
+                {serviceDashboard ? (
+                  <>
+                    <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+                      <SystemHealthCard
+                        title="Service Factory Health"
+                        status={serviceDashboard.health.status}
+                        metrics={[
+                          {
+                            label: "Cache Size",
+                            value: serviceDashboard.health.cache_size,
+                          },
+                        ]}
+                        issues={serviceDashboard.health.issues}
+                      />
+
+                      <Card>
+                        <h5 className="mb-4 text-lg font-semibold text-gray-900 dark:text-white">
+                          Top Services
+                        </h5>
+                        <div className="space-y-3">
+                          {serviceDashboard.top_services.most_used && (
+                            <div className="rounded-lg bg-gray-50 p-3 dark:bg-gray-700">
+                              <div className="text-xs text-gray-500 dark:text-gray-400">
+                                Most Used Service
+                              </div>
+                              <div className="font-medium text-gray-900 dark:text-white">
+                                {serviceDashboard.top_services.most_used.type}
+                              </div>
+                              <div className="text-sm text-gray-600 dark:text-gray-400">
+                                Created: {serviceDashboard.top_services.most_used.created_count} times
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      </Card>
+                    </div>
+
+                    {serviceMetrics.length > 0 && (
+                      <PerformanceMetricsPanel groups={serviceMetrics} />
+                    )}
+                  </>
+                ) : (
+                  <Card>
+                    <p className="text-center text-gray-500">No service factory data available</p>
+                  </Card>
+                )}
+              </div>
+            </Tabs.Item>
+          </Tabs>
+        )}
       </CsMain>
     </>
   );
