@@ -26,10 +26,10 @@ import { Route as AppReferencePredicatesRouteImport } from './routes/app/referen
 import { Route as AppRagTestRunnerRouteImport } from './routes/app/rag/test-runner'
 import { Route as AppRagPipelineComparisonRouteImport } from './routes/app/rag/pipeline-comparison'
 import { Route as AppRagExperimentsRouteImport } from './routes/app/rag/experiments'
-import { Route as AppMonitoringTasksRouteImport } from './routes/app/monitoring/tasks'
-import { Route as AppMonitoringSystemRouteImport } from './routes/app/monitoring/system'
+import { Route as AppMonitoringTaskManagerRouteImport } from './routes/app/monitoring/task-manager'
+import { Route as AppMonitoringSystemHealthRouteImport } from './routes/app/monitoring/system-health'
 import { Route as AppMonitoringPerformanceRouteImport } from './routes/app/monitoring/performance'
-import { Route as AppMonitoringLlmRouteImport } from './routes/app/monitoring/llm'
+import { Route as AppMonitoringLlmTraceabilityRouteImport } from './routes/app/monitoring/llm-traceability'
 import { Route as AppMonitoringAnalyticsRouteImport } from './routes/app/monitoring/analytics'
 import { Route as AppConfigSystemRouteImport } from './routes/app/config/system'
 import { Route as AppConfigProcessingRouteImport } from './routes/app/config/processing'
@@ -132,27 +132,30 @@ const AppRagExperimentsRoute = AppRagExperimentsRouteImport.update({
   path: '/rag/experiments',
   getParentRoute: () => AppRoute,
 } as any)
-const AppMonitoringTasksRoute = AppMonitoringTasksRouteImport.update({
-  id: '/monitoring/tasks',
-  path: '/monitoring/tasks',
-  getParentRoute: () => AppRoute,
-} as any)
-const AppMonitoringSystemRoute = AppMonitoringSystemRouteImport.update({
-  id: '/monitoring/system',
-  path: '/monitoring/system',
-  getParentRoute: () => AppRoute,
-} as any)
+const AppMonitoringTaskManagerRoute =
+  AppMonitoringTaskManagerRouteImport.update({
+    id: '/monitoring/task-manager',
+    path: '/monitoring/task-manager',
+    getParentRoute: () => AppRoute,
+  } as any)
+const AppMonitoringSystemHealthRoute =
+  AppMonitoringSystemHealthRouteImport.update({
+    id: '/monitoring/system-health',
+    path: '/monitoring/system-health',
+    getParentRoute: () => AppRoute,
+  } as any)
 const AppMonitoringPerformanceRoute =
   AppMonitoringPerformanceRouteImport.update({
     id: '/monitoring/performance',
     path: '/monitoring/performance',
     getParentRoute: () => AppRoute,
   } as any)
-const AppMonitoringLlmRoute = AppMonitoringLlmRouteImport.update({
-  id: '/monitoring/llm',
-  path: '/monitoring/llm',
-  getParentRoute: () => AppRoute,
-} as any)
+const AppMonitoringLlmTraceabilityRoute =
+  AppMonitoringLlmTraceabilityRouteImport.update({
+    id: '/monitoring/llm-traceability',
+    path: '/monitoring/llm-traceability',
+    getParentRoute: () => AppRoute,
+  } as any)
 const AppMonitoringAnalyticsRoute = AppMonitoringAnalyticsRouteImport.update({
   id: '/monitoring/analytics',
   path: '/monitoring/analytics',
@@ -251,10 +254,10 @@ export interface FileRoutesByFullPath {
   '/app/config/processing': typeof AppConfigProcessingRoute
   '/app/config/system': typeof AppConfigSystemRoute
   '/app/monitoring/analytics': typeof AppMonitoringAnalyticsRoute
-  '/app/monitoring/llm': typeof AppMonitoringLlmRoute
+  '/app/monitoring/llm-traceability': typeof AppMonitoringLlmTraceabilityRoute
   '/app/monitoring/performance': typeof AppMonitoringPerformanceRoute
-  '/app/monitoring/system': typeof AppMonitoringSystemRoute
-  '/app/monitoring/tasks': typeof AppMonitoringTasksRoute
+  '/app/monitoring/system-health': typeof AppMonitoringSystemHealthRoute
+  '/app/monitoring/task-manager': typeof AppMonitoringTaskManagerRoute
   '/app/rag/experiments': typeof AppRagExperimentsRoute
   '/app/rag/pipeline-comparison': typeof AppRagPipelineComparisonRoute
   '/app/rag/test-runner': typeof AppRagTestRunnerRoute
@@ -287,10 +290,10 @@ export interface FileRoutesByTo {
   '/app/config/processing': typeof AppConfigProcessingRoute
   '/app/config/system': typeof AppConfigSystemRoute
   '/app/monitoring/analytics': typeof AppMonitoringAnalyticsRoute
-  '/app/monitoring/llm': typeof AppMonitoringLlmRoute
+  '/app/monitoring/llm-traceability': typeof AppMonitoringLlmTraceabilityRoute
   '/app/monitoring/performance': typeof AppMonitoringPerformanceRoute
-  '/app/monitoring/system': typeof AppMonitoringSystemRoute
-  '/app/monitoring/tasks': typeof AppMonitoringTasksRoute
+  '/app/monitoring/system-health': typeof AppMonitoringSystemHealthRoute
+  '/app/monitoring/task-manager': typeof AppMonitoringTaskManagerRoute
   '/app/rag/experiments': typeof AppRagExperimentsRoute
   '/app/rag/pipeline-comparison': typeof AppRagPipelineComparisonRoute
   '/app/rag/test-runner': typeof AppRagTestRunnerRoute
@@ -326,10 +329,10 @@ export interface FileRoutesById {
   '/app/config/processing': typeof AppConfigProcessingRoute
   '/app/config/system': typeof AppConfigSystemRoute
   '/app/monitoring/analytics': typeof AppMonitoringAnalyticsRoute
-  '/app/monitoring/llm': typeof AppMonitoringLlmRoute
+  '/app/monitoring/llm-traceability': typeof AppMonitoringLlmTraceabilityRoute
   '/app/monitoring/performance': typeof AppMonitoringPerformanceRoute
-  '/app/monitoring/system': typeof AppMonitoringSystemRoute
-  '/app/monitoring/tasks': typeof AppMonitoringTasksRoute
+  '/app/monitoring/system-health': typeof AppMonitoringSystemHealthRoute
+  '/app/monitoring/task-manager': typeof AppMonitoringTaskManagerRoute
   '/app/rag/experiments': typeof AppRagExperimentsRoute
   '/app/rag/pipeline-comparison': typeof AppRagPipelineComparisonRoute
   '/app/rag/test-runner': typeof AppRagTestRunnerRoute
@@ -366,10 +369,10 @@ export interface FileRouteTypes {
     | '/app/config/processing'
     | '/app/config/system'
     | '/app/monitoring/analytics'
-    | '/app/monitoring/llm'
+    | '/app/monitoring/llm-traceability'
     | '/app/monitoring/performance'
-    | '/app/monitoring/system'
-    | '/app/monitoring/tasks'
+    | '/app/monitoring/system-health'
+    | '/app/monitoring/task-manager'
     | '/app/rag/experiments'
     | '/app/rag/pipeline-comparison'
     | '/app/rag/test-runner'
@@ -402,10 +405,10 @@ export interface FileRouteTypes {
     | '/app/config/processing'
     | '/app/config/system'
     | '/app/monitoring/analytics'
-    | '/app/monitoring/llm'
+    | '/app/monitoring/llm-traceability'
     | '/app/monitoring/performance'
-    | '/app/monitoring/system'
-    | '/app/monitoring/tasks'
+    | '/app/monitoring/system-health'
+    | '/app/monitoring/task-manager'
     | '/app/rag/experiments'
     | '/app/rag/pipeline-comparison'
     | '/app/rag/test-runner'
@@ -440,10 +443,10 @@ export interface FileRouteTypes {
     | '/app/config/processing'
     | '/app/config/system'
     | '/app/monitoring/analytics'
-    | '/app/monitoring/llm'
+    | '/app/monitoring/llm-traceability'
     | '/app/monitoring/performance'
-    | '/app/monitoring/system'
-    | '/app/monitoring/tasks'
+    | '/app/monitoring/system-health'
+    | '/app/monitoring/task-manager'
     | '/app/rag/experiments'
     | '/app/rag/pipeline-comparison'
     | '/app/rag/test-runner'
@@ -587,18 +590,18 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppRagExperimentsRouteImport
       parentRoute: typeof AppRoute
     }
-    '/app/monitoring/tasks': {
-      id: '/app/monitoring/tasks'
-      path: '/monitoring/tasks'
-      fullPath: '/app/monitoring/tasks'
-      preLoaderRoute: typeof AppMonitoringTasksRouteImport
+    '/app/monitoring/task-manager': {
+      id: '/app/monitoring/task-manager'
+      path: '/monitoring/task-manager'
+      fullPath: '/app/monitoring/task-manager'
+      preLoaderRoute: typeof AppMonitoringTaskManagerRouteImport
       parentRoute: typeof AppRoute
     }
-    '/app/monitoring/system': {
-      id: '/app/monitoring/system'
-      path: '/monitoring/system'
-      fullPath: '/app/monitoring/system'
-      preLoaderRoute: typeof AppMonitoringSystemRouteImport
+    '/app/monitoring/system-health': {
+      id: '/app/monitoring/system-health'
+      path: '/monitoring/system-health'
+      fullPath: '/app/monitoring/system-health'
+      preLoaderRoute: typeof AppMonitoringSystemHealthRouteImport
       parentRoute: typeof AppRoute
     }
     '/app/monitoring/performance': {
@@ -608,11 +611,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppMonitoringPerformanceRouteImport
       parentRoute: typeof AppRoute
     }
-    '/app/monitoring/llm': {
-      id: '/app/monitoring/llm'
-      path: '/monitoring/llm'
-      fullPath: '/app/monitoring/llm'
-      preLoaderRoute: typeof AppMonitoringLlmRouteImport
+    '/app/monitoring/llm-traceability': {
+      id: '/app/monitoring/llm-traceability'
+      path: '/monitoring/llm-traceability'
+      fullPath: '/app/monitoring/llm-traceability'
+      preLoaderRoute: typeof AppMonitoringLlmTraceabilityRouteImport
       parentRoute: typeof AppRoute
     }
     '/app/monitoring/analytics': {
@@ -791,10 +794,10 @@ interface AppRouteChildren {
   AppTermsRoute: typeof AppTermsRoute
   AppIndexRoute: typeof AppIndexRoute
   AppMonitoringAnalyticsRoute: typeof AppMonitoringAnalyticsRoute
-  AppMonitoringLlmRoute: typeof AppMonitoringLlmRoute
+  AppMonitoringLlmTraceabilityRoute: typeof AppMonitoringLlmTraceabilityRoute
   AppMonitoringPerformanceRoute: typeof AppMonitoringPerformanceRoute
-  AppMonitoringSystemRoute: typeof AppMonitoringSystemRoute
-  AppMonitoringTasksRoute: typeof AppMonitoringTasksRoute
+  AppMonitoringSystemHealthRoute: typeof AppMonitoringSystemHealthRoute
+  AppMonitoringTaskManagerRoute: typeof AppMonitoringTaskManagerRoute
   AppRagExperimentsRoute: typeof AppRagExperimentsRoute
   AppRagPipelineComparisonRoute: typeof AppRagPipelineComparisonRoute
   AppRagTestRunnerRoute: typeof AppRagTestRunnerRoute
@@ -816,10 +819,10 @@ const AppRouteChildren: AppRouteChildren = {
   AppTermsRoute: AppTermsRoute,
   AppIndexRoute: AppIndexRoute,
   AppMonitoringAnalyticsRoute: AppMonitoringAnalyticsRoute,
-  AppMonitoringLlmRoute: AppMonitoringLlmRoute,
+  AppMonitoringLlmTraceabilityRoute: AppMonitoringLlmTraceabilityRoute,
   AppMonitoringPerformanceRoute: AppMonitoringPerformanceRoute,
-  AppMonitoringSystemRoute: AppMonitoringSystemRoute,
-  AppMonitoringTasksRoute: AppMonitoringTasksRoute,
+  AppMonitoringSystemHealthRoute: AppMonitoringSystemHealthRoute,
+  AppMonitoringTaskManagerRoute: AppMonitoringTaskManagerRoute,
   AppRagExperimentsRoute: AppRagExperimentsRoute,
   AppRagPipelineComparisonRoute: AppRagPipelineComparisonRoute,
   AppRagTestRunnerRoute: AppRagTestRunnerRoute,

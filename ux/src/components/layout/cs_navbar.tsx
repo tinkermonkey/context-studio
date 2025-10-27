@@ -12,6 +12,109 @@ import {
 import { Search, Settings } from "lucide-react";
 import { useMatchRoute } from "@tanstack/react-router";
 
+/**
+ * Mobile navigation menu component
+ * Provides a flat navigation structure for mobile devices with category prefixes
+ */
+function MobileNavMenu() {
+  return (
+    <div className="lg:hidden">
+      {/* Knowledge Graph Items */}
+      <NavbarLink href="/app/layers">KG: Layers</NavbarLink>
+      <NavbarLink href="/app/domains">KG: Domains</NavbarLink>
+      <NavbarLink href="/app/terms">KG: Terms</NavbarLink>
+      <NavbarLink href="/app/predicates">KG: Predicates</NavbarLink>
+
+      {/* RAG & Testing Items */}
+      <NavbarLink href="/app/rag/experiments">RAG: Experiments</NavbarLink>
+      <NavbarLink href="/app/rag/pipeline-comparison">
+        RAG: Pipeline Comparison
+      </NavbarLink>
+      <NavbarLink href="/app/rag/test-runner">RAG: Test Runner</NavbarLink>
+
+      {/* External Reference Items */}
+      <NavbarLink href="/app/reference/search">Ref: Search</NavbarLink>
+      <NavbarLink href="/app/reference/predicates">
+        Ref: Predicate Mapping
+      </NavbarLink>
+
+      {/* Monitoring Items */}
+      <NavbarLink href="/app/monitoring/analytics">Mon: Analytics</NavbarLink>
+      <NavbarLink href="/app/monitoring/performance">
+        Mon: Performance
+      </NavbarLink>
+      <NavbarLink href="/app/monitoring/task-manager">
+        Mon: Task Manager
+      </NavbarLink>
+      <NavbarLink href="/app/monitoring/llm-traceability">
+        Mon: LLM Traceability
+      </NavbarLink>
+      <NavbarLink href="/app/monitoring/system-health">
+        Mon: System Health
+      </NavbarLink>
+
+      {/* Configuration */}
+      <NavbarLink href="/app/config">Configuration</NavbarLink>
+    </div>
+  );
+}
+
+/**
+ * Desktop navigation dropdown menus
+ * Provides hierarchical navigation structure for desktop devices
+ */
+function DesktopNavMenus() {
+  return (
+    <>
+      {/* Knowledge Graph */}
+      <Dropdown label="Knowledge Graph" className="hidden lg:block" inline={true}>
+        <DropdownItem href="/app/layers">Layers</DropdownItem>
+        <DropdownItem href="/app/domains">Domains</DropdownItem>
+        <DropdownItem href="/app/terms">Terms</DropdownItem>
+        <DropdownItem href="/app/predicates">Predicates</DropdownItem>
+      </Dropdown>
+
+      {/* RAG & Testing */}
+      <Dropdown label="RAG & Testing" className="hidden lg:block" inline={true}>
+        <DropdownItem href="/app/rag/experiments">Experiments</DropdownItem>
+        <DropdownItem href="/app/rag/pipeline-comparison">
+          Pipeline Comparison
+        </DropdownItem>
+        <DropdownItem href="/app/rag/test-runner">Test Runner</DropdownItem>
+      </Dropdown>
+
+      {/* External Reference */}
+      <Dropdown
+        label="External Reference"
+        className="hidden lg:block"
+        inline={true}
+      >
+        <DropdownItem href="/app/reference/search">Search</DropdownItem>
+        <DropdownItem href="/app/reference/predicates">
+          Predicate Mapping
+        </DropdownItem>
+      </Dropdown>
+
+      {/* Monitoring */}
+      <Dropdown label="Monitoring" className="hidden lg:block" inline={true}>
+        <DropdownItem href="/app/monitoring/analytics">Analytics</DropdownItem>
+        <DropdownItem href="/app/monitoring/performance">
+          Performance
+        </DropdownItem>
+        <DropdownItem href="/app/monitoring/task-manager">
+          Task Manager
+        </DropdownItem>
+        <DropdownItem href="/app/monitoring/llm-traceability">
+          LLM Traceability
+        </DropdownItem>
+        <DropdownItem href="/app/monitoring/system-health">
+          System Health
+        </DropdownItem>
+      </Dropdown>
+    </>
+  );
+}
+
 export function CsNavbar() {
   const matchRoute = useMatchRoute();
 
@@ -44,25 +147,8 @@ export function CsNavbar() {
               Dashboard
             </NavbarLink>
 
-            {/* Knowledge Graph */}
-            <Dropdown
-              label="Knowledge Graph"
-              className="hidden lg:block"
-              inline={true}
-            >
-              <DropdownItem href="/app/layers">Layers</DropdownItem>
-              <DropdownItem href="/app/domains">Domains</DropdownItem>
-              <DropdownItem href="/app/terms">Terms</DropdownItem>
-              <DropdownItem href="/app/predicates">Predicates</DropdownItem>
-            </Dropdown>
-
-            {/* Mobile: Knowledge Graph Items */}
-            <div className="lg:hidden">
-              <NavbarLink href="/app/layers">KG: Layers</NavbarLink>
-              <NavbarLink href="/app/domains">KG: Domains</NavbarLink>
-              <NavbarLink href="/app/terms">KG: Terms</NavbarLink>
-              <NavbarLink href="/app/predicates">KG: Predicates</NavbarLink>
-            </div>
+            {/* Desktop Navigation Dropdowns */}
+            <DesktopNavMenus />
 
             {/* Datasets */}
             <NavbarLink
@@ -72,102 +158,8 @@ export function CsNavbar() {
               Datasets
             </NavbarLink>
 
-            {/* RAG & Testing */}
-            <Dropdown
-              label="RAG & Testing"
-              className="hidden lg:block"
-              inline={true}
-            >
-              <DropdownItem href="/app/rag/experiments">
-                Experiments
-              </DropdownItem>
-              <DropdownItem href="/app/rag/pipeline-comparison">
-                Pipeline Comparison
-              </DropdownItem>
-              <DropdownItem href="/app/rag/test-runner">
-                Test Runner
-              </DropdownItem>
-            </Dropdown>
-
-            {/* Mobile: RAG & Testing Items */}
-            <div className="lg:hidden">
-              <NavbarLink href="/app/rag/experiments">
-                RAG: Experiments
-              </NavbarLink>
-              <NavbarLink href="/app/rag/pipeline-comparison">
-                RAG: Pipeline Comparison
-              </NavbarLink>
-              <NavbarLink href="/app/rag/test-runner">
-                RAG: Test Runner
-              </NavbarLink>
-            </div>
-
-            {/* External Reference */}
-            <Dropdown
-              label="External Reference"
-              className="hidden lg:block"
-              inline={true}
-            >
-              <DropdownItem href="/app/reference/search">Search</DropdownItem>
-              <DropdownItem href="/app/reference/predicates">
-                Predicate Mapping
-              </DropdownItem>
-            </Dropdown>
-
-            {/* Mobile: External Reference Items */}
-            <div className="lg:hidden">
-              <NavbarLink href="/app/reference/search">Ref: Search</NavbarLink>
-              <NavbarLink href="/app/reference/predicates">
-                Ref: Predicate Mapping
-              </NavbarLink>
-            </div>
-
-            {/* Monitoring */}
-            <Dropdown
-              label="Monitoring"
-              className="hidden lg:block"
-              inline={true}
-            >
-              <DropdownItem href="/app/monitoring/analytics">
-                Analytics
-              </DropdownItem>
-              <DropdownItem href="/app/monitoring/performance">
-                Performance
-              </DropdownItem>
-              <DropdownItem href="/app/monitoring/tasks">
-                Task Manager
-              </DropdownItem>
-              <DropdownItem href="/app/monitoring/llm">
-                LLM Traceability
-              </DropdownItem>
-              <DropdownItem href="/app/monitoring/system">
-                System Health
-              </DropdownItem>
-            </Dropdown>
-
-            {/* Mobile: Monitoring Items */}
-            <div className="lg:hidden">
-              <NavbarLink href="/app/monitoring/analytics">
-                Mon: Analytics
-              </NavbarLink>
-              <NavbarLink href="/app/monitoring/performance">
-                Mon: Performance
-              </NavbarLink>
-              <NavbarLink href="/app/monitoring/tasks">
-                Mon: Task Manager
-              </NavbarLink>
-              <NavbarLink href="/app/monitoring/llm">
-                Mon: LLM Traceability
-              </NavbarLink>
-              <NavbarLink href="/app/monitoring/system">
-                Mon: System Health
-              </NavbarLink>
-            </div>
-
-            {/* Mobile: Config Link */}
-            <NavbarLink href="/app/config" className="lg:hidden">
-              Configuration
-            </NavbarLink>
+            {/* Mobile Navigation */}
+            <MobileNavMenu />
           </NavbarCollapse>
 
           {/* Right side: Config icon and version badge */}
@@ -177,7 +169,7 @@ export function CsNavbar() {
             renderTrigger={() => (
               <button
                 className="hidden rounded-lg p-2 text-gray-500 hover:bg-gray-100 focus:outline-none focus:ring-4 focus:ring-gray-200 dark:text-gray-400 dark:hover:bg-gray-700 dark:focus:ring-gray-700 lg:block"
-                aria-label="Configuration"
+                aria-label="Configuration menu"
               >
                 <Settings className="h-5 w-5" />
               </button>
