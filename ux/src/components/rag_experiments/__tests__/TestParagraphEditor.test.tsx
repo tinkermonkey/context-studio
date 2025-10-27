@@ -90,4 +90,84 @@ describe("TestParagraphEditor", () => {
     const submitButton = screen.getByText(/Create Paragraph/i);
     expect(submitButton).not.toBeDisabled();
   });
+
+  it("shows loading state during submission", () => {
+    const { useCreateTestParagraph } = require("@/api/hooks/ragExperiments");
+    useCreateTestParagraph.mockReturnValue({
+      mutate: jest.fn(),
+      isPending: true,
+      isSuccess: false,
+      error: null,
+      data: null,
+    });
+
+    render(<TestParagraphEditor />, { wrapper: createWrapper() });
+
+    const textarea = screen.getByLabelText(/Paragraph Text/i);
+    fireEvent.change(textarea, { target: { value: "Test text" } });
+
+    expect(screen.getByText(/Creating/i)).toBeInTheDocument();
+  });
+
+  it("shows error state on submission failure", () => {
+    const { useCreateTestParagraph } = require("@/api/hooks/ragExperiments");
+    useCreateTestParagraph.mockReturnValue({
+      mutate: jest.fn(),
+      isPending: false,
+      isSuccess: false,
+      error: new Error("Submission failed"),
+      data: null,
+    });
+
+    render(<TestParagraphEditor />, { wrapper: createWrapper() });
+
+    expect(screen.getByText(/Submission failed/i)).toBeInTheDocument();
+  });
+
+  it("clears form after successful creation", async () => {
+    const mutateFn = jest.fn();
+    const { useCreateTestParagraph } = require("@/api/hooks/ragExperiments");
+    useCreateTestParagraph.mockReturnValue({
+      mutate: mutateFn,
+      isPending: false,
+      isSuccess: false,
+      error: null,
+      data: null,
+    });
+
+    render(<TestParagraphEditor />, { wrapper: createWrapper() });
+
+    const textarea = screen.getByLabelText(/Paragraph Text/i);
+    fireEvent.change(textarea, { target: { value: "Test text" } });
+
+    const submitButton = screen.getByText(/Create Paragraph/i);
+    fireEvent.click(submitButton);
+
+    expect(mutateFn).toHaveBeenCalledWith(
+      expect.objectContaining({ text: "Test text" }),
+      expect.any(Object)
+    );
+  });
+
+  it("handles empty notes field", () => {
+    render(<TestParagraphEditor />, { wrapper: createWrapper() });
+
+    const textarea = screen.getByLabelText(/Paragraph Text/i);
+    fireEvent.change(textarea, { target: { value: "Test text" } });
+
+    const notesInput = screen.getByLabelText(/Notes/i);
+    expect(notesInput).toHaveValue("");
+  });
+
+  it("updates character count in real-time", () => {
+    render(<TestParagraphEditor />, { wrapper: createWrapper() });
+
+    const textarea = screen.getByLabelText(/Paragraph Text/i);
+
+    fireEvent.change(textarea, { target: { value: "Hi" } });
+    expect(screen.getByText("2 characters")).toBeInTheDocument();
+
+    fireEvent.change(textarea, { target: { value: "Hello World" } });
+    expect(screen.getByText("11 characters")).toBeInTheDocument();
+  });
 });

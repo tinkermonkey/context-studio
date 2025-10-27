@@ -109,4 +109,151 @@ describe("PipelineTestRunner", () => {
     const runButton = screen.getByText(/Run Tests/i);
     expect(runButton).toBeDisabled();
   });
+
+  it("shows loading state when fetching paragraphs", () => {
+    const { useTestParagraphs } = require("@/api/hooks/ragExperiments");
+    useTestParagraphs.mockReturnValue({
+      data: null,
+      isLoading: true,
+      error: null,
+    });
+
+    render(<PipelineTestRunner />, { wrapper: createWrapper() });
+
+    expect(screen.getByText(/Loading test paragraphs/i)).toBeInTheDocument();
+  });
+
+  it("shows error state when fetching paragraphs fails", () => {
+    const { useTestParagraphs } = require("@/api/hooks/ragExperiments");
+    useTestParagraphs.mockReturnValue({
+      data: null,
+      isLoading: false,
+      error: new Error("Failed to fetch paragraphs"),
+    });
+
+    render(<PipelineTestRunner />, { wrapper: createWrapper() });
+
+    // Component should still render, showing no paragraphs available
+    expect(screen.getByText(/Select Test Paragraphs/i)).toBeInTheDocument();
+  });
+
+  it("enables run button when paragraphs are selected", () => {
+    render(<PipelineTestRunner />, { wrapper: createWrapper() });
+
+    const checkbox = screen.getByLabelText(/Test paragraph 1/i, {
+      selector: 'input[type="checkbox"]',
+    });
+    fireEvent.click(checkbox);
+
+    const runButton = screen.getByText(/Run Tests/i);
+    expect(runButton).not.toBeDisabled();
+  });
+
+  it("calculates total tests correctly", () => {
+    render(<PipelineTestRunner />, { wrapper: createWrapper() });
+
+    const checkbox1 = screen.getByLabelText(/Test paragraph 1/i, {
+      selector: 'input[type="checkbox"]',
+    });
+    const checkbox2 = screen.getByLabelText(/Test paragraph 2/i, {
+      selector: 'input[type="checkbox"]',
+    });
+
+    fireEvent.click(checkbox1);
+    expect(screen.getByText(/Total Tests: 1/i)).toBeInTheDocument();
+
+    fireEvent.click(checkbox2);
+    expect(screen.getByText(/Total Tests: 2/i)).toBeInTheDocument();
+  });
+
+  it("shows progress during test execution", () => {
+    const { useRunPipelineTest } = require("@/api/hooks/ragExperiments");
+    useRunPipelineTest.mockReturnValue({
+      mutateAsync: jest.fn(),
+      isPending: true,
+      isSuccess: false,
+      error: null,
+      data: null,
+    });
+
+    render(<PipelineTestRunner />, { wrapper: createWrapper() });
+
+    expect(screen.getByText(/Running Tests/i)).toBeInTheDocument();
+  });
+
+  it("shows success message after test completion", () => {
+    const { useRunPipelineTest } = require("@/api/hooks/ragExperiments");
+    useRunPipelineTest.mockReturnValue({
+      mutateAsync: jest.fn(),
+      isPending: false,
+      isSuccess: true,
+      error: null,
+      data: {
+        total_runs: 2,
+        successful_runs: 2,
+        failed_runs: 0,
+        results: [],
+      },
+    });
+
+    render(<PipelineTestRunner />, { wrapper: createWrapper() });
+
+    expect(screen.getByText(/Tests Completed/i)).toBeInTheDocument();
+    expect(screen.getByText(/Successful: 2/i)).toBeInTheDocument();
+  });
+
+  it("shows error message on test failure", () => {
+    const { useRunPipelineTest } = require("@/api/hooks/ragExperiments");
+    useRunPipelineTest.mockReturnValue({
+      mutateAsync: jest.fn(),
+      isPending: false,
+      isSuccess: false,
+      error: new Error("Test execution failed"),
+      data: null,
+    });
+
+    render(<PipelineTestRunner />, { wrapper: createWrapper() });
+
+    expect(screen.getByText(/Error Running Tests/i)).toBeInTheDocument();
+    expect(screen.getByText(/Test execution failed/i)).toBeInTheDocument();
+  });
+
+  it("toggles LLM layer option", () => {
+    render(<PipelineTestRunner />, { wrapper: createWrapper() });
+
+    const llmCheckbox = screen.getByLabelText(/Enable LLM Layer/i, {
+      selector: 'input[type="checkbox"]',
+    });
+
+    // Should be checked by default
+    expect(llmCheckbox).toBeChecked();
+
+    fireEvent.click(llmCheckbox);
+    expect(llmCheckbox).not.toBeChecked();
+  });
+
+  it("handles select all paragraphs", () => {
+    render(<PipelineTestRunner />, { wrapper: createWrapper() });
+
+    const selectAllButton = screen.getByText(/Select All/i);
+    fireEvent.click(selectAllButton);
+
+    // Both paragraphs should be selected
+    expect(screen.getByText(/2 paragraph\(s\) selected/i)).toBeInTheDocument();
+  });
+
+  it("shows empty state when no paragraphs available", () => {
+    const { useTestParagraphs } = require("@/api/hooks/ragExperiments");
+    useTestParagraphs.mockReturnValue({
+      data: { paragraphs: [], total_count: 0, limit: 100, offset: 0 },
+      isLoading: false,
+      error: null,
+    });
+
+    render(<PipelineTestRunner />, { wrapper: createWrapper() });
+
+    expect(
+      screen.getByText(/No test paragraphs available/i)
+    ).toBeInTheDocument();
+  });
 });

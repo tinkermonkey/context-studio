@@ -20,7 +20,11 @@ export interface PipelineTestRunnerProps {
   onTestComplete?: (results: RunPipelineTestResponse) => void;
 }
 
-// Available pipelines (hardcoded for now - could be fetched from API in the future)
+// Available RAG pipelines
+// Note: These are Python pipeline classes registered in the RAG pipeline registry,
+// not to be confused with LLM pipeline flavors. Currently hardcoded as there's only
+// one RAG pipeline implementation. A future enhancement could add an API endpoint
+// to list registered RAG pipeline classes dynamically.
 const AVAILABLE_PIPELINES = [
   {
     name: "StandardRAGPipeline",

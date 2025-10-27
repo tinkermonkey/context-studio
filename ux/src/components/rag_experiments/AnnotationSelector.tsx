@@ -104,11 +104,17 @@ export const AnnotationSelector: React.FC<AnnotationSelectorProps> = ({
 
   // Delete annotation
   const handleDeleteAnnotation = async (annotationId: string) => {
-    await deleteAnnotationMutation.mutateAsync({
-      annotationId,
-      paragraphId: paragraph.id,
-    });
-    onAnnotationChange?.();
+    try {
+      await deleteAnnotationMutation.mutateAsync({
+        annotationId,
+        paragraphId: paragraph.id,
+      });
+      onAnnotationChange?.();
+    } catch (error) {
+      // Error is already handled by the mutation's error state
+      // The UI will show the error message below the annotations list
+      console.error("Failed to delete annotation:", error);
+    }
   };
 
   // Render paragraph text with highlighted annotations

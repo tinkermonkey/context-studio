@@ -11,12 +11,14 @@ import {
   flexRender,
   getCoreRowModel,
   getSortedRowModel,
+  getPaginationRowModel,
   useReactTable,
   SortingState,
 } from "@tanstack/react-table";
 import { Button, Badge, Spinner } from "flowbite-react";
-import { Download, ChevronDown, ChevronUp } from "lucide-react";
+import { Download, ChevronDown, ChevronUp, ChevronLeft, ChevronRight } from "lucide-react";
 import { usePipelineComparison } from "@/api/hooks/ragExperiments";
+import { useButterToast } from "@/hooks/useButterToast";
 import type { PipelineComparisonResponse } from "@/api/services/ragExperiments";
 import type { components } from "@/api/client/types";
 
@@ -37,6 +39,7 @@ export const TestResultsViewer: React.FC<TestResultsViewerProps> = ({
     { id: "f1_score", desc: true },
   ]);
   const [expandedRows, setExpandedRows] = useState<Set<string>>(new Set());
+  const toast = useButterToast();
 
   const { data, isLoading, error } = usePipelineComparison({
     paragraphId,
@@ -128,69 +131,95 @@ export const TestResultsViewer: React.FC<TestResultsViewerProps> = ({
     onSortingChange: setSorting,
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: getSortedRowModel(),
+    getPaginationRowModel: getPaginationRowModel(),
+    initialState: {
+      pagination: {
+        pageSize: 10,
+      },
+    },
   });
 
   const handleExportCSV = () => {
-    if (!results || results.length === 0) return;
+    try {
+      if (!results || results.length === 0) {
+        toast.warning("No results to export");
+        return;
+      }
 
-    // Build CSV content
-    const headers = [
-      "Pipeline Name",
-      "Execution Time (ms)",
-      "Entities Extracted",
-      "Precision",
-      "Recall",
-      "F1 Score",
-      "Executed At",
-    ];
-    const rows = results.map((result) => [
-      result.pipeline_name,
-      result.execution_time_ms?.toFixed(2) || "N/A",
-      result.entities_extracted,
-      result.precision_score !== null && result.precision_score !== undefined ? (result.precision_score * 100).toFixed(1) + "%" : "N/A",
-      result.recall_score !== null && result.recall_score !== undefined ? (result.recall_score * 100).toFixed(1) + "%" : "N/A",
-      result.f1_score !== null && result.f1_score !== undefined ? (result.f1_score * 100).toFixed(1) + "%" : "N/A",
-      new Date(result.executed_at).toISOString(),
-    ]);
+      // Build CSV content
+      const headers = [
+        "Pipeline Name",
+        "Execution Time (ms)",
+        "Entities Extracted",
+        "Precision",
+        "Recall",
+        "F1 Score",
+        "Executed At",
+      ];
+      const rows = results.map((result) => [
+        result.pipeline_name,
+        result.execution_time_ms?.toFixed(2) || "N/A",
+        result.entities_extracted,
+        result.precision_score !== null && result.precision_score !== undefined ? (result.precision_score * 100).toFixed(1) + "%" : "N/A",
+        result.recall_score !== null && result.recall_score !== undefined ? (result.recall_score * 100).toFixed(1) + "%" : "N/A",
+        result.f1_score !== null && result.f1_score !== undefined ? (result.f1_score * 100).toFixed(1) + "%" : "N/A",
+        new Date(result.executed_at).toISOString(),
+      ]);
 
-    const csvContent = [
-      headers.join(","),
-      ...rows.map((row) => row.join(",")),
-    ].join("\n");
+      const csvContent = [
+        headers.join(","),
+        ...rows.map((row) => row.join(",")),
+      ].join("\n");
 
-    // Download CSV
-    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
-    const link = document.createElement("a");
-    const url = URL.createObjectURL(blob);
-    link.setAttribute("href", url);
-    link.setAttribute(
-      "download",
-      `rag_test_results_${paragraphId}_${new Date().toISOString()}.csv`
-    );
-    link.style.visibility = "hidden";
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+      // Download CSV
+      const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+      const link = document.createElement("a");
+      const url = URL.createObjectURL(blob);
+      link.setAttribute("href", url);
+      link.setAttribute(
+        "download",
+        `rag_test_results_${paragraphId}_${new Date().toISOString()}.csv`
+      );
+      link.style.visibility = "hidden";
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+
+      toast.success("CSV exported successfully");
+    } catch (error) {
+      console.error("Failed to export CSV:", error);
+      toast.error("Failed to export CSV. Please try again.");
+    }
   };
 
   const handleExportJSON = () => {
-    if (!data) return;
+    try {
+      if (!data) {
+        toast.warning("No data to export");
+        return;
+      }
 
-    const jsonContent = JSON.stringify(data, null, 2);
+      const jsonContent = JSON.stringify(data, null, 2);
 
-    // Download JSON
-    const blob = new Blob([jsonContent], { type: "application/json" });
-    const link = document.createElement("a");
-    const url = URL.createObjectURL(blob);
-    link.setAttribute("href", url);
-    link.setAttribute(
-      "download",
-      `rag_test_results_${paragraphId}_${new Date().toISOString()}.json`
-    );
-    link.style.visibility = "hidden";
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+      // Download JSON
+      const blob = new Blob([jsonContent], { type: "application/json" });
+      const link = document.createElement("a");
+      const url = URL.createObjectURL(blob);
+      link.setAttribute("href", url);
+      link.setAttribute(
+        "download",
+        `rag_test_results_${paragraphId}_${new Date().toISOString()}.json`
+      );
+      link.style.visibility = "hidden";
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+
+      toast.success("JSON exported successfully");
+    } catch (error) {
+      console.error("Failed to export JSON:", error);
+      toast.error("Failed to export JSON. Please try again.");
+    }
   };
 
   if (isLoading) {
@@ -318,6 +347,41 @@ export const TestResultsViewer: React.FC<TestResultsViewerProps> = ({
           </tbody>
         </table>
       </div>
+
+      {/* Pagination Controls */}
+      {results.length > 10 && (
+        <div className="flex items-center justify-between rounded-lg border border-gray-200 bg-white px-4 py-3">
+          <div className="flex items-center gap-2">
+            <span className="text-sm text-gray-700">
+              Page {table.getState().pagination.pageIndex + 1} of{" "}
+              {table.getPageCount()}
+            </span>
+            <span className="text-sm text-gray-500">
+              ({results.length} total results)
+            </span>
+          </div>
+          <div className="flex items-center gap-2">
+            <Button
+              size="sm"
+              color="gray"
+              onClick={() => table.previousPage()}
+              disabled={!table.getCanPreviousPage()}
+            >
+              <ChevronLeft className="h-4 w-4" />
+              Previous
+            </Button>
+            <Button
+              size="sm"
+              color="gray"
+              onClick={() => table.nextPage()}
+              disabled={!table.getCanNextPage()}
+            >
+              Next
+              <ChevronRight className="ml-1 h-4 w-4" />
+            </Button>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
