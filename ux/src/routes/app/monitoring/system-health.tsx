@@ -1,8 +1,8 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { CsMain, CsMainTitle } from "@/components/layout/cs_main";
 import { CsSidebar } from "@/components/layout/cs_sidebar";
-import { Card, Spinner, Tabs, Button } from "flowbite-react";
-import { Server, Database, Activity, Cpu, RefreshCw } from "lucide-react";
+import { Card, Spinner, Tabs, Button, Badge, Alert } from "flowbite-react";
+import { Server, Database, Activity, Cpu, RefreshCw, Shield, AlertCircle } from "lucide-react";
 import {
   useDatabaseHealth,
   useDatabaseDashboard,
@@ -15,22 +15,26 @@ import {
   AnalyticsChart,
 } from "@/components/monitoring";
 import type { MetricGroup } from "@/components/monitoring/PerformanceMetricsPanel";
+import { useButterToast } from "@/hooks/useButterToast";
 
 export const Route = createFileRoute("/app/monitoring/system-health")({
   component: RouteComponent,
 });
 
 function RouteComponent() {
-  const { data: dbHealth, isLoading: dbHealthLoading, refetch: refetchDbHealth } = useDatabaseHealth();
-  const { data: dbDashboard, isLoading: dbDashboardLoading } = useDatabaseDashboard();
-  const { data: serviceHealth, isLoading: serviceHealthLoading, refetch: refetchServiceHealth } = useServiceFactoryHealth();
-  const { data: serviceDashboard, isLoading: serviceDashboardLoading } = useServiceFactoryDashboard();
+  const { showToast } = useButterToast();
+  const { data: dbHealth, isLoading: dbHealthLoading, error: dbHealthError, refetch: refetchDbHealth } = useDatabaseHealth();
+  const { data: dbDashboard, isLoading: dbDashboardLoading, error: dbDashboardError } = useDatabaseDashboard();
+  const { data: serviceHealth, isLoading: serviceHealthLoading, error: serviceHealthError, refetch: refetchServiceHealth } = useServiceFactoryHealth();
+  const { data: serviceDashboard, isLoading: serviceDashboardLoading, error: serviceDashboardError } = useServiceFactoryDashboard();
 
   const isLoading = dbHealthLoading || dbDashboardLoading || serviceHealthLoading || serviceDashboardLoading;
+  const hasError = dbHealthError || dbDashboardError || serviceHealthError || serviceDashboardError;
 
   const handleRefresh = () => {
     refetchDbHealth();
     refetchServiceHealth();
+    showToast("Refreshing system health data", "info");
   };
 
   // Database metrics
@@ -84,12 +88,26 @@ function RouteComponent() {
       <CsSidebar></CsSidebar>
       <CsMain>
         <div className="mb-4 flex items-center justify-between">
-          <CsMainTitle>System Health</CsMainTitle>
+          <div className="flex items-center gap-3">
+            <CsMainTitle>System Health</CsMainTitle>
+            <Badge color="purple" icon={Shield}>
+              Admin Tool
+            </Badge>
+          </div>
           <Button size="sm" onClick={handleRefresh}>
             <RefreshCw className="mr-2 h-4 w-4" />
             Refresh
           </Button>
         </div>
+
+        {hasError && (
+          <Alert color="failure" icon={AlertCircle} className="mb-4">
+            <span className="font-medium">Error loading system health data</span>
+            <p className="text-sm mt-1">
+              {dbHealthError?.message || dbDashboardError?.message || serviceHealthError?.message || serviceDashboardError?.message}
+            </p>
+          </Alert>
+        )}
 
         {isLoading ? (
           <div className="flex items-center justify-center py-12">

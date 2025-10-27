@@ -43,6 +43,12 @@ export interface CollaborationMetrics {
   approval_rate: number;
 }
 
+export interface ImpactByType {
+  entity_type: string;
+  count: number;
+  operation: string;
+}
+
 export interface ChangeImpact {
   changeset_id: string;
   total_entities: number;
@@ -51,33 +57,105 @@ export interface ChangeImpact {
   entities_created?: number;
   entities_updated?: number;
   entities_deleted?: number;
-  impact_by_type: Array<Record<string, any>>;
+  impact_by_type: ImpactByType[];
+}
+
+export interface DailyTrend {
+  date: string;
+  changes: number;
+  active_users: number;
+  entities_modified: number;
+}
+
+export interface PeakHour {
+  hour: number;
+  avg_changes: number;
+  peak_day: string;
 }
 
 export interface TrendAnalysis {
-  daily_trends: Array<Record<string, any>>;
-  peak_hours: Array<Record<string, any>>;
+  daily_trends: DailyTrend[];
+  peak_hours: PeakHour[];
   analysis_period_days: number;
+}
+
+export interface SyncPerformance {
+  avg_sync_time_ms: number;
+  total_syncs: number;
+  failed_syncs: number;
+  success_rate: number;
+}
+
+export interface SystemLoad {
+  timestamp: string;
+  cpu_percent: number;
+  memory_percent: number;
+  active_queries: number;
 }
 
 export interface PerformanceMetrics {
-  sync_performance: Record<string, any>;
-  system_load: Array<Record<string, any>>;
+  sync_performance: SyncPerformance;
+  system_load: SystemLoad[];
+}
+
+export interface CollaborationNetwork {
+  user_id: string;
+  connections: string[];
+  collaboration_score: number;
+}
+
+export interface TeamProductivity {
+  team_id: string;
+  total_changes: number;
+  avg_response_time_hours: number;
+  productivity_score: number;
 }
 
 export interface CollaborationInsights {
-  collaboration_networks: Array<Record<string, any>>;
-  team_productivity: Array<Record<string, any>>;
+  collaboration_networks: CollaborationNetwork[];
+  team_productivity: TeamProductivity[];
   analysis_period_days: number;
+}
+
+export interface TopEntity {
+  entity_id: string;
+  entity_type: string;
+  modification_count: number;
+  unique_contributors: number;
 }
 
 export interface ExecutiveSummary {
   summary_period_days: number;
-  key_metrics: Record<string, any>;
-  collaboration_health: Record<string, any>;
-  system_health: Record<string, any>;
-  top_entities: Array<Record<string, any>>;
+  key_metrics: {
+    total_changes: number;
+    active_users: number;
+    avg_daily_changes: number;
+    system_uptime_percent: number;
+  };
+  collaboration_health: {
+    collaboration_score: number;
+    avg_response_time_hours: number;
+    approval_rate: number;
+  };
+  system_health: {
+    health_score: number;
+    performance_grade: string;
+    issues_count: number;
+  };
+  top_entities: TopEntity[];
   generated_at: string;
+}
+
+export interface ConflictMetrics {
+  total_conflicts: number;
+  resolved_conflicts: number;
+  pending_conflicts: number;
+  avg_resolution_time_hours: number;
+  conflict_rate: number;
+  conflicts_by_type: {
+    type: string;
+    count: number;
+  }[];
 }
 
 export interface AnalyticsHealth {
@@ -277,9 +355,9 @@ export function useExecutiveSummary(
 }
 
 export function useConflictMetrics(
-  options?: UseQueryOptions<Record<string, any>>
+  options?: UseQueryOptions<ConflictMetrics>
 ) {
-  return useQuery<Record<string, any>>({
+  return useQuery<ConflictMetrics>({
     queryKey: analyticsKeys.conflictMetrics(),
     queryFn: async () => {
       const response = await apiClient.get(`/api/analytics/conflict-metrics`);

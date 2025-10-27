@@ -8,36 +8,71 @@ import { useQuery, useMutation, UseQueryOptions, UseMutationOptions, useQueryCli
 import { apiClient } from "@/api/client";
 
 // Database Monitoring Types
+export interface EngineInfo {
+  status: string;
+  connection_count: number;
+  last_health_check: string;
+  performance_score: number;
+}
+
 export interface DatabaseHealth {
   status: string;
-  engines: Record<string, any>;
+  engines: Record<string, EngineInfo>;
   timestamp: string;
   issues?: string[];
 }
 
 export interface DatabasePerformance {
   timestamp: string;
-  [key: string]: any;
+  query_throughput: number;
+  avg_query_time_ms: number;
+  cache_hit_rate: number;
+  connection_pool_utilization: number;
+}
+
+export interface EngineStatus {
+  engine_id: string;
+  status: string;
+  connection_count: number;
+  last_check: string;
 }
 
 export interface DatabaseEnginesStatus {
   timestamp: string;
   total_engines: number;
-  engines: Record<string, any>;
+  engines: EngineStatus[];
   active_connections: number;
   peak_connections: number;
 }
 
+export interface ConnectionPoolMetrics {
+  pool_size: number;
+  active_connections: number;
+  idle_connections: number;
+  wait_time_ms: number;
+}
+
 export interface ConnectionMetrics {
   timestamp: string;
-  metrics: Record<string, any>;
+  metrics: ConnectionPoolMetrics;
+}
+
+export interface PerformanceMetric {
+  metric_name: string;
+  value: number;
+  unit: string;
+  status: "healthy" | "warning" | "critical";
 }
 
 export interface DatabaseDashboard {
   timestamp: string;
-  dashboard_info: Record<string, any>;
+  dashboard_info: {
+    database_type: string;
+    version: string;
+    uptime_seconds: number;
+  };
   health_status: DatabaseHealth;
-  performance_metrics: Record<string, any>;
+  performance_metrics: PerformanceMetric[];
   recommendations: string[];
   engines_summary: {
     total_engines: number;
@@ -48,27 +83,62 @@ export interface DatabaseDashboard {
 }
 
 // Service Monitoring Types
+export interface ServiceMetrics {
+  service_type: string;
+  instances_created: number;
+  cache_hits: number;
+  cache_misses: number;
+  avg_creation_time_ms: number;
+}
+
+export interface CacheEntry {
+  key: string;
+  created_at: string;
+  last_accessed: string;
+  access_count: number;
+}
+
 export interface ServiceFactoryStats {
   factory_id: string;
   cache_ttl_seconds: number;
   total_cache_entries: number;
-  service_metrics: Record<string, any>;
-  cache_entries: Record<string, any>;
+  service_metrics: ServiceMetrics[];
+  cache_entries: CacheEntry[];
   timestamp: string;
+}
+
+export interface ServicePerformance {
+  service_type: string;
+  hit_rate: number;
+  avg_response_time_ms: number;
+  total_requests: number;
 }
 
 export interface ServiceFactoryPerformance {
   overall_cache_hit_rate_percent: number;
   total_services_created: number;
-  best_performing_service?: Record<string, any>;
-  worst_performing_service?: Record<string, any>;
+  best_performing_service?: ServicePerformance;
+  worst_performing_service?: ServicePerformance;
+}
+
+export interface HealthMetric {
+  metric_name: string;
+  value: number;
+  status: "healthy" | "degraded" | "unhealthy";
 }
 
 export interface ServiceFactoryHealth {
   status: string;
   issues: string[];
   cache_size: number;
-  metrics: Record<string, any>;
+  metrics: HealthMetric[];
+}
+
+export interface TopService {
+  service_type: string;
+  request_count: number;
+  cache_hit_rate: number;
+  avg_response_time_ms: number;
 }
 
 export interface ServiceFactoryDashboard {
@@ -87,7 +157,7 @@ export interface ServiceFactoryDashboard {
     issues: string[];
     cache_size: number;
   };
-  top_services: Record<string, any>;
+  top_services: TopService[];
   generated_at: string;
 }
 
@@ -161,8 +231,29 @@ export function useConnectionMetrics(options?: UseQueryOptions<ConnectionMetrics
   });
 }
 
-export function useDatabaseRecommendations(options?: UseQueryOptions<any>) {
-  return useQuery<any>({
+export interface DatabaseRecommendation {
+  category: string;
+  priority: "high" | "medium" | "low";
+  title: string;
+  description: string;
+  estimated_impact: string;
+}
+
+export interface DatabaseRecommendations {
+  recommendations: DatabaseRecommendation[];
+  generated_at: string;
+}
+
+export interface DatabaseEnvironment {
+  database_type: string;
+  version: string;
+  python_version: string;
+  os_info: string;
+  available_extensions: string[];
+}
+
+export function useDatabaseRecommendations(options?: UseQueryOptions<DatabaseRecommendations>) {
+  return useQuery<DatabaseRecommendations>({
     queryKey: adminKeys.database.recommendations(),
     queryFn: async () => {
       const response = await apiClient.get(`/admin/database/recommendations`);
@@ -172,8 +263,8 @@ export function useDatabaseRecommendations(options?: UseQueryOptions<any>) {
   });
 }
 
-export function useDatabaseEnvironment(options?: UseQueryOptions<any>) {
-  return useQuery<any>({
+export function useDatabaseEnvironment(options?: UseQueryOptions<DatabaseEnvironment>) {
+  return useQuery<DatabaseEnvironment>({
     queryKey: adminKeys.database.environment(),
     queryFn: async () => {
       const response = await apiClient.get(`/admin/database/environment`);
@@ -197,11 +288,11 @@ export function useDatabaseDashboard(options?: UseQueryOptions<DatabaseDashboard
 // Database Mutation Hooks
 
 export function useOptimizeDatabase(
-  options?: UseMutationOptions<any, Error, string>
+  options?: UseMutationOptions<MutationResponse, Error, string>
 ) {
   const queryClient = useQueryClient();
 
-  return useMutation<any, Error, string>({
+  return useMutation<MutationResponse, Error, string>({
     mutationFn: async (workloadType: string) => {
       const response = await apiClient.post(`/admin/database/optimize`, null, {
         params: { workload_type: workloadType },
@@ -216,11 +307,11 @@ export function useOptimizeDatabase(
 }
 
 export function useResetDatabaseMetrics(
-  options?: UseMutationOptions<any, Error, void>
+  options?: UseMutationOptions<MutationResponse, Error, void>
 ) {
   const queryClient = useQueryClient();
 
-  return useMutation<any, Error, void>({
+  return useMutation<MutationResponse, Error, void>({
     mutationFn: async () => {
       const response = await apiClient.post(`/admin/database/reset-metrics`);
       return response.data;
@@ -233,11 +324,11 @@ export function useResetDatabaseMetrics(
 }
 
 export function useCreateDatabaseEngine(
-  options?: UseMutationOptions<any, Error, { engine_id: string; database_url?: string }>
+  options?: UseMutationOptions<MutationResponse, Error, { engine_id: string; database_url?: string }>
 ) {
   const queryClient = useQueryClient();
 
-  return useMutation<any, Error, { engine_id: string; database_url?: string }>({
+  return useMutation<MutationResponse, Error, { engine_id: string; database_url?: string }>({
     mutationFn: async ({ engine_id, database_url }) => {
       const response = await apiClient.post(`/admin/database/create-engine`, null, {
         params: { engine_id, database_url },
@@ -252,11 +343,11 @@ export function useCreateDatabaseEngine(
 }
 
 export function useCleanupDatabaseResources(
-  options?: UseMutationOptions<any, Error, void>
+  options?: UseMutationOptions<MutationResponse, Error, void>
 ) {
   const queryClient = useQueryClient();
 
-  return useMutation<any, Error, void>({
+  return useMutation<MutationResponse, Error, void>({
     mutationFn: async () => {
       const response = await apiClient.delete(`/admin/database/cleanup`);
       return response.data;
@@ -318,11 +409,22 @@ export function useServiceFactoryDashboard(
   });
 }
 
+export interface ServiceTypeMetrics {
+  service_type: string;
+  total_instances: number;
+  cache_hits: number;
+  cache_misses: number;
+  hit_rate_percent: number;
+  avg_creation_time_ms: number;
+  recent_requests: number;
+  timestamp: string;
+}
+
 export function useServiceTypeMetrics(
   serviceType: string,
-  options?: UseQueryOptions<any>
+  options?: UseQueryOptions<ServiceTypeMetrics>
 ) {
-  return useQuery<any>({
+  return useQuery<ServiceTypeMetrics>({
     queryKey: adminKeys.services.metrics(serviceType),
     queryFn: async () => {
       const response = await apiClient.get(`/admin/services/metrics/${serviceType}`);
@@ -333,12 +435,19 @@ export function useServiceTypeMetrics(
   });
 }
 
+// Mutation Response Types
+export interface MutationResponse {
+  success: boolean;
+  message: string;
+  timestamp: string;
+}
+
 // Service Factory Mutation Hooks
 
-export function useClearServiceCache(options?: UseMutationOptions<any, Error, void>) {
+export function useClearServiceCache(options?: UseMutationOptions<MutationResponse, Error, void>) {
   const queryClient = useQueryClient();
 
-  return useMutation<any, Error, void>({
+  return useMutation<MutationResponse, Error, void>({
     mutationFn: async () => {
       const response = await apiClient.post(`/admin/services/cache/clear`);
       return response.data;
@@ -350,10 +459,10 @@ export function useClearServiceCache(options?: UseMutationOptions<any, Error, vo
   });
 }
 
-export function useCleanupServiceCache(options?: UseMutationOptions<any, Error, void>) {
+export function useCleanupServiceCache(options?: UseMutationOptions<MutationResponse, Error, void>) {
   const queryClient = useQueryClient();
 
-  return useMutation<any, Error, void>({
+  return useMutation<MutationResponse, Error, void>({
     mutationFn: async () => {
       const response = await apiClient.post(`/admin/services/cache/cleanup`);
       return response.data;

@@ -2,8 +2,8 @@ import { useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { CsMain, CsMainTitle } from "@/components/layout/cs_main";
 import { CsSidebar } from "@/components/layout/cs_sidebar";
-import { Card, Button, Spinner, Select, Tabs } from "flowbite-react";
-import { ListTodo, AlertCircle, Activity } from "lucide-react";
+import { Card, Button, Spinner, Select, Tabs, Badge, Alert } from "flowbite-react";
+import { ListTodo, AlertCircle, Activity, Settings } from "lucide-react";
 import {
   useTaskList,
   useTaskStats,
@@ -16,6 +16,7 @@ import {
   PerformanceMetricsPanel,
 } from "@/components/monitoring";
 import type { MetricGroup } from "@/components/monitoring/PerformanceMetricsPanel";
+import { useButterToast } from "@/hooks/useButterToast";
 
 export const Route = createFileRoute("/app/monitoring/task-manager")({
   component: RouteComponent,
@@ -23,22 +24,26 @@ export const Route = createFileRoute("/app/monitoring/task-manager")({
 
 function RouteComponent() {
   const [statusFilter, setStatusFilter] = useState<string | undefined>(undefined);
+  const { showToast } = useButterToast();
 
-  const { data: tasks, isLoading: tasksLoading, refetch: refetchTasks } = useTaskList({ status_filter: statusFilter });
-  const { data: stats, isLoading: statsLoading } = useTaskStats();
-  const { data: deadLetterQueue, isLoading: dlqLoading } = useDeadLetterQueue();
+  const { data: tasks, isLoading: tasksLoading, error: tasksError, refetch: refetchTasks } = useTaskList({ status_filter: statusFilter });
+  const { data: stats, isLoading: statsLoading, error: statsError } = useTaskStats();
+  const { data: deadLetterQueue, isLoading: dlqLoading, error: dlqError } = useDeadLetterQueue();
   const cancelTask = useCancelTask();
 
   const isLoading = tasksLoading || statsLoading || dlqLoading;
+  const hasError = tasksError || statsError || dlqError;
 
   const handleCancelTask = (taskId: string) => {
-    if (confirm("Are you sure you want to cancel this task?")) {
-      cancelTask.mutate(taskId, {
-        onSuccess: () => {
-          refetchTasks();
-        },
-      });
-    }
+    cancelTask.mutate(taskId, {
+      onSuccess: () => {
+        showToast("Task cancelled successfully", "success");
+        refetchTasks();
+      },
+      onError: (error) => {
+        showToast(`Failed to cancel task: ${error.message}`, "error");
+      },
+    });
   };
 
   const statsMetrics: MetricGroup[] = stats
@@ -83,7 +88,12 @@ function RouteComponent() {
       <CsSidebar></CsSidebar>
       <CsMain>
         <div className="mb-4 flex items-center justify-between">
-          <CsMainTitle>Task Manager</CsMainTitle>
+          <div className="flex items-center gap-3">
+            <CsMainTitle>Task Manager</CsMainTitle>
+            <Badge color="purple" icon={Settings}>
+              Admin Tool
+            </Badge>
+          </div>
           <Select
             value={statusFilter || "all"}
             onChange={(e) => setStatusFilter(e.target.value === "all" ? undefined : e.target.value)}
@@ -96,6 +106,15 @@ function RouteComponent() {
             <option value="cancelled">Cancelled</option>
           </Select>
         </div>
+
+        {hasError && (
+          <Alert color="failure" icon={AlertCircle} className="mb-4">
+            <span className="font-medium">Error loading task data</span>
+            <p className="text-sm mt-1">
+              {tasksError?.message || statsError?.message || dlqError?.message}
+            </p>
+          </Alert>
+        )}
 
         {stats && (
           <div className="mb-6">

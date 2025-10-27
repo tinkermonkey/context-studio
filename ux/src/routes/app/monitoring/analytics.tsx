@@ -2,7 +2,7 @@ import { useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { CsMain, CsMainTitle } from "@/components/layout/cs_main";
 import { CsSidebar } from "@/components/layout/cs_sidebar";
-import { Card, Button, Select, Spinner, Alert, Tabs } from "flowbite-react";
+import { Card, Button, Select, Spinner, Alert, Tabs, Badge } from "flowbite-react";
 import {
   Download,
   TrendingUp,
@@ -10,6 +10,7 @@ import {
   Activity,
   Target,
   AlertCircle,
+  BarChart3,
 } from "lucide-react";
 import {
   useChangeSummary,
@@ -27,6 +28,7 @@ import {
   PerformanceMetricsPanel,
 } from "@/components/monitoring";
 import type { MetricGroup } from "@/components/monitoring/PerformanceMetricsPanel";
+import { useButterToast } from "@/hooks/useButterToast";
 
 export const Route = createFileRoute("/app/monitoring/analytics")({
   component: RouteComponent,
@@ -35,16 +37,18 @@ export const Route = createFileRoute("/app/monitoring/analytics")({
 function RouteComponent() {
   const [timePeriod, setTimePeriod] = useState(30);
   const [exporting, setExporting] = useState(false);
+  const { showToast } = useButterToast();
 
   // Fetch data
   const { data: summary, isLoading: summaryLoading, error: summaryError } = useChangeSummary(timePeriod);
-  const { data: userActivity, isLoading: userActivityLoading } = useUserActivity({ days: timePeriod });
-  const { data: hotspots, isLoading: hotspotsLoading } = useEntityHotspots(20);
-  const { data: collaboration, isLoading: collaborationLoading } = useCollaborationMetrics(timePeriod);
-  const { data: trends, isLoading: trendsLoading } = useTrends(timePeriod);
+  const { data: userActivity, isLoading: userActivityLoading, error: userActivityError } = useUserActivity({ days: timePeriod });
+  const { data: hotspots, isLoading: hotspotsLoading, error: hotspotsError } = useEntityHotspots(20);
+  const { data: collaboration, isLoading: collaborationLoading, error: collaborationError } = useCollaborationMetrics(timePeriod);
+  const { data: trends, isLoading: trendsLoading, error: trendsError } = useTrends(timePeriod);
   const { data: health } = useAnalyticsHealth();
 
   const isLoading = summaryLoading || userActivityLoading || hotspotsLoading || collaborationLoading || trendsLoading;
+  const hasError = summaryError || userActivityError || hotspotsError || collaborationError || trendsError;
 
   const handleExportCSV = async (reportType: "user-activity" | "hotspots" | "trends") => {
     try {
@@ -58,8 +62,10 @@ function RouteComponent() {
       a.click();
       window.URL.revokeObjectURL(url);
       document.body.removeChild(a);
+      showToast(`Successfully exported ${reportType} to CSV`, "success");
     } catch (error) {
-      console.error("Export failed:", error);
+      const errorMessage = error instanceof Error ? error.message : "Unknown error occurred";
+      showToast(`Export failed: ${errorMessage}`, "error");
     } finally {
       setExporting(false);
     }
@@ -133,7 +139,12 @@ function RouteComponent() {
       <CsSidebar></CsSidebar>
       <CsMain>
         <div className="mb-4 flex items-center justify-between">
-          <CsMainTitle>Analytics Dashboard</CsMainTitle>
+          <div className="flex items-center gap-3">
+            <CsMainTitle>Analytics Dashboard</CsMainTitle>
+            <Badge color="purple" icon={BarChart3}>
+              Developer Tool
+            </Badge>
+          </div>
           <div className="flex items-center gap-4">
             <Select
               value={timePeriod}
@@ -148,9 +159,12 @@ function RouteComponent() {
           </div>
         </div>
 
-        {summaryError && (
+        {hasError && (
           <Alert color="failure" icon={AlertCircle} className="mb-4">
-            Failed to load analytics data. The analytics system may not be configured or available.
+            <span className="font-medium">Error loading analytics data</span>
+            <p className="text-sm mt-1">
+              {summaryError?.message || userActivityError?.message || hotspotsError?.message || collaborationError?.message || trendsError?.message}
+            </p>
           </Alert>
         )}
 

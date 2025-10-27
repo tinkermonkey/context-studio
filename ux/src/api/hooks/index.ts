@@ -15,7 +15,7 @@ export * from "./llm";
 export * from "./modelCapabilities";
 export * from "./nlp";
 export * from "./nlpReference";
-export * from "./optimization";
+export * from "./performance";
 export * from "./pipelineFlavors";
 export * from "./predicates";
 export * from "./rag";

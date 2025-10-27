@@ -2,7 +2,7 @@ import { useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { CsMain, CsMainTitle } from "@/components/layout/cs_main";
 import { CsSidebar } from "@/components/layout/cs_sidebar";
-import { Card, Button, Spinner, Alert, Tabs, Select } from "flowbite-react";
+import { Card, Button, Spinner, Alert, Tabs, Select, Badge } from "flowbite-react";
 import {
   Gauge,
   Database,
@@ -11,6 +11,7 @@ import {
   AlertCircle,
   Play,
   BarChart3,
+  Wrench,
 } from "lucide-react";
 import {
   useSystemHealth,
@@ -18,15 +19,16 @@ import {
   usePerformanceTrends,
   useQueryStats,
   useStorageStats,
-  useAutoOptimize,
-  useOptimizeStorage,
-} from "@/api/hooks/optimization";
+  useAutoTunePerformance,
+  useCompressStorage,
+} from "@/api/hooks/performance";
 import {
   SystemHealthCard,
   PerformanceMetricsPanel,
   AnalyticsChart,
 } from "@/components/monitoring";
 import type { MetricGroup } from "@/components/monitoring/PerformanceMetricsPanel";
+import { useButterToast } from "@/hooks/useButterToast";
 
 export const Route = createFileRoute("/app/monitoring/performance")({
   component: RouteComponent,
@@ -34,37 +36,39 @@ export const Route = createFileRoute("/app/monitoring/performance")({
 
 function RouteComponent() {
   const [trendWindow, setTrendWindow] = useState(24);
+  const { showToast } = useButterToast();
 
   // Fetch data
-  const { data: systemHealth, isLoading: healthLoading } = useSystemHealth();
-  const { data: performanceMetrics, isLoading: metricsLoading } = usePerformanceMetrics();
-  const { data: trends, isLoading: trendsLoading } = usePerformanceTrends(trendWindow);
-  const { data: queryStats, isLoading: queryStatsLoading } = useQueryStats();
-  const { data: storageStats, isLoading: storageStatsLoading } = useStorageStats();
+  const { data: systemHealth, isLoading: healthLoading, error: healthError } = useSystemHealth();
+  const { data: performanceMetrics, isLoading: metricsLoading, error: metricsError } = usePerformanceMetrics();
+  const { data: trends, isLoading: trendsLoading, error: trendsError } = usePerformanceTrends(trendWindow);
+  const { data: queryStats, isLoading: queryStatsLoading, error: queryStatsError } = useQueryStats();
+  const { data: storageStats, isLoading: storageStatsLoading, error: storageStatsError } = useStorageStats();
 
-  const autoOptimize = useAutoOptimize();
-  const optimizeStorage = useOptimizeStorage();
+  const autoTune = useAutoTunePerformance();
+  const compressStorage = useCompressStorage();
 
   const isLoading = healthLoading || metricsLoading || trendsLoading || queryStatsLoading || storageStatsLoading;
+  const hasError = healthError || metricsError || trendsError || queryStatsError || storageStatsError;
 
-  const handleAutoOptimize = () => {
-    autoOptimize.mutate(undefined, {
+  const handleAutoTune = () => {
+    autoTune.mutate(undefined, {
       onSuccess: () => {
-        alert("Auto-optimization triggered successfully");
+        showToast("Auto-tuning triggered successfully", "success");
       },
       onError: (error) => {
-        alert(`Optimization failed: ${error.message}`);
+        showToast(`Performance tuning failed: ${error.message}`, "error");
       },
     });
   };
 
-  const handleOptimizeStorage = () => {
-    optimizeStorage.mutate(undefined, {
+  const handleCompressStorage = () => {
+    compressStorage.mutate(undefined, {
       onSuccess: () => {
-        alert("Storage optimization triggered successfully");
+        showToast("Storage compression triggered successfully", "success");
       },
       onError: (error) => {
-        alert(`Storage optimization failed: ${error.message}`);
+        showToast(`Storage compression failed: ${error.message}`, "error");
       },
     });
   };
@@ -140,27 +144,41 @@ function RouteComponent() {
       <CsSidebar></CsSidebar>
       <CsMain>
         <div className="mb-4 flex items-center justify-between">
-          <CsMainTitle>Performance Monitoring</CsMainTitle>
+          <div className="flex items-center gap-3">
+            <CsMainTitle>Performance Monitoring</CsMainTitle>
+            <Badge color="purple" icon={Wrench}>
+              Developer Tool
+            </Badge>
+          </div>
           <div className="flex gap-2">
             <Button
               size="sm"
-              onClick={handleAutoOptimize}
-              disabled={autoOptimize.isPending}
+              onClick={handleAutoTune}
+              disabled={autoTune.isPending}
             >
               <Play className="mr-2 h-4 w-4" />
-              Auto-Optimize
+              Auto-Tune
             </Button>
             <Button
               size="sm"
               color="light"
-              onClick={handleOptimizeStorage}
-              disabled={optimizeStorage.isPending}
+              onClick={handleCompressStorage}
+              disabled={compressStorage.isPending}
             >
               <HardDrive className="mr-2 h-4 w-4" />
-              Optimize Storage
+              Compress Storage
             </Button>
           </div>
         </div>
+
+        {hasError && (
+          <Alert color="failure" icon={AlertCircle} className="mb-4">
+            <span className="font-medium">Error loading performance data</span>
+            <p className="text-sm mt-1">
+              {(healthError || metricsError || trendsError || queryStatsError || storageStatsError)?.message}
+            </p>
+          </Alert>
+        )}
 
         {systemHealth && (
           <div className="mb-6">
