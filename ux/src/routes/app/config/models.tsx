@@ -11,6 +11,7 @@ import {
 } from "@/api/hooks";
 import { Brain, Server, Shield, AlertTriangle, CheckCircle, Settings } from "lucide-react";
 import type { EnabledModelConfig, ProviderType } from "@/api/services/enabledModels";
+import { useButterToast } from "@/hooks/useButterToast";
 
 export const Route = createFileRoute("/app/config/models")({
   component: RouteComponent,
@@ -37,7 +38,7 @@ const COST_TIER_COLORS = {
 } as const;
 
 function RouteComponent() {
-
+  const toast = useButterToast();
   const { data: enabledModels, isLoading: isLoadingEnabledModels } = useEnabledModels();
   const { data: providersStatus, isLoading: isLoadingProviders } = useProvidersStatus();
   const { data: supportedModels } = useSupportedModels();
@@ -48,8 +49,10 @@ function RouteComponent() {
   const handleToggleModel = async (modelName: string, enabled: boolean) => {
     try {
       await toggleModelMutation.mutateAsync({ modelName, enabled });
+      toast.success(`Model ${enabled ? 'enabled' : 'disabled'} successfully`);
     } catch (error) {
       console.error("Failed to toggle model:", error);
+      toast.error(`Failed to ${enabled ? 'enable' : 'disable'} model: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   };
 

@@ -19,6 +19,7 @@ import {
   useReferenceSourcesStatus,
   useUpdateReferenceSourceConfig
 } from "@/api/hooks";
+import { useButterToast } from "@/hooks/useButterToast";
 
 export const Route = createFileRoute("/app/config/data-sources")({
   component: RouteComponent,
@@ -53,6 +54,7 @@ const REFERENCE_SOURCE_LABELS: Record<string, { name: string; description: strin
 };
 
 function RouteComponent() {
+  const toast = useButterToast();
   const { data: configuration, isLoading: isLoadingConfig } = useConfiguration();
   const { data: referenceSourcesConfig, isLoading: isLoadingRefConfig } = useReferenceSourcesConfig();
   const { data: referenceSourcesStatus, isLoading: isLoadingStatus } = useReferenceSourcesStatus();
@@ -65,8 +67,10 @@ function RouteComponent() {
         path: "enabled",
         value: enabled
       });
+      toast.success(`${sourceName} ${enabled ? 'enabled' : 'disabled'} successfully`);
     } catch (error) {
       console.error(`Failed to toggle ${sourceName}:`, error);
+      toast.error(`Failed to ${enabled ? 'enable' : 'disable'} ${sourceName}: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   };
 
@@ -77,8 +81,10 @@ function RouteComponent() {
         path: "timeout",
         value: timeout
       });
+      toast.success(`Timeout for ${sourceName} updated successfully`);
     } catch (error) {
       console.error(`Failed to update timeout for ${sourceName}:`, error);
+      toast.error(`Failed to update timeout for ${sourceName}: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   };
 
@@ -89,8 +95,10 @@ function RouteComponent() {
         path: "use_proxy",
         value: useProxy
       });
+      toast.success(`Proxy settings for ${sourceName} updated successfully`);
     } catch (error) {
       console.error(`Failed to toggle proxy for ${sourceName}:`, error);
+      toast.error(`Failed to update proxy settings for ${sourceName}: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   };
 

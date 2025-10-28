@@ -18,6 +18,7 @@ import {
   useUpdateConfigurationValue,
   useEnabledModelsOnly
 } from "@/api/hooks";
+import { useButterToast } from "@/hooks/useButterToast";
 
 export const Route = createFileRoute("/app/config/processing")({
   component: RouteComponent,
@@ -44,6 +45,7 @@ const CONCEPTNET_RELATIONS = [
 ];
 
 function RouteComponent() {
+  const toast = useButterToast();
   const { data: configuration, isLoading: isLoadingConfig } = useConfiguration();
   const { data: enabledModels, isLoading: isLoadingModels } = useEnabledModelsOnly();
   const updateConfigMutation = useUpdateConfigurationValue();
@@ -54,8 +56,10 @@ function RouteComponent() {
         path: `nlp.${path}`,
         value
       });
+      toast.success('NLP configuration updated successfully');
     } catch (error) {
       console.error(`Failed to update NLP config ${path}:`, error);
+      toast.error(`Failed to update NLP configuration: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   };
 
@@ -65,8 +69,10 @@ function RouteComponent() {
         path: `llm.${path}`,
         value
       });
+      toast.success('LLM configuration updated successfully');
     } catch (error) {
       console.error(`Failed to update LLM config ${path}:`, error);
+      toast.error(`Failed to update LLM configuration: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   };
 

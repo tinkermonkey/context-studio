@@ -38,21 +38,6 @@ function MobileNavMenu() {
         Ref: Predicate Mapping
       </NavbarLink>
 
-      {/* Monitoring Items */}
-      <NavbarLink href="/app/monitoring/analytics">Mon: Analytics</NavbarLink>
-      <NavbarLink href="/app/monitoring/performance">
-        Mon: Performance
-      </NavbarLink>
-      <NavbarLink href="/app/monitoring/task-manager">
-        Mon: Task Manager
-      </NavbarLink>
-      <NavbarLink href="/app/monitoring/llm-traceability">
-        Mon: LLM Traceability
-      </NavbarLink>
-      <NavbarLink href="/app/monitoring/system-health">
-        Mon: System Health
-      </NavbarLink>
-
       {/* Configuration */}
       <NavbarLink href="/app/config">Configuration</NavbarLink>
     </div>
@@ -92,23 +77,6 @@ function DesktopNavMenus() {
         <DropdownItem href="/app/reference/search">Search</DropdownItem>
         <DropdownItem href="/app/reference/predicates">
           Predicate Mapping
-        </DropdownItem>
-      </Dropdown>
-
-      {/* Monitoring */}
-      <Dropdown label="Monitoring" className="hidden lg:block" inline={true}>
-        <DropdownItem href="/app/monitoring/analytics">Analytics</DropdownItem>
-        <DropdownItem href="/app/monitoring/performance">
-          Performance
-        </DropdownItem>
-        <DropdownItem href="/app/monitoring/task-manager">
-          Task Manager
-        </DropdownItem>
-        <DropdownItem href="/app/monitoring/llm-traceability">
-          LLM Traceability
-        </DropdownItem>
-        <DropdownItem href="/app/monitoring/system-health">
-          System Health
         </DropdownItem>
       </Dropdown>
     </>
