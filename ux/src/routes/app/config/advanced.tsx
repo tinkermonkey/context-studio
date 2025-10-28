@@ -25,6 +25,7 @@ import {
   useUpdateConfigurationValue
 } from "@/api/hooks";
 import { useState } from "react";
+import { useButterToast } from "@/components/ui/butter-toast";
 
 export const Route = createFileRoute("/app/config/advanced")({
   component: RouteComponent,
@@ -33,16 +34,37 @@ export const Route = createFileRoute("/app/config/advanced")({
 function RouteComponent() {
   const { data: configuration, isLoading: isLoadingConfig } = useConfiguration();
   const updateConfigMutation = useUpdateConfigurationValue();
+  const toast = useButterToast();
+
+  const getConfigLabel = (path: string): string => {
+    const labels: Record<string, string> = {
+      'S3_BUCKET': 'S3 bucket',
+      'S3_REGION': 'S3 region',
+      'S3_ACCESS_KEY': 'S3 access key',
+      'S3_SECRET_KEY': 'S3 secret key',
+      'S3_ENDPOINT': 'S3 endpoint',
+      'DUCKDB_MEMORY_LIMIT': 'DuckDB memory limit',
+      'DUCKDB_THREADS': 'DuckDB thread count'
+    };
+    return labels[path] || path;
+  };
 
   const handleUpdateConfig = async (path: string, value: any) => {
-    try {
-      await updateConfigMutation.mutateAsync({
+    const label = getConfigLabel(path);
+    await updateConfigMutation.mutateAsync(
+      {
         path,
         value
-      });
-    } catch (error) {
-      console.error(`Failed to update config ${path}:`, error);
-    }
+      },
+      {
+        onSuccess: () => {
+          toast.success(`${label} updated successfully`);
+        },
+        onError: (error) => {
+          toast.error(`Failed to update ${label}: ${error instanceof Error ? error.message : 'Unknown error'}`);
+        }
+      }
+    );
   };
 
   if (isLoadingConfig) {

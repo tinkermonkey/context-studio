@@ -50,30 +50,66 @@ function RouteComponent() {
   const { data: enabledModels, isLoading: isLoadingModels } = useEnabledModelsOnly();
   const updateConfigMutation = useUpdateConfigurationValue();
 
+  const getNLPConfigLabel = (path: string): string => {
+    const labels: Record<string, string> = {
+      'model_name': 'spaCy model',
+      'auto_download_models': 'Auto-download models',
+      'download_timeout': 'Download timeout',
+      'max_text_length': 'Max text length',
+      'request_timeout': 'Request timeout',
+      'filter_missing_text': 'Filter missing text',
+      'edge_weight_filter': 'Edge weight filter',
+      'concepcy_relations': 'ConceptNet relations'
+    };
+    return labels[path] || path;
+  };
+
+  const getLLMConfigLabel = (path: string): string => {
+    const labels: Record<string, string> = {
+      'model_name': 'Default model',
+      'temperature': 'Temperature',
+      'max_tokens': 'Max tokens',
+      'timeout': 'Request timeout',
+      'max_text_length': 'Max input length',
+      'retry_attempts': 'Retry attempts'
+    };
+    return labels[path] || path;
+  };
+
   const handleUpdateNLPConfig = async (path: string, value: any) => {
-    try {
-      await updateConfigMutation.mutateAsync({
+    const label = getNLPConfigLabel(path);
+    await updateConfigMutation.mutateAsync(
+      {
         path: `nlp.${path}`,
         value
-      });
-      toast.success('NLP configuration updated successfully');
-    } catch (error) {
-      console.error(`Failed to update NLP config ${path}:`, error);
-      toast.error(`Failed to update NLP configuration: ${error instanceof Error ? error.message : 'Unknown error'}`);
-    }
+      },
+      {
+        onSuccess: () => {
+          toast.success(`NLP ${label} updated successfully`);
+        },
+        onError: (error) => {
+          toast.error(`Failed to update NLP ${label}: ${error instanceof Error ? error.message : 'Unknown error'}`);
+        }
+      }
+    );
   };
 
   const handleUpdateLLMConfig = async (path: string, value: any) => {
-    try {
-      await updateConfigMutation.mutateAsync({
+    const label = getLLMConfigLabel(path);
+    await updateConfigMutation.mutateAsync(
+      {
         path: `llm.${path}`,
         value
-      });
-      toast.success('LLM configuration updated successfully');
-    } catch (error) {
-      console.error(`Failed to update LLM config ${path}:`, error);
-      toast.error(`Failed to update LLM configuration: ${error instanceof Error ? error.message : 'Unknown error'}`);
-    }
+      },
+      {
+        onSuccess: () => {
+          toast.success(`LLM ${label} updated successfully`);
+        },
+        onError: (error) => {
+          toast.error(`Failed to update LLM ${label}: ${error instanceof Error ? error.message : 'Unknown error'}`);
+        }
+      }
+    );
   };
 
   if (isLoadingConfig || isLoadingModels) {

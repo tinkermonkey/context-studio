@@ -47,13 +47,18 @@ function RouteComponent() {
   const toggleModelMutation = useToggleModel();
 
   const handleToggleModel = async (modelName: string, enabled: boolean) => {
-    try {
-      await toggleModelMutation.mutateAsync({ modelName, enabled });
-      toast.success(`Model ${enabled ? 'enabled' : 'disabled'} successfully`);
-    } catch (error) {
-      console.error("Failed to toggle model:", error);
-      toast.error(`Failed to ${enabled ? 'enable' : 'disable'} model: ${error instanceof Error ? error.message : 'Unknown error'}`);
-    }
+    const modelDisplayName = enabledModels?.models.find(m => m.model_name === modelName)?.display_name || modelName;
+    await toggleModelMutation.mutateAsync(
+      { modelName, enabled },
+      {
+        onSuccess: () => {
+          toast.success(`${modelDisplayName} ${enabled ? 'enabled' : 'disabled'} successfully`);
+        },
+        onError: (error) => {
+          toast.error(`Failed to ${enabled ? 'enable' : 'disable'} ${modelDisplayName}: ${error instanceof Error ? error.message : 'Unknown error'}`);
+        }
+      }
+    );
   };
 
   return (
