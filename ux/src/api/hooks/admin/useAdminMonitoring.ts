@@ -5,7 +5,7 @@
  */
 
 import { useQuery, useMutation, UseQueryOptions, UseMutationOptions, useQueryClient } from "@tanstack/react-query";
-import { apiClient } from "@/api/client";
+import { apiClient } from "@/api/client/axios";
 
 // Database Monitoring Types
 export interface EngineInfo {

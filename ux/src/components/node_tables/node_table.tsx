@@ -146,18 +146,20 @@ function BaseNodeTable<T>({
     ...propColumnVisibility,
   });
 
-  // Search state management
-  const [searchTerm, setSearchTerm] = React.useState<string>(
-    (queryParams?.query as string) || "",
-  );
+  // Search state management - use ref to preserve focus
+  const searchInputRef = React.useRef<HTMLInputElement>(null);
+  const [searchTerm, setSearchTerm] = React.useState<string>("");
 
-  // Update search term when queryParams change (e.g., from URL navigation)
+  // Track if we initiated the query change to avoid circular updates
+  const searchUpdateSourceRef = React.useRef<'user' | 'external'>('external');
+
+  // Initialize search term from URL on mount only
   React.useEffect(() => {
-    const newSearchTerm = (queryParams?.query as string) || "";
-    if (searchTerm !== newSearchTerm) {
-      setSearchTerm(newSearchTerm);
+    const initialQuery = (queryParams?.query as string) || "";
+    if (initialQuery) {
+      setSearchTerm(initialQuery);
     }
-  }, [queryParams?.query]);
+  }, []);
 
   // Filter state management
   const [filters, setFilters] = React.useState<QueryFilter[]>(() => {
@@ -221,7 +223,7 @@ function BaseNodeTable<T>({
     }
   }, [queryParams, filterFields]);
 
-  // Debounced search to avoid excessive API calls
+  // Debounced search for client-side filtering
   const [debouncedSearchTerm, setDebouncedSearchTerm] =
     React.useState(searchTerm);
 
@@ -232,27 +234,6 @@ function BaseNodeTable<T>({
 
     return () => clearTimeout(timer);
   }, [searchTerm]);
-
-  // Update query params when debounced search term changes
-  // Only update if the search term actually changed from user input
-  React.useEffect(() => {
-    // Don't update on initial mount - only when user actually changes search
-    if (debouncedSearchTerm === ((queryParams?.query as string) || "")) {
-      return; // No change needed
-    }
-
-    if (onSearchChange) {
-      onSearchChange(debouncedSearchTerm);
-    } else if (onQueryParamsChange) {
-      const newParams = { ...queryParams };
-      if (debouncedSearchTerm.trim()) {
-        newParams.query = debouncedSearchTerm.trim();
-      } else {
-        delete newParams.query;
-      }
-      onQueryParamsChange(newParams);
-    }
-  }, [debouncedSearchTerm, onSearchChange, onQueryParamsChange]);
 
   // Update query params when filters change
   // Only update if the filters actually changed from user input
@@ -327,6 +308,27 @@ function BaseNodeTable<T>({
     setSearchTerm(event.target.value);
   };
 
+  // Client-side filtering based on search term
+  const filteredData = React.useMemo(() => {
+    if (!debouncedSearchTerm.trim()) {
+      return data;
+    }
+
+    const searchLower = debouncedSearchTerm.toLowerCase().trim();
+    return (data ?? []).filter((item: any) => {
+      // Search in title and definition fields
+      const title = item.title?.toLowerCase() || "";
+      const definition = item.definition?.toLowerCase() || "";
+      const id = item.id?.toLowerCase() || "";
+
+      return (
+        title.includes(searchLower) ||
+        definition.includes(searchLower) ||
+        id.includes(searchLower)
+      );
+    });
+  }, [data, debouncedSearchTerm]);
+
   // Handle filter changes
   const handleFiltersChange = (newFilters: QueryFilter[]) => {
     setFilters(newFilters);
@@ -341,13 +343,13 @@ function BaseNodeTable<T>({
   const [pageIndex, setPageIndex] = React.useState(0);
   const [pageSize, setPageSize] = React.useState(defaultPageSize);
 
-  // Calculate total number of pages
+  // Calculate total number of pages using filtered data
   const totalPages = React.useMemo(() => {
-    return Math.max(1, Math.ceil((data?.length || 0) / pageSize));
-  }, [data?.length, pageSize]);
+    return Math.max(1, Math.ceil((filteredData?.length || 0) / pageSize));
+  }, [filteredData?.length, pageSize]);
 
   const table = useReactTable({
-    data: data ?? [],
+    data: filteredData ?? [],
     columns,
     state: {
       columnVisibility,
@@ -366,12 +368,17 @@ function BaseNodeTable<T>({
     setSelectedCount(table.getSelectedRowModel().rows.length);
   }, [table.getSelectedRowModel().rows.length]);
 
-  // Reset to first page if data changes and current page is out of range
+  // Reset to first page if filtered data changes and current page is out of range
   React.useEffect(() => {
     if (pageIndex > 0 && pageIndex >= totalPages) {
       setPageIndex(0);
     }
-  }, [data, pageIndex, totalPages]);
+  }, [filteredData, pageIndex, totalPages]);
+
+  // Reset to first page when search term changes
+  React.useEffect(() => {
+    setPageIndex(0);
+  }, [debouncedSearchTerm]);
 
   // Debug effect to track modal state changes
   React.useEffect(() => {
@@ -502,6 +509,7 @@ function BaseNodeTable<T>({
         <div className="flex grow justify-start">
           {searchEnabled && (
             <TextInput
+              ref={searchInputRef}
               placeholder={searchPlaceholder || `Search ${typeName}s...`}
               icon={Search}
               value={searchTerm}
@@ -685,13 +693,18 @@ function BaseNodeTable<T>({
                   {typeName.toLowerCase()}s
                 </Badge>{" "}
                 <span className="font-bold">
-                  {data.length === 0 ? 0 : pageIndex * pageSize + 1}
+                  {filteredData.length === 0 ? 0 : pageIndex * pageSize + 1}
                 </span>
                 -
                 <span className="font-bold">
-                  {Math.min((pageIndex + 1) * pageSize, data.length)}
+                  {Math.min((pageIndex + 1) * pageSize, filteredData.length)}
                 </span>
-                &nbsp;of&nbsp;<span className="font-bold">{data.length}</span>
+                &nbsp;of&nbsp;<span className="font-bold">{filteredData.length}</span>
+                {debouncedSearchTerm && (
+                  <span className="ml-1 text-gray-500">
+                    (filtered from {data.length})
+                  </span>
+                )}
               </div>
             </div>
             <div>
@@ -713,13 +726,18 @@ function BaseNodeTable<T>({
               {typeName.toLowerCase()}s
             </Badge>{" "}
             <span className="font-bold">
-              {data.length === 0 ? 0 : pageIndex * pageSize + 1}
+              {filteredData.length === 0 ? 0 : pageIndex * pageSize + 1}
             </span>
             -
             <span className="font-bold">
-              {Math.min((pageIndex + 1) * pageSize, data.length)}
+              {Math.min((pageIndex + 1) * pageSize, filteredData.length)}
             </span>
-            &nbsp;of&nbsp;<span className="font-bold">{data.length}</span>
+            &nbsp;of&nbsp;<span className="font-bold">{filteredData.length}</span>
+            {debouncedSearchTerm && (
+              <span className="ml-1 text-gray-500">
+                (filtered from {data.length})
+              </span>
+            )}
           </div>
         )}
       </div>

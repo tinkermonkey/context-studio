@@ -7,6 +7,8 @@ import {
   Modal,
   ModalHeader,
   ModalBody,
+  Breadcrumb,
+  BreadcrumbItem,
 } from "flowbite-react";
 import {
   Calendar,
@@ -212,6 +214,26 @@ export const DomainDetails: React.FC<DomainDetailsProps> = ({ domain }) => {
           </Button>
         </div>
 
+        {/* Breadcrumb */}
+        <div className="mb-4">
+          <Breadcrumb aria-label="Domain hierarchy breadcrumb">
+            {/* Layer */}
+            {layer && !layerLoading && (
+              <BreadcrumbItem
+                href={`/app/nodes/layer/${layer.id}`}
+                icon={Layers}
+              >
+                {layer.title}
+              </BreadcrumbItem>
+            )}
+
+            {/* Current Domain */}
+            <BreadcrumbItem icon={Database}>
+              {domain.title}
+            </BreadcrumbItem>
+          </Breadcrumb>
+        </div>
+
         <div className="space-y-6">
           {/* NLP title analysis for the domain */}
           <div className="mt-2">
@@ -225,15 +247,15 @@ export const DomainDetails: React.FC<DomainDetailsProps> = ({ domain }) => {
           </div>
 
           {/* Definition */}
-          <Card>
+          <div className="pt-4">
             <h2 className="mb-3 text-xl font-semibold">Definition</h2>
             <p className="leading-relaxed text-gray-700 dark:text-gray-300">
               {domain.definition}
             </p>
-          </Card>
+          </div>
 
           {/* Terms in this Domain */}
-          <Card>
+          <div className="pt-4">
             <div className="mb-4 flex items-center justify-between">
               <h2 className="text-xl font-semibold">Terms in this Domain</h2>
               <div className="flex items-center gap-2">
@@ -411,7 +433,7 @@ export const DomainDetails: React.FC<DomainDetailsProps> = ({ domain }) => {
                 )}
               </div>
             )}
-          </Card>
+          </div>
         </div>
       </CsMain>
       <DomainEditModal

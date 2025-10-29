@@ -12,7 +12,7 @@ from api import graph, datasets, nlp_analysis, schema, predicates, llm, pipeline
 from api import reference, config, structure_nodes, version_management, sync, llm_traceability
 from api import changeset_management, proposal_management, identity_management
 from api import conflict_resolution, analytics, incremental_sync, optimization, embeddings, model_capabilities, enabled_models
-from api import background_tasks, rag_pipeline, rag_experiments
+from api import background_tasks, rag_pipeline, rag_experiments, change_events
 from api.admin import service_monitoring
 from api.graph import get_cached_graph_service, invalidate_graph_cache
 from database.migrations.migration_manager import MigrationManager
@@ -277,6 +277,7 @@ def create_app(dataset_id=None, engine=None, session_local=None, service_factory
     # Using unified structure_nodes API instead of separate layers/domains/terms
     app.include_router(structure_nodes.router, tags=["structure_nodes"])
     app.include_router(predicates.router, prefix="/api/predicates", tags=["predicates"])
+    app.include_router(change_events.router, tags=["change_events"])
     app.include_router(version_management.router, tags=["version_management"])
     app.include_router(graph.router, prefix="/api", tags=["graph"])
     app.include_router(datasets.router, prefix="/api", tags=["datasets"])

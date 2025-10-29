@@ -455,21 +455,21 @@ export const TermDetails: React.FC<TermPageProps> = ({ term }) => {
           />
 
           {/* Definition */}
-          <Card>
+          <div className="pt-4">
             <h2 className="mb-3 text-xl font-semibold">Definition</h2>
             <p className="leading-relaxed text-gray-700 dark:text-gray-300">
               {term.definition}
             </p>
-          </Card>
+          </div>
 
           {/* Term Hierarchy */}
-          <Card>
+          <div className="pt-4">
             <h2 className="text-xl font-semibold">Term Hierarchy</h2>
             <TreeChartPanel termId={term.id} />
-          </Card>
+          </div>
 
           {/* Child Terms */}
-          <Card>
+          <div className="pt-4">
             <div className="mb-4 flex items-center justify-between">
               <h2 className="text-xl font-semibold">Child Terms</h2>
               <div className="flex items-center gap-2">
@@ -520,10 +520,10 @@ export const TermDetails: React.FC<TermPageProps> = ({ term }) => {
                 ))}
               </div>
             )}
-          </Card>
+          </div>
 
           {/* Relationships */}
-          <Card>
+          <div className="pt-4">
             <h2 className="mb-4 text-xl font-semibold">Relationships</h2>
             {relationshipsLoading ? (
               <div className="flex items-center justify-center py-4">
@@ -581,7 +581,7 @@ export const TermDetails: React.FC<TermPageProps> = ({ term }) => {
                 )}
               </div>
             )}
-          </Card>
+          </div>
         </div>
       </CsMain>
       <TermEditModal

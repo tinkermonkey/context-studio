@@ -25,7 +25,7 @@ import {
   useUpdateConfigurationValue
 } from "@/api/hooks";
 import { useState } from "react";
-import { useButterToast } from "@/components/ui/butter-toast";
+import { useButterToast } from "@/hooks/useButterToast";
 
 export const Route = createFileRoute("/app/config/advanced")({
   component: RouteComponent,

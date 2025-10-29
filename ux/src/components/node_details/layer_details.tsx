@@ -36,6 +36,7 @@ import {
 } from "@/components/layout/cs_sidebar";
 import { CsMain, CsMainTitle } from "@/components/layout/cs_main";
 import type { StructureNode } from "@/api/types/structureNodes";
+import { TreeMenuPanel } from "@/components/panels/TreeMenuPanel";
 
 interface LayerDetailsProps {
   layer: StructureNode;
@@ -156,16 +157,16 @@ export const LayerDetails: React.FC<LayerDetailsProps> = ({ layer }) => {
 
           {/* Definition */}
           {layer.definition && (
-            <Card>
+            <div className="pt-4">
               <h2 className="mb-3 text-xl font-semibold">Definition</h2>
               <p className="leading-relaxed text-gray-700 dark:text-gray-300">
                 {layer.definition}
               </p>
-            </Card>
+            </div>
           )}
 
           {/* Domains in this Layer */}
-          <Card>
+          <div className="pt-4">
             <div className="mb-4 flex items-center justify-between">
               <h2 className="text-xl font-semibold">Domains in this Layer</h2>
               <div className="flex items-center gap-2">
@@ -202,7 +203,7 @@ export const LayerDetails: React.FC<LayerDetailsProps> = ({ layer }) => {
                 ))}
               </div>
             )}
-          </Card>
+          </div>
         </div>
       </CsMain>
       <LayerEditModal

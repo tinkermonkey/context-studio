@@ -3,8 +3,8 @@ import type {
   Dimensions,
   LayoutConfig,
   ChartData,
-} from "./tree_data";
-import { ChartStyles } from "./tree_styles";
+} from "../hierarchy/tree_data";
+import { ChartStyles } from "./tree_menu_styles";
 import {
   measureSvgTextWidth,
   extractFontPropertiesFromStyles,

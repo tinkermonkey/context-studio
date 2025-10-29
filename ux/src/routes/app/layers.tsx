@@ -6,6 +6,7 @@ import { Spinner } from "flowbite-react";
 import { CsSidebar, CsSidebarTitle } from "@/components/layout/cs_sidebar";
 import { CsMain, CsMainTitle } from "@/components/layout/cs_main";
 import { Layers } from "lucide-react";
+import { TreeMenuPanel } from "@/components/panels/TreeMenuPanel";
 
 export const Route = createFileRoute("/app/layers")({
   component: LayersPage,

@@ -5,7 +5,7 @@
  */
 
 import { useQuery, UseQueryOptions } from "@tanstack/react-query";
-import { apiClient } from "@/api/client";
+import { apiClient } from "@/api/client/axios";
 
 // API Response Types
 export interface ChangeSummary {

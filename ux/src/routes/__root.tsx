@@ -1,6 +1,8 @@
 import { Outlet, createRootRoute } from "@tanstack/react-router";
 import { createTheme, ThemeProvider } from "flowbite-react";
 import { TanStackRouterDevtools } from "@tanstack/react-router-devtools";
+import { QueryClientProvider } from "@tanstack/react-query";
+import { queryClient } from "@/api/utils/queryClient";
 
 const customTheme = createTheme({
   button: {
@@ -39,9 +41,11 @@ export const Route = createRootRoute({
 
 function RootComponent() {
   return (
-    <ThemeProvider theme={customTheme}>
-      <Outlet />
-      {/* <TanStackRouterDevtools position="bottom-right" /> */}
-    </ThemeProvider>
+    <QueryClientProvider client={queryClient}>
+      <ThemeProvider theme={customTheme}>
+        <Outlet />
+        {/* <TanStackRouterDevtools position="bottom-right" /> */}
+      </ThemeProvider>
+    </QueryClientProvider>
   );
 }
