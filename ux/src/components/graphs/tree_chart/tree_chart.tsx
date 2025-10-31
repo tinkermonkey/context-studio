@@ -6,11 +6,11 @@ import React, {
   useState,
 } from "react";
 import { type ChartData } from "./tree_data";
-import { ChartStyles } from "./tree_styles";
+import { ChartStyles } from "./tree_chart_styles";
 import TreeTrunk from "./tree_trunk";
-import { TreeNode } from "./tree_node";
+import { TreeChartNode } from "./tree_chart_node";
 import { useMeasurementSvg, useMeasurementHtml } from "./useMeasurementElement";
-import { calculateLayout, ExpandState } from "./tree_chart_layout";
+import { calculateLayout } from "./tree_chart_layout";
 import { usePersistedExpandState } from "./usePersistedExpandState";
 import { Alert } from "flowbite-react";
 import { useNavigate } from "@tanstack/react-router";
@@ -26,16 +26,28 @@ interface TreeChartProps {
    * Optional term ID to highlight in the tree
    */
   highlightedTermId?: string;
+  /**
+   * Optional view identifier for persisting expand state
+   * If not provided, expand state will not be persisted to session storage
+   */
+  viewId?: string;
 }
 const TreeChart: React.FC<TreeChartProps> = ({
   chartData,
   initialExpandState,
   highlightedTermId,
+  viewId,
 }) => {
   // Container ref to measure width
   const containerRef = useRef<HTMLDivElement>(null);
   const [containerWidth, setContainerWidth] = useState<number>(0);
   const [containerHeight, setContainerHeight] = useState<number>(0);
+
+  // Track hovered node for layout adjustments
+  const [hoveredNodeId, setHoveredNodeId] = useState<string | null>(null);
+
+  // Track whether initial render is complete to enable transitions
+  const [enableTransitions, setEnableTransitions] = useState(false);
 
   // Use persisted expand state and scroll management hook
   const {
@@ -43,7 +55,18 @@ const TreeChart: React.FC<TreeChartProps> = ({
     handleNodeToggle,
     restoreScrollPosition,
     setInitialExpandState,
-  } = usePersistedExpandState();
+  } = usePersistedExpandState(viewId);
+
+  // Enable transitions after initial render to avoid animation on page load
+  useEffect(() => {
+    // Use requestAnimationFrame to ensure DOM is painted before enabling transitions
+    const rafId = requestAnimationFrame(() => {
+      setTimeout(() => {
+        setEnableTransitions(true);
+      }, 500);
+    });
+    return () => cancelAnimationFrame(rafId);
+  }, []);
 
   // Set initial expand state when initialExpandState prop changes
   useEffect(() => {
@@ -111,8 +134,9 @@ const TreeChart: React.FC<TreeChartProps> = ({
       undefined,
       undefined,
       maxWidth,
+      hoveredNodeId,
     );
-  }, [chartData, expandState, containerWidth]);
+  }, [chartData, expandState, containerWidth, hoveredNodeId]);
 
   // Calculate the actual height needed for the chart content
   const chartHeight = useMemo(() => {
@@ -130,6 +154,11 @@ const TreeChart: React.FC<TreeChartProps> = ({
 
     return () => clearTimeout(timeoutId);
   }, [restoreScrollPosition, dimensions]);
+
+  // Node hover handlers
+  const handleNodeHover = useCallback((nodeId: string | null) => {
+    setHoveredNodeId(nodeId);
+  }, []);
 
   // Node click handler to navigate to the node's details
   const handleNodeClick = useCallback((node: any) => {
@@ -151,23 +180,29 @@ const TreeChart: React.FC<TreeChartProps> = ({
         ...ChartStyles.chartContainer,
         position: "relative", // Enable relative positioning for the container
         minHeight: chartHeight, // Ensure container has minimum height for the chart
+        transition: "min-height 0.2s ease-in-out", // Animate height changes
       }}
     >
       {/* SVG Layer with embedded definitions via foreignObject */}
       <svg
         width={dimensions.width}
         height={chartHeight}
-        style={{ display: "block" }} // Remove default inline spacing
+        style={{
+          display: "block", // Remove default inline spacing
+          transition: "height 0.2s ease-in-out", // Animate height changes
+        }}
       >
         {/* Render all children of the root node */}
         {root.children.map((child: any, index: number) => (
-          <TreeNode
+          <TreeChartNode
             key={child.id || index}
             node={child}
             parentNode={root}
             onToggle={handleNodeToggle}
             onNodeClick={handleNodeClick}
+            onNodeHover={handleNodeHover}
             highlightedTermId={highlightedTermId}
+            enableTransitions={enableTransitions}
           />
         ))}
         <TreeTrunk rootNode={root} />

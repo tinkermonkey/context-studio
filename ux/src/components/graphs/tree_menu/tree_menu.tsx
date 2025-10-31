@@ -5,12 +5,16 @@ import React, {
   useRef,
   useState,
 } from "react";
-import { type ChartData, type LayoutConfig } from "../hierarchy/tree_data";
-import { MenuStyles } from "./tree_menu_styles";
-import { TreeMenuNode } from "./tree_menu_node";
-import { useMeasurementSvg, useMeasurementHtml } from "../hierarchy/useMeasurementElement";
-import { calculateLayout } from "../hierarchy/tree_chart_layout";
-import { usePersistedExpandState } from "../hierarchy/usePersistedExpandState";
+import { type ChartData } from "../tree_chart/tree_data";
+import { ChartStyles } from "./tree_menu_styles";
+import TreeTrunk from "../tree_chart/tree_trunk";
+import { TreeNode } from "./tree_menu_node";
+import {
+  useMeasurementSvg,
+  useMeasurementHtml,
+} from "../tree_chart/useMeasurementElement";
+import { calculateLayout, ExpandState } from "./tree_menu_layout";
+import { usePersistedExpandState } from "../tree_chart/usePersistedExpandState";
 import { Alert } from "flowbite-react";
 import { useNavigate } from "@tanstack/react-router";
 
@@ -29,31 +33,23 @@ interface TreeMenuProps {
    * Optional callback when a node is clicked
    */
   onNodeClick?: (node: any) => void;
+  /**
+   * Optional view identifier for persisting expand state
+   * If not provided, expand state will not be persisted to session storage
+   */
+  viewId?: string;
 }
-
-// Compressed layout configuration for navigation menu
-const menuLayoutConfig: LayoutConfig = {
-  spacing: {
-    vertical: 12, // Reduced from 20
-    horizontal: 16, // Reduced from 30
-  },
-  margins: {
-    top: 10, // Reduced from 30
-    left: 10, // Reduced from 20
-    right: 10,
-    bottom: 10, // Reduced from 30
-  },
-};
-
 const TreeMenu: React.FC<TreeMenuProps> = ({
   chartData,
   initialExpandState,
   highlightedTermId,
   onNodeClick,
+  viewId,
 }) => {
   // Container ref to measure width
   const containerRef = useRef<HTMLDivElement>(null);
   const [containerWidth, setContainerWidth] = useState<number>(0);
+  const [containerHeight, setContainerHeight] = useState<number>(0);
 
   // Use persisted expand state and scroll management hook
   const {
@@ -61,7 +57,7 @@ const TreeMenu: React.FC<TreeMenuProps> = ({
     handleNodeToggle,
     restoreScrollPosition,
     setInitialExpandState,
-  } = usePersistedExpandState();
+  } = usePersistedExpandState(viewId);
 
   // Set initial expand state when initialExpandState prop changes
   useEffect(() => {
@@ -88,7 +84,10 @@ const TreeMenu: React.FC<TreeMenuProps> = ({
     const measureDimensions = () => {
       if (containerRef.current) {
         const width = containerRef.current.clientWidth;
+        const height = containerRef.current.clientHeight;
+        console.log("Container dimensions measured:", { width, height });
         setContainerWidth(width);
+        setContainerHeight(height);
       }
     };
 
@@ -111,26 +110,28 @@ const TreeMenu: React.FC<TreeMenuProps> = ({
     return (
       <Alert color="warning">
         No chart data provided. Please provide valid chart data to render the
-        menu.
+        tree.
       </Alert>
     );
   }
 
-  // Calculate the layout with current expanded state and compressed configuration
+  // Calculate the layout with current expanded state and container dimensions
   const { root, dimensions } = useMemo(() => {
     // Only pass container width if it's been measured (> 0)
     const maxWidth = containerWidth > 0 ? containerWidth : undefined;
     return calculateLayout(
       chartData,
       expandState,
-      menuLayoutConfig,
+      undefined,
       undefined,
       maxWidth,
     );
   }, [chartData, expandState, containerWidth]);
 
-  // Calculate the actual height needed for the menu content
-  const menuHeight = useMemo(() => {
+  // Calculate the actual height needed for the chart content
+  const chartHeight = useMemo(() => {
+    // Use the calculated dimensions height from layout calculation
+    // The layout algorithm now correctly accounts for expanded/collapsed states
     return dimensions.height;
   }, [dimensions.height]);
 
@@ -146,50 +147,47 @@ const TreeMenu: React.FC<TreeMenuProps> = ({
 
   // Node click handler to navigate to the node's details
   const handleNodeClick = useCallback((node: any) => {
-    // If custom click handler provided, use that
-    if (onNodeClick) {
-      onNodeClick(node);
-      return;
-    }
-
-    // Otherwise, default navigation behavior
     if (node.type === "term") {
       navigate({ to: `/app/nodes/term/${node.id}` });
     } else if (node.type === "domain") {
       navigate({ to: `/app/nodes/domain/${node.id}` });
     } else if (node.type === "layer") {
       navigate({ to: `/app/nodes/layer/${node.id}` });
+    } else {
+      console.warn("Clicked on unknown node:", node);
     }
-  }, [navigate, onNodeClick]);
+  }, []);
 
   return (
     <div
       ref={containerRef}
       style={{
-        ...MenuStyles.menuContainer,
-        position: "relative",
-        minHeight: menuHeight,
-        overflowY: "auto",
-        maxHeight: "100%",
+        ...ChartStyles.chartContainer,
+        position: "relative", // Enable relative positioning for the container
+        minHeight: chartHeight, // Ensure container has minimum height for the chart
       }}
     >
-      {/* SVG Layer */}
+      {/* SVG Layer with embedded definitions via foreignObject */}
       <svg
         width={dimensions.width}
-        height={menuHeight}
-        style={{ display: "block" }}
+        height={chartHeight}
+        style={{ display: "block" }} // Remove default inline spacing
       >
         {/* Render all children of the root node */}
-        {root.children.map((child: any, index: number) => (
-          <TreeMenuNode
-            key={child.id || index}
-            node={child}
-            parentNode={root}
-            onToggle={handleNodeToggle}
-            onNodeClick={handleNodeClick}
-            highlightedTermId={highlightedTermId}
-          />
-        ))}
+        {root.children.map((child: any, index: number) => {
+          child.childIndex = index;
+          return (
+            <TreeNode
+              key={child.id || index}
+              node={child}
+              parentNode={root}
+              onToggle={handleNodeToggle}
+              onNodeClick={handleNodeClick}
+              highlightedTermId={highlightedTermId}
+            />
+          );
+        })}
+        <TreeTrunk rootNode={root} />
       </svg>
     </div>
   );

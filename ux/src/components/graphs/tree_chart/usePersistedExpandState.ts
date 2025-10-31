@@ -1,8 +1,8 @@
 import { useState, useEffect, useCallback } from "react";
 import { ExpandState, toggleExpandState } from "./tree_chart_layout";
 
-const EXPAND_STATE_STORAGE_KEY = "tree-chart-expand-state";
-const SCROLL_STATE_STORAGE_KEY = "tree-chart-scroll-state";
+const EXPAND_STATE_STORAGE_KEY_PREFIX = "tree-chart-expand-state";
+const SCROLL_STATE_STORAGE_KEY_PREFIX = "tree-chart-scroll-state";
 
 interface ScrollState {
   scrollTop: number;
@@ -10,15 +10,24 @@ interface ScrollState {
 }
 
 /**
- * Custom hook to manage expand state and scroll position with session storage persistence
+ * Custom hook to manage expand state and scroll position with optional session storage persistence
  * Listens to window scroll events instead of a local container
+ * @param viewId - Optional view identifier for persisting state. If not provided, state will not be persisted.
  * @returns Object containing expandState, handleNodeToggle, clearPersistedState, and scroll management functions
  */
-export const usePersistedExpandState = () => {
+export const usePersistedExpandState = (viewId?: string) => {
+  // Generate view-specific storage keys if viewId is provided
+  const expandStateKey = viewId ? `${EXPAND_STATE_STORAGE_KEY_PREFIX}-${viewId}` : null;
+  const scrollStateKey = viewId ? `${SCROLL_STATE_STORAGE_KEY_PREFIX}-${viewId}` : null;
   // Initialize expand state from session storage or with empty Map
   const [expandState, setExpandState] = useState<ExpandState>(() => {
+    // Only load from session storage if we have a viewId
+    if (!expandStateKey) {
+      return new Map();
+    }
+
     try {
-      const stored = sessionStorage.getItem(EXPAND_STATE_STORAGE_KEY);
+      const stored = sessionStorage.getItem(expandStateKey);
       if (stored) {
         const parsed = JSON.parse(stored);
         // Convert the stored object back to a Map
@@ -35,40 +44,55 @@ export const usePersistedExpandState = () => {
     setExpandState(initialState);
   }, []);
 
-  // Save expand state to session storage whenever it changes
+  // Save expand state to session storage whenever it changes (only if viewId is provided)
   useEffect(() => {
+    // Only save to session storage if we have a viewId
+    if (!expandStateKey) {
+      return;
+    }
+
     try {
       // Convert Map to plain object for JSON serialization
       const stateObject = Object.fromEntries(expandState);
       sessionStorage.setItem(
-        EXPAND_STATE_STORAGE_KEY,
+        expandStateKey,
         JSON.stringify(stateObject),
       );
     } catch (error) {
       console.warn("Failed to save expand state to session storage:", error);
     }
-  }, [expandState]);
+  }, [expandState, expandStateKey]);
 
-  // Save scroll position to session storage
+  // Save scroll position to session storage (only if viewId is provided)
   const saveScrollPosition = useCallback(() => {
+    // Only save to session storage if we have a viewId
+    if (!scrollStateKey) {
+      return;
+    }
+
     const scrollState: ScrollState = {
       scrollTop: window.scrollY || document.documentElement.scrollTop,
       scrollLeft: window.scrollX || document.documentElement.scrollLeft,
     };
     try {
       sessionStorage.setItem(
-        SCROLL_STATE_STORAGE_KEY,
+        scrollStateKey,
         JSON.stringify(scrollState),
       );
     } catch (error) {
       console.warn("Failed to save scroll state to session storage:", error);
     }
-  }, []);
+  }, [scrollStateKey]);
 
-  // Restore scroll position from session storage
+  // Restore scroll position from session storage (only if viewId is provided)
   const restoreScrollPosition = useCallback(() => {
+    // Only restore from session storage if we have a viewId
+    if (!scrollStateKey) {
+      return;
+    }
+
     try {
-      const stored = sessionStorage.getItem(SCROLL_STATE_STORAGE_KEY);
+      const stored = sessionStorage.getItem(scrollStateKey);
       if (stored) {
         const scrollState: ScrollState = JSON.parse(stored);
         // Use requestAnimationFrame to ensure the DOM is ready
@@ -86,7 +110,7 @@ export const usePersistedExpandState = () => {
         error,
       );
     }
-  }, []);
+  }, [scrollStateKey]);
 
   // Set up window scroll listener
   useEffect(() => {
@@ -116,16 +140,22 @@ export const usePersistedExpandState = () => {
   // Function to clear all expand state and scroll state (useful for reset functionality)
   const clearPersistedState = useCallback(() => {
     setExpandState(new Map());
+
+    // Only clear session storage if we have keys (i.e., if viewId is provided)
+    if (!expandStateKey || !scrollStateKey) {
+      return;
+    }
+
     try {
-      sessionStorage.removeItem(EXPAND_STATE_STORAGE_KEY);
-      sessionStorage.removeItem(SCROLL_STATE_STORAGE_KEY);
+      sessionStorage.removeItem(expandStateKey);
+      sessionStorage.removeItem(scrollStateKey);
     } catch (error) {
       console.warn(
         "Failed to clear persisted state from session storage:",
         error,
       );
     }
-  }, []);
+  }, [expandStateKey, scrollStateKey]);
 
   return {
     expandState,

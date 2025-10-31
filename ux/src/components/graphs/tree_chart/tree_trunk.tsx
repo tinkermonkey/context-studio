@@ -1,5 +1,5 @@
 import React from "react";
-import { ChartStyles } from "./tree_styles";
+import { ChartStyles } from "./tree_chart_styles";
 import { HierarchyNode } from "./tree_data";
 
 interface TreeTrunkProps {
@@ -13,7 +13,7 @@ const TreeTrunk: React.FC<TreeTrunkProps> = ({ rootNode }) => {
 
   return (
     <g>
-      <circle cx={x} cy={y} r={10} style={ChartStyles.mainNode} />
+      <circle cx={x-1} cy={y} r={10} style={ChartStyles.mainNode} />
     </g>
   );
 };

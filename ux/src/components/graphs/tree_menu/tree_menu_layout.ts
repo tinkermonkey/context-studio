@@ -3,25 +3,25 @@ import type {
   Dimensions,
   LayoutConfig,
   ChartData,
-} from "../hierarchy/tree_data";
+} from "../tree_chart/tree_data";
 import { ChartStyles } from "./tree_menu_styles";
 import {
   measureSvgTextWidth,
   extractFontPropertiesFromStyles,
   measureHtmlTextHeight,
-} from "./tree_chart_utils";
+} from "../tree_chart/tree_chart_utils";
 
 // Default layout configuration
 export const defaultLayoutConfig: LayoutConfig = {
   spacing: {
-    vertical: 20,
-    horizontal: 30,
+    vertical: 25,
+    horizontal: 16,
   },
   margins: {
-    top: 30,
-    left: 20,
+    top: 10,
+    left: 12,
     right: 10,
-    bottom: 30,
+    bottom: 10,
   },
 };
 
@@ -197,36 +197,16 @@ export function calculateLayout(
     node.textWidth =
       siblingMaxTextWidth ?? textWidthCache.getTextWidth(node.title);
 
-    node.definitionWidth = maxWidth
-      ? maxWidth - (config.margins.right || 0) - node.x - (node.textWidth || 0)
-      : 0;
-    node.definitionHeight = measureHtmlTextHeight(
-      node.definition || "",
-      node.definitionWidth,
-    );
+    node.definitionWidth = 0;
+    node.definitionHeight = 0;
     node.expanded = isExpanded;
     node.hasChildren = node.children && node.children.length > 0;
 
     maxY = Math.max(maxY, y);
 
     // Calculate the bottom Y position
-    // If the node has a definition being displayed, account for its height
     // Otherwise, just use the node's Y position + spacing
-    let currentBottomY: number;
-
-    if (node.definition && node.definitionHeight && node.definitionHeight > ChartStyles.nodeLabel.height) {
-      // Definition is displayed and extends below the node label
-      // Definition starts at nodeY - nodeLabel.height and extends downward by definitionHeight
-      const definitionBottom =
-        y -
-        ChartStyles.nodeLabel.height +
-        node.definitionHeight;
-      currentBottomY = definitionBottom + config.spacing.vertical;
-    } else {
-      // No definition or definition doesn't extend beyond label height
-      // Next element should start after the node label + spacing
-      currentBottomY = y + config.spacing.vertical;
-    }
+    let currentBottomY = y + config.spacing.vertical;
 
     // Only process children if node is expanded
     if (node.children && node.children.length > 0 && isExpanded) {

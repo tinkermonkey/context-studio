@@ -16,7 +16,7 @@ function RouteComponent() {
       </CsSidebar>
       <CsMain>
         <CsMainTitle>Context Studio Dashboard</CsMainTitle>
-        <TreeChartPanel />
+        <TreeChartPanel viewId="dashboard" />
       </CsMain>
     </>
   );

@@ -1,6 +1,6 @@
-// Menu styles for compressed navigation display
-export const MenuStyles = {
-  menuContainer: {
+// Chart styles for SVG elements
+export const ChartStyles = {
+  chartContainer: {
     fontFamily: "Arial, sans-serif",
     margin: "0",
     backgroundColor: "transparent",
@@ -10,25 +10,47 @@ export const MenuStyles = {
   },
   branchLine: {
     fill: "none",
-    stroke: "#cbd5e1",
+    stroke: "#f39c12",
     strokeWidth: 2,
     strokeLinecap: "round" as const,
+    //display: "none",
+  },
+  node: {
+    backgroundColor: "#FF0000",
   },
   nodeLabel: {
-    height: 16,
-    font: "12px sans-serif",
-    color: "#475569",
+    height: 20,
+    font: "14px sans-serif",
+    color: "#333",
     backgroundColor: "transparent",
     highlightColor: "#FEF3C7",
     dominantBaseline: "middle" as const,
-    hoverColor: "#1e40af",
+  },
+  nodeDefinition: {
+    font: "14px sans-serif",
+    color: "#333",
+    backgroundColor: "transparent",
+    highlightColor: "#FEF3C7",
+    padding: "5px 5px",
+  },
+  mainNode: {
+    fill: "#5B8FF9",
+    stroke: "#fff",
+    strokeWidth: 1,
+    rx: 3,
   },
 } as const;
 
-// Compressed line colors for menu
-export const MenuEdgeColors = [
-  "#94a3b8", // slate
-  "#cbd5e1", // lighter slate
-  "#64748b", // darker slate
-  "#475569", // even darker slate
+// Line Colors
+export const EdgeColors = [
+  "#5B8FF9", // blue
+  "#F6BD16", // yellow
+  "#5AD8A6", // green
+  "#945FB9", // purple
+  "#E86452", // red
+  "#6DC8EC", // cyan
+  "#FF99C3", // pink
+  "#1E9493", // teal
+  "#FF9845", // orange
+  "#5D7092", // gray
 ];

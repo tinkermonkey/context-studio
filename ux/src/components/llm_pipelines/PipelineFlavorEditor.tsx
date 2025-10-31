@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import {
   Button,
-  Card,
   Label,
   TextInput,
   Textarea,
@@ -10,7 +9,7 @@ import {
   Spinner,
   Badge,
 } from "flowbite-react";
-import { ArrowLeft, Save, AlertTriangle, Info } from "lucide-react";
+import { Save, AlertTriangle, Info } from "lucide-react";
 import {
   useCreatePipelineFlavor,
   useUpdatePipelineFlavor,
@@ -18,9 +17,9 @@ import {
 } from "@/api/hooks/pipelineFlavors";
 import {
   useTypedModelCapabilities,
-  useSupportedModels,
   useValidateLLMConfig,
 } from "@/api/hooks/modelCapabilities";
+import { useEnabledModels } from "@/api/hooks/enabledModels/useEnabledModels";
 import type {
   PipelineType,
   PipelineFlavor,
@@ -36,41 +35,39 @@ interface PipelineFlavorEditorProps {
 
 // Legacy providers for fallback
 const FALLBACK_LLM_PROVIDERS = [
-  { value: "openai", label: "OpenAI" },
-  { value: "anthropic", label: "Anthropic" },
-  { value: "ollama", label: "Ollama" },
-  { value: "azure", label: "Azure OpenAI" },
+  { value: "native_openai", label: "OpenAI" },
+  { value: "native_anthropic", label: "Anthropic" },
+  { value: "native_google", label: "Google" },
+  { value: "openrouter", label: "OpenRouter" },
 ];
 
-const FALLBACK_MODELS = {
-  openai: [
+const FALLBACK_MODELS: Record<string, string[]> = {
+  native_openai: [
     "gpt-5",
+    "gpt-5-turbo",
+    "gpt-5-preview",
     "gpt-5-mini",
-    "gpt-5-nano",
     "gpt-4o",
     "gpt-4o-mini",
+    "gpt-4o-turbo",
+    "gpt-4o-latest",
     "gpt-4-turbo",
+    "gpt-4-turbo-preview",
+    "gpt-4",
     "gpt-3.5-turbo",
-    "o3-mini",
-    "o3",
-    "o4-mini",
-    "o4",
   ],
-  anthropic: [
-    "claude-3-5-sonnet-20241022",
-    "claude-3-5-haiku-20241022",
+  native_anthropic: [
+    "claude-4-opus",
+    "claude-4-sonnet",
+    "claude-4-haiku",
+    "claude-4-turbo",
+    "claude-4",
     "claude-3-opus-20240229",
+    "claude-3-sonnet-20240229",
+    "claude-3-haiku-20240307",
   ],
-  ollama: ["llama3.2", "llama3.1", "mistral", "codellama"],
-  azure: [
-    "gpt-5",
-    "gpt-5-mini",
-    "gpt-5-nano",
-    "gpt-4o",
-    "gpt-4o-mini",
-    "gpt-4-turbo",
-    "gpt-3.5-turbo",
-  ],
+  native_google: [],
+  openrouter: [],
 };
 
 export const PipelineFlavorEditor: React.FC<PipelineFlavorEditorProps> = ({
@@ -80,8 +77,8 @@ export const PipelineFlavorEditor: React.FC<PipelineFlavorEditorProps> = ({
 }) => {
   const [formData, setFormData] = useState({
     title: "",
-    llm_provider: "openai",
-    llm_model: "gpt-4o-mini",
+    llm_provider: "",
+    llm_model: "",
     system_prompt: "",
     user_prompt: "",
     temperature: 0.7,
@@ -97,9 +94,10 @@ export const PipelineFlavorEditor: React.FC<PipelineFlavorEditorProps> = ({
   const systemPromptRef = useRef<HTMLTextAreaElement>(null) as React.RefObject<HTMLTextAreaElement>;
   const userPromptRef = useRef<HTMLTextAreaElement>(null) as React.RefObject<HTMLTextAreaElement>;
 
-  // Fetch supported models and capabilities
-  const { data: supportedModelsData, isLoading: modelsLoading } = useSupportedModels();
-  const { data: modelCapabilities, isLoading: capabilitiesLoading } = useTypedModelCapabilities(
+  // Fetch enabled models and capabilities
+  const { data: enabledModelsData } = useEnabledModels();
+  const enabledModels = enabledModelsData?.models || [];
+  const { data: modelCapabilities } = useTypedModelCapabilities(
     formData.llm_model
   );
   const { data: configValidationWarnings } = useValidateLLMConfig(
@@ -204,35 +202,65 @@ export const PipelineFlavorEditor: React.FC<PipelineFlavorEditorProps> = ({
     adjustTextAreaHeight(userPromptRef);
   }, [formData.system_prompt, formData.user_prompt]);
 
-  // Get available providers from API data or fallback to static list
+  // Initialize provider and model when enabled models are loaded (only for new flavors)
+  useEffect(() => {
+    if (!flavor && enabledModels.length > 0 && !formData.llm_provider) {
+      const providers = getAvailableProviders();
+      if (providers.length > 0) {
+        const firstProvider = providers[0].value;
+        const modelsForProvider = enabledModels.filter(
+          (model) => model.provider_type === firstProvider
+        );
+        const firstModel = modelsForProvider.length > 0 ? modelsForProvider[0].model_name : "";
+
+        setFormData((prev) => ({
+          ...prev,
+          llm_provider: firstProvider,
+          llm_model: firstModel,
+        }));
+      }
+    }
+  }, [flavor, enabledModelsData, formData.llm_provider, enabledModels]);
+
+  // Get available providers from enabled models or fallback to static list
   const getAvailableProviders = () => {
-    if (supportedModelsData?.models) {
+    if (enabledModels.length > 0) {
       const providersSet = new Set<string>();
-      supportedModelsData.models.forEach((model) => {
-        const provider = (model.capabilities as any)?.provider;
-        if (provider) {
-          providersSet.add(provider);
+      enabledModels.forEach((model) => {
+        if (model.provider_type) {
+          providersSet.add(model.provider_type);
         }
       });
+
+      // Map provider types to friendly labels
+      const providerLabels: Record<string, string> = {
+        'native_openai': 'OpenAI',
+        'native_anthropic': 'Anthropic',
+        'native_google': 'Google',
+        'openrouter': 'OpenRouter'
+      };
+
       return Array.from(providersSet).map((provider) => ({
         value: provider,
-        label: provider.charAt(0).toUpperCase() + provider.slice(1),
+        label: providerLabels[provider] || provider,
       }));
     }
     return FALLBACK_LLM_PROVIDERS;
   };
 
   // Get available models for the selected provider
-  const getAvailableModels = () => {
-    if (supportedModelsData?.models) {
-      const modelsForProvider = supportedModelsData.models.filter(
-        (model) => (model.capabilities as any)?.provider === formData.llm_provider
+  const getAvailableModels = (provider?: string) => {
+    const providerToUse = provider || formData.llm_provider;
+
+    if (enabledModels.length > 0) {
+      const modelsForProvider = enabledModels.filter(
+        (model) => model.provider_type === providerToUse
       );
       return modelsForProvider.map((model) => model.model_name);
     }
 
     // Fallback to static model lists
-    return FALLBACK_MODELS[formData.llm_provider as keyof typeof FALLBACK_MODELS] || [];
+    return FALLBACK_MODELS[providerToUse as keyof typeof FALLBACK_MODELS] || [];
   };
 
   const validateForm = () => {
@@ -240,6 +268,14 @@ export const PipelineFlavorEditor: React.FC<PipelineFlavorEditorProps> = ({
 
     if (!formData.title.trim()) {
       newErrors.title = "Title is required";
+    }
+
+    if (!formData.llm_provider) {
+      newErrors.llm_provider = "LLM provider is required";
+    }
+
+    if (!formData.llm_model) {
+      newErrors.llm_model = "LLM model is required";
     }
 
     if (!formData.system_prompt.trim()) {
@@ -309,7 +345,7 @@ export const PipelineFlavorEditor: React.FC<PipelineFlavorEditorProps> = ({
   const isDefaultFlavor = Boolean(flavor && flavor.title === "Default");
 
   return (
-    <Card>
+    <div>
 
       {errors.submit && (
         <Alert color="failure" className="mb-4">
@@ -439,16 +475,15 @@ export const PipelineFlavorEditor: React.FC<PipelineFlavorEditorProps> = ({
               value={formData.llm_provider}
               onChange={(e) => {
                 const provider = e.target.value;
-                setFormData((prev) => {
-                  const models = getAvailableModels();
-                  return {
-                    ...prev,
-                    llm_provider: provider,
-                    llm_model: models[0] || "",
-                  };
-                });
+                const models = getAvailableModels(provider);
+                setFormData((prev) => ({
+                  ...prev,
+                  llm_provider: provider,
+                  llm_model: models[0] || "",
+                }));
               }}
               disabled={isDefaultFlavor}
+              color={errors.llm_provider ? "failure" : undefined}
             >
               {getAvailableProviders().map((provider) => (
                 <option key={provider.value} value={provider.value}>
@@ -456,6 +491,11 @@ export const PipelineFlavorEditor: React.FC<PipelineFlavorEditorProps> = ({
                 </option>
               ))}
             </Select>
+            {errors.llm_provider && (
+              <p className="mt-1 text-sm text-red-600 dark:text-red-400">
+                {errors.llm_provider}
+              </p>
+            )}
           </div>
 
           <div>
@@ -467,6 +507,7 @@ export const PipelineFlavorEditor: React.FC<PipelineFlavorEditorProps> = ({
                 setFormData({ ...formData, llm_model: e.target.value })
               }
               disabled={isDefaultFlavor}
+              color={errors.llm_model ? "failure" : undefined}
             >
               {getAvailableModels().map((model) => (
                 <option key={model} value={model}>
@@ -474,6 +515,11 @@ export const PipelineFlavorEditor: React.FC<PipelineFlavorEditorProps> = ({
                 </option>
               ))}
             </Select>
+            {errors.llm_model && (
+              <p className="mt-1 text-sm text-red-600 dark:text-red-400">
+                {errors.llm_model}
+              </p>
+            )}
           </div>
         </div>
 
@@ -681,6 +727,6 @@ export const PipelineFlavorEditor: React.FC<PipelineFlavorEditorProps> = ({
           )}
         </div>
       </form>
-    </Card>
+    </div>
   );
 };

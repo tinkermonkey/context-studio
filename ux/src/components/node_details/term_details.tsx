@@ -45,6 +45,7 @@ import { NlpAnalysisPanel } from "@/components/nlp/NlpAnalysisPanel";
 import { TreeChartPanel } from "@/components/panels/TreeChartPanel";
 
 import type { StructureNode } from "@/api/types/structureNodes";
+import { TreeMenuPanel } from "@/components/panels/TreeMenuPanel"
 type NodeOut = components["schemas"]["NodeOut"];
 type NodeLinkOut = components["schemas"]["NodeLinkOut"];
 
@@ -71,12 +72,13 @@ export const TermDetails: React.FC<TermPageProps> = ({ term }) => {
       };
     }
 
-    const ancestors = (termHierarchy.ancestors as Array<{
-      id: string;
-      type: string;
-      title: string;
-      distance: number;
-    }>) || [];
+    const ancestors =
+      (termHierarchy.ancestors as Array<{
+        id: string;
+        type: string;
+        title: string;
+        distance: number;
+      }>) || [];
 
     // Find layer (farthest ancestor of type layer)
     const layer = ancestors.find((a) => a.type === "layer");
@@ -85,7 +87,9 @@ export const TermDetails: React.FC<TermPageProps> = ({ term }) => {
     const domain = ancestors.find((a) => a.type === "domain");
 
     // Find parent term (closest ancestor of type term, distance = 1)
-    const parentTerm = ancestors.find((a) => a.type === "term" && a.distance === 1);
+    const parentTerm = ancestors.find(
+      (a) => a.type === "term" && a.distance === 1,
+    );
 
     return {
       layerId: layer?.id || null,
@@ -193,6 +197,11 @@ export const TermDetails: React.FC<TermPageProps> = ({ term }) => {
   return (
     <>
       <CsSidebar>
+        <CsSidebarTitle>Structure Graph</CsSidebarTitle>
+        <CsSidebarSection>
+          <TreeMenuPanel viewId="sidebar" />
+        </CsSidebarSection>
+
         <CsSidebarTitle>Context</CsSidebarTitle>
 
         {/* Layer Information */}
@@ -299,22 +308,6 @@ export const TermDetails: React.FC<TermPageProps> = ({ term }) => {
                 {term.version}
               </div>
             </div>
-            {term.title_embedding && (
-              <div>
-                <span className="font-semibold">Title Embedding:</span>
-                <div className="text-gray-600 dark:text-gray-400">
-                  {term.title_embedding.length} dimensions
-                </div>
-              </div>
-            )}
-            {term.definition_embedding && (
-              <div>
-                <span className="font-semibold">Definition Embedding:</span>
-                <div className="text-gray-600 dark:text-gray-400">
-                  {term.definition_embedding.length} dimensions
-                </div>
-              </div>
-            )}
           </div>
         </CsSidebarSection>
       </CsSidebar>
@@ -432,7 +425,7 @@ export const TermDetails: React.FC<TermPageProps> = ({ term }) => {
           {/* NLP */}
           <NlpAnalysisPanel
             text={term.title}
-            textTitle={"Title"}
+            textTitle={"Term"}
             domainContext={
               domain
                 ? {

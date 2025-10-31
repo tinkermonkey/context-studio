@@ -1,6 +1,6 @@
 import React from "react";
 import { Spinner } from "flowbite-react";
-import { TreeMenu } from "@/components/graphs/tree_menu";
+import { TreeMenu } from "@/components/graphs/tree_menu/tree_menu";
 import {
   useLayerNodes,
   useDomainNodes,
@@ -9,7 +9,7 @@ import {
 import {
   buildHierarchicalTree,
 } from "@/utils/treeBuilder";
-import { ChartData } from "@/components/graphs/hierarchy/tree_data";
+import { ChartData } from "@/components/graphs/tree_chart/tree_data";
 import { apiLogger } from "@/api/utils/logger";
 
 export interface TreeMenuPanelProps {
@@ -37,6 +37,12 @@ export interface TreeMenuPanelProps {
    * Error component to display when data loading fails
    */
   errorComponent?: React.ReactNode;
+
+  /**
+   * Optional view identifier for persisting expand state
+   * If not provided, expand state will not be persisted to session storage
+   */
+  viewId?: string;
 }
 
 /**
@@ -56,6 +62,7 @@ export function TreeMenuPanel({
   className = "",
   loadingComponent,
   errorComponent,
+  viewId,
 }: TreeMenuPanelProps) {
   // Load all base data
   const {
@@ -151,6 +158,7 @@ export function TreeMenuPanel({
         chartData={chartData}
         highlightedTermId={highlightedTermId}
         onNodeClick={onNodeClick}
+        viewId={viewId}
       />
     </div>
   );

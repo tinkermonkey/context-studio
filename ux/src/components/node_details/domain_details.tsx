@@ -22,6 +22,8 @@ import {
 } from "lucide-react";
 import { Link } from "@tanstack/react-router";
 import { NlpAnalysisPanel } from "@/components/nlp/NlpAnalysisPanel";
+import { TreeChartPanel } from "@/components/panels/TreeChartPanel";
+import { TreeMenuPanel } from "@/components/panels/TreeMenuPanel";
 import {
   useStructureNode,
   useTermNodes,
@@ -97,6 +99,11 @@ export const DomainDetails: React.FC<DomainDetailsProps> = ({ domain }) => {
       <CsSidebar>
         <CsSidebarTitle>Context</CsSidebarTitle>
 
+        <CsSidebarTitle>Structure Graph</CsSidebarTitle>
+        <CsSidebarSection>
+          <TreeMenuPanel viewId="sidebar" />
+        </CsSidebarSection>
+
         {/* Layer Information */}
         <CsSidebarSection>
           <CsSidebarSectionTitle icon={Layers}>Layer</CsSidebarSectionTitle>
@@ -125,30 +132,6 @@ export const DomainDetails: React.FC<DomainDetailsProps> = ({ domain }) => {
           )}
         </CsSidebarSection>
 
-        {/* Statistics */}
-        <CsSidebarSection>
-          <CsSidebarSectionTitle icon={FileText}>
-            Statistics
-          </CsSidebarSectionTitle>
-          <div className="mx-2 inline-block space-y-2">
-            <div className="flex justify-between">
-              <span className="text-sm">Total Terms:</span>
-              <span className="pl-2 font-semibold">{terms?.length || 0}</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-sm">Root Terms:</span>
-              <span className="pl-2 font-semibold">{rootTerms.length}</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-sm">Parent Terms:</span>
-              <span className="pl-2 font-semibold">{parentTerms.length}</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-sm">Child Terms:</span>
-              <span className="pl-2 font-semibold">{childTerms.length}</span>
-            </div>
-          </div>
-        </CsSidebarSection>
 
         <CsSidebarTitle>Metadata</CsSidebarTitle>
         <CsSidebarSection>
@@ -252,6 +235,12 @@ export const DomainDetails: React.FC<DomainDetailsProps> = ({ domain }) => {
             <p className="leading-relaxed text-gray-700 dark:text-gray-300">
               {domain.definition}
             </p>
+          </div>
+
+          {/* Term Hierarchy */}
+          <div className="pt-4">
+            <h2 className="text-xl font-semibold">Term Hierarchy</h2>
+            <TreeChartPanel domainId={domain.id} />
           </div>
 
           {/* Terms in this Domain */}

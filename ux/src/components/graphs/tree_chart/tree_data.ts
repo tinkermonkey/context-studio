@@ -27,6 +27,8 @@ interface HierarchyNode {
   definitionWidth?: number; // Width of the definition box
   expanded?: boolean; // Whether the node is currently expanded
   hasChildren?: boolean; // Whether the node has children in the original data
+  isHovered?: boolean; // Whether the node is currently being hovered
+  childIndex?: number; // Index of the child among its siblings
 }
 
 interface Dimensions {

@@ -30,9 +30,9 @@ export const ChartStyles = {
     padding: "5px 5px",
   },
   mainNode: {
-    fill: "#4a90e2",
+    fill: "#5B8FF9",
     stroke: "#fff",
-    strokeWidth: 2,
+    strokeWidth: 1,
     rx: 3,
   },
 } as const;

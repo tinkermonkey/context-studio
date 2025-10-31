@@ -4,7 +4,7 @@ import type {
   LayoutConfig,
   ChartData,
 } from "./tree_data";
-import { ChartStyles } from "./tree_styles";
+import { ChartStyles } from "./tree_chart_styles";
 import {
   measureSvgTextWidth,
   extractFontPropertiesFromStyles,
@@ -14,8 +14,8 @@ import {
 // Default layout configuration
 export const defaultLayoutConfig: LayoutConfig = {
   spacing: {
-    vertical: 20,
-    horizontal: 30,
+    vertical: 25,
+    horizontal: 20,
   },
   margins: {
     top: 30,
@@ -143,6 +143,7 @@ export function calculateLayout(
   config: LayoutConfig = defaultLayoutConfig,
   existingTextWidths?: Map<string, number>,
   maxWidth?: number,
+  hoveredNodeId?: string | null,
 ): ChartData {
   let maxY = config.margins.top;
 
@@ -181,13 +182,22 @@ export function calculateLayout(
         ? config.margins.left
         : (parentX ?? config.margins.left) + config.spacing.horizontal;
 
-    const y = startY ?? config.margins.top;
+    let y = startY ?? config.margins.top;
 
     // Get expanded state from existing tree or default to true
     const isExpanded =
       (expandState.get(node.id || node.title) ?? depth === 0)
         ? true
         : defaultExpandState;
+
+    // Check if this node is hovered and calculate extra spacing
+    const isHovered = !!(hoveredNodeId && (node.id === hoveredNodeId || node.title === hoveredNodeId));
+    const extraVerticalSpacing = isHovered ? 16 : 0; // Total extra spacing for hovered node
+
+    // If hovered, move the node down by half the extra spacing to center it in the added space
+    if (isHovered) {
+      y += extraVerticalSpacing / 2;
+    }
 
     node.x = x;
     node.y = y;
@@ -206,6 +216,7 @@ export function calculateLayout(
     );
     node.expanded = isExpanded;
     node.hasChildren = node.children && node.children.length > 0;
+    node.isHovered = isHovered; // Store hover state on the node
 
     maxY = Math.max(maxY, y);
 
@@ -221,11 +232,11 @@ export function calculateLayout(
         y -
         ChartStyles.nodeLabel.height +
         node.definitionHeight;
-      currentBottomY = definitionBottom + config.spacing.vertical;
+      currentBottomY = definitionBottom + config.spacing.vertical + (extraVerticalSpacing / 2);
     } else {
       // No definition or definition doesn't extend beyond label height
       // Next element should start after the node label + spacing
-      currentBottomY = y + config.spacing.vertical;
+      currentBottomY = y + config.spacing.vertical + (extraVerticalSpacing / 2);
     }
 
     // Only process children if node is expanded

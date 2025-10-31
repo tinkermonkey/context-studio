@@ -1,24 +1,74 @@
-import { ChartStyles } from "./tree_styles";
+import { LayoutConfig } from "@/components/graphs/tree_chart/tree_data"
+import { ChartStyles } from "./tree_chart_styles";
 
-// Path utility functions for SVG drawing
+const treeTrunkCurveRadius = 14;
+const treeTrunkLeadInRadius = 10;
+
+/**
+ * Create an SVG path string for a tree node connection
+ * @param startX
+ * @param startY
+ * @param endX
+ * @param endY
+ * @param curveRadius
+ * @param leadInRadius
+ * @returns
+ */
 export const createNodePath = (
   startX: number,
   startY: number,
   endX: number,
   endY: number,
-  curveRadius: number = 15,
-  leadInRadius: number = 10,
+  curveRadius: number = treeTrunkCurveRadius,
+  leadInRadius: number = treeTrunkLeadInRadius,
 ): string => {
   const curveStartX = startX;
   const curveStartY = endY - curveRadius;
   const curveEndX = startX + curveRadius;
   const curveEndY = endY;
 
-  return `M ${startX - leadInRadius} ${startY + ChartStyles.branchLine.strokeWidth}
+  return `M ${startX - leadInRadius + ChartStyles.branchLine.strokeWidth} ${startY}
           Q ${startX} ${startY} ${startX} ${startY + leadInRadius}
           L ${curveStartX} ${curveStartY} 
           Q ${curveStartX} ${curveEndY} ${curveEndX} ${curveEndY}
           L ${endX} ${endY}`;
+};
+
+/**
+ * Create the svg path for the menu node background
+ * @param x
+ * @param y
+ * @param labelWidth
+ * @param labelHeight
+ * @returns
+ */
+export const createMenuNodeBackgroundPath = (
+  x: number,
+  y: number,
+  labelWidth: number,
+  labelHeight: number,
+  childIndex: number = 0,
+  config: LayoutConfig,
+  styles: any,
+): string => {
+  const bgWidth = labelWidth + styles.branchLine.strokeWidth;
+  const halfStroke = styles.branchLine.strokeWidth / 2;
+  if (childIndex === 0) {
+    return `M ${x - (treeTrunkCurveRadius + halfStroke) - 3} ${y - labelHeight -4}
+          h ${labelWidth + 5 + (treeTrunkCurveRadius - 2)}
+          v ${labelHeight + 3}
+          h ${-(labelWidth + 3.5)}
+          a ${treeTrunkCurveRadius - 2} ${treeTrunkCurveRadius - 2} 0 0 1 -${treeTrunkCurveRadius - 3} -${treeTrunkCurveRadius - 2}
+          Z`;
+  }
+
+  return `M ${x - (treeTrunkCurveRadius + halfStroke)} ${y - labelHeight - treeTrunkLeadInRadius}
+          a ${treeTrunkCurveRadius} ${treeTrunkCurveRadius - 2} 1 0 0 ${treeTrunkCurveRadius - 2} ${(treeTrunkCurveRadius - 2) / 2}
+          h ${labelWidth + 2}
+          v ${labelHeight + 3}
+          h ${-(labelWidth + 3.5)}
+          a ${treeTrunkCurveRadius - 2} ${treeTrunkCurveRadius - 2} 0 0 1 -${treeTrunkCurveRadius - 3} -${treeTrunkCurveRadius - 2}
+          Z`;
 };
 
 // Text measurement utilities

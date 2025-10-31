@@ -1,5 +1,5 @@
 import { apiLogger } from "@/api/utils/logger";
-import { HierarchyNode } from "@/components/graphs/hierarchy/tree_data";
+import { HierarchyNode } from "@/components/graphs/tree_chart/tree_data";
 
 export interface TreeBuilderInput {
   layers: any[];
@@ -300,6 +300,35 @@ export function collectAllNodeIds(node: HierarchyNode): string[] {
   if (node.children && node.children.length > 0) {
     for (const child of node.children) {
       nodeIds.push(...collectAllNodeIds(child));
+    }
+  }
+
+  return nodeIds;
+}
+
+/**
+ * Collects node IDs from a tree structure, stopping at a specified node type
+ * This is useful for initializing expand states when you want to expand only to a certain level
+ *
+ * @param node - The root node to start collecting from
+ * @param stopAtType - The node type to stop at (nodes of this type will be included but not their children)
+ * @returns Array of node IDs up to and including the stop type
+ */
+export function collectNodeIdsUpToType(
+  node: HierarchyNode,
+  stopAtType: string,
+): string[] {
+  const nodeIds: string[] = [node.id];
+
+  // If we've reached the stop type, include this node but don't recurse into children
+  if (node.type === stopAtType) {
+    return nodeIds;
+  }
+
+  // Otherwise, recurse into children
+  if (node.children && node.children.length > 0) {
+    for (const child of node.children) {
+      nodeIds.push(...collectNodeIdsUpToType(child, stopAtType));
     }
   }
 

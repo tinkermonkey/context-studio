@@ -742,7 +742,7 @@ class ReferenceService:
     async def get_source_status(self) -> Dict[str, Dict[str, Any]]:
         """Get status of all reference sources"""
         status = {}
-        for source_name in ["conceptnet", "dbpedia", "dbpedia_spotlight", "wikidata", "schema_org"]:
+        for source_name in ["conceptnet", "dbpedia_lookup", "dbpedia_sparql", "dbpedia_spotlight", "wikidata", "duckduckgo", "schema_org"]:
             config = getattr(self.settings.reference_sources, source_name)
             status[source_name] = {
                 "enabled": config.enabled,

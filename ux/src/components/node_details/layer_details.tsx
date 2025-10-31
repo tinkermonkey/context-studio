@@ -18,6 +18,8 @@ import {
 } from "lucide-react";
 import { Link } from "@tanstack/react-router";
 import { NlpAnalysisPanel } from "@/components/nlp/NlpAnalysisPanel";
+import { TreeChartPanel } from "@/components/panels/TreeChartPanel";
+import { TreeMenuPanel } from "@/components/panels/TreeMenuPanel";
 import {
   useDomainNodes,
   useTermNodes,
@@ -36,7 +38,6 @@ import {
 } from "@/components/layout/cs_sidebar";
 import { CsMain, CsMainTitle } from "@/components/layout/cs_main";
 import type { StructureNode } from "@/api/types/structureNodes";
-import { TreeMenuPanel } from "@/components/panels/TreeMenuPanel";
 
 interface LayerDetailsProps {
   layer: StructureNode;
@@ -88,7 +89,10 @@ export const LayerDetails: React.FC<LayerDetailsProps> = ({ layer }) => {
   return (
     <>
       <CsSidebar>
-        <CsSidebarTitle>Context</CsSidebarTitle>
+        <CsSidebarTitle>Structure Graph</CsSidebarTitle>
+        <CsSidebarSection>
+          <TreeMenuPanel viewId="sidebar" />
+        </CsSidebarSection>
 
         {/* Statistics */}
         <CsSidebarSection>
@@ -164,6 +168,12 @@ export const LayerDetails: React.FC<LayerDetailsProps> = ({ layer }) => {
               </p>
             </div>
           )}
+
+          {/* Term Hierarchy */}
+          <div className="pt-4">
+            <h2 className="text-xl font-semibold">Term Hierarchy</h2>
+            <TreeChartPanel layerId={layer.id} />
+          </div>
 
           {/* Domains in this Layer */}
           <div className="pt-4">

@@ -44,7 +44,7 @@ class DefaultFlavorProvider:
             pipeline=pipeline,
             title="Default",
             llm_provider="openai",
-            llm_model="gpt-4o-mini",
+            llm_model="gpt-3.5-turbo",
             llm_config=LLMConfig(temperature=0.0),
             system_prompt=system_prompt,
             user_prompt=user_prompt,

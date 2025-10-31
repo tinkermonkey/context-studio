@@ -1,8 +1,12 @@
 import React, { useState } from "react";
-import { MenuStyles, MenuEdgeColors } from "./tree_menu_styles";
-import { createNodePath } from "../hierarchy/tree_chart_utils";
-import type { HierarchyNode } from "../hierarchy/tree_data";
-import { CircleArrowRight, ChevronRight, ChevronDown } from "lucide-react";
+import { ChartStyles, EdgeColors } from "./tree_menu_styles";
+import {
+  createNodePath,
+  createMenuNodeBackgroundPath,
+} from "../tree_chart/tree_chart_utils";
+import type { HierarchyNode } from "../tree_chart/tree_data";
+import { ChevronDown, ChevronUp } from "lucide-react";
+import { defaultLayoutConfig } from "./tree_menu_layout";
 
 interface TreeMenuNodeProps {
   node: HierarchyNode;
@@ -25,24 +29,24 @@ const TreeMenuNode: React.FC<TreeMenuNodeProps> = ({
   const parentY = parentNode?.y ?? 0;
 
   // Use the measured text width from the node, with fallback
-  const labelWidth = node.textWidth ?? node.title.length * 5;
+  const labelWidth = node.textWidth ?? node.title.length * 6;
 
-  // Check if node has children based on original data
+  // Check if node has children based on original data (not current children array)
   const hasChildren =
     node.hasChildren ?? (node.children && node.children.length > 0);
 
-  // Use the external expanded state
+  // Use the external expanded state instead of node.expanded
   const isExpanded = node.expanded ?? true;
 
-  // Get color based on node depth
+  // Get color based on node depth (depth 1 uses index 0, depth 2 uses index 1, etc.)
   const nodeDepth = node.depth ?? 0;
-  const colorIndex = Math.max(0, nodeDepth - 1) % MenuEdgeColors.length;
-  const nodeColor = MenuEdgeColors[colorIndex];
+  const colorIndex = Math.max(0, nodeDepth - 1) % EdgeColors.length;
+  const nodeColor = EdgeColors[colorIndex];
 
   // Check if this node should be highlighted
   const isHighlighted = highlightedTermId && node.id === highlightedTermId;
 
-  const handleExpandClick = () => {
+  const handleClick = () => {
     if (hasChildren && onToggle) {
       onToggle(node.id);
     }
@@ -55,107 +59,105 @@ const TreeMenuNode: React.FC<TreeMenuNodeProps> = ({
   };
 
   const [isHovered, setIsHovered] = useState(false);
+  const [isExpandControlHovered, setIsExpandControlHovered] = useState(false);
 
   return (
     <g>
       {/* Render children recursively only if expanded */}
       {isExpanded &&
-        node.children.map((child, index) => (
-          <TreeMenuNode
-            key={child.id || index}
-            node={child}
-            parentNode={node}
-            onToggle={onToggle}
-            onNodeClick={onNodeClick}
-            highlightedTermId={highlightedTermId}
-          />
-        ))}
+        node.children.map((child, index) => {
+          child.childIndex = index;
+          return (
+            <TreeMenuNode
+              key={child.id || index}
+              node={child}
+              parentNode={node}
+              onToggle={onToggle}
+              onNodeClick={onNodeClick}
+              highlightedTermId={highlightedTermId}
+            />
+          );
+        })}
 
-      {/* Node label with expand/collapse icon */}
+      {/* Node label */}
       <g
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
-        onClick={handleNodeTextClick}
         style={{ cursor: onNodeClick ? "pointer" : "default" }}
       >
-        {/* Background rectangle for text */}
-        <rect
-          x={nodeX - 2}
-          y={nodeY - MenuStyles.nodeLabel.height}
-          width={labelWidth + 20}
-          height={MenuStyles.nodeLabel.height}
-          fill={
-            isHighlighted
-              ? MenuStyles.nodeLabel.highlightColor
-              : MenuStyles.nodeLabel.backgroundColor
-          }
-          rx={2}
+        {/* Background for node */}
+        <path
+          className="tree-node-bg"
+          d={createMenuNodeBackgroundPath(
+            nodeX,
+            nodeY,
+            labelWidth,
+            ChartStyles.nodeLabel.height,
+            node.childIndex || 0,
+            defaultLayoutConfig,
+            ChartStyles,
+          )}
+          fill={isHovered ? nodeColor : "transparent"}
+          fillOpacity={0.2}
+          style={{ transition: "fill 0.1s ease-in-out" }}
         />
 
-        {/* Expand/collapse chevron icon for nodes with children */}
-        {hasChildren && (
-          <g
-            onClick={(e) => {
-              e.stopPropagation();
-              handleExpandClick();
-            }}
-            style={{ cursor: "pointer" }}
-            transform={`translate(${nodeX}, ${nodeY - 14})`}
-          >
-            {isExpanded ? (
-              <ChevronDown size={12} className="text-slate-600" />
-            ) : (
-              <ChevronRight size={12} className="text-slate-600" />
-            )}
-          </g>
-        )}
-
-        {/* Node text */}
+        {/* Node title */}
         <text
-          x={nodeX + (hasChildren ? 14 : 2)}
-          y={nodeY - MenuStyles.nodeLabel.height / 2}
+          className="tree-node-label"
+          x={nodeX - 4}
+          y={nodeY - ChartStyles.nodeLabel.height / 2}
           style={{
-            ...MenuStyles.nodeLabel,
-            fill: isHovered ? MenuStyles.nodeLabel.hoverColor : MenuStyles.nodeLabel.color,
-            fontWeight: isHighlighted ? "600" : "normal",
+            ...ChartStyles.nodeLabel,
+            //fontWeight: isHighlighted ? "bold" : "normal",
           }}
         >
           {node.title}
         </text>
-
-        {/* CircleArrowRight icon - shown on hover when click handler is provided */}
-        {onNodeClick && isHovered && (
-          <g
-            onClick={handleNodeTextClick}
-            style={{ cursor: "pointer" }}
-            transform={`translate(${nodeX + labelWidth + (hasChildren ? 14 : 2)}, ${nodeY - 14})`}
-          >
-            <CircleArrowRight
-              size={12}
-              className="text-blue-500 hover:text-blue-700"
-              fill={MenuStyles.controls.backgroundColor}
-            />
-          </g>
-        )}
       </g>
 
       {/* Branch line from parent to this node */}
       {parentNode && (
         <path
-          d={createNodePath(
-            parentX + (parentNode.hasChildren ? 14 : 2),
-            parentY,
-            nodeX + (hasChildren ? 14 : 2),
-            nodeY
-          )}
+          d={createNodePath(parentX, parentY, nodeX + labelWidth + 16, nodeY)}
           style={{
-            ...MenuStyles.branchLine,
+            ...ChartStyles.branchLine,
             stroke: nodeColor,
           }}
         />
+      )}
+
+      {/* Expand/collapse indicator for nodes with children */}
+      {hasChildren && (
+        <g
+          className="tree-expand-controls"
+          onClick={handleClick}
+          onMouseEnter={() => setIsExpandControlHovered(true)}
+          onMouseLeave={() => setIsExpandControlHovered(false)}
+          style={{ cursor: "pointer" }}
+          transform={`translate(${nodeX + labelWidth} ${nodeY - ChartStyles.nodeLabel.height - 4})`}
+        >
+          <rect
+            className="tree-expand-controls-bg"
+            x={0}
+            y={0}
+            width={16}
+            height={22}
+            fill={isExpandControlHovered ? `#DDD` : `none`}
+            stroke={`none`}
+            strokeWidth={2}
+          />
+          <foreignObject x={0} y={3} width={16} height={16}>
+            {isExpanded ? (
+              <ChevronUp size={16} color={nodeColor} />
+            ) : (
+              <ChevronDown size={16} color={nodeColor} />
+            )}
+          </foreignObject>
+        </g>
       )}
     </g>
   );
 };
 
-export { TreeMenuNode };
+export { TreeMenuNode as TreeNode };

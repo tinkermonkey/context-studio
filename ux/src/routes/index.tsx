@@ -232,6 +232,7 @@ function HomeComponent() {
             <div className="min-h-[400px]">
               <TreeChartPanel
                 className="w-full"
+                viewId="dashboard"
                 loadingComponent={
                   <div className="flex flex-col items-center justify-center py-12">
                     <Spinner size="xl" aria-label="Loading knowledge graph" />
