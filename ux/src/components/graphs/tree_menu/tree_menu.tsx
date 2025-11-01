@@ -6,14 +6,13 @@ import React, {
   useState,
 } from "react";
 import { type ChartData } from "../tree_chart/tree_data";
-import { ChartStyles } from "./tree_menu_styles";
-import TreeTrunk from "../tree_chart/tree_trunk";
+import { chartStyles } from "./config";
 import { TreeNode } from "./tree_menu_node";
 import {
   useMeasurementSvg,
   useMeasurementHtml,
 } from "../tree_chart/useMeasurementElement";
-import { calculateLayout, ExpandState } from "./tree_menu_layout";
+import { calculateLayout } from "./layout";
 import { usePersistedExpandState } from "../tree_chart/usePersistedExpandState";
 import { Alert } from "flowbite-react";
 import { useNavigate } from "@tanstack/react-router";
@@ -38,6 +37,22 @@ interface TreeMenuProps {
    * If not provided, expand state will not be persisted to session storage
    */
   viewId?: string;
+  /**
+   * Optional container width to constrain the tree menu
+   * If not provided, the component will measure its own container
+   */
+  containerWidth?: number;
+  /**
+   * Whether to show node definitions
+   * Default: false
+   */
+  showDefinitions?: boolean;
+  /**
+   * Width for titles when showing definitions
+   * Can be a number (pixels) or percentage (0-1)
+   * Default: 0.2 (20% of container width)
+   */
+  titleWidth?: number;
 }
 const TreeMenu: React.FC<TreeMenuProps> = ({
   chartData,
@@ -45,11 +60,18 @@ const TreeMenu: React.FC<TreeMenuProps> = ({
   highlightedTermId,
   onNodeClick,
   viewId,
+  containerWidth: propContainerWidth,
+  showDefinitions = false,
+  titleWidth = 0.2,
 }) => {
   // Container ref to measure width
   const containerRef = useRef<HTMLDivElement>(null);
-  const [containerWidth, setContainerWidth] = useState<number>(0);
+  const [measuredWidth, setMeasuredWidth] = useState<number>(0);
   const [containerHeight, setContainerHeight] = useState<number>(0);
+  const [isReady, setIsReady] = useState<boolean>(false);
+
+  // Use prop width if provided, otherwise use measured width
+  const containerWidth = propContainerWidth || measuredWidth;
 
   // Use persisted expand state and scroll management hook
   const {
@@ -79,14 +101,19 @@ const TreeMenu: React.FC<TreeMenuProps> = ({
   // Router navigation hook
   const navigate = useNavigate();
 
-  // Measure container width on mount and resize
+  // Measure container width on mount and resize (only if not provided via props)
   useEffect(() => {
+    // Skip measurement if width is provided via props
+    if (propContainerWidth) {
+      return;
+    }
+
     const measureDimensions = () => {
       if (containerRef.current) {
         const width = containerRef.current.clientWidth;
         const height = containerRef.current.clientHeight;
-        console.log("Container dimensions measured:", { width, height });
-        setContainerWidth(width);
+        //console.log("Container dimensions measured:", { width, height });
+        setMeasuredWidth(width);
         setContainerHeight(height);
       }
     };
@@ -103,7 +130,7 @@ const TreeMenu: React.FC<TreeMenuProps> = ({
     return () => {
       resizeObserver.disconnect();
     };
-  }, []);
+  }, [propContainerWidth]);
 
   // Early return with alert if no chart data is provided
   if (!chartData) {
@@ -123,10 +150,12 @@ const TreeMenu: React.FC<TreeMenuProps> = ({
       chartData,
       expandState,
       undefined,
-      undefined,
       maxWidth,
+      containerWidth, // Pass container width for full-width nodes
+      showDefinitions,
+      titleWidth,
     );
-  }, [chartData, expandState, containerWidth]);
+  }, [chartData, expandState, containerWidth, showDefinitions, titleWidth]);
 
   // Calculate the actual height needed for the chart content
   const chartHeight = useMemo(() => {
@@ -145,26 +174,42 @@ const TreeMenu: React.FC<TreeMenuProps> = ({
     return () => clearTimeout(timeoutId);
   }, [restoreScrollPosition, dimensions]);
 
-  // Node click handler to navigate to the node's details
-  const handleNodeClick = useCallback((node: any) => {
-    if (node.type === "term") {
-      navigate({ to: `/app/nodes/term/${node.id}` });
-    } else if (node.type === "domain") {
-      navigate({ to: `/app/nodes/domain/${node.id}` });
-    } else if (node.type === "layer") {
-      navigate({ to: `/app/nodes/layer/${node.id}` });
-    } else {
-      console.warn("Clicked on unknown node:", node);
+  // Reset ready state when chart data changes
+  useEffect(() => {
+    setIsReady(false);
+  }, [chartData]);
+
+  // Mark component as ready after layout is calculated and container is measured
+  useEffect(() => {
+    if (root) {
+      setIsReady(true);
     }
-  }, []);
+  }, [root]);
+
+  // Node click handler to navigate to the node's details
+  // Uses provided onNodeClick if present, otherwise navigates to details page
+  const handleNodeClick = useCallback((node: any) => {
+    console.log("handleNodeClick:", node)
+    if (onNodeClick) {
+      onNodeClick(node);
+    } else {
+      // Default navigation behavior
+      if (node.type === "term" || node.type === "domain" || node.type === "layer") {
+        navigate({ to: `/app/structure_nodes/${node.id}` });
+      } else {
+        console.warn("Clicked on unknown node:", node);
+      }
+    }
+  }, [onNodeClick, navigate]);
 
   return (
     <div
       ref={containerRef}
       style={{
-        ...ChartStyles.chartContainer,
+        ...chartStyles.chartContainer,
         position: "relative", // Enable relative positioning for the container
         minHeight: chartHeight, // Ensure container has minimum height for the chart
+        opacity: isReady ? 1 : 0, // Fade in when ready
       }}
     >
       {/* SVG Layer with embedded definitions via foreignObject */}
@@ -187,7 +232,9 @@ const TreeMenu: React.FC<TreeMenuProps> = ({
             />
           );
         })}
-        <TreeTrunk rootNode={root} />
+        <g>
+          <circle cx={root.x} cy={root.y} r={2} style={chartStyles.mainNode} />
+        </g>
       </svg>
     </div>
   );

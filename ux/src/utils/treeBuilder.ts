@@ -22,6 +22,10 @@ export function buildHierarchicalTree(input: TreeBuilderInput): HierarchyNode {
       id: "dataset",
       title: "No Data Set",
       type: "dataset",
+      x: 0,
+      y: 0,
+      width: 0,
+      height: 0,
       depth: 0,
       children: [],
     };
@@ -36,8 +40,12 @@ export function buildHierarchicalTree(input: TreeBuilderInput): HierarchyNode {
       id: "dataset",
       title: "Data Set",
       type: "dataset",
-      children: [],
+      x: 0,
+      y: 0,
+      width: 0,
+      height: 0,
       depth: 0,
+      children: [],
     };
 
     // Combine all nodes into a single array for generic processing
@@ -88,8 +96,12 @@ export function buildNodeHierarchy(nodes: any[]): {
       title: node.title || node.name || `Node ${node.id}`,
       definition: node.definition || "",
       type: node.node_type || "unknown",
+      x: 0,
+      y: 0,
+      width: 0,
+      height: 0,
+      depth: 0,
       children: [],
-      depth: 0, // Will be set during parent-child linking
     };
 
     nodeMap.set(node.id, hierarchyNode);
@@ -146,6 +158,10 @@ export function filterTreeByTerm(
         id: "filtered-dataset",
         title: "Term Not Found",
         type: "dataset",
+        x: 0,
+        y: 0,
+        width: 0,
+        height: 0,
         depth: 0,
         children: [],
       };

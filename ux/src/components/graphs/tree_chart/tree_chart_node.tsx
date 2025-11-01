@@ -29,7 +29,7 @@ const TreeChartNode: React.FC<TreeChartNodeProps> = ({
   const parentY = parentNode?.y ?? 0;
 
   // Use the measured text width from the node, with fallback
-  const labelWidth = node.textWidth ?? node.title.length * 6;
+  const labelWidth = node.titleWidth ?? node.title.length * 6;
 
   // Definition dimensions
   const definitionWidth = node.definitionWidth ?? 0;

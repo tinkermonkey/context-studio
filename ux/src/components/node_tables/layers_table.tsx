@@ -120,7 +120,7 @@ const LayersTable = React.forwardRef<any, LayersTableProps>((props, ref) => {
       typeName="Layer"
       getId={(item) => item.id}
       columnVisibility={columnVisibility}
-      linkGenerator={(layer: StructureNode) => `/app/nodes/layer/${layer.id}`}
+      linkGenerator={(layer: StructureNode) => `/app/structure_nodes/${layer.id}`}
     />
   );
 });

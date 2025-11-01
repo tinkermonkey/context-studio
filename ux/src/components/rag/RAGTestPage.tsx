@@ -23,16 +23,7 @@ function EntityItem({ entity }: { entity: any }) {
   const linkProps = useMemo(() => {
     if (!node?.id || !node?.node_type) return null;
 
-    switch (node.node_type) {
-      case 'layer':
-        return { to: '/app/nodes/layer/$layerId' as const, params: { layerId: node.id } };
-      case 'domain':
-        return { to: '/app/nodes/domain/$domainId' as const, params: { domainId: node.id } };
-      case 'term':
-        return { to: '/app/nodes/term/$termId' as const, params: { termId: node.id } };
-      default:
-        return null;
-    }
+    return { to: '/app/structure_nodes/$nodeId' as const, params: { nodeId: node.id } };
   }, [node]);
 
   return (

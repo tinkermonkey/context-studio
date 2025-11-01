@@ -94,7 +94,7 @@ const TreeChart: React.FC<TreeChartProps> = ({
       if (containerRef.current) {
         const width = containerRef.current.clientWidth;
         const height = containerRef.current.clientHeight;
-        console.log("Container dimensions measured:", { width, height });
+        //console.log("Container dimensions measured:", { width, height });
         setContainerWidth(width);
         setContainerHeight(height);
       }
@@ -162,16 +162,12 @@ const TreeChart: React.FC<TreeChartProps> = ({
 
   // Node click handler to navigate to the node's details
   const handleNodeClick = useCallback((node: any) => {
-    if (node.type === "term") {
-      navigate({ to: `/app/nodes/term/${node.id}` });
-    } else if (node.type === "domain") {
-      navigate({ to: `/app/nodes/domain/${node.id}` });
-    } else if (node.type === "layer") {
-      navigate({ to: `/app/nodes/layer/${node.id}` });
+    if (node.type === "term" || node.type === "domain" || node.type === "layer") {
+      navigate({ to: `/app/structure_nodes/${node.id}` });
     } else {
       console.warn("Clicked on unknown node:", node);
     }
-  }, []);
+  }, [navigate]);
 
   return (
     <div

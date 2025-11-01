@@ -1,6 +1,6 @@
 import React from "react";
 import { Spinner } from "flowbite-react";
-import { TreeChart } from "@/components/graphs/tree_chart/tree_chart";
+import { TreeMenu } from "@/components/graphs/tree_menu/tree_menu";
 import {
   useLayerNodes,
   useDomainNodes,
@@ -400,14 +400,16 @@ export function TreeChartPanel({
     );
   }
 
-  // Render the tree chart
+  // Render the tree menu with definitions
   return (
     <div className={className}>
-      <TreeChart
+      <TreeMenu
         chartData={chartData}
         initialExpandState={initialExpandState}
         highlightedTermId={termId || domainId || layerId}
         viewId={viewId}
+        showDefinitions={true}
+        titleWidth={0.2}
       />
     </div>
   );

@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useRef, useState, useEffect } from "react";
 import { Spinner } from "flowbite-react";
 import { TreeMenu } from "@/components/graphs/tree_menu/tree_menu";
 import {
@@ -64,6 +64,33 @@ export function TreeMenuPanel({
   errorComponent,
   viewId,
 }: TreeMenuPanelProps) {
+  // Container ref to measure width
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [containerWidth, setContainerWidth] = useState<number>(0);
+
+  // Measure container width on mount and resize
+  useEffect(() => {
+    const measureWidth = () => {
+      if (containerRef.current) {
+        const width = containerRef.current.clientWidth;
+        setContainerWidth(width);
+      }
+    };
+
+    // Initial measurement
+    measureWidth();
+
+    // Add resize listener
+    const resizeObserver = new ResizeObserver(measureWidth);
+    if (containerRef.current) {
+      resizeObserver.observe(containerRef.current);
+    }
+
+    return () => {
+      resizeObserver.disconnect();
+    };
+  }, []);
+
   // Load all base data
   const {
     data: layers,
@@ -113,7 +140,7 @@ export function TreeMenuPanel({
   // Handle loading state
   if (isLoading) {
     return (
-      <div className={`flex items-center justify-center p-4 ${className}`}>
+      <div ref={containerRef} className={`flex items-center justify-center p-4 ${className}`}>
         {loadingComponent || <Spinner size="sm" />}
       </div>
     );
@@ -124,11 +151,12 @@ export function TreeMenuPanel({
     apiLogger.error("TreeMenuPanel error", { error });
 
     if (errorComponent) {
-      return <div className={className}>{errorComponent}</div>;
+      return <div ref={containerRef} className={className}>{errorComponent}</div>;
     }
 
     return (
       <div
+        ref={containerRef}
         className={`flex items-center justify-center p-4 text-red-600 ${className}`}
       >
         <div className="text-center text-sm">
@@ -142,6 +170,7 @@ export function TreeMenuPanel({
   if (!chartData) {
     return (
       <div
+        ref={containerRef}
         className={`flex items-center justify-center p-4 text-gray-600 ${className}`}
       >
         <div className="text-center text-sm">
@@ -153,12 +182,13 @@ export function TreeMenuPanel({
 
   // Render the tree menu
   return (
-    <div className={className}>
+    <div ref={containerRef} className={className}>
       <TreeMenu
         chartData={chartData}
         highlightedTermId={highlightedTermId}
         onNodeClick={onNodeClick}
         viewId={viewId}
+        containerWidth={containerWidth}
       />
     </div>
   );

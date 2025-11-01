@@ -216,7 +216,7 @@ const TermsTable = React.forwardRef<any, TermsTableProps>((props, ref) => {
       onQueryParamsChange={onQueryParamsChange}
       filterFields={domainFilterFields}
       searchPlaceholder="Search..."
-      linkGenerator={(term: StructureNode) => `/app/nodes/term/${term.id}`}
+      linkGenerator={(term: StructureNode) => `/app/structure_nodes/${term.id}`}
       onGetChildren={getTermChildren}
       onMoveChildren={moveTermChildren}
     />

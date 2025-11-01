@@ -217,7 +217,7 @@ const DomainsTable = React.forwardRef<any, DomainsTableProps>((props, ref) => {
       onQueryParamsChange={onQueryParamsChange}
       filterFields={domainFilterFields}
       searchPlaceholder="Search..."
-      linkGenerator={(item: StructureNode) => `/app/nodes/domain/${item.id}`}
+      linkGenerator={(item: StructureNode) => `/app/structure_nodes/${item.id}`}
       onGetChildren={getDomainsChildren}
       onMoveChildren={moveDomainsChildren}
     />

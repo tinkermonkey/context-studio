@@ -1,12 +1,13 @@
 import React, { useState } from "react";
-import { ChartStyles, EdgeColors } from "./tree_menu_styles";
 import {
-  createNodePath,
-  createMenuNodeBackgroundPath,
-} from "../tree_chart/tree_chart_utils";
+  chartStyles,
+  EdgeColors,
+  layoutConfig,
+  definitionSpacing,
+} from "./config";
+import { createNodeSpinePath, createMenuNodeBackgroundPath } from "./geometry";
 import type { HierarchyNode } from "../tree_chart/tree_data";
 import { ChevronDown, ChevronUp } from "lucide-react";
-import { defaultLayoutConfig } from "./tree_menu_layout";
 
 interface TreeMenuNodeProps {
   node: HierarchyNode;
@@ -27,9 +28,7 @@ const TreeMenuNode: React.FC<TreeMenuNodeProps> = ({
   const nodeY = node.y ?? 0;
   const parentX = parentNode?.x ?? 0;
   const parentY = parentNode?.y ?? 0;
-
-  // Use the measured text width from the node, with fallback
-  const labelWidth = node.textWidth ?? node.title.length * 6;
+  const parentHeight = parentNode?.height ?? 0;
 
   // Check if node has children based on original data (not current children array)
   const hasChildren =
@@ -46,13 +45,13 @@ const TreeMenuNode: React.FC<TreeMenuNodeProps> = ({
   // Check if this node should be highlighted
   const isHighlighted = highlightedTermId && node.id === highlightedTermId;
 
-  const handleClick = () => {
+  const handleExpandToggleClick = () => {
     if (hasChildren && onToggle) {
       onToggle(node.id);
     }
   };
 
-  const handleNodeTextClick = () => {
+  const handleNodeClick = () => {
     if (onNodeClick) {
       onNodeClick(node);
     }
@@ -79,82 +78,176 @@ const TreeMenuNode: React.FC<TreeMenuNodeProps> = ({
           );
         })}
 
-      {/* Node label */}
+      {/* Background for node */}
       <g
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
         style={{ cursor: onNodeClick ? "pointer" : "default" }}
+        onClick={handleNodeClick}
       >
-        {/* Background for node */}
+        {/*}
+        <circle
+          cx={nodeX}
+          cy={nodeY}
+          r={2}
+          fill={isHighlighted ? "#ff5900" : nodeColor}
+        />
+        */}
+
+        <rect
+          className="tree-node-bg"
+          x={nodeX}
+          y={nodeY}
+          width={node.width}
+          height={node.height}
+          fill={"transparent"}
+          fillOpacity={0.2}
+          style={{ transition: "fill 0.1s ease-in-out" }}
+        />
+
         <path
           className="tree-node-bg"
           d={createMenuNodeBackgroundPath(
             nodeX,
             nodeY,
-            labelWidth,
-            ChartStyles.nodeLabel.height,
-            node.childIndex || 0,
-            defaultLayoutConfig,
-            ChartStyles,
+            (node.definitionWidth ? node.width : node.titleWidth) || 0,
+            node.height || 0,
+            node.childIndex,
           )}
-          fill={isHovered ? nodeColor : "transparent"}
-          fillOpacity={0.2}
+          fill={isHovered || isHighlighted ? nodeColor : "transparent"}
+          fillOpacity={0.3}
           style={{ transition: "fill 0.1s ease-in-out" }}
         />
 
-        {/* Node title */}
-        <text
-          className="tree-node-label"
-          x={nodeX - 4}
-          y={nodeY - ChartStyles.nodeLabel.height / 2}
-          style={{
-            ...ChartStyles.nodeLabel,
-            //fontWeight: isHighlighted ? "bold" : "normal",
-          }}
+        {/* Node title using foreignObject for text wrapping */}
+        <foreignObject
+          x={nodeX}
+          y={nodeY + node.height - (node.titleHeight || 0)}
+          width={node.titleWidth}
+          height={node.titleHeight}
         >
-          {node.title}
-        </text>
-      </g>
+          <div
+            className="tree-node-label"
+            style={{
+              font: chartStyles.nodeLabel.font,
+              color: chartStyles.nodeLabel.color,
+              padding: chartStyles.nodeLabel.padding,
+              margin: chartStyles.nodeLabel.margin,
+              lineHeight: chartStyles.nodeLabel.lineHeight,
+              maxWidth: `${node.titleWidth}px`,
+              wordWrap: "break-word",
+              overflowWrap: "break-word",
+              hyphens: "auto",
+              boxSizing: "border-box",
+              backgroundColor: chartStyles.nodeLabel.backgroundColor,
+            }}
+          >
+            {node.title}
+          </div>
+        </foreignObject>
 
-      {/* Branch line from parent to this node */}
-      {parentNode && (
-        <path
-          d={createNodePath(parentX, parentY, nodeX + labelWidth + 16, nodeY)}
-          style={{
-            ...ChartStyles.branchLine,
-            stroke: nodeColor,
-          }}
-        />
-      )}
+        {/* Node definition using foreignObject for text wrapping */}
+        {node.definition &&
+          node.definitionWidth &&
+          node.definitionWidth > 0 && (
+            <foreignObject
+              className="tree-node-definition-container"
+              x={
+                nodeX +
+                (node.titleWidth || 0) +
+                definitionSpacing.controlsWidth +
+                (layoutConfig.expandControls?.width || 0) +
+                definitionSpacing.leftMargin
+              }
+              y={nodeY + node.height - (node.definitionHeight || 0)}
+              width={node.definitionWidth}
+              height={node.definitionHeight || 0}
+            >
+              <div
+                className="tree-node-definition"
+                style={{
+                  width: node.definitionWidth,
+                  height: node.definitionHeight,
+                  borderRadius: "4px",
+                  font: chartStyles.nodeDefinition.font,
+                  color: chartStyles.nodeDefinition.color,
+                  padding: chartStyles.nodeDefinition.padding,
+                  lineHeight: chartStyles.nodeDefinition.lineHeight,
+                  backgroundColor: chartStyles.nodeDefinition.backgroundColor,
+                  wordWrap: "break-word",
+                  overflowWrap: "break-word",
+                  hyphens: "auto",
+                  boxSizing: "border-box",
+                }}
+              >
+                {node.definition}
+              </div>
+            </foreignObject>
+          )}
+      </g>
 
       {/* Expand/collapse indicator for nodes with children */}
       {hasChildren && (
         <g
           className="tree-expand-controls"
-          onClick={handleClick}
+          onClick={handleExpandToggleClick}
           onMouseEnter={() => setIsExpandControlHovered(true)}
           onMouseLeave={() => setIsExpandControlHovered(false)}
           style={{ cursor: "pointer" }}
-          transform={`translate(${nodeX + labelWidth} ${nodeY - ChartStyles.nodeLabel.height - 4})`}
+          transform={`translate(${nodeX + (node.titleWidth || 0)} ${nodeY})`}
         >
           <rect
             className="tree-expand-controls-bg"
             x={0}
-            y={0}
-            width={16}
-            height={22}
-            fill={isExpandControlHovered ? `#DDD` : `none`}
+            y={chartStyles.branchLine.strokeWidth / 2}
+            width={layoutConfig.expandControls?.width || 0}
+            height={node.height - chartStyles.branchLine.strokeWidth || 0}
+            fill={isExpandControlHovered ? `#DDD` : `transparent`}
             stroke={`none`}
-            strokeWidth={2}
+            style={{ transition: "fill 0.2s ease-in-out" }}
           />
-          <foreignObject x={0} y={3} width={16} height={16}>
+          {/** Expand/Collapse Icon, the y adjustment is purely for the icon centering and should be static */}
+          <foreignObject
+            x={0}
+            y={Math.max(
+              (node.height - (layoutConfig.expandControls?.width || 0)) / 2,
+              2,
+            )}
+            width={layoutConfig.expandControls?.width || 0}
+            height={layoutConfig.expandControls?.width }
+          >
             {isExpanded ? (
-              <ChevronUp size={16} color={nodeColor} />
+              <ChevronUp
+                size={layoutConfig.expandControls?.width || 16}
+                color={nodeColor}
+              />
             ) : (
-              <ChevronDown size={16} color={nodeColor} />
+              <ChevronDown
+                size={layoutConfig.expandControls?.width || 16}
+                color={nodeColor}
+              />
             )}
           </foreignObject>
         </g>
+      )}
+
+      {/* Branch line from parent to this node */}
+      {parentNode && (
+        <path
+          d={createNodeSpinePath(
+            parentX,
+            parentY,
+            parentHeight,
+            nodeX,
+            nodeY,
+            (node.titleWidth || 0) + (layoutConfig.expandControls?.width || 0),
+            node.height || 0,
+          )}
+          style={{
+            ...chartStyles.branchLine,
+            stroke: nodeColor,
+          }}
+        />
       )}
     </g>
   );

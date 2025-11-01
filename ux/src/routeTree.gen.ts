@@ -20,6 +20,7 @@ import { Route as AppDatasetsRouteImport } from './routes/app/datasets'
 import { Route as AppConfigRouteImport } from './routes/app/config'
 import { Route as AppReferenceIndexRouteImport } from './routes/app/reference/index'
 import { Route as AppConfigIndexRouteImport } from './routes/app/config/index'
+import { Route as AppStructure_nodesNodeIdRouteImport } from './routes/app/structure_nodes/$nodeId'
 import { Route as AppReferenceSearchRouteImport } from './routes/app/reference/search'
 import { Route as AppReferenceRagTestRouteImport } from './routes/app/reference/rag-test'
 import { Route as AppReferencePredicatesRouteImport } from './routes/app/reference/predicates'
@@ -39,9 +40,6 @@ import { Route as AppConfigModelsRouteImport } from './routes/app/config/models'
 import { Route as AppConfigDataSourcesRouteImport } from './routes/app/config/data-sources'
 import { Route as AppConfigAdvancedRouteImport } from './routes/app/config/advanced'
 import { Route as AppConfigPipelinesIndexRouteImport } from './routes/app/config/pipelines.index'
-import { Route as AppNodesTermTermIdRouteImport } from './routes/app/nodes/term/$termId'
-import { Route as AppNodesLayerLayerIdRouteImport } from './routes/app/nodes/layer/$layerId'
-import { Route as AppNodesDomainDomainIdRouteImport } from './routes/app/nodes/domain/$domainId'
 import { Route as AppConfigPipelinesPipelineTypeRouteImport } from './routes/app/config/pipelines.$pipelineType'
 import { Route as AppConfigPipelinesPipelineTypeIndexRouteImport } from './routes/app/config/pipelines.$pipelineType.index'
 import { Route as AppConfigPipelinesPipelineTypeCreateRouteImport } from './routes/app/config/pipelines.$pipelineType.create'
@@ -103,6 +101,12 @@ const AppConfigIndexRoute = AppConfigIndexRouteImport.update({
   path: '/',
   getParentRoute: () => AppConfigRoute,
 } as any)
+const AppStructure_nodesNodeIdRoute =
+  AppStructure_nodesNodeIdRouteImport.update({
+    id: '/structure_nodes/$nodeId',
+    path: '/structure_nodes/$nodeId',
+    getParentRoute: () => AppRoute,
+  } as any)
 const AppReferenceSearchRoute = AppReferenceSearchRouteImport.update({
   id: '/reference/search',
   path: '/reference/search',
@@ -203,21 +207,6 @@ const AppConfigPipelinesIndexRoute = AppConfigPipelinesIndexRouteImport.update({
   path: '/',
   getParentRoute: () => AppConfigPipelinesRoute,
 } as any)
-const AppNodesTermTermIdRoute = AppNodesTermTermIdRouteImport.update({
-  id: '/nodes/term/$termId',
-  path: '/nodes/term/$termId',
-  getParentRoute: () => AppRoute,
-} as any)
-const AppNodesLayerLayerIdRoute = AppNodesLayerLayerIdRouteImport.update({
-  id: '/nodes/layer/$layerId',
-  path: '/nodes/layer/$layerId',
-  getParentRoute: () => AppRoute,
-} as any)
-const AppNodesDomainDomainIdRoute = AppNodesDomainDomainIdRouteImport.update({
-  id: '/nodes/domain/$domainId',
-  path: '/nodes/domain/$domainId',
-  getParentRoute: () => AppRoute,
-} as any)
 const AppConfigPipelinesPipelineTypeRoute =
   AppConfigPipelinesPipelineTypeRouteImport.update({
     id: '/$pipelineType',
@@ -277,12 +266,10 @@ export interface FileRoutesByFullPath {
   '/app/reference/predicates': typeof AppReferencePredicatesRoute
   '/app/reference/rag-test': typeof AppReferenceRagTestRoute
   '/app/reference/search': typeof AppReferenceSearchRoute
+  '/app/structure_nodes/$nodeId': typeof AppStructure_nodesNodeIdRoute
   '/app/config/': typeof AppConfigIndexRoute
   '/app/reference': typeof AppReferenceIndexRoute
   '/app/config/pipelines/$pipelineType': typeof AppConfigPipelinesPipelineTypeRouteWithChildren
-  '/app/nodes/domain/$domainId': typeof AppNodesDomainDomainIdRoute
-  '/app/nodes/layer/$layerId': typeof AppNodesLayerLayerIdRoute
-  '/app/nodes/term/$termId': typeof AppNodesTermTermIdRoute
   '/app/config/pipelines/': typeof AppConfigPipelinesIndexRoute
   '/app/config/pipelines/$pipelineType/create': typeof AppConfigPipelinesPipelineTypeCreateRoute
   '/app/config/pipelines/$pipelineType/': typeof AppConfigPipelinesPipelineTypeIndexRoute
@@ -314,11 +301,9 @@ export interface FileRoutesByTo {
   '/app/reference/predicates': typeof AppReferencePredicatesRoute
   '/app/reference/rag-test': typeof AppReferenceRagTestRoute
   '/app/reference/search': typeof AppReferenceSearchRoute
+  '/app/structure_nodes/$nodeId': typeof AppStructure_nodesNodeIdRoute
   '/app/config': typeof AppConfigIndexRoute
   '/app/reference': typeof AppReferenceIndexRoute
-  '/app/nodes/domain/$domainId': typeof AppNodesDomainDomainIdRoute
-  '/app/nodes/layer/$layerId': typeof AppNodesLayerLayerIdRoute
-  '/app/nodes/term/$termId': typeof AppNodesTermTermIdRoute
   '/app/config/pipelines': typeof AppConfigPipelinesIndexRoute
   '/app/config/pipelines/$pipelineType/create': typeof AppConfigPipelinesPipelineTypeCreateRoute
   '/app/config/pipelines/$pipelineType': typeof AppConfigPipelinesPipelineTypeIndexRoute
@@ -354,12 +339,10 @@ export interface FileRoutesById {
   '/app/reference/predicates': typeof AppReferencePredicatesRoute
   '/app/reference/rag-test': typeof AppReferenceRagTestRoute
   '/app/reference/search': typeof AppReferenceSearchRoute
+  '/app/structure_nodes/$nodeId': typeof AppStructure_nodesNodeIdRoute
   '/app/config/': typeof AppConfigIndexRoute
   '/app/reference/': typeof AppReferenceIndexRoute
   '/app/config/pipelines/$pipelineType': typeof AppConfigPipelinesPipelineTypeRouteWithChildren
-  '/app/nodes/domain/$domainId': typeof AppNodesDomainDomainIdRoute
-  '/app/nodes/layer/$layerId': typeof AppNodesLayerLayerIdRoute
-  '/app/nodes/term/$termId': typeof AppNodesTermTermIdRoute
   '/app/config/pipelines/': typeof AppConfigPipelinesIndexRoute
   '/app/config/pipelines/$pipelineType/create': typeof AppConfigPipelinesPipelineTypeCreateRoute
   '/app/config/pipelines/$pipelineType/': typeof AppConfigPipelinesPipelineTypeIndexRoute
@@ -396,12 +379,10 @@ export interface FileRouteTypes {
     | '/app/reference/predicates'
     | '/app/reference/rag-test'
     | '/app/reference/search'
+    | '/app/structure_nodes/$nodeId'
     | '/app/config/'
     | '/app/reference'
     | '/app/config/pipelines/$pipelineType'
-    | '/app/nodes/domain/$domainId'
-    | '/app/nodes/layer/$layerId'
-    | '/app/nodes/term/$termId'
     | '/app/config/pipelines/'
     | '/app/config/pipelines/$pipelineType/create'
     | '/app/config/pipelines/$pipelineType/'
@@ -433,11 +414,9 @@ export interface FileRouteTypes {
     | '/app/reference/predicates'
     | '/app/reference/rag-test'
     | '/app/reference/search'
+    | '/app/structure_nodes/$nodeId'
     | '/app/config'
     | '/app/reference'
-    | '/app/nodes/domain/$domainId'
-    | '/app/nodes/layer/$layerId'
-    | '/app/nodes/term/$termId'
     | '/app/config/pipelines'
     | '/app/config/pipelines/$pipelineType/create'
     | '/app/config/pipelines/$pipelineType'
@@ -472,12 +451,10 @@ export interface FileRouteTypes {
     | '/app/reference/predicates'
     | '/app/reference/rag-test'
     | '/app/reference/search'
+    | '/app/structure_nodes/$nodeId'
     | '/app/config/'
     | '/app/reference/'
     | '/app/config/pipelines/$pipelineType'
-    | '/app/nodes/domain/$domainId'
-    | '/app/nodes/layer/$layerId'
-    | '/app/nodes/term/$termId'
     | '/app/config/pipelines/'
     | '/app/config/pipelines/$pipelineType/create'
     | '/app/config/pipelines/$pipelineType/'
@@ -568,6 +545,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/app/config/'
       preLoaderRoute: typeof AppConfigIndexRouteImport
       parentRoute: typeof AppConfigRoute
+    }
+    '/app/structure_nodes/$nodeId': {
+      id: '/app/structure_nodes/$nodeId'
+      path: '/structure_nodes/$nodeId'
+      fullPath: '/app/structure_nodes/$nodeId'
+      preLoaderRoute: typeof AppStructure_nodesNodeIdRouteImport
+      parentRoute: typeof AppRoute
     }
     '/app/reference/search': {
       id: '/app/reference/search'
@@ -702,27 +686,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppConfigPipelinesIndexRouteImport
       parentRoute: typeof AppConfigPipelinesRoute
     }
-    '/app/nodes/term/$termId': {
-      id: '/app/nodes/term/$termId'
-      path: '/nodes/term/$termId'
-      fullPath: '/app/nodes/term/$termId'
-      preLoaderRoute: typeof AppNodesTermTermIdRouteImport
-      parentRoute: typeof AppRoute
-    }
-    '/app/nodes/layer/$layerId': {
-      id: '/app/nodes/layer/$layerId'
-      path: '/nodes/layer/$layerId'
-      fullPath: '/app/nodes/layer/$layerId'
-      preLoaderRoute: typeof AppNodesLayerLayerIdRouteImport
-      parentRoute: typeof AppRoute
-    }
-    '/app/nodes/domain/$domainId': {
-      id: '/app/nodes/domain/$domainId'
-      path: '/nodes/domain/$domainId'
-      fullPath: '/app/nodes/domain/$domainId'
-      preLoaderRoute: typeof AppNodesDomainDomainIdRouteImport
-      parentRoute: typeof AppRoute
-    }
     '/app/config/pipelines/$pipelineType': {
       id: '/app/config/pipelines/$pipelineType'
       path: '/$pipelineType'
@@ -844,10 +807,8 @@ interface AppRouteChildren {
   AppReferencePredicatesRoute: typeof AppReferencePredicatesRoute
   AppReferenceRagTestRoute: typeof AppReferenceRagTestRoute
   AppReferenceSearchRoute: typeof AppReferenceSearchRoute
+  AppStructure_nodesNodeIdRoute: typeof AppStructure_nodesNodeIdRoute
   AppReferenceIndexRoute: typeof AppReferenceIndexRoute
-  AppNodesDomainDomainIdRoute: typeof AppNodesDomainDomainIdRoute
-  AppNodesLayerLayerIdRoute: typeof AppNodesLayerLayerIdRoute
-  AppNodesTermTermIdRoute: typeof AppNodesTermTermIdRoute
 }
 
 const AppRouteChildren: AppRouteChildren = {
@@ -869,10 +830,8 @@ const AppRouteChildren: AppRouteChildren = {
   AppReferencePredicatesRoute: AppReferencePredicatesRoute,
   AppReferenceRagTestRoute: AppReferenceRagTestRoute,
   AppReferenceSearchRoute: AppReferenceSearchRoute,
+  AppStructure_nodesNodeIdRoute: AppStructure_nodesNodeIdRoute,
   AppReferenceIndexRoute: AppReferenceIndexRoute,
-  AppNodesDomainDomainIdRoute: AppNodesDomainDomainIdRoute,
-  AppNodesLayerLayerIdRoute: AppNodesLayerLayerIdRoute,
-  AppNodesTermTermIdRoute: AppNodesTermTermIdRoute,
 }
 
 const AppRouteWithChildren = AppRoute._addFileChildren(AppRouteChildren)

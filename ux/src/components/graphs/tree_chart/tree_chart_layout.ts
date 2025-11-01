@@ -204,11 +204,11 @@ export function calculateLayout(
     node.depth = depth;
 
     // Use sibling max text width if provided, otherwise calculate individual width
-    node.textWidth =
+    node.titleWidth =
       siblingMaxTextWidth ?? textWidthCache.getTextWidth(node.title);
 
     node.definitionWidth = maxWidth
-      ? maxWidth - (config.margins.right || 0) - node.x - (node.textWidth || 0)
+      ? maxWidth - (config.margins.right || 0) - node.x - (node.titleWidth || 0)
       : 0;
     node.definitionHeight = measureHtmlTextHeight(
       node.definition || "",
