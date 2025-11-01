@@ -14,6 +14,7 @@ import {
   Edit3,
   Database,
   Layers,
+  Brain,
 } from "lucide-react";
 import { NodeType } from "@/api/types/structureNodes";
 import { useTermHierarchy } from "@/api/hooks/graph/useGraph";
@@ -33,6 +34,7 @@ import { NlpAnalysisPanel } from "@/components/nlp/NlpAnalysisPanel";
 import { TreeChartPanel } from "@/components/panels/TreeChartPanel";
 import type { StructureNode } from "@/api/types/structureNodes";
 import { TreeMenuPanel } from "@/components/panels/TreeMenuPanel";
+import { useNlpAnalysisStore } from "@/stores/nlpAnalysisStore";
 
 type NodeOut = components["schemas"]["NodeOut"];
 
@@ -44,10 +46,17 @@ export const StructureNodeDetails: React.FC<StructureNodeDetailsProps> = ({
   node,
 }) => {
   const [isEditOpen, setIsEditOpen] = React.useState(false);
+  const { setText, triggerAnalysis } = useNlpAnalysisStore();
 
-  // Get the appropriate icon based on node type
-  const getNodeIcon = () => {
-    switch (node.node_type) {
+  // Handle analyze button click
+  const handleAnalyze = React.useCallback(() => {
+    setText(node.title);
+    triggerAnalysis();
+  }, [node.title, setText, triggerAnalysis]);
+
+  // Helper to get icon for a node type
+  const getIconForType = (nodeType: string) => {
+    switch (nodeType) {
       case NodeType.LAYER:
         return Layers;
       case NodeType.DOMAIN:
@@ -59,7 +68,7 @@ export const StructureNodeDetails: React.FC<StructureNodeDetailsProps> = ({
     }
   };
 
-  const NodeIcon = getNodeIcon();
+  const NodeIcon = getIconForType(node.node_type);
 
   // Load hierarchy data for all nodes
   const { data: hierarchy, isLoading: hierarchyLoading } = useTermHierarchy(
@@ -139,22 +148,9 @@ export const StructureNodeDetails: React.FC<StructureNodeDetailsProps> = ({
               </BreadcrumbItem>
             ) : (
               (() => {
-                // Helper to get icon for a node type
-                const getIconForType = (nodeType: NodeType) => {
-                  switch (nodeType) {
-                    case NodeType.LAYER:
-                      return Layers;
-                    case NodeType.DOMAIN:
-                      return Database;
-                    case NodeType.TERM:
-                      return Hash;
-                    default:
-                      return Hash;
-                  }
-                };
 
                 // If lineage is short (3 or fewer items), show all
-                if (lineage.length <= 3) {
+                if (lineage.length <= 4) {
                   return lineage.map((ancestorNode, index) => {
                     const isLast = index === lineage.length - 1;
                     const icon = getIconForType(ancestorNode.node_type);
@@ -223,10 +219,16 @@ export const StructureNodeDetails: React.FC<StructureNodeDetailsProps> = ({
               </div>
             </div>
           </div>
-          <Button color="gray" size="sm" onClick={() => setIsEditOpen(true)}>
-            <Edit3 className="mr-2 h-4 w-4" />
-            Edit
-          </Button>
+          <div className="flex gap-2">
+            <Button color="gray" size="sm" onClick={handleAnalyze}>
+              <Brain className="mr-2 h-4 w-4" />
+              Analyze
+            </Button>
+            <Button color="gray" size="sm" onClick={() => setIsEditOpen(true)}>
+              <Edit3 className="mr-2 h-4 w-4" />
+              Edit
+            </Button>
+          </div>
         </div>
 
         <div className="space-y-6">
@@ -346,7 +348,7 @@ const EditModal: React.FC<{
   };
 
   return (
-    <Modal show={isOpen} onClose={onClose} size="lg">
+    <Modal show={isOpen} onClose={onClose}>
       <ModalHeader className="border-b-0">{getModalTitle()}</ModalHeader>
       <ModalBody>{getForm()}</ModalBody>
     </Modal>

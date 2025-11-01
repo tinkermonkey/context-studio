@@ -14,6 +14,7 @@ export interface TextMeasurementOptions {
 let measurementSvg: SVGSVGElement | null = null;
 let measurementText: SVGTextElement | null = null;
 let measurementHtml: HTMLDivElement | null = null;
+let measurementReady = false;
 
 // Initialize the offscreen SVG element for text measurement
 function initializeMeasurementSvg(): void {
@@ -35,6 +36,9 @@ function initializeMeasurementSvg(): void {
   );
   measurementSvg.appendChild(measurementText);
   document.body.appendChild(measurementSvg);
+
+  // Mark as ready after DOM insertion
+  measurementReady = true;
 }
 
 // Clean up the measurement SVG when component unmounts
@@ -43,6 +47,7 @@ export function cleanupMeasurementSvg(): void {
     measurementSvg.parentNode.removeChild(measurementSvg);
     measurementSvg = null;
     measurementText = null;
+    measurementReady = false;
   }
 }
 
@@ -66,13 +71,28 @@ function initializeMeasurementHtml(): void {
 
     document.body.appendChild(measurementHtml);
   }
+
+  // Mark as ready after DOM insertion
+  measurementReady = true;
+}
+
+// Eagerly initialize both measurement elements
+export function initializeMeasurementElements(): void {
+  initializeMeasurementSvg();
+  initializeMeasurementHtml();
 }
 
 export function cleanupMeasurementHtml(): void {
   if (measurementHtml && measurementHtml.parentNode) {
     measurementHtml.parentNode.removeChild(measurementHtml);
     measurementHtml = null;
+    measurementReady = false;
   }
+}
+
+// Check if measurement elements are ready
+export function isMeasurementReady(): boolean {
+  return measurementReady && measurementSvg !== null && measurementHtml !== null;
 }
 
 // Extract font properties from chart styles with better parsing
@@ -190,7 +210,16 @@ export function measureSvgTextWidth(
 
   // Get the bounding box
   const bbox = measurementText.getBBox();
-  return Math.ceil(bbox.width);
+  const width = Math.ceil(bbox.width);
+
+  // Validate measurement - warn if we got zero for non-empty text
+  if (width === 0 && text.length > 0) {
+    console.warn(`[TreeMenu] Measurement returned zero width for text: "${text.substring(0, 50)}..."`);
+    // Return a fallback based on character count
+    return text.length * 8; // Approximate 8px per character
+  }
+
+  return width;
 }
 
 // Measure HTML text height with specific font properties and width
@@ -200,6 +229,10 @@ export function measureHtmlTextHeight(
   options: TextMeasurementOptions = {},
 ): number {
   if (!text) return 0;
+  if (width <= 0) {
+    console.warn(`[TreeMenu] Invalid width (${width}) for text height measurement`);
+    return 0;
+  }
 
   // Initialize measurement HTML container if needed
   initializeMeasurementHtml();
@@ -244,6 +277,13 @@ export function measureHtmlTextHeight(
   // Get the bounding box height
   const bbox = measurementHtml.getBoundingClientRect();
   const height = Math.ceil(bbox.height);
+
+  // Validate measurement - warn if we got zero for non-empty text
+  if (height === 0 && text.length > 0) {
+    console.warn(`[TreeMenu] Measurement returned zero height for text: "${text.substring(0, 50)}..." (width: ${width}px)`);
+    // Return a fallback minimum height
+    return 20; // Approximate minimum single-line height
+  }
 
   return height;
 }

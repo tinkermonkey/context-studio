@@ -136,6 +136,12 @@ export function cleanupMeasurementHtml(): void {
   }
 }
 
+// Eagerly initialize both measurement elements
+export function initializeMeasurementElements(): void {
+  initializeMeasurementSvg();
+  initializeMeasurementHtml();
+}
+
 // Text measurement options interface
 export interface TextMeasurementOptions {
   fontSize?: string;

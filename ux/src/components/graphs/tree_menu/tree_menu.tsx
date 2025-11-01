@@ -12,7 +12,7 @@ import {
   useMeasurementSvg,
   useMeasurementHtml,
 } from "../tree_chart/useMeasurementElement";
-import { calculateLayout } from "./layout";
+import { calculateLayout, clearTextHeightCache } from "./layout";
 import { usePersistedExpandState } from "../tree_chart/usePersistedExpandState";
 import { Alert } from "flowbite-react";
 import { useNavigate } from "@tanstack/react-router";
@@ -144,9 +144,19 @@ const TreeMenu: React.FC<TreeMenuProps> = ({
 
   // Calculate the layout with current expanded state and container dimensions
   const { root, dimensions } = useMemo(() => {
+    // Don't calculate layout until container width is measured (unless provided via props)
+    // This prevents zero-width calculations that can lead to cached zero heights
+    if (!propContainerWidth && containerWidth === 0) {
+      console.warn("[TreeMenu] Waiting for container width measurement before calculating layout");
+      return {
+        root: { ...chartData.root, children: [] },
+        dimensions: { width: 0, height: 0 }
+      };
+    }
+
     // Only pass container width if it's been measured (> 0)
     const maxWidth = containerWidth > 0 ? containerWidth : undefined;
-    return calculateLayout(
+    const layout = calculateLayout(
       chartData,
       expandState,
       undefined,
@@ -155,7 +165,14 @@ const TreeMenu: React.FC<TreeMenuProps> = ({
       showDefinitions,
       titleWidth,
     );
-  }, [chartData, expandState, containerWidth, showDefinitions, titleWidth]);
+
+    // Validate layout to detect zero-height issues
+    if (layout.dimensions.height === 0 && chartData.root.children?.length > 0) {
+      console.error("[TreeMenu] Layout calculation resulted in zero height despite having children");
+    }
+
+    return layout;
+  }, [chartData, expandState, containerWidth, showDefinitions, titleWidth, propContainerWidth]);
 
   // Calculate the actual height needed for the chart content
   const chartHeight = useMemo(() => {
@@ -179,12 +196,48 @@ const TreeMenu: React.FC<TreeMenuProps> = ({
     setIsReady(false);
   }, [chartData]);
 
+  // Recovery mechanism: detect and fix zero-height layouts
+  const [recoveryAttempted, setRecoveryAttempted] = useState(false);
+  useEffect(() => {
+    const hasChildren = root.children?.length > 0;
+    const hasZeroHeight = dimensions.height === 0;
+    const hasValidWidth = (propContainerWidth || containerWidth) > 0;
+
+    if (hasChildren && hasZeroHeight && hasValidWidth && !recoveryAttempted) {
+      console.warn("[TreeMenu] Detected zero-height layout - attempting recovery by clearing measurement cache");
+
+      // Clear the measurement cache to force remeasurement
+      clearTextHeightCache();
+
+      // Mark recovery as attempted to prevent infinite loops
+      setRecoveryAttempted(true);
+
+      // Force a small delay to ensure DOM is ready, then trigger re-render
+      setTimeout(() => {
+        setIsReady(false);
+        // The layout will recalculate due to the cleared cache
+      }, 50);
+    } else if (hasChildren && dimensions.height > 0) {
+      // Reset recovery flag when we have valid dimensions
+      setRecoveryAttempted(false);
+    }
+  }, [root, dimensions, containerWidth, propContainerWidth, recoveryAttempted]);
+
   // Mark component as ready after layout is calculated and container is measured
   useEffect(() => {
-    if (root) {
+    // Only mark as ready if we have a valid layout with non-zero dimensions
+    // or if there are genuinely no children to render
+    const hasValidDimensions = dimensions.height > 0 || (root.children?.length === 0);
+    const hasValidWidth = propContainerWidth || containerWidth > 0;
+
+    if (root && hasValidDimensions && hasValidWidth) {
       setIsReady(true);
+    } else if (root && !hasValidDimensions && root.children?.length > 0) {
+      // We have children but zero height - this indicates a measurement problem
+      console.warn("[TreeMenu] Detected zero-height layout with children present - delaying ready state");
+      setIsReady(false);
     }
-  }, [root]);
+  }, [root, dimensions, containerWidth, propContainerWidth]);
 
   // Node click handler to navigate to the node's details
   // Uses provided onNodeClick if present, otherwise navigates to details page
