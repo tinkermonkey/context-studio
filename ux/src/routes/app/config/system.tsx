@@ -21,6 +21,7 @@ import {
   useConfiguration,
   useUpdateConfigurationValue
 } from "@/api/hooks";
+import { useButterToast } from "@/hooks/useButterToast";
 
 export const Route = createFileRoute("/app/config/system")({
   component: RouteComponent,
@@ -37,38 +38,84 @@ const LOG_LEVELS = [
 function RouteComponent() {
   const { data: configuration, isLoading: isLoadingConfig } = useConfiguration();
   const updateConfigMutation = useUpdateConfigurationValue();
+  const toast = useButterToast();
+
+  const getConfigLabel = (path: string): string => {
+    const labels: Record<string, string> = {
+      'host': 'Host address',
+      'port': 'Port',
+      'cors_origins': 'CORS origins',
+      'reload': 'Auto-reload',
+      'access_log': 'Access logs',
+      'log_level': 'Server log level',
+      'level': 'Log level',
+      'enable_console': 'Console logging',
+      'enable_file': 'File logging',
+      'file_path': 'Log file path',
+      'format': 'Log format',
+      'date_format': 'Date format',
+      'max_file_size': 'Max file size',
+      'backup_count': 'Backup count',
+      'require_secure_key': 'Secure key requirement',
+      'secure_key': 'Secure key',
+      'api_key_header': 'API key header',
+      'log_security_events': 'Security event logging'
+    };
+    return labels[path] || path;
+  };
 
   const handleUpdateServerConfig = async (path: string, value: any) => {
-    try {
-      await updateConfigMutation.mutateAsync({
+    const label = getConfigLabel(path);
+    await updateConfigMutation.mutateAsync(
+      {
         path: `server.${path}`,
         value
-      });
-    } catch (error) {
-      console.error(`Failed to update server config ${path}:`, error);
-    }
+      },
+      {
+        onSuccess: () => {
+          toast.success(`Server ${label} updated successfully`);
+        },
+        onError: (error) => {
+          toast.error(`Failed to update server ${label}: ${error instanceof Error ? error.message : 'Unknown error'}`);
+        }
+      }
+    );
   };
 
   const handleUpdateLoggingConfig = async (path: string, value: any) => {
-    try {
-      await updateConfigMutation.mutateAsync({
+    const label = getConfigLabel(path);
+    await updateConfigMutation.mutateAsync(
+      {
         path: `logging.${path}`,
         value
-      });
-    } catch (error) {
-      console.error(`Failed to update logging config ${path}:`, error);
-    }
+      },
+      {
+        onSuccess: () => {
+          toast.success(`Logging ${label} updated successfully`);
+        },
+        onError: (error) => {
+          toast.error(`Failed to update logging ${label}: ${error instanceof Error ? error.message : 'Unknown error'}`);
+        }
+      }
+    );
   };
 
   const handleUpdateSecurityConfig = async (path: string, value: any) => {
-    try {
-      await updateConfigMutation.mutateAsync({
+    const label = getConfigLabel(path);
+    await updateConfigMutation.mutateAsync(
+      {
         path: `security.${path}`,
         value
-      });
-    } catch (error) {
-      console.error(`Failed to update security config ${path}:`, error);
-    }
+      },
+      {
+        onSuccess: () => {
+          toast.success(`Security ${label} updated successfully`);
+        },
+        onError: (error) => {
+          toast.error(`Failed to update security ${label}: ${error instanceof Error ? error.message : 'Unknown error'}`);
+        }
+      }
+    );
   };
 
   if (isLoadingConfig) {

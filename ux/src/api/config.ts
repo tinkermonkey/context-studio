@@ -4,8 +4,13 @@
  * Configuration settings for the Context Studio API client
  */
 
-// Get the correct localhost URL based on platform
+// Get the correct localhost URL based on platform and environment
 const getDefaultBaseURL = () => {
+  // Check for Vite environment variable first (for E2E tests and custom configs)
+  if (import.meta.env.VITE_API_BASE_URL) {
+    return import.meta.env.VITE_API_BASE_URL;
+  }
+  // Default to production port
   return "http://localhost:8100";
 };
 

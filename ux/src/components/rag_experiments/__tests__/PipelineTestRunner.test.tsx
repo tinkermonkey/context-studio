@@ -6,42 +6,11 @@ import React from "react";
 import { render, screen, fireEvent } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { PipelineTestRunner } from "../PipelineTestRunner";
+import { vi, describe, it, expect, beforeEach } from "vitest";
+import * as ragExperimentsHooks from "@/api/hooks/ragExperiments";
 
-// Mock the hooks
-jest.mock("@/api/hooks/ragExperiments", () => ({
-  useTestParagraphs: () => ({
-    data: {
-      paragraphs: [
-        {
-          id: "para-1",
-          text: "Test paragraph 1",
-          notes: "Notes 1",
-          created_at: new Date().toISOString(),
-          annotations: [],
-        },
-        {
-          id: "para-2",
-          text: "Test paragraph 2",
-          notes: "Notes 2",
-          created_at: new Date().toISOString(),
-          annotations: [],
-        },
-      ],
-      total_count: 2,
-      limit: 100,
-      offset: 0,
-    },
-    isLoading: false,
-    error: null,
-  }),
-  useRunPipelineTest: () => ({
-    mutateAsync: jest.fn(),
-    isPending: false,
-    isSuccess: false,
-    error: null,
-    data: null,
-  }),
-}));
+// Mock the hooks module
+vi.mock("@/api/hooks/ragExperiments");
 
 const createWrapper = () => {
   const queryClient = new QueryClient({
@@ -56,6 +25,46 @@ const createWrapper = () => {
 };
 
 describe("PipelineTestRunner", () => {
+  beforeEach(() => {
+    // Reset mocks before each test
+    vi.clearAllMocks();
+
+    // Default mock implementations
+    vi.mocked(ragExperimentsHooks.useTestParagraphs).mockReturnValue({
+      data: {
+        paragraphs: [
+          {
+            id: "para-1",
+            text: "Test paragraph 1",
+            notes: "Notes 1",
+            created_at: new Date().toISOString(),
+            annotations: [],
+          },
+          {
+            id: "para-2",
+            text: "Test paragraph 2",
+            notes: "Notes 2",
+            created_at: new Date().toISOString(),
+            annotations: [],
+          },
+        ],
+        total_count: 2,
+        limit: 100,
+        offset: 0,
+      },
+      isLoading: false,
+      error: null,
+    } as any);
+
+    vi.mocked(ragExperimentsHooks.useRunPipelineTest).mockReturnValue({
+      mutateAsync: vi.fn(),
+      isPending: false,
+      isSuccess: false,
+      error: null,
+      data: null,
+    } as any);
+  });
+
   it("renders pipeline selection", () => {
     render(<PipelineTestRunner />, { wrapper: createWrapper() });
 
@@ -111,12 +120,11 @@ describe("PipelineTestRunner", () => {
   });
 
   it("shows loading state when fetching paragraphs", () => {
-    const { useTestParagraphs } = require("@/api/hooks/ragExperiments");
-    useTestParagraphs.mockReturnValue({
+    vi.mocked(ragExperimentsHooks.useTestParagraphs).mockReturnValue({
       data: null,
       isLoading: true,
       error: null,
-    });
+    } as any);
 
     render(<PipelineTestRunner />, { wrapper: createWrapper() });
 
@@ -124,12 +132,11 @@ describe("PipelineTestRunner", () => {
   });
 
   it("shows error state when fetching paragraphs fails", () => {
-    const { useTestParagraphs } = require("@/api/hooks/ragExperiments");
-    useTestParagraphs.mockReturnValue({
+    vi.mocked(ragExperimentsHooks.useTestParagraphs).mockReturnValue({
       data: null,
       isLoading: false,
       error: new Error("Failed to fetch paragraphs"),
-    });
+    } as any);
 
     render(<PipelineTestRunner />, { wrapper: createWrapper() });
 
@@ -167,14 +174,13 @@ describe("PipelineTestRunner", () => {
   });
 
   it("shows progress during test execution", () => {
-    const { useRunPipelineTest } = require("@/api/hooks/ragExperiments");
-    useRunPipelineTest.mockReturnValue({
-      mutateAsync: jest.fn(),
+    vi.mocked(ragExperimentsHooks.useRunPipelineTest).mockReturnValue({
+      mutateAsync: vi.fn(),
       isPending: true,
       isSuccess: false,
       error: null,
       data: null,
-    });
+    } as any);
 
     render(<PipelineTestRunner />, { wrapper: createWrapper() });
 
@@ -182,9 +188,8 @@ describe("PipelineTestRunner", () => {
   });
 
   it("shows success message after test completion", () => {
-    const { useRunPipelineTest } = require("@/api/hooks/ragExperiments");
-    useRunPipelineTest.mockReturnValue({
-      mutateAsync: jest.fn(),
+    vi.mocked(ragExperimentsHooks.useRunPipelineTest).mockReturnValue({
+      mutateAsync: vi.fn(),
       isPending: false,
       isSuccess: true,
       error: null,
@@ -194,7 +199,7 @@ describe("PipelineTestRunner", () => {
         failed_runs: 0,
         results: [],
       },
-    });
+    } as any);
 
     render(<PipelineTestRunner />, { wrapper: createWrapper() });
 
@@ -203,14 +208,13 @@ describe("PipelineTestRunner", () => {
   });
 
   it("shows error message on test failure", () => {
-    const { useRunPipelineTest } = require("@/api/hooks/ragExperiments");
-    useRunPipelineTest.mockReturnValue({
-      mutateAsync: jest.fn(),
+    vi.mocked(ragExperimentsHooks.useRunPipelineTest).mockReturnValue({
+      mutateAsync: vi.fn(),
       isPending: false,
       isSuccess: false,
       error: new Error("Test execution failed"),
       data: null,
-    });
+    } as any);
 
     render(<PipelineTestRunner />, { wrapper: createWrapper() });
 
@@ -243,12 +247,11 @@ describe("PipelineTestRunner", () => {
   });
 
   it("shows empty state when no paragraphs available", () => {
-    const { useTestParagraphs } = require("@/api/hooks/ragExperiments");
-    useTestParagraphs.mockReturnValue({
+    vi.mocked(ragExperimentsHooks.useTestParagraphs).mockReturnValue({
       data: { paragraphs: [], total_count: 0, limit: 100, offset: 0 },
       isLoading: false,
       error: null,
-    });
+    } as any);
 
     render(<PipelineTestRunner />, { wrapper: createWrapper() });
 

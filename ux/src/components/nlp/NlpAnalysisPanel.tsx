@@ -13,6 +13,7 @@ import { apiLogger } from "@/api/utils/logger";
 import { NlpTokenAnalysisPanel } from "@/components/nlp/NlpTokenAnalysisPanel";
 import { NlpRefinementPanel } from "@/components/nlp/NlpRefinementPanel";
 import { NlpGenerationResult } from "@/components/nlp/NlpGenerationResult";
+import { useNlpAnalysisStore } from "@/stores/nlpAnalysisStore";
 import type {
   NodeContext,
   SelectedNodeContextEntry,
@@ -50,13 +51,12 @@ export const NlpAnalysisPanel: React.FC<NlpAnalysisPanelProps> = ({
   layerId = null,
   flavorList = null,
 }) => {
-  const [pendingText, setPendingText] = useState(text);
-  const [debouncedText, setDebouncedText] = useState(text);
+  // Subscribe to the NLP analysis store
+  const { shouldAnalyze, currentText, reset } = useNlpAnalysisStore();
   const [hasAnalyzed, setHasAnalyzed] = useState(false);
-  const [isAnalyzing, setIsAnalyzing] = useState(false);
 
   // Custom hook for API call
-  const lowercasedText = debouncedText.toLowerCase();
+  const lowercasedText = text.toLowerCase();
   const queryKey = [
     "nlp",
     "analysis",
@@ -67,26 +67,22 @@ export const NlpAnalysisPanel: React.FC<NlpAnalysisPanelProps> = ({
     isLoading: loading,
     error,
     refetch,
-  } = useNLPAnalysis(lowercasedText, { enabled: false, queryKey });
+  } = useNLPAnalysis(lowercasedText, {
+    enabled: false,
+    queryKey,
+    staleTime: 1000 * 60 * 5, // Cache for 5 minutes
+    cacheTime: 1000 * 60 * 30, // Keep in cache for 30 minutes
+  });
 
-  // Sync prop text changes
+  // Watch for analyze trigger from store
   useEffect(() => {
-    setPendingText(text);
-    if (!hasAnalyzed) {
-      setDebouncedText(text);
-    }
-  }, [text, hasAnalyzed]);
-
-  // Debounce text changes after analysis
-  useEffect(() => {
-    if (!hasAnalyzed || pendingText === debouncedText) return;
-    const handler = setTimeout(() => {
-      setDebouncedText(pendingText);
+    if (shouldAnalyze && currentText.toLowerCase() === lowercasedText) {
+      setHasAnalyzed(true);
       refetch();
-      apiLogger.info("NLP analysis re-triggered due to text change");
-    }, 1000);
-    return () => clearTimeout(handler);
-  }, [pendingText, hasAnalyzed, debouncedText, refetch]);
+      reset(); // Reset the trigger
+      apiLogger.info("NLP analysis triggered from store", { text });
+    }
+  }, [shouldAnalyze, currentText, lowercasedText, refetch, reset, text]);
 
   // Error handling
   useEffect(() => {
@@ -94,22 +90,6 @@ export const NlpAnalysisPanel: React.FC<NlpAnalysisPanelProps> = ({
       apiLogger.error("NLP analysis error", { error });
     }
   }, [error]);
-
-  // Analyze button click
-  const handleAnalyze = useCallback(() => {
-    setDebouncedText(pendingText);
-    setHasAnalyzed(true);
-    setIsAnalyzing(true);
-    refetch();
-    apiLogger.info("NLP analysis triggered by user");
-  }, [pendingText, refetch]);
-
-  // Reset isAnalyzing when loading finishes
-  useEffect(() => {
-    if (!loading && isAnalyzing) {
-      setIsAnalyzing(false);
-    }
-  }, [loading, isAnalyzing]);
 
   // selected nodes from the embedded charts - single source of truth
   const [selectedNodeIds, setSelectedNodeIds] = useState<Set<string>>(
@@ -300,106 +280,99 @@ export const NlpAnalysisPanel: React.FC<NlpAnalysisPanelProps> = ({
 
   return (
     <>
-      {analysisResult ? (
-        <>
-          <div className="space-y-3">
-            <div>
-              <h4 className="mb-2 text-lg font-bold">
-                {textTitle} Token Analysis
-              </h4>
-              {!analysisResult.tokens || analysisResult.tokens.length === 0 ? (
-                <div className="py-2 text-sm text-gray-500">
-                  No tokens available
-                </div>
-              ) : (
-                <div className="flex flex-col items-stretch gap-4 md:flex-row">
-                  <div className="flex w-full min-w-0 md:w-2/3">
-                    <Accordion alwaysOpen className="w-full">
-                      {(analysisResult.tokens || []).map((token: any) => {
-                        // Create a unique prefix for this token's chart nodes
-                        const tokenPrefix = `token-${token.text}-${token.start ?? 0}`;
-
-                        // Memoize the selection handler to prevent unnecessary re-renders
-                        const onNodeClick = (nodeId: string) => {
-                          // Create a full node ID with token prefix for global tracking
-                          const fullNodeId = `${tokenPrefix}-${nodeId}`;
-                          handleNodeClick(fullNodeId);
-                        };
-
-                        return (
-                          <AccordionPanel
-                            key={`${token.text}-${token.start ?? 0}`}
-                          >
-                            <AccordionTitle>
-                              Token &quot;
-                              <span className="font-bold italic">{`${token.text}`}</span>
-                              &quot;
-                            </AccordionTitle>
-                            <AccordionContent className="p-0">
-                              <React.Suspense
-                                fallback={
-                                  <div className="flex items-center gap-2">
-                                    <Spinner size="sm" />{" "}
-                                    <span className="text-sm text-gray-500">
-                                      Loading details...
-                                    </span>
-                                  </div>
-                                }
-                              >
-                                <NlpTokenAnalysisPanel
-                                  token={token}
-                                  selectedNodeIds={selectedNodeIds}
-                                  onNodeClick={onNodeClick}
-                                />
-                              </React.Suspense>
-                            </AccordionContent>
-                          </AccordionPanel>
-                        );
-                      })}
-                    </Accordion>
-                  </div>
-                  <div className="flex w-full min-w-0 md:w-1/3">
-                    <NlpRefinementPanel
-                      selectedNodeContext={selectedNodeContext}
-                      className="flex w-full rounded-lg border border-gray-200"
-                    />
-                  </div>
-                </div>
-              )}
-            </div>
-
-            {/* Definition Generation Panel */}
-            <NlpGenerationResult
-              selectedNodeContext={selectedNodeContext}
-              term={text}
-              textTitle={textTitle}
-              domainContext={domainContext}
-              parentTermContext={parentTermContext}
-              currentDefinition={currentDefinition}
-              termId={termId}
-              domainId={domainId}
-              layerId={layerId}
-              flavorList={flavorList}
-              className="w-full rounded-lg border border-gray-200 bg-white"
-            />
-          </div>
-        </>
-      ) : (
-        <div className="flex items-center gap-3">
-          <Button
-            onClick={handleAnalyze}
-            disabled={loading || isAnalyzing || !pendingText}
-            color="dark"
-            className="capitalize"
-          >
-            {loading || isAnalyzing ? (
-              <Spinner size="sm" />
-            ) : hasAnalyzed ? (
-              `Analyze ${textTitle} Again`
+      {loading ? (
+        <div className="flex items-center gap-3 py-4">
+          <Spinner size="sm" />
+          <span className="text-sm text-gray-600">
+            Analyzing {textTitle}...
+          </span>
+        </div>
+      ) : analysisResult ? (
+        <div className="space-y-3">
+          <div>
+            <h4 className="mb-2 text-lg font-bold">
+              {textTitle} Token Analysis
+            </h4>
+            {!analysisResult.tokens || analysisResult.tokens.length === 0 ? (
+              <div className="py-2 text-sm text-gray-500">
+                No tokens available
+              </div>
             ) : (
-              `Analyze ${textTitle}`
+              <div className="flex flex-col items-stretch gap-4 md:flex-row">
+                <div className="flex w-full min-w-0 md:w-2/3">
+                  <Accordion alwaysOpen className="w-full">
+                    {(analysisResult.tokens || []).map((token: any) => {
+                      // Create a unique prefix for this token's chart nodes
+                      const tokenPrefix = `token-${token.text}-${token.start ?? 0}`;
+
+                      // Memoize the selection handler to prevent unnecessary re-renders
+                      const onNodeClick = (nodeId: string) => {
+                        // Create a full node ID with token prefix for global tracking
+                        const fullNodeId = `${tokenPrefix}-${nodeId}`;
+                        handleNodeClick(fullNodeId);
+                      };
+
+                      return (
+                        <AccordionPanel
+                          key={`${token.text}-${token.start ?? 0}`}
+                        >
+                          <AccordionTitle>
+                            Token &quot;
+                            <span className="font-bold italic">{`${token.text}`}</span>
+                            &quot;
+                          </AccordionTitle>
+                          <AccordionContent className="p-0">
+                            <React.Suspense
+                              fallback={
+                                <div className="flex items-center gap-2">
+                                  <Spinner size="sm" />{" "}
+                                  <span className="text-sm text-gray-500">
+                                    Loading details...
+                                  </span>
+                                </div>
+                              }
+                            >
+                              <NlpTokenAnalysisPanel
+                                token={token}
+                                selectedNodeIds={selectedNodeIds}
+                                onNodeClick={onNodeClick}
+                              />
+                            </React.Suspense>
+                          </AccordionContent>
+                        </AccordionPanel>
+                      );
+                    })}
+                  </Accordion>
+                </div>
+                <div className="flex w-full min-w-0 md:w-1/3">
+                  <NlpRefinementPanel
+                    selectedNodeContext={selectedNodeContext}
+                    className="flex w-full rounded-lg border border-gray-200"
+                  />
+                </div>
+              </div>
             )}
-          </Button>
+          </div>
+
+          {/* Definition Generation Panel */}
+          <NlpGenerationResult
+            selectedNodeContext={selectedNodeContext}
+            term={text}
+            textTitle={textTitle}
+            domainContext={domainContext}
+            parentTermContext={parentTermContext}
+            currentDefinition={currentDefinition}
+            termId={termId}
+            domainId={domainId}
+            layerId={layerId}
+            flavorList={flavorList}
+            className="w-full rounded-lg border border-gray-200 bg-white"
+          />
+        </div>
+      ) : (
+        <div className="py-4 text-sm text-gray-500">
+          Click &quot;Analyze {textTitle}&quot; to view token analysis and
+          generation options.
         </div>
       )}
     </>

@@ -1,6 +1,6 @@
 import React from "react";
 import { Spinner } from "flowbite-react";
-import { TreeChart } from "@/components/graphs/hierarchy/tree_chart";
+import { TreeMenu } from "@/components/graphs/tree_menu/tree_menu";
 import {
   useLayerNodes,
   useDomainNodes,
@@ -12,8 +12,9 @@ import {
   buildHierarchicalTree,
   filterTreeByTerm,
   collectAllNodeIds,
+  collectNodeIdsUpToType,
 } from "@/utils/treeBuilder";
-import { ChartData } from "@/components/graphs/hierarchy/tree_data";
+import { ChartData } from "@/components/graphs/tree_chart/tree_data";
 import { apiLogger } from "@/api/utils/logger";
 import { NodeType } from "@/api/types/structureNodes";
 
@@ -23,6 +24,18 @@ export interface TreeChartPanelProps {
    * If not provided, shows the complete hierarchy
    */
   termId?: string;
+
+  /**
+   * Optional domain ID to filter the tree to show only direct parents and children
+   * If not provided, shows the complete hierarchy
+   */
+  domainId?: string;
+
+  /**
+   * Optional layer ID to filter the tree to show only direct parents and children
+   * If not provided, shows the complete hierarchy
+   */
+  layerId?: string;
 
   /**
    * Additional CSS classes to apply to the panel container
@@ -38,6 +51,12 @@ export interface TreeChartPanelProps {
    * Error component to display when data loading fails
    */
   errorComponent?: React.ReactNode;
+
+  /**
+   * Optional view identifier for persisting expand state
+   * If not provided, expand state will not be persisted to session storage
+   */
+  viewId?: string;
 }
 
 /**
@@ -47,14 +66,17 @@ export interface TreeChartPanelProps {
  * Features:
  * - Automatically loads layers, domains, and terms data
  * - Builds hierarchical tree structure using treeBuilder utility
- * - Optional filtering by term_id to show focused view
+ * - Optional filtering by term_id, domain_id, or layer_id to show focused view
  * - Handles loading and error states
  */
 export function TreeChartPanel({
   termId,
+  domainId,
+  layerId,
   className = "",
   loadingComponent,
   errorComponent,
+  viewId,
 }: TreeChartPanelProps) {
   // Load all base data
   const {
@@ -87,19 +109,37 @@ export function TreeChartPanel({
     error: hierarchyError,
   } = useTermHierarchy(termId || "");
 
+  // Load specific domain if domainId is provided
+  const {
+    data: targetDomain,
+    isLoading: domainLoading,
+    error: domainError,
+  } = useStructureNode(domainId || "");
+
+  // Load specific layer if layerId is provided
+  const {
+    data: targetLayer,
+    isLoading: layerLoading,
+    error: layerError,
+  } = useStructureNode(layerId || "");
+
   // Determine loading state
   const isLoading =
     layersLoading ||
     domainsLoading ||
     termsLoading ||
-    (termId && (termLoading || hierarchyLoading));
+    (termId && (termLoading || hierarchyLoading)) ||
+    (domainId && domainLoading) ||
+    (layerId && layerLoading);
 
   // Determine error state
   const error =
     layersError ||
     domainsError ||
     termsError ||
-    (termId && (termError || hierarchyError));
+    (termId && (termError || hierarchyError)) ||
+    (domainId && domainError) ||
+    (layerId && layerError);
 
   // Build chart data and collect initial expand state
   const { chartData, initialExpandState } = React.useMemo((): {
@@ -111,7 +151,17 @@ export function TreeChartPanel({
     }
 
     try {
-      // Ensure targetTerm and all its ancestors are included in the appropriate arrays
+      // Determine which node we're filtering by
+      const filterNodeId = termId || domainId || layerId;
+      const targetNode = termId
+        ? targetTerm
+        : domainId
+          ? targetDomain
+          : layerId
+            ? targetLayer
+            : null;
+
+      // Ensure target node and all its ancestors are included in the appropriate arrays
       let allTerms = terms;
       let allDomains = domains;
       let allLayers = layers;
@@ -204,6 +254,28 @@ export function TreeChartPanel({
         }
       }
 
+      if (domainId && targetDomain) {
+        // Add targetDomain if not present
+        if (!allDomains.some((d) => d.id === domainId)) {
+          allDomains = [...allDomains, targetDomain];
+        }
+
+        // For domains, we don't have a hierarchy endpoint by domain_id
+        // We rely on the data already loaded including parent relationships
+        // If needed, we could walk up parent_node_id chain here
+      }
+
+      if (layerId && targetLayer) {
+        // Add targetLayer if not present
+        if (!allLayers.some((l) => l.id === layerId)) {
+          allLayers = [...allLayers, targetLayer];
+        }
+
+        // For layers, we don't have a hierarchy endpoint by layer_id
+        // We rely on the data already loaded including parent relationships
+        // If needed, we could walk up parent_node_id chain here
+      }
+
       // Build the complete tree
       const completeTree = buildHierarchicalTree({
         layers: allLayers,
@@ -211,12 +283,25 @@ export function TreeChartPanel({
         terms: allTerms,
       });
 
-      // If termId is provided, filter the tree and expand all nodes
-      if (termId && targetTerm) {
-        const filteredTree = filterTreeByTerm(completeTree, termId);
+      // If termId, domainId, or layerId is provided, filter the tree and expand nodes
+      if (filterNodeId && targetNode) {
+        const filteredTree = filterTreeByTerm(completeTree, filterNodeId);
 
-        // Collect all node IDs from the filtered tree for initial expansion
-        const nodeIdsToExpand = collectAllNodeIds(filteredTree);
+        // Determine expansion strategy based on node type
+        let nodeIdsToExpand: string[];
+
+        if (layerId) {
+          // For layers, only expand the dataset root and layer itself (domains stay collapsed)
+          // This shows the domains but keeps them collapsed
+          nodeIdsToExpand = ["dataset", layerId];
+        } else if (domainId) {
+          // For domains, expand all nodes up to and including domains (terms stay collapsed)
+          // This expands the parent layer(s) and domain to show the full path, but keeps terms collapsed
+          nodeIdsToExpand = collectNodeIdsUpToType(filteredTree, "domain");
+        } else {
+          // For terms, expand all nodes
+          nodeIdsToExpand = collectAllNodeIds(filteredTree);
+        }
 
         return {
           chartData: {
@@ -233,10 +318,26 @@ export function TreeChartPanel({
         } as ChartData,
       };
     } catch (err) {
-      apiLogger.error("Error building chart data", { error: err, termId });
+      apiLogger.error("Error building chart data", {
+        error: err,
+        termId,
+        domainId,
+        layerId,
+      });
       return { chartData: null };
     }
-  }, [layers, domains, terms, termId, targetTerm, termHierarchy]);
+  }, [
+    layers,
+    domains,
+    terms,
+    termId,
+    targetTerm,
+    termHierarchy,
+    domainId,
+    targetDomain,
+    layerId,
+    targetLayer,
+  ]);
 
   // Handle loading state
   if (isLoading) {
@@ -284,18 +385,31 @@ export function TreeChartPanel({
               Unable to load data for term: {termId}
             </p>
           )}
+          {domainId && (
+            <p className="mt-2 text-sm">
+              Unable to load data for domain: {domainId}
+            </p>
+          )}
+          {layerId && (
+            <p className="mt-2 text-sm">
+              Unable to load data for layer: {layerId}
+            </p>
+          )}
         </div>
       </div>
     );
   }
 
-  // Render the tree chart
+  // Render the tree menu with definitions
   return (
     <div className={className}>
-      <TreeChart
+      <TreeMenu
         chartData={chartData}
         initialExpandState={initialExpandState}
-        highlightedTermId={termId}
+        highlightedTermId={termId || domainId || layerId}
+        viewId={viewId}
+        showDefinitions={true}
+        titleWidth={0.2}
       />
     </div>
   );

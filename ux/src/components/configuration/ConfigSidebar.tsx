@@ -75,7 +75,7 @@ export function ConfigSidebar() {
   return (
     <div className="space-y-4">
       {/* Overview Section */}
-      <Card className="p-4">
+      <div className="p-4">
         <div className="flex items-center gap-3 mb-3">
           <Settings className="h-5 w-5 text-gray-600" />
           <h3 className="font-semibold text-gray-900">Configuration</h3>
@@ -91,10 +91,34 @@ export function ConfigSidebar() {
         >
           Overview
         </Link>
-      </Card>
+      </div>
+
+      {/* Pipeline Configuration */}
+      <div className="p-4">
+        <h4 className="font-medium text-gray-900 mb-3 text-sm uppercase tracking-wide">
+          Pipeline Management
+        </h4>
+
+        <Link
+          to="/app/config/pipelines"
+          className={`flex items-center gap-3 px-3 py-2 rounded-md text-sm transition-colors ${
+            currentPath.startsWith("/app/config/pipelines")
+              ? "bg-blue-100 text-blue-800 font-medium"
+              : "text-gray-600 hover:bg-gray-100 hover:text-gray-900"
+          }`}
+        >
+          <Shield className="h-4 w-4 flex-shrink-0" />
+          <div className="flex-1 min-w-0">
+            <span className="truncate">Pipeline Flavors</span>
+            <p className="text-xs text-gray-500 mt-0.5 truncate">
+              Manage LLM pipeline configurations
+            </p>
+          </div>
+        </Link>
+      </div>
 
       {/* Configuration Sections */}
-      <Card className="p-4">
+      <div className="p-4">
         <h4 className="font-medium text-gray-900 mb-3 text-sm uppercase tracking-wide">
           Settings
         </h4>
@@ -137,31 +161,7 @@ export function ConfigSidebar() {
             );
           })}
         </nav>
-      </Card>
-
-      {/* Legacy Pipeline Configuration */}
-      <Card className="p-4">
-        <h4 className="font-medium text-gray-900 mb-3 text-sm uppercase tracking-wide">
-          Pipeline Management
-        </h4>
-
-        <Link
-          to="/app/config/pipelines"
-          className={`flex items-center gap-3 px-3 py-2 rounded-md text-sm transition-colors ${
-            currentPath.startsWith("/app/config/pipelines")
-              ? "bg-blue-100 text-blue-800 font-medium"
-              : "text-gray-600 hover:bg-gray-100 hover:text-gray-900"
-          }`}
-        >
-          <Shield className="h-4 w-4 flex-shrink-0" />
-          <div className="flex-1 min-w-0">
-            <span className="truncate">Pipeline Flavors</span>
-            <p className="text-xs text-gray-500 mt-0.5 truncate">
-              Manage LLM pipeline configurations
-            </p>
-          </div>
-        </Link>
-      </Card>
+      </div>
     </div>
   );
 }

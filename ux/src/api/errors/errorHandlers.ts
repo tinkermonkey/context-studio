@@ -18,9 +18,7 @@ import {
   NetworkError,
 } from "./ApiError";
 import { apiLogger } from "../utils/logger";
-
-// TODO: Replace with your actual toast implementation
-// import { showToast } from '../utils/toast';
+import { toast } from "@/utils/toast";
 
 interface ErrorHandlerOptions {
   showToast?: boolean;
@@ -104,9 +102,8 @@ const showErrorToast = (error: ApiError, context?: string) => {
     }
   }
 
-  // TODO: Replace with actual toast implementation
-  // showToast(message, 'error');
-  console.error("Toast would show:", message);
+  // Show the toast notification
+  toast.error(message);
 };
 
 export const getErrorMessage = (error: unknown, context?: string): string => {

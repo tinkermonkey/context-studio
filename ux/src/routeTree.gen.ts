@@ -18,11 +18,20 @@ import { Route as AppLayersRouteImport } from './routes/app/layers'
 import { Route as AppDomainsRouteImport } from './routes/app/domains'
 import { Route as AppDatasetsRouteImport } from './routes/app/datasets'
 import { Route as AppConfigRouteImport } from './routes/app/config'
+import { Route as AppReferenceIndexRouteImport } from './routes/app/reference/index'
 import { Route as AppConfigIndexRouteImport } from './routes/app/config/index'
-import { Route as AppReferenceSearchRouteImport } from './routes/app/reference.search'
-import { Route as AppReferenceRagTestRouteImport } from './routes/app/reference.rag-test'
-import { Route as AppReferencePredicatesRouteImport } from './routes/app/reference.predicates'
+import { Route as AppStructure_nodesNodeIdRouteImport } from './routes/app/structure_nodes/$nodeId'
+import { Route as AppReferenceSearchRouteImport } from './routes/app/reference/search'
+import { Route as AppReferenceRagTestRouteImport } from './routes/app/reference/rag-test'
+import { Route as AppReferencePredicatesRouteImport } from './routes/app/reference/predicates'
+import { Route as AppRagTestRunnerRouteImport } from './routes/app/rag/test-runner'
+import { Route as AppRagPipelineComparisonRouteImport } from './routes/app/rag/pipeline-comparison'
 import { Route as AppRagExperimentsRouteImport } from './routes/app/rag/experiments'
+import { Route as AppMonitoringTaskManagerRouteImport } from './routes/app/monitoring/task-manager'
+import { Route as AppMonitoringSystemHealthRouteImport } from './routes/app/monitoring/system-health'
+import { Route as AppMonitoringPerformanceRouteImport } from './routes/app/monitoring/performance'
+import { Route as AppMonitoringLlmTraceabilityRouteImport } from './routes/app/monitoring/llm-traceability'
+import { Route as AppMonitoringAnalyticsRouteImport } from './routes/app/monitoring/analytics'
 import { Route as AppConfigSystemRouteImport } from './routes/app/config/system'
 import { Route as AppConfigProcessingRouteImport } from './routes/app/config/processing'
 import { Route as AppConfigPipelinesRouteImport } from './routes/app/config/pipelines'
@@ -30,15 +39,12 @@ import { Route as AppConfigNetworkRouteImport } from './routes/app/config/networ
 import { Route as AppConfigModelsRouteImport } from './routes/app/config/models'
 import { Route as AppConfigDataSourcesRouteImport } from './routes/app/config/data-sources'
 import { Route as AppConfigAdvancedRouteImport } from './routes/app/config/advanced'
-import { Route as AppConfigPipelinesIndexRouteImport } from './routes/app/config/pipelines/index'
-import { Route as AppNodesTermTermIdRouteImport } from './routes/app/nodes/term/$termId'
-import { Route as AppNodesLayerLayerIdRouteImport } from './routes/app/nodes/layer/$layerId'
-import { Route as AppNodesDomainDomainIdRouteImport } from './routes/app/nodes/domain/$domainId'
-import { Route as AppConfigPipelinesPipelineTypeRouteImport } from './routes/app/config/pipelines/$pipelineType'
-import { Route as AppConfigPipelinesPipelineTypeIndexRouteImport } from './routes/app/config/pipelines/$pipelineType/index'
-import { Route as AppConfigPipelinesPipelineTypeCreateRouteImport } from './routes/app/config/pipelines/$pipelineType/create'
-import { Route as AppConfigPipelinesPipelineTypeTestFlavorIdRouteImport } from './routes/app/config/pipelines/$pipelineType/test/$flavorId'
-import { Route as AppConfigPipelinesPipelineTypeEditFlavorIdRouteImport } from './routes/app/config/pipelines/$pipelineType/edit/$flavorId'
+import { Route as AppConfigPipelinesIndexRouteImport } from './routes/app/config/pipelines.index'
+import { Route as AppConfigPipelinesPipelineTypeRouteImport } from './routes/app/config/pipelines.$pipelineType'
+import { Route as AppConfigPipelinesPipelineTypeIndexRouteImport } from './routes/app/config/pipelines.$pipelineType.index'
+import { Route as AppConfigPipelinesPipelineTypeCreateRouteImport } from './routes/app/config/pipelines.$pipelineType.create'
+import { Route as AppConfigPipelinesPipelineTypeTestFlavorIdRouteImport } from './routes/app/config/pipelines.$pipelineType.test.$flavorId'
+import { Route as AppConfigPipelinesPipelineTypeEditFlavorIdRouteImport } from './routes/app/config/pipelines.$pipelineType.edit.$flavorId'
 
 const AppRoute = AppRouteImport.update({
   id: '/app',
@@ -85,11 +91,22 @@ const AppConfigRoute = AppConfigRouteImport.update({
   path: '/config',
   getParentRoute: () => AppRoute,
 } as any)
+const AppReferenceIndexRoute = AppReferenceIndexRouteImport.update({
+  id: '/reference/',
+  path: '/reference/',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppConfigIndexRoute = AppConfigIndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => AppConfigRoute,
 } as any)
+const AppStructure_nodesNodeIdRoute =
+  AppStructure_nodesNodeIdRouteImport.update({
+    id: '/structure_nodes/$nodeId',
+    path: '/structure_nodes/$nodeId',
+    getParentRoute: () => AppRoute,
+  } as any)
 const AppReferenceSearchRoute = AppReferenceSearchRouteImport.update({
   id: '/reference/search',
   path: '/reference/search',
@@ -105,9 +122,49 @@ const AppReferencePredicatesRoute = AppReferencePredicatesRouteImport.update({
   path: '/reference/predicates',
   getParentRoute: () => AppRoute,
 } as any)
+const AppRagTestRunnerRoute = AppRagTestRunnerRouteImport.update({
+  id: '/rag/test-runner',
+  path: '/rag/test-runner',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppRagPipelineComparisonRoute =
+  AppRagPipelineComparisonRouteImport.update({
+    id: '/rag/pipeline-comparison',
+    path: '/rag/pipeline-comparison',
+    getParentRoute: () => AppRoute,
+  } as any)
 const AppRagExperimentsRoute = AppRagExperimentsRouteImport.update({
   id: '/rag/experiments',
   path: '/rag/experiments',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppMonitoringTaskManagerRoute =
+  AppMonitoringTaskManagerRouteImport.update({
+    id: '/monitoring/task-manager',
+    path: '/monitoring/task-manager',
+    getParentRoute: () => AppRoute,
+  } as any)
+const AppMonitoringSystemHealthRoute =
+  AppMonitoringSystemHealthRouteImport.update({
+    id: '/monitoring/system-health',
+    path: '/monitoring/system-health',
+    getParentRoute: () => AppRoute,
+  } as any)
+const AppMonitoringPerformanceRoute =
+  AppMonitoringPerformanceRouteImport.update({
+    id: '/monitoring/performance',
+    path: '/monitoring/performance',
+    getParentRoute: () => AppRoute,
+  } as any)
+const AppMonitoringLlmTraceabilityRoute =
+  AppMonitoringLlmTraceabilityRouteImport.update({
+    id: '/monitoring/llm-traceability',
+    path: '/monitoring/llm-traceability',
+    getParentRoute: () => AppRoute,
+  } as any)
+const AppMonitoringAnalyticsRoute = AppMonitoringAnalyticsRouteImport.update({
+  id: '/monitoring/analytics',
+  path: '/monitoring/analytics',
   getParentRoute: () => AppRoute,
 } as any)
 const AppConfigSystemRoute = AppConfigSystemRouteImport.update({
@@ -149,21 +206,6 @@ const AppConfigPipelinesIndexRoute = AppConfigPipelinesIndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => AppConfigPipelinesRoute,
-} as any)
-const AppNodesTermTermIdRoute = AppNodesTermTermIdRouteImport.update({
-  id: '/nodes/term/$termId',
-  path: '/nodes/term/$termId',
-  getParentRoute: () => AppRoute,
-} as any)
-const AppNodesLayerLayerIdRoute = AppNodesLayerLayerIdRouteImport.update({
-  id: '/nodes/layer/$layerId',
-  path: '/nodes/layer/$layerId',
-  getParentRoute: () => AppRoute,
-} as any)
-const AppNodesDomainDomainIdRoute = AppNodesDomainDomainIdRouteImport.update({
-  id: '/nodes/domain/$domainId',
-  path: '/nodes/domain/$domainId',
-  getParentRoute: () => AppRoute,
 } as any)
 const AppConfigPipelinesPipelineTypeRoute =
   AppConfigPipelinesPipelineTypeRouteImport.update({
@@ -213,15 +255,21 @@ export interface FileRoutesByFullPath {
   '/app/config/pipelines': typeof AppConfigPipelinesRouteWithChildren
   '/app/config/processing': typeof AppConfigProcessingRoute
   '/app/config/system': typeof AppConfigSystemRoute
+  '/app/monitoring/analytics': typeof AppMonitoringAnalyticsRoute
+  '/app/monitoring/llm-traceability': typeof AppMonitoringLlmTraceabilityRoute
+  '/app/monitoring/performance': typeof AppMonitoringPerformanceRoute
+  '/app/monitoring/system-health': typeof AppMonitoringSystemHealthRoute
+  '/app/monitoring/task-manager': typeof AppMonitoringTaskManagerRoute
   '/app/rag/experiments': typeof AppRagExperimentsRoute
+  '/app/rag/pipeline-comparison': typeof AppRagPipelineComparisonRoute
+  '/app/rag/test-runner': typeof AppRagTestRunnerRoute
   '/app/reference/predicates': typeof AppReferencePredicatesRoute
   '/app/reference/rag-test': typeof AppReferenceRagTestRoute
   '/app/reference/search': typeof AppReferenceSearchRoute
+  '/app/structure_nodes/$nodeId': typeof AppStructure_nodesNodeIdRoute
   '/app/config/': typeof AppConfigIndexRoute
+  '/app/reference': typeof AppReferenceIndexRoute
   '/app/config/pipelines/$pipelineType': typeof AppConfigPipelinesPipelineTypeRouteWithChildren
-  '/app/nodes/domain/$domainId': typeof AppNodesDomainDomainIdRoute
-  '/app/nodes/layer/$layerId': typeof AppNodesLayerLayerIdRoute
-  '/app/nodes/term/$termId': typeof AppNodesTermTermIdRoute
   '/app/config/pipelines/': typeof AppConfigPipelinesIndexRoute
   '/app/config/pipelines/$pipelineType/create': typeof AppConfigPipelinesPipelineTypeCreateRoute
   '/app/config/pipelines/$pipelineType/': typeof AppConfigPipelinesPipelineTypeIndexRoute
@@ -242,14 +290,20 @@ export interface FileRoutesByTo {
   '/app/config/network': typeof AppConfigNetworkRoute
   '/app/config/processing': typeof AppConfigProcessingRoute
   '/app/config/system': typeof AppConfigSystemRoute
+  '/app/monitoring/analytics': typeof AppMonitoringAnalyticsRoute
+  '/app/monitoring/llm-traceability': typeof AppMonitoringLlmTraceabilityRoute
+  '/app/monitoring/performance': typeof AppMonitoringPerformanceRoute
+  '/app/monitoring/system-health': typeof AppMonitoringSystemHealthRoute
+  '/app/monitoring/task-manager': typeof AppMonitoringTaskManagerRoute
   '/app/rag/experiments': typeof AppRagExperimentsRoute
+  '/app/rag/pipeline-comparison': typeof AppRagPipelineComparisonRoute
+  '/app/rag/test-runner': typeof AppRagTestRunnerRoute
   '/app/reference/predicates': typeof AppReferencePredicatesRoute
   '/app/reference/rag-test': typeof AppReferenceRagTestRoute
   '/app/reference/search': typeof AppReferenceSearchRoute
+  '/app/structure_nodes/$nodeId': typeof AppStructure_nodesNodeIdRoute
   '/app/config': typeof AppConfigIndexRoute
-  '/app/nodes/domain/$domainId': typeof AppNodesDomainDomainIdRoute
-  '/app/nodes/layer/$layerId': typeof AppNodesLayerLayerIdRoute
-  '/app/nodes/term/$termId': typeof AppNodesTermTermIdRoute
+  '/app/reference': typeof AppReferenceIndexRoute
   '/app/config/pipelines': typeof AppConfigPipelinesIndexRoute
   '/app/config/pipelines/$pipelineType/create': typeof AppConfigPipelinesPipelineTypeCreateRoute
   '/app/config/pipelines/$pipelineType': typeof AppConfigPipelinesPipelineTypeIndexRoute
@@ -274,15 +328,21 @@ export interface FileRoutesById {
   '/app/config/pipelines': typeof AppConfigPipelinesRouteWithChildren
   '/app/config/processing': typeof AppConfigProcessingRoute
   '/app/config/system': typeof AppConfigSystemRoute
+  '/app/monitoring/analytics': typeof AppMonitoringAnalyticsRoute
+  '/app/monitoring/llm-traceability': typeof AppMonitoringLlmTraceabilityRoute
+  '/app/monitoring/performance': typeof AppMonitoringPerformanceRoute
+  '/app/monitoring/system-health': typeof AppMonitoringSystemHealthRoute
+  '/app/monitoring/task-manager': typeof AppMonitoringTaskManagerRoute
   '/app/rag/experiments': typeof AppRagExperimentsRoute
+  '/app/rag/pipeline-comparison': typeof AppRagPipelineComparisonRoute
+  '/app/rag/test-runner': typeof AppRagTestRunnerRoute
   '/app/reference/predicates': typeof AppReferencePredicatesRoute
   '/app/reference/rag-test': typeof AppReferenceRagTestRoute
   '/app/reference/search': typeof AppReferenceSearchRoute
+  '/app/structure_nodes/$nodeId': typeof AppStructure_nodesNodeIdRoute
   '/app/config/': typeof AppConfigIndexRoute
+  '/app/reference/': typeof AppReferenceIndexRoute
   '/app/config/pipelines/$pipelineType': typeof AppConfigPipelinesPipelineTypeRouteWithChildren
-  '/app/nodes/domain/$domainId': typeof AppNodesDomainDomainIdRoute
-  '/app/nodes/layer/$layerId': typeof AppNodesLayerLayerIdRoute
-  '/app/nodes/term/$termId': typeof AppNodesTermTermIdRoute
   '/app/config/pipelines/': typeof AppConfigPipelinesIndexRoute
   '/app/config/pipelines/$pipelineType/create': typeof AppConfigPipelinesPipelineTypeCreateRoute
   '/app/config/pipelines/$pipelineType/': typeof AppConfigPipelinesPipelineTypeIndexRoute
@@ -308,15 +368,21 @@ export interface FileRouteTypes {
     | '/app/config/pipelines'
     | '/app/config/processing'
     | '/app/config/system'
+    | '/app/monitoring/analytics'
+    | '/app/monitoring/llm-traceability'
+    | '/app/monitoring/performance'
+    | '/app/monitoring/system-health'
+    | '/app/monitoring/task-manager'
     | '/app/rag/experiments'
+    | '/app/rag/pipeline-comparison'
+    | '/app/rag/test-runner'
     | '/app/reference/predicates'
     | '/app/reference/rag-test'
     | '/app/reference/search'
+    | '/app/structure_nodes/$nodeId'
     | '/app/config/'
+    | '/app/reference'
     | '/app/config/pipelines/$pipelineType'
-    | '/app/nodes/domain/$domainId'
-    | '/app/nodes/layer/$layerId'
-    | '/app/nodes/term/$termId'
     | '/app/config/pipelines/'
     | '/app/config/pipelines/$pipelineType/create'
     | '/app/config/pipelines/$pipelineType/'
@@ -337,14 +403,20 @@ export interface FileRouteTypes {
     | '/app/config/network'
     | '/app/config/processing'
     | '/app/config/system'
+    | '/app/monitoring/analytics'
+    | '/app/monitoring/llm-traceability'
+    | '/app/monitoring/performance'
+    | '/app/monitoring/system-health'
+    | '/app/monitoring/task-manager'
     | '/app/rag/experiments'
+    | '/app/rag/pipeline-comparison'
+    | '/app/rag/test-runner'
     | '/app/reference/predicates'
     | '/app/reference/rag-test'
     | '/app/reference/search'
+    | '/app/structure_nodes/$nodeId'
     | '/app/config'
-    | '/app/nodes/domain/$domainId'
-    | '/app/nodes/layer/$layerId'
-    | '/app/nodes/term/$termId'
+    | '/app/reference'
     | '/app/config/pipelines'
     | '/app/config/pipelines/$pipelineType/create'
     | '/app/config/pipelines/$pipelineType'
@@ -368,15 +440,21 @@ export interface FileRouteTypes {
     | '/app/config/pipelines'
     | '/app/config/processing'
     | '/app/config/system'
+    | '/app/monitoring/analytics'
+    | '/app/monitoring/llm-traceability'
+    | '/app/monitoring/performance'
+    | '/app/monitoring/system-health'
+    | '/app/monitoring/task-manager'
     | '/app/rag/experiments'
+    | '/app/rag/pipeline-comparison'
+    | '/app/rag/test-runner'
     | '/app/reference/predicates'
     | '/app/reference/rag-test'
     | '/app/reference/search'
+    | '/app/structure_nodes/$nodeId'
     | '/app/config/'
+    | '/app/reference/'
     | '/app/config/pipelines/$pipelineType'
-    | '/app/nodes/domain/$domainId'
-    | '/app/nodes/layer/$layerId'
-    | '/app/nodes/term/$termId'
     | '/app/config/pipelines/'
     | '/app/config/pipelines/$pipelineType/create'
     | '/app/config/pipelines/$pipelineType/'
@@ -454,12 +532,26 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppConfigRouteImport
       parentRoute: typeof AppRoute
     }
+    '/app/reference/': {
+      id: '/app/reference/'
+      path: '/reference'
+      fullPath: '/app/reference'
+      preLoaderRoute: typeof AppReferenceIndexRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/app/config/': {
       id: '/app/config/'
       path: '/'
       fullPath: '/app/config/'
       preLoaderRoute: typeof AppConfigIndexRouteImport
       parentRoute: typeof AppConfigRoute
+    }
+    '/app/structure_nodes/$nodeId': {
+      id: '/app/structure_nodes/$nodeId'
+      path: '/structure_nodes/$nodeId'
+      fullPath: '/app/structure_nodes/$nodeId'
+      preLoaderRoute: typeof AppStructure_nodesNodeIdRouteImport
+      parentRoute: typeof AppRoute
     }
     '/app/reference/search': {
       id: '/app/reference/search'
@@ -482,11 +574,60 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppReferencePredicatesRouteImport
       parentRoute: typeof AppRoute
     }
+    '/app/rag/test-runner': {
+      id: '/app/rag/test-runner'
+      path: '/rag/test-runner'
+      fullPath: '/app/rag/test-runner'
+      preLoaderRoute: typeof AppRagTestRunnerRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/app/rag/pipeline-comparison': {
+      id: '/app/rag/pipeline-comparison'
+      path: '/rag/pipeline-comparison'
+      fullPath: '/app/rag/pipeline-comparison'
+      preLoaderRoute: typeof AppRagPipelineComparisonRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/app/rag/experiments': {
       id: '/app/rag/experiments'
       path: '/rag/experiments'
       fullPath: '/app/rag/experiments'
       preLoaderRoute: typeof AppRagExperimentsRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/app/monitoring/task-manager': {
+      id: '/app/monitoring/task-manager'
+      path: '/monitoring/task-manager'
+      fullPath: '/app/monitoring/task-manager'
+      preLoaderRoute: typeof AppMonitoringTaskManagerRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/app/monitoring/system-health': {
+      id: '/app/monitoring/system-health'
+      path: '/monitoring/system-health'
+      fullPath: '/app/monitoring/system-health'
+      preLoaderRoute: typeof AppMonitoringSystemHealthRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/app/monitoring/performance': {
+      id: '/app/monitoring/performance'
+      path: '/monitoring/performance'
+      fullPath: '/app/monitoring/performance'
+      preLoaderRoute: typeof AppMonitoringPerformanceRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/app/monitoring/llm-traceability': {
+      id: '/app/monitoring/llm-traceability'
+      path: '/monitoring/llm-traceability'
+      fullPath: '/app/monitoring/llm-traceability'
+      preLoaderRoute: typeof AppMonitoringLlmTraceabilityRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/app/monitoring/analytics': {
+      id: '/app/monitoring/analytics'
+      path: '/monitoring/analytics'
+      fullPath: '/app/monitoring/analytics'
+      preLoaderRoute: typeof AppMonitoringAnalyticsRouteImport
       parentRoute: typeof AppRoute
     }
     '/app/config/system': {
@@ -544,27 +685,6 @@ declare module '@tanstack/react-router' {
       fullPath: '/app/config/pipelines/'
       preLoaderRoute: typeof AppConfigPipelinesIndexRouteImport
       parentRoute: typeof AppConfigPipelinesRoute
-    }
-    '/app/nodes/term/$termId': {
-      id: '/app/nodes/term/$termId'
-      path: '/nodes/term/$termId'
-      fullPath: '/app/nodes/term/$termId'
-      preLoaderRoute: typeof AppNodesTermTermIdRouteImport
-      parentRoute: typeof AppRoute
-    }
-    '/app/nodes/layer/$layerId': {
-      id: '/app/nodes/layer/$layerId'
-      path: '/nodes/layer/$layerId'
-      fullPath: '/app/nodes/layer/$layerId'
-      preLoaderRoute: typeof AppNodesLayerLayerIdRouteImport
-      parentRoute: typeof AppRoute
-    }
-    '/app/nodes/domain/$domainId': {
-      id: '/app/nodes/domain/$domainId'
-      path: '/nodes/domain/$domainId'
-      fullPath: '/app/nodes/domain/$domainId'
-      preLoaderRoute: typeof AppNodesDomainDomainIdRouteImport
-      parentRoute: typeof AppRoute
     }
     '/app/config/pipelines/$pipelineType': {
       id: '/app/config/pipelines/$pipelineType'
@@ -676,13 +796,19 @@ interface AppRouteChildren {
   AppPredicatesRoute: typeof AppPredicatesRoute
   AppTermsRoute: typeof AppTermsRoute
   AppIndexRoute: typeof AppIndexRoute
+  AppMonitoringAnalyticsRoute: typeof AppMonitoringAnalyticsRoute
+  AppMonitoringLlmTraceabilityRoute: typeof AppMonitoringLlmTraceabilityRoute
+  AppMonitoringPerformanceRoute: typeof AppMonitoringPerformanceRoute
+  AppMonitoringSystemHealthRoute: typeof AppMonitoringSystemHealthRoute
+  AppMonitoringTaskManagerRoute: typeof AppMonitoringTaskManagerRoute
   AppRagExperimentsRoute: typeof AppRagExperimentsRoute
+  AppRagPipelineComparisonRoute: typeof AppRagPipelineComparisonRoute
+  AppRagTestRunnerRoute: typeof AppRagTestRunnerRoute
   AppReferencePredicatesRoute: typeof AppReferencePredicatesRoute
   AppReferenceRagTestRoute: typeof AppReferenceRagTestRoute
   AppReferenceSearchRoute: typeof AppReferenceSearchRoute
-  AppNodesDomainDomainIdRoute: typeof AppNodesDomainDomainIdRoute
-  AppNodesLayerLayerIdRoute: typeof AppNodesLayerLayerIdRoute
-  AppNodesTermTermIdRoute: typeof AppNodesTermTermIdRoute
+  AppStructure_nodesNodeIdRoute: typeof AppStructure_nodesNodeIdRoute
+  AppReferenceIndexRoute: typeof AppReferenceIndexRoute
 }
 
 const AppRouteChildren: AppRouteChildren = {
@@ -693,13 +819,19 @@ const AppRouteChildren: AppRouteChildren = {
   AppPredicatesRoute: AppPredicatesRoute,
   AppTermsRoute: AppTermsRoute,
   AppIndexRoute: AppIndexRoute,
+  AppMonitoringAnalyticsRoute: AppMonitoringAnalyticsRoute,
+  AppMonitoringLlmTraceabilityRoute: AppMonitoringLlmTraceabilityRoute,
+  AppMonitoringPerformanceRoute: AppMonitoringPerformanceRoute,
+  AppMonitoringSystemHealthRoute: AppMonitoringSystemHealthRoute,
+  AppMonitoringTaskManagerRoute: AppMonitoringTaskManagerRoute,
   AppRagExperimentsRoute: AppRagExperimentsRoute,
+  AppRagPipelineComparisonRoute: AppRagPipelineComparisonRoute,
+  AppRagTestRunnerRoute: AppRagTestRunnerRoute,
   AppReferencePredicatesRoute: AppReferencePredicatesRoute,
   AppReferenceRagTestRoute: AppReferenceRagTestRoute,
   AppReferenceSearchRoute: AppReferenceSearchRoute,
-  AppNodesDomainDomainIdRoute: AppNodesDomainDomainIdRoute,
-  AppNodesLayerLayerIdRoute: AppNodesLayerLayerIdRoute,
-  AppNodesTermTermIdRoute: AppNodesTermTermIdRoute,
+  AppStructure_nodesNodeIdRoute: AppStructure_nodesNodeIdRoute,
+  AppReferenceIndexRoute: AppReferenceIndexRoute,
 }
 
 const AppRouteWithChildren = AppRoute._addFileChildren(AppRouteChildren)

@@ -4,6 +4,12 @@
 *.log*
 coverage/
 
+# E2E Testing
+/playwright-report/
+/playwright/.cache/
+/test-results/
+.env.e2e.local
+
 # Claude
 .claude/
 PRPs/

@@ -82,6 +82,7 @@ const LayerForm: React.FC<LayerFormProps> = ({ onSuccess, layer }) => {
           form.handleSubmit();
         }}
         className="flex flex-col gap-4"
+        data-testid="layer-form"
       >
         <form.Field
           name="title"
@@ -102,6 +103,7 @@ const LayerForm: React.FC<LayerFormProps> = ({ onSuccess, layer }) => {
                 onChange={(e) => field.handleChange(e.target.value)}
                 required
                 autoFocus
+                data-testid="layer-title-input"
               />
               {field.state.meta.errors.length > 0 && (
                 <div className="mt-1 text-sm text-red-600">
@@ -125,6 +127,7 @@ const LayerForm: React.FC<LayerFormProps> = ({ onSuccess, layer }) => {
                 placeholder="Definition (optional)"
                 value={field.state.value}
                 onChange={(e) => field.handleChange(e.target.value)}
+                data-testid="layer-definition-input"
               />
               {field.state.meta.errors.length > 0 && (
                 <div className="mt-1 text-sm text-red-600">
@@ -149,6 +152,7 @@ const LayerForm: React.FC<LayerFormProps> = ({ onSuccess, layer }) => {
               createLayerMutation.isPending ||
               updateLayerMutation.isPending
             }
+            data-testid="layer-submit-button"
           >
             {form.state.isSubmitting ||
             createLayerMutation.isPending ||

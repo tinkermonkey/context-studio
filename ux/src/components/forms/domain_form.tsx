@@ -38,7 +38,7 @@ const DomainForm: React.FC<DomainFormProps> = ({
     title: domain?.title ?? "",
     definition: domain?.definition ?? "",
     parent_node_id: domain?.parent_node_id ?? parentLayerId ?? "",
-    structural_predicate_id: domain?.structural_predicate_id ?? "",
+    structural_predicate_id: domain?.structural_predicate_id ?? undefined,
   });
 
   const form = useForm({
@@ -53,13 +53,19 @@ const DomainForm: React.FC<DomainFormProps> = ({
             data: value,
           });
         } else {
+          const createData: any = {
+            title: value.title,
+            definition: value.definition,
+          };
+
+          // Only include structural_predicate_id if it has a value
+          if (value.structural_predicate_id) {
+            createData.structural_predicate_id = value.structural_predicate_id;
+          }
+
           result = await createDomainMutation.mutateAsync({
             layerId: value.parent_node_id,
-            data: {
-              title: value.title,
-              definition: value.definition,
-              structural_predicate_id: value.structural_predicate_id,
-            },
+            data: createData,
           });
         }
         if (onSuccess) onSuccess(result);
@@ -217,7 +223,7 @@ const DomainForm: React.FC<DomainFormProps> = ({
               <PredicateSelector
                 value={field.state.value}
                 onSelect={(predicate) => {
-                  const predicateId = predicate?.id || "";
+                  const predicateId = predicate?.id || undefined;
                   field.handleChange(predicateId);
 
                   // Structural predicate selection

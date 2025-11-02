@@ -12,9 +12,9 @@ interface CsSidebarSectionTitleProps {
 
 const CsSidebar: React.FC<CsSidebarProps> = ({ children }) => {
   return (
-    <div className="fixed inset-0 z-50 hidden size-full max-w-64 overflow-y-auto bg-white pt-8 lg:sticky lg:top-[61px] lg:block lg:h-[calc(100vh-4rem)] dark:bg-gray-900">
+    <div className="fixed inset-0 z-50 hidden size-full max-w-64 overflow-y-auto bg-white lg:sticky lg:top-[var(--navbar-height,0px)] lg:block lg:h-[calc(100vh-var(--navbar-height,0px))] lg:overflow-y-auto dark:bg-gray-900">
       <nav
-        className="px-1 pt-16 pb-8 pl-3 text-base font-normal lg:pt-2 lg:pl-0 lg:text-sm"
+        className="px-1 pt-2 pb-8 pl-3 text-base font-normal lg:pl-0 lg:text-sm"
         aria-label="Main Sidebar"
       >
         {children}

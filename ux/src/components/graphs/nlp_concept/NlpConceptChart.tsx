@@ -8,12 +8,12 @@ import React, {
 import {
   useMeasurementSvg,
   useMeasurementHtml,
-} from "@/components/graphs/hierarchy/useMeasurementElement";
+} from "@/components/graphs/tree_chart/useMeasurementElement";
 import {
   measureSvgTextWidth,
   measureHtmlTextHeight,
   TextMeasurementOptions,
-} from "@/components/graphs/hierarchy/tree_chart_utils";
+} from "@/components/graphs/tree_chart/tree_chart_utils";
 import { NlpConceptChartLink } from "./NlpConceptChartLink";
 import { NlpConceptChartNode } from "./NlpConceptChartNode";
 import { input } from "@testing-library/user-event/dist/cjs/event/input.js";

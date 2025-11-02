@@ -21,6 +21,7 @@ import {
   useConfiguration,
   useUpdateConfigurationValue
 } from "@/api/hooks";
+import { useButterToast } from "@/hooks/useButterToast";
 
 export const Route = createFileRoute("/app/config/network")({
   component: RouteComponent,
@@ -29,16 +30,39 @@ export const Route = createFileRoute("/app/config/network")({
 function RouteComponent() {
   const { data: configuration, isLoading: isLoadingConfig } = useConfiguration();
   const updateConfigMutation = useUpdateConfigurationValue();
+  const toast = useButterToast();
+
+  const getProxyConfigLabel = (path: string): string => {
+    const labels: Record<string, string> = {
+      'enabled': 'Proxy server status',
+      'host': 'Proxy host',
+      'port': 'Proxy port',
+      'database_path': 'Cache database path',
+      'max_cache_entries': 'Maximum cache entries',
+      'default_cache_ttl': 'Default cache TTL',
+      'default_max_response_size': 'Maximum response size',
+      'default_requests_per_hour': 'Default requests per hour',
+      'progressive_max_delay': 'Progressive max delay'
+    };
+    return labels[path] || path;
+  };
 
   const handleUpdateProxyConfig = async (path: string, value: any) => {
-    try {
-      await updateConfigMutation.mutateAsync({
+    const label = getProxyConfigLabel(path);
+    await updateConfigMutation.mutateAsync(
+      {
         path: `proxy_server.${path}`,
         value
-      });
-    } catch (error) {
-      console.error(`Failed to update proxy config ${path}:`, error);
-    }
+      },
+      {
+        onSuccess: () => {
+          toast.success(`${label} updated successfully`);
+        },
+        onError: (error) => {
+          toast.error(`Failed to update ${label}: ${error instanceof Error ? error.message : 'Unknown error'}`);
+        }
+      }
+    );
   };
 
   if (isLoadingConfig) {

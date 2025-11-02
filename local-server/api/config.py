@@ -127,7 +127,7 @@ async def get_reference_source_config(source_name: str):
         config_manager = get_config_manager()
 
         # Validate source name and get configuration
-        valid_sources = ["conceptnet", "dbpedia", "dbpedia_spotlight", "wikidata", "schema_org"]
+        valid_sources = ["conceptnet", "dbpedia_lookup", "dbpedia_sparql", "dbpedia_spotlight", "wikidata", "duckduckgo", "schema_org"]
         if source_name not in valid_sources:
             raise HTTPException(status_code=404, detail=f"Unknown reference source: {source_name}")
 
@@ -148,7 +148,7 @@ async def update_reference_source_config(source_name: str, request: ConfigUpdate
         config_manager = get_config_manager()
 
         # Validate source name
-        valid_sources = ["conceptnet", "dbpedia", "dbpedia_spotlight", "wikidata", "schema_org"]
+        valid_sources = ["conceptnet", "dbpedia_lookup", "dbpedia_sparql", "dbpedia_spotlight", "wikidata", "duckduckgo", "schema_org"]
         if source_name not in valid_sources:
             raise HTTPException(status_code=404, detail=f"Unknown reference source: {source_name}")
 

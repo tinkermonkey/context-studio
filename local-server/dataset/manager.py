@@ -20,11 +20,17 @@ logger = get_logger(__name__)
 class DatasetManager:
     """Manages multiple datasets and database switching."""
     
-    def __init__(self, 
+    def __init__(self,
                  datasets_config_path: str = "./datasets.json",
                  datasets_directory: str = None):
         self.config_path = datasets_config_path
-        self.datasets_directory = datasets_directory or self._get_default_datasets_directory()
+        # If datasets_directory is provided, use it. Otherwise try to get from config.
+        # If config doesn't have it or it doesn't exist, use default.
+        if datasets_directory:
+            self.datasets_directory = datasets_directory
+        else:
+            self.datasets_directory = self._get_datasets_directory_from_config()
+
         self.active_dataset_id = None
         self.active_engine = None
         self.active_session_local = None
@@ -57,16 +63,33 @@ class DatasetManager:
         
         logger.info(f"DatasetManager initialized with datasets directory: {self.datasets_directory}")
     
+    def _get_datasets_directory_from_config(self) -> str:
+        """Get datasets directory from configuration, with fallback to defaults."""
+        try:
+            from config import get_settings
+            settings = get_settings()
+
+            if settings.database.datasets_directory:
+                # Expand ~ to home directory if present
+                expanded_path = os.path.expanduser(settings.database.datasets_directory)
+                logger.info(f"Using datasets directory from config: {expanded_path}")
+                return expanded_path
+        except Exception as e:
+            logger.warning(f"Could not read datasets_directory from config: {e}")
+
+        # Fall back to default
+        return self._get_default_datasets_directory()
+
     def _get_default_datasets_directory(self) -> str:
         """Get platform-specific default datasets directory."""
         # Check environment variable first
         env_dir = os.getenv('DATASETS_DIRECTORY')
         if env_dir:
             return env_dir
-            
+
         # Use platform-specific defaults for desktop deployment
         home = os.path.expanduser("~")
-        
+
         if platform.system() == "Windows":
             return os.path.join(home, "Documents", "ContextStudio", "datasets")
         else:  # macOS and Linux

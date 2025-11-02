@@ -28,7 +28,7 @@ import {
   renderWithProviders as render,
   makeTestQueryClient,
 } from "@/test/utils/renderWithProviders";
-import { DomainDetails } from "@/components/node_details/domain_details";
+import { StructureNodeDetails } from "@/components/node_details/structure_node_details";
 import { QUERY_KEYS } from "@/api/config";
 // Using service-level mocks for deterministic integration test
 import { structureNodeService } from "@/api/services/structureNodes";
@@ -49,7 +49,7 @@ const domain = {
   version: 1,
 };
 
-describe("DomainDetails edit flow", () => {
+describe("StructureNodeDetails edit flow (Domain)", () => {
   it("opens edit modal, submits form, and invalidates queries on success", async () => {
     // create a test QueryClient and spy on invalidateQueries
     const qc = makeTestQueryClient();
@@ -72,7 +72,7 @@ describe("DomainDetails edit flow", () => {
       .mockResolvedValue(updatedDomain as any);
 
     // With Link, useLayer, and useTerms mocked above, we can render without RouterProvider
-    render(<DomainDetails domain={domain} />, { queryClient: qc });
+    render(<StructureNodeDetails node={domain} />, { queryClient: qc });
 
     // Edit button should be present
     const edit = await screen.findByRole("button", { name: /edit/i });

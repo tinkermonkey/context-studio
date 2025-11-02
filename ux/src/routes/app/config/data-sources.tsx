@@ -19,6 +19,7 @@ import {
   useReferenceSourcesStatus,
   useUpdateReferenceSourceConfig
 } from "@/api/hooks";
+import { useButterToast } from "@/hooks/useButterToast";
 
 export const Route = createFileRoute("/app/config/data-sources")({
   component: RouteComponent,
@@ -53,45 +54,71 @@ const REFERENCE_SOURCE_LABELS: Record<string, { name: string; description: strin
 };
 
 function RouteComponent() {
+  const toast = useButterToast();
   const { data: configuration, isLoading: isLoadingConfig } = useConfiguration();
   const { data: referenceSourcesConfig, isLoading: isLoadingRefConfig } = useReferenceSourcesConfig();
   const { data: referenceSourcesStatus, isLoading: isLoadingStatus } = useReferenceSourcesStatus();
   const updateReferenceSourceMutation = useUpdateReferenceSourceConfig();
 
+  const getSourceDisplayName = (sourceName: string): string => {
+    return REFERENCE_SOURCE_LABELS[sourceName]?.name || sourceName;
+  };
+
   const handleToggleSource = async (sourceName: string, enabled: boolean) => {
-    try {
-      await updateReferenceSourceMutation.mutateAsync({
+    const displayName = getSourceDisplayName(sourceName);
+    await updateReferenceSourceMutation.mutateAsync(
+      {
         sourceName,
         path: "enabled",
         value: enabled
-      });
-    } catch (error) {
-      console.error(`Failed to toggle ${sourceName}:`, error);
-    }
+      },
+      {
+        onSuccess: () => {
+          toast.success(`${displayName} ${enabled ? 'enabled' : 'disabled'} successfully`);
+        },
+        onError: (error) => {
+          toast.error(`Failed to ${enabled ? 'enable' : 'disable'} ${displayName}: ${error instanceof Error ? error.message : 'Unknown error'}`);
+        }
+      }
+    );
   };
 
   const handleUpdateTimeout = async (sourceName: string, timeout: number) => {
-    try {
-      await updateReferenceSourceMutation.mutateAsync({
+    const displayName = getSourceDisplayName(sourceName);
+    await updateReferenceSourceMutation.mutateAsync(
+      {
         sourceName,
         path: "timeout",
         value: timeout
-      });
-    } catch (error) {
-      console.error(`Failed to update timeout for ${sourceName}:`, error);
-    }
+      },
+      {
+        onSuccess: () => {
+          toast.success(`${displayName} timeout updated to ${timeout}s successfully`);
+        },
+        onError: (error) => {
+          toast.error(`Failed to update ${displayName} timeout: ${error instanceof Error ? error.message : 'Unknown error'}`);
+        }
+      }
+    );
   };
 
   const handleToggleProxy = async (sourceName: string, useProxy: boolean) => {
-    try {
-      await updateReferenceSourceMutation.mutateAsync({
+    const displayName = getSourceDisplayName(sourceName);
+    await updateReferenceSourceMutation.mutateAsync(
+      {
         sourceName,
         path: "use_proxy",
         value: useProxy
-      });
-    } catch (error) {
-      console.error(`Failed to toggle proxy for ${sourceName}:`, error);
-    }
+      },
+      {
+        onSuccess: () => {
+          toast.success(`${displayName} proxy ${useProxy ? 'enabled' : 'disabled'} successfully`);
+        },
+        onError: (error) => {
+          toast.error(`Failed to update ${displayName} proxy settings: ${error instanceof Error ? error.message : 'Unknown error'}`);
+        }
+      }
+    );
   };
 
   if (isLoadingConfig || isLoadingRefConfig || isLoadingStatus) {

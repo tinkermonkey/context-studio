@@ -53,6 +53,7 @@ def create_node(
     - Terms must have a domain parent
     """
     from utils.logger import get_logger
+    from api.graph import invalidate_graph_cache
     logger = get_logger(__name__)
 
     try:
@@ -66,6 +67,10 @@ def create_node(
         }
 
         created_node = node_service.create_node(node_data)
+
+        # Invalidate graph cache so hierarchy updates are immediately visible
+        invalidate_graph_cache()
+
         return to_node_out(created_node)
 
     except ValueError as e:
@@ -274,10 +279,12 @@ def create_node_link(
 ):
     """
     Create a new structure_node link.
-    
+
     Links can only be created between structure_nodes of the same type (layers to layers,
     domains to domains, terms to terms) as per the Great Normalization requirements.
     """
+    from api.graph import invalidate_graph_cache
+
     try:
         # Convert API model to service data
         link_data = {
@@ -286,10 +293,14 @@ def create_node_link(
             "predicate": link.predicate,
             "predicate_id": uuid_to_str(link.predicate_id)
         }
-        
+
         created_link = link_service.create_link(link_data)
+
+        # Invalidate graph cache so new links are immediately visible
+        invalidate_graph_cache()
+
         return to_node_link_out(created_link)
-        
+
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
     except Exception as e:
@@ -338,10 +349,12 @@ def update_node_link(
 ):
     """
     Update a structure_node link.
-    
+
     Allows updating the predicate and predicate_id of an existing link.
     Source and target structure_nodes can also be updated if the new configuration is valid.
     """
+    from api.graph import invalidate_graph_cache
+
     try:
         # Convert API model to service data
         update_data = {
@@ -350,10 +363,14 @@ def update_node_link(
             "predicate": link_update.predicate,
             "predicate_id": uuid_to_str(link_update.predicate_id)
         }
-        
+
         updated_link = link_service.update_link(str(link_id), update_data)
+
+        # Invalidate graph cache so link updates are immediately visible
+        invalidate_graph_cache()
+
         return to_node_link_out(updated_link)
-        
+
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
     except Exception as e:
@@ -367,12 +384,16 @@ def delete_node_link(
 ):
     """
     Delete a structure_node link.
-    
+
     Removes the relationship between two structure_nodes. This operation cannot be undone.
     """
+    from api.graph import invalidate_graph_cache
+
     try:
         success = link_service.delete_link(str(link_id))
         if success:
+            # Invalidate graph cache so link deletions are immediately visible
+            invalidate_graph_cache()
             return  # Return empty response with 204 status
         else:
             raise HTTPException(status_code=404, detail="StructureNode link not found")
@@ -422,10 +443,12 @@ def update_node(
 ):
     """
     Update a structure_node.
-    
+
     Supports updating title, definition, parent relationships, and structural predicates.
     Circular reference validation is automatically enforced.
     """
+    from api.graph import invalidate_graph_cache
+
     try:
         # Convert API model to service data, excluding unset values
         update_data = {}
@@ -437,10 +460,14 @@ def update_node(
             update_data["parent_node_id"] = uuid_to_str(node_update.parent_node_id)
         if node_update.structural_predicate_id is not None:
             update_data["structural_predicate_id"] = uuid_to_str(node_update.structural_predicate_id)
-        
+
         updated_node = node_service.update_node(str(node_id), update_data)
+
+        # Invalidate graph cache so hierarchy updates are immediately visible
+        invalidate_graph_cache()
+
         return to_node_out(updated_node)
-        
+
     except ValueError as e:
         error_msg = str(e).lower()
         # Check for not found errors first
@@ -465,13 +492,17 @@ def delete_node(
 ):
     """
     Delete a structure_node and its children.
-    
+
     This operation cascades to all child structure_nodes and their relationships.
     Use with caution as this operation cannot be undone.
     """
+    from api.graph import invalidate_graph_cache
+
     try:
         success = node_service.delete_node(str(node_id))
         if success:
+            # Invalidate graph cache so hierarchy updates are immediately visible
+            invalidate_graph_cache()
             return  # Return empty response with 204 status
         else:
             raise HTTPException(status_code=404, detail="StructureNode not found")

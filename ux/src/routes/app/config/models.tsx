@@ -6,11 +6,11 @@ import {
   useEnabledModels,
   useProvidersStatus,
   useToggleModel,
-  useModelsByProvider,
-  useSupportedModels
+  useModelsByProvider
 } from "@/api/hooks";
-import { Brain, Server, Shield, AlertTriangle, CheckCircle, Settings } from "lucide-react";
+import { Server, AlertTriangle, CheckCircle } from "lucide-react";
 import type { EnabledModelConfig, ProviderType } from "@/api/services/enabledModels";
+import { useButterToast } from "@/hooks/useButterToast";
 
 export const Route = createFileRoute("/app/config/models")({
   component: RouteComponent,
@@ -37,19 +37,19 @@ const COST_TIER_COLORS = {
 } as const;
 
 function RouteComponent() {
-
+  const toast = useButterToast();
   const { data: enabledModels, isLoading: isLoadingEnabledModels } = useEnabledModels();
   const { data: providersStatus, isLoading: isLoadingProviders } = useProvidersStatus();
-  const { data: supportedModels } = useSupportedModels();
-  const { data: modelsByProvider } = useModelsByProvider();
 
   const toggleModelMutation = useToggleModel();
 
   const handleToggleModel = async (modelName: string, enabled: boolean) => {
+    const modelDisplayName = enabledModels?.models.find(m => m.model_name === modelName)?.display_name || modelName;
     try {
       await toggleModelMutation.mutateAsync({ modelName, enabled });
+      toast.success(`${modelDisplayName} ${enabled ? 'enabled' : 'disabled'} successfully`);
     } catch (error) {
-      console.error("Failed to toggle model:", error);
+      toast.error(`Failed to ${enabled ? 'enable' : 'disable'} ${modelDisplayName}: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   };
 
@@ -81,17 +81,6 @@ function RouteComponent() {
         <ProviderConfigurationTab
           providersStatus={providersStatus}
           isLoading={isLoadingProviders}
-        />
-      </div>
-
-      {/* Model Capabilities Section */}
-      <div className="mt-8">
-        <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
-          <Shield className="h-5 w-5" />
-          Model Capabilities
-        </h2>
-        <ModelCapabilitiesTab
-          supportedModels={supportedModels?.models || []}
         />
       </div>
     </div>
@@ -319,55 +308,8 @@ function ProviderStatusCard({
             </div>
           )}
 
-          <div className="mt-4 flex gap-2">
-            <Button size="xs" color="gray">
-              <Settings className="h-3 w-3 mr-1" />
-              Configure
-            </Button>
-            <Button size="xs" color="gray">
-              Test Connection
-            </Button>
-          </div>
         </div>
       </div>
     </Card>
-  );
-}
-
-// Model Capabilities Tab Component
-function ModelCapabilitiesTab({
-  supportedModels
-}: {
-  supportedModels: any[];
-}) {
-  return (
-    <div className="space-y-6">
-      <Alert color="info">
-        <Shield className="h-4 w-4" />
-        <span className="ml-2">
-          This section shows read-only model capabilities and parameter support.
-        </span>
-      </Alert>
-
-      {supportedModels.length === 0 ? (
-        <div className="text-center py-8 text-gray-600">
-          No model capabilities data available
-        </div>
-      ) : (
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-          {supportedModels.map((model) => (
-            <Card key={model.model_name}>
-              <h4 className="font-semibold mb-2">{model.model_name}</h4>
-              <div className="text-sm space-y-1">
-                {/* This would show capabilities based on the model data structure */}
-                <div>Provider: {model.capabilities?.provider || "Unknown"}</div>
-                <div>Family: {model.capabilities?.model_family || "Unknown"}</div>
-                {/* Add more capability details as needed */}
-              </div>
-            </Card>
-          ))}
-        </div>
-      )}
-    </div>
   );
 }

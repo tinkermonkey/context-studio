@@ -16,6 +16,70 @@
         "cost-effective"
       ]
     },
+    "gpt-4": {
+      "model_name": "gpt-4",
+      "provider_type": "native_openai",
+      "display_name": "GPT-4",
+      "enabled": true,
+      "api_key_env_var": "OPENAI_API_KEY",
+      "custom_endpoint": null,
+      "model_override": null,
+      "description": "Advanced OpenAI model with high reasoning capability",
+      "cost_tier": "high",
+      "tags": [
+        "openai",
+        "advanced",
+        "reasoning"
+      ]
+    },
+    "gpt-4-turbo": {
+      "model_name": "gpt-4-turbo",
+      "provider_type": "native_openai",
+      "display_name": "GPT-4 Turbo",
+      "enabled": true,
+      "api_key_env_var": "OPENAI_API_KEY",
+      "custom_endpoint": null,
+      "model_override": null,
+      "description": "Fast GPT-4 with large context window",
+      "cost_tier": "high",
+      "tags": [
+        "openai",
+        "advanced",
+        "large-context"
+      ]
+    },
+    "gpt-4-turbo-preview": {
+      "model_name": "gpt-4-turbo-preview",
+      "provider_type": "native_openai",
+      "display_name": "GPT-4 Turbo Preview",
+      "enabled": true,
+      "api_key_env_var": "OPENAI_API_KEY",
+      "custom_endpoint": null,
+      "model_override": null,
+      "description": "Preview version of GPT-4 Turbo",
+      "cost_tier": "high",
+      "tags": [
+        "openai",
+        "preview",
+        "large-context"
+      ]
+    },
+    "gpt-4o": {
+      "model_name": "gpt-4o",
+      "provider_type": "native_openai",
+      "display_name": "GPT-4o",
+      "enabled": true,
+      "api_key_env_var": "OPENAI_API_KEY",
+      "custom_endpoint": null,
+      "model_override": null,
+      "description": "GPT-4 optimized model with enhanced capabilities",
+      "cost_tier": "medium",
+      "tags": [
+        "openai",
+        "optimized",
+        "gpt4-class"
+      ]
+    },
     "gpt-4o-mini": {
       "model_name": "gpt-4o-mini",
       "provider_type": "native_openai",
@@ -33,20 +97,102 @@
         "gpt4-class"
       ]
     },
-    "gpt-4": {
-      "model_name": "gpt-4",
+    "gpt-4o-turbo": {
+      "model_name": "gpt-4o-turbo",
       "provider_type": "native_openai",
-      "display_name": "GPT-4",
+      "display_name": "GPT-4o Turbo",
       "enabled": true,
       "api_key_env_var": "OPENAI_API_KEY",
       "custom_endpoint": null,
       "model_override": null,
-      "description": "Advanced OpenAI model with high reasoning capability",
+      "description": "Fast GPT-4o with enhanced performance",
+      "cost_tier": "medium",
+      "tags": [
+        "openai",
+        "optimized",
+        "fast"
+      ]
+    },
+    "gpt-4o-latest": {
+      "model_name": "gpt-4o-latest",
+      "provider_type": "native_openai",
+      "display_name": "GPT-4o Latest",
+      "enabled": true,
+      "api_key_env_var": "OPENAI_API_KEY",
+      "custom_endpoint": null,
+      "model_override": null,
+      "description": "Latest GPT-4o model with newest improvements",
+      "cost_tier": "medium",
+      "tags": [
+        "openai",
+        "latest",
+        "gpt4-class"
+      ]
+    },
+    "gpt-5": {
+      "model_name": "gpt-5",
+      "provider_type": "native_openai",
+      "display_name": "GPT-5",
+      "enabled": true,
+      "api_key_env_var": "OPENAI_API_KEY",
+      "custom_endpoint": null,
+      "model_override": null,
+      "description": "Next generation OpenAI model with enhanced capabilities",
       "cost_tier": "high",
       "tags": [
         "openai",
         "advanced",
-        "reasoning"
+        "gpt5"
+      ]
+    },
+    "gpt-5-turbo": {
+      "model_name": "gpt-5-turbo",
+      "provider_type": "native_openai",
+      "display_name": "GPT-5 Turbo",
+      "enabled": true,
+      "api_key_env_var": "OPENAI_API_KEY",
+      "custom_endpoint": null,
+      "model_override": null,
+      "description": "Fast GPT-5 with large context window",
+      "cost_tier": "high",
+      "tags": [
+        "openai",
+        "advanced",
+        "gpt5",
+        "fast"
+      ]
+    },
+    "gpt-5-preview": {
+      "model_name": "gpt-5-preview",
+      "provider_type": "native_openai",
+      "display_name": "GPT-5 Preview",
+      "enabled": true,
+      "api_key_env_var": "OPENAI_API_KEY",
+      "custom_endpoint": null,
+      "model_override": null,
+      "description": "Preview version of GPT-5",
+      "cost_tier": "high",
+      "tags": [
+        "openai",
+        "preview",
+        "gpt5"
+      ]
+    },
+    "gpt-5-mini": {
+      "model_name": "gpt-5-mini",
+      "provider_type": "native_openai",
+      "display_name": "GPT-5 Mini",
+      "enabled": true,
+      "api_key_env_var": "OPENAI_API_KEY",
+      "custom_endpoint": null,
+      "model_override": null,
+      "description": "Efficient GPT-5 variant with reduced costs",
+      "cost_tier": "low",
+      "tags": [
+        "openai",
+        "fast",
+        "cost-effective",
+        "gpt5"
       ]
     },
     "claude-3-haiku-20240307": {
@@ -69,7 +215,7 @@
       "model_name": "claude-3-sonnet-20240229",
       "provider_type": "native_anthropic",
       "display_name": "Claude 3 Sonnet",
-      "enabled": false,
+      "enabled": true,
       "api_key_env_var": "ANTHROPIC_API_KEY",
       "custom_endpoint": null,
       "model_override": null,
@@ -83,23 +229,105 @@
     },
     "claude-3-opus-20240229": {
       "model_name": "claude-3-opus-20240229",
-      "provider_type": "openrouter",
-      "display_name": "Claude 3 Opus (OpenRouter)",
+      "provider_type": "native_anthropic",
+      "display_name": "Claude 3 Opus",
       "enabled": true,
-      "api_key_env_var": "OPENROUTER_API_KEY",
+      "api_key_env_var": "ANTHROPIC_API_KEY",
       "custom_endpoint": null,
       "model_override": null,
-      "description": "High-performance Claude model via OpenRouter",
+      "description": "High-performance Claude model",
       "cost_tier": "high",
       "tags": [
         "anthropic",
-        "openrouter",
-        "high-performance"
+        "high-performance",
+        "advanced"
+      ]
+    },
+    "claude-4": {
+      "model_name": "claude-4",
+      "provider_type": "native_anthropic",
+      "display_name": "Claude 4",
+      "enabled": true,
+      "api_key_env_var": "ANTHROPIC_API_KEY",
+      "custom_endpoint": null,
+      "model_override": null,
+      "description": "Next generation Claude with massive context window",
+      "cost_tier": "high",
+      "tags": [
+        "anthropic",
+        "advanced",
+        "large-context"
+      ]
+    },
+    "claude-4-turbo": {
+      "model_name": "claude-4-turbo",
+      "provider_type": "native_anthropic",
+      "display_name": "Claude 4 Turbo",
+      "enabled": true,
+      "api_key_env_var": "ANTHROPIC_API_KEY",
+      "custom_endpoint": null,
+      "model_override": null,
+      "description": "Fast Claude 4 with enhanced performance",
+      "cost_tier": "high",
+      "tags": [
+        "anthropic",
+        "advanced",
+        "fast",
+        "large-context"
+      ]
+    },
+    "claude-4-sonnet": {
+      "model_name": "claude-4-sonnet",
+      "provider_type": "native_anthropic",
+      "display_name": "Claude 4 Sonnet",
+      "enabled": true,
+      "api_key_env_var": "ANTHROPIC_API_KEY",
+      "custom_endpoint": null,
+      "model_override": null,
+      "description": "Balanced Claude 4 model with strong performance",
+      "cost_tier": "medium",
+      "tags": [
+        "anthropic",
+        "balanced",
+        "capable"
+      ]
+    },
+    "claude-4-opus": {
+      "model_name": "claude-4-opus",
+      "provider_type": "native_anthropic",
+      "display_name": "Claude 4 Opus",
+      "enabled": true,
+      "api_key_env_var": "ANTHROPIC_API_KEY",
+      "custom_endpoint": null,
+      "model_override": null,
+      "description": "Maximum capability Claude 4 with largest context window",
+      "cost_tier": "high",
+      "tags": [
+        "anthropic",
+        "advanced",
+        "maximum-capability",
+        "large-context"
+      ]
+    },
+    "claude-4-haiku": {
+      "model_name": "claude-4-haiku",
+      "provider_type": "native_anthropic",
+      "display_name": "Claude 4 Haiku",
+      "enabled": true,
+      "api_key_env_var": "ANTHROPIC_API_KEY",
+      "custom_endpoint": null,
+      "model_override": null,
+      "description": "Fast and efficient Claude 4 variant",
+      "cost_tier": "low",
+      "tags": [
+        "anthropic",
+        "fast",
+        "efficient"
       ]
     }
   },
   "metadata": {
     "version": "1.0",
-    "last_updated": null
+    "last_updated": "2025-10-29T21:20:00Z"
   }
 }

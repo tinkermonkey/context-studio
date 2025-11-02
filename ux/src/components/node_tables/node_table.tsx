@@ -146,18 +146,20 @@ function BaseNodeTable<T>({
     ...propColumnVisibility,
   });
 
-  // Search state management
-  const [searchTerm, setSearchTerm] = React.useState<string>(
-    (queryParams?.query as string) || "",
-  );
+  // Search state management - use ref to preserve focus
+  const searchInputRef = React.useRef<HTMLInputElement>(null);
+  const [searchTerm, setSearchTerm] = React.useState<string>("");
 
-  // Update search term when queryParams change (e.g., from URL navigation)
+  // Track if we initiated the query change to avoid circular updates
+  const searchUpdateSourceRef = React.useRef<'user' | 'external'>('external');
+
+  // Initialize search term from URL on mount only
   React.useEffect(() => {
-    const newSearchTerm = (queryParams?.query as string) || "";
-    if (searchTerm !== newSearchTerm) {
-      setSearchTerm(newSearchTerm);
+    const initialQuery = (queryParams?.query as string) || "";
+    if (initialQuery) {
+      setSearchTerm(initialQuery);
     }
-  }, [queryParams?.query]);
+  }, []);
 
   // Filter state management
   const [filters, setFilters] = React.useState<QueryFilter[]>(() => {
@@ -221,7 +223,7 @@ function BaseNodeTable<T>({
     }
   }, [queryParams, filterFields]);
 
-  // Debounced search to avoid excessive API calls
+  // Debounced search for client-side filtering
   const [debouncedSearchTerm, setDebouncedSearchTerm] =
     React.useState(searchTerm);
 
@@ -232,27 +234,6 @@ function BaseNodeTable<T>({
 
     return () => clearTimeout(timer);
   }, [searchTerm]);
-
-  // Update query params when debounced search term changes
-  // Only update if the search term actually changed from user input
-  React.useEffect(() => {
-    // Don't update on initial mount - only when user actually changes search
-    if (debouncedSearchTerm === ((queryParams?.query as string) || "")) {
-      return; // No change needed
-    }
-
-    if (onSearchChange) {
-      onSearchChange(debouncedSearchTerm);
-    } else if (onQueryParamsChange) {
-      const newParams = { ...queryParams };
-      if (debouncedSearchTerm.trim()) {
-        newParams.query = debouncedSearchTerm.trim();
-      } else {
-        delete newParams.query;
-      }
-      onQueryParamsChange(newParams);
-    }
-  }, [debouncedSearchTerm, onSearchChange, onQueryParamsChange]);
 
   // Update query params when filters change
   // Only update if the filters actually changed from user input
@@ -327,6 +308,27 @@ function BaseNodeTable<T>({
     setSearchTerm(event.target.value);
   };
 
+  // Client-side filtering based on search term
+  const filteredData = React.useMemo(() => {
+    if (!debouncedSearchTerm.trim()) {
+      return data;
+    }
+
+    const searchLower = debouncedSearchTerm.toLowerCase().trim();
+    return (data ?? []).filter((item: any) => {
+      // Search in title and definition fields
+      const title = item.title?.toLowerCase() || "";
+      const definition = item.definition?.toLowerCase() || "";
+      const id = item.id?.toLowerCase() || "";
+
+      return (
+        title.includes(searchLower) ||
+        definition.includes(searchLower) ||
+        id.includes(searchLower)
+      );
+    });
+  }, [data, debouncedSearchTerm]);
+
   // Handle filter changes
   const handleFiltersChange = (newFilters: QueryFilter[]) => {
     setFilters(newFilters);
@@ -341,13 +343,13 @@ function BaseNodeTable<T>({
   const [pageIndex, setPageIndex] = React.useState(0);
   const [pageSize, setPageSize] = React.useState(defaultPageSize);
 
-  // Calculate total number of pages
+  // Calculate total number of pages using filtered data
   const totalPages = React.useMemo(() => {
-    return Math.max(1, Math.ceil((data?.length || 0) / pageSize));
-  }, [data?.length, pageSize]);
+    return Math.max(1, Math.ceil((filteredData?.length || 0) / pageSize));
+  }, [filteredData?.length, pageSize]);
 
   const table = useReactTable({
-    data: data ?? [],
+    data: filteredData ?? [],
     columns,
     state: {
       columnVisibility,
@@ -366,12 +368,17 @@ function BaseNodeTable<T>({
     setSelectedCount(table.getSelectedRowModel().rows.length);
   }, [table.getSelectedRowModel().rows.length]);
 
-  // Reset to first page if data changes and current page is out of range
+  // Reset to first page if filtered data changes and current page is out of range
   React.useEffect(() => {
     if (pageIndex > 0 && pageIndex >= totalPages) {
       setPageIndex(0);
     }
-  }, [data, pageIndex, totalPages]);
+  }, [filteredData, pageIndex, totalPages]);
+
+  // Reset to first page when search term changes
+  React.useEffect(() => {
+    setPageIndex(0);
+  }, [debouncedSearchTerm]);
 
   // Debug effect to track modal state changes
   React.useEffect(() => {
@@ -498,15 +505,17 @@ function BaseNodeTable<T>({
         />
       )}
 
-      <div className="mb-4 flex items-center justify-between">
+      <div className="mb-4 flex items-center justify-between" data-testid={`${typeName.toLowerCase()}-table-toolbar`}>
         <div className="flex grow justify-start">
           {searchEnabled && (
             <TextInput
+              ref={searchInputRef}
               placeholder={searchPlaceholder || `Search ${typeName}s...`}
               icon={Search}
               value={searchTerm}
               onChange={handleSearchChange}
               className="max-w-md"
+              data-testid={`${typeName.toLowerCase()}-search-input`}
             />
           )}
         </div>
@@ -519,6 +528,7 @@ function BaseNodeTable<T>({
               size="sm"
               onClick={() => setShowCreateModal(true)}
               className="w-auto whitespace-nowrap"
+              data-testid={`${typeName.toLowerCase()}-add-button`}
             >
               <Plus className="mr-2 h-4 w-4" />
               Add {typeName}
@@ -532,14 +542,15 @@ function BaseNodeTable<T>({
             className="w-auto whitespace-nowrap"
             dismissOnClick={true}
             disabled={selectedCount === 0}
+            data-testid={`${typeName.toLowerCase()}-actions-dropdown`}
           >
             {MoveForm && (
-              <DropdownItem onClick={handleMoveSelected}>
+              <DropdownItem onClick={handleMoveSelected} data-testid={`${typeName.toLowerCase()}-move-selected-action`}>
                 <Move className="mr-2 h-4 w-4" />
                 Move Selected
               </DropdownItem>
             )}
-            <DropdownItem onClick={handleDeleteSelected}>
+            <DropdownItem onClick={handleDeleteSelected} data-testid={`${typeName.toLowerCase()}-delete-selected-action`}>
               Delete Selected
             </DropdownItem>
             {customBulkActions.map((action, index) => (
@@ -569,7 +580,7 @@ function BaseNodeTable<T>({
         </div>
       </div>
 
-      <Table hoverable className="max-w-full">
+      <Table hoverable className="max-w-full" data-testid={`${typeName.toLowerCase()}-table`}>
         <TableHead>
           <TableRow>
             {table
@@ -592,6 +603,7 @@ function BaseNodeTable<T>({
           {table.getRowModel().rows.map((row) => (
             <TableRow
               key={row.id}
+              data-testid={`${typeName.toLowerCase()}-row-${getId(row.original)}`}
               onDoubleClick={() => {
                 setEditNodeId(getId(row.original));
               }}
@@ -685,13 +697,18 @@ function BaseNodeTable<T>({
                   {typeName.toLowerCase()}s
                 </Badge>{" "}
                 <span className="font-bold">
-                  {data.length === 0 ? 0 : pageIndex * pageSize + 1}
+                  {filteredData.length === 0 ? 0 : pageIndex * pageSize + 1}
                 </span>
                 -
                 <span className="font-bold">
-                  {Math.min((pageIndex + 1) * pageSize, data.length)}
+                  {Math.min((pageIndex + 1) * pageSize, filteredData.length)}
                 </span>
-                &nbsp;of&nbsp;<span className="font-bold">{data.length}</span>
+                &nbsp;of&nbsp;<span className="font-bold">{filteredData.length}</span>
+                {debouncedSearchTerm && (
+                  <span className="ml-1 text-gray-500">
+                    (filtered from {data.length})
+                  </span>
+                )}
               </div>
             </div>
             <div>
@@ -713,17 +730,22 @@ function BaseNodeTable<T>({
               {typeName.toLowerCase()}s
             </Badge>{" "}
             <span className="font-bold">
-              {data.length === 0 ? 0 : pageIndex * pageSize + 1}
+              {filteredData.length === 0 ? 0 : pageIndex * pageSize + 1}
             </span>
             -
             <span className="font-bold">
-              {Math.min((pageIndex + 1) * pageSize, data.length)}
+              {Math.min((pageIndex + 1) * pageSize, filteredData.length)}
             </span>
-            &nbsp;of&nbsp;<span className="font-bold">{data.length}</span>
+            &nbsp;of&nbsp;<span className="font-bold">{filteredData.length}</span>
+            {debouncedSearchTerm && (
+              <span className="ml-1 text-gray-500">
+                (filtered from {data.length})
+              </span>
+            )}
           </div>
         )}
       </div>
-      <Modal show={showDeleteModal} onClose={() => setShowDeleteModal(false)}>
+      <Modal show={showDeleteModal} onClose={() => setShowDeleteModal(false)} data-testid={`${typeName.toLowerCase()}-delete-modal`}>
         <ModalHeader className="border-b-0">
           <div className="flex items-center gap-2">
             <AlertTriangle className="h-5 w-5 text-red-500" />
@@ -807,10 +829,10 @@ function BaseNodeTable<T>({
           </div>
 
           <div className="flex justify-end gap-2">
-            <Button color="gray" onClick={() => setShowDeleteModal(false)}>
+            <Button color="gray" onClick={() => setShowDeleteModal(false)} data-testid={`${typeName.toLowerCase()}-delete-cancel-button`}>
               Cancel
             </Button>
-            <Button color="red" onClick={confirmDeleteSelected}>
+            <Button color="red" onClick={confirmDeleteSelected} data-testid={`${typeName.toLowerCase()}-delete-confirm-button`}>
               Delete
             </Button>
           </div>
@@ -827,6 +849,7 @@ function BaseNodeTable<T>({
             setPendingMoveRows([]);
             setIsProcessing(false);
           }}
+          data-testid={`${typeName.toLowerCase()}-move-modal`}
         >
           <ModalHeader className="border-b-0">
             Move {pendingMoveRows.length} {typeName.toLowerCase()}
@@ -855,14 +878,14 @@ function BaseNodeTable<T>({
         </Modal>
       )}
       {/* Create Modal */}
-      <Modal show={showCreateModal} onClose={() => setShowCreateModal(false)}>
+      <Modal show={showCreateModal} onClose={() => setShowCreateModal(false)} data-testid={`${typeName.toLowerCase()}-create-modal`}>
         <ModalHeader className="border-b-0">Create New {typeName}</ModalHeader>
         <ModalBody>
           <CreateForm onSuccess={() => setShowCreateModal(false)} />
         </ModalBody>
       </Modal>
       {/* Edit Modal */}
-      <Modal show={!!editNodeId} onClose={() => setEditNodeId(undefined)}>
+      <Modal show={!!editNodeId} onClose={() => setEditNodeId(undefined)} data-testid={`${typeName.toLowerCase()}-edit-modal`}>
         <ModalHeader className="border-b-0">Edit {typeName}</ModalHeader>
         <ModalBody>
           {editNode && (
