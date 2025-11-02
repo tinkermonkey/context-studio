@@ -10,6 +10,13 @@
     "test:coverage": "vitest run --coverage",
     "test:coverage:c8": "c8 --reporter=lcov --reporter=text npx vitest run",
     "test:msw": "vitest run --config vitest.msw.config.ts",
+    "test:e2e": "playwright test",
+    "test:e2e:ui": "playwright test --ui",
+    "test:e2e:debug": "playwright test --debug",
+    "test:e2e:headed": "playwright test --headed",
+    "test:e2e:verbose": "SHOW_BACKEND_LOGS=true playwright test",
+    "test:e2e:logs": "./e2e/watch-logs.sh",
+    "test:e2e:report": "playwright show-report",
     "typecheck": "tsc --noEmit",
     "dev": "vite --port=3100",
     "build": "vite build",
@@ -21,6 +28,7 @@
     "generate-types": "openapi-typescript documentation/openapi.json -o src/api/client/types.ts"
   },
   "devDependencies": {
+    "@playwright/test": "^1.48.0",
     "@tailwindcss/vite": "^4.1.4",
     "@tanstack/router-plugin": "^1.116.1",
     "@testing-library/dom": "^8.20.1",

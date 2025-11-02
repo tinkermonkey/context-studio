@@ -552,11 +552,33 @@ def cleanup_database_resources():
 
 
 def get_dataset_manager():
-    """Get the global dataset manager instance."""
+    """
+    Get the global dataset manager instance.
+
+    Returns None if datasets directory is not configured or doesn't exist,
+    indicating that dataset manager should be disabled and direct database
+    access should be used instead.
+    """
     global _dataset_manager
     if _dataset_manager is None:
         from dataset.manager import DatasetManager
-        _dataset_manager = DatasetManager()
+        from config import get_settings
+        import os
+
+        # Check if datasets directory is configured and exists
+        settings = get_settings()
+        if settings.database.datasets_directory:
+            datasets_dir = os.path.expanduser(settings.database.datasets_directory)
+            if os.path.exists(datasets_dir):
+                logger.info(f"Initializing dataset manager with directory: {datasets_dir}")
+                _dataset_manager = DatasetManager()
+            else:
+                logger.info(f"Datasets directory does not exist: {datasets_dir}. Dataset manager disabled.")
+                return None
+        else:
+            logger.info("No datasets_directory configured. Dataset manager disabled.")
+            return None
+
     return _dataset_manager
 
 
@@ -565,6 +587,10 @@ def switch_active_database(dataset_id: str) -> bool:
     global _current_engine, _current_session_local
 
     dataset_manager = get_dataset_manager()
+    if dataset_manager is None:
+        logger.warning("Cannot switch dataset: dataset manager is disabled")
+        return False
+
     if dataset_manager.switch_dataset(dataset_id):
         _current_engine = dataset_manager.active_engine
         _current_session_local = dataset_manager.active_session_local
@@ -578,7 +604,14 @@ def get_current_engine():
     if _current_engine is None:
         # Initialize with default dataset
         dataset_manager = get_dataset_manager()
-        _current_engine = dataset_manager.active_engine
+        if dataset_manager is not None:
+            _current_engine = dataset_manager.active_engine
+        else:
+            # Dataset manager disabled, use default_url directly
+            from config import get_settings
+            settings = get_settings()
+            logger.info("Dataset manager disabled, creating engine from default_url")
+            _current_engine = get_engine(settings.database.default_url)
     return _current_engine
 
 
@@ -588,7 +621,14 @@ def get_current_session_local():
     if _current_session_local is None:
         # Initialize with default dataset
         dataset_manager = get_dataset_manager()
-        _current_session_local = dataset_manager.active_session_local
+        if dataset_manager is not None:
+            _current_session_local = dataset_manager.active_session_local
+        else:
+            # Dataset manager disabled, create session from default_url engine
+            from sqlalchemy.orm import sessionmaker
+            engine = get_current_engine()
+            _current_session_local = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+            logger.info("Dataset manager disabled, created session from default_url")
     return _current_session_local
 
 

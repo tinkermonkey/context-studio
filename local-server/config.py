@@ -48,6 +48,7 @@ class DatabaseConfig(BaseModel):
     """Database configuration section"""
     default_url: str = Field(default="sqlite:///./datafiles/local.db", description="Default database URL")
     default_dataset_filename: str = Field(default="default.db", description="Default dataset filename")
+    datasets_directory: Optional[str] = Field(default=None, description="Directory for dataset management. If None or path doesn't exist, dataset manager is disabled and default_url is used directly.")
     reference_path: str = Field(default="./datafiles/reference.db", description="Reference database path (multi-source knowledge graph)")
     reference_cache_path: str = Field(default="./datafiles/reference_api_cache.db", description="Reference API cache database path")
     operations_path: str = Field(default="./datafiles/operations.db", description="Operations database path (pipeline configs, audit logs, task management)")
@@ -597,6 +598,7 @@ class ConfigurationManager:
         self.config_file = config_file
         self.settings = None
         self._lock = threading.Lock()
+        print(f"[ConfigurationManager] Loading config from: {self.config_file}")
         self.load()
     
     def load(self) -> Settings:
@@ -612,7 +614,11 @@ class ConfigurationManager:
                 # Apply environment variable overrides to config_data
                 config_data = self._apply_env_overrides(config_data)
                 self.settings = Settings(**config_data)
+                print(f"[ConfigurationManager] Config loaded successfully from {self.config_file}")
+                print(f"[ConfigurationManager] Server port: {self.settings.server.port}")
+                print(f"[ConfigurationManager] Database URL: {self.settings.database.default_url}")
             else:
+                print(f"[ConfigurationManager] Config file not found: {self.config_file}, using defaults")
                 self.settings = Settings()
                 self.save()  # Create default config file
         except Exception as e:
@@ -768,7 +774,9 @@ def get_config_manager() -> ConfigurationManager:
     """Get the global configuration manager instance"""
     global _config_manager
     if _config_manager is None:
-        _config_manager = ConfigurationManager()
+        # Check for CONFIG_PATH environment variable (useful for testing)
+        config_path = os.getenv('CONFIG_PATH', './config.json')
+        _config_manager = ConfigurationManager(config_file=config_path)
     return _config_manager
 
 

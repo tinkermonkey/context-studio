@@ -12,6 +12,7 @@
   "database": {
     "default_url": "sqlite:///./datafiles/local.db",
     "default_dataset_filename": "default.db",
+    "datasets_directory": "~/Documents/ContextStudio/datasets",
     "reference_path": "./datafiles/reference.db",
     "reference_cache_path": "./datafiles/reference_api_cache.db",
     "operations_path": "./datafiles/operations.db",

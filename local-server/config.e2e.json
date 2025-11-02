@@ -1,0 +1,47 @@
+{
+  "server": {
+    "host": "127.0.0.1",
+    "port": 8888,
+    "reload": false,
+    "cors_origins": ["http://localhost:3888"],
+    "access_log": false,
+    "log_level": "WARNING"
+  },
+  "database": {
+    "default_url": "sqlite:///./datafiles/e2e-test/local.db",
+    "default_dataset_filename": "default.db",
+    "datasets_directory": "./datafiles/e2e-test/datasets",
+    "reference_path": "./datafiles/e2e-test/reference.db",
+    "reference_cache_path": "./datafiles/e2e-test/reference_api_cache.db",
+    "operations_path": "./datafiles/e2e-test/operations.db",
+    "check_same_thread": false,
+    "pool_timeout": 30
+  },
+  "llm": {
+    "model_name": "gpt-4o-mini",
+    "temperature": 0.0,
+    "timeout": 10,
+    "max_text_length": 500,
+    "retry_attempts": 1
+  },
+  "nlp": {
+    "model_name": "en_core_web_lg",
+    "max_text_length": 512,
+    "auto_download_models": false,
+    "request_timeout": 10
+  },
+  "rag_pipeline": {
+    "enable_llm_layer": false,
+    "web_search_enabled": false,
+    "enable_observability": false
+  },
+  "proxy_server": {
+    "enabled": false
+  },
+  "logging": {
+    "level": "WARNING",
+    "enable_console": false,
+    "enable_file": true,
+    "file_path": "./logs/context_studio_e2e.log"
+  }
+}

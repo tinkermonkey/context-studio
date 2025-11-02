@@ -505,7 +505,7 @@ function BaseNodeTable<T>({
         />
       )}
 
-      <div className="mb-4 flex items-center justify-between">
+      <div className="mb-4 flex items-center justify-between" data-testid={`${typeName.toLowerCase()}-table-toolbar`}>
         <div className="flex grow justify-start">
           {searchEnabled && (
             <TextInput
@@ -515,6 +515,7 @@ function BaseNodeTable<T>({
               value={searchTerm}
               onChange={handleSearchChange}
               className="max-w-md"
+              data-testid={`${typeName.toLowerCase()}-search-input`}
             />
           )}
         </div>
@@ -527,6 +528,7 @@ function BaseNodeTable<T>({
               size="sm"
               onClick={() => setShowCreateModal(true)}
               className="w-auto whitespace-nowrap"
+              data-testid={`${typeName.toLowerCase()}-add-button`}
             >
               <Plus className="mr-2 h-4 w-4" />
               Add {typeName}
@@ -540,14 +542,15 @@ function BaseNodeTable<T>({
             className="w-auto whitespace-nowrap"
             dismissOnClick={true}
             disabled={selectedCount === 0}
+            data-testid={`${typeName.toLowerCase()}-actions-dropdown`}
           >
             {MoveForm && (
-              <DropdownItem onClick={handleMoveSelected}>
+              <DropdownItem onClick={handleMoveSelected} data-testid={`${typeName.toLowerCase()}-move-selected-action`}>
                 <Move className="mr-2 h-4 w-4" />
                 Move Selected
               </DropdownItem>
             )}
-            <DropdownItem onClick={handleDeleteSelected}>
+            <DropdownItem onClick={handleDeleteSelected} data-testid={`${typeName.toLowerCase()}-delete-selected-action`}>
               Delete Selected
             </DropdownItem>
             {customBulkActions.map((action, index) => (
@@ -577,7 +580,7 @@ function BaseNodeTable<T>({
         </div>
       </div>
 
-      <Table hoverable className="max-w-full">
+      <Table hoverable className="max-w-full" data-testid={`${typeName.toLowerCase()}-table`}>
         <TableHead>
           <TableRow>
             {table
@@ -600,6 +603,7 @@ function BaseNodeTable<T>({
           {table.getRowModel().rows.map((row) => (
             <TableRow
               key={row.id}
+              data-testid={`${typeName.toLowerCase()}-row-${getId(row.original)}`}
               onDoubleClick={() => {
                 setEditNodeId(getId(row.original));
               }}
@@ -741,7 +745,7 @@ function BaseNodeTable<T>({
           </div>
         )}
       </div>
-      <Modal show={showDeleteModal} onClose={() => setShowDeleteModal(false)}>
+      <Modal show={showDeleteModal} onClose={() => setShowDeleteModal(false)} data-testid={`${typeName.toLowerCase()}-delete-modal`}>
         <ModalHeader className="border-b-0">
           <div className="flex items-center gap-2">
             <AlertTriangle className="h-5 w-5 text-red-500" />
@@ -825,10 +829,10 @@ function BaseNodeTable<T>({
           </div>
 
           <div className="flex justify-end gap-2">
-            <Button color="gray" onClick={() => setShowDeleteModal(false)}>
+            <Button color="gray" onClick={() => setShowDeleteModal(false)} data-testid={`${typeName.toLowerCase()}-delete-cancel-button`}>
               Cancel
             </Button>
-            <Button color="red" onClick={confirmDeleteSelected}>
+            <Button color="red" onClick={confirmDeleteSelected} data-testid={`${typeName.toLowerCase()}-delete-confirm-button`}>
               Delete
             </Button>
           </div>
@@ -845,6 +849,7 @@ function BaseNodeTable<T>({
             setPendingMoveRows([]);
             setIsProcessing(false);
           }}
+          data-testid={`${typeName.toLowerCase()}-move-modal`}
         >
           <ModalHeader className="border-b-0">
             Move {pendingMoveRows.length} {typeName.toLowerCase()}
@@ -873,14 +878,14 @@ function BaseNodeTable<T>({
         </Modal>
       )}
       {/* Create Modal */}
-      <Modal show={showCreateModal} onClose={() => setShowCreateModal(false)}>
+      <Modal show={showCreateModal} onClose={() => setShowCreateModal(false)} data-testid={`${typeName.toLowerCase()}-create-modal`}>
         <ModalHeader className="border-b-0">Create New {typeName}</ModalHeader>
         <ModalBody>
           <CreateForm onSuccess={() => setShowCreateModal(false)} />
         </ModalBody>
       </Modal>
       {/* Edit Modal */}
-      <Modal show={!!editNodeId} onClose={() => setEditNodeId(undefined)}>
+      <Modal show={!!editNodeId} onClose={() => setEditNodeId(undefined)} data-testid={`${typeName.toLowerCase()}-edit-modal`}>
         <ModalHeader className="border-b-0">Edit {typeName}</ModalHeader>
         <ModalBody>
           {editNode && (
