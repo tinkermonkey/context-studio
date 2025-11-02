@@ -88,11 +88,12 @@ export const NlpConceptChartNode: React.FC<Props> = ({
               color: "#000",
               lineHeight: "1.3",
               textAlign: "left",
-              width: `${node.width}px`,
-              height: `${node.height}px`,
+              width: "100%",
+              height: "100%",
               overflow: "hidden",
               wordWrap: "break-word",
               wordBreak: "break-word",
+              boxSizing: "border-box",
             }}
           >
             <div style={{ fontWeight: "bold", marginBottom: "4px" }}>

@@ -10,8 +10,13 @@ interface CsMainTitleProps {
   className?: string;
 }
 
+interface CsMainHeaderProps {
+  children?: ReactNode;
+  className?: string;
+}
+
 const CsMain: React.FC<CsMainProps> = ({ children }) => {
-  return <div className="w-full min-w-0 overflow-x-auto p-2 pt-8">{children}</div>;
+  return <div className="w-full min-w-0 pl-2">{children}</div>;
 };
 
 const CsMainTitle: React.FC<CsMainTitleProps> = ({
@@ -29,4 +34,15 @@ const CsMainTitle: React.FC<CsMainTitleProps> = ({
   );
 };
 
-export { CsMain, CsMainTitle };
+const CsMainHeader: React.FC<CsMainHeaderProps> = ({ children, className }) => {
+  return (
+    <div
+      className={`sticky z-10 bg-white dark:bg-gray-900 pb-4 ${className || ""}`}
+      style={{ top: "var(--navbar-height, 0px)" }}
+    >
+      {children}
+    </div>
+  );
+};
+
+export { CsMain, CsMainTitle, CsMainHeader };

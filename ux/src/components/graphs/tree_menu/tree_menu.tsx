@@ -11,11 +11,15 @@ import { TreeNode } from "./tree_menu_node";
 import {
   useMeasurementSvg,
   useMeasurementHtml,
-} from "../tree_chart/useMeasurementElement";
+} from "./useMeasurementElement";
 import { calculateLayout, clearTextHeightCache } from "./layout";
 import { usePersistedExpandState } from "../tree_chart/usePersistedExpandState";
 import { Alert } from "flowbite-react";
 import { useNavigate } from "@tanstack/react-router";
+
+// Cache last measured width to avoid waiting for measurement on remount
+// This is a module-level variable that persists across component lifecycles
+let lastMeasuredWidth = 0;
 
 interface TreeMenuProps {
   chartData: ChartData;
@@ -66,7 +70,8 @@ const TreeMenu: React.FC<TreeMenuProps> = ({
 }) => {
   // Container ref to measure width
   const containerRef = useRef<HTMLDivElement>(null);
-  const [measuredWidth, setMeasuredWidth] = useState<number>(0);
+  // Initialize with cached width to avoid waiting for measurement on remount
+  const [measuredWidth, setMeasuredWidth] = useState<number>(lastMeasuredWidth);
   const [containerHeight, setContainerHeight] = useState<number>(0);
   const [isReady, setIsReady] = useState<boolean>(false);
 
@@ -113,6 +118,7 @@ const TreeMenu: React.FC<TreeMenuProps> = ({
         const width = containerRef.current.clientWidth;
         const height = containerRef.current.clientHeight;
         //console.log("Container dimensions measured:", { width, height });
+        lastMeasuredWidth = width; // Cache for future mounts
         setMeasuredWidth(width);
         setContainerHeight(height);
       }

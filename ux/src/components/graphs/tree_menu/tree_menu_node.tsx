@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   chartStyles,
   EdgeColors,
@@ -59,6 +59,15 @@ const TreeMenuNode: React.FC<TreeMenuNodeProps> = ({
 
   const [isHovered, setIsHovered] = useState(false);
   const [isExpandControlHovered, setIsExpandControlHovered] = useState(false);
+  const [isDefinitionDisplayed, setIsDefinitionDisplayed] = useState(
+    !!(node.definition && node.definitionWidth && node.definitionWidth > 0),
+  );
+
+  useEffect(() => {
+    setIsDefinitionDisplayed(
+      !!(node.definition && node.definitionWidth && node.definitionWidth > 0),
+    );
+  }, [node.definition, node.definitionWidth]);
 
   return (
     <g>
@@ -110,12 +119,12 @@ const TreeMenuNode: React.FC<TreeMenuNodeProps> = ({
           d={createMenuNodeBackgroundPath(
             nodeX,
             nodeY,
-            (node.definitionWidth ? node.width : node.titleWidth) || 0,
+            (isDefinitionDisplayed ? node.width : node.titleWidth) || 0,
             node.height || 0,
             node.childIndex,
           )}
-          fill={isHovered || isHighlighted ? nodeColor : "transparent"}
-          fillOpacity={0.3}
+          fill={nodeColor}
+          fillOpacity={isHovered  || isHighlighted ? 0.5 : (isDefinitionDisplayed ? 0 : 0.1)}
           style={{ transition: "fill 0.1s ease-in-out" }}
         />
 
@@ -134,6 +143,7 @@ const TreeMenuNode: React.FC<TreeMenuNodeProps> = ({
               padding: chartStyles.nodeLabel.padding,
               margin: chartStyles.nodeLabel.margin,
               lineHeight: chartStyles.nodeLabel.lineHeight,
+              width: `${node.titleWidth}px`,
               maxWidth: `${node.titleWidth}px`,
               wordWrap: "break-word",
               overflowWrap: "break-word",
@@ -147,43 +157,41 @@ const TreeMenuNode: React.FC<TreeMenuNodeProps> = ({
         </foreignObject>
 
         {/* Node definition using foreignObject for text wrapping */}
-        {node.definition &&
-          node.definitionWidth &&
-          node.definitionWidth > 0 && (
-            <foreignObject
-              className="tree-node-definition-container"
-              x={
-                nodeX +
-                (node.titleWidth || 0) +
-                definitionSpacing.controlsWidth +
-                (layoutConfig.expandControls?.width || 0) +
-                definitionSpacing.leftMargin
-              }
-              y={nodeY + node.height - (node.definitionHeight || 0)}
-              width={node.definitionWidth}
-              height={node.definitionHeight || 0}
+        {isDefinitionDisplayed && (
+          <foreignObject
+            className="tree-node-definition-container"
+            x={
+              nodeX +
+              (node.titleWidth || 0) +
+              definitionSpacing.controlsWidth +
+              (layoutConfig.expandControls?.width || 0) +
+              definitionSpacing.leftMargin
+            }
+            y={nodeY + node.height - (node.definitionHeight || 0)}
+            width={node.definitionWidth}
+            height={node.definitionHeight || 0}
+          >
+            <div
+              className="tree-node-definition"
+              style={{
+                width: node.definitionWidth,
+                height: node.definitionHeight,
+                borderRadius: "4px",
+                font: chartStyles.nodeDefinition.font,
+                color: chartStyles.nodeDefinition.color,
+                padding: chartStyles.nodeDefinition.padding,
+                lineHeight: chartStyles.nodeDefinition.lineHeight,
+                backgroundColor: chartStyles.nodeDefinition.backgroundColor,
+                wordWrap: "break-word",
+                overflowWrap: "break-word",
+                hyphens: "auto",
+                boxSizing: "border-box",
+              }}
             >
-              <div
-                className="tree-node-definition"
-                style={{
-                  width: node.definitionWidth,
-                  height: node.definitionHeight,
-                  borderRadius: "4px",
-                  font: chartStyles.nodeDefinition.font,
-                  color: chartStyles.nodeDefinition.color,
-                  padding: chartStyles.nodeDefinition.padding,
-                  lineHeight: chartStyles.nodeDefinition.lineHeight,
-                  backgroundColor: chartStyles.nodeDefinition.backgroundColor,
-                  wordWrap: "break-word",
-                  overflowWrap: "break-word",
-                  hyphens: "auto",
-                  boxSizing: "border-box",
-                }}
-              >
-                {node.definition}
-              </div>
-            </foreignObject>
-          )}
+              {node.definition}
+            </div>
+          </foreignObject>
+        )}
       </g>
 
       {/* Expand/collapse indicator for nodes with children */}
@@ -214,7 +222,7 @@ const TreeMenuNode: React.FC<TreeMenuNodeProps> = ({
               2,
             )}
             width={layoutConfig.expandControls?.width || 0}
-            height={layoutConfig.expandControls?.width }
+            height={layoutConfig.expandControls?.width}
           >
             {isExpanded ? (
               <ChevronUp

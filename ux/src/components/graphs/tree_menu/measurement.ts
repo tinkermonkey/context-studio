@@ -158,7 +158,7 @@ export function extractFontPropertiesFromStyles(
     fontWeight,
     fontStyle,
     padding: styleObject.padding,
-    lineHeight: styleObject.lineHeight,
+    lineHeight: styleObject.lineHeight || "normal",
   };
 }
 
@@ -239,6 +239,12 @@ export function measureHtmlTextHeight(
 
   if (!measurementHtml) {
     throw new Error("Failed to initialize measurement text element");
+  }
+
+  // Ensure the element is actually attached to the DOM
+  if (!measurementHtml.parentNode) {
+    console.warn("[TreeMenu] Measurement element not attached to DOM, reinitializing");
+    document.body.appendChild(measurementHtml);
   }
 
   // Apply font properties

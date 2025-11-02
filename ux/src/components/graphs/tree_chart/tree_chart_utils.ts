@@ -149,6 +149,7 @@ export interface TextMeasurementOptions {
   fontWeight?: string;
   fontStyle?: string;
   padding?: string;
+  lineHeight?: string;
 }
 
 // Extract font properties from chart styles with better parsing
@@ -213,6 +214,8 @@ export function extractFontPropertiesFromStyles(
     fontFamily,
     fontWeight,
     fontStyle,
+    padding: styleObject.padding,
+    lineHeight: styleObject.lineHeight || "normal",
   };
 }
 
@@ -264,7 +267,16 @@ export function measureSvgTextWidth(
 
   // Get the bounding box
   const bbox = measurementText.getBBox();
-  return Math.ceil(bbox.width);
+  const width = Math.ceil(bbox.width);
+
+  // Validate measurement - warn if we got zero for non-empty text
+  if (width === 0 && text.length > 0) {
+    console.warn(`[NlpConceptChart] Measurement returned zero width for text: "${text.substring(0, 50)}..."`);
+    // Return a fallback based on character count
+    return text.length * 8; // Approximate 8px per character
+  }
+
+  return width;
 }
 
 // Measure HTML text height with specific font properties and width
@@ -274,6 +286,10 @@ export function measureHtmlTextHeight(
   options: TextMeasurementOptions = {},
 ): number {
   if (!text) return 0;
+  if (width <= 0) {
+    console.warn(`[NlpConceptChart] Invalid width (${width}) for text height measurement`);
+    return 0;
+  }
 
   // Initialize measurement HTML container if needed
   initializeMeasurementHtml();
@@ -289,6 +305,7 @@ export function measureHtmlTextHeight(
     fontWeight = "normal",
     fontStyle = "normal",
     padding = "3px",
+    lineHeight,
   } = options;
 
   measurementHtml.style.fontSize = fontSize;
@@ -296,14 +313,34 @@ export function measureHtmlTextHeight(
   measurementHtml.style.fontWeight = fontWeight;
   measurementHtml.style.fontStyle = fontStyle;
   measurementHtml.style.padding = padding;
+  if (lineHeight) {
+    measurementHtml.style.lineHeight = lineHeight;
+  }
 
-  // Set the text content
+  // Apply word wrapping styles to match rendered text
+  measurementHtml.style.wordWrap = "break-word";
+  measurementHtml.style.overflowWrap = "break-word";
+  measurementHtml.style.hyphens = "auto";
+  measurementHtml.style.boxSizing = "border-box";
+  measurementHtml.style.whiteSpace = "normal"; // Allow wrapping
+  measurementHtml.style.overflow = "visible"; // Don't clip content
+  measurementHtml.style.height = "auto"; // Let height expand
+
+  // Set the text content and width constraint
   measurementHtml.textContent = text;
   measurementHtml.style.width = `${width}px`; // Set width for wrapping
+  measurementHtml.style.maxWidth = `${width}px`; // Enforce max width
 
   // Get the bounding box height
   const bbox = measurementHtml.getBoundingClientRect();
   const height = Math.ceil(bbox.height);
+
+  // Validate measurement - warn if we got zero for non-empty text
+  if (height === 0 && text.length > 0) {
+    console.warn(`[NlpConceptChart] Measurement returned zero height for text: "${text.substring(0, 50)}..." (width: ${width}px)`);
+    // Return a fallback minimum height
+    return 20; // Approximate minimum single-line height
+  }
 
   return height;
 }

@@ -137,6 +137,34 @@ export function TreeMenuPanel({
     }
   }, [layers, domains, terms]);
 
+  // Find path to highlighted node for auto-expansion
+  const initialExpandState = React.useMemo((): string[] => {
+    if (!chartData || !highlightedTermId) {
+      return [];
+    }
+
+    // Helper function to find path to a node
+    const findPath = (node: any, targetId: string, path: string[] = []): string[] | null => {
+      if (node.id === targetId) {
+        return path;
+      }
+
+      if (node.children) {
+        for (const child of node.children) {
+          const childPath = findPath(child, targetId, [...path, node.id]);
+          if (childPath) {
+            return childPath;
+          }
+        }
+      }
+
+      return null;
+    };
+
+    const path = findPath(chartData.root, highlightedTermId);
+    return path || [];
+  }, [chartData, highlightedTermId]);
+
   // Handle loading state
   if (isLoading) {
     return (
@@ -189,6 +217,7 @@ export function TreeMenuPanel({
         onNodeClick={onNodeClick}
         viewId={viewId}
         containerWidth={containerWidth}
+        //initialExpandState={initialExpandState}
       />
     </div>
   );

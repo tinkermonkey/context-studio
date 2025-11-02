@@ -149,7 +149,14 @@ function processNode(
   let currentBottomY: number;
 
   // Calculate the full width and height
-  node.width = ((titleRightEdge || 0) + totalGap + node.definitionWidth) - node.x;
+  if (showDefinitions && titleRightEdge !== undefined) {
+    // When showing definitions, width spans from node.x to the end of the definition
+    node.width = (titleRightEdge + totalGap + node.definitionWidth) - node.x;
+  } else {
+    // When not showing definitions, width is just the title width plus expand controls
+    node.width = node.titleWidth + (config.expandControls?.width || 0);
+  }
+
   node.height =
     Math.max(node.titleHeight || 0, node.definitionHeight || 0) +
     config.spacing.vertical;
