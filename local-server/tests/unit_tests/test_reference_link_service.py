@@ -17,6 +17,7 @@ from services.reference_link_service import ReferenceLinkService
 from api.models.structure_nodes import ReferenceLink
 from database.models import StructureNode
 from database.enums import NodeType
+from services.exceptions import NotFoundError, ReferenceNotFoundError, ValidationError
 
 
 class TestReferenceLinkService:
@@ -78,7 +79,7 @@ class TestReferenceLinkService:
         mock_db.query.return_value.filter.return_value.first.return_value = None
 
         # Execute & Assert
-        with pytest.raises(ValueError, match="StructureNode not found"):
+        with pytest.raises(NotFoundError, match="StructureNode not found"):
             service.add_reference_links("nonexistent-node", sample_links)
 
     def test_add_reference_links_invalid_reference(self, service, mock_db, sample_node, sample_links):
@@ -93,7 +94,7 @@ class TestReferenceLinkService:
             mock_ref_mgr.return_value = mock_manager
 
             # Execute & Assert
-            with pytest.raises(ValueError, match="Reference not found in reference.db"):
+            with pytest.raises(ReferenceNotFoundError, match="Reference not found in reference.db"):
                 service.add_reference_links("test-node-123", sample_links)
 
     def test_add_reference_links_prevents_duplicates(self, service, mock_db, sample_node):
@@ -152,7 +153,7 @@ class TestReferenceLinkService:
         links_to_remove = [ReferenceLink(source="schema.org", external_id="Person")]
 
         # Execute & Assert
-        with pytest.raises(ValueError, match="StructureNode not found"):
+        with pytest.raises(NotFoundError, match="StructureNode not found"):
             service.remove_reference_links("nonexistent-node", links_to_remove)
 
     def test_remove_reference_links_empty_result(self, service, mock_db, sample_node):
@@ -280,7 +281,7 @@ class TestReferenceLinkService:
             mock_ref_mgr.return_value = mock_manager
 
             # Execute & Assert
-            with pytest.raises(ValueError, match="Reference not found in reference.db"):
+            with pytest.raises(ReferenceNotFoundError, match="Reference not found in reference.db"):
                 service.validate_reference_link("schema.org", "NonExistent")
 
     def test_commit_failure_rollback(self, service, mock_db, sample_node, sample_links):
@@ -295,7 +296,7 @@ class TestReferenceLinkService:
             mock_ref_mgr.return_value = mock_manager
 
             # Execute & Assert
-            with pytest.raises(ValueError, match="Failed to add reference links"):
+            with pytest.raises(ValidationError, match="Failed to add reference links"):
                 service.add_reference_links("test-node-123", sample_links)
 
             # Verify rollback was called
@@ -496,12 +497,12 @@ class TestReferenceLinkService:
                 mock_validate.assert_called_with("node-1", check_existence=False)
 
     def test_validate_node_reference_links_raises_on_missing_node(self, service, mock_db):
-        """Test that validation raises ValueError when node is not found."""
+        """Test that validation raises NotFoundError when node is not found."""
         # Setup - node doesn't exist
         mock_db.query.return_value.filter.return_value.first.return_value = None
 
-        # Execute & Assert - should raise ValueError, not return error in dict
-        with pytest.raises(ValueError, match="StructureNode not found"):
+        # Execute & Assert - should raise NotFoundError, not return error in dict
+        with pytest.raises(NotFoundError, match="StructureNode not found"):
             service.validate_node_reference_links("nonexistent-node")
 
     def test_validate_all_reference_links_with_database_query_failure(self, service, mock_db):

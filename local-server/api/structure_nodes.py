@@ -83,6 +83,12 @@ def create_node(
 
         return to_node_out(created_node)
 
+    except ValidationError as e:
+        # Handle all validation errors (including InvalidHierarchyError) with 400
+        raise HTTPException(status_code=400, detail=str(e))
+    except ConflictError as e:
+        # Handle conflict errors with 409
+        return conflict_error_response(str(e))
     except ValueError as e:
         error_msg = str(e)
         # Check if this is a uniqueness constraint violation
@@ -478,13 +484,15 @@ def update_node(
 
         return to_node_out(updated_node)
 
+    except NotFoundError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+    except ValidationError as e:
+        # Handle all validation errors (including CircularReferenceError and InvalidHierarchyError) with 400
+        raise HTTPException(status_code=400, detail=str(e))
     except ValueError as e:
         error_msg = str(e).lower()
-        # Check for not found errors first
-        if "not found" in error_msg:
-            raise HTTPException(status_code=404, detail=str(e))
         # Check if this is a uniqueness constraint violation
-        elif "unique" in error_msg:
+        if "unique" in error_msg:
             return conflict_error_response(str(e))
         else:
             raise HTTPException(status_code=400, detail=str(e))
@@ -516,12 +524,12 @@ def delete_node(
             return  # Return empty response with 204 status
         else:
             raise HTTPException(status_code=404, detail="StructureNode not found")
-            
+
+    except NotFoundError as e:
+        raise HTTPException(status_code=404, detail=str(e))
     except ValueError as e:
         error_message = str(e)
-        if "not found" in error_message.lower():
-            raise HTTPException(status_code=404, detail=error_message)
-        elif "unique" in error_message.lower() or "already exists" in error_message.lower():
+        if "unique" in error_message.lower() or "already exists" in error_message.lower():
             return conflict_error_response(error_message)
         else:
             raise HTTPException(status_code=400, detail=error_message)

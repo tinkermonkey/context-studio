@@ -19,6 +19,7 @@ from services.node_service import NodeService
 from database.models import StructureNode
 from database.enums import NodeType
 from graph.graph_service import GraphService
+from services.exceptions import InvalidHierarchyError, CircularReferenceError, NotFoundError
 
 
 @pytest.fixture
@@ -86,7 +87,7 @@ class TestNodeServiceValidation:
         }
 
         with pytest.raises(
-            ValueError, match="Layers cannot have parent structure_nodes"
+            InvalidHierarchyError, match="Layers cannot have parent structure_nodes"
         ):
             node_service.create_node(layer_data)
 
@@ -108,7 +109,7 @@ class TestNodeServiceValidation:
         """Test domain validation rule: Domains must have a parent layer."""
         del sample_domain_data["parent_node_id"]
 
-        with pytest.raises(ValueError, match="Domains must have a parent layer"):
+        with pytest.raises(InvalidHierarchyError, match="Domains must have a parent layer"):
             node_service.create_node(sample_domain_data)
 
     def test_domain_validation_parent_must_be_layer(
@@ -122,7 +123,7 @@ class TestNodeServiceValidation:
             parent_domain
         )
 
-        with pytest.raises(ValueError, match="Domain parent must be a layer"):
+        with pytest.raises(InvalidHierarchyError, match="Domain parent must be a layer"):
             node_service.create_node(sample_domain_data)
 
     def test_domain_validation_unique_title_within_layer(
@@ -162,7 +163,7 @@ class TestNodeServiceValidation:
         """Test term validation rule: Terms must have a parent domain or term."""
         del sample_term_data["parent_node_id"]
 
-        with pytest.raises(ValueError, match="Terms must have a parent domain or term"):
+        with pytest.raises(InvalidHierarchyError, match="Terms must have a parent domain or term"):
             node_service.create_node(sample_term_data)
 
     def test_term_validation_parent_must_be_domain_or_term(
@@ -174,7 +175,7 @@ class TestNodeServiceValidation:
         parent_layer.node_type = NodeType.LAYER
         mock_db.query.return_value.filter.return_value.first.return_value = parent_layer
 
-        with pytest.raises(ValueError, match="Term parent must be a domain or term"):
+        with pytest.raises(InvalidHierarchyError, match="Term parent must be a domain or term"):
             node_service.create_node(sample_term_data)
 
 
@@ -185,7 +186,7 @@ class TestCircularReferenceValidation:
         """Test preventing direct circular reference: structure_node cannot be its own parent."""
         node_id = str(uuid.uuid4())
 
-        with pytest.raises(ValueError, match="StructureNode cannot be its own parent"):
+        with pytest.raises(CircularReferenceError, match="StructureNode cannot be its own parent"):
             node_service._validate_no_circular_reference(node_id, node_id)
 
     def test_circular_reference_prevention_indirect(self, node_service, mock_db):
@@ -230,7 +231,7 @@ class TestCircularReferenceValidation:
         # Try to make term1 child of term2 - should detect circular reference
         # This would create: term2 -> term1 -> domain -> layer, but term2 is already child of term1
         with pytest.raises(
-            ValueError, match="Operation would create circular reference"
+            CircularReferenceError, match="Operation would create circular reference"
         ):
             node_service._validate_no_circular_reference(term1_id, term2_id)
 
@@ -292,7 +293,7 @@ class TestNodeServiceCRUD:
         """Test updating non-existent structure_node."""
         mock_db.query.return_value.filter.return_value.first.return_value = None
 
-        with pytest.raises(ValueError, match="StructureNode not found"):
+        with pytest.raises(NotFoundError, match="StructureNode not found"):
             node_service.update_node(str(uuid.uuid4()), {"title": "New Title"})
 
     def test_delete_node_success(self, node_service, mock_db):
@@ -334,7 +335,7 @@ class TestNodeServiceCRUD:
         """Test deleting non-existent structure_node."""
         mock_db.query.return_value.filter.return_value.first.return_value = None
 
-        with pytest.raises(ValueError, match="StructureNode not found"):
+        with pytest.raises(NotFoundError, match="StructureNode not found"):
             node_service.delete_node(str(uuid.uuid4()))
 
     def test_get_node(self, node_service, mock_db):
