@@ -77,11 +77,11 @@ class ReferenceLinkService:
         # Serialize to JSON
         links_json = json.dumps([link.model_dump() for link in existing_links])
 
-        # Update node
+        # Update node (increment version after validation, before commit)
         node.reference_links = links_json
-        node.version = node.version + 1
 
         try:
+            node.version = node.version + 1
             self.db.commit()
             logger.info(
                 f"Successfully added {new_links_added} new reference links to node {node_id} "
@@ -134,11 +134,11 @@ class ReferenceLinkService:
         # Serialize to JSON (empty array if no links remain)
         links_json = json.dumps([link.model_dump() for link in remaining_links])
 
-        # Update node
+        # Update node (increment version after validation, before commit)
         node.reference_links = links_json
-        node.version = node.version + 1
 
         try:
+            node.version = node.version + 1
             self.db.commit()
             logger.info(
                 f"Successfully removed {removed_count} reference links from node {node_id} "
@@ -189,7 +189,8 @@ class ReferenceLinkService:
                     links.append(ReferenceLink(**link_dict))
                 except Exception as e:
                     logger.warning(
-                        f"Failed to parse reference link for node {node_id}: {e}. Skipping."
+                        f"Failed to parse reference link for node {node_id}: {e}. "
+                        f"Skipping invalid entry: {link_dict}"
                     )
                     continue
 
@@ -228,7 +229,7 @@ class ReferenceLinkService:
             external_id: Source-specific identifier
 
         Raises:
-            ValueError: If reference doesn't exist
+            ValueError: If reference doesn't exist or validation fails
         """
         try:
             # Get reference manager and check if node exists
@@ -245,10 +246,11 @@ class ReferenceLinkService:
                 f"Validated reference link: source='{source}', external_id='{external_id}'"
             )
 
+        except ValueError:
+            # Re-raise ValueError as-is
+            raise
         except Exception as e:
-            # Re-raise ValueError as-is, wrap other exceptions
-            if isinstance(e, ValueError):
-                raise
+            # Wrap other exceptions in ValueError with context
             logger.error(f"Error validating reference link: {e}")
             raise ValueError(f"Failed to validate reference link: {e}")
 
@@ -270,24 +272,27 @@ class ReferenceLinkService:
             f"Finding nodes with reference link: source='{source}', external_id='{external_id}'"
         )
 
-        # Query nodes where reference_links JSON contains the reference
-        # Using SQLite JSON functions for efficient querying
+        # Query nodes using SQLite json_extract for efficiency
+        # This filters at the database level instead of fetching all nodes
+        from sqlalchemy import text
+
         query = self.db.query(StructureNode).filter(
             StructureNode.reference_links.isnot(None),
             StructureNode.reference_links != "",
             StructureNode.reference_links != "[]",
-        )
+            text(
+                "EXISTS ("
+                "  SELECT 1 FROM json_each(reference_links) "
+                "  WHERE json_extract(value, '$.source') = :source "
+                "  AND json_extract(value, '$.external_id') = :external_id"
+                ")"
+            )
+        ).params(source=source, external_id=external_id)
 
-        nodes = query.all()
+        if limit:
+            query = query.limit(limit)
 
-        # Filter in Python (more reliable than SQLite JSON queries which can be finicky)
-        matching_nodes = []
-        for node in nodes:
-            links = self.get_reference_links(str(node.id))
-            if any(link.source == source and link.external_id == external_id for link in links):
-                matching_nodes.append(node)
-                if limit and len(matching_nodes) >= limit:
-                    break
+        matching_nodes = query.all()
 
         logger.debug(
             f"Found {len(matching_nodes)} nodes with reference link source='{source}', "

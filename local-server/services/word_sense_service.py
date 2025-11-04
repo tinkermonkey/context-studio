@@ -6,7 +6,7 @@ from NLP analysis results, with conservative filtering to preserve existing sens
 """
 
 import json
-from typing import List, Optional, Set
+from typing import List, Optional
 from sqlalchemy.orm import Session
 
 from database.models import StructureNode
@@ -38,7 +38,10 @@ class WordSenseService:
         Extracts WordNet synsets from token data and converts them to WordSense instances.
 
         Args:
-            nlp_response: NLP analysis response containing token data
+            nlp_response: NLP analysis response containing token data with structure:
+                - tokens: List of TokenData objects
+                - Each TokenData has: text, wordnet (with synsets list)
+                - Each synset dict has: name, definition, optional domain
             term: Optional specific term to filter senses for (uses all tokens if None)
 
         Returns:
@@ -164,11 +167,11 @@ class WordSenseService:
         # Serialize to JSON
         senses_json = json.dumps([sense.model_dump() for sense in updated_senses])
 
-        # Update node
+        # Update node (increment version after validation, before commit)
         node.word_senses = senses_json
-        node.version = node.version + 1
 
         try:
+            node.version = node.version + 1
             self.db.commit()
             logger.info(
                 f"Successfully updated word senses for node {node_id} "
@@ -219,7 +222,8 @@ class WordSenseService:
                     senses.append(WordSense(**sense_dict))
                 except Exception as e:
                     logger.warning(
-                        f"Failed to parse word sense for node {node_id}: {e}. Skipping."
+                        f"Failed to parse word sense for node {node_id}: {e}. "
+                        f"Skipping invalid entry: {sense_dict}"
                     )
                     continue
 
@@ -271,11 +275,11 @@ class WordSenseService:
         # Serialize to JSON (empty array if no senses remain)
         senses_json = json.dumps([sense.model_dump() for sense in remaining_senses])
 
-        # Update node
+        # Update node (increment version after validation, before commit)
         node.word_senses = senses_json
-        node.version = node.version + 1
 
         try:
+            node.version = node.version + 1
             self.db.commit()
             logger.info(
                 f"Successfully removed {removed_count} word senses from node {node_id} "
@@ -360,23 +364,26 @@ class WordSenseService:
         """
         logger.debug(f"Finding nodes with word sense: sense_id='{sense_id}'")
 
-        # Query nodes where word_senses JSON contains the sense
+        # Query nodes using SQLite json_extract for efficiency
+        # This filters at the database level instead of fetching all nodes
+        from sqlalchemy import text
+
         query = self.db.query(StructureNode).filter(
             StructureNode.word_senses.isnot(None),
             StructureNode.word_senses != "",
             StructureNode.word_senses != "[]",
-        )
+            text(
+                "EXISTS ("
+                "  SELECT 1 FROM json_each(word_senses) "
+                "  WHERE json_extract(value, '$.sense_id') = :sense_id"
+                ")"
+            )
+        ).params(sense_id=sense_id)
 
-        nodes = query.all()
+        if limit:
+            query = query.limit(limit)
 
-        # Filter in Python (more reliable than SQLite JSON queries)
-        matching_nodes = []
-        for node in nodes:
-            senses = self.get_word_senses(str(node.id))
-            if any(sense.sense_id == sense_id for sense in senses):
-                matching_nodes.append(node)
-                if limit and len(matching_nodes) >= limit:
-                    break
+        matching_nodes = query.all()
 
         logger.debug(
             f"Found {len(matching_nodes)} nodes with word sense sense_id='{sense_id}'"
