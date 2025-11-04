@@ -317,10 +317,12 @@ class ReferenceLinkService:
                 "node_id": str,
                 "total_links": int,
                 "valid_links": int,
-                "invalid_links": List[dict],  # Links that don't exist in reference.db
-                "orphaned_links": List[dict],  # Same as invalid_links (legacy key)
+                "orphaned_links": List[dict],  # Links that don't exist in reference.db
                 "malformed_links": List[dict]  # Links with parsing errors
             }
+
+        Raises:
+            ValueError: If node not found
         """
         logger.info(f"Validating reference links for node {node_id}")
 
@@ -328,18 +330,17 @@ class ReferenceLinkService:
             "node_id": node_id,
             "total_links": 0,
             "valid_links": 0,
-            "invalid_links": [],
-            "orphaned_links": [],  # Alias for invalid_links
+            "orphaned_links": [],  # Links that don't exist in reference.db
             "malformed_links": []
         }
 
+        # Get the node
+        node = self.db.query(StructureNode).filter(StructureNode.id == node_id).first()
+        if not node:
+            logger.error(f"StructureNode not found: {node_id}")
+            raise ValueError(f"StructureNode not found: {node_id}")
+
         try:
-            # Get the node
-            node = self.db.query(StructureNode).filter(StructureNode.id == node_id).first()
-            if not node:
-                logger.error(f"StructureNode not found: {node_id}")
-                result["error"] = f"StructureNode not found: {node_id}"
-                return result
 
             # Parse reference links with error handling
             if not node.reference_links:
@@ -371,24 +372,22 @@ class ReferenceLinkService:
                                 if ref_node:
                                     result["valid_links"] += 1
                                 else:
-                                    # Orphaned/invalid link
-                                    invalid_entry = {
+                                    # Orphaned link
+                                    orphaned_entry = {
                                         "source": link.source,
                                         "external_id": link.external_id,
                                         "reason": "Reference not found in reference.db"
                                     }
-                                    result["invalid_links"].append(invalid_entry)
-                                    result["orphaned_links"].append(invalid_entry)
+                                    result["orphaned_links"].append(orphaned_entry)
 
                             except Exception as e:
                                 # Error checking reference.db (e.g., database unavailable)
-                                invalid_entry = {
+                                orphaned_entry = {
                                     "source": link.source,
                                     "external_id": link.external_id,
                                     "reason": f"Validation error: {str(e)}"
                                 }
-                                result["invalid_links"].append(invalid_entry)
-                                result["orphaned_links"].append(invalid_entry)
+                                result["orphaned_links"].append(orphaned_entry)
                                 logger.warning(
                                     f"Error validating reference link for node {node_id}: {e}"
                                 )
@@ -419,7 +418,7 @@ class ReferenceLinkService:
         logger.info(
             f"Validation complete for node {node_id}: "
             f"{result['valid_links']}/{result['total_links']} valid, "
-            f"{len(result['invalid_links'])} invalid, "
+            f"{len(result['orphaned_links'])} orphaned, "
             f"{len(result['malformed_links'])} malformed"
         )
 
@@ -442,9 +441,9 @@ class ReferenceLinkService:
                 "nodes_with_links": int,
                 "total_links": int,
                 "valid_links": int,
-                "invalid_links": int,
+                "orphaned_links": int,
                 "malformed_links": int,
-                "problematic_nodes": List[dict],  # Nodes with invalid/malformed links
+                "problematic_nodes": List[dict],  # Nodes with orphaned/malformed links
                 "reference_db_available": bool
             }
         """
@@ -455,7 +454,7 @@ class ReferenceLinkService:
             "nodes_with_links": 0,
             "total_links": 0,
             "valid_links": 0,
-            "invalid_links": 0,
+            "orphaned_links": 0,
             "malformed_links": 0,
             "problematic_nodes": [],
             "reference_db_available": True
@@ -499,18 +498,18 @@ class ReferenceLinkService:
 
                 result["total_links"] += node_result.get("total_links", 0)
                 result["valid_links"] += node_result.get("valid_links", 0)
-                result["invalid_links"] += len(node_result.get("invalid_links", []))
+                result["orphaned_links"] += len(node_result.get("orphaned_links", []))
                 result["malformed_links"] += len(node_result.get("malformed_links", []))
 
                 # Track problematic nodes
-                if node_result.get("invalid_links") or node_result.get("malformed_links"):
+                if node_result.get("orphaned_links") or node_result.get("malformed_links"):
                     problematic_node = {
                         "node_id": str(node.id),
                         "node_title": node.title,
                         "node_type": node.node_type,
                         "total_links": node_result.get("total_links", 0),
                         "valid_links": node_result.get("valid_links", 0),
-                        "invalid_links": node_result.get("invalid_links", []),
+                        "orphaned_links": node_result.get("orphaned_links", []),
                         "malformed_links": node_result.get("malformed_links", [])
                     }
                     result["problematic_nodes"].append(problematic_node)
@@ -518,7 +517,7 @@ class ReferenceLinkService:
             logger.info(
                 f"Bulk validation complete: {result['total_nodes_checked']} nodes checked, "
                 f"{result['valid_links']}/{result['total_links']} links valid, "
-                f"{result['invalid_links']} invalid, {result['malformed_links']} malformed"
+                f"{result['orphaned_links']} orphaned, {result['malformed_links']} malformed"
             )
 
         except Exception as e:

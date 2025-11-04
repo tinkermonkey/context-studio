@@ -61,7 +61,7 @@ def test_validate_node_reference_links_empty(shared_client):
     assert data["node_id"] == domain_id
     assert data["total_links"] == 0
     assert data["valid_links"] == 0
-    assert len(data["invalid_links"]) == 0
+    assert len(data["orphaned_links"]) == 0
     assert len(data["malformed_links"]) == 0
 
 
@@ -124,7 +124,7 @@ def test_validate_all_reference_links_success(shared_client):
     assert "nodes_with_links" in data
     assert "total_links" in data
     assert "valid_links" in data
-    assert "invalid_links" in data
+    assert "orphaned_links" in data
     assert "malformed_links" in data
     assert "problematic_nodes" in data
     assert "reference_db_available" in data

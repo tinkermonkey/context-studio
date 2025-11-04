@@ -13,6 +13,17 @@ import pytest
 import time
 from uuid import uuid4
 
+# Performance timeout constants (in seconds)
+BULK_VALIDATION_TIMEOUT_SECONDS = 10.0
+INDIVIDUAL_VALIDATION_TIMEOUT_SECONDS = 1.0
+BULK_FETCH_TIMEOUT_SECONDS = 5.0
+SCALABILITY_FACTOR_LIMIT = 5.0  # Max allowed performance degradation factor
+
+# Test data constants
+PERFORMANCE_TEST_NODE_COUNT = 110
+SAMPLE_NODE_COUNT_SMALL = 10
+SAMPLE_NODE_COUNT_MEDIUM = 20
+
 
 @pytest.fixture
 def test_nodes(shared_client):
@@ -29,7 +40,7 @@ def test_nodes(shared_client):
 
     # Create 100+ domains for bulk testing
     node_ids = []
-    for i in range(110):  # Create 110 nodes for testing
+    for i in range(PERFORMANCE_TEST_NODE_COUNT):
         domain_payload = {
             "node_type": "domain",
             "parent_node_id": layer_id,
@@ -51,7 +62,7 @@ def test_bulk_validation_performance(shared_client, test_nodes):
 
     # Run bulk validation
     resp = shared_client.post(
-        "/api/structure_nodes/reference_links/validate?limit=110"
+        f"/api/structure_nodes/reference_links/validate?limit={PERFORMANCE_TEST_NODE_COUNT}"
     )
 
     elapsed_time = time.time() - start_time
@@ -60,12 +71,13 @@ def test_bulk_validation_performance(shared_client, test_nodes):
     assert resp.status_code == 200
     data = resp.json()
 
-    # Should check up to 110 nodes
-    assert data["total_nodes_checked"] <= 110
+    # Should check up to specified node count
+    assert data["total_nodes_checked"] <= PERFORMANCE_TEST_NODE_COUNT
 
-    # Performance assertion: should complete in under 10 seconds
+    # Performance assertion: should complete within timeout
     # (even with empty reference links, parsing 100+ nodes should be fast)
-    assert elapsed_time < 10.0, f"Bulk validation took {elapsed_time:.2f}s (expected < 10s)"
+    assert elapsed_time < BULK_VALIDATION_TIMEOUT_SECONDS, \
+        f"Bulk validation took {elapsed_time:.2f}s (expected < {BULK_VALIDATION_TIMEOUT_SECONDS}s)"
 
     # Log performance metrics
     print(f"\nBulk validation performance:")
@@ -76,8 +88,8 @@ def test_bulk_validation_performance(shared_client, test_nodes):
 
 def test_individual_validation_performance(shared_client, test_nodes):
     """Test that individual node validation is fast."""
-    # Sample 10 nodes from the test set
-    sample_nodes = test_nodes[:10]
+    # Sample small set of nodes from the test set
+    sample_nodes = test_nodes[:SAMPLE_NODE_COUNT_SMALL]
 
     total_time = 0
     for node_id in sample_nodes:
@@ -93,7 +105,8 @@ def test_individual_validation_performance(shared_client, test_nodes):
         assert resp.status_code == 200
 
         # Each individual validation should be very fast
-        assert elapsed_time < 1.0, f"Individual validation took {elapsed_time:.2f}s (expected < 1s)"
+        assert elapsed_time < INDIVIDUAL_VALIDATION_TIMEOUT_SECONDS, \
+            f"Individual validation took {elapsed_time:.2f}s (expected < {INDIVIDUAL_VALIDATION_TIMEOUT_SECONDS}s)"
 
     avg_time = total_time / len(sample_nodes)
     print(f"\nIndividual validation performance:")
@@ -104,8 +117,8 @@ def test_individual_validation_performance(shared_client, test_nodes):
 
 def test_get_reference_links_performance(shared_client, test_nodes):
     """Test that retrieving reference links is fast."""
-    # Sample 20 nodes
-    sample_nodes = test_nodes[:20]
+    # Sample medium set of nodes
+    sample_nodes = test_nodes[:SAMPLE_NODE_COUNT_MEDIUM]
 
     start_time = time.time()
 
@@ -115,8 +128,9 @@ def test_get_reference_links_performance(shared_client, test_nodes):
 
     elapsed_time = time.time() - start_time
 
-    # Should be able to fetch 20 nodes' reference links quickly
-    assert elapsed_time < 5.0, f"Fetching 20 nodes took {elapsed_time:.2f}s (expected < 5s)"
+    # Should be able to fetch nodes' reference links quickly
+    assert elapsed_time < BULK_FETCH_TIMEOUT_SECONDS, \
+        f"Fetching {len(sample_nodes)} nodes took {elapsed_time:.2f}s (expected < {BULK_FETCH_TIMEOUT_SECONDS}s)"
 
     print(f"\nGet reference links performance:")
     print(f"  - Nodes fetched: {len(sample_nodes)}")
@@ -126,8 +140,8 @@ def test_get_reference_links_performance(shared_client, test_nodes):
 
 def test_get_word_senses_performance(shared_client, test_nodes):
     """Test that retrieving word senses is fast."""
-    # Sample 20 nodes
-    sample_nodes = test_nodes[:20]
+    # Sample medium set of nodes
+    sample_nodes = test_nodes[:SAMPLE_NODE_COUNT_MEDIUM]
 
     start_time = time.time()
 
@@ -137,8 +151,9 @@ def test_get_word_senses_performance(shared_client, test_nodes):
 
     elapsed_time = time.time() - start_time
 
-    # Should be able to fetch 20 nodes' word senses quickly
-    assert elapsed_time < 5.0, f"Fetching 20 nodes took {elapsed_time:.2f}s (expected < 5s)"
+    # Should be able to fetch nodes' word senses quickly
+    assert elapsed_time < BULK_FETCH_TIMEOUT_SECONDS, \
+        f"Fetching {len(sample_nodes)} nodes took {elapsed_time:.2f}s (expected < {BULK_FETCH_TIMEOUT_SECONDS}s)"
 
     print(f"\nGet word senses performance:")
     print(f"  - Nodes fetched: {len(sample_nodes)}")
@@ -202,7 +217,7 @@ def test_scalability_100_plus_nodes(shared_client, test_nodes):
     time_per_node_10 = times[0] / batch_sizes[0]
     time_per_node_100 = times[2] / batch_sizes[2]
 
-    # Time per node for 100 should be within 5x of time per node for 10
+    # Time per node for 100 should be within scalability factor limit of time per node for 10
     # (allowing for startup overhead and caching effects)
-    assert time_per_node_100 < time_per_node_10 * 5, \
+    assert time_per_node_100 < time_per_node_10 * SCALABILITY_FACTOR_LIMIT, \
         f"Performance degraded significantly: {time_per_node_10:.4f}s/node -> {time_per_node_100:.4f}s/node"

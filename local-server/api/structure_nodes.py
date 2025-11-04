@@ -735,11 +735,26 @@ def validate_all_reference_links(
     logger = get_logger(__name__)
 
     try:
+        # Warn if limit is very high (may impact performance)
+        if limit and limit > 1000:
+            logger.warning(
+                f"Bulk validation requested with high limit ({limit}). "
+                f"This may take significant time. Consider using a lower limit for better performance."
+            )
+
         logger.info(f"Starting bulk reference link validation (check_existence={check_existence}, limit={limit})")
         result = reference_link_service.validate_all_reference_links(
             check_existence=check_existence,
             limit=limit
         )
+
+        # Add performance warning to result if limit was high
+        if limit and limit > 1000:
+            result["performance_warning"] = (
+                f"Validation performed on {limit} nodes. "
+                f"For routine checks, consider using limit <= 1000 for better performance."
+            )
+
         return result
 
     except Exception as e:
@@ -780,13 +795,14 @@ def validate_node_reference_links(
             str(node_id),
             check_existence=check_existence
         )
-
-        # Check if node was not found
-        if "error" in result and "not found" in result["error"].lower():
-            raise HTTPException(status_code=404, detail=result["error"])
-
         return result
 
+    except ValueError as e:
+        error_msg = str(e).lower()
+        if "not found" in error_msg:
+            raise HTTPException(status_code=404, detail=str(e))
+        else:
+            raise HTTPException(status_code=400, detail=str(e))
     except HTTPException:
         raise
     except Exception as e:
