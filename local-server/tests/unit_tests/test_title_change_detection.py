@@ -266,6 +266,92 @@ class TestTitleChangeDetection:
             # Verify enqueue was called
             mock_enqueue.assert_called_once_with(event.record_id, "new title")
 
+    def test_empty_title_validation(self, event_processor):
+        """Test validation of empty title after whitespace stripping."""
+
+        event = Mock()
+        event.record_id = str(uuid4())
+        event.operation = "update"
+        event.old_data = json.dumps({"title": "old title"})
+        event.new_data = json.dumps({"title": "   "})  # Whitespace only
+
+        # Should not trigger re-analysis (empty after strip)
+        with patch.object(event_processor, '_enqueue_nlp_reanalysis') as mock_enqueue:
+            event_processor._handle_title_change(event)
+
+            # Verify warning was logged
+            assert event_processor.logger.warning.called
+
+            # Verify enqueue was NOT called
+            mock_enqueue.assert_not_called()
+
+    def test_title_length_validation(self, event_processor):
+        """Test validation of title length exceeding maximum."""
+
+        event = Mock()
+        event.record_id = str(uuid4())
+        event.operation = "update"
+        event.old_data = json.dumps({"title": "old title"})
+        # Create a title longer than MAX_TITLE_LENGTH
+        long_title = "a" * (event_processor.MAX_TITLE_LENGTH + 1)
+        event.new_data = json.dumps({"title": long_title})
+
+        # Should not trigger re-analysis (title too long)
+        with patch.object(event_processor, '_enqueue_nlp_reanalysis') as mock_enqueue:
+            event_processor._handle_title_change(event)
+
+            # Verify warning was logged
+            assert event_processor.logger.warning.called
+
+            # Verify enqueue was NOT called
+            mock_enqueue.assert_not_called()
+
+    def test_concurrent_title_changes_race_condition(self, event_processor):
+        """Test prevention of concurrent updates for the same node."""
+        import threading
+        import time
+
+        node_id = str(uuid4())
+
+        event1 = Mock()
+        event1.record_id = node_id
+        event1.operation = "update"
+        event1.old_data = json.dumps({"title": "old title"})
+        event1.new_data = json.dumps({"title": "new title 1"})
+
+        event2 = Mock()
+        event2.record_id = node_id
+        event2.operation = "update"
+        event2.old_data = json.dumps({"title": "old title"})
+        event2.new_data = json.dumps({"title": "new title 2"})
+
+        enqueue_calls = []
+
+        def slow_enqueue(node_id, title):
+            enqueue_calls.append((node_id, title))
+            time.sleep(0.1)  # Simulate slow processing
+
+        with patch.object(event_processor, '_enqueue_nlp_reanalysis', side_effect=slow_enqueue):
+            # Start processing first event in thread 1
+            thread1 = threading.Thread(target=event_processor._handle_title_change, args=(event1,))
+            thread1.start()
+
+            # Small delay to ensure thread1 acquires lock
+            time.sleep(0.01)
+
+            # Try to process second event for same node in thread 2
+            thread2 = threading.Thread(target=event_processor._handle_title_change, args=(event2,))
+            thread2.start()
+
+            thread1.join()
+            thread2.join()
+
+            # Only one call should have been made (first one that got the lock)
+            assert len(enqueue_calls) == 1
+
+            # Verify info log about skipping was called
+            assert event_processor.logger.info.called
+
 
 class TestNLPReanalysisEdgeCases:
     """Unit tests for NLP re-analysis edge cases."""
@@ -343,6 +429,156 @@ class TestNLPReanalysisEdgeCases:
                         # Should return error result
                         assert result['success'] is False
                         assert 'error' in result
+
+    @pytest.mark.asyncio
+    async def test_transient_error_retry_success(self, event_processor):
+        """Test retry logic succeeds after transient error."""
+
+        with patch('nlp.pipeline.get_pipeline') as mock_get_pipeline:
+            mock_pipeline = Mock()
+            mock_pipeline.is_initialized.return_value = True
+            mock_nlp = Mock()
+            mock_nlp.return_value = Mock()  # Mock doc result
+            mock_pipeline.get_nlp.return_value = mock_nlp
+
+            mock_get_pipeline.return_value = mock_pipeline
+
+            # Mock process_nlp_result
+            with patch('nlp.processors.process_nlp_result') as mock_process:
+                mock_process.return_value = Mock(tokens=[])
+
+                # Mock WordSenseService - fail first time, succeed second time
+                call_count = [0]
+
+                def update_word_senses_side_effect(*args, **kwargs):
+                    call_count[0] += 1
+                    if call_count[0] == 1:
+                        raise ConnectionError("Temporary connection error")
+                    return []
+
+                with patch('services.word_sense_service.WordSenseService') as mock_wss:
+                    mock_service = Mock()
+                    mock_service.extract_word_senses.return_value = []
+                    mock_service.update_word_senses.side_effect = update_word_senses_side_effect
+                    mock_wss.return_value = mock_service
+
+                    # Mock _get_optimized_session and db.begin()
+                    with patch.object(event_processor, '_get_optimized_session') as mock_session:
+                        mock_db = MagicMock()
+                        mock_session.return_value.__enter__.return_value = mock_db
+
+                        result = await event_processor._perform_nlp_reanalysis(str(uuid4()), "test")
+
+                        # Should succeed after retry
+                        assert result['success'] is True
+                        assert result['attempts'] == 2
+
+    @pytest.mark.asyncio
+    async def test_transient_error_retry_exhausted(self, event_processor):
+        """Test retry logic exhausts all attempts with transient errors."""
+
+        with patch('nlp.pipeline.get_pipeline') as mock_get_pipeline:
+            mock_pipeline = Mock()
+            mock_pipeline.is_initialized.return_value = True
+            mock_nlp = Mock()
+            mock_nlp.return_value = Mock()  # Mock doc result
+            mock_pipeline.get_nlp.return_value = mock_nlp
+
+            mock_get_pipeline.return_value = mock_pipeline
+
+            # Mock process_nlp_result
+            with patch('nlp.processors.process_nlp_result') as mock_process:
+                mock_process.return_value = Mock(tokens=[])
+
+                # Mock WordSenseService - always fail with transient error
+                with patch('services.word_sense_service.WordSenseService') as mock_wss:
+                    mock_service = Mock()
+                    mock_service.extract_word_senses.return_value = []
+                    mock_service.update_word_senses.side_effect = ConnectionError("Persistent connection error")
+                    mock_wss.return_value = mock_service
+
+                    # Mock _get_optimized_session and db.begin()
+                    with patch.object(event_processor, '_get_optimized_session') as mock_session:
+                        mock_db = MagicMock()
+                        mock_session.return_value.__enter__.return_value = mock_db
+
+                        result = await event_processor._perform_nlp_reanalysis(str(uuid4()), "test")
+
+                        # Should fail after all retries
+                        assert result['success'] is False
+                        assert result['attempts'] == event_processor.NLP_RETRY_ATTEMPTS
+                        assert 'error' in result
+
+    @pytest.mark.asyncio
+    async def test_non_transient_error_no_retry(self, event_processor):
+        """Test non-transient errors fail immediately without retry."""
+
+        with patch('nlp.pipeline.get_pipeline') as mock_get_pipeline:
+            mock_pipeline = Mock()
+            mock_pipeline.is_initialized.return_value = True
+            mock_nlp = Mock()
+            mock_nlp.return_value = Mock()  # Mock doc result
+            mock_pipeline.get_nlp.return_value = mock_nlp
+
+            mock_get_pipeline.return_value = mock_pipeline
+
+            # Mock process_nlp_result
+            with patch('nlp.processors.process_nlp_result') as mock_process:
+                mock_process.return_value = Mock(tokens=[])
+
+                # Mock WordSenseService - fail with non-transient error
+                with patch('services.word_sense_service.WordSenseService') as mock_wss:
+                    mock_service = Mock()
+                    mock_service.extract_word_senses.return_value = []
+                    mock_service.update_word_senses.side_effect = ValueError("Invalid node ID")
+                    mock_wss.return_value = mock_service
+
+                    # Mock _get_optimized_session and db.begin()
+                    with patch.object(event_processor, '_get_optimized_session') as mock_session:
+                        mock_db = MagicMock()
+                        mock_session.return_value.__enter__.return_value = mock_db
+
+                        result = await event_processor._perform_nlp_reanalysis(str(uuid4()), "test")
+
+                        # Should fail immediately without retries
+                        assert result['success'] is False
+                        assert result['attempts'] == 1  # Only first attempt
+                        assert 'error' in result
+
+    @pytest.mark.asyncio
+    async def test_transaction_rollback_on_error(self, event_processor):
+        """Test that database transaction is properly managed on error."""
+
+        with patch('nlp.pipeline.get_pipeline') as mock_get_pipeline:
+            mock_pipeline = Mock()
+            mock_pipeline.is_initialized.return_value = True
+            mock_nlp = Mock()
+            mock_nlp.return_value = Mock()
+            mock_pipeline.get_nlp.return_value = mock_nlp
+
+            mock_get_pipeline.return_value = mock_pipeline
+
+            with patch('nlp.processors.process_nlp_result') as mock_process:
+                mock_process.return_value = Mock(tokens=[])
+
+                with patch('services.word_sense_service.WordSenseService') as mock_wss:
+                    mock_service = Mock()
+                    mock_service.extract_word_senses.return_value = []
+                    # Simulate error during transaction
+                    mock_service.update_word_senses.side_effect = ValueError("Database error")
+                    mock_wss.return_value = mock_service
+
+                    with patch.object(event_processor, '_get_optimized_session') as mock_session:
+                        mock_db = MagicMock()
+                        mock_session.return_value.__enter__.return_value = mock_db
+
+                        result = await event_processor._perform_nlp_reanalysis(str(uuid4()), "test")
+
+                        # Verify transaction begin was called
+                        assert mock_db.begin.called
+
+                        # Should fail
+                        assert result['success'] is False
 
 
 if __name__ == "__main__":
