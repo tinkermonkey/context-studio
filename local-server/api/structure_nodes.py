@@ -15,6 +15,10 @@ Endpoints:
 - GET /api/structure_nodes/links - List structure_node links
 - PUT /api/structure_nodes/links/{link_id} - Update a structure_node link
 - DELETE /api/structure_nodes/links/{link_id} - Delete a structure_node link
+- POST /api/structure_nodes/{node_id}/reference_links - Add reference links to a structure_node
+- DELETE /api/structure_nodes/{node_id}/reference_links - Remove reference links from a structure_node
+- GET /api/structure_nodes/{node_id}/reference_links - Get reference links for a structure_node
+- GET /api/structure_nodes/{node_id}/word_senses - Get word senses for a structure_node
 """
 
 from fastapi import APIRouter, HTTPException, Query, Depends, Path
@@ -23,16 +27,21 @@ from uuid import UUID
 
 from services.node_service import NodeService
 from services.node_link_service import NodeLinkService
+from services.reference_link_service import ReferenceLinkService
+from services.word_sense_service import WordSenseService
 from api.models.structure_nodes import (
     NodeCreate, NodeUpdate, NodeOut, NodeLinkCreate, NodeLinkOut,
     NodeSearchRequest, NodeSearchResult, PaginatedNodesResponse, NodeTypeEnum,
-    MoveNodesRequest, MoveNodesResponse
+    MoveNodesRequest, MoveNodesResponse, ReferenceLink, WordSense
 )
 from api.utils.node_conversion import (
     to_node_out, to_node_link_out, nodes_to_paginated_response,
     convert_api_node_type_to_db, uuid_to_str
 )
-from api.dependencies.structure_nodes import get_node_service, get_node_service_simple, get_node_link_service
+from api.dependencies.structure_nodes import (
+    get_node_service, get_node_service_simple, get_node_link_service,
+    get_reference_link_service, get_word_sense_service
+)
 from api.api_errors import conflict_error_response
 
 router = APIRouter(prefix="/api/structure_nodes", tags=["structure_nodes"])
@@ -519,6 +528,181 @@ def delete_node(
         # Re-raise HTTPException without catching it
         raise
     except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Internal server error: {str(e)}")
+
+
+# Reference Links endpoints
+@router.post("/{node_id}/reference_links", response_model=List[ReferenceLink], status_code=200)
+def add_reference_links(
+    node_id: UUID = Path(..., description="The ID of the structure node"),
+    links: List[ReferenceLink] = ...,
+    reference_link_service: ReferenceLinkService = Depends(get_reference_link_service)
+):
+    """
+    Add reference links to a structure node.
+
+    Links the structure node to external knowledge sources such as schema.org,
+    Wikidata, or ConceptNet. Each link is validated against the reference database
+    before being added. Duplicate links are ignored.
+
+    Args:
+        node_id: UUID of the structure node
+        links: List of reference links to add (source + external_id pairs)
+
+    Returns:
+        List of all reference links after addition (including pre-existing ones)
+
+    Raises:
+        400: If validation fails or reference doesn't exist in reference.db
+        404: If structure node not found
+        500: If an unexpected error occurs
+    """
+    from utils.logger import get_logger
+    logger = get_logger(__name__)
+
+    try:
+        result = reference_link_service.add_reference_links(str(node_id), links)
+        return result
+
+    except ValueError as e:
+        error_msg = str(e).lower()
+        if "not found" in error_msg:
+            raise HTTPException(status_code=404, detail=str(e))
+        else:
+            raise HTTPException(status_code=400, detail=str(e))
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Unexpected error adding reference links to node {node_id}: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail=f"Internal server error: {str(e)}")
+
+
+@router.delete("/{node_id}/reference_links", response_model=List[ReferenceLink], status_code=200)
+def remove_reference_links(
+    node_id: UUID = Path(..., description="The ID of the structure node"),
+    links: List[ReferenceLink] = ...,
+    reference_link_service: ReferenceLinkService = Depends(get_reference_link_service)
+):
+    """
+    Remove reference links from a structure node.
+
+    Removes specified reference links from the structure node. Links that don't
+    exist are silently ignored.
+
+    Args:
+        node_id: UUID of the structure node
+        links: List of reference links to remove (source + external_id pairs)
+
+    Returns:
+        List of remaining reference links after removal
+
+    Raises:
+        404: If structure node not found
+        500: If an unexpected error occurs
+    """
+    from utils.logger import get_logger
+    logger = get_logger(__name__)
+
+    try:
+        result = reference_link_service.remove_reference_links(str(node_id), links)
+        return result
+
+    except ValueError as e:
+        error_msg = str(e).lower()
+        if "not found" in error_msg:
+            raise HTTPException(status_code=404, detail=str(e))
+        else:
+            raise HTTPException(status_code=400, detail=str(e))
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Unexpected error removing reference links from node {node_id}: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail=f"Internal server error: {str(e)}")
+
+
+@router.get("/{node_id}/reference_links", response_model=List[ReferenceLink])
+def get_reference_links(
+    node_id: UUID = Path(..., description="The ID of the structure node"),
+    reference_link_service: ReferenceLinkService = Depends(get_reference_link_service)
+):
+    """
+    Get all reference links for a structure node.
+
+    Returns all external knowledge source links associated with this structure node.
+    Returns an empty list if no links exist.
+
+    Args:
+        node_id: UUID of the structure node
+
+    Returns:
+        List of reference links (may be empty)
+
+    Raises:
+        404: If structure node not found
+        500: If an unexpected error occurs
+    """
+    from utils.logger import get_logger
+    logger = get_logger(__name__)
+
+    try:
+        result = reference_link_service.get_reference_links(str(node_id))
+        return result
+
+    except ValueError as e:
+        error_msg = str(e).lower()
+        if "not found" in error_msg:
+            raise HTTPException(status_code=404, detail=str(e))
+        else:
+            raise HTTPException(status_code=400, detail=str(e))
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Unexpected error getting reference links for node {node_id}: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail=f"Internal server error: {str(e)}")
+
+
+@router.get("/{node_id}/word_senses", response_model=List[WordSense])
+def get_word_senses(
+    node_id: UUID = Path(..., description="The ID of the structure node"),
+    word_sense_service: WordSenseService = Depends(get_word_sense_service)
+):
+    """
+    Get all word senses for a structure node.
+
+    Returns word sense identifiers from NLP analysis (e.g., WordNet synsets) that
+    have been associated with this structure node through title analysis.
+    Returns an empty list if no word senses exist.
+
+    Word senses are automatically updated when the structure node's title changes,
+    via the event processor system.
+
+    Args:
+        node_id: UUID of the structure node
+
+    Returns:
+        List of word senses (may be empty)
+
+    Raises:
+        404: If structure node not found
+        500: If an unexpected error occurs
+    """
+    from utils.logger import get_logger
+    logger = get_logger(__name__)
+
+    try:
+        result = word_sense_service.get_word_senses(str(node_id))
+        return result
+
+    except ValueError as e:
+        error_msg = str(e).lower()
+        if "not found" in error_msg:
+            raise HTTPException(status_code=404, detail=str(e))
+        else:
+            raise HTTPException(status_code=400, detail=str(e))
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Unexpected error getting word senses for node {node_id}: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail=f"Internal server error: {str(e)}")
 
 

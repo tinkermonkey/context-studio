@@ -4,6 +4,35 @@
  */
 
 export interface paths {
+    "/health": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Health Check
+         * @description Health check endpoint.
+         *
+         *     Returns a simple status message to indicate the server is running.
+         *     This endpoint is used by:
+         *     - E2E test infrastructure to verify server startup
+         *     - Monitoring systems to check service availability
+         *     - Load balancers for health checks
+         *
+         *     Returns:
+         *         dict: Status message with "status": "ok"
+         */
+        get: operations["health_check_health_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/structure_nodes/": {
         parameters: {
             query?: never;
@@ -53,8 +82,6 @@ export interface paths {
          *     This endpoint replaces the separate find endpoints for layers, domains, and terms.
          *     Supports semantic search across structure_node titles and definitions with optional
          *     type filtering and configurable similarity thresholds.
-         *
-         *     Note: Implementation depends on vector search infrastructure being available.
          */
         post: operations["search_nodes_api_structure_nodes_find_post"];
         delete?: never;
@@ -154,6 +181,114 @@ export interface paths {
          *     Use with caution as this operation cannot be undone.
          */
         delete: operations["delete_node_api_structure_nodes__node_id__delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/structure_nodes/{node_id}/reference_links": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Reference Links
+         * @description Get all reference links for a structure node.
+         *
+         *     Returns all external knowledge source links associated with this structure node.
+         *     Returns an empty list if no links exist.
+         *
+         *     Args:
+         *         node_id: UUID of the structure node
+         *
+         *     Returns:
+         *         List of reference links (may be empty)
+         *
+         *     Raises:
+         *         404: If structure node not found
+         *         500: If an unexpected error occurs
+         */
+        get: operations["get_reference_links_api_structure_nodes__node_id__reference_links_get"];
+        put?: never;
+        /**
+         * Add Reference Links
+         * @description Add reference links to a structure node.
+         *
+         *     Links the structure node to external knowledge sources such as schema.org,
+         *     Wikidata, or ConceptNet. Each link is validated against the reference database
+         *     before being added. Duplicate links are ignored.
+         *
+         *     Args:
+         *         node_id: UUID of the structure node
+         *         links: List of reference links to add (source + external_id pairs)
+         *
+         *     Returns:
+         *         List of all reference links after addition (including pre-existing ones)
+         *
+         *     Raises:
+         *         400: If validation fails or reference doesn't exist in reference.db
+         *         404: If structure node not found
+         *         500: If an unexpected error occurs
+         */
+        post: operations["add_reference_links_api_structure_nodes__node_id__reference_links_post"];
+        /**
+         * Remove Reference Links
+         * @description Remove reference links from a structure node.
+         *
+         *     Removes specified reference links from the structure node. Links that don't
+         *     exist are silently ignored.
+         *
+         *     Args:
+         *         node_id: UUID of the structure node
+         *         links: List of reference links to remove (source + external_id pairs)
+         *
+         *     Returns:
+         *         List of remaining reference links after removal
+         *
+         *     Raises:
+         *         404: If structure node not found
+         *         500: If an unexpected error occurs
+         */
+        delete: operations["remove_reference_links_api_structure_nodes__node_id__reference_links_delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/structure_nodes/{node_id}/word_senses": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Word Senses
+         * @description Get all word senses for a structure node.
+         *
+         *     Returns word sense identifiers from NLP analysis (e.g., WordNet synsets) that
+         *     have been associated with this structure node through title analysis.
+         *     Returns an empty list if no word senses exist.
+         *
+         *     Word senses are automatically updated when the structure node's title changes,
+         *     via the event processor system.
+         *
+         *     Args:
+         *         node_id: UUID of the structure node
+         *
+         *     Returns:
+         *         List of word senses (may be empty)
+         *
+         *     Raises:
+         *         404: If structure node not found
+         *         500: If an unexpected error occurs
+         */
+        get: operations["get_word_senses_api_structure_nodes__node_id__word_senses_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
         options?: never;
         head?: never;
         patch?: never;
@@ -612,6 +747,52 @@ export interface paths {
          *         Success message with cache statistics
          */
         post: operations["invalidate_similarity_cache_api_predicates_invalidate_similarity_cache_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/change_events/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Change Events
+         * @description List change events with filtering and pagination.
+         *
+         *     Events are returned in descending order by timestamp (newest first).
+         */
+        get: operations["list_change_events_api_change_events__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/change_events/{event_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Change Event
+         * @description Get a specific change event by ID.
+         */
+        get: operations["get_change_event_api_change_events__event_id__get"];
+        /**
+         * Update Change Event
+         * @description Update a change event (e.g., mark as processed).
+         */
+        put: operations["update_change_event_api_change_events__event_id__put"];
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -6044,6 +6225,43 @@ export interface components {
             method: string | null;
         };
         /**
+         * ChangeEventOut
+         * @description Model for change event output/response.
+         */
+        ChangeEventOut: {
+            /** Id */
+            id: number;
+            /** Event Type */
+            event_type: string;
+            /** Record Type */
+            record_type: string;
+            /** Record Id */
+            record_id?: string | null;
+            /** Old Data */
+            old_data?: {
+                [key: string]: unknown;
+            } | null;
+            /** New Data */
+            new_data?: {
+                [key: string]: unknown;
+            } | null;
+            /** Event Timestamp */
+            event_timestamp: string;
+            /** Processed */
+            processed: boolean;
+        };
+        /**
+         * ChangeEventUpdate
+         * @description Model for updating a change event.
+         */
+        ChangeEventUpdate: {
+            /**
+             * Processed
+             * @description Mark event as processed
+             */
+            processed: boolean;
+        };
+        /**
          * ChangeImpactOut
          * @description API model for change impact analysis.
          */
@@ -7587,23 +7805,28 @@ export interface components {
          * @description Model for structure_node search requests.
          */
         NodeSearchRequest: {
-            /** Title */
-            title?: string | null;
-            /** Definition */
-            definition?: string | null;
-            node_type?: components["schemas"]["NodeTypeEnum"] | null;
-            /** Parent Node Id */
-            parent_node_id?: string | null;
-            /** Created At */
-            created_at?: string | null;
             /**
-             * Minimum Score
-             * @default 0.7
+             * Query
+             * @description Search query text
              */
-            minimum_score: number | null;
+            query: string;
+            /** @description Filter by node type */
+            node_type?: components["schemas"]["NodeTypeEnum"] | null;
+            /**
+             * Parent Node Id
+             * @description Filter by parent node
+             */
+            parent_node_id?: string | null;
+            /**
+             * Threshold
+             * @description Minimum similarity score
+             * @default 0
+             */
+            threshold: number | null;
             /**
              * Limit
-             * @default 10
+             * @description Maximum number of results
+             * @default 20
              */
             limit: number | null;
         };
@@ -8447,6 +8670,28 @@ export interface components {
              * @description The content that was selected
              */
             selected_content: string;
+        };
+        /**
+         * RecordTypeEnum
+         * @description Record types for change events.
+         * @enum {string}
+         */
+        RecordTypeEnum: "structure_node" | "structure_node_link" | "predicate";
+        /**
+         * ReferenceLink
+         * @description Model for reference data links from external knowledge sources.
+         */
+        ReferenceLink: {
+            /**
+             * Source
+             * @description Source identifier (e.g., 'schema.org', 'wikidata', 'conceptnet')
+             */
+            source: string;
+            /**
+             * External Id
+             * @description Source-specific identifier
+             */
+            external_id: string;
         };
         /**
          * ReferenceSearchRequest
@@ -9609,6 +9854,37 @@ export interface components {
             definitions?: string[] | null;
         };
         /**
+         * WordSense
+         * @description Model for word sense identifiers from NLP analysis.
+         */
+        WordSense: {
+            /**
+             * Term
+             * @description The term/word this sense refers to
+             */
+            term: string;
+            /**
+             * Sense Type
+             * @description Type of sense system (e.g., 'wordnet')
+             */
+            sense_type: string;
+            /**
+             * Sense Id
+             * @description Unique identifier for the sense (e.g., 'bank.n.01')
+             */
+            sense_id: string;
+            /**
+             * Definition
+             * @description Human-readable definition of the sense
+             */
+            definition: string;
+            /**
+             * Domain
+             * @description Semantic domain or category (e.g., 'noun.group')
+             */
+            domain?: string | null;
+        };
+        /**
          * WorkingTreeEntryOut
          * @description Model for working tree entry output/response.
          */
@@ -9713,6 +9989,28 @@ export interface components {
 }
 export type $defs = Record<string, never>;
 export interface operations {
+    health_check_health_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: string;
+                    };
+                };
+            };
+        };
+    };
     list_nodes_api_structure_nodes__get: {
         parameters: {
             query?: {
@@ -10062,6 +10360,150 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_reference_links_api_structure_nodes__node_id__reference_links_get: {
+        parameters: {
+            query?: {
+                SessionLocal?: unknown;
+            };
+            header?: never;
+            path: {
+                /** @description The ID of the structure node */
+                node_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReferenceLink"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    add_reference_links_api_structure_nodes__node_id__reference_links_post: {
+        parameters: {
+            query?: {
+                SessionLocal?: unknown;
+            };
+            header?: never;
+            path: {
+                /** @description The ID of the structure node */
+                node_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ReferenceLink"][];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReferenceLink"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    remove_reference_links_api_structure_nodes__node_id__reference_links_delete: {
+        parameters: {
+            query?: {
+                SessionLocal?: unknown;
+            };
+            header?: never;
+            path: {
+                /** @description The ID of the structure node */
+                node_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ReferenceLink"][];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReferenceLink"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_word_senses_api_structure_nodes__node_id__word_senses_get: {
+        parameters: {
+            query?: {
+                SessionLocal?: unknown;
+            };
+            header?: never;
+            path: {
+                /** @description The ID of the structure node */
+                node_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WordSense"][];
+                };
             };
             /** @description Validation Error */
             422: {
@@ -10759,6 +11201,119 @@ export interface operations {
                 };
                 content: {
                     "application/json": unknown;
+                };
+            };
+        };
+    };
+    list_change_events_api_change_events__get: {
+        parameters: {
+            query?: {
+                /** @description Number of events to skip */
+                skip?: number;
+                /** @description Maximum number of events to return */
+                limit?: number;
+                /** @description Filter by record type */
+                record_type?: components["schemas"]["RecordTypeEnum"] | null;
+                /** @description Filter by record ID */
+                record_id?: string | null;
+                /** @description Filter by event type (create, update, delete) */
+                event_type?: string | null;
+                /** @description Filter by processed status */
+                processed?: boolean | null;
+                SessionLocal?: unknown;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ChangeEventOut"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_change_event_api_change_events__event_id__get: {
+        parameters: {
+            query?: {
+                SessionLocal?: unknown;
+            };
+            header?: never;
+            path: {
+                event_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ChangeEventOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_change_event_api_change_events__event_id__put: {
+        parameters: {
+            query?: {
+                SessionLocal?: unknown;
+            };
+            header?: never;
+            path: {
+                event_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ChangeEventUpdate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ChangeEventOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
                 };
             };
         };

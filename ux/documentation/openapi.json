@@ -5,6 +5,32 @@
     "version": "0.1.0"
   },
   "paths": {
+    "/health": {
+      "get": {
+        "tags": [
+          "health"
+        ],
+        "summary": "Health Check",
+        "description": "Health check endpoint.\n\nReturns a simple status message to indicate the server is running.\nThis endpoint is used by:\n- E2E test infrastructure to verify server startup\n- Monitoring systems to check service availability\n- Load balancers for health checks\n\nReturns:\n    dict: Status message with \"status\": \"ok\"",
+        "operationId": "health_check_health_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": {
+                    "type": "string"
+                  },
+                  "type": "object",
+                  "title": "Response Health Check Health Get"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/structure_nodes/": {
       "post": {
         "tags": [
@@ -122,7 +148,7 @@
             "required": false,
             "schema": {
               "type": "integer",
-              "maximum": 100,
+              "maximum": 1000,
               "minimum": 1,
               "description": "Maximum number of structure_nodes to return",
               "default": 50,
@@ -183,7 +209,7 @@
           "structure_nodes"
         ],
         "summary": "Search Nodes",
-        "description": "Vector search across structure_nodes.\n\nThis endpoint replaces the separate find endpoints for layers, domains, and terms.\nSupports semantic search across structure_node titles and definitions with optional\ntype filtering and configurable similarity thresholds.\n\nNote: Implementation depends on vector search infrastructure being available.",
+        "description": "Vector search across structure_nodes.\n\nThis endpoint replaces the separate find endpoints for layers, domains, and terms.\nSupports semantic search across structure_node titles and definitions with optional\ntype filtering and configurable similarity thresholds.",
         "operationId": "search_nodes_api_structure_nodes_find_post",
         "parameters": [
           {
@@ -675,6 +701,266 @@
         "responses": {
           "204": {
             "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/structure_nodes/{node_id}/reference_links": {
+      "post": {
+        "tags": [
+          "structure_nodes",
+          "structure_nodes"
+        ],
+        "summary": "Add Reference Links",
+        "description": "Add reference links to a structure node.\n\nLinks the structure node to external knowledge sources such as schema.org,\nWikidata, or ConceptNet. Each link is validated against the reference database\nbefore being added. Duplicate links are ignored.\n\nArgs:\n    node_id: UUID of the structure node\n    links: List of reference links to add (source + external_id pairs)\n\nReturns:\n    List of all reference links after addition (including pre-existing ones)\n\nRaises:\n    400: If validation fails or reference doesn't exist in reference.db\n    404: If structure node not found\n    500: If an unexpected error occurs",
+        "operationId": "add_reference_links_api_structure_nodes__node_id__reference_links_post",
+        "parameters": [
+          {
+            "name": "node_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "description": "The ID of the structure node",
+              "title": "Node Id"
+            },
+            "description": "The ID of the structure node"
+          },
+          {
+            "name": "SessionLocal",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "title": "Sessionlocal"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/ReferenceLink"
+                },
+                "title": "Links"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ReferenceLink"
+                  },
+                  "title": "Response Add Reference Links Api Structure Nodes  Node Id  Reference Links Post"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "structure_nodes",
+          "structure_nodes"
+        ],
+        "summary": "Remove Reference Links",
+        "description": "Remove reference links from a structure node.\n\nRemoves specified reference links from the structure node. Links that don't\nexist are silently ignored.\n\nArgs:\n    node_id: UUID of the structure node\n    links: List of reference links to remove (source + external_id pairs)\n\nReturns:\n    List of remaining reference links after removal\n\nRaises:\n    404: If structure node not found\n    500: If an unexpected error occurs",
+        "operationId": "remove_reference_links_api_structure_nodes__node_id__reference_links_delete",
+        "parameters": [
+          {
+            "name": "node_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "description": "The ID of the structure node",
+              "title": "Node Id"
+            },
+            "description": "The ID of the structure node"
+          },
+          {
+            "name": "SessionLocal",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "title": "Sessionlocal"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/ReferenceLink"
+                },
+                "title": "Links"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ReferenceLink"
+                  },
+                  "title": "Response Remove Reference Links Api Structure Nodes  Node Id  Reference Links Delete"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "structure_nodes",
+          "structure_nodes"
+        ],
+        "summary": "Get Reference Links",
+        "description": "Get all reference links for a structure node.\n\nReturns all external knowledge source links associated with this structure node.\nReturns an empty list if no links exist.\n\nArgs:\n    node_id: UUID of the structure node\n\nReturns:\n    List of reference links (may be empty)\n\nRaises:\n    404: If structure node not found\n    500: If an unexpected error occurs",
+        "operationId": "get_reference_links_api_structure_nodes__node_id__reference_links_get",
+        "parameters": [
+          {
+            "name": "node_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "description": "The ID of the structure node",
+              "title": "Node Id"
+            },
+            "description": "The ID of the structure node"
+          },
+          {
+            "name": "SessionLocal",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "title": "Sessionlocal"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ReferenceLink"
+                  },
+                  "title": "Response Get Reference Links Api Structure Nodes  Node Id  Reference Links Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/structure_nodes/{node_id}/word_senses": {
+      "get": {
+        "tags": [
+          "structure_nodes",
+          "structure_nodes"
+        ],
+        "summary": "Get Word Senses",
+        "description": "Get all word senses for a structure node.\n\nReturns word sense identifiers from NLP analysis (e.g., WordNet synsets) that\nhave been associated with this structure node through title analysis.\nReturns an empty list if no word senses exist.\n\nWord senses are automatically updated when the structure node's title changes,\nvia the event processor system.\n\nArgs:\n    node_id: UUID of the structure node\n\nReturns:\n    List of word senses (may be empty)\n\nRaises:\n    404: If structure node not found\n    500: If an unexpected error occurs",
+        "operationId": "get_word_senses_api_structure_nodes__node_id__word_senses_get",
+        "parameters": [
+          {
+            "name": "node_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "description": "The ID of the structure node",
+              "title": "Node Id"
+            },
+            "description": "The ID of the structure node"
+          },
+          {
+            "name": "SessionLocal",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "title": "Sessionlocal"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/WordSense"
+                  },
+                  "title": "Response Get Word Senses Api Structure Nodes  Node Id  Word Senses Get"
+                }
+              }
+            }
           },
           "422": {
             "description": "Validation Error",
@@ -1899,6 +2185,264 @@
             "content": {
               "application/json": {
                 "schema": {}
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/change_events/": {
+      "get": {
+        "tags": [
+          "change_events",
+          "change_events"
+        ],
+        "summary": "List Change Events",
+        "description": "List change events with filtering and pagination.\n\nEvents are returned in descending order by timestamp (newest first).",
+        "operationId": "list_change_events_api_change_events__get",
+        "parameters": [
+          {
+            "name": "skip",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "description": "Number of events to skip",
+              "default": 0,
+              "title": "Skip"
+            },
+            "description": "Number of events to skip"
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 1000,
+              "minimum": 1,
+              "description": "Maximum number of events to return",
+              "default": 50,
+              "title": "Limit"
+            },
+            "description": "Maximum number of events to return"
+          },
+          {
+            "name": "record_type",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/RecordTypeEnum"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by record type",
+              "title": "Record Type"
+            },
+            "description": "Filter by record type"
+          },
+          {
+            "name": "record_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by record ID",
+              "title": "Record Id"
+            },
+            "description": "Filter by record ID"
+          },
+          {
+            "name": "event_type",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by event type (create, update, delete)",
+              "title": "Event Type"
+            },
+            "description": "Filter by event type (create, update, delete)"
+          },
+          {
+            "name": "processed",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "boolean"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by processed status",
+              "title": "Processed"
+            },
+            "description": "Filter by processed status"
+          },
+          {
+            "name": "SessionLocal",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "title": "Sessionlocal"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ChangeEventOut"
+                  },
+                  "title": "Response List Change Events Api Change Events  Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/change_events/{event_id}": {
+      "get": {
+        "tags": [
+          "change_events",
+          "change_events"
+        ],
+        "summary": "Get Change Event",
+        "description": "Get a specific change event by ID.",
+        "operationId": "get_change_event_api_change_events__event_id__get",
+        "parameters": [
+          {
+            "name": "event_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Event Id"
+            }
+          },
+          {
+            "name": "SessionLocal",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "title": "Sessionlocal"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ChangeEventOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "change_events",
+          "change_events"
+        ],
+        "summary": "Update Change Event",
+        "description": "Update a change event (e.g., mark as processed).",
+        "operationId": "update_change_event_api_change_events__event_id__put",
+        "parameters": [
+          {
+            "name": "event_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Event Id"
+            }
+          },
+          {
+            "name": "SessionLocal",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "title": "Sessionlocal"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ChangeEventUpdate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ChangeEventOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
               }
             }
           }
@@ -15171,6 +15715,90 @@
         "type": "object",
         "title": "CentralityRequest"
       },
+      "ChangeEventOut": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
+          "event_type": {
+            "type": "string",
+            "title": "Event Type"
+          },
+          "record_type": {
+            "type": "string",
+            "title": "Record Type"
+          },
+          "record_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Record Id"
+          },
+          "old_data": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Old Data"
+          },
+          "new_data": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "New Data"
+          },
+          "event_timestamp": {
+            "type": "string",
+            "title": "Event Timestamp"
+          },
+          "processed": {
+            "type": "boolean",
+            "title": "Processed"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "event_type",
+          "record_type",
+          "event_timestamp",
+          "processed"
+        ],
+        "title": "ChangeEventOut",
+        "description": "Model for change event output/response."
+      },
+      "ChangeEventUpdate": {
+        "properties": {
+          "processed": {
+            "type": "boolean",
+            "title": "Processed",
+            "description": "Mark event as processed"
+          }
+        },
+        "type": "object",
+        "required": [
+          "processed"
+        ],
+        "title": "ChangeEventUpdate",
+        "description": "Model for updating a change event."
+      },
       "ChangeImpactOut": {
         "properties": {
           "changeset_id": {
@@ -18150,27 +18778,11 @@
       },
       "NodeSearchRequest": {
         "properties": {
-          "title": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Title"
-          },
-          "definition": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Definition"
+          "query": {
+            "type": "string",
+            "minLength": 1,
+            "title": "Query",
+            "description": "Search query text"
           },
           "node_type": {
             "anyOf": [
@@ -18180,7 +18792,8 @@
               {
                 "type": "null"
               }
-            ]
+            ],
+            "description": "Filter by node type"
           },
           "parent_node_id": {
             "anyOf": [
@@ -18192,20 +18805,10 @@
                 "type": "null"
               }
             ],
-            "title": "Parent Node Id"
+            "title": "Parent Node Id",
+            "description": "Filter by parent node"
           },
-          "created_at": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Created At"
-          },
-          "minimum_score": {
+          "threshold": {
             "anyOf": [
               {
                 "type": "number",
@@ -18216,8 +18819,9 @@
                 "type": "null"
               }
             ],
-            "title": "Minimum Score",
-            "default": 0.7
+            "title": "Threshold",
+            "description": "Minimum similarity score",
+            "default": 0.0
           },
           "limit": {
             "anyOf": [
@@ -18231,10 +18835,14 @@
               }
             ],
             "title": "Limit",
-            "default": 10
+            "description": "Maximum number of results",
+            "default": 20
           }
         },
         "type": "object",
+        "required": [
+          "query"
+        ],
         "title": "NodeSearchRequest",
         "description": "Model for structure_node search requests."
       },
@@ -19930,6 +20538,41 @@
         ],
         "title": "RecordSelectionRequest",
         "description": "Request model for recording user selection of LLM suggestions."
+      },
+      "RecordTypeEnum": {
+        "type": "string",
+        "enum": [
+          "structure_node",
+          "structure_node_link",
+          "predicate"
+        ],
+        "title": "RecordTypeEnum",
+        "description": "Record types for change events."
+      },
+      "ReferenceLink": {
+        "properties": {
+          "source": {
+            "type": "string",
+            "maxLength": 255,
+            "minLength": 1,
+            "title": "Source",
+            "description": "Source identifier (e.g., 'schema.org', 'wikidata', 'conceptnet')"
+          },
+          "external_id": {
+            "type": "string",
+            "maxLength": 255,
+            "minLength": 1,
+            "title": "External Id",
+            "description": "Source-specific identifier"
+          }
+        },
+        "type": "object",
+        "required": [
+          "source",
+          "external_id"
+        ],
+        "title": "ReferenceLink",
+        "description": "Model for reference data links from external knowledge sources."
       },
       "ReferenceSearchRequest": {
         "properties": {
@@ -22392,6 +23035,53 @@
         "type": "object",
         "title": "WordNetData",
         "description": "WordNet data for a token."
+      },
+      "WordSense": {
+        "properties": {
+          "term": {
+            "type": "string",
+            "maxLength": 255,
+            "minLength": 1,
+            "title": "Term",
+            "description": "The term/word this sense refers to"
+          },
+          "sense_type": {
+            "type": "string",
+            "title": "Sense Type",
+            "description": "Type of sense system (e.g., 'wordnet')"
+          },
+          "sense_id": {
+            "type": "string",
+            "title": "Sense Id",
+            "description": "Unique identifier for the sense (e.g., 'bank.n.01')"
+          },
+          "definition": {
+            "type": "string",
+            "title": "Definition",
+            "description": "Human-readable definition of the sense"
+          },
+          "domain": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Domain",
+            "description": "Semantic domain or category (e.g., 'noun.group')"
+          }
+        },
+        "type": "object",
+        "required": [
+          "term",
+          "sense_type",
+          "sense_id",
+          "definition"
+        ],
+        "title": "WordSense",
+        "description": "Model for word sense identifiers from NLP analysis."
       },
       "WorkingTreeEntryOut": {
         "properties": {
