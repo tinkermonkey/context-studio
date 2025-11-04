@@ -304,6 +304,90 @@ class ReferenceLinkService:
 
         return matching_nodes
 
+    def _parse_reference_links_json(self, node_id: str, reference_links_json: str) -> List[dict]:
+        """
+        Parse reference links JSON string into list of dictionaries.
+
+        Args:
+            node_id: ID of the structure node (for logging)
+            reference_links_json: JSON string containing reference links
+
+        Returns:
+            List of link dictionaries
+
+        Raises:
+            json.JSONDecodeError: If JSON parsing fails
+            ValueError: If parsed data is not a list
+        """
+        links_data = json.loads(reference_links_json)
+        if not isinstance(links_data, list):
+            raise ValueError("reference_links field is not an array")
+        return links_data
+
+    def _validate_single_link(
+        self, link_dict: dict, node_id: str, check_existence: bool
+    ) -> tuple[bool, Optional[dict]]:
+        """
+        Validate a single reference link.
+
+        Args:
+            link_dict: Dictionary containing link data
+            node_id: ID of the structure node (for logging)
+            check_existence: If True, validates link exists in reference.db
+
+        Returns:
+            Tuple of (is_valid, error_entry):
+            - is_valid: True if link is valid
+            - error_entry: Dictionary with error details if invalid, None otherwise
+              Format: {"source": str, "external_id": str, "reason": str} for orphaned
+                     {"data": dict, "reason": str} for malformed
+        """
+        try:
+            # Try to parse link
+            link = ReferenceLink(**link_dict)
+
+            # If check_existence is True, validate against reference.db
+            if check_existence:
+                try:
+                    ref_manager = get_reference_manager()
+                    ref_node = ref_manager.get_reference_node_by_source(
+                        link.source, link.external_id
+                    )
+
+                    if ref_node:
+                        return (True, None)
+                    else:
+                        # Orphaned link
+                        return (False, {
+                            "source": link.source,
+                            "external_id": link.external_id,
+                            "reason": "Reference not found in reference.db"
+                        })
+
+                except Exception as e:
+                    # Error checking reference.db (e.g., database unavailable)
+                    logger.warning(
+                        f"Error validating reference link for node {node_id}: {e}"
+                    )
+                    return (False, {
+                        "source": link.source,
+                        "external_id": link.external_id,
+                        "reason": f"Validation error: {str(e)}"
+                    })
+            else:
+                # Just count as valid if we're not checking existence
+                return (True, None)
+
+        except Exception as e:
+            # Malformed link data
+            logger.warning(
+                f"Failed to parse reference link for node {node_id}: {e}"
+            )
+            return (False, {
+                "data": link_dict,
+                "reason": f"Parse error: {str(e)}"
+            })
+
     def validate_node_reference_links(
         self, node_id: str, check_existence: bool = True
     ) -> dict:
@@ -333,7 +417,7 @@ class ReferenceLinkService:
             "node_id": node_id,
             "total_links": 0,
             "valid_links": 0,
-            "orphaned_links": [],  # Links that don't exist in reference.db
+            "orphaned_links": [],
             "malformed_links": []
         }
 
@@ -343,80 +427,41 @@ class ReferenceLinkService:
             logger.error(f"StructureNode not found: {node_id}")
             raise NotFoundError("StructureNode", node_id)
 
+        # Handle empty reference links
+        if not node.reference_links:
+            logger.debug(f"Node {node_id} has no reference links")
+            return result
+
+        # Parse JSON with error handling
         try:
-
-            # Parse reference links with error handling
-            if not node.reference_links:
-                logger.debug(f"Node {node_id} has no reference links")
-                return result
-
-            try:
-                links_data = json.loads(node.reference_links)
-                if not isinstance(links_data, list):
-                    logger.warning(f"reference_links for node {node_id} is not an array")
-                    result["error"] = "reference_links field is not an array"
-                    return result
-
-                result["total_links"] = len(links_data)
-
-                for link_dict in links_data:
-                    try:
-                        # Try to parse link
-                        link = ReferenceLink(**link_dict)
-
-                        # If check_existence is True, validate against reference.db
-                        if check_existence:
-                            try:
-                                ref_manager = get_reference_manager()
-                                ref_node = ref_manager.get_reference_node_by_source(
-                                    link.source, link.external_id
-                                )
-
-                                if ref_node:
-                                    result["valid_links"] += 1
-                                else:
-                                    # Orphaned link
-                                    orphaned_entry = {
-                                        "source": link.source,
-                                        "external_id": link.external_id,
-                                        "reason": "Reference not found in reference.db"
-                                    }
-                                    result["orphaned_links"].append(orphaned_entry)
-
-                            except Exception as e:
-                                # Error checking reference.db (e.g., database unavailable)
-                                orphaned_entry = {
-                                    "source": link.source,
-                                    "external_id": link.external_id,
-                                    "reason": f"Validation error: {str(e)}"
-                                }
-                                result["orphaned_links"].append(orphaned_entry)
-                                logger.warning(
-                                    f"Error validating reference link for node {node_id}: {e}"
-                                )
-                        else:
-                            # Just count as valid if we're not checking existence
-                            result["valid_links"] += 1
-
-                    except Exception as e:
-                        # Malformed link data
-                        malformed_entry = {
-                            "data": link_dict,
-                            "reason": f"Parse error: {str(e)}"
-                        }
-                        result["malformed_links"].append(malformed_entry)
-                        logger.warning(
-                            f"Failed to parse reference link for node {node_id}: {e}"
-                        )
-
-            except json.JSONDecodeError as e:
-                logger.error(f"Failed to parse reference_links JSON for node {node_id}: {e}")
-                result["error"] = f"JSON decode error: {str(e)}"
-                return result
-
+            links_data = self._parse_reference_links_json(node_id, node.reference_links)
+        except json.JSONDecodeError as e:
+            logger.error(f"Failed to parse reference_links JSON for node {node_id}: {e}")
+            result["error"] = f"JSON decode error: {str(e)}"
+            return result
+        except ValueError as e:
+            logger.warning(f"reference_links for node {node_id} is not an array")
+            result["error"] = str(e)
+            return result
         except Exception as e:
-            logger.error(f"Unexpected error validating reference links for node {node_id}: {e}")
+            logger.error(f"Unexpected error parsing reference links for node {node_id}: {e}")
             result["error"] = f"Unexpected error: {str(e)}"
+            return result
+
+        result["total_links"] = len(links_data)
+
+        # Validate each link
+        for link_dict in links_data:
+            is_valid, error_entry = self._validate_single_link(link_dict, node_id, check_existence)
+
+            if is_valid:
+                result["valid_links"] += 1
+            else:
+                # Categorize error as orphaned or malformed based on presence of "data" field
+                if "data" in error_entry:
+                    result["malformed_links"].append(error_entry)
+                else:
+                    result["orphaned_links"].append(error_entry)
 
         logger.info(
             f"Validation complete for node {node_id}: "
