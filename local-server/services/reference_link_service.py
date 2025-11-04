@@ -13,6 +13,7 @@ from database.models import StructureNode
 from api.models.structure_nodes import ReferenceLink
 from reference_db.manager import get_reference_manager
 from utils.logger import get_logger
+from services.exceptions import NotFoundError, ReferenceNotFoundError, ValidationError
 
 logger = get_logger(__name__)
 
@@ -46,14 +47,16 @@ class ReferenceLinkService:
             List of all reference links after addition (including pre-existing)
 
         Raises:
-            ValueError: If node not found, reference doesn't exist, or validation fails
+            NotFoundError: If node not found
+            ReferenceNotFoundError: If reference doesn't exist in reference.db
+            ValidationError: If validation fails
         """
         logger.info(f"Adding {len(links)} reference links to node {node_id}")
 
         # Get the node
         node = self.db.query(StructureNode).filter(StructureNode.id == node_id).first()
         if not node:
-            raise ValueError(f"StructureNode not found: {node_id}")
+            raise NotFoundError("StructureNode", node_id)
 
         # Validate all links exist in reference.db before proceeding
         for link in links:
@@ -91,7 +94,7 @@ class ReferenceLinkService:
         except Exception as e:
             self.db.rollback()
             logger.error(f"Failed to add reference links to node {node_id}: {e}")
-            raise ValueError(f"Failed to add reference links: {e}")
+            raise ValidationError(f"Failed to add reference links: {e}")
 
     def remove_reference_links(
         self, node_id: str, links: List[ReferenceLink]
@@ -107,14 +110,15 @@ class ReferenceLinkService:
             List of remaining reference links after removal
 
         Raises:
-            ValueError: If node not found or update fails
+            NotFoundError: If node not found
+            ValidationError: If update fails
         """
         logger.info(f"Removing {len(links)} reference links from node {node_id}")
 
         # Get the node
         node = self.db.query(StructureNode).filter(StructureNode.id == node_id).first()
         if not node:
-            raise ValueError(f"StructureNode not found: {node_id}")
+            raise NotFoundError("StructureNode", node_id)
 
         # Get existing links
         existing_links = self.get_reference_links(node_id)
@@ -148,7 +152,7 @@ class ReferenceLinkService:
         except Exception as e:
             self.db.rollback()
             logger.error(f"Failed to remove reference links from node {node_id}: {e}")
-            raise ValueError(f"Failed to remove reference links: {e}")
+            raise ValidationError(f"Failed to remove reference links: {e}")
 
     def get_reference_links(self, node_id: str) -> List[ReferenceLink]:
         """
@@ -161,12 +165,12 @@ class ReferenceLinkService:
             List of ReferenceLink instances (empty list if none)
 
         Raises:
-            ValueError: If node not found or JSON parsing fails
+            NotFoundError: If node not found
         """
         # Get the node
         node = self.db.query(StructureNode).filter(StructureNode.id == node_id).first()
         if not node:
-            raise ValueError(f"StructureNode not found: {node_id}")
+            raise NotFoundError("StructureNode", node_id)
 
         # Parse JSON field (handle null, empty string, and malformed JSON)
         if not node.reference_links:
@@ -215,7 +219,8 @@ class ReferenceLinkService:
             True if reference exists
 
         Raises:
-            ValueError: If reference doesn't exist in reference.db
+            ReferenceNotFoundError: If reference doesn't exist in reference.db
+            ValidationError: If validation fails
         """
         self._validate_reference_link(source, external_id)
         return True
@@ -229,7 +234,8 @@ class ReferenceLinkService:
             external_id: Source-specific identifier
 
         Raises:
-            ValueError: If reference doesn't exist or validation fails
+            ReferenceNotFoundError: If reference doesn't exist in reference.db
+            ValidationError: If validation fails
         """
         try:
             # Get reference manager and check if node exists
@@ -237,22 +243,19 @@ class ReferenceLinkService:
             ref_node = ref_manager.get_reference_node_by_source(source, external_id)
 
             if not ref_node:
-                raise ValueError(
-                    f"Reference not found in reference.db: source='{source}', "
-                    f"external_id='{external_id}'"
-                )
+                raise ReferenceNotFoundError(source, external_id)
 
             logger.debug(
                 f"Validated reference link: source='{source}', external_id='{external_id}'"
             )
 
-        except ValueError:
-            # Re-raise ValueError as-is
+        except ReferenceNotFoundError:
+            # Re-raise ReferenceNotFoundError as-is
             raise
         except Exception as e:
-            # Wrap other exceptions in ValueError with context
+            # Wrap other exceptions in ValidationError with context
             logger.error(f"Error validating reference link: {e}")
-            raise ValueError(f"Failed to validate reference link: {e}")
+            raise ValidationError(f"Failed to validate reference link: {e}")
 
     def get_nodes_with_reference_link(
         self, source: str, external_id: str, limit: Optional[int] = None
@@ -322,7 +325,7 @@ class ReferenceLinkService:
             }
 
         Raises:
-            ValueError: If node not found
+            NotFoundError: If node not found
         """
         logger.info(f"Validating reference links for node {node_id}")
 
@@ -338,7 +341,7 @@ class ReferenceLinkService:
         node = self.db.query(StructureNode).filter(StructureNode.id == node_id).first()
         if not node:
             logger.error(f"StructureNode not found: {node_id}")
-            raise ValueError(f"StructureNode not found: {node_id}")
+            raise NotFoundError("StructureNode", node_id)
 
         try:
 
