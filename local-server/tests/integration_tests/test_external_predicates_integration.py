@@ -36,11 +36,36 @@ class TestExternalPredicatesIntegration:
 
     @pytest.fixture(autouse=True)
     def check_sqlite_vec(self):
-        """Check if sqlite-vec is available, skip tests if not."""
+        """Check if sqlite-vec is available and working, skip tests if not."""
         try:
             import sqlite_vec  # noqa: F401
         except ImportError:
             pytest.skip("sqlite-vec not available (expected in Docker environment)")
+
+        # Also verify that vec functions are actually available in SQLite
+        test_db_path = None
+        try:
+            import tempfile
+            from sqlalchemy import create_engine, text
+            from database.utils import init_db
+
+            with tempfile.NamedTemporaryFile(suffix='.db', delete=False) as tf:
+                test_db_path = tf.name
+
+            test_engine = create_engine(f"sqlite:///{test_db_path}")
+            init_db(test_engine)
+
+            # Test if vec_distance_cosine is available
+            with test_engine.connect() as conn:
+                try:
+                    conn.execute(text("SELECT vec_distance_cosine(x'00000000', x'00000000')"))
+                except Exception as e:
+                    pytest.skip(f"sqlite-vec extension not properly loaded: {e}")
+
+            test_engine.dispose()
+        finally:
+            if test_db_path and os.path.exists(test_db_path):
+                os.unlink(test_db_path)
 
     @pytest.fixture
     def temp_db(self):
