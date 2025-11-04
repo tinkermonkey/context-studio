@@ -498,7 +498,12 @@ class TestWordSenseService:
             }
         ])
 
-        mock_db.query.return_value.filter.return_value.all.return_value = [node1, node2, node3]
+        # Setup query mock that returns itself for chaining
+        query_mock = Mock()
+        query_mock.filter.return_value = query_mock
+        query_mock.params.return_value = query_mock
+        query_mock.all.return_value = [node1, node3]  # Only nodes with bank.n.01
+        mock_db.query.return_value = query_mock
 
         # Execute
         result = service.get_nodes_with_word_sense("bank.n.01")
@@ -525,7 +530,13 @@ class TestWordSenseService:
             ])
             nodes.append(node)
 
-        mock_db.query.return_value.filter.return_value.all.return_value = nodes
+        # Setup query mock that returns itself for chaining, including limit()
+        query_mock = Mock()
+        query_mock.filter.return_value = query_mock
+        query_mock.params.return_value = query_mock
+        query_mock.limit.return_value = query_mock
+        query_mock.all.return_value = nodes[:3]  # Simulate limit returning first 3
+        mock_db.query.return_value = query_mock
 
         # Execute
         result = service.get_nodes_with_word_sense("test.n.01", limit=3)

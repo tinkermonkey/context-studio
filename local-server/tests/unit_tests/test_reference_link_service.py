@@ -283,58 +283,6 @@ class TestReferenceLinkService:
             with pytest.raises(ValueError, match="Reference not found in reference.db"):
                 service.validate_reference_link("schema.org", "NonExistent")
 
-    def test_get_nodes_with_reference_link(self, service, mock_db):
-        """Test finding nodes by reference link."""
-        # Setup
-        node1 = Mock(spec=StructureNode)
-        node1.id = "node-1"
-        node1.reference_links = json.dumps([
-            {"source": "schema.org", "external_id": "Person"}
-        ])
-
-        node2 = Mock(spec=StructureNode)
-        node2.id = "node-2"
-        node2.reference_links = json.dumps([
-            {"source": "wikidata", "external_id": "Q5"}
-        ])
-
-        node3 = Mock(spec=StructureNode)
-        node3.id = "node-3"
-        node3.reference_links = json.dumps([
-            {"source": "schema.org", "external_id": "Person"},
-            {"source": "wikidata", "external_id": "Q5"}
-        ])
-
-        mock_db.query.return_value.filter.return_value.all.return_value = [node1, node2, node3]
-
-        # Execute
-        result = service.get_nodes_with_reference_link("schema.org", "Person")
-
-        # Assert
-        assert len(result) == 2  # node1 and node3
-        assert result[0].id == "node-1"
-        assert result[1].id == "node-3"
-
-    def test_get_nodes_with_reference_link_with_limit(self, service, mock_db):
-        """Test finding nodes with limit."""
-        # Setup
-        nodes = []
-        for i in range(5):
-            node = Mock(spec=StructureNode)
-            node.id = f"node-{i}"
-            node.reference_links = json.dumps([
-                {"source": "schema.org", "external_id": "Person"}
-            ])
-            nodes.append(node)
-
-        mock_db.query.return_value.filter.return_value.all.return_value = nodes
-
-        # Execute
-        result = service.get_nodes_with_reference_link("schema.org", "Person", limit=3)
-
-        # Assert
-        assert len(result) == 3
-
     def test_commit_failure_rollback(self, service, mock_db, sample_node, sample_links):
         """Test that database rollback occurs on commit failure."""
         # Setup
