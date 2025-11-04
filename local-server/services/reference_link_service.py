@@ -51,7 +51,7 @@ class ReferenceLinkService:
             ReferenceNotFoundError: If reference doesn't exist in reference.db
             ValidationError: If validation fails
         """
-        logger.info(f"Adding {len(links)} reference links to node {node_id}")
+        logger.debug(f"Adding {len(links)} reference links to node {node_id}")
 
         # Get the node
         node = self.db.query(StructureNode).filter(StructureNode.id == node_id).first()
@@ -113,7 +113,7 @@ class ReferenceLinkService:
             NotFoundError: If node not found
             ValidationError: If update fails
         """
-        logger.info(f"Removing {len(links)} reference links from node {node_id}")
+        logger.debug(f"Removing {len(links)} reference links from node {node_id}")
 
         # Get the node
         node = self.db.query(StructureNode).filter(StructureNode.id == node_id).first()
@@ -412,7 +412,7 @@ class ReferenceLinkService:
         Raises:
             NotFoundError: If node not found
         """
-        logger.info(f"Validating reference links for node {node_id}")
+        logger.debug(f"Validating reference links for node {node_id}")
 
         result = {
             "node_id": node_id,
@@ -537,7 +537,7 @@ class ReferenceLinkService:
             result["total_nodes_checked"] = len(nodes_with_links)
             result["nodes_with_links"] = len(nodes_with_links)
 
-            logger.info(f"Found {len(nodes_with_links)} nodes with reference links")
+            logger.debug(f"Found {len(nodes_with_links)} nodes with reference links")
 
             # Validate each node
             for node in nodes_with_links:
