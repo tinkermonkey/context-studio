@@ -713,7 +713,7 @@ def get_word_senses(
 @router.post("/reference_links/validate", response_model=dict)
 def validate_all_reference_links(
     check_existence: bool = Query(True, description="Check if references exist in reference.db"),
-    limit: Optional[int] = Query(None, ge=1, le=10000, description="Limit number of nodes to validate"),
+    limit: Optional[int] = Query(None, ge=1, le=1000, description="Limit number of nodes to validate"),
     reference_link_service: ReferenceLinkService = Depends(get_reference_link_service)
 ):
     """
@@ -738,25 +738,11 @@ def validate_all_reference_links(
     logger = get_logger(__name__)
 
     try:
-        # Warn if limit is very high (may impact performance)
-        if limit and limit > 1000:
-            logger.warning(
-                f"Bulk validation requested with high limit ({limit}). "
-                f"This may take significant time. Consider using a lower limit for better performance."
-            )
-
         logger.info(f"Starting bulk reference link validation (check_existence={check_existence}, limit={limit})")
         result = reference_link_service.validate_all_reference_links(
             check_existence=check_existence,
             limit=limit
         )
-
-        # Add performance warning to result if limit was high
-        if limit and limit > 1000:
-            result["performance_warning"] = (
-                f"Validation performed on {limit} nodes. "
-                f"For routine checks, consider using limit <= 1000 for better performance."
-            )
 
         return result
 
