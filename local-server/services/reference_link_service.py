@@ -277,6 +277,7 @@ class ReferenceLinkService:
 
         # Query nodes using SQLite json_extract for efficiency
         # This filters at the database level instead of fetching all nodes
+        # SQL injection safe: Uses parameterized query with .params() - values are not interpolated
         from sqlalchemy import text
 
         query = self.db.query(StructureNode).filter(
