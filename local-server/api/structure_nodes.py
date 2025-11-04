@@ -706,6 +706,94 @@ def get_word_senses(
         raise HTTPException(status_code=500, detail=f"Internal server error: {str(e)}")
 
 
+# Reference Link Validation endpoints
+@router.post("/reference_links/validate", response_model=dict)
+def validate_all_reference_links(
+    check_existence: bool = Query(True, description="Check if references exist in reference.db"),
+    limit: Optional[int] = Query(None, ge=1, le=10000, description="Limit number of nodes to validate"),
+    reference_link_service: ReferenceLinkService = Depends(get_reference_link_service)
+):
+    """
+    Validate all reference links across all structure nodes.
+
+    Performs bulk validation of reference links to identify:
+    - Orphaned links (references that no longer exist in reference.db)
+    - Malformed links (invalid JSON or missing required fields)
+    - Nodes with problematic links
+
+    This endpoint is useful for maintenance and data integrity checking.
+    Gracefully degrades if reference.db is unavailable.
+
+    Args:
+        check_existence: If True, validates each link exists in reference.db
+        limit: Optional limit on number of nodes to check
+
+    Returns:
+        Validation results with statistics and list of problematic nodes
+    """
+    from utils.logger import get_logger
+    logger = get_logger(__name__)
+
+    try:
+        logger.info(f"Starting bulk reference link validation (check_existence={check_existence}, limit={limit})")
+        result = reference_link_service.validate_all_reference_links(
+            check_existence=check_existence,
+            limit=limit
+        )
+        return result
+
+    except Exception as e:
+        logger.error(f"Error during bulk validation: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail=f"Validation error: {str(e)}")
+
+
+@router.post("/{node_id}/reference_links/validate", response_model=dict)
+def validate_node_reference_links(
+    node_id: UUID = Path(..., description="The ID of the structure node"),
+    check_existence: bool = Query(True, description="Check if references exist in reference.db"),
+    reference_link_service: ReferenceLinkService = Depends(get_reference_link_service)
+):
+    """
+    Validate reference links for a specific structure node.
+
+    Checks all reference links on a single node to identify:
+    - Orphaned links (references that no longer exist in reference.db)
+    - Malformed links (invalid JSON or missing required fields)
+    - Valid links
+
+    Args:
+        node_id: UUID of the structure node
+        check_existence: If True, validates each link exists in reference.db
+
+    Returns:
+        Validation results with counts of valid, invalid, and malformed links
+
+    Raises:
+        404: If structure node not found
+        500: If an unexpected error occurs
+    """
+    from utils.logger import get_logger
+    logger = get_logger(__name__)
+
+    try:
+        result = reference_link_service.validate_node_reference_links(
+            str(node_id),
+            check_existence=check_existence
+        )
+
+        # Check if node was not found
+        if "error" in result and "not found" in result["error"].lower():
+            raise HTTPException(status_code=404, detail=result["error"])
+
+        return result
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error validating reference links for node {node_id}: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail=f"Validation error: {str(e)}")
+
+
 # Additional utility endpoints
 @router.post("/move", response_model=MoveNodesResponse)
 def move_nodes(

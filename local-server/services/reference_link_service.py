@@ -300,3 +300,229 @@ class ReferenceLinkService:
         )
 
         return matching_nodes
+
+    def validate_node_reference_links(
+        self, node_id: str, check_existence: bool = True
+    ) -> dict:
+        """
+        Validate all reference links for a specific structure node.
+
+        Args:
+            node_id: ID of the structure node
+            check_existence: If True, validates each link exists in reference.db
+
+        Returns:
+            Dictionary containing validation results:
+            {
+                "node_id": str,
+                "total_links": int,
+                "valid_links": int,
+                "invalid_links": List[dict],  # Links that don't exist in reference.db
+                "orphaned_links": List[dict],  # Same as invalid_links (legacy key)
+                "malformed_links": List[dict]  # Links with parsing errors
+            }
+        """
+        logger.info(f"Validating reference links for node {node_id}")
+
+        result = {
+            "node_id": node_id,
+            "total_links": 0,
+            "valid_links": 0,
+            "invalid_links": [],
+            "orphaned_links": [],  # Alias for invalid_links
+            "malformed_links": []
+        }
+
+        try:
+            # Get the node
+            node = self.db.query(StructureNode).filter(StructureNode.id == node_id).first()
+            if not node:
+                logger.error(f"StructureNode not found: {node_id}")
+                result["error"] = f"StructureNode not found: {node_id}"
+                return result
+
+            # Parse reference links with error handling
+            if not node.reference_links:
+                logger.debug(f"Node {node_id} has no reference links")
+                return result
+
+            try:
+                links_data = json.loads(node.reference_links)
+                if not isinstance(links_data, list):
+                    logger.warning(f"reference_links for node {node_id} is not an array")
+                    result["error"] = "reference_links field is not an array"
+                    return result
+
+                result["total_links"] = len(links_data)
+
+                for link_dict in links_data:
+                    try:
+                        # Try to parse link
+                        link = ReferenceLink(**link_dict)
+
+                        # If check_existence is True, validate against reference.db
+                        if check_existence:
+                            try:
+                                ref_manager = get_reference_manager()
+                                ref_node = ref_manager.get_reference_node_by_source(
+                                    link.source, link.external_id
+                                )
+
+                                if ref_node:
+                                    result["valid_links"] += 1
+                                else:
+                                    # Orphaned/invalid link
+                                    invalid_entry = {
+                                        "source": link.source,
+                                        "external_id": link.external_id,
+                                        "reason": "Reference not found in reference.db"
+                                    }
+                                    result["invalid_links"].append(invalid_entry)
+                                    result["orphaned_links"].append(invalid_entry)
+
+                            except Exception as e:
+                                # Error checking reference.db (e.g., database unavailable)
+                                invalid_entry = {
+                                    "source": link.source,
+                                    "external_id": link.external_id,
+                                    "reason": f"Validation error: {str(e)}"
+                                }
+                                result["invalid_links"].append(invalid_entry)
+                                result["orphaned_links"].append(invalid_entry)
+                                logger.warning(
+                                    f"Error validating reference link for node {node_id}: {e}"
+                                )
+                        else:
+                            # Just count as valid if we're not checking existence
+                            result["valid_links"] += 1
+
+                    except Exception as e:
+                        # Malformed link data
+                        malformed_entry = {
+                            "data": link_dict,
+                            "reason": f"Parse error: {str(e)}"
+                        }
+                        result["malformed_links"].append(malformed_entry)
+                        logger.warning(
+                            f"Failed to parse reference link for node {node_id}: {e}"
+                        )
+
+            except json.JSONDecodeError as e:
+                logger.error(f"Failed to parse reference_links JSON for node {node_id}: {e}")
+                result["error"] = f"JSON decode error: {str(e)}"
+                return result
+
+        except Exception as e:
+            logger.error(f"Unexpected error validating reference links for node {node_id}: {e}")
+            result["error"] = f"Unexpected error: {str(e)}"
+
+        logger.info(
+            f"Validation complete for node {node_id}: "
+            f"{result['valid_links']}/{result['total_links']} valid, "
+            f"{len(result['invalid_links'])} invalid, "
+            f"{len(result['malformed_links'])} malformed"
+        )
+
+        return result
+
+    def validate_all_reference_links(
+        self, check_existence: bool = True, limit: Optional[int] = None
+    ) -> dict:
+        """
+        Validate reference links across all structure nodes.
+
+        Args:
+            check_existence: If True, validates each link exists in reference.db
+            limit: Optional limit on number of nodes to validate
+
+        Returns:
+            Dictionary containing aggregate validation results:
+            {
+                "total_nodes_checked": int,
+                "nodes_with_links": int,
+                "total_links": int,
+                "valid_links": int,
+                "invalid_links": int,
+                "malformed_links": int,
+                "problematic_nodes": List[dict],  # Nodes with invalid/malformed links
+                "reference_db_available": bool
+            }
+        """
+        logger.info(f"Starting bulk validation of reference links (limit={limit})")
+
+        result = {
+            "total_nodes_checked": 0,
+            "nodes_with_links": 0,
+            "total_links": 0,
+            "valid_links": 0,
+            "invalid_links": 0,
+            "malformed_links": 0,
+            "problematic_nodes": [],
+            "reference_db_available": True
+        }
+
+        try:
+            # Check if reference.db is available
+            if check_existence:
+                try:
+                    ref_manager = get_reference_manager()
+                    # Try a simple operation to check if reference.db is accessible
+                    # This is a lightweight check
+                    result["reference_db_available"] = ref_manager is not None
+                except Exception as e:
+                    logger.warning(f"reference.db appears unavailable: {e}")
+                    result["reference_db_available"] = False
+                    # Continue with validation but without checking existence
+                    check_existence = False
+
+            # Query all nodes that have reference_links
+            query = self.db.query(StructureNode).filter(
+                StructureNode.reference_links.isnot(None),
+                StructureNode.reference_links != "",
+                StructureNode.reference_links != "[]"
+            )
+
+            if limit:
+                query = query.limit(limit)
+
+            nodes_with_links = query.all()
+            result["total_nodes_checked"] = len(nodes_with_links)
+            result["nodes_with_links"] = len(nodes_with_links)
+
+            logger.info(f"Found {len(nodes_with_links)} nodes with reference links")
+
+            # Validate each node
+            for node in nodes_with_links:
+                node_result = self.validate_node_reference_links(
+                    str(node.id), check_existence=check_existence
+                )
+
+                result["total_links"] += node_result.get("total_links", 0)
+                result["valid_links"] += node_result.get("valid_links", 0)
+                result["invalid_links"] += len(node_result.get("invalid_links", []))
+                result["malformed_links"] += len(node_result.get("malformed_links", []))
+
+                # Track problematic nodes
+                if node_result.get("invalid_links") or node_result.get("malformed_links"):
+                    problematic_node = {
+                        "node_id": str(node.id),
+                        "node_title": node.title,
+                        "node_type": node.node_type,
+                        "total_links": node_result.get("total_links", 0),
+                        "valid_links": node_result.get("valid_links", 0),
+                        "invalid_links": node_result.get("invalid_links", []),
+                        "malformed_links": node_result.get("malformed_links", [])
+                    }
+                    result["problematic_nodes"].append(problematic_node)
+
+            logger.info(
+                f"Bulk validation complete: {result['total_nodes_checked']} nodes checked, "
+                f"{result['valid_links']}/{result['total_links']} links valid, "
+                f"{result['invalid_links']} invalid, {result['malformed_links']} malformed"
+            )
+
+        except Exception as e:
+            logger.error(f"Error during bulk validation: {e}", exc_info=True)
+            result["error"] = f"Bulk validation error: {str(e)}"
+
+        return result

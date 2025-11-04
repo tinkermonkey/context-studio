@@ -302,5 +302,203 @@ class TestReferenceLinkService:
             mock_db.rollback.assert_called_once()
 
 
+    def test_validate_node_reference_links_success(self, service, mock_db, sample_node):
+        """Test successful validation of node reference links."""
+        # Setup - node with valid links
+        links = [
+            ReferenceLink(source="schema.org", external_id="Person"),
+            ReferenceLink(source="wikidata", external_id="Q5"),
+        ]
+        sample_node.reference_links = json.dumps([link.model_dump() for link in links])
+
+        mock_db.query.return_value.filter.return_value.first.return_value = sample_node
+
+        # Mock reference validation
+        with patch('services.reference_link_service.get_reference_manager') as mock_ref_mgr:
+            mock_manager = Mock()
+            mock_manager.get_reference_node_by_source.return_value = Mock()  # All refs exist
+            mock_ref_mgr.return_value = mock_manager
+
+            # Execute
+            result = service.validate_node_reference_links("test-node-123", check_existence=True)
+
+            # Assert
+            assert result["node_id"] == "test-node-123"
+            assert result["total_links"] == 2
+            assert result["valid_links"] == 2
+            assert len(result["invalid_links"]) == 0
+            assert len(result["orphaned_links"]) == 0
+            assert len(result["malformed_links"]) == 0
+
+    def test_validate_node_reference_links_orphaned(self, service, mock_db, sample_node):
+        """Test validation detects orphaned links."""
+        # Setup - node with one valid and one orphaned link
+        links = [
+            ReferenceLink(source="schema.org", external_id="Person"),
+            ReferenceLink(source="wikidata", external_id="Q_NONEXISTENT"),
+        ]
+        sample_node.reference_links = json.dumps([link.model_dump() for link in links])
+
+        mock_db.query.return_value.filter.return_value.first.return_value = sample_node
+
+        # Mock reference validation - first exists, second doesn't
+        with patch('services.reference_link_service.get_reference_manager') as mock_ref_mgr:
+            mock_manager = Mock()
+
+            def get_ref_node(source, external_id):
+                if external_id == "Q_NONEXISTENT":
+                    return None
+                return Mock()
+
+            mock_manager.get_reference_node_by_source.side_effect = get_ref_node
+            mock_ref_mgr.return_value = mock_manager
+
+            # Execute
+            result = service.validate_node_reference_links("test-node-123", check_existence=True)
+
+            # Assert
+            assert result["total_links"] == 2
+            assert result["valid_links"] == 1
+            assert len(result["invalid_links"]) == 1
+            assert len(result["orphaned_links"]) == 1
+            assert result["invalid_links"][0]["source"] == "wikidata"
+            assert result["invalid_links"][0]["external_id"] == "Q_NONEXISTENT"
+
+    def test_validate_node_reference_links_malformed(self, service, mock_db, sample_node):
+        """Test validation detects malformed links."""
+        # Setup - one valid, one malformed
+        sample_node.reference_links = json.dumps([
+            {"source": "schema.org", "external_id": "Person"},  # Valid
+            {"invalid_field": "bad_data"},  # Malformed
+        ])
+
+        mock_db.query.return_value.filter.return_value.first.return_value = sample_node
+
+        with patch('services.reference_link_service.get_reference_manager') as mock_ref_mgr:
+            mock_manager = Mock()
+            mock_manager.get_reference_node_by_source.return_value = Mock()
+            mock_ref_mgr.return_value = mock_manager
+
+            # Execute
+            result = service.validate_node_reference_links("test-node-123", check_existence=True)
+
+            # Assert
+            assert result["total_links"] == 2
+            assert result["valid_links"] == 1
+            assert len(result["malformed_links"]) == 1
+
+    def test_validate_node_reference_links_no_existence_check(self, service, mock_db, sample_node):
+        """Test validation without checking existence."""
+        # Setup
+        links = [ReferenceLink(source="schema.org", external_id="Person")]
+        sample_node.reference_links = json.dumps([link.model_dump() for link in links])
+
+        mock_db.query.return_value.filter.return_value.first.return_value = sample_node
+
+        # Execute - without existence check
+        result = service.validate_node_reference_links("test-node-123", check_existence=False)
+
+        # Assert - should mark as valid without checking reference.db
+        assert result["valid_links"] == 1
+        assert len(result["invalid_links"]) == 0
+
+    def test_validate_node_reference_links_empty(self, service, mock_db, sample_node):
+        """Test validation with no links."""
+        # Setup
+        sample_node.reference_links = None
+
+        mock_db.query.return_value.filter.return_value.first.return_value = sample_node
+
+        # Execute
+        result = service.validate_node_reference_links("test-node-123")
+
+        # Assert
+        assert result["total_links"] == 0
+        assert result["valid_links"] == 0
+        assert len(result["invalid_links"]) == 0
+
+    def test_validate_all_reference_links_success(self, service, mock_db):
+        """Test bulk validation of all nodes."""
+        # Setup - create mock nodes with links
+        nodes = []
+        for i in range(3):
+            node = Mock(spec=StructureNode)
+            node.id = f"node-{i}"
+            node.title = f"Node {i}"
+            node.node_type = "term"
+            node.reference_links = json.dumps([
+                {"source": "schema.org", "external_id": f"Thing{i}"}
+            ])
+            nodes.append(node)
+
+        # Setup query mock
+        query_mock = Mock()
+        query_mock.filter.return_value = query_mock
+        query_mock.limit.return_value = query_mock
+        query_mock.all.return_value = nodes
+        mock_db.query.return_value = query_mock
+
+        # Mock individual node validation
+        with patch.object(service, 'validate_node_reference_links') as mock_validate:
+            mock_validate.return_value = {
+                "node_id": "node-0",
+                "total_links": 1,
+                "valid_links": 1,
+                "invalid_links": [],
+                "orphaned_links": [],
+                "malformed_links": []
+            }
+
+            with patch('services.reference_link_service.get_reference_manager') as mock_ref_mgr:
+                mock_ref_mgr.return_value = Mock()
+
+                # Execute
+                result = service.validate_all_reference_links(check_existence=True, limit=10)
+
+                # Assert
+                assert result["total_nodes_checked"] == 3
+                assert result["nodes_with_links"] == 3
+                assert result["reference_db_available"] is True
+
+    def test_validate_all_reference_links_unavailable_db(self, service, mock_db):
+        """Test bulk validation gracefully handles unavailable reference.db."""
+        # Setup - create mock nodes
+        node = Mock(spec=StructureNode)
+        node.id = "node-1"
+        node.title = "Test Node"
+        node.node_type = "term"
+        node.reference_links = json.dumps([
+            {"source": "schema.org", "external_id": "Thing"}
+        ])
+
+        # Setup query mock
+        query_mock = Mock()
+        query_mock.filter.return_value = query_mock
+        query_mock.limit.return_value = query_mock
+        query_mock.all.return_value = [node]
+        mock_db.query.return_value = query_mock
+
+        # Mock reference manager to fail
+        with patch('services.reference_link_service.get_reference_manager') as mock_ref_mgr:
+            mock_ref_mgr.side_effect = Exception("Database unavailable")
+
+            with patch.object(service, 'validate_node_reference_links') as mock_validate:
+                mock_validate.return_value = {
+                    "total_links": 1,
+                    "valid_links": 1,
+                    "invalid_links": [],
+                    "orphaned_links": [],
+                    "malformed_links": []
+                }
+
+                # Execute
+                result = service.validate_all_reference_links(check_existence=True)
+
+                # Assert - should degrade gracefully
+                assert result["reference_db_available"] is False
+                # Validation should continue without checking existence
+                mock_validate.assert_called_with("node-1", check_existence=False)
+
+
 if __name__ == "__main__":
     pytest.main([__file__, "-v"])
