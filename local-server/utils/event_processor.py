@@ -304,7 +304,7 @@ class EventProcessor:
     def process_structure_node_event(self, event):
         """Process structure_node-related events with version management integration."""
         self.logger.info(f"Processing structure_node event: {event.operation}")
-        
+
         # Create version when entity is modified (only for create/update operations)
         if self.version_manager and event.operation in ['create', 'update'] and event.record_id:
             try:
@@ -320,10 +320,10 @@ class EventProcessor:
                         content = json.loads(event.old_data) if isinstance(event.old_data, str) else event.old_data
                     except (json.JSONDecodeError, TypeError):
                         content = event.old_data if event.old_data else {}
-                
+
                 if content:
                     from services.version_manager import ChangeState
-                    
+
                     # Create version for this entity change
                     version = self.version_manager.create_version(
                         entity_type='structure_node',
@@ -332,10 +332,10 @@ class EventProcessor:
                         author_id='system',
                         state=ChangeState.WORKING
                     )
-                    
+
                     # Link the change event to the created version
                     self._link_event_to_version(event.id, version.id, ChangeState.WORKING)
-                    
+
                     # Update working tree if working tree manager is available
                     if self.working_tree_manager:
                         try:
@@ -357,12 +357,20 @@ class EventProcessor:
                                 self.logger.debug(f"[EventProcessor] Updated working tree for structure_node {event.record_id}")
                         except Exception as wt_e:
                             self.logger.error(f"[EventProcessor] Failed to manage working tree: {wt_e}")
-                    
+
                     self.logger.debug(f"[EventProcessor] Created version {version.version_number} for structure_node {event.record_id}")
-                
+
             except Exception as e:
                 self.logger.error(f"[EventProcessor] Failed to create version for structure_node {event.record_id}: {e}")
                 # Continue processing even if version creation fails
+
+        # Detect title changes and trigger NLP re-analysis
+        if event.operation == 'update' and event.old_data and event.new_data:
+            try:
+                self._handle_title_change(event)
+            except Exception as e:
+                self.logger.error(f"[EventProcessor] Failed to handle title change for structure_node {event.record_id}: {e}")
+                # Continue processing even if title change handling fails
 
     def process_structure_node_link_event(self, event):
         """Process structure_node_link-related events with version management integration."""
@@ -438,7 +446,7 @@ class EventProcessor:
         try:
             with self._get_optimized_session() as db:
                 db.execute(text("""
-                    UPDATE change_events 
+                    UPDATE change_events
                     SET version_id = :version_id, change_state = :change_state
                     WHERE id = :event_id
                 """), {
@@ -447,9 +455,169 @@ class EventProcessor:
                     "event_id": event_id
                 })
                 # Session commits automatically via context manager
-                
+
         except Exception as e:
             self.logger.error(f"[EventProcessor] Failed to link event {event_id} to version {version_id}: {e}")
+
+    def _handle_title_change(self, event):
+        """
+        Detect title changes and trigger asynchronous NLP re-analysis.
+
+        Args:
+            event: The structure_node update event
+        """
+        try:
+            # Parse old and new data
+            old_data = json.loads(event.old_data) if isinstance(event.old_data, str) else event.old_data
+            new_data = json.loads(event.new_data) if isinstance(event.new_data, str) else event.new_data
+
+            old_title = old_data.get('title', '') if old_data else ''
+            new_title = new_data.get('title', '') if new_data else ''
+
+            # Check if title has actually changed
+            if old_title and new_title and old_title != new_title:
+                self.logger.info(
+                    f"[EventProcessor] Title change detected for structure_node {event.record_id}: "
+                    f"'{old_title}' -> '{new_title}'"
+                )
+
+                # Enqueue async NLP re-analysis task
+                self._enqueue_nlp_reanalysis(event.record_id, new_title)
+
+        except json.JSONDecodeError as e:
+            self.logger.error(f"[EventProcessor] Failed to parse event data for title change detection: {e}")
+        except Exception as e:
+            self.logger.error(f"[EventProcessor] Error in title change detection: {e}")
+
+    def _enqueue_nlp_reanalysis(self, node_id: str, new_title: str):
+        """
+        Enqueue an asynchronous NLP re-analysis task for a structure node.
+
+        Args:
+            node_id: The structure node ID
+            new_title: The new title to analyze
+        """
+        try:
+            # Get the task manager (will be None if not initialized)
+            from services.task_manager import get_task_manager
+
+            try:
+                task_manager = get_task_manager()
+            except RuntimeError:
+                self.logger.warning(
+                    f"[EventProcessor] TaskManager not initialized, skipping NLP re-analysis for node {node_id}"
+                )
+                return
+
+            # Import asyncio for creating the coroutine
+            import asyncio
+
+            # Create the async task coroutine
+            async def nlp_reanalysis_task():
+                return await self._perform_nlp_reanalysis(node_id, new_title)
+
+            # Submit the task asynchronously (this is called from sync context)
+            # We need to use asyncio.create_task or submit it to the task manager
+            # Since EventProcessor runs in a background thread, we need to handle this carefully
+
+            # Get or create an event loop for this thread
+            try:
+                loop = asyncio.get_event_loop()
+            except RuntimeError:
+                # No event loop in current thread, create a new one
+                loop = asyncio.new_event_loop()
+                asyncio.set_event_loop(loop)
+
+            # Submit the task to the task manager
+            async def submit_task():
+                await task_manager.submit_task(
+                    task_type='nlp_reanalysis',
+                    coroutine=nlp_reanalysis_task(),
+                    metadata={
+                        'node_id': node_id,
+                        'new_title': new_title
+                    }
+                )
+
+            # Run the submission in the event loop
+            asyncio.run_coroutine_threadsafe(submit_task(), loop)
+
+            self.logger.info(f"[EventProcessor] Enqueued NLP re-analysis task for node {node_id}")
+
+        except Exception as e:
+            self.logger.error(f"[EventProcessor] Failed to enqueue NLP re-analysis task: {e}")
+
+    async def _perform_nlp_reanalysis(self, node_id: str, new_title: str):
+        """
+        Perform NLP re-analysis and update word senses for a structure node.
+
+        Args:
+            node_id: The structure node ID
+            new_title: The new title to analyze
+
+        Returns:
+            Dictionary with results
+        """
+        try:
+            self.logger.info(f"[EventProcessor] Starting NLP re-analysis for node {node_id}")
+
+            # Import required modules
+            from nlp.pipeline import get_pipeline
+            from nlp.processors import process_nlp_result
+            from services.word_sense_service import WordSenseService
+
+            # Get NLP pipeline
+            pipeline = get_pipeline()
+            if not pipeline.is_initialized():
+                raise RuntimeError("NLP pipeline not initialized")
+
+            nlp = pipeline.get_nlp()
+            if not nlp:
+                raise RuntimeError("NLP pipeline unavailable")
+
+            # Process the new title
+            doc = nlp(new_title)
+            nlp_response = process_nlp_result(new_title, doc)
+
+            # Extract word senses from NLP analysis
+            with self._get_optimized_session() as db:
+                word_sense_service = WordSenseService(db)
+
+                # Extract new senses
+                new_senses = word_sense_service.extract_word_senses(nlp_response)
+
+                self.logger.debug(
+                    f"[EventProcessor] Extracted {len(new_senses)} word senses from NLP analysis"
+                )
+
+                # Update word senses with conservative filtering
+                # This will preserve existing senses that match and remove only obsolete ones
+                updated_senses = word_sense_service.update_word_senses(
+                    node_id=node_id,
+                    new_senses=new_senses,
+                    conservative=True
+                )
+
+                self.logger.info(
+                    f"[EventProcessor] Successfully updated word senses for node {node_id}: "
+                    f"{len(updated_senses)} total senses"
+                )
+
+                return {
+                    'success': True,
+                    'node_id': node_id,
+                    'new_title': new_title,
+                    'senses_count': len(updated_senses)
+                }
+
+        except Exception as e:
+            self.logger.error(f"[EventProcessor] NLP re-analysis failed for node {node_id}: {e}", exc_info=True)
+            return {
+                'success': False,
+                'node_id': node_id,
+                'new_title': new_title,
+                'error': str(e)
+            }
 
     def _cleanup_loop(self):
         """Background loop for cleaning up old processed events."""
