@@ -266,11 +266,11 @@ class TestReferenceLinkService:
             mock_manager.get_reference_node_by_source.return_value = Mock()  # Reference exists
             mock_ref_mgr.return_value = mock_manager
 
-            # Execute
-            result = service.validate_reference_link("schema.org", "Person")
+            # Execute - should not raise exception
+            service.validate_reference_link("schema.org", "Person")
 
-            # Assert
-            assert result is True
+            # Assert - if we get here, validation succeeded
+            mock_manager.get_reference_node_by_source.assert_called_once_with("schema.org", "Person")
 
     def test_validate_reference_link_not_found(self, service):
         """Test validation when reference doesn't exist."""

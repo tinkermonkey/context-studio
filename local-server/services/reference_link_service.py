@@ -207,7 +207,7 @@ class ReferenceLinkService:
             )
             return []
 
-    def validate_reference_link(self, source: str, external_id: str) -> bool:
+    def validate_reference_link(self, source: str, external_id: str) -> None:
         """
         Validate that a reference link exists in reference.db.
 
@@ -215,15 +215,11 @@ class ReferenceLinkService:
             source: Source identifier (e.g., 'schema.org')
             external_id: Source-specific identifier
 
-        Returns:
-            True if reference exists
-
         Raises:
             ReferenceNotFoundError: If reference doesn't exist in reference.db
             ValidationError: If validation fails
         """
         self._validate_reference_link(source, external_id)
-        return True
 
     def _validate_reference_link(self, source: str, external_id: str):
         """
