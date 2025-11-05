@@ -14,14 +14,31 @@ import time
 from uuid import uuid4
 
 # Performance timeout constants (in seconds)
+# Bulk validation timeout: allows for parsing 100+ node definitions and checking reference link syntax
+# Set to 10s to accommodate slower CI environments while catching performance regressions
 BULK_VALIDATION_TIMEOUT_SECONDS = 10.0
+
+# Individual validation timeout: single node validation should be nearly instantaneous
+# Set to 1s to allow for database queries and link parsing on a single node
 INDIVIDUAL_VALIDATION_TIMEOUT_SECONDS = 1.0
+
+# Bulk fetch timeout: retrieving reference links for multiple nodes should be fast
+# Set to 5s for fetching 20 nodes, allowing ~250ms per node including DB overhead
 BULK_FETCH_TIMEOUT_SECONDS = 5.0
-SCALABILITY_FACTOR_LIMIT = 5.0  # Max allowed performance degradation factor
+
+# Scalability factor: maximum allowed performance degradation between small and large batches
+# Set to 5x to detect quadratic complexity issues while allowing for startup overhead
+SCALABILITY_FACTOR_LIMIT = 5.0
 
 # Test data constants
+# Node count chosen to exceed 100 to test bulk operations with a realistic dataset size
+# 110 provides margin above the common 100-item batch threshold
 PERFORMANCE_TEST_NODE_COUNT = 110
+
+# Small sample size for testing individual operations where each is timed separately
 SAMPLE_NODE_COUNT_SMALL = 10
+
+# Medium sample size for testing repeated fetch operations in a loop
 SAMPLE_NODE_COUNT_MEDIUM = 20
 
 
