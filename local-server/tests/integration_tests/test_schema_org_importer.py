@@ -76,7 +76,8 @@ class TestSchemaOrgImporterDownload:
             mock_response.text = json.dumps(SAMPLE_SCHEMA_ORG_JSONLD)
             mock_response.raise_for_status = Mock()
 
-            with patch('requests.get', return_value=mock_response):
+            # Patch at the module level where it's used
+            with patch('reference_db.schema_org_importer.requests.get', return_value=mock_response):
                 file_path = importer._download_with_retry()
 
                 assert os.path.exists(file_path)
@@ -103,7 +104,8 @@ class TestSchemaOrgImporterDownload:
             mock_response_success.text = json.dumps(SAMPLE_SCHEMA_ORG_JSONLD)
             mock_response_success.raise_for_status = Mock()
 
-            with patch('requests.get', side_effect=[mock_response_fail, mock_response_success]):
+            # Patch at the module level where it's used
+            with patch('reference_db.schema_org_importer.requests.get', side_effect=[mock_response_fail, mock_response_success]):
                 file_path = importer._download_with_retry()
                 assert os.path.exists(file_path)
                 os.remove(file_path)
@@ -117,7 +119,7 @@ class TestSchemaOrgImporterDownload:
             importer = SchemaOrgImporter(config, manager)
 
             # Mock persistent failure
-            with patch('requests.get', side_effect=Exception("Network error")):
+            with patch('reference_db.schema_org_importer.requests.get', side_effect=Exception("Network error")):
                 with pytest.raises(DownloadError) as exc_info:
                     importer._download_with_retry()
 
@@ -636,7 +638,8 @@ class TestSchemaOrgImporterIdempotency:
             mock_response.text = json.dumps(SAMPLE_SCHEMA_ORG_JSONLD)
             mock_response.raise_for_status = Mock()
 
-            with patch('requests.get', return_value=mock_response):
+            # Patch at the module level where it's used
+            with patch('reference_db.schema_org_importer.requests.get', return_value=mock_response):
                 # First import - should succeed
                 result1 = importer.import_schema_org(batch_size=10)
                 assert result1["success"] is True
