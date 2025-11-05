@@ -533,11 +533,11 @@ class TestReferenceLinkService:
             ])
             nodes.append(node)
 
-        # Setup query mock
+        # Setup query mock to support yield_per
         query_mock = Mock()
         query_mock.filter.return_value = query_mock
         query_mock.limit.return_value = query_mock
-        query_mock.all.return_value = nodes
+        query_mock.yield_per.return_value = iter(nodes)
         mock_db.query.return_value = query_mock
 
         # Mock individual node validation with different results
@@ -597,11 +597,11 @@ class TestReferenceLinkService:
             ])
             nodes.append(node)
 
-        # Setup query mock
+        # Setup query mock to support yield_per
         query_mock = Mock()
         query_mock.filter.return_value = query_mock
         query_mock.limit.return_value = query_mock
-        query_mock.all.return_value = nodes
+        query_mock.yield_per.return_value = iter(nodes)
         mock_db.query.return_value = query_mock
 
         # Mock reference manager to be unavailable
