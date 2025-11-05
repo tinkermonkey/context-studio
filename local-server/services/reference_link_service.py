@@ -470,14 +470,18 @@ class ReferenceLinkService:
         return result
 
     def validate_all_reference_links(
-        self, check_existence: bool = True, limit: Optional[int] = None
+        self, check_existence: bool = True, limit: Optional[int] = None, batch_size: int = 100
     ) -> dict:
         """
         Validate reference links across all structure nodes.
 
+        Uses batching to avoid loading all nodes into memory at once, which is
+        important for large datasets with thousands of nodes.
+
         Args:
             check_existence: If True, validates each link exists in reference.db
             limit: Optional limit on number of nodes to validate
+            batch_size: Number of nodes to process in each batch (default: 100)
 
         Returns:
             Dictionary containing aggregate validation results:
@@ -492,7 +496,7 @@ class ReferenceLinkService:
                 "reference_db_available": bool
             }
         """
-        logger.info(f"Starting bulk validation of reference links (limit={limit})")
+        logger.info(f"Starting bulk validation of reference links (limit={limit}, batch_size={batch_size})")
 
         result = {
             "total_nodes_checked": 0,
@@ -529,14 +533,17 @@ class ReferenceLinkService:
             if limit:
                 query = query.limit(limit)
 
-            nodes_with_links = query.all()
-            result["total_nodes_checked"] = len(nodes_with_links)
-            result["nodes_with_links"] = len(nodes_with_links)
+            # Use yield_per() to batch results and avoid loading all nodes into memory
+            # This processes nodes in chunks, improving memory efficiency for large datasets
+            query = query.yield_per(batch_size)
 
-            logger.debug(f"Found {len(nodes_with_links)} nodes with reference links")
+            # Process nodes in batches
+            nodes_processed = 0
+            for node in query:
+                nodes_processed += 1
+                result["total_nodes_checked"] += 1
+                result["nodes_with_links"] += 1
 
-            # Validate each node
-            for node in nodes_with_links:
                 node_result = self.validate_node_reference_links(
                     str(node.id), check_existence=check_existence
                 )
@@ -558,6 +565,10 @@ class ReferenceLinkService:
                         "malformed_links": node_result.get("malformed_links", [])
                     }
                     result["problematic_nodes"].append(problematic_node)
+
+                # Log progress every batch_size nodes
+                if nodes_processed % batch_size == 0:
+                    logger.debug(f"Processed {nodes_processed} nodes so far...")
 
             logger.info(
                 f"Bulk validation complete: {result['total_nodes_checked']} nodes checked, "

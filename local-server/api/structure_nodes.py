@@ -714,6 +714,7 @@ def get_word_senses(
 def validate_all_reference_links(
     check_existence: bool = Query(True, description="Check if references exist in reference.db"),
     limit: Optional[int] = Query(None, ge=1, le=1000, description="Limit number of nodes to validate"),
+    batch_size: int = Query(100, ge=10, le=1000, description="Number of nodes to process per batch"),
     reference_link_service: ReferenceLinkService = Depends(get_reference_link_service)
 ):
     """
@@ -724,12 +725,14 @@ def validate_all_reference_links(
     - Malformed links (invalid JSON or missing required fields)
     - Nodes with problematic links
 
+    Uses batching to efficiently handle large datasets without loading all nodes into memory.
     This endpoint is useful for maintenance and data integrity checking.
     Gracefully degrades if reference.db is unavailable.
 
     Args:
         check_existence: If True, validates each link exists in reference.db
         limit: Optional limit on number of nodes to check
+        batch_size: Number of nodes to process per batch (default: 100, min: 10, max: 1000)
 
     Returns:
         Validation results with statistics and list of problematic nodes
@@ -738,10 +741,11 @@ def validate_all_reference_links(
     logger = get_logger(__name__)
 
     try:
-        logger.info(f"Starting bulk reference link validation (check_existence={check_existence}, limit={limit})")
+        logger.info(f"Starting bulk reference link validation (check_existence={check_existence}, limit={limit}, batch_size={batch_size})")
         result = reference_link_service.validate_all_reference_links(
             check_existence=check_existence,
-            limit=limit
+            limit=limit,
+            batch_size=batch_size
         )
 
         return result
