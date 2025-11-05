@@ -4933,3 +4933,1025 @@
 2025-11-04 22:59:54,221 - __main__ - INFO - Result summary: success=True, agent_calls=3, duration=874.6s
 2025-11-04 22:59:54,221 - __main__ - INFO - Repair cycle succeeded - all tests passed!
 2025-11-04 22:59:54,221 - __main__ - INFO - Repair cycle container runner exiting
+2025-11-05 14:07:53,301 - __main__ - INFO - Logging to /workspace/context-studio/.repair_cycle.log
+2025-11-05 14:07:53,301 - __main__ - INFO - ================================================================================
+2025-11-05 14:07:53,301 - __main__ - INFO - Repair Cycle Container Runner Starting
+2025-11-05 14:07:53,301 - __main__ - INFO - Project: context-studio
+2025-11-05 14:07:53,301 - __main__ - INFO - Issue: 187
+2025-11-05 14:07:53,301 - __main__ - INFO - Pipeline Run: e83d1a34-daa4-429f-8c28-e5bba617fe63
+2025-11-05 14:07:53,301 - __main__ - INFO - ================================================================================
+2025-11-05 14:07:53,301 - __main__ - INFO - Loading context from /workspace/clauditoreum/orchestrator_data/repair_cycles/context-studio/187/context.json
+2025-11-05 14:07:53,301 - __main__ - INFO - Context loaded: project=context-studio, issue=187
+2025-11-05 14:07:53,512 - __main__ - INFO - Stage initialized: 2 test types, agent=senior_software_engineer
+2025-11-05 14:07:53,513 - monitoring.observability - INFO - Observability manager connected to Redis at redis:6379
+2025-11-05 14:07:53,514 - monitoring.observability - INFO - Observability manager connected to Elasticsearch at http://elasticsearch:9200
+2025-11-05 14:07:53,528 - elastic_transport.transport - INFO - PUT http://elasticsearch:9200/_ilm/policy/decision-events-ilm-policy [status:200 duration:0.013s]
+2025-11-05 14:07:53,528 - monitoring.observability - INFO - Created/updated ILM policy: decision-events-ilm-policy (7-day retention)
+2025-11-05 14:07:53,533 - elastic_transport.transport - INFO - PUT http://elasticsearch:9200/_index_template/decision-events-template [status:200 duration:0.005s]
+2025-11-05 14:07:53,533 - monitoring.observability - INFO - Created/updated index template: decision-events-template
+2025-11-05 14:07:53,533 - __main__ - INFO - Observability manager initialized and added to context
+2025-11-05 14:07:53,533 - pipeline.repair_cycle_checkpoint - WARNING - Primary checkpoint invalid, trying backup...
+2025-11-05 14:07:53,533 - pipeline.repair_cycle_checkpoint - INFO - No valid checkpoint found
+2025-11-05 14:07:53,533 - __main__ - INFO - Starting repair cycle execution...
+2025-11-05 14:07:53,534 - pipeline.repair_cycle - INFO - Starting repair cycle stage: Testing
+2025-11-05 14:07:53,566 - elastic_transport.transport - INFO - POST http://elasticsearch:9200/agent-events-2025-11-05/_doc [status:201 duration:0.023s]
+2025-11-05 14:07:53,566 - monitoring.observability - INFO - Indexed agent lifecycle event agent_initialized to agent-events-2025-11-05
+2025-11-05 14:07:53,566 - pipeline.repair_cycle - INFO - Starting unit test cycle (test type 1/2)
+2025-11-05 14:07:53,594 - elastic_transport.transport - INFO - POST http://elasticsearch:9200/decision-events-2025-11-05/_doc [status:201 duration:0.027s]
+2025-11-05 14:07:53,594 - monitoring.observability - INFO - Indexed decision event repair_cycle_test_cycle_started to decision-events-2025-11-05
+2025-11-05 14:07:53,594 - pipeline.repair_cycle - INFO - Test cycle iteration 1/5 for unit (test type 1/2)
+2025-11-05 14:07:53,730 - elastic_transport.transport - INFO - POST http://elasticsearch:9200/decision-events-2025-11-05/_doc [status:201 duration:0.135s]
+2025-11-05 14:07:53,730 - monitoring.observability - INFO - Indexed decision event repair_cycle_iteration to decision-events-2025-11-05
+2025-11-05 14:07:53,730 - pipeline.repair_cycle - INFO - Running unit tests (test cycle iteration 1/5, test type 1)
+2025-11-05 14:07:53,758 - elastic_transport.transport - INFO - POST http://elasticsearch:9200/decision-events-2025-11-05/_doc [status:201 duration:0.026s]
+2025-11-05 14:07:53,758 - monitoring.observability - INFO - Indexed decision event repair_cycle_test_execution_started to decision-events-2025-11-05
+2025-11-05 14:07:53,792 - services.project_workspace - INFO - Detected container environment, using /workspace
+2025-11-05 14:07:53,792 - services.project_workspace - INFO - ProjectWorkspaceManager initialized with workspace root: /workspace
+2025-11-05 14:07:53,796 - services.dev_container_state - INFO - DevContainerStateManager initialized with state_dir: /app/state/dev_containers
+2025-11-05 14:07:53,827 - services.agent_executor - INFO - Executing agent senior_software_engineer for project context-studio (task_id: repair_test_unit_type1_iter1_attempt0_senior_software_engineer_1762351673)
+2025-11-05 14:07:53,853 - services.agent_executor - INFO - Agent senior_software_engineer requires_docker=True, overriding task context
+2025-11-05 14:07:53,853 - services.agent_executor - INFO - Skipping workspace preparation (skip_workspace_prep=True) for senior_software_engineer
+2025-11-05 14:07:53,853 - services.agent_executor - INFO - Generated container name for UI tracking: claude-agent-context-studio-repair_test_unit_type1_iter1_attempt0_senior_software_engineer_1762351673
+2025-11-05 14:07:53,862 - elastic_transport.transport - INFO - POST http://elasticsearch:9200/agent-events-2025-11-05/_doc [status:201 duration:0.009s]
+2025-11-05 14:07:53,862 - monitoring.observability - INFO - Indexed agent lifecycle event agent_initialized to agent-events-2025-11-05
+2025-11-05 14:07:53,862 - services.agent_executor - INFO - Agent execution started with ID: ea6b6e1a-2163-44c0-90af-a0929709429e
+2025-11-05 14:07:53,862 - agents.base_maker_agent - INFO - Using INITIAL mode (first-time analysis)
+2025-11-05 14:07:53,862 - claude.claude_integration - INFO - run_claude_code called
+2025-11-05 14:07:53,862 - claude.claude_integration - INFO - Context project: context-studio
+2025-11-05 14:07:53,862 - claude.claude_integration - INFO - Prompt length: 1340
+2025-11-05 14:07:53,863 - claude.claude_integration - INFO - Agent senior_software_engineer: use_docker from context=True, agent_config present=True
+2025-11-05 14:07:53,863 - claude.claude_integration - INFO - Agent senior_software_engineer: agent_config type=<class 'config.manager.AgentConfig'>, has requires_docker=True
+2025-11-05 14:07:53,863 - claude.claude_integration - INFO - Agent senior_software_engineer: Using agent_config.requires_docker=True
+2025-11-05 14:07:53,863 - claude.claude_integration - INFO - Running agent in Docker container for project context-studio
+2025-11-05 14:07:53,863 - claude.docker_runner - INFO - Running agent senior_software_engineer in Docker container for project context-studio
+2025-11-05 14:07:53,864 - monitoring.claude_code_breaker - INFO - Claude Code breaker initialized with Redis persistence. State: closed
+2025-11-05 14:07:53,864 - claude.docker_runner - INFO - Using fallback host workspace path: /home/austinsand/workspace/orchestrator
+2025-11-05 14:07:53,864 - claude.docker_runner - INFO - Mounting project: container=/workspace/context-studio, host=/home/austinsand/workspace/orchestrator/context-studio
+2025-11-05 14:07:53,864 - claude.docker_runner - INFO - Agent senior_software_engineer has filesystem_write_allowed=true, mounting workspace as READ-WRITE
+2025-11-05 14:07:53,864 - claude.docker_runner - INFO - Verifying write access to /workspace/context-studio
+2025-11-05 14:07:53,865 - claude.docker_runner - INFO - ✓ Filesystem write verification passed: Can read, write, and delete files in /workspace/context-studio
+2025-11-05 14:07:53,865 - claude.docker_runner - INFO - Using fallback host home path: /home/orchestrator
+2025-11-05 14:07:53,865 - claude.docker_runner - INFO - Adding -i flag for stdin support
+2025-11-05 14:07:53,865 - claude.docker_runner - INFO - DOCKER MOUNT: /home/austinsand/workspace/orchestrator/context-studio:/workspace:rw
+2025-11-05 14:07:53,865 - claude.docker_runner - INFO - Using CLAUDE_CODE_OAUTH_TOKEN (subscription billing)
+2025-11-05 14:07:53,865 - claude.docker_runner - INFO - DEBUG: OAuth token length: 108, starts with: sk-ant-oat...
+2025-11-05 14:07:53,865 - claude.docker_runner - INFO - Agent senior_software_engineer requires dev container, using project image: context-studio-agent:latest
+2025-11-05 14:07:53,865 - claude.docker_runner - INFO - Using Docker image: context-studio-agent:latest for agent senior_software_engineer
+2025-11-05 14:07:53,865 - claude.docker_runner - INFO - Using Claude model in Docker: claude-sonnet-4-5-20250929
+2025-11-05 14:07:53,865 - claude.docker_runner - INFO - Pre-launch safety check: Verifying container write access...
+2025-11-05 14:07:53,865 - claude.docker_runner - INFO -    Running container write test with container: write-test-senior_software_engineer-1762351673
+2025-11-05 14:07:54,473 - claude.docker_runner - INFO -    ✓ Container write test PASSED
+2025-11-05 14:07:54,473 - claude.docker_runner - INFO - ✓ Pre-launch verification passed: Container has write access
+2025-11-05 14:07:54,473 - claude.docker_runner - INFO - Using --permission-mode bypassPermissions (safe in isolated container)
+2025-11-05 14:07:54,473 - claude.docker_runner - INFO - DEBUG: Checking for GITHUB_TOKEN, got: ***
+2025-11-05 14:07:54,473 - claude.docker_runner - INFO - Added gh configuration setup before claude execution
+2025-11-05 14:07:54,473 - claude.docker_runner - INFO - Executing: docker run ... claude ...
+2025-11-05 14:07:54,473 - claude.docker_runner - INFO - Full Docker command: docker run --rm --name claude-agent-context-studio-repair_test_unit_type1_iter1_attempt0_senior_software_engineer_1762351673 --network clauditoreum_orchestrator-net -i -v /home/austinsand/workspace/orchestrator/context-studio:/workspace:rw -v /home/orchestrator/.ssh:/home/orchestrator/.ssh:ro -v /home/orchestrator/.gitconfig:/home/orchestrator/.gitconfig:ro -w /workspace -e GITHUB_TOKEN=*** -e GH_AUTH_SETUP_REQUIRED=true -e CLAUDE_CODE_OAUTH_TOKEN=*** context-studio-agent:latest sh -c mkdir -p ~/.config/gh && printf 'version: 1\nauth:\n  github.com:\n    oauth_token: $GITHUB_TOKEN\n    git_protocol: https\n' > ~/.config/gh/hosts.yml && exec claude --print --verbose --output-format stream-json --model claude-sonnet-4-5-20250929 --permission-mode bypassPermissions -
+2025-11-05 14:07:55,555 - claude.docker_runner - INFO - Registered active container: claude-agent-context-studio-repair_test_unit_type1_iter1_attempt0_senior_software_engineer_1762351673 (agent=senior_software_engineer, project=context-studio, id=None)
+2025-11-05 14:07:55,556 - claude.docker_runner - INFO - Passing prompt via stdin (1340 chars)
+2025-11-05 14:07:57,865 - claude.docker_runner - INFO - Captured Claude Code session_id: 6088e119-579c-4d38-a1e9-87ba8793cfef
+2025-11-05 14:23:02,221 - claude.docker_runner - ERROR - 🔴 Detected limit in assistant response: ```json
+{
+    "passed": 1217,
+    "failed": 0,
+    "warnings": 182,
+    "failures": [],
+    "warning_list": [
+        {"file": "", "message": "services.changeset_manager:changeset_manager.py:230 No changeset found with ID nonexistent"},
+        {"file": "", "message": "services.changeset_manager:changeset_manager.py:209 No updates provided for changeset"},
+        {"file": "", "message": "services.changeset_manager:changeset_manager.py:329 Cannot delete changeset changeset123 in merged state"},
+        {"file": "", "message": "services.changeset_manager:changeset_manager.py:324 Changeset nonexistent not found"},
+        {"file": "", "message": "services.duckdb_service:duckdb_service.py:43 DuckDB not available - service will operate in fallback mode"},
+        {"file": "", "message": "utils.event_processor:event_processor.py:740 [EventProcessor] Database health issue: degraded"},
+        {"file": "", "message": "utils.event_processor:event_processor.py:740 [EventProcessor] Database health issue: degraded"},
+        {"file": "", "message": "utils.event_processor:event_processor.py:292 [EventProcessor] Unknown record_type: unknown_record_type"},
+        {"file": "", "message": "utils.event_processor:event_processor.py:740 [EventProcessor] Database health issue: degraded"},
+        {"file": "", "message": "utils.event_processor:event_processor.py:740 [EventProcessor] Database health issue: degraded"},
+        {"file": "", "message": "utils.event_processor:event_processor.py:740 [EventProcessor] Database health issue: degraded"},
+        {"file": "", "message": "services.identity_manager:identity_manager.py:134 Invalid verification code for user user123"},
+        {"file": "", "message": "services.identity_manager:identity_manager.py:130 No verification code found for user user123"},
+        {"file": "", "message": "services.identity_manager:identity_manager.py:148 No user found with ID nonexistent"},
+        {"file": "", "message": "services.identity_manager:identity_manager.py:182 Trustee trustee123 not found or not verified"},
+        {"file": "", "message": "services.identity_manager:identity_manager.py:182 Trustee nonexistent not found or not verified"},
+        {"file": "", "message": "services.identity_manager:identity_manager.py:188 Trusted user nonexistent not found"},
+        {"file": "", "message": "services.identity_manager:identity_manager.py:193 Cannot trust self"},
+        {"file": "", "message": "llm_api:llm.py:60 LLM request timeout: Request timeout"},
+        {"file": "", "message": "llm_api:llm.py:57 API quota exceeded: API quota exceeded"},
+        {"file": "", "message": "llm.service:service.py:158 LLM request timed out after 30 seconds for pipeline: PipelineType.SUGGEST_TERM_DEFINITION"},
+        {"file": "", "message": "api.llm_traceability:llm_traceability.py:29 Invalid selection request: Execution not found"},
+        {"file": "", "message": "services.performance_monitor:performance_monitor.py:731 Performance alerts triggered: 4 new alerts"},
+        {"file": "", "message": "reference_db.predicate_discovery:predicate_discovery.py:129 Error calculating batch size: Memory error, using default 8"},
+        {"file": "", "message": "reference_db.predicate_discovery:predicate_discovery.py:329 ConceptNet source not enabled in configuration"},
+        {"file": "", "message": "test:test_predicate_set_formats.py:46 Invalid JSON in domain test-invalid-json predicate_set: invalid json, error: Expecting value: line 1 column 1 (char 0)"},
+        {"file": "", "message": "predicate_similarity:predicate_similarity.py:508 Not enough embeddings (1) for clustering. Minimum required: 2. Started with 1 predicates, 0 failed to generate embeddings."},
+        {"file": "", "message": "services.proposal_manager:proposal_manager.py:541 Failed to push vote to S3: S3 error"},
+        {"file": "", "message": "rag.cleanup_scheduler:cleanup_scheduler.py:70 Cleanup scheduler is already running"},
+        {"file": "", "message": "api_buddy.core.proxy:handler.py:75 Domain not mapped: conceptnet"},
+        {"file": "", "message": "api_buddy.core.proxy:handler.py:75 Domain not mapped: conceptnet"},
+        {"file": "", "message": "api_buddy.core.proxy:handler.py:75 Domain not mapped: conceptnet"},
+        {"file": "", "message": "api_buddy.core.proxy:handler.py:75 Domain not mapped: conceptnet"},
+        {"file": "", "message": "api_buddy.core.proxy:handler.py:75 Domain not mapped: conceptnet"},
+        {"file": "", "message": "api_buddy.core.proxy:handler.py:75 Domain not mapped: conceptnet"},
+        {"file": "", "message": "api_buddy.core.proxy:handler.py:75 Domain not mapped: conceptnet"},
+        {"file": "", "message": "api_buddy.core.proxy:handler.py:75 Domain not mapped: conceptnet"},
+        {"file": "", "message": "api_buddy.core.proxy:handler.py:75 Domain not mapped: conceptnet"},
+        {"file": "", "message": "api_buddy.core.proxy:handler.py:75 Domain not mapped: conceptnet"},
+        {"file": "", "message": "api_buddy.core.proxy:handler.py:75 Domain not mapped: conceptnet"},
+        {"file": "", "message": "api_buddy.core.proxy:handler.py:75 Domain not mapped: conceptnet"},
+        {"file": "", "message": "api_buddy.core.proxy:handler.py:75 Domain not mapped: conceptnet"},
+        {"file": "", "message": "api_buddy.core.proxy:handler.py:75 Domain not mapped: conceptnet"},
+        {"file": "", "message": "api_buddy.core.proxy:handler.py:75 Domain not mapped: conceptnet"},
+        {"file": "", "message": "api_buddy.core.proxy:handler.py:75 Domain not mapped: conceptnet"},
+        {"file": "", "message": "api_buddy.core.proxy:handler.py:75 Domain not mapped: conceptnet"},
+        {"file": "", "message": "api_buddy.core.proxy:handler.py:75 Domain not mapped: conceptnet"},
+        {"file": "", "message": "api_buddy.core.proxy:handler.py:75 Domain not mapped: conceptnet"},
+        {"file": "", "message": "api_buddy.core.proxy:handler.py:75 Domain not mapped: conceptnet"}
+    ]
+}
+```
+2025-11-05 14:23:02,549 - claude.docker_runner - INFO - Agent completed successfully in container, result length: 6104, session_id: 6088e119-579c-4d38-a1e9-87ba8793cfef
+2025-11-05 14:23:02,585 - claude.docker_runner - INFO - Unregistered container: claude-agent-context-studio-repair_test_unit_type1_iter1_attempt0_senior_software_engineer_1762351673
+2025-11-05 14:23:02,628 - elastic_transport.transport - INFO - POST http://elasticsearch:9200/agent-events-2025-11-05/_doc [status:201 duration:0.029s]
+2025-11-05 14:23:02,630 - monitoring.observability - INFO - Indexed agent lifecycle event agent_completed to agent-events-2025-11-05
+2025-11-05 14:23:02,757 - services.github_app_auth - WARNING - GitHub App authentication not configured, will use PAT fallback
+2025-11-05 14:23:02,757 - services.github_integration - WARNING - Using Personal Access Token authentication
+2025-11-05 14:23:02,757 - services.github_integration - INFO - post_agent_output - workspace_type: issues, discussion_id: None, context keys: ['project', 'board', 'pipeline', 'repository', 'issue_number', 'issue', 'previous_stage_output', 'column', 'workspace_type', 'discussion_id', 'pipeline_run_id', 'project_dir', 'use_docker', 'task_id', 'test_configs', 'agent_name', 'max_total_agent_calls', 'checkpoint_interval', 'stage_name', 'observability', 'task_description', 'timeout', 'skip_workspace_prep', 'review_cycle', 'direct_prompt']
+2025-11-05 14:23:02,759 - services.github_api_client - INFO - GitHub API breaker connected to Redis
+2025-11-05 14:23:02,759 - services.github_api_client - INFO - GitHub API client initialized with rate limiting
+2025-11-05 14:23:03,039 - services.github_api_client - ERROR - HTTP request failed: 404 - {"message":"Not Found","documentation_url":"https://docs.github.com/rest/issues/comments#create-an-issue-comment","status":"404"}
+2025-11-05 14:23:03,040 - services.github_integration - ERROR - Failed to post issue comment: {'error': 'http_error_404', 'status_code': 404}
+2025-11-05 14:23:03,040 - services.agent_executor - ERROR - Failed to post senior_software_engineer output to GitHub: http_error_404
+2025-11-05 14:23:03,045 - services.work_execution_state - INFO - WorkExecutionStateTracker initialized with state_dir: /app/state/execution_history
+2025-11-05 14:23:03,083 - services.work_execution_state - INFO - Recorded execution outcome: context-studio/#187 senior_software_engineer in Testing → success
+2025-11-05 14:23:03,083 - services.agent_executor - INFO - Agent senior_software_engineer completed successfully (duration: 908725ms)
+2025-11-05 14:23:03,083 - pipeline.repair_cycle - INFO - Parsed test result JSON keys: ['passed', 'failed', 'warnings', 'failures', 'warning_list'], warnings type: <class 'int'>, warning_list type: <class 'list'>
+2025-11-05 14:23:03,096 - elastic_transport.transport - INFO - POST http://elasticsearch:9200/decision-events-2025-11-05/_doc [status:201 duration:0.012s]
+2025-11-05 14:23:03,096 - monitoring.observability - INFO - Indexed decision event repair_cycle_test_execution_completed to decision-events-2025-11-05
+2025-11-05 14:23:03,096 - pipeline.repair_cycle - INFO - No test failures in test cycle iteration 1
+2025-11-05 14:23:03,097 - pipeline.repair_cycle - INFO - Reviewing 182 warnings
+2025-11-05 14:23:03,097 - pipeline.repair_cycle - INFO - Reviewing 49 warnings in 
+2025-11-05 14:23:03,107 - elastic_transport.transport - INFO - POST http://elasticsearch:9200/decision-events-2025-11-05/_doc [status:201 duration:0.009s]
+2025-11-05 14:23:03,107 - monitoring.observability - INFO - Indexed decision event repair_cycle_warning_review_started to decision-events-2025-11-05
+2025-11-05 14:23:03,107 - services.agent_executor - INFO - Executing agent senior_software_engineer for project context-studio (task_id: repair_warn__senior_software_engineer_1762352583)
+2025-11-05 14:23:03,108 - services.agent_executor - INFO - Agent senior_software_engineer requires_docker=True, overriding task context
+2025-11-05 14:23:03,108 - services.agent_executor - INFO - Skipping workspace preparation (skip_workspace_prep=True) for senior_software_engineer
+2025-11-05 14:23:03,108 - services.agent_executor - INFO - Generated container name for UI tracking: claude-agent-context-studio-repair_warn__senior_software_engineer_1762352583
+2025-11-05 14:23:03,121 - elastic_transport.transport - INFO - POST http://elasticsearch:9200/agent-events-2025-11-05/_doc [status:201 duration:0.012s]
+2025-11-05 14:23:03,121 - monitoring.observability - INFO - Indexed agent lifecycle event agent_initialized to agent-events-2025-11-05
+2025-11-05 14:23:03,121 - services.agent_executor - INFO - Agent execution started with ID: a138d629-9cba-4cac-bc22-d7b48978403d
+2025-11-05 14:23:03,121 - agents.base_maker_agent - INFO - Using INITIAL mode (first-time analysis)
+2025-11-05 14:23:03,122 - claude.claude_integration - INFO - run_claude_code called
+2025-11-05 14:23:03,122 - claude.claude_integration - INFO - Context project: context-studio
+2025-11-05 14:23:03,122 - claude.claude_integration - INFO - Prompt length: 4349
+2025-11-05 14:23:03,123 - claude.claude_integration - INFO - Agent senior_software_engineer: use_docker from context=True, agent_config present=True
+2025-11-05 14:23:03,123 - claude.claude_integration - INFO - Agent senior_software_engineer: agent_config type=<class 'config.manager.AgentConfig'>, has requires_docker=True
+2025-11-05 14:23:03,123 - claude.claude_integration - INFO - Agent senior_software_engineer: Using agent_config.requires_docker=True
+2025-11-05 14:23:03,123 - claude.claude_integration - INFO - Running agent in Docker container for project context-studio
+2025-11-05 14:23:03,123 - claude.docker_runner - INFO - Running agent senior_software_engineer in Docker container for project context-studio
+2025-11-05 14:23:03,124 - claude.docker_runner - INFO - Using fallback host workspace path: /home/austinsand/workspace/orchestrator
+2025-11-05 14:23:03,124 - claude.docker_runner - INFO - Mounting project: container=/workspace/context-studio, host=/home/austinsand/workspace/orchestrator/context-studio
+2025-11-05 14:23:03,124 - claude.docker_runner - INFO - Agent senior_software_engineer has filesystem_write_allowed=true, mounting workspace as READ-WRITE
+2025-11-05 14:23:03,124 - claude.docker_runner - INFO - Verifying write access to /workspace/context-studio
+2025-11-05 14:23:03,124 - claude.docker_runner - INFO - ✓ Filesystem write verification passed: Can read, write, and delete files in /workspace/context-studio
+2025-11-05 14:23:03,124 - claude.docker_runner - INFO - Using fallback host home path: /home/orchestrator
+2025-11-05 14:23:03,124 - claude.docker_runner - INFO - Adding -i flag for stdin support
+2025-11-05 14:23:03,124 - claude.docker_runner - INFO - DOCKER MOUNT: /home/austinsand/workspace/orchestrator/context-studio:/workspace:rw
+2025-11-05 14:23:03,124 - claude.docker_runner - INFO - Using CLAUDE_CODE_OAUTH_TOKEN (subscription billing)
+2025-11-05 14:23:03,124 - claude.docker_runner - INFO - DEBUG: OAuth token length: 108, starts with: sk-ant-oat...
+2025-11-05 14:23:03,125 - claude.docker_runner - INFO - Agent senior_software_engineer requires dev container, using project image: context-studio-agent:latest
+2025-11-05 14:23:03,125 - claude.docker_runner - INFO - Using Docker image: context-studio-agent:latest for agent senior_software_engineer
+2025-11-05 14:23:03,125 - claude.docker_runner - INFO - Using Claude model in Docker: claude-sonnet-4-5-20250929
+2025-11-05 14:23:03,125 - claude.docker_runner - INFO - Pre-launch safety check: Verifying container write access...
+2025-11-05 14:23:03,125 - claude.docker_runner - INFO -    Running container write test with container: write-test-senior_software_engineer-1762352583
+2025-11-05 14:23:03,351 - claude.docker_runner - INFO -    ✓ Container write test PASSED
+2025-11-05 14:23:03,351 - claude.docker_runner - INFO - ✓ Pre-launch verification passed: Container has write access
+2025-11-05 14:23:03,351 - claude.docker_runner - INFO - Using --permission-mode bypassPermissions (safe in isolated container)
+2025-11-05 14:23:03,351 - claude.docker_runner - INFO - DEBUG: Checking for GITHUB_TOKEN, got: ***
+2025-11-05 14:23:03,351 - claude.docker_runner - INFO - Added gh configuration setup before claude execution
+2025-11-05 14:23:03,351 - claude.docker_runner - INFO - Executing: docker run ... claude ...
+2025-11-05 14:23:03,351 - claude.docker_runner - INFO - Full Docker command: docker run --rm --name claude-agent-context-studio-repair_warn__senior_software_engineer_1762352583 --network clauditoreum_orchestrator-net -i -v /home/austinsand/workspace/orchestrator/context-studio:/workspace:rw -v /home/orchestrator/.ssh:/home/orchestrator/.ssh:ro -v /home/orchestrator/.gitconfig:/home/orchestrator/.gitconfig:ro -w /workspace -e GITHUB_TOKEN=*** -e GH_AUTH_SETUP_REQUIRED=true -e CLAUDE_CODE_OAUTH_TOKEN=*** context-studio-agent:latest sh -c mkdir -p ~/.config/gh && printf 'version: 1\nauth:\n  github.com:\n    oauth_token: $GITHUB_TOKEN\n    git_protocol: https\n' > ~/.config/gh/hosts.yml && exec claude --print --verbose --output-format stream-json --model claude-sonnet-4-5-20250929 --permission-mode bypassPermissions -
+2025-11-05 14:23:04,394 - claude.docker_runner - INFO - Registered active container: claude-agent-context-studio-repair_warn__senior_software_engineer_1762352583 (agent=senior_software_engineer, project=context-studio, id=None)
+2025-11-05 14:23:04,395 - claude.docker_runner - INFO - Passing prompt via stdin (4349 chars)
+2025-11-05 14:23:05,478 - claude.docker_runner - INFO - Captured Claude Code session_id: 6ff2a446-8329-442d-93c5-a9b4026ac237
+2025-11-05 14:23:07,983 - services.github_api_client - INFO - 📊 GitHub API Rate Limit Status: 4235/5000 remaining (15.3% used)
+2025-11-05 14:24:13,450 - claude.docker_runner - ERROR - 🔴 Detected limit in assistant response: Based on my analysis of the warning patterns and the test files, I can now provide a comprehensive assessment:
+
+## Warning Analysis
+
+All the warnings you've listed are **expected test warnings** - they are intentionally testing error conditions and edge cases. Here's the breakdown:
+
+### **Expected Test Warnings** (No Action Needed)
+
+1. **Changeset Manager** (test_changeset_manager.py):
+   - `No changeset found with ID nonexistent` - Line 161: Tests get_changeset with non-existent ID
+   - `No updates provided for changeset` - Line 218: Tests update_changeset with no fields
+   - `Cannot delete changeset changeset123 in merged state` - Line 244: Tests deletion validation  
+   - `Changeset nonexistent not found` - Line 250: Tests deletion of non-existent changeset
+
+2. **DuckDB Service** (test_duckdb_service.py):
+   - `DuckDB not available - service will operate in fallback mode` - Line 52: Tests fallback when DuckDB unavailable
+
+3. **Event Processor** (test_event_processor.py):
+   - `Database health issue: degraded` - Multiple occurrences: Tests health monitoring
+   - `Unknown record_type: unknown_record_type` - Line 290-337: Tests handling of unknown record types
+
+4. **Identity Manager** (test_identity_manager.py):
+   - `Invalid verification code for user user123` - Line 156: Tests invalid verification code
+   - `No verification code found for user user123` - Line 162: Tests missing verification code
+   - `No user found with ID nonexistent` - Line 172: Tests non-existent user
+   - `Trustee trustee123 not found or not verified` - Line 206: Tests unverified trustee
+   - `Trustee nonexistent not found or not verified` - Line 208: Tests non-existent trustee
+   - `Trusted user nonexistent not found` - Line 221: Tests non-existent trusted user
+   - `Cannot trust self` - Line 232: Tests self-trust prevention
+
+5. **LLM Services** (likely integration tests):
+   - `LLM request timeout: Request timeout` - Tests timeout handling
+   - `API quota exceeded: API quota exceeded` - Tests quota handling  
+   - `LLM request timed out after 30 seconds` - Tests pipeline timeout
+   - `Invalid selection request: Execution not found` - Tests traceability validation
+
+6. **Performance Monitor**:
+   - `Performance alerts triggered: 4 new alerts` - Tests alert system
+
+7. **Predicate Discovery**:
+   - `Error calculating batch size: Memory error, using default 8` - Tests error recovery
+   - `ConceptNet source not enabled in configuration` - Tests config validation
+   - `Not enough embeddings (1) for clustering` - Tests clustering validation
+
+8. **Predicate Set Formats** (test_predicate_set_formats.py):
+   - `Invalid JSON in domain test-invalid-json predicate_set: invalid json` - Line 61: Tests invalid JSON handling
+
+9. **Proposal Manager** (test_proposal_manager.py):
+   - `Failed to push vote to S3: S3 error` - Line 401: Tests S3 failure handling
+
+10. **RAG Cleanup Scheduler** (test_rag_cleanup_scheduler.py):
+    - `Cleanup scheduler is already running` - Line 76: Tests idempotent start
+
+11. **API Buddy Proxy**:
+    - `Domain not mapped: conceptnet` (20 occurrences) - Tests unmapped domain handling (integration/performance tests)
+
+### **Recommendations**
+
+**All warnings are expected and intentional.** They indicate that:
+
+1. **Error paths are being tested** - This is good practice
+2. **Edge cases are covered** - Non-existent IDs, invalid inputs, etc.
+3. **Fallback mechanisms work** - DuckDB fallback, error recovery
+4. **Validation is functioning** - Rejecting invalid states, self-trust, etc.
+
+### **Optional Improvements** (Low Priority)
+
+If you want cleaner test output, you could consider:
+
+1. **Use pytest's warning filters** to suppress expected warnings:
+   ```python
+   @pytest.mark.filterwarnings("ignore:No changeset found")
+   ```
+
+2. **Use context managers** to assert warnings are raised:
+   ```python
+   with pytest.warns(UserWarning, match="No changeset found"):
+       manager.get_changeset("nonexistent")
+   ```
+
+3. **Add test markers** to document expected warnings:
+   ```python
+   @pytest.mark.expected_warnings(["No changeset found"])
+   ```
+
+However, **these changes are not necessary** - the current warnings are informative and help verify that error handling is working correctly.
+2025-11-05 14:24:19,352 - claude.docker_runner - INFO - Agent completed successfully in container, result length: 5314, session_id: 6ff2a446-8329-442d-93c5-a9b4026ac237
+2025-11-05 14:24:19,363 - claude.docker_runner - INFO - Unregistered container: claude-agent-context-studio-repair_warn__senior_software_engineer_1762352583
+2025-11-05 14:24:19,380 - elastic_transport.transport - INFO - POST http://elasticsearch:9200/agent-events-2025-11-05/_doc [status:201 duration:0.016s]
+2025-11-05 14:24:19,380 - monitoring.observability - INFO - Indexed agent lifecycle event agent_completed to agent-events-2025-11-05
+2025-11-05 14:24:19,380 - services.github_integration - WARNING - Using Personal Access Token authentication
+2025-11-05 14:24:19,380 - services.github_integration - INFO - post_agent_output - workspace_type: issues, discussion_id: None, context keys: ['project', 'board', 'pipeline', 'repository', 'issue_number', 'issue', 'previous_stage_output', 'column', 'workspace_type', 'discussion_id', 'pipeline_run_id', 'project_dir', 'use_docker', 'task_id', 'test_configs', 'agent_name', 'max_total_agent_calls', 'checkpoint_interval', 'stage_name', 'observability', 'task_description', 'timeout', 'skip_workspace_prep', 'review_cycle', 'direct_prompt']
+2025-11-05 14:24:19,608 - services.github_api_client - ERROR - HTTP request failed: 404 - {"message":"Not Found","documentation_url":"https://docs.github.com/rest/issues/comments#create-an-issue-comment","status":"404"}
+2025-11-05 14:24:19,608 - services.github_integration - ERROR - Failed to post issue comment: {'error': 'http_error_404', 'status_code': 404}
+2025-11-05 14:24:19,608 - services.agent_executor - ERROR - Failed to post senior_software_engineer output to GitHub: http_error_404
+2025-11-05 14:24:19,631 - services.work_execution_state - WARNING - No in_progress execution found for senior_software_engineer in Testing, creating new record with outcome success
+2025-11-05 14:24:19,646 - services.agent_executor - INFO - Agent senior_software_engineer completed successfully (duration: 76242ms)
+2025-11-05 14:24:19,646 - pipeline.repair_cycle - INFO - Reviewed warnings in 
+2025-11-05 14:24:19,651 - elastic_transport.transport - INFO - POST http://elasticsearch:9200/decision-events-2025-11-05/_doc [status:201 duration:0.004s]
+2025-11-05 14:24:19,651 - monitoring.observability - INFO - Indexed decision event repair_cycle_warning_review_completed to decision-events-2025-11-05
+2025-11-05 14:24:19,651 - pipeline.repair_cycle - INFO - Re-running tests after warning fixes
+2025-11-05 14:24:19,651 - pipeline.repair_cycle - INFO - Running unit tests (test cycle iteration 1/5, test type 1)
+2025-11-05 14:24:19,657 - elastic_transport.transport - INFO - POST http://elasticsearch:9200/decision-events-2025-11-05/_doc [status:201 duration:0.006s]
+2025-11-05 14:24:19,657 - monitoring.observability - INFO - Indexed decision event repair_cycle_test_execution_started to decision-events-2025-11-05
+2025-11-05 14:24:19,658 - services.agent_executor - INFO - Executing agent senior_software_engineer for project context-studio (task_id: repair_test_unit_type1_iter1_attempt0_senior_software_engineer_1762352659)
+2025-11-05 14:24:19,658 - services.agent_executor - INFO - Agent senior_software_engineer requires_docker=True, overriding task context
+2025-11-05 14:24:19,658 - services.agent_executor - INFO - Skipping workspace preparation (skip_workspace_prep=True) for senior_software_engineer
+2025-11-05 14:24:19,658 - services.agent_executor - INFO - Generated container name for UI tracking: claude-agent-context-studio-repair_test_unit_type1_iter1_attempt0_senior_software_engineer_1762352659
+2025-11-05 14:24:19,663 - elastic_transport.transport - INFO - POST http://elasticsearch:9200/agent-events-2025-11-05/_doc [status:201 duration:0.004s]
+2025-11-05 14:24:19,663 - monitoring.observability - INFO - Indexed agent lifecycle event agent_initialized to agent-events-2025-11-05
+2025-11-05 14:24:19,663 - services.agent_executor - INFO - Agent execution started with ID: 9715b42d-db36-4c59-b8a4-910c3cf7eec8
+2025-11-05 14:24:19,663 - agents.base_maker_agent - INFO - Using INITIAL mode (first-time analysis)
+2025-11-05 14:24:19,663 - claude.claude_integration - INFO - run_claude_code called
+2025-11-05 14:24:19,663 - claude.claude_integration - INFO - Context project: context-studio
+2025-11-05 14:24:19,663 - claude.claude_integration - INFO - Prompt length: 1340
+2025-11-05 14:24:19,664 - claude.claude_integration - INFO - Agent senior_software_engineer: use_docker from context=True, agent_config present=True
+2025-11-05 14:24:19,664 - claude.claude_integration - INFO - Agent senior_software_engineer: agent_config type=<class 'config.manager.AgentConfig'>, has requires_docker=True
+2025-11-05 14:24:19,664 - claude.claude_integration - INFO - Agent senior_software_engineer: Using agent_config.requires_docker=True
+2025-11-05 14:24:19,664 - claude.claude_integration - INFO - Running agent in Docker container for project context-studio
+2025-11-05 14:24:19,664 - claude.docker_runner - INFO - Running agent senior_software_engineer in Docker container for project context-studio
+2025-11-05 14:24:19,664 - claude.docker_runner - INFO - Using fallback host workspace path: /home/austinsand/workspace/orchestrator
+2025-11-05 14:24:19,664 - claude.docker_runner - INFO - Mounting project: container=/workspace/context-studio, host=/home/austinsand/workspace/orchestrator/context-studio
+2025-11-05 14:24:19,664 - claude.docker_runner - INFO - Agent senior_software_engineer has filesystem_write_allowed=true, mounting workspace as READ-WRITE
+2025-11-05 14:24:19,664 - claude.docker_runner - INFO - Verifying write access to /workspace/context-studio
+2025-11-05 14:24:19,665 - claude.docker_runner - INFO - ✓ Filesystem write verification passed: Can read, write, and delete files in /workspace/context-studio
+2025-11-05 14:24:19,665 - claude.docker_runner - INFO - Using fallback host home path: /home/orchestrator
+2025-11-05 14:24:19,665 - claude.docker_runner - INFO - Adding -i flag for stdin support
+2025-11-05 14:24:19,665 - claude.docker_runner - INFO - DOCKER MOUNT: /home/austinsand/workspace/orchestrator/context-studio:/workspace:rw
+2025-11-05 14:24:19,665 - claude.docker_runner - INFO - Using CLAUDE_CODE_OAUTH_TOKEN (subscription billing)
+2025-11-05 14:24:19,665 - claude.docker_runner - INFO - DEBUG: OAuth token length: 108, starts with: sk-ant-oat...
+2025-11-05 14:24:19,666 - claude.docker_runner - INFO - Agent senior_software_engineer requires dev container, using project image: context-studio-agent:latest
+2025-11-05 14:24:19,666 - claude.docker_runner - INFO - Using Docker image: context-studio-agent:latest for agent senior_software_engineer
+2025-11-05 14:24:19,666 - claude.docker_runner - INFO - Using Claude model in Docker: claude-sonnet-4-5-20250929
+2025-11-05 14:24:19,666 - claude.docker_runner - INFO - Pre-launch safety check: Verifying container write access...
+2025-11-05 14:24:19,666 - claude.docker_runner - INFO -    Running container write test with container: write-test-senior_software_engineer-1762352659
+2025-11-05 14:24:19,889 - claude.docker_runner - INFO -    ✓ Container write test PASSED
+2025-11-05 14:24:19,889 - claude.docker_runner - INFO - ✓ Pre-launch verification passed: Container has write access
+2025-11-05 14:24:19,889 - claude.docker_runner - INFO - Using --permission-mode bypassPermissions (safe in isolated container)
+2025-11-05 14:24:19,889 - claude.docker_runner - INFO - DEBUG: Checking for GITHUB_TOKEN, got: ***
+2025-11-05 14:24:19,889 - claude.docker_runner - INFO - Added gh configuration setup before claude execution
+2025-11-05 14:24:19,889 - claude.docker_runner - INFO - Executing: docker run ... claude ...
+2025-11-05 14:24:19,889 - claude.docker_runner - INFO - Full Docker command: docker run --rm --name claude-agent-context-studio-repair_test_unit_type1_iter1_attempt0_senior_software_engineer_1762352659 --network clauditoreum_orchestrator-net -i -v /home/austinsand/workspace/orchestrator/context-studio:/workspace:rw -v /home/orchestrator/.ssh:/home/orchestrator/.ssh:ro -v /home/orchestrator/.gitconfig:/home/orchestrator/.gitconfig:ro -w /workspace -e GITHUB_TOKEN=*** -e GH_AUTH_SETUP_REQUIRED=true -e CLAUDE_CODE_OAUTH_TOKEN=*** context-studio-agent:latest sh -c mkdir -p ~/.config/gh && printf 'version: 1\nauth:\n  github.com:\n    oauth_token: $GITHUB_TOKEN\n    git_protocol: https\n' > ~/.config/gh/hosts.yml && exec claude --print --verbose --output-format stream-json --model claude-sonnet-4-5-20250929 --permission-mode bypassPermissions -
+2025-11-05 14:24:20,922 - claude.docker_runner - INFO - Registered active container: claude-agent-context-studio-repair_test_unit_type1_iter1_attempt0_senior_software_engineer_1762352659 (agent=senior_software_engineer, project=context-studio, id=None)
+2025-11-05 14:24:20,923 - claude.docker_runner - INFO - Passing prompt via stdin (1340 chars)
+2025-11-05 14:24:21,967 - claude.docker_runner - INFO - Captured Claude Code session_id: e9845697-f0a4-47b7-95f9-94267d187efc
+2025-11-05 14:28:03,332 - services.github_api_client - INFO - 📊 GitHub API Rate Limit Check: 4100/5000 remaining (18.0% used)
+2025-11-05 14:28:03,348 - services.github_api_client - INFO - 📊 GitHub API Call Summary (last hour): 2 total calls from 1 unique sources
+2025-11-05 14:28:03,351 - services.github_api_client - INFO -   📍 threading:run():982: 2 calls [graphql(2)]
+2025-11-05 14:29:57,738 - claude.docker_runner - INFO - Agent completed successfully in container, result length: 196, session_id: e9845697-f0a4-47b7-95f9-94267d187efc
+2025-11-05 14:29:57,774 - claude.docker_runner - INFO - Unregistered container: claude-agent-context-studio-repair_test_unit_type1_iter1_attempt0_senior_software_engineer_1762352659
+2025-11-05 14:29:57,892 - elastic_transport.transport - INFO - POST http://elasticsearch:9200/agent-events-2025-11-05/_doc [status:201 duration:0.106s]
+2025-11-05 14:29:57,893 - monitoring.observability - INFO - Indexed agent lifecycle event agent_completed to agent-events-2025-11-05
+2025-11-05 14:29:57,896 - services.github_integration - WARNING - Using Personal Access Token authentication
+2025-11-05 14:29:57,896 - services.github_integration - INFO - post_agent_output - workspace_type: issues, discussion_id: None, context keys: ['project', 'board', 'pipeline', 'repository', 'issue_number', 'issue', 'previous_stage_output', 'column', 'workspace_type', 'discussion_id', 'pipeline_run_id', 'project_dir', 'use_docker', 'task_id', 'test_configs', 'agent_name', 'max_total_agent_calls', 'checkpoint_interval', 'stage_name', 'observability', 'task_description', 'timeout', 'skip_workspace_prep', 'review_cycle', 'direct_prompt']
+2025-11-05 14:29:58,171 - services.github_api_client - ERROR - HTTP request failed: 404 - {"message":"Not Found","documentation_url":"https://docs.github.com/rest/issues/comments#create-an-issue-comment","status":"404"}
+2025-11-05 14:29:58,172 - services.github_integration - ERROR - Failed to post issue comment: {'error': 'http_error_404', 'status_code': 404}
+2025-11-05 14:29:58,173 - services.agent_executor - ERROR - Failed to post senior_software_engineer output to GitHub: http_error_404
+2025-11-05 14:29:58,220 - services.work_execution_state - WARNING - No in_progress execution found for senior_software_engineer in Testing, creating new record with outcome success
+2025-11-05 14:29:58,246 - services.agent_executor - INFO - Agent senior_software_engineer completed successfully (duration: 338113ms)
+2025-11-05 14:29:58,247 - pipeline.repair_cycle - INFO - Parsed test result JSON keys: ['passed', 'failed', 'warnings', 'failures', 'warning_list'], warnings type: <class 'int'>, warning_list type: <class 'list'>
+2025-11-05 14:29:58,262 - elastic_transport.transport - INFO - POST http://elasticsearch:9200/decision-events-2025-11-05/_doc [status:201 duration:0.015s]
+2025-11-05 14:29:58,262 - monitoring.observability - INFO - Indexed decision event repair_cycle_test_execution_completed to decision-events-2025-11-05
+2025-11-05 14:29:58,265 - pipeline.repair_cycle - INFO - Test cycle completed successfully after 1 iterations
+2025-11-05 14:29:58,279 - elastic_transport.transport - INFO - POST http://elasticsearch:9200/decision-events-2025-11-05/_doc [status:201 duration:0.013s]
+2025-11-05 14:29:58,280 - monitoring.observability - INFO - Indexed decision event repair_cycle_test_cycle_completed to decision-events-2025-11-05
+2025-11-05 14:29:58,282 - pipeline.repair_cycle - INFO - Starting integration test cycle (test type 2/2)
+2025-11-05 14:29:58,294 - elastic_transport.transport - INFO - POST http://elasticsearch:9200/decision-events-2025-11-05/_doc [status:201 duration:0.012s]
+2025-11-05 14:29:58,294 - monitoring.observability - INFO - Indexed decision event repair_cycle_test_cycle_started to decision-events-2025-11-05
+2025-11-05 14:29:58,294 - pipeline.repair_cycle - INFO - Test cycle iteration 1/3 for integration (test type 2/2)
+2025-11-05 14:29:58,308 - elastic_transport.transport - INFO - POST http://elasticsearch:9200/decision-events-2025-11-05/_doc [status:201 duration:0.012s]
+2025-11-05 14:29:58,308 - monitoring.observability - INFO - Indexed decision event repair_cycle_iteration to decision-events-2025-11-05
+2025-11-05 14:29:58,308 - pipeline.repair_cycle - INFO - Running integration tests (test cycle iteration 1/3, test type 2)
+2025-11-05 14:29:58,319 - elastic_transport.transport - INFO - POST http://elasticsearch:9200/decision-events-2025-11-05/_doc [status:201 duration:0.010s]
+2025-11-05 14:29:58,319 - monitoring.observability - INFO - Indexed decision event repair_cycle_test_execution_started to decision-events-2025-11-05
+2025-11-05 14:29:58,321 - services.agent_executor - INFO - Executing agent senior_software_engineer for project context-studio (task_id: repair_test_integration_type2_iter1_attempt0_senior_software_engineer_1762352998)
+2025-11-05 14:29:58,323 - services.agent_executor - INFO - Agent senior_software_engineer requires_docker=True, overriding task context
+2025-11-05 14:29:58,324 - services.agent_executor - INFO - Skipping workspace preparation (skip_workspace_prep=True) for senior_software_engineer
+2025-11-05 14:29:58,324 - services.agent_executor - INFO - Generated container name for UI tracking: claude-agent-context-studio-repair_test_integration_type2_iter1_attempt0_senior_software_engineer_1762352998
+2025-11-05 14:29:58,336 - elastic_transport.transport - INFO - POST http://elasticsearch:9200/agent-events-2025-11-05/_doc [status:201 duration:0.011s]
+2025-11-05 14:29:58,336 - monitoring.observability - INFO - Indexed agent lifecycle event agent_initialized to agent-events-2025-11-05
+2025-11-05 14:29:58,336 - services.agent_executor - INFO - Agent execution started with ID: 5197fac9-0dd8-488b-ae67-f8ea5ccdd378
+2025-11-05 14:29:58,337 - agents.base_maker_agent - INFO - Using INITIAL mode (first-time analysis)
+2025-11-05 14:29:58,338 - claude.claude_integration - INFO - run_claude_code called
+2025-11-05 14:29:58,338 - claude.claude_integration - INFO - Context project: context-studio
+2025-11-05 14:29:58,338 - claude.claude_integration - INFO - Prompt length: 1354
+2025-11-05 14:29:58,338 - claude.claude_integration - INFO - Agent senior_software_engineer: use_docker from context=True, agent_config present=True
+2025-11-05 14:29:58,338 - claude.claude_integration - INFO - Agent senior_software_engineer: agent_config type=<class 'config.manager.AgentConfig'>, has requires_docker=True
+2025-11-05 14:29:58,338 - claude.claude_integration - INFO - Agent senior_software_engineer: Using agent_config.requires_docker=True
+2025-11-05 14:29:58,338 - claude.claude_integration - INFO - Running agent in Docker container for project context-studio
+2025-11-05 14:29:58,339 - claude.docker_runner - INFO - Running agent senior_software_engineer in Docker container for project context-studio
+2025-11-05 14:29:58,339 - claude.docker_runner - INFO - Using fallback host workspace path: /home/austinsand/workspace/orchestrator
+2025-11-05 14:29:58,339 - claude.docker_runner - INFO - Mounting project: container=/workspace/context-studio, host=/home/austinsand/workspace/orchestrator/context-studio
+2025-11-05 14:29:58,339 - claude.docker_runner - INFO - Agent senior_software_engineer has filesystem_write_allowed=true, mounting workspace as READ-WRITE
+2025-11-05 14:29:58,339 - claude.docker_runner - INFO - Verifying write access to /workspace/context-studio
+2025-11-05 14:29:58,339 - claude.docker_runner - INFO - ✓ Filesystem write verification passed: Can read, write, and delete files in /workspace/context-studio
+2025-11-05 14:29:58,340 - claude.docker_runner - INFO - Using fallback host home path: /home/orchestrator
+2025-11-05 14:29:58,340 - claude.docker_runner - INFO - Adding -i flag for stdin support
+2025-11-05 14:29:58,340 - claude.docker_runner - INFO - DOCKER MOUNT: /home/austinsand/workspace/orchestrator/context-studio:/workspace:rw
+2025-11-05 14:29:58,340 - claude.docker_runner - INFO - Using CLAUDE_CODE_OAUTH_TOKEN (subscription billing)
+2025-11-05 14:29:58,340 - claude.docker_runner - INFO - DEBUG: OAuth token length: 108, starts with: sk-ant-oat...
+2025-11-05 14:29:58,342 - claude.docker_runner - INFO - Agent senior_software_engineer requires dev container, using project image: context-studio-agent:latest
+2025-11-05 14:29:58,342 - claude.docker_runner - INFO - Using Docker image: context-studio-agent:latest for agent senior_software_engineer
+2025-11-05 14:29:58,342 - claude.docker_runner - INFO - Using Claude model in Docker: claude-sonnet-4-5-20250929
+2025-11-05 14:29:58,342 - claude.docker_runner - INFO - Pre-launch safety check: Verifying container write access...
+2025-11-05 14:29:58,342 - claude.docker_runner - INFO -    Running container write test with container: write-test-senior_software_engineer-1762352998
+2025-11-05 14:29:59,036 - claude.docker_runner - INFO -    ✓ Container write test PASSED
+2025-11-05 14:29:59,036 - claude.docker_runner - INFO - ✓ Pre-launch verification passed: Container has write access
+2025-11-05 14:29:59,036 - claude.docker_runner - INFO - Using --permission-mode bypassPermissions (safe in isolated container)
+2025-11-05 14:29:59,036 - claude.docker_runner - INFO - DEBUG: Checking for GITHUB_TOKEN, got: ***
+2025-11-05 14:29:59,036 - claude.docker_runner - INFO - Added gh configuration setup before claude execution
+2025-11-05 14:29:59,036 - claude.docker_runner - INFO - Executing: docker run ... claude ...
+2025-11-05 14:29:59,036 - claude.docker_runner - INFO - Full Docker command: docker run --rm --name claude-agent-context-studio-repair_test_integration_type2_iter1_attempt0_senior_software_engineer_1762352998 --network clauditoreum_orchestrator-net -i -v /home/austinsand/workspace/orchestrator/context-studio:/workspace:rw -v /home/orchestrator/.ssh:/home/orchestrator/.ssh:ro -v /home/orchestrator/.gitconfig:/home/orchestrator/.gitconfig:ro -w /workspace -e GITHUB_TOKEN=*** -e GH_AUTH_SETUP_REQUIRED=true -e CLAUDE_CODE_OAUTH_TOKEN=*** context-studio-agent:latest sh -c mkdir -p ~/.config/gh && printf 'version: 1\nauth:\n  github.com:\n    oauth_token: $GITHUB_TOKEN\n    git_protocol: https\n' > ~/.config/gh/hosts.yml && exec claude --print --verbose --output-format stream-json --model claude-sonnet-4-5-20250929 --permission-mode bypassPermissions -
+2025-11-05 14:30:00,086 - claude.docker_runner - INFO - Registered active container: claude-agent-context-studio-repair_test_integration_type2_iter1_attempt0_senior_software_engineer_1762352998 (agent=senior_software_engineer, project=context-studio, id=None)
+2025-11-05 14:30:00,090 - claude.docker_runner - INFO - Passing prompt via stdin (1354 chars)
+2025-11-05 14:30:01,416 - claude.docker_runner - INFO - Captured Claude Code session_id: 0f22b202-f681-48ca-b48e-0baf91c47203
+2025-11-05 14:33:04,886 - services.github_api_client - INFO - 📊 GitHub API Rate Limit Check: 3965/5000 remaining (20.7% used)
+2025-11-05 14:33:04,898 - services.github_api_client - INFO - 📊 GitHub API Call Summary (last hour): 3 total calls from 1 unique sources
+2025-11-05 14:33:04,900 - services.github_api_client - INFO -   📍 threading:run():982: 3 calls [graphql(3)]
+2025-11-05 14:38:05,115 - services.github_api_client - INFO - 📊 GitHub API Rate Limit Check: 3830/5000 remaining (23.4% used)
+2025-11-05 14:38:05,120 - services.github_api_client - INFO - 📊 GitHub API Call Summary (last hour): 4 total calls from 1 unique sources
+2025-11-05 14:38:05,121 - services.github_api_client - INFO -   📍 threading:run():982: 4 calls [graphql(4)]
+2025-11-05 14:38:14,735 - claude.docker_runner - INFO - Agent completed successfully in container, result length: 2452, session_id: 0f22b202-f681-48ca-b48e-0baf91c47203
+2025-11-05 14:38:14,913 - claude.docker_runner - INFO - Unregistered container: claude-agent-context-studio-repair_test_integration_type2_iter1_attempt0_senior_software_engineer_1762352998
+2025-11-05 14:38:15,137 - elastic_transport.transport - INFO - POST http://elasticsearch:9200/agent-events-2025-11-05/_doc [status:201 duration:0.204s]
+2025-11-05 14:38:15,139 - monitoring.observability - INFO - Indexed agent lifecycle event agent_completed to agent-events-2025-11-05
+2025-11-05 14:38:15,144 - services.github_integration - WARNING - Using Personal Access Token authentication
+2025-11-05 14:38:15,144 - services.github_integration - INFO - post_agent_output - workspace_type: issues, discussion_id: None, context keys: ['project', 'board', 'pipeline', 'repository', 'issue_number', 'issue', 'previous_stage_output', 'column', 'workspace_type', 'discussion_id', 'pipeline_run_id', 'project_dir', 'use_docker', 'task_id', 'test_configs', 'agent_name', 'max_total_agent_calls', 'checkpoint_interval', 'stage_name', 'observability', 'task_description', 'timeout', 'skip_workspace_prep', 'review_cycle', 'direct_prompt']
+2025-11-05 14:38:15,494 - services.github_api_client - ERROR - HTTP request failed: 404 - {"message":"Not Found","documentation_url":"https://docs.github.com/rest/issues/comments#create-an-issue-comment","status":"404"}
+2025-11-05 14:38:15,496 - services.github_integration - ERROR - Failed to post issue comment: {'error': 'http_error_404', 'status_code': 404}
+2025-11-05 14:38:15,498 - services.agent_executor - ERROR - Failed to post senior_software_engineer output to GitHub: http_error_404
+2025-11-05 14:38:15,581 - services.work_execution_state - WARNING - No in_progress execution found for senior_software_engineer in Testing, creating new record with outcome success
+2025-11-05 14:38:15,602 - services.agent_executor - INFO - Agent senior_software_engineer completed successfully (duration: 496581ms)
+2025-11-05 14:38:15,604 - pipeline.repair_cycle - INFO - Parsed test result JSON keys: ['passed', 'failed', 'warnings', 'failures', 'warning_list'], warnings type: <class 'int'>, warning_list type: <class 'list'>
+2025-11-05 14:38:15,623 - elastic_transport.transport - INFO - POST http://elasticsearch:9200/decision-events-2025-11-05/_doc [status:201 duration:0.018s]
+2025-11-05 14:38:15,623 - monitoring.observability - INFO - Indexed decision event repair_cycle_test_execution_completed to decision-events-2025-11-05
+2025-11-05 14:38:15,624 - pipeline.repair_cycle - INFO - Found failures in 2 files: ['test_event_processor_integration.py', 'test_predicate_discovery_integration.py']
+2025-11-05 14:38:15,643 - elastic_transport.transport - INFO - POST http://elasticsearch:9200/decision-events-2025-11-05/_doc [status:201 duration:0.016s]
+2025-11-05 14:38:15,643 - monitoring.observability - INFO - Indexed decision event repair_cycle_fix_cycle_started to decision-events-2025-11-05
+2025-11-05 14:38:15,645 - pipeline.repair_cycle - INFO - Fixing 1 failures in test_event_processor_integration.py
+2025-11-05 14:38:15,659 - elastic_transport.transport - INFO - POST http://elasticsearch:9200/decision-events-2025-11-05/_doc [status:201 duration:0.013s]
+2025-11-05 14:38:15,659 - monitoring.observability - INFO - Indexed decision event repair_cycle_file_fix_started to decision-events-2025-11-05
+2025-11-05 14:38:15,661 - services.agent_executor - INFO - Executing agent senior_software_engineer for project context-studio (task_id: repair_fix_test_event_processor_integration_py_senior_software_engineer_1762353495)
+2025-11-05 14:38:15,665 - services.agent_executor - INFO - Agent senior_software_engineer requires_docker=True, overriding task context
+2025-11-05 14:38:15,666 - services.agent_executor - INFO - Skipping workspace preparation (skip_workspace_prep=True) for senior_software_engineer
+2025-11-05 14:38:15,667 - services.agent_executor - INFO - Generated container name for UI tracking: claude-agent-context-studio-repair_fix_test_event_processor_integration_py_senior_software_engineer_1762353495
+2025-11-05 14:38:15,696 - elastic_transport.transport - INFO - POST http://elasticsearch:9200/agent-events-2025-11-05/_doc [status:201 duration:0.028s]
+2025-11-05 14:38:15,696 - monitoring.observability - INFO - Indexed agent lifecycle event agent_initialized to agent-events-2025-11-05
+2025-11-05 14:38:15,696 - services.agent_executor - INFO - Agent execution started with ID: 737e7d53-400e-4dbd-ba67-94b2f0544558
+2025-11-05 14:38:15,699 - agents.base_maker_agent - INFO - Using INITIAL mode (first-time analysis)
+2025-11-05 14:38:15,701 - claude.claude_integration - INFO - run_claude_code called
+2025-11-05 14:38:15,701 - claude.claude_integration - INFO - Context project: context-studio
+2025-11-05 14:38:15,701 - claude.claude_integration - INFO - Prompt length: 469
+2025-11-05 14:38:15,702 - claude.claude_integration - INFO - Agent senior_software_engineer: use_docker from context=True, agent_config present=True
+2025-11-05 14:38:15,702 - claude.claude_integration - INFO - Agent senior_software_engineer: agent_config type=<class 'config.manager.AgentConfig'>, has requires_docker=True
+2025-11-05 14:38:15,702 - claude.claude_integration - INFO - Agent senior_software_engineer: Using agent_config.requires_docker=True
+2025-11-05 14:38:15,702 - claude.claude_integration - INFO - Running agent in Docker container for project context-studio
+2025-11-05 14:38:15,702 - claude.docker_runner - INFO - Running agent senior_software_engineer in Docker container for project context-studio
+2025-11-05 14:38:15,703 - claude.docker_runner - INFO - Using fallback host workspace path: /home/austinsand/workspace/orchestrator
+2025-11-05 14:38:15,703 - claude.docker_runner - INFO - Mounting project: container=/workspace/context-studio, host=/home/austinsand/workspace/orchestrator/context-studio
+2025-11-05 14:38:15,703 - claude.docker_runner - INFO - Agent senior_software_engineer has filesystem_write_allowed=true, mounting workspace as READ-WRITE
+2025-11-05 14:38:15,703 - claude.docker_runner - INFO - Verifying write access to /workspace/context-studio
+2025-11-05 14:38:15,706 - claude.docker_runner - INFO - ✓ Filesystem write verification passed: Can read, write, and delete files in /workspace/context-studio
+2025-11-05 14:38:15,706 - claude.docker_runner - INFO - Using fallback host home path: /home/orchestrator
+2025-11-05 14:38:15,706 - claude.docker_runner - INFO - Adding -i flag for stdin support
+2025-11-05 14:38:15,706 - claude.docker_runner - INFO - DOCKER MOUNT: /home/austinsand/workspace/orchestrator/context-studio:/workspace:rw
+2025-11-05 14:38:15,706 - claude.docker_runner - INFO - Using CLAUDE_CODE_OAUTH_TOKEN (subscription billing)
+2025-11-05 14:38:15,706 - claude.docker_runner - INFO - DEBUG: OAuth token length: 108, starts with: sk-ant-oat...
+2025-11-05 14:38:15,711 - claude.docker_runner - INFO - Agent senior_software_engineer requires dev container, using project image: context-studio-agent:latest
+2025-11-05 14:38:15,711 - claude.docker_runner - INFO - Using Docker image: context-studio-agent:latest for agent senior_software_engineer
+2025-11-05 14:38:15,711 - claude.docker_runner - INFO - Using Claude model in Docker: claude-sonnet-4-5-20250929
+2025-11-05 14:38:15,711 - claude.docker_runner - INFO - Pre-launch safety check: Verifying container write access...
+2025-11-05 14:38:15,711 - claude.docker_runner - INFO -    Running container write test with container: write-test-senior_software_engineer-1762353495
+2025-11-05 14:38:16,721 - claude.docker_runner - INFO -    ✓ Container write test PASSED
+2025-11-05 14:38:16,721 - claude.docker_runner - INFO - ✓ Pre-launch verification passed: Container has write access
+2025-11-05 14:38:16,721 - claude.docker_runner - INFO - Using --permission-mode bypassPermissions (safe in isolated container)
+2025-11-05 14:38:16,721 - claude.docker_runner - INFO - DEBUG: Checking for GITHUB_TOKEN, got: ***
+2025-11-05 14:38:16,722 - claude.docker_runner - INFO - Added gh configuration setup before claude execution
+2025-11-05 14:38:16,722 - claude.docker_runner - INFO - Executing: docker run ... claude ...
+2025-11-05 14:38:16,722 - claude.docker_runner - INFO - Full Docker command: docker run --rm --name claude-agent-context-studio-repair_fix_test_event_processor_integration_py_senior_software_engineer_1762353495 --network clauditoreum_orchestrator-net -i -v /home/austinsand/workspace/orchestrator/context-studio:/workspace:rw -v /home/orchestrator/.ssh:/home/orchestrator/.ssh:ro -v /home/orchestrator/.gitconfig:/home/orchestrator/.gitconfig:ro -w /workspace -e GITHUB_TOKEN=*** -e GH_AUTH_SETUP_REQUIRED=true -e CLAUDE_CODE_OAUTH_TOKEN=*** context-studio-agent:latest sh -c mkdir -p ~/.config/gh && printf 'version: 1\nauth:\n  github.com:\n    oauth_token: $GITHUB_TOKEN\n    git_protocol: https\n' > ~/.config/gh/hosts.yml && exec claude --print --verbose --output-format stream-json --model claude-sonnet-4-5-20250929 --permission-mode bypassPermissions -
+2025-11-05 14:38:17,824 - claude.docker_runner - INFO - Registered active container: claude-agent-context-studio-repair_fix_test_event_processor_integration_py_senior_software_engineer_1762353495 (agent=senior_software_engineer, project=context-studio, id=None)
+2025-11-05 14:38:17,833 - claude.docker_runner - INFO - Passing prompt via stdin (469 chars)
+2025-11-05 14:38:20,593 - claude.docker_runner - INFO - Captured Claude Code session_id: f34a8c87-6256-4e58-b56a-e4c92e5a5c5b
+2025-11-05 14:42:49,121 - claude.docker_runner - INFO - Agent completed successfully in container, result length: 5431, session_id: f34a8c87-6256-4e58-b56a-e4c92e5a5c5b
+2025-11-05 14:42:49,132 - claude.docker_runner - INFO - Unregistered container: claude-agent-context-studio-repair_fix_test_event_processor_integration_py_senior_software_engineer_1762353495
+2025-11-05 14:42:49,140 - elastic_transport.transport - INFO - POST http://elasticsearch:9200/agent-events-2025-11-05/_doc [status:201 duration:0.008s]
+2025-11-05 14:42:49,140 - monitoring.observability - INFO - Indexed agent lifecycle event agent_completed to agent-events-2025-11-05
+2025-11-05 14:42:49,140 - services.github_integration - WARNING - Using Personal Access Token authentication
+2025-11-05 14:42:49,140 - services.github_integration - INFO - post_agent_output - workspace_type: issues, discussion_id: None, context keys: ['project', 'board', 'pipeline', 'repository', 'issue_number', 'issue', 'previous_stage_output', 'column', 'workspace_type', 'discussion_id', 'pipeline_run_id', 'project_dir', 'use_docker', 'task_id', 'test_configs', 'agent_name', 'max_total_agent_calls', 'checkpoint_interval', 'stage_name', 'observability', 'task_description', 'timeout', 'skip_workspace_prep', 'review_cycle', 'direct_prompt']
+2025-11-05 14:42:49,363 - services.github_api_client - ERROR - HTTP request failed: 404 - {"message":"Not Found","documentation_url":"https://docs.github.com/rest/issues/comments#create-an-issue-comment","status":"404"}
+2025-11-05 14:42:49,371 - services.github_integration - ERROR - Failed to post issue comment: {'error': 'http_error_404', 'status_code': 404}
+2025-11-05 14:42:49,371 - services.agent_executor - ERROR - Failed to post senior_software_engineer output to GitHub: http_error_404
+2025-11-05 14:42:49,393 - services.work_execution_state - WARNING - No in_progress execution found for senior_software_engineer in Testing, creating new record with outcome success
+2025-11-05 14:42:49,408 - services.agent_executor - INFO - Agent senior_software_engineer completed successfully (duration: 273436ms)
+2025-11-05 14:42:49,408 - pipeline.repair_cycle - INFO - Fixed failures in test_event_processor_integration.py
+2025-11-05 14:42:49,424 - elastic_transport.transport - INFO - POST http://elasticsearch:9200/decision-events-2025-11-05/_doc [status:201 duration:0.015s]
+2025-11-05 14:42:49,425 - monitoring.observability - INFO - Indexed decision event repair_cycle_file_fix_completed to decision-events-2025-11-05
+2025-11-05 14:42:49,425 - pipeline.repair_cycle - INFO - Fixing 2 failures in test_predicate_discovery_integration.py
+2025-11-05 14:42:49,431 - elastic_transport.transport - INFO - POST http://elasticsearch:9200/decision-events-2025-11-05/_doc [status:201 duration:0.005s]
+2025-11-05 14:42:49,431 - monitoring.observability - INFO - Indexed decision event repair_cycle_file_fix_started to decision-events-2025-11-05
+2025-11-05 14:42:49,431 - services.agent_executor - INFO - Executing agent senior_software_engineer for project context-studio (task_id: repair_fix_test_predicate_discovery_integration_py_senior_software_engineer_1762353769)
+2025-11-05 14:42:49,432 - services.agent_executor - INFO - Agent senior_software_engineer requires_docker=True, overriding task context
+2025-11-05 14:42:49,432 - services.agent_executor - INFO - Skipping workspace preparation (skip_workspace_prep=True) for senior_software_engineer
+2025-11-05 14:42:49,432 - services.agent_executor - INFO - Generated container name for UI tracking: claude-agent-context-studio-repair_fix_test_predicate_discovery_integration_py_senior_software_engineer_1762353769
+2025-11-05 14:42:49,438 - elastic_transport.transport - INFO - POST http://elasticsearch:9200/agent-events-2025-11-05/_doc [status:201 duration:0.005s]
+2025-11-05 14:42:49,438 - monitoring.observability - INFO - Indexed agent lifecycle event agent_initialized to agent-events-2025-11-05
+2025-11-05 14:42:49,438 - services.agent_executor - INFO - Agent execution started with ID: 3af2a082-4a92-4ed4-884a-e4e655c48e1c
+2025-11-05 14:42:49,438 - agents.base_maker_agent - INFO - Using INITIAL mode (first-time analysis)
+2025-11-05 14:42:49,439 - claude.claude_integration - INFO - run_claude_code called
+2025-11-05 14:42:49,439 - claude.claude_integration - INFO - Context project: context-studio
+2025-11-05 14:42:49,439 - claude.claude_integration - INFO - Prompt length: 700
+2025-11-05 14:42:49,439 - claude.claude_integration - INFO - Agent senior_software_engineer: use_docker from context=True, agent_config present=True
+2025-11-05 14:42:49,439 - claude.claude_integration - INFO - Agent senior_software_engineer: agent_config type=<class 'config.manager.AgentConfig'>, has requires_docker=True
+2025-11-05 14:42:49,439 - claude.claude_integration - INFO - Agent senior_software_engineer: Using agent_config.requires_docker=True
+2025-11-05 14:42:49,439 - claude.claude_integration - INFO - Running agent in Docker container for project context-studio
+2025-11-05 14:42:49,439 - claude.docker_runner - INFO - Running agent senior_software_engineer in Docker container for project context-studio
+2025-11-05 14:42:49,439 - claude.docker_runner - INFO - Using fallback host workspace path: /home/austinsand/workspace/orchestrator
+2025-11-05 14:42:49,440 - claude.docker_runner - INFO - Mounting project: container=/workspace/context-studio, host=/home/austinsand/workspace/orchestrator/context-studio
+2025-11-05 14:42:49,440 - claude.docker_runner - INFO - Agent senior_software_engineer has filesystem_write_allowed=true, mounting workspace as READ-WRITE
+2025-11-05 14:42:49,440 - claude.docker_runner - INFO - Verifying write access to /workspace/context-studio
+2025-11-05 14:42:49,440 - claude.docker_runner - INFO - ✓ Filesystem write verification passed: Can read, write, and delete files in /workspace/context-studio
+2025-11-05 14:42:49,440 - claude.docker_runner - INFO - Using fallback host home path: /home/orchestrator
+2025-11-05 14:42:49,440 - claude.docker_runner - INFO - Adding -i flag for stdin support
+2025-11-05 14:42:49,440 - claude.docker_runner - INFO - DOCKER MOUNT: /home/austinsand/workspace/orchestrator/context-studio:/workspace:rw
+2025-11-05 14:42:49,440 - claude.docker_runner - INFO - Using CLAUDE_CODE_OAUTH_TOKEN (subscription billing)
+2025-11-05 14:42:49,440 - claude.docker_runner - INFO - DEBUG: OAuth token length: 108, starts with: sk-ant-oat...
+2025-11-05 14:42:49,440 - claude.docker_runner - INFO - Agent senior_software_engineer requires dev container, using project image: context-studio-agent:latest
+2025-11-05 14:42:49,441 - claude.docker_runner - INFO - Using Docker image: context-studio-agent:latest for agent senior_software_engineer
+2025-11-05 14:42:49,441 - claude.docker_runner - INFO - Using Claude model in Docker: claude-sonnet-4-5-20250929
+2025-11-05 14:42:49,441 - claude.docker_runner - INFO - Pre-launch safety check: Verifying container write access...
+2025-11-05 14:42:49,441 - claude.docker_runner - INFO -    Running container write test with container: write-test-senior_software_engineer-1762353769
+2025-11-05 14:42:49,656 - claude.docker_runner - INFO -    ✓ Container write test PASSED
+2025-11-05 14:42:49,656 - claude.docker_runner - INFO - ✓ Pre-launch verification passed: Container has write access
+2025-11-05 14:42:49,656 - claude.docker_runner - INFO - Using --permission-mode bypassPermissions (safe in isolated container)
+2025-11-05 14:42:49,656 - claude.docker_runner - INFO - DEBUG: Checking for GITHUB_TOKEN, got: ***
+2025-11-05 14:42:49,656 - claude.docker_runner - INFO - Added gh configuration setup before claude execution
+2025-11-05 14:42:49,656 - claude.docker_runner - INFO - Executing: docker run ... claude ...
+2025-11-05 14:42:49,656 - claude.docker_runner - INFO - Full Docker command: docker run --rm --name claude-agent-context-studio-repair_fix_test_predicate_discovery_integration_py_senior_software_engineer_1762353769 --network clauditoreum_orchestrator-net -i -v /home/austinsand/workspace/orchestrator/context-studio:/workspace:rw -v /home/orchestrator/.ssh:/home/orchestrator/.ssh:ro -v /home/orchestrator/.gitconfig:/home/orchestrator/.gitconfig:ro -w /workspace -e GITHUB_TOKEN=*** -e GH_AUTH_SETUP_REQUIRED=true -e CLAUDE_CODE_OAUTH_TOKEN=*** context-studio-agent:latest sh -c mkdir -p ~/.config/gh && printf 'version: 1\nauth:\n  github.com:\n    oauth_token: $GITHUB_TOKEN\n    git_protocol: https\n' > ~/.config/gh/hosts.yml && exec claude --print --verbose --output-format stream-json --model claude-sonnet-4-5-20250929 --permission-mode bypassPermissions -
+2025-11-05 14:42:50,700 - claude.docker_runner - INFO - Registered active container: claude-agent-context-studio-repair_fix_test_predicate_discovery_integration_py_senior_software_engineer_1762353769 (agent=senior_software_engineer, project=context-studio, id=None)
+2025-11-05 14:42:50,701 - claude.docker_runner - INFO - Passing prompt via stdin (700 chars)
+2025-11-05 14:42:51,736 - claude.docker_runner - INFO - Captured Claude Code session_id: d191694d-275f-4e13-b21f-29dfd8f0271c
+2025-11-05 14:43:05,286 - services.github_api_client - INFO - 📊 GitHub API Rate Limit Check: 3693/5000 remaining (26.1% used)
+2025-11-05 14:43:05,286 - services.github_api_client - INFO - 📊 GitHub API Call Summary (last hour): 5 total calls from 1 unique sources
+2025-11-05 14:43:05,286 - services.github_api_client - INFO -   📍 threading:run():982: 5 calls [graphql(5)]
+2025-11-05 14:45:52,884 - claude.docker_runner - INFO - Agent completed successfully in container, result length: 3580, session_id: d191694d-275f-4e13-b21f-29dfd8f0271c
+2025-11-05 14:45:52,947 - claude.docker_runner - INFO - Unregistered container: claude-agent-context-studio-repair_fix_test_predicate_discovery_integration_py_senior_software_engineer_1762353769
+2025-11-05 14:45:53,131 - elastic_transport.transport - INFO - POST http://elasticsearch:9200/agent-events-2025-11-05/_doc [status:201 duration:0.166s]
+2025-11-05 14:45:53,133 - monitoring.observability - INFO - Indexed agent lifecycle event agent_completed to agent-events-2025-11-05
+2025-11-05 14:45:53,138 - services.github_integration - WARNING - Using Personal Access Token authentication
+2025-11-05 14:45:53,138 - services.github_integration - INFO - post_agent_output - workspace_type: issues, discussion_id: None, context keys: ['project', 'board', 'pipeline', 'repository', 'issue_number', 'issue', 'previous_stage_output', 'column', 'workspace_type', 'discussion_id', 'pipeline_run_id', 'project_dir', 'use_docker', 'task_id', 'test_configs', 'agent_name', 'max_total_agent_calls', 'checkpoint_interval', 'stage_name', 'observability', 'task_description', 'timeout', 'skip_workspace_prep', 'review_cycle', 'direct_prompt']
+2025-11-05 14:45:53,436 - services.github_api_client - ERROR - HTTP request failed: 404 - {"message":"Not Found","documentation_url":"https://docs.github.com/rest/issues/comments#create-an-issue-comment","status":"404"}
+2025-11-05 14:45:53,437 - services.github_integration - ERROR - Failed to post issue comment: {'error': 'http_error_404', 'status_code': 404}
+2025-11-05 14:45:53,438 - services.agent_executor - ERROR - Failed to post senior_software_engineer output to GitHub: http_error_404
+2025-11-05 14:45:53,494 - services.work_execution_state - WARNING - No in_progress execution found for senior_software_engineer in Testing, creating new record with outcome success
+2025-11-05 14:45:53,514 - services.agent_executor - INFO - Agent senior_software_engineer completed successfully (duration: 183512ms)
+2025-11-05 14:45:53,515 - pipeline.repair_cycle - INFO - Fixed failures in test_predicate_discovery_integration.py
+2025-11-05 14:45:53,535 - elastic_transport.transport - INFO - POST http://elasticsearch:9200/decision-events-2025-11-05/_doc [status:201 duration:0.019s]
+2025-11-05 14:45:53,535 - monitoring.observability - INFO - Indexed decision event repair_cycle_file_fix_completed to decision-events-2025-11-05
+2025-11-05 14:45:53,547 - elastic_transport.transport - INFO - POST http://elasticsearch:9200/decision-events-2025-11-05/_doc [status:201 duration:0.010s]
+2025-11-05 14:45:53,547 - monitoring.observability - INFO - Indexed decision event repair_cycle_fix_cycle_completed to decision-events-2025-11-05
+2025-11-05 14:45:53,548 - pipeline.repair_cycle - INFO - Test cycle iteration 2/3 for integration (test type 2/2)
+2025-11-05 14:45:53,557 - elastic_transport.transport - INFO - POST http://elasticsearch:9200/decision-events-2025-11-05/_doc [status:201 duration:0.009s]
+2025-11-05 14:45:53,557 - monitoring.observability - INFO - Indexed decision event repair_cycle_iteration to decision-events-2025-11-05
+2025-11-05 14:45:53,558 - pipeline.repair_cycle - INFO - Running integration tests (test cycle iteration 2/3, test type 2)
+2025-11-05 14:45:53,577 - elastic_transport.transport - INFO - POST http://elasticsearch:9200/decision-events-2025-11-05/_doc [status:201 duration:0.019s]
+2025-11-05 14:45:53,577 - monitoring.observability - INFO - Indexed decision event repair_cycle_test_execution_started to decision-events-2025-11-05
+2025-11-05 14:45:53,578 - services.agent_executor - INFO - Executing agent senior_software_engineer for project context-studio (task_id: repair_test_integration_type2_iter2_attempt0_senior_software_engineer_1762353953)
+2025-11-05 14:45:53,582 - services.agent_executor - INFO - Agent senior_software_engineer requires_docker=True, overriding task context
+2025-11-05 14:45:53,583 - services.agent_executor - INFO - Skipping workspace preparation (skip_workspace_prep=True) for senior_software_engineer
+2025-11-05 14:45:53,584 - services.agent_executor - INFO - Generated container name for UI tracking: claude-agent-context-studio-repair_test_integration_type2_iter2_attempt0_senior_software_engineer_1762353953
+2025-11-05 14:45:53,602 - elastic_transport.transport - INFO - POST http://elasticsearch:9200/agent-events-2025-11-05/_doc [status:201 duration:0.015s]
+2025-11-05 14:45:53,602 - monitoring.observability - INFO - Indexed agent lifecycle event agent_initialized to agent-events-2025-11-05
+2025-11-05 14:45:53,603 - services.agent_executor - INFO - Agent execution started with ID: 9b503e9d-3f30-4b6b-95c1-55bdb7b7cb4b
+2025-11-05 14:45:53,603 - agents.base_maker_agent - INFO - Using INITIAL mode (first-time analysis)
+2025-11-05 14:45:53,604 - claude.claude_integration - INFO - run_claude_code called
+2025-11-05 14:45:53,604 - claude.claude_integration - INFO - Context project: context-studio
+2025-11-05 14:45:53,604 - claude.claude_integration - INFO - Prompt length: 1354
+2025-11-05 14:45:53,606 - claude.claude_integration - INFO - Agent senior_software_engineer: use_docker from context=True, agent_config present=True
+2025-11-05 14:45:53,606 - claude.claude_integration - INFO - Agent senior_software_engineer: agent_config type=<class 'config.manager.AgentConfig'>, has requires_docker=True
+2025-11-05 14:45:53,607 - claude.claude_integration - INFO - Agent senior_software_engineer: Using agent_config.requires_docker=True
+2025-11-05 14:45:53,607 - claude.claude_integration - INFO - Running agent in Docker container for project context-studio
+2025-11-05 14:45:53,607 - claude.docker_runner - INFO - Running agent senior_software_engineer in Docker container for project context-studio
+2025-11-05 14:45:53,607 - claude.docker_runner - INFO - Using fallback host workspace path: /home/austinsand/workspace/orchestrator
+2025-11-05 14:45:53,607 - claude.docker_runner - INFO - Mounting project: container=/workspace/context-studio, host=/home/austinsand/workspace/orchestrator/context-studio
+2025-11-05 14:45:53,607 - claude.docker_runner - INFO - Agent senior_software_engineer has filesystem_write_allowed=true, mounting workspace as READ-WRITE
+2025-11-05 14:45:53,607 - claude.docker_runner - INFO - Verifying write access to /workspace/context-studio
+2025-11-05 14:45:53,608 - claude.docker_runner - INFO - ✓ Filesystem write verification passed: Can read, write, and delete files in /workspace/context-studio
+2025-11-05 14:45:53,608 - claude.docker_runner - INFO - Using fallback host home path: /home/orchestrator
+2025-11-05 14:45:53,608 - claude.docker_runner - INFO - Adding -i flag for stdin support
+2025-11-05 14:45:53,608 - claude.docker_runner - INFO - DOCKER MOUNT: /home/austinsand/workspace/orchestrator/context-studio:/workspace:rw
+2025-11-05 14:45:53,608 - claude.docker_runner - INFO - Using CLAUDE_CODE_OAUTH_TOKEN (subscription billing)
+2025-11-05 14:45:53,608 - claude.docker_runner - INFO - DEBUG: OAuth token length: 108, starts with: sk-ant-oat...
+2025-11-05 14:45:53,612 - claude.docker_runner - INFO - Agent senior_software_engineer requires dev container, using project image: context-studio-agent:latest
+2025-11-05 14:45:53,612 - claude.docker_runner - INFO - Using Docker image: context-studio-agent:latest for agent senior_software_engineer
+2025-11-05 14:45:53,612 - claude.docker_runner - INFO - Using Claude model in Docker: claude-sonnet-4-5-20250929
+2025-11-05 14:45:53,612 - claude.docker_runner - INFO - Pre-launch safety check: Verifying container write access...
+2025-11-05 14:45:53,613 - claude.docker_runner - INFO -    Running container write test with container: write-test-senior_software_engineer-1762353953
+2025-11-05 14:45:54,502 - claude.docker_runner - INFO -    ✓ Container write test PASSED
+2025-11-05 14:45:54,502 - claude.docker_runner - INFO - ✓ Pre-launch verification passed: Container has write access
+2025-11-05 14:45:54,502 - claude.docker_runner - INFO - Using --permission-mode bypassPermissions (safe in isolated container)
+2025-11-05 14:45:54,502 - claude.docker_runner - INFO - DEBUG: Checking for GITHUB_TOKEN, got: ***
+2025-11-05 14:45:54,502 - claude.docker_runner - INFO - Added gh configuration setup before claude execution
+2025-11-05 14:45:54,502 - claude.docker_runner - INFO - Executing: docker run ... claude ...
+2025-11-05 14:45:54,502 - claude.docker_runner - INFO - Full Docker command: docker run --rm --name claude-agent-context-studio-repair_test_integration_type2_iter2_attempt0_senior_software_engineer_1762353953 --network clauditoreum_orchestrator-net -i -v /home/austinsand/workspace/orchestrator/context-studio:/workspace:rw -v /home/orchestrator/.ssh:/home/orchestrator/.ssh:ro -v /home/orchestrator/.gitconfig:/home/orchestrator/.gitconfig:ro -w /workspace -e GITHUB_TOKEN=*** -e GH_AUTH_SETUP_REQUIRED=true -e CLAUDE_CODE_OAUTH_TOKEN=*** context-studio-agent:latest sh -c mkdir -p ~/.config/gh && printf 'version: 1\nauth:\n  github.com:\n    oauth_token: $GITHUB_TOKEN\n    git_protocol: https\n' > ~/.config/gh/hosts.yml && exec claude --print --verbose --output-format stream-json --model claude-sonnet-4-5-20250929 --permission-mode bypassPermissions -
+2025-11-05 14:45:55,545 - claude.docker_runner - INFO - Registered active container: claude-agent-context-studio-repair_test_integration_type2_iter2_attempt0_senior_software_engineer_1762353953 (agent=senior_software_engineer, project=context-studio, id=None)
+2025-11-05 14:45:55,548 - claude.docker_runner - INFO - Passing prompt via stdin (1354 chars)
+2025-11-05 14:45:56,801 - claude.docker_runner - INFO - Captured Claude Code session_id: ae3f619f-d2ff-4b85-8559-a57047de1ddb
+2025-11-05 14:48:05,513 - services.github_api_client - INFO - 📊 GitHub API Rate Limit Check: 4907/5000 remaining (1.9% used)
+2025-11-05 14:48:05,523 - services.github_api_client - INFO - 📊 GitHub API Call Summary (last hour): 6 total calls from 1 unique sources
+2025-11-05 14:48:05,524 - services.github_api_client - INFO -   📍 threading:run():982: 6 calls [graphql(6)]
+2025-11-05 14:53:05,746 - services.github_api_client - INFO - 📊 GitHub API Rate Limit Check: 4770/5000 remaining (4.6% used)
+2025-11-05 14:53:05,751 - services.github_api_client - INFO - 📊 GitHub API Call Summary (last hour): 7 total calls from 1 unique sources
+2025-11-05 14:53:05,751 - services.github_api_client - INFO -   📍 threading:run():982: 7 calls [graphql(7)]
+2025-11-05 14:54:34,008 - claude.docker_runner - INFO - Agent completed successfully in container, result length: 3949, session_id: ae3f619f-d2ff-4b85-8559-a57047de1ddb
+2025-11-05 14:54:34,168 - claude.docker_runner - INFO - Unregistered container: claude-agent-context-studio-repair_test_integration_type2_iter2_attempt0_senior_software_engineer_1762353953
+2025-11-05 14:54:34,421 - elastic_transport.transport - INFO - POST http://elasticsearch:9200/agent-events-2025-11-05/_doc [status:201 duration:0.236s]
+2025-11-05 14:54:34,424 - monitoring.observability - INFO - Indexed agent lifecycle event agent_completed to agent-events-2025-11-05
+2025-11-05 14:54:34,430 - services.github_integration - WARNING - Using Personal Access Token authentication
+2025-11-05 14:54:34,431 - services.github_integration - INFO - post_agent_output - workspace_type: issues, discussion_id: None, context keys: ['project', 'board', 'pipeline', 'repository', 'issue_number', 'issue', 'previous_stage_output', 'column', 'workspace_type', 'discussion_id', 'pipeline_run_id', 'project_dir', 'use_docker', 'task_id', 'test_configs', 'agent_name', 'max_total_agent_calls', 'checkpoint_interval', 'stage_name', 'observability', 'task_description', 'timeout', 'skip_workspace_prep', 'review_cycle', 'direct_prompt']
+2025-11-05 14:54:34,771 - services.github_api_client - ERROR - HTTP request failed: 404 - {"message":"Not Found","documentation_url":"https://docs.github.com/rest/issues/comments#create-an-issue-comment","status":"404"}
+2025-11-05 14:54:34,774 - services.github_integration - ERROR - Failed to post issue comment: {'error': 'http_error_404', 'status_code': 404}
+2025-11-05 14:54:34,775 - services.agent_executor - ERROR - Failed to post senior_software_engineer output to GitHub: http_error_404
+2025-11-05 14:54:34,850 - services.work_execution_state - WARNING - No in_progress execution found for senior_software_engineer in Testing, creating new record with outcome success
+2025-11-05 14:54:34,868 - services.agent_executor - INFO - Agent senior_software_engineer completed successfully (duration: 520569ms)
+2025-11-05 14:54:34,870 - pipeline.repair_cycle - INFO - Parsed test result JSON keys: ['passed', 'failed', 'warnings', 'failures', 'warning_list'], warnings type: <class 'int'>, warning_list type: <class 'list'>
+2025-11-05 14:54:34,888 - elastic_transport.transport - INFO - POST http://elasticsearch:9200/decision-events-2025-11-05/_doc [status:201 duration:0.017s]
+2025-11-05 14:54:34,888 - monitoring.observability - INFO - Indexed decision event repair_cycle_test_execution_completed to decision-events-2025-11-05
+2025-11-05 14:54:34,891 - pipeline.repair_cycle - INFO - Found failures in 2 files: ['e2e/tests/example.spec.ts', 'e2e/tests/layers.spec.ts']
+2025-11-05 14:54:34,913 - elastic_transport.transport - INFO - POST http://elasticsearch:9200/decision-events-2025-11-05/_doc [status:201 duration:0.020s]
+2025-11-05 14:54:34,913 - monitoring.observability - INFO - Indexed decision event repair_cycle_fix_cycle_started to decision-events-2025-11-05
+2025-11-05 14:54:34,915 - pipeline.repair_cycle - INFO - Fixing 4 failures in e2e/tests/example.spec.ts
+2025-11-05 14:54:34,930 - elastic_transport.transport - INFO - POST http://elasticsearch:9200/decision-events-2025-11-05/_doc [status:201 duration:0.015s]
+2025-11-05 14:54:34,930 - monitoring.observability - INFO - Indexed decision event repair_cycle_file_fix_started to decision-events-2025-11-05
+2025-11-05 14:54:34,932 - services.agent_executor - INFO - Executing agent senior_software_engineer for project context-studio (task_id: repair_fix_e2e_tests_example_spec_ts_senior_software_engineer_1762354474)
+2025-11-05 14:54:34,940 - services.agent_executor - INFO - Agent senior_software_engineer requires_docker=True, overriding task context
+2025-11-05 14:54:34,942 - services.agent_executor - INFO - Skipping workspace preparation (skip_workspace_prep=True) for senior_software_engineer
+2025-11-05 14:54:34,943 - services.agent_executor - INFO - Generated container name for UI tracking: claude-agent-context-studio-repair_fix_e2e_tests_example_spec_ts_senior_software_engineer_1762354474
+2025-11-05 14:54:34,978 - elastic_transport.transport - INFO - POST http://elasticsearch:9200/agent-events-2025-11-05/_doc [status:201 duration:0.034s]
+2025-11-05 14:54:34,978 - monitoring.observability - INFO - Indexed agent lifecycle event agent_initialized to agent-events-2025-11-05
+2025-11-05 14:54:34,978 - services.agent_executor - INFO - Agent execution started with ID: e97d5f4b-9e6e-4211-a5b3-b6198de317e2
+2025-11-05 14:54:34,981 - agents.base_maker_agent - INFO - Using INITIAL mode (first-time analysis)
+2025-11-05 14:54:34,982 - claude.claude_integration - INFO - run_claude_code called
+2025-11-05 14:54:34,982 - claude.claude_integration - INFO - Context project: context-studio
+2025-11-05 14:54:34,982 - claude.claude_integration - INFO - Prompt length: 1167
+2025-11-05 14:54:34,985 - claude.claude_integration - INFO - Agent senior_software_engineer: use_docker from context=True, agent_config present=True
+2025-11-05 14:54:34,985 - claude.claude_integration - INFO - Agent senior_software_engineer: agent_config type=<class 'config.manager.AgentConfig'>, has requires_docker=True
+2025-11-05 14:54:34,985 - claude.claude_integration - INFO - Agent senior_software_engineer: Using agent_config.requires_docker=True
+2025-11-05 14:54:34,986 - claude.claude_integration - INFO - Running agent in Docker container for project context-studio
+2025-11-05 14:54:34,986 - claude.docker_runner - INFO - Running agent senior_software_engineer in Docker container for project context-studio
+2025-11-05 14:54:34,988 - claude.docker_runner - INFO - Using fallback host workspace path: /home/austinsand/workspace/orchestrator
+2025-11-05 14:54:34,988 - claude.docker_runner - INFO - Mounting project: container=/workspace/context-studio, host=/home/austinsand/workspace/orchestrator/context-studio
+2025-11-05 14:54:34,989 - claude.docker_runner - INFO - Agent senior_software_engineer has filesystem_write_allowed=true, mounting workspace as READ-WRITE
+2025-11-05 14:54:34,989 - claude.docker_runner - INFO - Verifying write access to /workspace/context-studio
+2025-11-05 14:54:34,990 - claude.docker_runner - INFO - ✓ Filesystem write verification passed: Can read, write, and delete files in /workspace/context-studio
+2025-11-05 14:54:34,991 - claude.docker_runner - INFO - Using fallback host home path: /home/orchestrator
+2025-11-05 14:54:34,991 - claude.docker_runner - INFO - Adding -i flag for stdin support
+2025-11-05 14:54:34,991 - claude.docker_runner - INFO - DOCKER MOUNT: /home/austinsand/workspace/orchestrator/context-studio:/workspace:rw
+2025-11-05 14:54:34,991 - claude.docker_runner - INFO - Using CLAUDE_CODE_OAUTH_TOKEN (subscription billing)
+2025-11-05 14:54:34,991 - claude.docker_runner - INFO - DEBUG: OAuth token length: 108, starts with: sk-ant-oat...
+2025-11-05 14:54:34,997 - claude.docker_runner - INFO - Agent senior_software_engineer requires dev container, using project image: context-studio-agent:latest
+2025-11-05 14:54:34,997 - claude.docker_runner - INFO - Using Docker image: context-studio-agent:latest for agent senior_software_engineer
+2025-11-05 14:54:34,997 - claude.docker_runner - INFO - Using Claude model in Docker: claude-sonnet-4-5-20250929
+2025-11-05 14:54:34,997 - claude.docker_runner - INFO - Pre-launch safety check: Verifying container write access...
+2025-11-05 14:54:34,998 - claude.docker_runner - INFO -    Running container write test with container: write-test-senior_software_engineer-1762354474
+2025-11-05 14:54:36,061 - claude.docker_runner - INFO -    ✓ Container write test PASSED
+2025-11-05 14:54:36,062 - claude.docker_runner - INFO - ✓ Pre-launch verification passed: Container has write access
+2025-11-05 14:54:36,062 - claude.docker_runner - INFO - Using --permission-mode bypassPermissions (safe in isolated container)
+2025-11-05 14:54:36,062 - claude.docker_runner - INFO - DEBUG: Checking for GITHUB_TOKEN, got: ***
+2025-11-05 14:54:36,062 - claude.docker_runner - INFO - Added gh configuration setup before claude execution
+2025-11-05 14:54:36,062 - claude.docker_runner - INFO - Executing: docker run ... claude ...
+2025-11-05 14:54:36,062 - claude.docker_runner - INFO - Full Docker command: docker run --rm --name claude-agent-context-studio-repair_fix_e2e_tests_example_spec_ts_senior_software_engineer_1762354474 --network clauditoreum_orchestrator-net -i -v /home/austinsand/workspace/orchestrator/context-studio:/workspace:rw -v /home/orchestrator/.ssh:/home/orchestrator/.ssh:ro -v /home/orchestrator/.gitconfig:/home/orchestrator/.gitconfig:ro -w /workspace -e GITHUB_TOKEN=*** -e GH_AUTH_SETUP_REQUIRED=true -e CLAUDE_CODE_OAUTH_TOKEN=*** context-studio-agent:latest sh -c mkdir -p ~/.config/gh && printf 'version: 1\nauth:\n  github.com:\n    oauth_token: $GITHUB_TOKEN\n    git_protocol: https\n' > ~/.config/gh/hosts.yml && exec claude --print --verbose --output-format stream-json --model claude-sonnet-4-5-20250929 --permission-mode bypassPermissions -
+2025-11-05 14:54:37,320 - claude.docker_runner - INFO - Registered active container: claude-agent-context-studio-repair_fix_e2e_tests_example_spec_ts_senior_software_engineer_1762354474 (agent=senior_software_engineer, project=context-studio, id=None)
+2025-11-05 14:54:37,321 - claude.docker_runner - INFO - Passing prompt via stdin (1167 chars)
+2025-11-05 14:54:39,450 - claude.docker_runner - INFO - Captured Claude Code session_id: e856c03b-992b-4ff4-a407-e29c03deae7e
+2025-11-05 14:58:06,202 - services.github_api_client - INFO - 📊 GitHub API Rate Limit Check: 4635/5000 remaining (7.3% used)
+2025-11-05 14:58:06,216 - services.github_api_client - INFO - 📊 GitHub API Call Summary (last hour): 8 total calls from 1 unique sources
+2025-11-05 14:58:06,221 - services.github_api_client - INFO -   📍 threading:run():982: 8 calls [graphql(8)]
+2025-11-05 14:58:17,678 - claude.docker_runner - INFO - Agent completed successfully in container, result length: 2783, session_id: e856c03b-992b-4ff4-a407-e29c03deae7e
+2025-11-05 14:58:17,713 - claude.docker_runner - INFO - Unregistered container: claude-agent-context-studio-repair_fix_e2e_tests_example_spec_ts_senior_software_engineer_1762354474
+2025-11-05 14:58:17,936 - elastic_transport.transport - INFO - POST http://elasticsearch:9200/agent-events-2025-11-05/_doc [status:201 duration:0.208s]
+2025-11-05 14:58:17,939 - monitoring.observability - INFO - Indexed agent lifecycle event agent_completed to agent-events-2025-11-05
+2025-11-05 14:58:17,943 - services.github_integration - WARNING - Using Personal Access Token authentication
+2025-11-05 14:58:17,944 - services.github_integration - INFO - post_agent_output - workspace_type: issues, discussion_id: None, context keys: ['project', 'board', 'pipeline', 'repository', 'issue_number', 'issue', 'previous_stage_output', 'column', 'workspace_type', 'discussion_id', 'pipeline_run_id', 'project_dir', 'use_docker', 'task_id', 'test_configs', 'agent_name', 'max_total_agent_calls', 'checkpoint_interval', 'stage_name', 'observability', 'task_description', 'timeout', 'skip_workspace_prep', 'review_cycle', 'direct_prompt']
+2025-11-05 14:58:18,253 - services.github_api_client - ERROR - HTTP request failed: 404 - {"message":"Not Found","documentation_url":"https://docs.github.com/rest/issues/comments#create-an-issue-comment","status":"404"}
+2025-11-05 14:58:18,254 - services.github_integration - ERROR - Failed to post issue comment: {'error': 'http_error_404', 'status_code': 404}
+2025-11-05 14:58:18,254 - services.agent_executor - ERROR - Failed to post senior_software_engineer output to GitHub: http_error_404
+2025-11-05 14:58:18,299 - services.work_execution_state - WARNING - No in_progress execution found for senior_software_engineer in Testing, creating new record with outcome success
+2025-11-05 14:58:18,317 - services.agent_executor - INFO - Agent senior_software_engineer completed successfully (duration: 222739ms)
+2025-11-05 14:58:18,318 - pipeline.repair_cycle - INFO - Fixed failures in e2e/tests/example.spec.ts
+2025-11-05 14:58:18,352 - elastic_transport.transport - INFO - POST http://elasticsearch:9200/decision-events-2025-11-05/_doc [status:201 duration:0.032s]
+2025-11-05 14:58:18,352 - monitoring.observability - INFO - Indexed decision event repair_cycle_file_fix_completed to decision-events-2025-11-05
+2025-11-05 14:58:18,352 - pipeline.repair_cycle - INFO - Fixing 9 failures in e2e/tests/layers.spec.ts
+2025-11-05 14:58:18,369 - elastic_transport.transport - INFO - POST http://elasticsearch:9200/decision-events-2025-11-05/_doc [status:201 duration:0.017s]
+2025-11-05 14:58:18,369 - monitoring.observability - INFO - Indexed decision event repair_cycle_file_fix_started to decision-events-2025-11-05
+2025-11-05 14:58:18,371 - services.agent_executor - INFO - Executing agent senior_software_engineer for project context-studio (task_id: repair_fix_e2e_tests_layers_spec_ts_senior_software_engineer_1762354698)
+2025-11-05 14:58:18,376 - services.agent_executor - INFO - Agent senior_software_engineer requires_docker=True, overriding task context
+2025-11-05 14:58:18,377 - services.agent_executor - INFO - Skipping workspace preparation (skip_workspace_prep=True) for senior_software_engineer
+2025-11-05 14:58:18,378 - services.agent_executor - INFO - Generated container name for UI tracking: claude-agent-context-studio-repair_fix_e2e_tests_layers_spec_ts_senior_software_engineer_1762354698
+2025-11-05 14:58:18,407 - elastic_transport.transport - INFO - POST http://elasticsearch:9200/agent-events-2025-11-05/_doc [status:201 duration:0.028s]
+2025-11-05 14:58:18,407 - monitoring.observability - INFO - Indexed agent lifecycle event agent_initialized to agent-events-2025-11-05
+2025-11-05 14:58:18,407 - services.agent_executor - INFO - Agent execution started with ID: 7c2494de-3d41-423c-bcf2-f99a8f0c5495
+2025-11-05 14:58:18,408 - agents.base_maker_agent - INFO - Using INITIAL mode (first-time analysis)
+2025-11-05 14:58:18,409 - claude.claude_integration - INFO - run_claude_code called
+2025-11-05 14:58:18,409 - claude.claude_integration - INFO - Context project: context-studio
+2025-11-05 14:58:18,409 - claude.claude_integration - INFO - Prompt length: 2195
+2025-11-05 14:58:18,410 - claude.claude_integration - INFO - Agent senior_software_engineer: use_docker from context=True, agent_config present=True
+2025-11-05 14:58:18,410 - claude.claude_integration - INFO - Agent senior_software_engineer: agent_config type=<class 'config.manager.AgentConfig'>, has requires_docker=True
+2025-11-05 14:58:18,410 - claude.claude_integration - INFO - Agent senior_software_engineer: Using agent_config.requires_docker=True
+2025-11-05 14:58:18,411 - claude.claude_integration - INFO - Running agent in Docker container for project context-studio
+2025-11-05 14:58:18,411 - claude.docker_runner - INFO - Running agent senior_software_engineer in Docker container for project context-studio
+2025-11-05 14:58:18,411 - claude.docker_runner - INFO - Using fallback host workspace path: /home/austinsand/workspace/orchestrator
+2025-11-05 14:58:18,411 - claude.docker_runner - INFO - Mounting project: container=/workspace/context-studio, host=/home/austinsand/workspace/orchestrator/context-studio
+2025-11-05 14:58:18,411 - claude.docker_runner - INFO - Agent senior_software_engineer has filesystem_write_allowed=true, mounting workspace as READ-WRITE
+2025-11-05 14:58:18,411 - claude.docker_runner - INFO - Verifying write access to /workspace/context-studio
+2025-11-05 14:58:18,412 - claude.docker_runner - INFO - ✓ Filesystem write verification passed: Can read, write, and delete files in /workspace/context-studio
+2025-11-05 14:58:18,412 - claude.docker_runner - INFO - Using fallback host home path: /home/orchestrator
+2025-11-05 14:58:18,412 - claude.docker_runner - INFO - Adding -i flag for stdin support
+2025-11-05 14:58:18,412 - claude.docker_runner - INFO - DOCKER MOUNT: /home/austinsand/workspace/orchestrator/context-studio:/workspace:rw
+2025-11-05 14:58:18,412 - claude.docker_runner - INFO - Using CLAUDE_CODE_OAUTH_TOKEN (subscription billing)
+2025-11-05 14:58:18,412 - claude.docker_runner - INFO - DEBUG: OAuth token length: 108, starts with: sk-ant-oat...
+2025-11-05 14:58:18,414 - claude.docker_runner - INFO - Agent senior_software_engineer requires dev container, using project image: context-studio-agent:latest
+2025-11-05 14:58:18,415 - claude.docker_runner - INFO - Using Docker image: context-studio-agent:latest for agent senior_software_engineer
+2025-11-05 14:58:18,415 - claude.docker_runner - INFO - Using Claude model in Docker: claude-sonnet-4-5-20250929
+2025-11-05 14:58:18,415 - claude.docker_runner - INFO - Pre-launch safety check: Verifying container write access...
+2025-11-05 14:58:18,415 - claude.docker_runner - INFO -    Running container write test with container: write-test-senior_software_engineer-1762354698
+2025-11-05 14:58:19,260 - claude.docker_runner - INFO -    ✓ Container write test PASSED
+2025-11-05 14:58:19,260 - claude.docker_runner - INFO - ✓ Pre-launch verification passed: Container has write access
+2025-11-05 14:58:19,260 - claude.docker_runner - INFO - Using --permission-mode bypassPermissions (safe in isolated container)
+2025-11-05 14:58:19,260 - claude.docker_runner - INFO - DEBUG: Checking for GITHUB_TOKEN, got: ***
+2025-11-05 14:58:19,260 - claude.docker_runner - INFO - Added gh configuration setup before claude execution
+2025-11-05 14:58:19,260 - claude.docker_runner - INFO - Executing: docker run ... claude ...
+2025-11-05 14:58:19,260 - claude.docker_runner - INFO - Full Docker command: docker run --rm --name claude-agent-context-studio-repair_fix_e2e_tests_layers_spec_ts_senior_software_engineer_1762354698 --network clauditoreum_orchestrator-net -i -v /home/austinsand/workspace/orchestrator/context-studio:/workspace:rw -v /home/orchestrator/.ssh:/home/orchestrator/.ssh:ro -v /home/orchestrator/.gitconfig:/home/orchestrator/.gitconfig:ro -w /workspace -e GITHUB_TOKEN=*** -e GH_AUTH_SETUP_REQUIRED=true -e CLAUDE_CODE_OAUTH_TOKEN=*** context-studio-agent:latest sh -c mkdir -p ~/.config/gh && printf 'version: 1\nauth:\n  github.com:\n    oauth_token: $GITHUB_TOKEN\n    git_protocol: https\n' > ~/.config/gh/hosts.yml && exec claude --print --verbose --output-format stream-json --model claude-sonnet-4-5-20250929 --permission-mode bypassPermissions -
+2025-11-05 14:58:20,302 - claude.docker_runner - INFO - Registered active container: claude-agent-context-studio-repair_fix_e2e_tests_layers_spec_ts_senior_software_engineer_1762354698 (agent=senior_software_engineer, project=context-studio, id=None)
+2025-11-05 14:58:20,303 - claude.docker_runner - INFO - Passing prompt via stdin (2195 chars)
+2025-11-05 14:58:21,575 - claude.docker_runner - INFO - Captured Claude Code session_id: 84b545fe-560c-4984-a5a2-9d1574d5140e
+2025-11-05 15:03:06,898 - services.github_api_client - INFO - 📊 GitHub API Rate Limit Check: 4500/5000 remaining (10.0% used)
+2025-11-05 15:03:07,155 - services.github_api_client - INFO - 📊 GitHub API Call Summary (last hour): 9 total calls from 1 unique sources
+2025-11-05 15:03:07,157 - services.github_api_client - INFO -   📍 threading:run():982: 9 calls [graphql(9)]
+2025-11-05 15:08:07,485 - services.github_api_client - INFO - 📊 GitHub API Rate Limit Check: 4375/5000 remaining (12.5% used)
+2025-11-05 15:08:07,499 - services.github_api_client - INFO - 📊 GitHub API Call Summary (last hour): 10 total calls from 1 unique sources
+2025-11-05 15:08:07,501 - services.github_api_client - INFO -   📍 threading:run():982: 10 calls [graphql(10)]
+2025-11-05 15:08:25,195 - claude.docker_runner - INFO - Agent completed successfully in container, result length: 5896, session_id: 84b545fe-560c-4984-a5a2-9d1574d5140e
+2025-11-05 15:08:25,253 - claude.docker_runner - INFO - Unregistered container: claude-agent-context-studio-repair_fix_e2e_tests_layers_spec_ts_senior_software_engineer_1762354698
+2025-11-05 15:08:25,516 - elastic_transport.transport - INFO - POST http://elasticsearch:9200/agent-events-2025-11-05/_doc [status:201 duration:0.246s]
+2025-11-05 15:08:25,519 - monitoring.observability - INFO - Indexed agent lifecycle event agent_completed to agent-events-2025-11-05
+2025-11-05 15:08:25,523 - services.github_integration - WARNING - Using Personal Access Token authentication
+2025-11-05 15:08:25,523 - services.github_integration - INFO - post_agent_output - workspace_type: issues, discussion_id: None, context keys: ['project', 'board', 'pipeline', 'repository', 'issue_number', 'issue', 'previous_stage_output', 'column', 'workspace_type', 'discussion_id', 'pipeline_run_id', 'project_dir', 'use_docker', 'task_id', 'test_configs', 'agent_name', 'max_total_agent_calls', 'checkpoint_interval', 'stage_name', 'observability', 'task_description', 'timeout', 'skip_workspace_prep', 'review_cycle', 'direct_prompt']
+2025-11-05 15:08:25,955 - services.github_api_client - ERROR - HTTP request failed: 404 - {"message":"Not Found","documentation_url":"https://docs.github.com/rest/issues/comments#create-an-issue-comment","status":"404"}
+2025-11-05 15:08:25,968 - services.github_integration - ERROR - Failed to post issue comment: {'error': 'http_error_404', 'status_code': 404}
+2025-11-05 15:08:25,983 - services.agent_executor - ERROR - Failed to post senior_software_engineer output to GitHub: http_error_404
+2025-11-05 15:08:26,077 - services.work_execution_state - WARNING - No in_progress execution found for senior_software_engineer in Testing, creating new record with outcome success
+2025-11-05 15:08:26,101 - services.agent_executor - INFO - Agent senior_software_engineer completed successfully (duration: 606850ms)
+2025-11-05 15:08:26,102 - pipeline.repair_cycle - INFO - Fixed failures in e2e/tests/layers.spec.ts
+2025-11-05 15:08:26,134 - elastic_transport.transport - INFO - POST http://elasticsearch:9200/decision-events-2025-11-05/_doc [status:201 duration:0.031s]
+2025-11-05 15:08:26,135 - monitoring.observability - INFO - Indexed decision event repair_cycle_file_fix_completed to decision-events-2025-11-05
+2025-11-05 15:08:26,152 - elastic_transport.transport - INFO - POST http://elasticsearch:9200/decision-events-2025-11-05/_doc [status:201 duration:0.016s]
+2025-11-05 15:08:26,152 - monitoring.observability - INFO - Indexed decision event repair_cycle_fix_cycle_completed to decision-events-2025-11-05
+2025-11-05 15:08:26,152 - pipeline.repair_cycle - INFO - Test cycle iteration 3/3 for integration (test type 2/2)
+2025-11-05 15:08:26,177 - elastic_transport.transport - INFO - POST http://elasticsearch:9200/decision-events-2025-11-05/_doc [status:201 duration:0.025s]
+2025-11-05 15:08:26,178 - monitoring.observability - INFO - Indexed decision event repair_cycle_iteration to decision-events-2025-11-05
+2025-11-05 15:08:26,179 - pipeline.repair_cycle - INFO - Running integration tests (test cycle iteration 3/3, test type 2)
+2025-11-05 15:08:26,205 - elastic_transport.transport - INFO - POST http://elasticsearch:9200/decision-events-2025-11-05/_doc [status:201 duration:0.025s]
+2025-11-05 15:08:26,205 - monitoring.observability - INFO - Indexed decision event repair_cycle_test_execution_started to decision-events-2025-11-05
+2025-11-05 15:08:26,207 - services.agent_executor - INFO - Executing agent senior_software_engineer for project context-studio (task_id: repair_test_integration_type2_iter3_attempt0_senior_software_engineer_1762355306)
+2025-11-05 15:08:26,212 - services.agent_executor - INFO - Agent senior_software_engineer requires_docker=True, overriding task context
+2025-11-05 15:08:26,213 - services.agent_executor - INFO - Skipping workspace preparation (skip_workspace_prep=True) for senior_software_engineer
+2025-11-05 15:08:26,214 - services.agent_executor - INFO - Generated container name for UI tracking: claude-agent-context-studio-repair_test_integration_type2_iter3_attempt0_senior_software_engineer_1762355306
+2025-11-05 15:08:26,322 - elastic_transport.transport - INFO - POST http://elasticsearch:9200/agent-events-2025-11-05/_doc [status:201 duration:0.106s]
+2025-11-05 15:08:26,322 - monitoring.observability - INFO - Indexed agent lifecycle event agent_initialized to agent-events-2025-11-05
+2025-11-05 15:08:26,322 - services.agent_executor - INFO - Agent execution started with ID: ccadb627-c7af-4245-9df4-6f2a1364e141
+2025-11-05 15:08:26,322 - agents.base_maker_agent - INFO - Using INITIAL mode (first-time analysis)
+2025-11-05 15:08:26,323 - claude.claude_integration - INFO - run_claude_code called
+2025-11-05 15:08:26,323 - claude.claude_integration - INFO - Context project: context-studio
+2025-11-05 15:08:26,323 - claude.claude_integration - INFO - Prompt length: 1354
+2025-11-05 15:08:26,325 - claude.claude_integration - INFO - Agent senior_software_engineer: use_docker from context=True, agent_config present=True
+2025-11-05 15:08:26,325 - claude.claude_integration - INFO - Agent senior_software_engineer: agent_config type=<class 'config.manager.AgentConfig'>, has requires_docker=True
+2025-11-05 15:08:26,326 - claude.claude_integration - INFO - Agent senior_software_engineer: Using agent_config.requires_docker=True
+2025-11-05 15:08:26,326 - claude.claude_integration - INFO - Running agent in Docker container for project context-studio
+2025-11-05 15:08:26,326 - claude.docker_runner - INFO - Running agent senior_software_engineer in Docker container for project context-studio
+2025-11-05 15:08:26,326 - claude.docker_runner - INFO - Using fallback host workspace path: /home/austinsand/workspace/orchestrator
+2025-11-05 15:08:26,326 - claude.docker_runner - INFO - Mounting project: container=/workspace/context-studio, host=/home/austinsand/workspace/orchestrator/context-studio
+2025-11-05 15:08:26,327 - claude.docker_runner - INFO - Agent senior_software_engineer has filesystem_write_allowed=true, mounting workspace as READ-WRITE
+2025-11-05 15:08:26,327 - claude.docker_runner - INFO - Verifying write access to /workspace/context-studio
+2025-11-05 15:08:26,327 - claude.docker_runner - INFO - ✓ Filesystem write verification passed: Can read, write, and delete files in /workspace/context-studio
+2025-11-05 15:08:26,327 - claude.docker_runner - INFO - Using fallback host home path: /home/orchestrator
+2025-11-05 15:08:26,327 - claude.docker_runner - INFO - Adding -i flag for stdin support
+2025-11-05 15:08:26,327 - claude.docker_runner - INFO - DOCKER MOUNT: /home/austinsand/workspace/orchestrator/context-studio:/workspace:rw
+2025-11-05 15:08:26,327 - claude.docker_runner - INFO - Using CLAUDE_CODE_OAUTH_TOKEN (subscription billing)
+2025-11-05 15:08:26,327 - claude.docker_runner - INFO - DEBUG: OAuth token length: 108, starts with: sk-ant-oat...
+2025-11-05 15:08:26,330 - claude.docker_runner - INFO - Agent senior_software_engineer requires dev container, using project image: context-studio-agent:latest
+2025-11-05 15:08:26,330 - claude.docker_runner - INFO - Using Docker image: context-studio-agent:latest for agent senior_software_engineer
+2025-11-05 15:08:26,330 - claude.docker_runner - INFO - Using Claude model in Docker: claude-sonnet-4-5-20250929
+2025-11-05 15:08:26,330 - claude.docker_runner - INFO - Pre-launch safety check: Verifying container write access...
+2025-11-05 15:08:26,330 - claude.docker_runner - INFO -    Running container write test with container: write-test-senior_software_engineer-1762355306
+2025-11-05 15:08:27,490 - claude.docker_runner - INFO -    ✓ Container write test PASSED
+2025-11-05 15:08:27,490 - claude.docker_runner - INFO - ✓ Pre-launch verification passed: Container has write access
+2025-11-05 15:08:27,490 - claude.docker_runner - INFO - Using --permission-mode bypassPermissions (safe in isolated container)
+2025-11-05 15:08:27,490 - claude.docker_runner - INFO - DEBUG: Checking for GITHUB_TOKEN, got: ***
+2025-11-05 15:08:27,491 - claude.docker_runner - INFO - Added gh configuration setup before claude execution
+2025-11-05 15:08:27,491 - claude.docker_runner - INFO - Executing: docker run ... claude ...
+2025-11-05 15:08:27,491 - claude.docker_runner - INFO - Full Docker command: docker run --rm --name claude-agent-context-studio-repair_test_integration_type2_iter3_attempt0_senior_software_engineer_1762355306 --network clauditoreum_orchestrator-net -i -v /home/austinsand/workspace/orchestrator/context-studio:/workspace:rw -v /home/orchestrator/.ssh:/home/orchestrator/.ssh:ro -v /home/orchestrator/.gitconfig:/home/orchestrator/.gitconfig:ro -w /workspace -e GITHUB_TOKEN=*** -e GH_AUTH_SETUP_REQUIRED=true -e CLAUDE_CODE_OAUTH_TOKEN=*** context-studio-agent:latest sh -c mkdir -p ~/.config/gh && printf 'version: 1\nauth:\n  github.com:\n    oauth_token: $GITHUB_TOKEN\n    git_protocol: https\n' > ~/.config/gh/hosts.yml && exec claude --print --verbose --output-format stream-json --model claude-sonnet-4-5-20250929 --permission-mode bypassPermissions -
+2025-11-05 15:08:28,561 - claude.docker_runner - INFO - Registered active container: claude-agent-context-studio-repair_test_integration_type2_iter3_attempt0_senior_software_engineer_1762355306 (agent=senior_software_engineer, project=context-studio, id=None)
+2025-11-05 15:08:28,562 - claude.docker_runner - INFO - Passing prompt via stdin (1354 chars)
+2025-11-05 15:08:30,567 - claude.docker_runner - INFO - Captured Claude Code session_id: f2e640fc-7137-4b43-9f5d-62cf8e2b5de8
+2025-11-05 15:13:07,779 - services.github_api_client - INFO - 📊 GitHub API Rate Limit Check: 4239/5000 remaining (15.2% used)
+2025-11-05 15:13:07,789 - services.github_api_client - INFO - 📊 GitHub API Call Summary (last hour): 11 total calls from 1 unique sources
+2025-11-05 15:13:07,790 - services.github_api_client - INFO -   📍 threading:run():982: 11 calls [graphql(11)]
+2025-11-05 15:17:12,113 - claude.docker_runner - INFO - Agent completed successfully in container, result length: 701, session_id: f2e640fc-7137-4b43-9f5d-62cf8e2b5de8
+2025-11-05 15:17:12,141 - claude.docker_runner - INFO - Unregistered container: claude-agent-context-studio-repair_test_integration_type2_iter3_attempt0_senior_software_engineer_1762355306
+2025-11-05 15:17:12,194 - elastic_transport.transport - INFO - POST http://elasticsearch:9200/agent-events-2025-11-05/_doc [status:201 duration:0.039s]
+2025-11-05 15:17:12,197 - monitoring.observability - INFO - Indexed agent lifecycle event agent_completed to agent-events-2025-11-05
+2025-11-05 15:17:12,202 - services.github_integration - WARNING - Using Personal Access Token authentication
+2025-11-05 15:17:12,203 - services.github_integration - INFO - post_agent_output - workspace_type: issues, discussion_id: None, context keys: ['project', 'board', 'pipeline', 'repository', 'issue_number', 'issue', 'previous_stage_output', 'column', 'workspace_type', 'discussion_id', 'pipeline_run_id', 'project_dir', 'use_docker', 'task_id', 'test_configs', 'agent_name', 'max_total_agent_calls', 'checkpoint_interval', 'stage_name', 'observability', 'task_description', 'timeout', 'skip_workspace_prep', 'review_cycle', 'direct_prompt']
+2025-11-05 15:17:12,548 - services.github_api_client - ERROR - HTTP request failed: 404 - {"message":"Not Found","documentation_url":"https://docs.github.com/rest/issues/comments#create-an-issue-comment","status":"404"}
+2025-11-05 15:17:12,550 - services.github_integration - ERROR - Failed to post issue comment: {'error': 'http_error_404', 'status_code': 404}
+2025-11-05 15:17:12,552 - services.agent_executor - ERROR - Failed to post senior_software_engineer output to GitHub: http_error_404
+2025-11-05 15:17:12,599 - services.work_execution_state - WARNING - No in_progress execution found for senior_software_engineer in Testing, creating new record with outcome success
+2025-11-05 15:17:12,621 - services.agent_executor - INFO - Agent senior_software_engineer completed successfully (duration: 525821ms)
+2025-11-05 15:17:12,623 - pipeline.repair_cycle - INFO - Parsed test result JSON keys: ['passed', 'failed', 'warnings', 'failures', 'warning_list'], warnings type: <class 'int'>, warning_list type: <class 'list'>
+2025-11-05 15:17:12,657 - elastic_transport.transport - INFO - POST http://elasticsearch:9200/decision-events-2025-11-05/_doc [status:201 duration:0.033s]
+2025-11-05 15:17:12,658 - monitoring.observability - INFO - Indexed decision event repair_cycle_test_execution_completed to decision-events-2025-11-05
+2025-11-05 15:17:12,661 - pipeline.repair_cycle - INFO - Found failures in 1 files: ['test_predicate_discovery_integration.py']
+2025-11-05 15:17:12,668 - elastic_transport.transport - INFO - POST http://elasticsearch:9200/decision-events-2025-11-05/_doc [status:201 duration:0.006s]
+2025-11-05 15:17:12,668 - monitoring.observability - INFO - Indexed decision event repair_cycle_fix_cycle_started to decision-events-2025-11-05
+2025-11-05 15:17:12,669 - pipeline.repair_cycle - INFO - Fixing 2 failures in test_predicate_discovery_integration.py
+2025-11-05 15:17:12,675 - elastic_transport.transport - INFO - POST http://elasticsearch:9200/decision-events-2025-11-05/_doc [status:201 duration:0.005s]
+2025-11-05 15:17:12,675 - monitoring.observability - INFO - Indexed decision event repair_cycle_file_fix_started to decision-events-2025-11-05
+2025-11-05 15:17:12,676 - services.agent_executor - INFO - Executing agent senior_software_engineer for project context-studio (task_id: repair_fix_test_predicate_discovery_integration_py_senior_software_engineer_1762355832)
+2025-11-05 15:17:12,682 - services.agent_executor - INFO - Agent senior_software_engineer requires_docker=True, overriding task context
+2025-11-05 15:17:12,684 - services.agent_executor - INFO - Skipping workspace preparation (skip_workspace_prep=True) for senior_software_engineer
+2025-11-05 15:17:12,685 - services.agent_executor - INFO - Generated container name for UI tracking: claude-agent-context-studio-repair_fix_test_predicate_discovery_integration_py_senior_software_engineer_1762355832
+2025-11-05 15:17:12,692 - elastic_transport.transport - INFO - POST http://elasticsearch:9200/agent-events-2025-11-05/_doc [status:201 duration:0.007s]
+2025-11-05 15:17:12,692 - monitoring.observability - INFO - Indexed agent lifecycle event agent_initialized to agent-events-2025-11-05
+2025-11-05 15:17:12,693 - services.agent_executor - INFO - Agent execution started with ID: a364eb6d-fa5b-4ded-b19a-701bdbb421dc
+2025-11-05 15:17:12,693 - agents.base_maker_agent - INFO - Using INITIAL mode (first-time analysis)
+2025-11-05 15:17:12,693 - claude.claude_integration - INFO - run_claude_code called
+2025-11-05 15:17:12,693 - claude.claude_integration - INFO - Context project: context-studio
+2025-11-05 15:17:12,694 - claude.claude_integration - INFO - Prompt length: 668
+2025-11-05 15:17:12,695 - claude.claude_integration - INFO - Agent senior_software_engineer: use_docker from context=True, agent_config present=True
+2025-11-05 15:17:12,695 - claude.claude_integration - INFO - Agent senior_software_engineer: agent_config type=<class 'config.manager.AgentConfig'>, has requires_docker=True
+2025-11-05 15:17:12,695 - claude.claude_integration - INFO - Agent senior_software_engineer: Using agent_config.requires_docker=True
+2025-11-05 15:17:12,695 - claude.claude_integration - INFO - Running agent in Docker container for project context-studio
+2025-11-05 15:17:12,695 - claude.docker_runner - INFO - Running agent senior_software_engineer in Docker container for project context-studio
+2025-11-05 15:17:12,695 - claude.docker_runner - INFO - Using fallback host workspace path: /home/austinsand/workspace/orchestrator
+2025-11-05 15:17:12,695 - claude.docker_runner - INFO - Mounting project: container=/workspace/context-studio, host=/home/austinsand/workspace/orchestrator/context-studio
+2025-11-05 15:17:12,696 - claude.docker_runner - INFO - Agent senior_software_engineer has filesystem_write_allowed=true, mounting workspace as READ-WRITE
+2025-11-05 15:17:12,696 - claude.docker_runner - INFO - Verifying write access to /workspace/context-studio
+2025-11-05 15:17:12,696 - claude.docker_runner - INFO - ✓ Filesystem write verification passed: Can read, write, and delete files in /workspace/context-studio
+2025-11-05 15:17:12,696 - claude.docker_runner - INFO - Using fallback host home path: /home/orchestrator
+2025-11-05 15:17:12,696 - claude.docker_runner - INFO - Adding -i flag for stdin support
+2025-11-05 15:17:12,696 - claude.docker_runner - INFO - DOCKER MOUNT: /home/austinsand/workspace/orchestrator/context-studio:/workspace:rw
+2025-11-05 15:17:12,696 - claude.docker_runner - INFO - Using CLAUDE_CODE_OAUTH_TOKEN (subscription billing)
+2025-11-05 15:17:12,696 - claude.docker_runner - INFO - DEBUG: OAuth token length: 108, starts with: sk-ant-oat...
+2025-11-05 15:17:12,698 - claude.docker_runner - INFO - Agent senior_software_engineer requires dev container, using project image: context-studio-agent:latest
+2025-11-05 15:17:12,698 - claude.docker_runner - INFO - Using Docker image: context-studio-agent:latest for agent senior_software_engineer
+2025-11-05 15:17:12,698 - claude.docker_runner - INFO - Using Claude model in Docker: claude-sonnet-4-5-20250929
+2025-11-05 15:17:12,698 - claude.docker_runner - INFO - Pre-launch safety check: Verifying container write access...
+2025-11-05 15:17:12,698 - claude.docker_runner - INFO -    Running container write test with container: write-test-senior_software_engineer-1762355832
+2025-11-05 15:17:13,149 - claude.docker_runner - INFO -    ✓ Container write test PASSED
+2025-11-05 15:17:13,149 - claude.docker_runner - INFO - ✓ Pre-launch verification passed: Container has write access
+2025-11-05 15:17:13,149 - claude.docker_runner - INFO - Using --permission-mode bypassPermissions (safe in isolated container)
+2025-11-05 15:17:13,149 - claude.docker_runner - INFO - DEBUG: Checking for GITHUB_TOKEN, got: ***
+2025-11-05 15:17:13,150 - claude.docker_runner - INFO - Added gh configuration setup before claude execution
+2025-11-05 15:17:13,150 - claude.docker_runner - INFO - Executing: docker run ... claude ...
+2025-11-05 15:17:13,150 - claude.docker_runner - INFO - Full Docker command: docker run --rm --name claude-agent-context-studio-repair_fix_test_predicate_discovery_integration_py_senior_software_engineer_1762355832 --network clauditoreum_orchestrator-net -i -v /home/austinsand/workspace/orchestrator/context-studio:/workspace:rw -v /home/orchestrator/.ssh:/home/orchestrator/.ssh:ro -v /home/orchestrator/.gitconfig:/home/orchestrator/.gitconfig:ro -w /workspace -e GITHUB_TOKEN=*** -e GH_AUTH_SETUP_REQUIRED=true -e CLAUDE_CODE_OAUTH_TOKEN=*** context-studio-agent:latest sh -c mkdir -p ~/.config/gh && printf 'version: 1\nauth:\n  github.com:\n    oauth_token: $GITHUB_TOKEN\n    git_protocol: https\n' > ~/.config/gh/hosts.yml && exec claude --print --verbose --output-format stream-json --model claude-sonnet-4-5-20250929 --permission-mode bypassPermissions -
+2025-11-05 15:17:14,232 - claude.docker_runner - INFO - Registered active container: claude-agent-context-studio-repair_fix_test_predicate_discovery_integration_py_senior_software_engineer_1762355832 (agent=senior_software_engineer, project=context-studio, id=None)
+2025-11-05 15:17:14,233 - claude.docker_runner - INFO - Passing prompt via stdin (668 chars)
+2025-11-05 15:17:15,405 - claude.docker_runner - INFO - Captured Claude Code session_id: d90b9b29-aa63-4519-9b16-a7810309a3af
+2025-11-05 15:18:07,982 - services.github_api_client - INFO - 📊 GitHub API Rate Limit Check: 4102/5000 remaining (18.0% used)
+2025-11-05 15:18:07,982 - services.github_api_client - INFO - 📊 GitHub API Call Summary (last hour): 12 total calls from 1 unique sources
+2025-11-05 15:18:07,983 - services.github_api_client - INFO -   📍 threading:run():982: 12 calls [graphql(12)]
+2025-11-05 15:19:45,593 - claude.docker_runner - INFO - Agent completed successfully in container, result length: 7679, session_id: d90b9b29-aa63-4519-9b16-a7810309a3af
+2025-11-05 15:19:45,604 - claude.docker_runner - INFO - Unregistered container: claude-agent-context-studio-repair_fix_test_predicate_discovery_integration_py_senior_software_engineer_1762355832
+2025-11-05 15:19:45,614 - elastic_transport.transport - INFO - POST http://elasticsearch:9200/agent-events-2025-11-05/_doc [status:201 duration:0.008s]
+2025-11-05 15:19:45,614 - monitoring.observability - INFO - Indexed agent lifecycle event agent_completed to agent-events-2025-11-05
+2025-11-05 15:19:45,614 - services.github_integration - WARNING - Using Personal Access Token authentication
+2025-11-05 15:19:45,614 - services.github_integration - INFO - post_agent_output - workspace_type: issues, discussion_id: None, context keys: ['project', 'board', 'pipeline', 'repository', 'issue_number', 'issue', 'previous_stage_output', 'column', 'workspace_type', 'discussion_id', 'pipeline_run_id', 'project_dir', 'use_docker', 'task_id', 'test_configs', 'agent_name', 'max_total_agent_calls', 'checkpoint_interval', 'stage_name', 'observability', 'task_description', 'timeout', 'skip_workspace_prep', 'review_cycle', 'direct_prompt']
+2025-11-05 15:19:45,849 - services.github_api_client - ERROR - HTTP request failed: 404 - {"message":"Not Found","documentation_url":"https://docs.github.com/rest/issues/comments#create-an-issue-comment","status":"404"}
+2025-11-05 15:19:45,852 - services.github_integration - ERROR - Failed to post issue comment: {'error': 'http_error_404', 'status_code': 404}
+2025-11-05 15:19:45,853 - services.agent_executor - ERROR - Failed to post senior_software_engineer output to GitHub: http_error_404
+2025-11-05 15:19:45,918 - services.work_execution_state - WARNING - No in_progress execution found for senior_software_engineer in Testing, creating new record with outcome success
+2025-11-05 15:19:45,935 - services.agent_executor - INFO - Agent senior_software_engineer completed successfully (duration: 152912ms)
+2025-11-05 15:19:45,935 - pipeline.repair_cycle - INFO - Fixed failures in test_predicate_discovery_integration.py
+2025-11-05 15:19:45,946 - elastic_transport.transport - INFO - POST http://elasticsearch:9200/decision-events-2025-11-05/_doc [status:201 duration:0.010s]
+2025-11-05 15:19:45,946 - monitoring.observability - INFO - Indexed decision event repair_cycle_file_fix_completed to decision-events-2025-11-05
+2025-11-05 15:19:45,952 - elastic_transport.transport - INFO - POST http://elasticsearch:9200/decision-events-2025-11-05/_doc [status:201 duration:0.004s]
+2025-11-05 15:19:45,952 - monitoring.observability - INFO - Indexed decision event repair_cycle_fix_cycle_completed to decision-events-2025-11-05
+2025-11-05 15:19:45,952 - pipeline.repair_cycle - ERROR - Max iterations (3) reached for integration tests
+2025-11-05 15:19:45,952 - pipeline.repair_cycle - INFO - Running integration tests (test cycle iteration 3/3, test type 2)
+2025-11-05 15:19:45,957 - elastic_transport.transport - INFO - POST http://elasticsearch:9200/decision-events-2025-11-05/_doc [status:201 duration:0.004s]
+2025-11-05 15:19:45,957 - monitoring.observability - INFO - Indexed decision event repair_cycle_test_execution_started to decision-events-2025-11-05
+2025-11-05 15:19:45,958 - services.agent_executor - INFO - Executing agent senior_software_engineer for project context-studio (task_id: repair_test_integration_type2_iter3_attempt0_senior_software_engineer_1762355985)
+2025-11-05 15:19:45,958 - services.agent_executor - INFO - Agent senior_software_engineer requires_docker=True, overriding task context
+2025-11-05 15:19:45,959 - services.agent_executor - INFO - Skipping workspace preparation (skip_workspace_prep=True) for senior_software_engineer
+2025-11-05 15:19:45,959 - services.agent_executor - INFO - Generated container name for UI tracking: claude-agent-context-studio-repair_test_integration_type2_iter3_attempt0_senior_software_engineer_1762355985
+2025-11-05 15:19:45,964 - elastic_transport.transport - INFO - POST http://elasticsearch:9200/agent-events-2025-11-05/_doc [status:201 duration:0.005s]
+2025-11-05 15:19:45,964 - monitoring.observability - INFO - Indexed agent lifecycle event agent_initialized to agent-events-2025-11-05
+2025-11-05 15:19:45,964 - services.agent_executor - INFO - Agent execution started with ID: e9ba1ed6-5994-49ed-bb09-f903fb5f5ec1
+2025-11-05 15:19:45,964 - agents.base_maker_agent - INFO - Using INITIAL mode (first-time analysis)
+2025-11-05 15:19:45,964 - claude.claude_integration - INFO - run_claude_code called
+2025-11-05 15:19:45,964 - claude.claude_integration - INFO - Context project: context-studio
+2025-11-05 15:19:45,964 - claude.claude_integration - INFO - Prompt length: 1354
+2025-11-05 15:19:45,965 - claude.claude_integration - INFO - Agent senior_software_engineer: use_docker from context=True, agent_config present=True
+2025-11-05 15:19:45,965 - claude.claude_integration - INFO - Agent senior_software_engineer: agent_config type=<class 'config.manager.AgentConfig'>, has requires_docker=True
+2025-11-05 15:19:45,965 - claude.claude_integration - INFO - Agent senior_software_engineer: Using agent_config.requires_docker=True
+2025-11-05 15:19:45,965 - claude.claude_integration - INFO - Running agent in Docker container for project context-studio
+2025-11-05 15:19:45,965 - claude.docker_runner - INFO - Running agent senior_software_engineer in Docker container for project context-studio
+2025-11-05 15:19:45,965 - claude.docker_runner - INFO - Using fallback host workspace path: /home/austinsand/workspace/orchestrator
+2025-11-05 15:19:45,965 - claude.docker_runner - INFO - Mounting project: container=/workspace/context-studio, host=/home/austinsand/workspace/orchestrator/context-studio
+2025-11-05 15:19:45,966 - claude.docker_runner - INFO - Agent senior_software_engineer has filesystem_write_allowed=true, mounting workspace as READ-WRITE
+2025-11-05 15:19:45,966 - claude.docker_runner - INFO - Verifying write access to /workspace/context-studio
+2025-11-05 15:19:45,966 - claude.docker_runner - INFO - ✓ Filesystem write verification passed: Can read, write, and delete files in /workspace/context-studio
+2025-11-05 15:19:45,966 - claude.docker_runner - INFO - Using fallback host home path: /home/orchestrator
+2025-11-05 15:19:45,966 - claude.docker_runner - INFO - Adding -i flag for stdin support
+2025-11-05 15:19:45,966 - claude.docker_runner - INFO - DOCKER MOUNT: /home/austinsand/workspace/orchestrator/context-studio:/workspace:rw
+2025-11-05 15:19:45,966 - claude.docker_runner - INFO - Using CLAUDE_CODE_OAUTH_TOKEN (subscription billing)
+2025-11-05 15:19:45,966 - claude.docker_runner - INFO - DEBUG: OAuth token length: 108, starts with: sk-ant-oat...
+2025-11-05 15:19:45,967 - claude.docker_runner - INFO - Agent senior_software_engineer requires dev container, using project image: context-studio-agent:latest
+2025-11-05 15:19:45,967 - claude.docker_runner - INFO - Using Docker image: context-studio-agent:latest for agent senior_software_engineer
+2025-11-05 15:19:45,967 - claude.docker_runner - INFO - Using Claude model in Docker: claude-sonnet-4-5-20250929
+2025-11-05 15:19:45,967 - claude.docker_runner - INFO - Pre-launch safety check: Verifying container write access...
+2025-11-05 15:19:45,967 - claude.docker_runner - INFO -    Running container write test with container: write-test-senior_software_engineer-1762355985
+2025-11-05 15:19:46,223 - claude.docker_runner - INFO -    ✓ Container write test PASSED
+2025-11-05 15:19:46,223 - claude.docker_runner - INFO - ✓ Pre-launch verification passed: Container has write access
+2025-11-05 15:19:46,223 - claude.docker_runner - INFO - Using --permission-mode bypassPermissions (safe in isolated container)
+2025-11-05 15:19:46,223 - claude.docker_runner - INFO - DEBUG: Checking for GITHUB_TOKEN, got: ***
+2025-11-05 15:19:46,224 - claude.docker_runner - INFO - Added gh configuration setup before claude execution
+2025-11-05 15:19:46,224 - claude.docker_runner - INFO - Executing: docker run ... claude ...
+2025-11-05 15:19:46,224 - claude.docker_runner - INFO - Full Docker command: docker run --rm --name claude-agent-context-studio-repair_test_integration_type2_iter3_attempt0_senior_software_engineer_1762355985 --network clauditoreum_orchestrator-net -i -v /home/austinsand/workspace/orchestrator/context-studio:/workspace:rw -v /home/orchestrator/.ssh:/home/orchestrator/.ssh:ro -v /home/orchestrator/.gitconfig:/home/orchestrator/.gitconfig:ro -w /workspace -e GITHUB_TOKEN=*** -e GH_AUTH_SETUP_REQUIRED=true -e CLAUDE_CODE_OAUTH_TOKEN=*** context-studio-agent:latest sh -c mkdir -p ~/.config/gh && printf 'version: 1\nauth:\n  github.com:\n    oauth_token: $GITHUB_TOKEN\n    git_protocol: https\n' > ~/.config/gh/hosts.yml && exec claude --print --verbose --output-format stream-json --model claude-sonnet-4-5-20250929 --permission-mode bypassPermissions -
+2025-11-05 15:19:47,280 - claude.docker_runner - INFO - Registered active container: claude-agent-context-studio-repair_test_integration_type2_iter3_attempt0_senior_software_engineer_1762355985 (agent=senior_software_engineer, project=context-studio, id=None)
+2025-11-05 15:19:47,281 - claude.docker_runner - INFO - Passing prompt via stdin (1354 chars)
+2025-11-05 15:19:48,364 - claude.docker_runner - INFO - Captured Claude Code session_id: 123a85bc-cc4d-44fe-a712-afbe7e08bb02
+2025-11-05 15:23:08,149 - services.github_api_client - INFO - 📊 GitHub API Rate Limit Check: 3953/5000 remaining (20.9% used)
+2025-11-05 15:23:08,149 - services.github_api_client - INFO - 📊 GitHub API Call Summary (last hour): 12 total calls from 1 unique sources
+2025-11-05 15:23:08,149 - services.github_api_client - INFO -   📍 threading:run():982: 12 calls [graphql(12)]
+2025-11-05 15:25:33,877 - claude.docker_runner - INFO - Agent completed successfully in container, result length: 4360, session_id: 123a85bc-cc4d-44fe-a712-afbe7e08bb02
+2025-11-05 15:25:33,887 - claude.docker_runner - INFO - Unregistered container: claude-agent-context-studio-repair_test_integration_type2_iter3_attempt0_senior_software_engineer_1762355985
+2025-11-05 15:25:33,893 - elastic_transport.transport - INFO - POST http://elasticsearch:9200/agent-events-2025-11-05/_doc [status:201 duration:0.004s]
+2025-11-05 15:25:33,893 - monitoring.observability - INFO - Indexed agent lifecycle event agent_completed to agent-events-2025-11-05
+2025-11-05 15:25:33,893 - services.github_integration - WARNING - Using Personal Access Token authentication
+2025-11-05 15:25:33,893 - services.github_integration - INFO - post_agent_output - workspace_type: issues, discussion_id: None, context keys: ['project', 'board', 'pipeline', 'repository', 'issue_number', 'issue', 'previous_stage_output', 'column', 'workspace_type', 'discussion_id', 'pipeline_run_id', 'project_dir', 'use_docker', 'task_id', 'test_configs', 'agent_name', 'max_total_agent_calls', 'checkpoint_interval', 'stage_name', 'observability', 'task_description', 'timeout', 'skip_workspace_prep', 'review_cycle', 'direct_prompt']
+2025-11-05 15:25:34,177 - services.github_api_client - ERROR - HTTP request failed: 404 - {"message":"Not Found","documentation_url":"https://docs.github.com/rest/issues/comments#create-an-issue-comment","status":"404"}
+2025-11-05 15:25:34,179 - services.github_integration - ERROR - Failed to post issue comment: {'error': 'http_error_404', 'status_code': 404}
+2025-11-05 15:25:34,180 - services.agent_executor - ERROR - Failed to post senior_software_engineer output to GitHub: http_error_404
+2025-11-05 15:25:34,243 - services.work_execution_state - WARNING - No in_progress execution found for senior_software_engineer in Testing, creating new record with outcome success
+2025-11-05 15:25:34,259 - services.agent_executor - INFO - Agent senior_software_engineer completed successfully (duration: 347923ms)
+2025-11-05 15:25:34,268 - pipeline.repair_cycle - WARNING - Failed to parse JSON from code block: Unterminated string starting at: line 1 column 3490 (char 3489)
+2025-11-05 15:25:34,271 - pipeline.repair_cycle - ERROR - Failed to extract valid JSON from response. Response length: 4360
+2025-11-05 15:25:34,271 - pipeline.repair_cycle - ERROR - Response preview (first 1000 chars): I'll run all integration tests for this project. Let me start by identifying the test structure and setting up the environment.Now I'll run the integration tests. I'll capture the full output to a file for analysis.Good, the tests completed. Let me read the full output file to parse the results:Now let me extract detailed failure information and warnings:Now let me extract the warning details:Let me search for the actual warnings in the pytest output format:Let me parse the XML junit file which has structured test results:Perfect! All tests passed. Now let me extract the warning details from the pytest output. The warnings are typically captured at the end or can be found throughout the output:Perfect! Now let me save this to the final output file and return the JSON:```json
+{"passed": 385, "failed": 0, "warnings": 28, "failures": [], "warning_list": [{"file": "task_manager.py:416", "message": "Task 196ee69e-e426-415b-a56b-5cd0cb19f6a3 failed: error"}, {"file": "task_manager.py:416", "
+2025-11-05 15:25:34,271 - pipeline.repair_cycle - ERROR - Response preview (last 500 chars): /tmp4ks6_od1'"}, {"file": "manager.py:133", "message": "Failed to save datasets config: [Errno 21] Is a directory: '/tmp/tmp4ks6_od1'"}, {"file": "manager.py:119", "message": "Failed to load datasets config: [Errno 21] Is a directory: '/tmp/tmpekwo0wlu'"}, {"file": "manager.py:133", "message": "Failed to save datasets config: [Errno 21] Is a directory: '/tmp/tmpekwo0wlu'"}, {"file": "manager.py:133", "message": "Failed to save datasets config: [Errno 21] Is a directory: '/tmp/tmpekwo0wlu'}]}
+```
+2025-11-05 15:25:34,272 - pipeline.repair_cycle - WARNING - Failed to parse test results (attempt 1/3): No valid JSON test result found in response. Expected format: {'passed': <int>, 'failed': <int>, 'failures': [...], ...}. Response length: 4360 chars. Response preview: I'll run all integration tests for this project. Let me start by identifying the test structure and setting up the environment.Now I'll run the integration tests. I'll capture the full output to a file for analysis.Good, the tests completed. Let me read the full output file to parse the results:Now let me extract detailed failure information and warnings:Now let me extract the warning details:Let me search for the actual warnings in the pytest output format:Let me parse the XML junit file which ...
+2025-11-05 15:25:34,272 - pipeline.repair_cycle - INFO - Retrying with enhanced instructions...
+2025-11-05 15:25:34,272 - services.agent_executor - INFO - Executing agent senior_software_engineer for project context-studio (task_id: repair_test_integration_type2_iter3_attempt1_senior_software_engineer_1762356334)
+2025-11-05 15:25:34,272 - services.agent_executor - INFO - Agent senior_software_engineer requires_docker=True, overriding task context
+2025-11-05 15:25:34,272 - services.agent_executor - INFO - Skipping workspace preparation (skip_workspace_prep=True) for senior_software_engineer
+2025-11-05 15:25:34,273 - services.agent_executor - INFO - Generated container name for UI tracking: claude-agent-context-studio-repair_test_integration_type2_iter3_attempt1_senior_software_engineer_1762356334
+2025-11-05 15:25:34,278 - elastic_transport.transport - INFO - POST http://elasticsearch:9200/agent-events-2025-11-05/_doc [status:201 duration:0.005s]
+2025-11-05 15:25:34,279 - monitoring.observability - INFO - Indexed agent lifecycle event agent_initialized to agent-events-2025-11-05
+2025-11-05 15:25:34,279 - services.agent_executor - INFO - Agent execution started with ID: 5a13c060-a0d4-43e8-a95c-a4027812cadd
+2025-11-05 15:25:34,279 - agents.base_maker_agent - INFO - Using INITIAL mode (first-time analysis)
+2025-11-05 15:25:34,279 - claude.claude_integration - INFO - run_claude_code called
+2025-11-05 15:25:34,279 - claude.claude_integration - INFO - Context project: context-studio
+2025-11-05 15:25:34,279 - claude.claude_integration - INFO - Prompt length: 2124
+2025-11-05 15:25:34,282 - claude.claude_integration - INFO - Agent senior_software_engineer: use_docker from context=True, agent_config present=True
+2025-11-05 15:25:34,282 - claude.claude_integration - INFO - Agent senior_software_engineer: agent_config type=<class 'config.manager.AgentConfig'>, has requires_docker=True
+2025-11-05 15:25:34,282 - claude.claude_integration - INFO - Agent senior_software_engineer: Using agent_config.requires_docker=True
+2025-11-05 15:25:34,283 - claude.claude_integration - INFO - Running agent in Docker container for project context-studio
+2025-11-05 15:25:34,283 - claude.docker_runner - INFO - Running agent senior_software_engineer in Docker container for project context-studio
+2025-11-05 15:25:34,284 - claude.docker_runner - INFO - Using fallback host workspace path: /home/austinsand/workspace/orchestrator
+2025-11-05 15:25:34,284 - claude.docker_runner - INFO - Mounting project: container=/workspace/context-studio, host=/home/austinsand/workspace/orchestrator/context-studio
+2025-11-05 15:25:34,284 - claude.docker_runner - INFO - Agent senior_software_engineer has filesystem_write_allowed=true, mounting workspace as READ-WRITE
+2025-11-05 15:25:34,284 - claude.docker_runner - INFO - Verifying write access to /workspace/context-studio
+2025-11-05 15:25:34,285 - claude.docker_runner - INFO - ✓ Filesystem write verification passed: Can read, write, and delete files in /workspace/context-studio
+2025-11-05 15:25:34,286 - claude.docker_runner - INFO - Using fallback host home path: /home/orchestrator
+2025-11-05 15:25:34,286 - claude.docker_runner - INFO - Adding -i flag for stdin support
+2025-11-05 15:25:34,286 - claude.docker_runner - INFO - DOCKER MOUNT: /home/austinsand/workspace/orchestrator/context-studio:/workspace:rw
+2025-11-05 15:25:34,286 - claude.docker_runner - INFO - Using CLAUDE_CODE_OAUTH_TOKEN (subscription billing)
+2025-11-05 15:25:34,286 - claude.docker_runner - INFO - DEBUG: OAuth token length: 108, starts with: sk-ant-oat...
+2025-11-05 15:25:34,288 - claude.docker_runner - INFO - Agent senior_software_engineer requires dev container, using project image: context-studio-agent:latest
+2025-11-05 15:25:34,288 - claude.docker_runner - INFO - Using Docker image: context-studio-agent:latest for agent senior_software_engineer
+2025-11-05 15:25:34,288 - claude.docker_runner - INFO - Using Claude model in Docker: claude-sonnet-4-5-20250929
+2025-11-05 15:25:34,288 - claude.docker_runner - INFO - Pre-launch safety check: Verifying container write access...
+2025-11-05 15:25:34,289 - claude.docker_runner - INFO -    Running container write test with container: write-test-senior_software_engineer-1762356334
+2025-11-05 15:25:34,649 - claude.docker_runner - INFO -    ✓ Container write test PASSED
+2025-11-05 15:25:34,649 - claude.docker_runner - INFO - ✓ Pre-launch verification passed: Container has write access
+2025-11-05 15:25:34,649 - claude.docker_runner - INFO - Using --permission-mode bypassPermissions (safe in isolated container)
+2025-11-05 15:25:34,650 - claude.docker_runner - INFO - DEBUG: Checking for GITHUB_TOKEN, got: ***
+2025-11-05 15:25:34,650 - claude.docker_runner - INFO - Added gh configuration setup before claude execution
+2025-11-05 15:25:34,650 - claude.docker_runner - INFO - Executing: docker run ... claude ...
+2025-11-05 15:25:34,650 - claude.docker_runner - INFO - Full Docker command: docker run --rm --name claude-agent-context-studio-repair_test_integration_type2_iter3_attempt1_senior_software_engineer_1762356334 --network clauditoreum_orchestrator-net -i -v /home/austinsand/workspace/orchestrator/context-studio:/workspace:rw -v /home/orchestrator/.ssh:/home/orchestrator/.ssh:ro -v /home/orchestrator/.gitconfig:/home/orchestrator/.gitconfig:ro -w /workspace -e GITHUB_TOKEN=*** -e GH_AUTH_SETUP_REQUIRED=true -e CLAUDE_CODE_OAUTH_TOKEN=*** context-studio-agent:latest sh -c mkdir -p ~/.config/gh && printf 'version: 1\nauth:\n  github.com:\n    oauth_token: $GITHUB_TOKEN\n    git_protocol: https\n' > ~/.config/gh/hosts.yml && exec claude --print --verbose --output-format stream-json --model claude-sonnet-4-5-20250929 --permission-mode bypassPermissions -
+2025-11-05 15:25:35,749 - claude.docker_runner - INFO - Registered active container: claude-agent-context-studio-repair_test_integration_type2_iter3_attempt1_senior_software_engineer_1762356334 (agent=senior_software_engineer, project=context-studio, id=None)
+2025-11-05 15:25:35,749 - claude.docker_runner - INFO - Passing prompt via stdin (2124 chars)
+2025-11-05 15:25:36,914 - claude.docker_runner - INFO - Captured Claude Code session_id: c0abfbaf-2634-48f7-838e-49cfe2b59985
+2025-11-05 15:28:08,331 - services.github_api_client - INFO - 📊 GitHub API Rate Limit Check: 3818/5000 remaining (23.6% used)
+2025-11-05 15:28:08,331 - services.github_api_client - INFO - 📊 GitHub API Call Summary (last hour): 12 total calls from 1 unique sources
+2025-11-05 15:28:08,331 - services.github_api_client - INFO -   📍 threading:run():982: 12 calls [graphql(12)]
+2025-11-05 15:30:09,760 - claude.docker_runner - INFO - Agent completed successfully in container, result length: 3409, session_id: c0abfbaf-2634-48f7-838e-49cfe2b59985
+2025-11-05 15:30:09,782 - claude.docker_runner - INFO - Unregistered container: claude-agent-context-studio-repair_test_integration_type2_iter3_attempt1_senior_software_engineer_1762356334
+2025-11-05 15:30:09,787 - elastic_transport.transport - INFO - POST http://elasticsearch:9200/agent-events-2025-11-05/_doc [status:201 duration:0.005s]
+2025-11-05 15:30:09,787 - monitoring.observability - INFO - Indexed agent lifecycle event agent_completed to agent-events-2025-11-05
+2025-11-05 15:30:09,787 - services.github_integration - WARNING - Using Personal Access Token authentication
+2025-11-05 15:30:09,787 - services.github_integration - INFO - post_agent_output - workspace_type: issues, discussion_id: None, context keys: ['project', 'board', 'pipeline', 'repository', 'issue_number', 'issue', 'previous_stage_output', 'column', 'workspace_type', 'discussion_id', 'pipeline_run_id', 'project_dir', 'use_docker', 'task_id', 'test_configs', 'agent_name', 'max_total_agent_calls', 'checkpoint_interval', 'stage_name', 'observability', 'task_description', 'timeout', 'skip_workspace_prep', 'review_cycle', 'direct_prompt']
+2025-11-05 15:30:10,024 - services.github_api_client - ERROR - HTTP request failed: 404 - {"message":"Not Found","documentation_url":"https://docs.github.com/rest/issues/comments#create-an-issue-comment","status":"404"}
+2025-11-05 15:30:10,025 - services.github_integration - ERROR - Failed to post issue comment: {'error': 'http_error_404', 'status_code': 404}
+2025-11-05 15:30:10,025 - services.agent_executor - ERROR - Failed to post senior_software_engineer output to GitHub: http_error_404
+2025-11-05 15:30:10,051 - services.work_execution_state - WARNING - No in_progress execution found for senior_software_engineer in Testing, creating new record with outcome success
+2025-11-05 15:30:10,068 - services.agent_executor - INFO - Agent senior_software_engineer completed successfully (duration: 275503ms)
+2025-11-05 15:30:10,068 - pipeline.repair_cycle - INFO - Parsed test result JSON keys: ['passed', 'failed', 'warnings', 'failures', 'warning_list'], warnings type: <class 'int'>, warning_list type: <class 'list'>
+2025-11-05 15:30:10,075 - elastic_transport.transport - INFO - POST http://elasticsearch:9200/decision-events-2025-11-05/_doc [status:201 duration:0.006s]
+2025-11-05 15:30:10,075 - monitoring.observability - INFO - Indexed decision event repair_cycle_test_execution_completed to decision-events-2025-11-05
+2025-11-05 15:30:10,075 - pipeline.repair_cycle - INFO - Max iterations reached, but all tests passed. Success! (warnings may remain)
+2025-11-05 15:30:10,081 - elastic_transport.transport - INFO - POST http://elasticsearch:9200/decision-events-2025-11-05/_doc [status:201 duration:0.004s]
+2025-11-05 15:30:10,082 - monitoring.observability - INFO - Indexed decision event repair_cycle_test_cycle_completed to decision-events-2025-11-05
+2025-11-05 15:30:10,093 - elastic_transport.transport - INFO - POST http://elasticsearch:9200/agent-events-2025-11-05/_doc [status:201 duration:0.004s]
+2025-11-05 15:30:10,093 - monitoring.observability - INFO - Indexed agent lifecycle event agent_completed to agent-events-2025-11-05
+2025-11-05 15:30:10,096 - __main__ - INFO - Repair cycle completed successfully, checkpoint cleared
+2025-11-05 15:30:10,117 - __main__ - INFO - Result saved to Redis: repair_cycle:result:context-studio:187:e83d1a34-daa4-429f-8c28-e5bba617fe63
+2025-11-05 15:30:10,117 - __main__ - INFO - Result summary: success=True, agent_calls=13, duration=4936.6s
+2025-11-05 15:30:10,117 - __main__ - INFO - Repair cycle succeeded - all tests passed!
+2025-11-05 15:30:10,117 - __main__ - INFO - Repair cycle container runner exiting
