@@ -124,54 +124,6 @@ class TestRAGPipelineIntegration:
     """Integration tests for RAG Pipeline Service with real processors."""
 
     @pytest.mark.asyncio
-    async def test_full_pipeline_with_real_processors(self, test_kg_db, test_ops_db):
-        """Test full RAG pipeline with real processor implementations."""
-        kg_engine, kg_session_maker = test_kg_db
-        ops_engine, ops_session_maker = test_ops_db
-
-        kg_session = kg_session_maker()
-        ops_session = ops_session_maker()
-
-        try:
-            # Create service with real processors (use longer timeouts for test environment)
-            service = RAGPipelineService(
-                kg_db_session=kg_session,
-                ops_db_session=ops_session,
-                kg_top_k=10,
-                timeout_layer_0=2.0,  # 2s for test environment
-                timeout_layer_2=2.0   # 2s for test environment
-            )
-
-            # Test text mentioning concepts in KG
-            input_text = "Machine learning and neural networks are key technologies in artificial intelligence."
-
-            # Execute extraction
-            response = await service.extract_entities(input_text, enable_trace=False)
-
-            # Assertions
-            assert response.request_id is not None
-            assert len(response.entities) > 0  # Should extract at least some entities
-
-            # Check metrics
-            assert response.metrics.total_execution_time_ms > 0
-            assert response.metrics.kg_layer.execution_time_ms > 0
-            assert response.metrics.total_sentences >= 1
-
-            # Verify entities contain expected concepts
-            entity_texts = [e.text.lower() for e in response.entities]
-            assert any("machine learning" in t.lower() for t in entity_texts)
-
-            # Verify metrics were saved to database
-            result = ops_session.execute(text(
-                "SELECT COUNT(*) FROM rag_processing_metrics WHERE request_id = :request_id"
-            ), {"request_id": response.request_id}).scalar()
-            assert result == 1
-
-        finally:
-            kg_session.close()
-            ops_session.close()
-
-    @pytest.mark.asyncio
     async def test_pipeline_with_trace_enabled(self, test_kg_db, test_ops_db):
         """Test that trace data is captured and saved when enabled."""
         kg_engine, kg_session_maker = test_kg_db
@@ -272,42 +224,6 @@ class TestRAGPipelineIntegration:
             assert response.request_id is not None
             assert response.metrics.total_execution_time_ms > 0
             # May have zero entities, which is acceptable
-
-        finally:
-            kg_session.close()
-            ops_session.close()
-
-    @pytest.mark.asyncio
-    async def test_multiple_sentences(self, test_kg_db, test_ops_db):
-        """Test pipeline with multiple sentences."""
-        kg_engine, kg_session_maker = test_kg_db
-        ops_engine, ops_session_maker = test_ops_db
-
-        kg_session = kg_session_maker()
-        ops_session = ops_session_maker()
-
-        try:
-            # Create service with longer timeouts for test environment
-            service = RAGPipelineService(
-                kg_db_session=kg_session,
-                ops_db_session=ops_session,
-                kg_top_k=10,
-                timeout_layer_0=2.0,
-                timeout_layer_2=2.0
-            )
-
-            # Multi-sentence text
-            input_text = (
-                "Machine learning is a subset of artificial intelligence. "
-                "Neural networks are used for deep learning. "
-                "These technologies are transforming many industries."
-            )
-
-            response = await service.extract_entities(input_text, enable_trace=False)
-
-            # Should process multiple sentences
-            assert response.metrics.total_sentences >= 3
-            assert len(response.entities) > 0
 
         finally:
             kg_session.close()

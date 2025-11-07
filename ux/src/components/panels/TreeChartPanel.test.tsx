@@ -14,12 +14,28 @@ import {
 } from "@/api/hooks/structure_nodes/useStructureNodes";
 import { vi } from "vitest";
 
+// Mock TanStack Router
+vi.mock("@tanstack/react-router", () => ({
+  useNavigate: () => vi.fn(),
+}));
+
+// Mock the graph hook
+vi.mock("@/api/hooks/graph/useGraph", () => ({
+  useTermHierarchy: () => ({
+    data: null,
+    isLoading: false,
+    error: null,
+  }),
+}));
+
 // Mock the hooks
 vi.mock("@/api/hooks/structure_nodes/useStructureNodes");
-vi.mock("@/components/graphs/hierarchy/tree_chart", () => ({
-  TreeChart: ({ chartData }: any) => (
-    <div data-testid="tree-chart">
-      Tree Chart - Root: {chartData?.root?.title || "No data"}
+
+// Mock TreeMenu component
+vi.mock("@/components/graphs/tree_menu/tree_menu", () => ({
+  TreeMenu: ({ chartData }: any) => (
+    <div data-testid="tree-menu">
+      Tree Menu - Root: {chartData?.root?.title || "No data"}
     </div>
   ),
 }));
@@ -134,7 +150,7 @@ describe("TreeChartPanel", () => {
     consoleErrorSpy.mockRestore();
   });
 
-  it("renders TreeChart when data is successfully loaded", async () => {
+  it("renders TreeMenu when data is successfully loaded", async () => {
     mockUseLayerNodes.mockReturnValue({
       data: mockLayers,
       isLoading: false,
@@ -158,7 +174,7 @@ describe("TreeChartPanel", () => {
     );
 
     await waitFor(() => {
-      expect(screen.getByTestId("tree-chart")).toBeInTheDocument();
+      expect(screen.getByTestId("tree-menu")).toBeInTheDocument();
     });
   });
 
@@ -205,7 +221,7 @@ describe("TreeChartPanel", () => {
     expect(mockUseStructureNode).toHaveBeenCalledWith(testTermId);
 
     await waitFor(() => {
-      expect(screen.getByTestId("tree-chart")).toBeInTheDocument();
+      expect(screen.getByTestId("tree-menu")).toBeInTheDocument();
     });
   });
 

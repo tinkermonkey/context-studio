@@ -57,17 +57,14 @@ const renderWithQueryClient = (component: React.ReactElement) => {
 };
 
 describe("NlpAnalysisPanel", () => {
-  it("shows tokens and entities when analysis is available", async () => {
+  it("shows initial state message when no analysis is available", async () => {
     renderWithQueryClient(
       <NlpAnalysisPanel text="database" textTitle="Term" />,
     );
 
-    // Should show analyze button initially since enabled: false
-    expect(screen.getByText("Analyze Term")).toBeInTheDocument();
-
-    // Our component should display correctly with a proper title
+    // Should show message prompting user to trigger analysis from parent component
     expect(
-      screen.getByRole("button", { name: /Analyze Term/i }),
+      screen.getByText(/Click "Analyze Term" to view token analysis/i),
     ).toBeInTheDocument();
   });
 });
