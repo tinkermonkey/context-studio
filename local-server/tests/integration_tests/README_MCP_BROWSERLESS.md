@@ -15,7 +15,7 @@ The smoke test verifies the following functionality:
 1. **Navigation**: Browser can navigate to https://linkagelabs.co
 2. **Page Title**: Page title contains "Linkage Labs"
 3. **HTTP Status**: Page loads successfully with status 200
-4. **Screenshot**: Screenshot can be captured and saved to `/workspace/context-studio/test_screenshot.png`
+4. **Screenshot**: Screenshot can be captured and saved to `test_outputs/test_screenshot.png`
 
 ## Current Status
 
@@ -63,7 +63,7 @@ MCP Browserless Smoke Test
 ============================================================
 Target URL: https://linkagelabs.co
 Expected title contains: Linkage Labs
-Screenshot path: /workspace/context-studio/test_screenshot.png
+Screenshot path: test_outputs/test_screenshot.png
 ============================================================
 
 Test Status: PENDING MCP INTEGRATION
@@ -90,16 +90,16 @@ Once MCP client is available, the test would be updated similar to:
 
 ```python
 from mcp_client import MCPClient
+from pathlib import Path
 
-def test_browser_navigation_and_screenshot(self):
-    target_url = "https://linkagelabs.co"
-    screenshot_path = Path("/workspace/context-studio/test_screenshot.png")
+def test_browser_navigation_and_screenshot(self, test_output_dir):
+    screenshot_path = test_output_dir / self.SCREENSHOT_FILENAME
 
     # Initialize MCP client
     mcp_client = MCPClient()
 
     # Navigate to URL
-    response = mcp_client.navigate(target_url)
+    response = mcp_client.navigate(self.TEST_URL)
     page_title = response.title
     http_status = response.status
 
@@ -109,7 +109,7 @@ def test_browser_navigation_and_screenshot(self):
         f.write(screenshot_data)
 
     # Assertions
-    assert "Linkage Labs" in page_title
+    assert self.EXPECTED_TITLE_TEXT in page_title
     assert http_status == 200
     assert screenshot_path.exists()
 ```
