@@ -14,7 +14,7 @@ const queryClientConfig: QueryClientConfig = {
       staleTime: API_CONFIG.staleTime,
       gcTime: API_CONFIG.cacheTime, // formerly cacheTime
       retry: (failureCount, error) => {
-        // Don't retry on 4xx errors
+        // Don't retry on 4xx errors (client errors)
         if (error instanceof Error && "status" in error) {
           const status = (error as any).status;
           if (status >= 400 && status < 500) {
@@ -23,7 +23,12 @@ const queryClientConfig: QueryClientConfig = {
         }
         return failureCount < API_CONFIG.retryAttempts;
       },
-      retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
+      // Exponential backoff with jitter to prevent thundering herd
+      retryDelay: (attemptIndex) => {
+        const baseDelay = API_CONFIG.retryDelay * 2 ** attemptIndex;
+        const jitter = Math.random() * 1000; // Add random jitter (0-1000ms)
+        return Math.min(baseDelay + jitter, API_CONFIG.maxRetryDelay);
+      },
     },
     mutations: {
       retry: false,

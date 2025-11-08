@@ -19,8 +19,12 @@ export const API_CONFIG = {
   timeout: 30000,
   retryAttempts: 3,
   retryDelay: 1000,
+  maxRetryDelay: 30000, // Maximum retry delay: 30 seconds
   staleTime: 5 * 60 * 1000, // 5 minutes
   cacheTime: 10 * 60 * 1000, // 10 minutes
+  // Conflict resolution settings
+  refetchOnConflict: true,
+  conflictRetryDelay: 2000,
 } as const;
 
 export const QUERY_KEYS = {

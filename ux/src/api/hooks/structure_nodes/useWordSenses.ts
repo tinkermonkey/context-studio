@@ -15,6 +15,8 @@ import { structureNodeService } from "@/api/services/structureNodes";
 import { QUERY_KEYS } from "@/api/config";
 import { createQueryKey } from "@/api/utils/queryClient";
 import { WordSense, SelectedWordSensesUpdate } from "@/api/types/structureNodes";
+import { handleVersionConflict, isVersionConflict } from "@/api/utils/conflictResolution";
+import { toast } from "@/utils/toast";
 
 /**
  * Hook to fetch word senses for a structure node
@@ -71,13 +73,35 @@ export const useUpdateWordSenses = (
 
       return { previousWordSenses };
     },
-    onError: (err, variables, context) => {
-      // Rollback to the previous value on error
-      if (context?.previousWordSenses) {
-        queryClient.setQueryData(
-          createQueryKey(QUERY_KEYS.STRUCTURE_NODES, nodeId, { type: "word_senses" }),
-          context.previousWordSenses,
+    onError: async (err, variables, context) => {
+      // Check if this is a version conflict
+      if (isVersionConflict(err)) {
+        const queryKey = createQueryKey(QUERY_KEYS.STRUCTURE_NODES, nodeId, { type: "word_senses" });
+
+        // Handle conflict with automatic refetch
+        await handleVersionConflict(
+          err,
+          async () => {
+            const freshData = await structureNodeService.getWordSenses(nodeId);
+            queryClient.setQueryData(queryKey, freshData);
+            return freshData;
+          },
+          {
+            customMessage: "Word senses were modified elsewhere. Your changes were not saved. Please review the current values and try again.",
+            showToast: true,
+          }
         );
+      } else {
+        // Rollback to the previous value on other errors
+        if (context?.previousWordSenses) {
+          queryClient.setQueryData(
+            createQueryKey(QUERY_KEYS.STRUCTURE_NODES, nodeId, { type: "word_senses" }),
+            context.previousWordSenses,
+          );
+        }
+
+        // Show error toast
+        toast.error(`Failed to update word senses: ${err.message}`);
       }
     },
     onSuccess: (data) => {

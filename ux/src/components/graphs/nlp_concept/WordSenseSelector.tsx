@@ -59,6 +59,10 @@ export const WordSenseSelector: React.FC<WordSenseSelectorProps> = ({
       .map((w) => w.toLowerCase());
   }, [title]);
 
+  // Ref for focus management
+  const saveButtonRef = React.useRef<HTMLButtonElement>(null);
+  const containerRef = React.useRef<HTMLDivElement>(null);
+
   // Consolidated state: all word-specific data in a single Map
   const [wordStates, setWordStates] = useState<Map<string, WordState>>(() => {
     const initialMap = new Map<string, WordState>();
@@ -114,10 +118,21 @@ export const WordSenseSelector: React.FC<WordSenseSelectorProps> = ({
   const updateWordSensesMutation = useUpdateWordSenses(nodeId, {
     onSuccess: () => {
       toast.success("Word senses saved successfully");
+
+      // Return focus to container after save
+      setTimeout(() => {
+        containerRef.current?.focus();
+      }, 100);
+
       onSaveComplete?.();
     },
     onError: (error) => {
       toast.error(`Failed to save word senses: ${error.message}`);
+
+      // Return focus to save button on error
+      setTimeout(() => {
+        saveButtonRef.current?.focus();
+      }, 100);
     },
   });
 
@@ -329,16 +344,27 @@ export const WordSenseSelector: React.FC<WordSenseSelectorProps> = ({
     return (
       <div
         key={word}
-        className={`rounded-lg border-2 p-3 transition-all ${borderColorClass} ${bgColorClass}`}
+        className={`rounded-lg border-2 p-3 transition-all duration-300 ease-in-out ${borderColorClass} ${bgColorClass}`}
+        role="region"
+        aria-label={`Word sense for ${word}`}
       >
         {/* Word header - clickable to expand */}
         <button
           onClick={() => handleWordClick(word)}
-          className="mb-2 w-full text-left font-semibold text-gray-800 hover:text-blue-600"
+          onKeyDown={(e) => {
+            if (e.key === "Enter" || e.key === " ") {
+              e.preventDefault();
+              handleWordClick(word);
+            }
+          }}
+          className="mb-2 w-full text-left font-semibold text-gray-800 transition-colors duration-200 hover:text-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+          aria-expanded={state.isExpanded}
+          aria-controls={`word-sense-${word}`}
+          aria-label={`${state.isExpanded ? 'Collapse' : 'Expand'} sense options for ${word}${state.selectedSense ? `, currently selected: ${state.selectedSense.sense_id}` : ''}`}
         >
           {word}
           {state.selectedSense && (
-            <span className="ml-2 rounded-full bg-blue-600 px-2 py-0.5 text-xs text-white">
+            <span className="ml-2 rounded-full bg-blue-600 px-2 py-0.5 text-xs text-white" aria-label="Selected sense">
               {state.selectedSense.sense_id}
             </span>
           )}
@@ -346,16 +372,25 @@ export const WordSenseSelector: React.FC<WordSenseSelectorProps> = ({
 
         {/* Show analysis when expanded */}
         {state.isExpanded && (
-          <div className="mt-2">
+          <div
+            className="mt-2 animate-fade-in"
+            id={`word-sense-${word}`}
+            role="region"
+            aria-live="polite"
+          >
             {state.isAnalyzing && (
-              <div className="flex items-center gap-2">
-                <Spinner size="sm" />
+              <div className="flex items-center gap-2" role="status" aria-label="Loading word sense analysis">
+                <Spinner size="sm" aria-hidden="true" />
                 <span className="text-sm text-gray-600">Analyzing...</span>
               </div>
             )}
 
             {state.error && (
-              <div className="text-sm text-red-600">
+              <div
+                className="text-sm text-red-600"
+                role="alert"
+                aria-live="assertive"
+              >
                 Error: {state.error.message}
               </div>
             )}
@@ -399,23 +434,37 @@ export const WordSenseSelector: React.FC<WordSenseSelectorProps> = ({
   };
 
   return (
-    <div className="space-y-4">
+    <div
+      className="space-y-4"
+      ref={containerRef}
+      tabIndex={-1}
+      aria-label="Word sense selector"
+    >
       {/* Save button - only show when dirty */}
       {isDirty && (
-        <div className="flex items-center justify-end">
+        <div className="flex items-center justify-end" role="region" aria-label="Save actions">
           <button
+            ref={saveButtonRef}
             onClick={handleSave}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" || e.key === " ") {
+                e.preventDefault();
+                handleSave();
+              }
+            }}
             disabled={isSaving || !updateWordSensesMutation}
-            className="inline-flex items-center rounded-lg bg-blue-700 px-4 py-2 text-sm font-medium text-white hover:bg-blue-800 focus:outline-none focus:ring-4 focus:ring-blue-300 disabled:cursor-not-allowed disabled:opacity-50"
+            className="inline-flex items-center rounded-lg bg-blue-700 px-4 py-2 text-sm font-medium text-white transition-colors duration-200 hover:bg-blue-800 focus:outline-none focus:ring-4 focus:ring-blue-300 disabled:cursor-not-allowed disabled:opacity-50"
+            aria-label={isSaving ? "Saving word senses" : "Save word senses"}
+            aria-busy={isSaving}
           >
             {isSaving ? (
               <>
-                <Spinner size="sm" className="mr-2" />
+                <Spinner size="sm" className="mr-2" aria-hidden="true" />
                 Saving...
               </>
             ) : (
               <>
-                <Save className="mr-2 h-4 w-4" />
+                <Save className="mr-2 h-4 w-4" aria-hidden="true" />
                 Save Word Senses
               </>
             )}
@@ -424,13 +473,17 @@ export const WordSenseSelector: React.FC<WordSenseSelectorProps> = ({
       )}
 
       {/* Multi-word chart display with responsive grid */}
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3">
+      <div
+        className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
+        role="list"
+        aria-label={`Word senses for ${words.length} word${words.length > 1 ? 's' : ''}`}
+      >
         {words.map(renderWordChart)}
       </div>
 
       {/* Helper text */}
-      <div className="text-xs text-gray-500">
-        Click a word to view and select its senses. Selected senses will be saved for this term.
+      <div className="text-xs text-gray-500" role="status" aria-live="polite">
+        Click a word to view and select its senses. Use Tab to navigate between words and Enter or Space to expand. Selected senses will be saved for this term.
       </div>
     </div>
   );
