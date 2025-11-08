@@ -41,6 +41,7 @@ import { TreeMenuPanel } from "@/components/panels/TreeMenuPanel";
 import { useNlpAnalysisStore } from "@/stores/nlpAnalysisStore";
 import { useUpdateStructureNode } from "@/api/hooks/structure_nodes/useStructureNodeMutations";
 import { toast } from "@/utils/toast";
+import { ReferenceNodePanel } from "@/components/reference_nodes";
 
 type NodeOut = components["schemas"]["NodeOut"];
 
@@ -284,6 +285,11 @@ export const StructureNodeDetails: React.FC<StructureNodeDetailsProps> = ({
             termId={node.node_type === NodeType.TERM ? node.id : undefined}
             nodeId={node.id}
           />
+
+          {/* Reference Nodes */}
+          <div className="pt-4">
+            <ReferenceNodePanel nodeId={node.id} />
+          </div>
 
           {/* Definition */}
           <div className="pt-4">
