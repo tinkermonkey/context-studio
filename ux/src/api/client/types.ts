@@ -286,8 +286,104 @@ export interface paths {
          *         500: If an unexpected error occurs
          */
         get: operations["get_word_senses_api_structure_nodes__node_id__word_senses_get"];
-        put?: never;
+        /**
+         * Update Word Senses
+         * @description Update selected word senses for a structure node.
+         *
+         *     Allows user to persist their selected word senses from NLP analysis.
+         *     Uses a conservative merge strategy: preserves existing word senses for words
+         *     not included in this update, while replacing senses for words that are included.
+         *
+         *     For example, if a node has existing senses for words "bank" and "account", and
+         *     you update only "bank", the existing "account" senses will be preserved.
+         *
+         *     Args:
+         *         node_id: UUID of the structure node
+         *         update_request: Selected word senses to persist
+         *
+         *     Returns:
+         *         List of all word senses after update (including preserved senses)
+         *
+         *     Raises:
+         *         400: If validation fails (invalid sense_id format)
+         *         404: If structure node not found
+         *         500: If an unexpected error occurs
+         */
+        put: operations["update_word_senses_api_structure_nodes__node_id__word_senses_put"];
         post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/structure_nodes/reference_links/validate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Validate All Reference Links
+         * @description Validate all reference links across all structure nodes.
+         *
+         *     Performs bulk validation of reference links to identify:
+         *     - Orphaned links (references that no longer exist in reference.db)
+         *     - Malformed links (invalid JSON or missing required fields)
+         *     - Nodes with problematic links
+         *
+         *     Uses batching to efficiently handle large datasets without loading all nodes into memory.
+         *     This endpoint is useful for maintenance and data integrity checking.
+         *     Gracefully degrades if reference.db is unavailable.
+         *
+         *     Args:
+         *         check_existence: If True, validates each link exists in reference.db
+         *         limit: Optional limit on number of nodes to check
+         *         batch_size: Number of nodes to process per batch (default: 100, min: 10, max: 1000)
+         *
+         *     Returns:
+         *         Validation results with statistics and list of problematic nodes
+         */
+        post: operations["validate_all_reference_links_api_structure_nodes_reference_links_validate_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/structure_nodes/{node_id}/reference_links/validate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Validate Node Reference Links
+         * @description Validate reference links for a specific structure node.
+         *
+         *     Checks all reference links on a single node to identify:
+         *     - Orphaned links (references that no longer exist in reference.db)
+         *     - Malformed links (invalid JSON or missing required fields)
+         *     - Valid links
+         *
+         *     Args:
+         *         node_id: UUID of the structure node
+         *         check_existence: If True, validates each link exists in reference.db
+         *
+         *     Returns:
+         *         Validation results with counts of valid, invalid, and malformed links
+         *
+         *     Raises:
+         *         404: If structure node not found
+         *         500: If an unexpected error occurs
+         */
+        post: operations["validate_node_reference_links_api_structure_nodes__node_id__reference_links_validate_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -8992,6 +9088,17 @@ export interface components {
             analysis_depth: number | null;
         };
         /**
+         * SelectedWordSensesUpdate
+         * @description Model for updating selected word senses on a structure node.
+         */
+        SelectedWordSensesUpdate: {
+            /**
+             * Selected Senses
+             * @description List of word senses to persist as selected
+             */
+            selected_senses: components["schemas"]["WordSense"][];
+        };
+        /**
          * SelectionResponse
          * @description Response model for selection recording.
          */
@@ -10503,6 +10610,121 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["WordSense"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_word_senses_api_structure_nodes__node_id__word_senses_put: {
+        parameters: {
+            query?: {
+                SessionLocal?: unknown;
+            };
+            header?: never;
+            path: {
+                /** @description The ID of the structure node */
+                node_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SelectedWordSensesUpdate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WordSense"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    validate_all_reference_links_api_structure_nodes_reference_links_validate_post: {
+        parameters: {
+            query?: {
+                /** @description Check if references exist in reference.db */
+                check_existence?: boolean;
+                /** @description Limit number of nodes to validate */
+                limit?: number | null;
+                /** @description Number of nodes to process per batch */
+                batch_size?: number;
+                SessionLocal?: unknown;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    validate_node_reference_links_api_structure_nodes__node_id__reference_links_validate_post: {
+        parameters: {
+            query?: {
+                /** @description Check if references exist in reference.db */
+                check_existence?: boolean;
+                SessionLocal?: unknown;
+            };
+            header?: never;
+            path: {
+                /** @description The ID of the structure node */
+                node_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: unknown;
+                    };
                 };
             };
             /** @description Validation Error */

@@ -16,6 +16,9 @@ import {
   FindStructureNodeResult,
   NodeType,
   VALIDATION_RULES,
+  WordSense,
+  ReferenceLink,
+  SelectedWordSensesUpdate,
 } from "../types/structureNodes";
 
 export class StructureNodeService extends BaseService {
@@ -278,6 +281,86 @@ export class StructureNodeService extends BaseService {
       params.node_type = nodeType;
     }
     return this.list(params);
+  }
+
+  /**
+   * Get word senses for a structure node
+   */
+  async getWordSenses(nodeId: string): Promise<WordSense[]> {
+    return this.withErrorContext(async () => {
+      this.validateRequired(nodeId, "nodeId");
+      return this.getResource<WordSense[]>(
+        `${ENDPOINTS.STRUCTURE_NODES}/${nodeId}/word_senses`,
+      );
+    }, "getWordSenses");
+  }
+
+  /**
+   * Update word senses for a structure node
+   */
+  async updateWordSenses(
+    nodeId: string,
+    data: SelectedWordSensesUpdate,
+  ): Promise<WordSense[]> {
+    return this.withErrorContext(async () => {
+      this.validateRequired(nodeId, "nodeId");
+      this.validateRequired(data.selected_senses, "selected_senses");
+
+      return this.putResource<WordSense[]>(
+        `${ENDPOINTS.STRUCTURE_NODES}/${nodeId}/word_senses`,
+        data,
+      );
+    }, "updateWordSenses");
+  }
+
+  /**
+   * Get reference links for a structure node
+   */
+  async getReferenceLinks(nodeId: string): Promise<ReferenceLink[]> {
+    return this.withErrorContext(async () => {
+      this.validateRequired(nodeId, "nodeId");
+      return this.getResource<ReferenceLink[]>(
+        `${ENDPOINTS.STRUCTURE_NODES}/${nodeId}/reference_links`,
+      );
+    }, "getReferenceLinks");
+  }
+
+  /**
+   * Add reference links to a structure node
+   */
+  async addReferenceLinks(
+    nodeId: string,
+    referenceLinks: ReferenceLink[],
+  ): Promise<ReferenceLink[]> {
+    return this.withErrorContext(async () => {
+      this.validateRequired(nodeId, "nodeId");
+      this.validateRequired(referenceLinks, "referenceLinks");
+
+      return this.postResource<ReferenceLink[]>(
+        `${ENDPOINTS.STRUCTURE_NODES}/${nodeId}/reference_links`,
+        { reference_links: referenceLinks },
+      );
+    }, "addReferenceLinks");
+  }
+
+  /**
+   * Remove reference links from a structure node
+   */
+  async removeReferenceLinks(
+    nodeId: string,
+    referenceLinks: ReferenceLink[],
+  ): Promise<ReferenceLink[]> {
+    return this.withErrorContext(async () => {
+      this.validateRequired(nodeId, "nodeId");
+      this.validateRequired(referenceLinks, "referenceLinks");
+
+      return this.deleteResource<ReferenceLink[]>(
+        `${ENDPOINTS.STRUCTURE_NODES}/${nodeId}/reference_links`,
+        {
+          params: { reference_links: JSON.stringify(referenceLinks) },
+        },
+      );
+    }, "removeReferenceLinks");
   }
 
   /**

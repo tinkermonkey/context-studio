@@ -82,6 +82,26 @@ export interface ChangeEvent {
   processed: boolean;
 }
 
+// Word sense from NLP analysis
+export interface WordSense {
+  term: string;
+  sense_type: string;
+  sense_id: string;
+  definition: string;
+  domain?: string | null;
+}
+
+// Reference link to external knowledge sources
+export interface ReferenceLink {
+  source: string;
+  external_id: string;
+}
+
+// Update request for word senses
+export interface SelectedWordSensesUpdate {
+  selected_senses: WordSense[];
+}
+
 // Structure node links (replaces term relationships)
 export interface StructureNodeLink {
   id: string;
