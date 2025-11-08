@@ -15,7 +15,7 @@ import { NlpRefinementPanel } from "@/components/nlp/NlpRefinementPanel";
 import { NlpGenerationResult } from "@/components/nlp/NlpGenerationResult";
 import { useNlpAnalysisStore } from "@/stores/nlpAnalysisStore";
 import { useWordSenses } from "@/api/hooks/structure_nodes/useWordSenses";
-import { MultiWordNlpConceptChart } from "@/components/graphs/nlp_concept/MultiWordNlpConceptChart";
+import { WordSenseSelector } from "@/components/graphs/nlp_concept/WordSenseSelector";
 import type {
   NodeContext,
   SelectedNodeContextEntry,
@@ -329,7 +329,7 @@ export const NlpAnalysisPanel: React.FC<NlpAnalysisPanelProps> = ({
                   </span>
                 </div>
               ) : (
-                <MultiWordNlpConceptChart
+                <WordSenseSelector
                   title={text}
                   persistedSenses={persistedWordSenses}
                   nodeId={nodeId}
