@@ -5,9 +5,10 @@
  * Reuses UnifiedSearchBar and SourceSelector patterns from UnifiedSearchPage.
  */
 
-import React, { useState } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { TextInput, Button, Alert, Spinner, Badge, Checkbox } from "flowbite-react";
 import { Search, Info, Clock, CheckCircle, XCircle } from "lucide-react";
+
 import { UnifiedNode, SourceType, SOURCE_METADATA } from "@/api/types/unified";
 import { useStreamingUnifiedSearch, useSourceLoadingStates } from "@/api/hooks/unifiedReference/useStreamingReference";
 import { SourceSelector } from "@/components/reference/UnifiedSearch/SourceSelector";
@@ -18,11 +19,15 @@ interface ReferenceNodeSearchProps {
   selectedNodes: UnifiedNode[];
 }
 
+// Debounce delay in milliseconds
+const SEARCH_DEBOUNCE_DELAY = 500;
+
 export const ReferenceNodeSearch: React.FC<ReferenceNodeSearchProps> = ({
   onAddNode,
   selectedNodes,
 }) => {
   const [query, setQuery] = useState("");
+  const [debouncedQuery, setDebouncedQuery] = useState("");
   const [selectedSources, setSelectedSources] = useState<SourceType[]>([
     "dbpedia",
     "schema_org",
@@ -31,6 +36,7 @@ export const ReferenceNodeSearch: React.FC<ReferenceNodeSearchProps> = ({
   ]);
   const [selectedResultIds, setSelectedResultIds] = useState<Set<string>>(new Set());
   const [searchError, setSearchError] = useState<Error | null>(null);
+  const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
 
   const {
     search: performSearch,
@@ -52,12 +58,39 @@ export const ReferenceNodeSearch: React.FC<ReferenceNodeSearchProps> = ({
 
   const sourceLoadingStates = useSourceLoadingStates(searchState);
 
-  const handleSearch = () => {
-    if (query.trim().length >= 2 && selectedSources.length > 0) {
+  // Debounce the search query
+  useEffect(() => {
+    // Clear any existing timer
+    if (debounceTimerRef.current) {
+      clearTimeout(debounceTimerRef.current);
+    }
+
+    // Set new timer
+    debounceTimerRef.current = setTimeout(() => {
+      setDebouncedQuery(query);
+    }, SEARCH_DEBOUNCE_DELAY);
+
+    // Cleanup on unmount
+    return () => {
+      if (debounceTimerRef.current) {
+        clearTimeout(debounceTimerRef.current);
+      }
+    };
+  }, [query]);
+
+  // Automatically trigger search when debounced query changes
+  useEffect(() => {
+    if (debouncedQuery.trim().length >= 2 && selectedSources.length > 0) {
+      performSearchInternal();
+    }
+  }, [debouncedQuery, selectedSources]);
+
+  const performSearchInternal = () => {
+    if (debouncedQuery.trim().length >= 2 && selectedSources.length > 0) {
       setSearchError(null);
       setSelectedResultIds(new Set());
       performSearch({
-        query: query.trim(),
+        query: debouncedQuery.trim(),
         sources: selectedSources,
         limit: 20,
         offset: 0,
@@ -65,6 +98,15 @@ export const ReferenceNodeSearch: React.FC<ReferenceNodeSearchProps> = ({
         setSearchError(error);
       });
     }
+  };
+
+  const handleSearch = () => {
+    // Clear debounce and search immediately
+    if (debounceTimerRef.current) {
+      clearTimeout(debounceTimerRef.current);
+    }
+    setDebouncedQuery(query);
+    performSearchInternal();
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -236,7 +278,7 @@ export const ReferenceNodeSearch: React.FC<ReferenceNodeSearchProps> = ({
 
       {/* Results with Selection Checkboxes */}
       {hasSearched && (
-        <div className="space-y-3">
+        <div className="space-y-3" role="list" aria-label="Search results">
           {hasSelections && (
             <div className="flex items-center justify-between border-b pb-3">
               <span className="text-sm text-gray-600">
@@ -267,6 +309,7 @@ export const ReferenceNodeSearch: React.FC<ReferenceNodeSearchProps> = ({
                 className={`border rounded-lg p-3 ${
                   isSelected ? "border-blue-500 bg-blue-50" : "border-gray-200"
                 } ${alreadyAdded ? "opacity-50" : ""}`}
+                role="listitem"
               >
                 <div className="flex items-start gap-3">
                   <Checkbox
@@ -274,11 +317,18 @@ export const ReferenceNodeSearch: React.FC<ReferenceNodeSearchProps> = ({
                     onChange={() => handleToggleSelection(node)}
                     disabled={alreadyAdded}
                     className="mt-1"
+                    aria-label={`Select ${node.title} from ${getSourceLabel(node.source)}`}
+                    aria-describedby={`node-desc-${nodeKey}`}
                   />
                   <div className="flex-1">
-                    <h4 className="font-medium text-gray-900">{node.title}</h4>
+                    <h4 className="font-medium text-gray-900" id={`node-title-${nodeKey}`}>
+                      {node.title}
+                    </h4>
                     {node.definition && (
-                      <p className="mt-1 text-sm text-gray-600 line-clamp-2">
+                      <p
+                        className="mt-1 text-sm text-gray-600 line-clamp-2"
+                        id={`node-desc-${nodeKey}`}
+                      >
                         {node.definition}
                       </p>
                     )}

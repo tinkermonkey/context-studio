@@ -3,9 +3,10 @@
  */
 
 import React from "react";
-import { render, screen, waitFor, fireEvent } from "@testing-library/react";
+import { render, screen, waitFor, fireEvent, cleanup } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { vi, describe, it, expect, beforeEach } from "vitest";
+import { vi, describe, it, expect, beforeEach, afterEach } from "vitest";
+
 import { ReferenceNodePanel } from "../ReferenceNodePanel";
 import { useReferenceLinks } from "@/api/hooks/structure_nodes/useReferenceLinks";
 
@@ -61,10 +62,14 @@ const TestWrapper: React.FC<{ children: React.ReactNode }> = ({ children }) => {
 };
 
 describe("ReferenceNodePanel", () => {
-  const mockNodeId = "test-node-123";
+  const mockNodeId = "550e8400-e29b-41d4-a716-446655440000"; // Valid UUID
 
   beforeEach(() => {
     vi.clearAllMocks();
+  });
+
+  afterEach(() => {
+    cleanup();
   });
 
   it("displays loading state while fetching reference links", () => {
@@ -187,5 +192,21 @@ describe("ReferenceNodePanel", () => {
     await waitFor(() => {
       expect(screen.getByText("Cancel")).toBeInTheDocument();
     });
+  });
+
+  it("displays error for invalid UUID format", () => {
+    mockUseReferenceLinks.mockReturnValue({
+      data: [],
+      isLoading: false,
+      error: null,
+    } as any);
+
+    render(
+      <TestWrapper>
+        <ReferenceNodePanel nodeId="invalid-uuid" />
+      </TestWrapper>
+    );
+
+    expect(screen.getByText(/invalid node id format/i)).toBeInTheDocument();
   });
 });

@@ -8,6 +8,7 @@
 import React from "react";
 import { Button, Badge, Alert, Spinner } from "flowbite-react";
 import { X, Save, Trash2 } from "lucide-react";
+
 import { UnifiedNode } from "@/api/types/unified";
 import { ReferenceLink } from "@/api/types/structureNodes";
 import { useAddReferenceLinks } from "@/api/hooks/structure_nodes/useReferenceLinks";

@@ -8,6 +8,7 @@
 import React, { useState } from "react";
 import { Card, Button, Alert } from "flowbite-react";
 import { Link as LinkIcon, Search, Info } from "lucide-react";
+
 import { ReferenceLink } from "@/api/types/structureNodes";
 import { UnifiedNode } from "@/api/types/unified";
 import { useReferenceLinks } from "@/api/hooks/structure_nodes/useReferenceLinks";
@@ -19,18 +20,24 @@ interface ReferenceNodePanelProps {
   nodeId: string;
 }
 
+// UUID validation regex
+const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
 export const ReferenceNodePanel: React.FC<ReferenceNodePanelProps> = ({
   nodeId,
 }) => {
   const [isSearchActive, setIsSearchActive] = useState(false);
   const [selectedNodes, setSelectedNodes] = useState<UnifiedNode[]>([]);
 
-  // Fetch persisted reference links
+  // Validate UUID format before making API calls
+  const isValidUuid = UUID_REGEX.test(nodeId);
+
+  // Fetch persisted reference links only if UUID is valid
   const {
     data: persistedLinks = [],
     isLoading: linksLoading,
     error: linksError,
-  } = useReferenceLinks(nodeId);
+  } = useReferenceLinks(isValidUuid ? nodeId : "");
 
   // Handle adding a node to the selection list
   const handleAddNode = (node: UnifiedNode) => {
@@ -88,22 +95,29 @@ export const ReferenceNodePanel: React.FC<ReferenceNodePanelProps> = ({
           )}
         </div>
 
+        {/* Invalid UUID State */}
+        {!isValidUuid && (
+          <Alert color="failure">
+            Invalid node ID format. Cannot load reference links.
+          </Alert>
+        )}
+
         {/* Loading State */}
-        {linksLoading && (
+        {isValidUuid && linksLoading && (
           <Alert color="info" icon={Info}>
             Loading reference links...
           </Alert>
         )}
 
         {/* Error State */}
-        {linksError && (
+        {isValidUuid && linksError && (
           <Alert color="failure">
             Failed to load reference links: {linksError.message}
           </Alert>
         )}
 
         {/* Search Interface */}
-        {shouldShowSearch && !linksLoading && (
+        {isValidUuid && shouldShowSearch && !linksLoading && (
           <ReferenceNodeSearch
             onAddNode={handleAddNode}
             selectedNodes={selectedNodes}
@@ -111,7 +125,7 @@ export const ReferenceNodePanel: React.FC<ReferenceNodePanelProps> = ({
         )}
 
         {/* Selection List */}
-        {hasSelections && (
+        {isValidUuid && hasSelections && (
           <ReferenceNodeSelectionList
             nodeId={nodeId}
             selectedNodes={selectedNodes}

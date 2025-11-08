@@ -3,9 +3,10 @@
  */
 
 import React from "react";
-import { render, screen, fireEvent, waitFor } from "@testing-library/react";
+import { render, screen, fireEvent, waitFor, cleanup } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { vi, describe, it, expect, beforeEach } from "vitest";
+import { vi, describe, it, expect, beforeEach, afterEach } from "vitest";
+
 import { ReferenceNodeDisplay } from "../ReferenceNodeDisplay";
 import { useRemoveReferenceLink } from "@/api/hooks/structure_nodes/useReferenceLinks";
 import { ReferenceLink } from "@/api/types/structureNodes";
@@ -33,19 +34,29 @@ const TestWrapper: React.FC<{ children: React.ReactNode }> = ({ children }) => {
 };
 
 describe("ReferenceNodeDisplay", () => {
-  const mockNodeId = "test-node-123";
+  const mockNodeId = "550e8400-e29b-41d4-a716-446655440000"; // Valid UUID
+  let mockWindowOpen: ReturnType<typeof vi.fn>;
 
   beforeEach(() => {
     vi.clearAllMocks();
 
-    // Mock window.open
-    window.open = vi.fn();
+    // Mock window.open and store reference
+    mockWindowOpen = vi.fn().mockReturnValue(null);
+    window.open = mockWindowOpen as any;
 
     // Default mock for remove mutation
     mockUseRemoveReferenceLink.mockReturnValue({
       mutate: vi.fn(),
       isPending: false,
     } as any);
+  });
+
+  afterEach(() => {
+    cleanup();
+    // Restore window.open if needed
+    if (mockWindowOpen) {
+      mockWindowOpen.mockRestore?.();
+    }
   });
 
   it("returns null when no reference links are provided", () => {
