@@ -33,7 +33,7 @@ from services.exceptions import NotFoundError, ValidationError, ConflictError, C
 from api.models.structure_nodes import (
     NodeCreate, NodeUpdate, NodeOut, NodeLinkCreate, NodeLinkOut,
     NodeSearchRequest, NodeSearchResult, PaginatedNodesResponse, NodeTypeEnum,
-    MoveNodesRequest, MoveNodesResponse, ReferenceLink, WordSense
+    MoveNodesRequest, MoveNodesResponse, ReferenceLink, WordSense, SelectedWordSensesUpdate
 )
 from api.utils.node_conversion import (
     to_node_out, to_node_link_out, nodes_to_paginated_response,
@@ -706,6 +706,57 @@ def get_word_senses(
         raise
     except Exception as e:
         logger.error(f"Unexpected error getting word senses for node {node_id}: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail=f"Internal server error: {str(e)}")
+
+
+@router.put("/{node_id}/word_senses", response_model=List[WordSense])
+def update_word_senses(
+    node_id: UUID = Path(..., description="The ID of the structure node"),
+    update_request: SelectedWordSensesUpdate = ...,
+    word_sense_service: WordSenseService = Depends(get_word_sense_service)
+):
+    """
+    Update selected word senses for a structure node.
+
+    Allows user to persist their selected word senses from NLP analysis.
+    Uses a conservative merge strategy: preserves existing word senses for words
+    not included in this update, while replacing senses for words that are included.
+
+    For example, if a node has existing senses for words "bank" and "account", and
+    you update only "bank", the existing "account" senses will be preserved.
+
+    Args:
+        node_id: UUID of the structure node
+        update_request: Selected word senses to persist
+
+    Returns:
+        List of all word senses after update (including preserved senses)
+
+    Raises:
+        400: If validation fails (invalid sense_id format)
+        404: If structure node not found
+        500: If an unexpected error occurs
+    """
+    from utils.logger import get_logger
+    logger = get_logger(__name__)
+
+    try:
+        result = word_sense_service.update_selected_senses(
+            str(node_id),
+            update_request.selected_senses
+        )
+        return result
+
+    except ValueError as e:
+        error_msg = str(e).lower()
+        if "not found" in error_msg:
+            raise HTTPException(status_code=404, detail=str(e))
+        else:
+            raise HTTPException(status_code=400, detail=str(e))
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Unexpected error updating word senses for node {node_id}: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail=f"Internal server error: {str(e)}")
 
 

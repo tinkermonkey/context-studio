@@ -18,6 +18,16 @@ os.environ["OPENAI_API_KEY"] = "sk-test1234567890abcdefghijklmnopqrstuvwxyzABCDE
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
 
+@pytest.fixture(scope="function")
+def client(shared_client):
+    """
+    Provide test client for integration tests.
+
+    Integration tests use the shared client from root conftest.
+    """
+    return shared_client
+
+
 @pytest.fixture
 def minimal_reference_client():
     """

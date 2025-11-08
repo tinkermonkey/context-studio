@@ -154,3 +154,10 @@ class WordSense(BaseModel):
     domain: Optional[str] = Field(None, description="Semantic domain or category (e.g., 'noun.group')")
 
     model_config = ConfigDict(from_attributes=True)
+
+
+class SelectedWordSensesUpdate(BaseModel):
+    """Model for updating selected word senses on a structure node."""
+    selected_senses: List[WordSense] = Field(..., description="List of word senses to persist as selected")
+
+    model_config = ConfigDict(from_attributes=True)

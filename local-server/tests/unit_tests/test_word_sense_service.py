@@ -557,6 +557,252 @@ class TestWordSenseService:
         # Verify rollback was called
         mock_db.rollback.assert_called_once()
 
+    def test_update_selected_senses_success(self, service, mock_db, sample_node):
+        """Test successfully updating selected word senses."""
+        # Setup - node has no existing senses
+        sample_node.word_senses = None
+        mock_db.query.return_value.filter.return_value.first.return_value = sample_node
+
+        # Create selected senses for a single word
+        selected_senses = [
+            WordSense(
+                term="bank",
+                sense_type="wordnet",
+                sense_id="bank.n.01",
+                definition="financial institution",
+                domain="noun.group"
+            )
+        ]
+
+        # Execute
+        result = service.update_selected_senses("test-node-123", selected_senses)
+
+        # Assert
+        assert len(result) == 1
+        assert result[0].sense_id == "bank.n.01"
+        assert result[0].term == "bank"
+        assert sample_node.version == 2
+        mock_db.commit.assert_called_once()
+
+    def test_update_selected_senses_conservative_merge(self, service, mock_db, sample_node):
+        """Test conservative merge preserves senses for other words."""
+        # Setup - node has existing senses for two different words
+        existing_senses = [
+            WordSense(
+                term="bank",
+                sense_type="wordnet",
+                sense_id="bank.n.02",
+                definition="sloping land beside water",
+                domain="noun.object"
+            ),
+            WordSense(
+                term="account",
+                sense_type="wordnet",
+                sense_id="account.n.01",
+                definition="a record or narrative description",
+                domain="noun.communication"
+            )
+        ]
+        sample_node.word_senses = json.dumps([s.model_dump() for s in existing_senses])
+        mock_db.query.return_value.filter.return_value.first.return_value = sample_node
+
+        # Update only "bank", not "account"
+        selected_senses = [
+            WordSense(
+                term="bank",
+                sense_type="wordnet",
+                sense_id="bank.n.01",
+                definition="financial institution",
+                domain="noun.group"
+            )
+        ]
+
+        # Execute
+        result = service.update_selected_senses("test-node-123", selected_senses)
+
+        # Assert
+        assert len(result) == 2  # Both words should still be present
+        sense_by_term = {s.term: s for s in result}
+
+        # "bank" should be updated
+        assert "bank" in sense_by_term
+        assert sense_by_term["bank"].sense_id == "bank.n.01"
+
+        # "account" should be preserved
+        assert "account" in sense_by_term
+        assert sense_by_term["account"].sense_id == "account.n.01"
+
+        assert sample_node.version == 2
+
+    def test_update_selected_senses_replaces_word(self, service, mock_db, sample_node):
+        """Test that updating a word replaces all its previous senses."""
+        # Setup - node has multiple senses for "bank"
+        existing_senses = [
+            WordSense(
+                term="bank",
+                sense_type="wordnet",
+                sense_id="bank.n.01",
+                definition="financial institution",
+                domain="noun.group"
+            ),
+            WordSense(
+                term="bank",
+                sense_type="wordnet",
+                sense_id="bank.n.02",
+                definition="sloping land beside water",
+                domain="noun.object"
+            )
+        ]
+        sample_node.word_senses = json.dumps([s.model_dump() for s in existing_senses])
+        mock_db.query.return_value.filter.return_value.first.return_value = sample_node
+
+        # Update "bank" with a single new sense
+        selected_senses = [
+            WordSense(
+                term="bank",
+                sense_type="wordnet",
+                sense_id="bank.n.03",
+                definition="building housing a bank",
+                domain="noun.artifact"
+            )
+        ]
+
+        # Execute
+        result = service.update_selected_senses("test-node-123", selected_senses)
+
+        # Assert - only the new sense should remain
+        assert len(result) == 1
+        assert result[0].sense_id == "bank.n.03"
+
+    def test_update_selected_senses_multiple_words(self, service, mock_db, sample_node):
+        """Test updating senses for multiple words at once."""
+        # Setup - node has no existing senses
+        sample_node.word_senses = None
+        mock_db.query.return_value.filter.return_value.first.return_value = sample_node
+
+        # Update with senses for two different words
+        selected_senses = [
+            WordSense(
+                term="bank",
+                sense_type="wordnet",
+                sense_id="bank.n.01",
+                definition="financial institution",
+                domain="noun.group"
+            ),
+            WordSense(
+                term="account",
+                sense_type="wordnet",
+                sense_id="account.n.02",
+                definition="a formal contractual relationship",
+                domain="noun.state"
+            )
+        ]
+
+        # Execute
+        result = service.update_selected_senses("test-node-123", selected_senses)
+
+        # Assert
+        assert len(result) == 2
+        sense_ids = {s.sense_id for s in result}
+        assert "bank.n.01" in sense_ids
+        assert "account.n.02" in sense_ids
+
+    def test_update_selected_senses_invalid_sense_id(self, service, mock_db, sample_node):
+        """Test validation rejects invalid sense IDs."""
+        # Setup
+        mock_db.query.return_value.filter.return_value.first.return_value = sample_node
+
+        # Create senses with invalid sense_id
+        selected_senses = [
+            WordSense(
+                term="bank",
+                sense_type="wordnet",
+                sense_id="invalid-format",  # Invalid WordNet format
+                definition="test definition"
+            )
+        ]
+
+        # Execute & Assert
+        with pytest.raises(ValueError, match="Invalid sense"):
+            service.update_selected_senses("test-node-123", selected_senses)
+
+        # Verify no commit occurred
+        mock_db.commit.assert_not_called()
+
+    def test_update_selected_senses_node_not_found(self, service, mock_db):
+        """Test error when updating senses for non-existent node."""
+        # Setup
+        mock_db.query.return_value.filter.return_value.first.return_value = None
+
+        selected_senses = [
+            WordSense(
+                term="bank",
+                sense_type="wordnet",
+                sense_id="bank.n.01",
+                definition="financial institution"
+            )
+        ]
+
+        # Execute & Assert
+        with pytest.raises(ValueError, match="StructureNode not found"):
+            service.update_selected_senses("nonexistent-node", selected_senses)
+
+    def test_update_selected_senses_case_insensitive_term_matching(self, service, mock_db, sample_node):
+        """Test that term matching is case-insensitive."""
+        # Setup - existing sense with lowercase term
+        existing_senses = [
+            WordSense(
+                term="bank",
+                sense_type="wordnet",
+                sense_id="bank.n.01",
+                definition="financial institution",
+                domain="noun.group"
+            )
+        ]
+        sample_node.word_senses = json.dumps([s.model_dump() for s in existing_senses])
+        mock_db.query.return_value.filter.return_value.first.return_value = sample_node
+
+        # Update with uppercase term
+        selected_senses = [
+            WordSense(
+                term="BANK",  # Uppercase
+                sense_type="wordnet",
+                sense_id="bank.n.02",
+                definition="sloping land beside water",
+                domain="noun.object"
+            )
+        ]
+
+        # Execute
+        result = service.update_selected_senses("test-node-123", selected_senses)
+
+        # Assert - should replace the existing "bank" sense despite case difference
+        assert len(result) == 1
+        assert result[0].sense_id == "bank.n.02"
+
+    def test_update_selected_senses_commit_failure(self, service, mock_db, sample_node):
+        """Test rollback on commit failure."""
+        # Setup
+        sample_node.word_senses = None
+        mock_db.query.return_value.filter.return_value.first.return_value = sample_node
+        mock_db.commit.side_effect = Exception("Database error")
+
+        selected_senses = [
+            WordSense(
+                term="bank",
+                sense_type="wordnet",
+                sense_id="bank.n.01",
+                definition="financial institution"
+            )
+        ]
+
+        # Execute & Assert
+        with pytest.raises(ValueError, match="Failed to update selected word senses"):
+            service.update_selected_senses("test-node-123", selected_senses)
+
+        # Verify rollback was called
+        mock_db.rollback.assert_called_once()
+
 
 if __name__ == "__main__":
     pytest.main([__file__, "-v"])

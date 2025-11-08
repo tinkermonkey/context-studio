@@ -349,6 +349,83 @@ class WordSenseService:
             logger.debug(f"Validated sense_id for {sense_type}: {sense_id}")
             return True
 
+    def update_selected_senses(
+        self, node_id: str, selected_senses: List[WordSense]
+    ) -> List[WordSense]:
+        """
+        Update selected word senses for a structure node.
+
+        This method uses a conservative merge strategy: it preserves existing word
+        senses that are not included in the update (for different words), while
+        replacing senses for words that are included in the update.
+
+        Args:
+            node_id: ID of the structure node
+            selected_senses: List of WordSense instances representing user selections
+
+        Returns:
+            List of all word senses after update
+
+        Raises:
+            ValueError: If node not found, validation fails, or update fails
+        """
+        logger.info(
+            f"Updating selected word senses for node {node_id} "
+            f"with {len(selected_senses)} selections"
+        )
+
+        # Get the node
+        node = self.db.query(StructureNode).filter(StructureNode.id == node_id).first()
+        if not node:
+            raise ValueError(f"StructureNode not found: {node_id}")
+
+        # Validate all sense IDs before proceeding
+        for sense in selected_senses:
+            try:
+                self.validate_sense_identifier(sense.sense_type, sense.sense_id)
+            except ValueError as e:
+                logger.error(f"Invalid sense in update: {e}")
+                raise ValueError(f"Invalid sense: {e}")
+
+        # Get existing senses
+        existing_senses = self.get_word_senses(node_id)
+
+        # Create set of words (terms) being updated
+        updated_terms = {sense.term.lower() for sense in selected_senses}
+
+        # Preserve existing senses for words NOT included in this update
+        preserved_senses = [
+            sense for sense in existing_senses
+            if sense.term.lower() not in updated_terms
+        ]
+
+        # Combine preserved senses with new selections
+        updated_senses = preserved_senses + selected_senses
+
+        logger.info(
+            f"Conservative merge: preserved {len(preserved_senses)} senses for other words, "
+            f"updated {len(selected_senses)} senses"
+        )
+
+        # Serialize to JSON
+        senses_json = json.dumps([sense.model_dump() for sense in updated_senses])
+
+        # Update node (increment version after validation, before commit)
+        node.word_senses = senses_json
+
+        try:
+            node.version = node.version + 1
+            self.db.commit()
+            logger.info(
+                f"Successfully updated selected word senses for node {node_id} "
+                f"(total: {len(updated_senses)})"
+            )
+            return updated_senses
+        except Exception as e:
+            self.db.rollback()
+            logger.error(f"Failed to update selected word senses for node {node_id}: {e}")
+            raise ValueError(f"Failed to update selected word senses: {e}")
+
     def get_nodes_with_word_sense(
         self, sense_id: str, limit: Optional[int] = None
     ) -> List[StructureNode]:
