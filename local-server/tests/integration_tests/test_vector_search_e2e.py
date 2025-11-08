@@ -193,14 +193,21 @@ class TestSemanticDiscoveryWorkflow:
         person_id = data["node_ids"]["person"]
         create_embedding = data["create_embedding"]
 
-        # Mock get_settings to return settings with the test database path
-        with patch('config.get_settings') as mock_settings:
-            # Create a mock settings object with the test database path
-            mock_config = MagicMock()
-            mock_config.database.reference_path = db_path
-            mock_settings.return_value = mock_config
+        # Create a custom context manager that uses our test database
+        from contextlib import contextmanager
+        from reference_db.config import ReferenceConfig
+        from reference_db.manager import ReferenceManager
 
-            with patch('api.reference.generate_embedding') as mock_embed:
+        @contextmanager
+        def test_reference_manager_context(config):
+            manager = ReferenceManager(config, db_path=db_path)
+            try:
+                yield manager
+            finally:
+                manager.close()
+
+        with patch('reference_db.dependencies.reference_manager_context', side_effect=test_reference_manager_context):
+            with patch('embeddings.generate_embeddings.generate_embedding') as mock_embed:
                 mock_embed.return_value = create_embedding(0.8)
 
                 # Step 1: User searches for "human being"
@@ -261,12 +268,20 @@ class TestSemanticDiscoveryWorkflow:
         place_id = data["node_ids"]["place"]
         create_embedding = data["create_embedding"]
 
-        # Mock get_settings to return settings with the test database path
-        with patch('config.get_settings') as mock_settings:
-            mock_config = MagicMock()
-            mock_config.database.reference_path = db_path
-            mock_settings.return_value = mock_config
+        # Create a custom context manager that uses our test database
+        from contextlib import contextmanager
+        from reference_db.config import ReferenceConfig
+        from reference_db.manager import ReferenceManager
 
+        @contextmanager
+        def test_reference_manager_context(config):
+            manager = ReferenceManager(config, db_path=db_path)
+            try:
+                yield manager
+            finally:
+                manager.close()
+
+        with patch('reference_db.dependencies.reference_manager_context', side_effect=test_reference_manager_context):
             # Step 1: Get Person node links
             person_links_response = client.get(
                 f"/api/reference/ref-db/nodes/{person_id}/links",
@@ -324,12 +339,20 @@ class TestSemanticDiscoveryWorkflow:
         db_path, data = e2e_test_database
         thing_id = data["node_ids"]["thing"]
 
-        # Mock get_settings to return settings with the test database path
-        with patch('config.get_settings') as mock_settings:
-            mock_config = MagicMock()
-            mock_config.database.reference_path = db_path
-            mock_settings.return_value = mock_config
+        # Create a custom context manager that uses our test database
+        from contextlib import contextmanager
+        from reference_db.config import ReferenceConfig
+        from reference_db.manager import ReferenceManager
 
+        @contextmanager
+        def test_reference_manager_context(config):
+            manager = ReferenceManager(config, db_path=db_path)
+            try:
+                yield manager
+            finally:
+                manager.close()
+
+        with patch('reference_db.dependencies.reference_manager_context', side_effect=test_reference_manager_context):
             # Get all things that are subClassOf Thing
             links_response = client.get(
                 f"/api/reference/ref-db/nodes/{thing_id}/links",
@@ -374,13 +397,21 @@ class TestErrorRecoveryWorkflows:
         db_path, data = e2e_test_database
         create_embedding = data["create_embedding"]
 
-        # Mock get_settings to return settings with the test database path
-        with patch('config.get_settings') as mock_settings:
-            mock_config = MagicMock()
-            mock_config.database.reference_path = db_path
-            mock_settings.return_value = mock_config
+        # Create a custom context manager that uses our test database
+        from contextlib import contextmanager
+        from reference_db.config import ReferenceConfig
+        from reference_db.manager import ReferenceManager
 
-            with patch('api.reference.generate_embedding') as mock_embed:
+        @contextmanager
+        def test_reference_manager_context(config):
+            manager = ReferenceManager(config, db_path=db_path)
+            try:
+                yield manager
+            finally:
+                manager.close()
+
+        with patch('reference_db.dependencies.reference_manager_context', side_effect=test_reference_manager_context):
+            with patch('embeddings.generate_embeddings.generate_embedding') as mock_embed:
                 # Use an embedding very different from existing nodes
                 mock_embed.return_value = create_embedding(0.99)
 
@@ -404,12 +435,20 @@ class TestErrorRecoveryWorkflows:
         """Test that invalid node IDs return proper 404 errors."""
         db_path, data = e2e_test_database
 
-        # Mock get_settings to return settings with the test database path
-        with patch('config.get_settings') as mock_settings:
-            mock_config = MagicMock()
-            mock_config.database.reference_path = db_path
-            mock_settings.return_value = mock_config
+        # Create a custom context manager that uses our test database
+        from contextlib import contextmanager
+        from reference_db.config import ReferenceConfig
+        from reference_db.manager import ReferenceManager
 
+        @contextmanager
+        def test_reference_manager_context(config):
+            manager = ReferenceManager(config, db_path=db_path)
+            try:
+                yield manager
+            finally:
+                manager.close()
+
+        with patch('reference_db.dependencies.reference_manager_context', side_effect=test_reference_manager_context):
             # Try to get non-existent node
             response = client.get("/api/reference/ref-db/nodes/invalid-node-id")
             assert response.status_code == 404
@@ -427,32 +466,40 @@ class TestErrorRecoveryWorkflows:
         """Test retrieving links for a node with no relationships."""
         db_path, data = e2e_test_database
 
-        # Mock get_settings to return settings with the test database path
-        with patch('config.get_settings') as mock_settings:
-            mock_config = MagicMock()
-            mock_config.database.reference_path = db_path
-            mock_settings.return_value = mock_config
+        # Create a custom context manager that uses our test database
+        from contextlib import contextmanager
+        from reference_db.config import ReferenceConfig
+        from reference_db.manager import ReferenceManager
 
-            # Create a new isolated node
-            config = ReferenceConfig()
-            with ReferenceManager(config, db_path=db_path) as manager:
-                def create_embedding(value: float) -> bytes:
-                    vec = np.full(384, value, dtype=np.float32)
-                    vec = vec / np.linalg.norm(vec)
-                    return vec.tobytes()
+        @contextmanager
+        def test_reference_manager_context(config):
+            manager = ReferenceManager(config, db_path=db_path)
+            try:
+                yield manager
+            finally:
+                manager.close()
 
-                isolated_node = manager.add_reference_node(
-                    title="IsolatedNode",
-                    definition="A node with no relationships",
-                    source="test",
-                    external_id="isolated",
-                    title_embedding=create_embedding(0.5),
-                    definition_embedding=create_embedding(0.5),
-                    embedding_dims=384
-                )
-                # Store ID before closing session
-                isolated_node_id = isolated_node.id
+        # Create a new isolated node
+        config = ReferenceConfig()
+        with ReferenceManager(config, db_path=db_path) as manager:
+            def create_embedding(value: float) -> bytes:
+                vec = np.full(384, value, dtype=np.float32)
+                vec = vec / np.linalg.norm(vec)
+                return vec.tobytes()
 
+            isolated_node = manager.add_reference_node(
+                title="IsolatedNode",
+                definition="A node with no relationships",
+                source="test",
+                external_id="isolated",
+                title_embedding=create_embedding(0.5),
+                definition_embedding=create_embedding(0.5),
+                embedding_dims=384
+            )
+            # Store ID before closing session
+            isolated_node_id = isolated_node.id
+
+        with patch('reference_db.dependencies.reference_manager_context', side_effect=test_reference_manager_context):
             # Try to get links for isolated node
             response = client.get(
                 f"/api/reference/ref-db/nodes/{isolated_node_id}/links",
@@ -483,13 +530,21 @@ class TestPerformanceWorkflows:
         db_path, data = e2e_test_database
         create_embedding = data["create_embedding"]
 
-        # Mock get_settings to return settings with the test database path
-        with patch('config.get_settings') as mock_settings:
-            mock_config = MagicMock()
-            mock_config.database.reference_path = db_path
-            mock_settings.return_value = mock_config
+        # Create a custom context manager that uses our test database
+        from contextlib import contextmanager
+        from reference_db.config import ReferenceConfig
+        from reference_db.manager import ReferenceManager
 
-            with patch('api.reference.generate_embedding') as mock_embed:
+        @contextmanager
+        def test_reference_manager_context(config):
+            manager = ReferenceManager(config, db_path=db_path)
+            try:
+                yield manager
+            finally:
+                manager.close()
+
+        with patch('reference_db.dependencies.reference_manager_context', side_effect=test_reference_manager_context):
+            with patch('embeddings.generate_embeddings.generate_embedding') as mock_embed:
                 mock_embed.return_value = create_embedding(0.8)
 
                 import time
@@ -518,12 +573,20 @@ class TestPerformanceWorkflows:
         db_path, data = e2e_test_database
         thing_id = data["node_ids"]["thing"]
 
-        # Mock get_settings to return settings with the test database path
-        with patch('config.get_settings') as mock_settings:
-            mock_config = MagicMock()
-            mock_config.database.reference_path = db_path
-            mock_settings.return_value = mock_config
+        # Create a custom context manager that uses our test database
+        from contextlib import contextmanager
+        from reference_db.config import ReferenceConfig
+        from reference_db.manager import ReferenceManager
 
+        @contextmanager
+        def test_reference_manager_context(config):
+            manager = ReferenceManager(config, db_path=db_path)
+            try:
+                yield manager
+            finally:
+                manager.close()
+
+        with patch('reference_db.dependencies.reference_manager_context', side_effect=test_reference_manager_context):
             import time
             start = time.perf_counter()
 
