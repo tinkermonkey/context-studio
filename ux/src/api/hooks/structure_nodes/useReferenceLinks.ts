@@ -45,7 +45,7 @@ export const useAddReferenceLinks = (
 ) => {
   const queryClient = useQueryClient();
 
-  return useMutation({
+  return useMutation<ReferenceLink[], Error, ReferenceLink[]>({
     mutationFn: (referenceLinks: ReferenceLink[]) =>
       structureNodeService.addReferenceLinks(nodeId, referenceLinks),
     onSuccess: (data) => {
@@ -55,35 +55,35 @@ export const useAddReferenceLinks = (
         data,
       );
 
-      // Invalidate the structure node detail query to refresh the full node data
+      // Invalidate only the specific node's detail query to refresh the full node data
       queryClient.invalidateQueries({
         queryKey: createQueryKey(QUERY_KEYS.STRUCTURE_NODES, nodeId),
-      });
-
-      // Invalidate the structure nodes list to ensure consistency
-      queryClient.invalidateQueries({
-        queryKey: [QUERY_KEYS.STRUCTURE_NODES],
       });
     },
     ...options,
   });
 };
 
+// Context type for optimistic updates
+interface ReferenceLinkContext {
+  previousReferenceLinks: ReferenceLink[] | undefined;
+}
+
 /**
  * Hook to remove reference links from a structure node
  */
-export const useRemoveReferenceLinks = (
+export const useRemoveReferenceLink = (
   nodeId: string,
-  options?: UseMutationOptions<ReferenceLink[], Error, ReferenceLink[]>,
+  options?: UseMutationOptions<ReferenceLink[], Error, ReferenceLink[], ReferenceLinkContext>,
 ) => {
   const queryClient = useQueryClient();
 
-  return useMutation({
+  return useMutation<ReferenceLink[], Error, ReferenceLink[], ReferenceLinkContext>({
     mutationFn: (referenceLinks: ReferenceLink[]) =>
       structureNodeService.removeReferenceLinks(nodeId, referenceLinks),
     onMutate: async (
       variables: ReferenceLink[],
-    ): Promise<{ previousReferenceLinks: ReferenceLink[] | undefined }> => {
+    ): Promise<ReferenceLinkContext> => {
       // Cancel any outgoing refetches
       const queryKey = createQueryKey(
         QUERY_KEYS.STRUCTURE_NODES,
@@ -114,15 +114,14 @@ export const useRemoveReferenceLinks = (
     },
     onError: (err, variables, context) => {
       // Rollback to the previous value on error
-      const ctx = context as { previousReferenceLinks?: ReferenceLink[] };
-      if (ctx?.previousReferenceLinks) {
+      if (context?.previousReferenceLinks) {
         queryClient.setQueryData(
           createQueryKey(
             QUERY_KEYS.STRUCTURE_NODES,
             nodeId,
             { type: "reference_links" },
           ),
-          ctx.previousReferenceLinks,
+          context.previousReferenceLinks,
         );
       }
     },
@@ -133,14 +132,9 @@ export const useRemoveReferenceLinks = (
         data,
       );
 
-      // Invalidate the structure node detail query to refresh the full node data
+      // Invalidate only the specific node's detail query to refresh the full node data
       queryClient.invalidateQueries({
         queryKey: createQueryKey(QUERY_KEYS.STRUCTURE_NODES, nodeId),
-      });
-
-      // Invalidate the structure nodes list to ensure consistency
-      queryClient.invalidateQueries({
-        queryKey: [QUERY_KEYS.STRUCTURE_NODES],
       });
     },
     ...options,

@@ -354,11 +354,9 @@ export class StructureNodeService extends BaseService {
       this.validateRequired(nodeId, "nodeId");
       this.validateRequired(referenceLinks, "referenceLinks");
 
-      return this.deleteResource<ReferenceLink[]>(
-        `${ENDPOINTS.STRUCTURE_NODES}/${nodeId}/reference_links`,
-        {
-          params: { reference_links: JSON.stringify(referenceLinks) },
-        },
+      return this.postResource<ReferenceLink[]>(
+        `${ENDPOINTS.STRUCTURE_NODES}/${nodeId}/reference_links/delete`,
+        { reference_links: referenceLinks },
       );
     }, "removeReferenceLinks");
   }

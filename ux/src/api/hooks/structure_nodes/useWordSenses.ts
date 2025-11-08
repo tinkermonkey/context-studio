@@ -31,6 +31,11 @@ export const useWordSenses = (
   });
 };
 
+// Context type for optimistic updates
+interface WordSenseContext {
+  previousWordSenses: WordSense[] | undefined;
+}
+
 /**
  * Hook to update word senses for a structure node
  * Supports optimistic updates for immediate UI feedback
@@ -40,17 +45,18 @@ export const useUpdateWordSenses = (
   options?: UseMutationOptions<
     WordSense[],
     Error,
-    SelectedWordSensesUpdate
+    SelectedWordSensesUpdate,
+    WordSenseContext
   >,
 ) => {
   const queryClient = useQueryClient();
 
-  return useMutation({
+  return useMutation<WordSense[], Error, SelectedWordSensesUpdate, WordSenseContext>({
     mutationFn: (data: SelectedWordSensesUpdate) =>
       structureNodeService.updateWordSenses(nodeId, data),
     onMutate: async (
       variables: SelectedWordSensesUpdate,
-    ): Promise<{ previousWordSenses: WordSense[] | undefined }> => {
+    ): Promise<WordSenseContext> => {
       // Cancel any outgoing refetches to avoid optimistic update being overwritten
       const queryKey = createQueryKey(QUERY_KEYS.STRUCTURE_NODES, nodeId, { type: "word_senses" });
       await queryClient.cancelQueries({
@@ -67,11 +73,10 @@ export const useUpdateWordSenses = (
     },
     onError: (err, variables, context) => {
       // Rollback to the previous value on error
-      const ctx = context as { previousWordSenses?: WordSense[] };
-      if (ctx?.previousWordSenses) {
+      if (context?.previousWordSenses) {
         queryClient.setQueryData(
           createQueryKey(QUERY_KEYS.STRUCTURE_NODES, nodeId, { type: "word_senses" }),
-          ctx.previousWordSenses,
+          context.previousWordSenses,
         );
       }
     },
@@ -82,7 +87,7 @@ export const useUpdateWordSenses = (
         data,
       );
 
-      // Invalidate the structure node detail query to refresh the full node data
+      // Invalidate only the specific node's detail query to refresh the full node data
       queryClient.invalidateQueries({
         queryKey: createQueryKey(QUERY_KEYS.STRUCTURE_NODES, nodeId),
       });
