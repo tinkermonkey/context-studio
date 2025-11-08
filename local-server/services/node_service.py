@@ -16,6 +16,7 @@ from embeddings.generate_embeddings import generate_embedding
 from services.change_event_handler import ChangeEventHandler
 from services.version_manager import VersionManager, ChangeState
 from services.working_tree_manager import WorkingTreeManager
+from services.exceptions import NotFoundError, ValidationError, ConflictError, CircularReferenceError, InvalidHierarchyError
 from utils.logger import get_logger
 
 logger = get_logger(__name__)
@@ -189,7 +190,7 @@ class NodeService:
             self.db.query(StructureNode).filter(StructureNode.id == node_id).first()
         )
         if not structure_node:
-            raise ValueError(f"StructureNode not found: {node_id}")
+            raise NotFoundError("StructureNode", node_id)
 
         # Store old data for validation and events
         old_node_data = self._node_to_dict(structure_node)
@@ -284,7 +285,7 @@ class NodeService:
             self.db.query(StructureNode).filter(StructureNode.id == node_id).first()
         )
         if not structure_node:
-            raise ValueError(f"StructureNode not found: {node_id}")
+            raise NotFoundError("StructureNode", node_id)
 
         # Store structure_node data for event before deletion
         node_data = self._node_to_dict(structure_node)
@@ -548,7 +549,7 @@ class NodeService:
 
         # Layers should not have parents
         if node_data.get("parent_node_id"):
-            raise ValueError("Layers cannot have parent structure_nodes")
+            raise InvalidHierarchyError("Layers cannot have parent structure_nodes")
 
     def _validate_layer_update(
         self, structure_node: StructureNode, node_data: Dict[str, Any]
@@ -571,20 +572,20 @@ class NodeService:
 
         # Layers should not have parents
         if "parent_node_id" in node_data and node_data["parent_node_id"] is not None:
-            raise ValueError("Layers cannot have parent structure_nodes")
+            raise InvalidHierarchyError("Layers cannot have parent structure_nodes")
 
     def _validate_domain_creation(self, node_data: Dict[str, Any]):
         """Validate domain creation rules"""
         parent_id = node_data.get("parent_node_id")
         if not parent_id:
-            raise ValueError("Domains must have a parent layer")
+            raise InvalidHierarchyError("Domains must have a parent layer")
 
         # Parent must be a layer
         parent = (
             self.db.query(StructureNode).filter(StructureNode.id == parent_id).first()
         )
         if not parent or parent.node_type != NodeType.LAYER:
-            raise ValueError("Domain parent must be a layer")
+            raise InvalidHierarchyError("Domain parent must be a layer")
 
         # Validate structural predicate ID if provided
         self._validate_structural_predicate_id(node_data.get("structural_predicate_id"))
@@ -612,7 +613,7 @@ class NodeService:
         # Parent validation if changing parent
         if "parent_node_id" in node_data:
             if not parent_id:
-                raise ValueError("Domains must have a parent layer")
+                raise InvalidHierarchyError("Domains must have a parent layer")
 
             parent = (
                 self.db.query(StructureNode)
@@ -620,7 +621,7 @@ class NodeService:
                 .first()
             )
             if not parent or parent.node_type != NodeType.LAYER:
-                raise ValueError("Domain parent must be a layer")
+                raise InvalidHierarchyError("Domain parent must be a layer")
 
         # Validate structural predicate ID if being updated
         if "structural_predicate_id" in node_data:
@@ -654,14 +655,14 @@ class NodeService:
         """Validate term creation rules"""
         parent_id = node_data.get("parent_node_id")
         if not parent_id:
-            raise ValueError("Terms must have a parent domain or term")
+            raise InvalidHierarchyError("Terms must have a parent domain or term")
 
         # Parent must be a domain or term
         parent = (
             self.db.query(StructureNode).filter(StructureNode.id == parent_id).first()
         )
         if not parent or parent.node_type not in [NodeType.DOMAIN, NodeType.TERM]:
-            raise ValueError("Term parent must be a domain or term")
+            raise InvalidHierarchyError("Term parent must be a domain or term")
 
         # Get the domain (either direct parent or ancestor)
         domain = self._get_domain_ancestor(parent)
@@ -681,7 +682,7 @@ class NodeService:
         # Parent validation if changing parent
         if "parent_node_id" in node_data:
             if not parent_id:
-                raise ValueError("Terms must have a parent domain or term")
+                raise InvalidHierarchyError("Terms must have a parent domain or term")
 
             parent = (
                 self.db.query(StructureNode)
@@ -689,7 +690,7 @@ class NodeService:
                 .first()
             )
             if not parent or parent.node_type not in [NodeType.DOMAIN, NodeType.TERM]:
-                raise ValueError("Term parent must be a domain or term")
+                raise InvalidHierarchyError("Term parent must be a domain or term")
 
         # Get the domain for uniqueness check
         if parent_id:
@@ -734,14 +735,14 @@ class NodeService:
 
         # Check if parent_id is the same as node_id
         if node_id == parent_id:
-            raise ValueError("StructureNode cannot be its own parent")
+            raise CircularReferenceError("StructureNode cannot be its own parent")
 
         # Check if parent_id is a descendant of node_id
         ancestors = self.get_node_ancestors(parent_id)
         ancestor_ids = [ancestor.id for ancestor in ancestors]
 
         if node_id in ancestor_ids:
-            raise ValueError("Operation would create circular reference")
+            raise CircularReferenceError("Operation would create circular reference")
 
     def _get_domain_ancestor(
         self, structure_node: StructureNode
@@ -1035,7 +1036,7 @@ class NodeService:
         # Get the structure_node to move
         structure_node = self.get_node(node_id)
         if not structure_node:
-            raise ValueError(f"StructureNode {node_id} not found")
+            raise NotFoundError("StructureNode", node_id)
 
         # Validate the move is allowed
         self._validate_node_move(structure_node, target_parent)
@@ -1089,27 +1090,27 @@ class NodeService:
         # Layer moves
         if structure_node.node_type == NodeType.LAYER:
             if target_parent is not None:
-                raise ValueError("Layers must be at root level (no parent)")
+                raise InvalidHierarchyError("Layers must be at root level (no parent)")
 
         # Domain moves
         elif structure_node.node_type == NodeType.DOMAIN:
             if target_parent is None:
-                raise ValueError("Domains must have a parent layer")
+                raise InvalidHierarchyError("Domains must have a parent layer")
             if target_parent.node_type != NodeType.LAYER:
-                raise ValueError("Domains can only be placed under layers")
+                raise InvalidHierarchyError("Domains can only be placed under layers")
 
         # Term moves
         elif structure_node.node_type == NodeType.TERM:
             if target_parent is None:
-                raise ValueError("Terms must have a parent domain")
+                raise InvalidHierarchyError("Terms must have a parent domain")
             if target_parent.node_type != NodeType.DOMAIN:
-                raise ValueError("Terms can only be placed under domains")
+                raise InvalidHierarchyError("Terms can only be placed under domains")
 
         # Prevent circular references
         if target_parent and self._would_create_cycle(
             structure_node.id, target_parent.id
         ):
-            raise ValueError("Move would create circular reference")
+            raise CircularReferenceError("Move would create circular reference")
 
     def _check_move_conflicts(
         self,

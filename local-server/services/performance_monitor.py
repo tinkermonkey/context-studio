@@ -65,14 +65,17 @@ class PerformanceMonitor:
         self._metrics_lock = Lock()
         
         # Get total system memory for percentage-based threshold
+        # Note: On Linux/Unix systems, high memory usage is often normal due to disk caching
+        # We use a high threshold (90%) to avoid false positives from normal caching behavior
         try:
             import psutil
             total_memory_mb = psutil.virtual_memory().total / (1024 * 1024)
-            # Alert when memory usage exceeds 85% of total system memory
-            memory_threshold_mb = total_memory_mb * 0.85
+            # Alert when memory usage exceeds 90% of total system memory
+            # This accounts for OS-level caching which is normal and expected
+            memory_threshold_mb = total_memory_mb * 0.90
         except (ImportError, Exception):
-            # Fallback to a reasonable default (16GB * 85%)
-            memory_threshold_mb = 16384 * 0.85
+            # Fallback to a reasonable default (16GB * 90%)
+            memory_threshold_mb = 16384 * 0.90
 
         # Performance thresholds
         self.performance_thresholds = {
@@ -546,8 +549,8 @@ class PerformanceMonitor:
         
         # Check memory usage - use 80% of threshold as warning level for trends
         memory_trend = trends.get('memory_usage_trend', {})
-        memory_threshold = self.performance_thresholds.get('system_metrics.memory_usage_mb', 16384 * 0.85)
-        memory_warning_level = memory_threshold * 0.8  # 80% of threshold (which is 68% of total memory)
+        memory_threshold = self.performance_thresholds.get('system_metrics.memory_usage_mb', 16384 * 0.90)
+        memory_warning_level = memory_threshold * 0.8  # 80% of threshold (which is 72% of total memory)
         if memory_trend.get('trend') == 'increasing' and memory_trend.get('current_value', 0) > memory_warning_level:
             issues.append({
                 'type': 'memory_usage_high',
@@ -642,10 +645,10 @@ class PerformanceMonitor:
         query_score = max(0, min(1, (10000 - query_time) / 10000))  # 0-10s range
         scores.append(query_score * 0.25)  # 25% weight
 
-        # Memory usage score - use threshold (85% of total memory)
+        # Memory usage score - use threshold (90% of total memory)
         memory_trend = trends.get('memory_usage_trend', {})
         memory_usage = memory_trend.get('current_value', 500)
-        memory_threshold = self.performance_thresholds.get('system_metrics.memory_usage_mb', 16384 * 0.85)
+        memory_threshold = self.performance_thresholds.get('system_metrics.memory_usage_mb', 16384 * 0.90)
         # Score is good if usage is below threshold, degrades as it approaches/exceeds threshold
         memory_score = max(0, min(1, (memory_threshold - memory_usage) / memory_threshold))
         scores.append(memory_score * 0.2)  # 20% weight

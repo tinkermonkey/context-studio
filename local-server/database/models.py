@@ -72,6 +72,8 @@ class StructureNode(Base):
     structural_predicate_id = Column(String, ForeignKey("predicates.id"), nullable=True)
     title_embedding = Column(BLOB, nullable=True, default=None)
     definition_embedding = Column(BLOB, nullable=True, default=None)
+    reference_links = Column(Text, nullable=True)  # JSON array of reference links
+    word_senses = Column(Text, nullable=True)  # JSON array of word senses
     created_at = Column(DateTime, default=lambda: datetime.datetime.now(datetime.UTC))
     version = Column(Integer, default=1)
     last_modified = Column(

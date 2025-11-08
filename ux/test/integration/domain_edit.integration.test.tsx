@@ -8,6 +8,7 @@ vi.mock("@tanstack/react-router", () => {
   const React = require("react");
   return {
     Link: (props: any) => React.createElement("a", props, props.children),
+    useNavigate: () => vi.fn(),
   };
 });
 vi.mock("@/api/hooks/layers/useLayers", () => ({
@@ -89,16 +90,16 @@ describe("StructureNodeDetails edit flow (Domain)", () => {
     });
     await userEvent.click(save);
 
-    // Wait until invalidateQueries has been called for both the per-domain and domains list keys
+    // Wait until invalidateQueries has been called for both the per-node and nodes list keys
     await waitFor(() => {
       expect(invalidateSpy).toHaveBeenCalled();
       // check for list invalidation
       expect(invalidateSpy).toHaveBeenCalledWith({
-        queryKey: [QUERY_KEYS.DOMAINS],
+        queryKey: [QUERY_KEYS.STRUCTURE_NODES],
       });
-      // check for per-domain invalidation
+      // check for per-node invalidation
       expect(invalidateSpy).toHaveBeenCalledWith({
-        queryKey: [QUERY_KEYS.DOMAINS, domain.id],
+        queryKey: [QUERY_KEYS.STRUCTURE_NODES, domain.id],
       });
       // Service mocks handled the update; we expect the query invalidation to have been triggered
     });

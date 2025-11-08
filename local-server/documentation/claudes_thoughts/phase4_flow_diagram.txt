@@ -1,0 +1,107 @@
+Phase 4: Automatic NLP Re-Analysis on Title Changes - Flow Diagram
+====================================================================
+
+┌────────────────────────────────────────────────────────────────────────┐
+│                        User Updates Node Title                         │
+│                     (e.g., "bank" → "river")                          │
+└───────────────────────────────┬────────────────────────────────────────┘
+                                │
+                                ▼
+┌────────────────────────────────────────────────────────────────────────┐
+│                    ChangeEvent Created in Database                     │
+│    record_type: structure_node, event_type: update                    │
+│    old_data: {"title": "bank", ...}                                   │
+│    new_data: {"title": "river", ...}                                  │
+└───────────────────────────────┬────────────────────────────────────────┘
+                                │
+                                ▼
+┌────────────────────────────────────────────────────────────────────────┐
+│              EventProcessor Polls for Unprocessed Events               │
+│                    (Background Thread, 1s interval)                    │
+└───────────────────────────────┬────────────────────────────────────────┘
+                                │
+                                ▼
+┌────────────────────────────────────────────────────────────────────────┐
+│           process_structure_node_event() Called                        │
+│   1. Creates version (if version_manager available)                   │
+│   2. Updates working tree (if working_tree_manager available)         │
+│   3. Calls _handle_title_change(event)  ◄── NEW                      │
+└───────────────────────────────┬────────────────────────────────────────┘
+                                │
+                                ▼
+┌────────────────────────────────────────────────────────────────────────┐
+│                    _handle_title_change(event)                         │
+│   • Parse old_data and new_data as JSON                               │
+│   • Extract old_title and new_title                                   │
+│   • Compare: if old_title != new_title → trigger re-analysis         │
+└───────────────────────────────┬────────────────────────────────────────┘
+                                │ Title changed?
+                                ▼
+                    ┌───────────┴───────────┐
+                    │ YES                   │ NO → End
+                    ▼                       │
+┌────────────────────────────────────────┐ │
+│  _enqueue_nlp_reanalysis()            │ │
+│  • Get TaskManager instance           │ │
+│  • Create async coroutine             │ │
+│  • Submit to TaskManager queue        │ │
+│  • Returns immediately (non-blocking) │ │
+└───────────────┬────────────────────────┘ │
+                │                          │
+                ▼                          │
+┌────────────────────────────────────────┐ │
+│     TaskManager Worker Thread          │ │
+│     (Processes tasks sequentially)     │ │
+└───────────────┬────────────────────────┘ │
+                │                          │
+                ▼                          │
+┌────────────────────────────────────────┐ │
+│  _perform_nlp_reanalysis()            │ │
+│  1. Get NLP pipeline                  │ │
+│  2. Analyze new title                 │ │
+│  3. Extract word senses               │ │
+│  4. Update with conservative filter   │ │
+└───────────────┬────────────────────────┘ │
+                │                          │
+                ▼                          │
+┌────────────────────────────────────────┐ │
+│   WordSenseService.update_word_senses()│ │
+│   • Load existing word senses         │ │
+│   • Create set of new sense IDs       │ │
+│   • Preserve matching senses          │ │
+│   • Remove non-matching senses        │ │
+│   • Save updated JSON to DB           │ │
+└───────────────┬────────────────────────┘ │
+                │                          │
+                ▼                          │
+┌────────────────────────────────────────┐ │
+│        Task Completes Successfully     │ │
+│   Result: {success: true, ...}        │ │
+└────────────────────────────────────────┘ │
+                                           │
+                    ┌──────────────────────┘
+                    │
+                    ▼
+             ┌──────────────┐
+             │   Complete   │
+             └──────────────┘
+
+
+Key Design Features:
+====================
+
+1. ASYNCHRONOUS: User operations return immediately
+2. CONSERVATIVE: Only removes senses no longer in analysis
+3. TRANSACTIONAL: All database updates are atomic
+4. ERROR-SAFE: Failures logged but don't crash event processor
+5. NON-BLOCKING: Background processing via TaskManager
+
+Error Handling:
+===============
+
+• Malformed JSON → Log error, continue processing
+• TaskManager not initialized → Log warning, skip re-analysis
+• NLP pipeline failure → Log error, mark task as failed
+• Node not found → Return error result
+• Missing data → Skip re-analysis gracefully
+

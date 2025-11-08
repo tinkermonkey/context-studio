@@ -77,7 +77,20 @@ def test_integration_event_processor_end_to_end(temp_db, capsys):
     try:
         processor = EventProcessor(temp_db, poll_interval=0.05, max_events=10)
         processor.start()
-        time.sleep(0.3)
+
+        # Poll until all events are processed or timeout
+        file_path = temp_db.replace("sqlite:///", "")
+        timeout = time.time() + 2.0  # 2 second timeout
+        while time.time() < timeout:
+            conn = sqlite3.connect(file_path)
+            cur = conn.cursor()
+            cur.execute("SELECT COUNT(*) FROM change_events WHERE processed=0")
+            unprocessed = cur.fetchone()[0]
+            conn.close()
+
+            if unprocessed == 0:
+                break
+            time.sleep(0.05)
     finally:
         processor.stop()
         logger.removeHandler(handler)
@@ -134,7 +147,20 @@ def test_integration_event_processor_large_batch(temp_db, capsys):
     processor = EventProcessor(temp_db, poll_interval=0.05, max_events=10)
     try:
         processor.start()
-        time.sleep(0.5)  # Let it process multiple batches
+
+        # Poll until all events are processed or timeout
+        file_path = temp_db.replace("sqlite:///", "")
+        timeout = time.time() + 5.0  # 5 second timeout
+        while time.time() < timeout:
+            conn = sqlite3.connect(file_path)
+            cur = conn.cursor()
+            cur.execute("SELECT COUNT(*) FROM change_events WHERE processed=0")
+            unprocessed = cur.fetchone()[0]
+            conn.close()
+
+            if unprocessed == 0:
+                break
+            time.sleep(0.05)
     finally:
         processor.stop()
 

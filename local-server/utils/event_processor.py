@@ -29,11 +29,11 @@ def set_global_event_processor(processor: Optional['EventProcessor']):
 class EventProcessor:
     """
     Event processor that handles ChangeEvent processing with optimized database connections.
-    
+
     This processor handles the unified ChangeEvent system for processing
     change events (create, update, delete) for all record types including
     structure_nodes, structure_node_links, and predicates.
-    
+
     Features:
     - Leverages DatabaseManager for optimized connection pooling
     - Environment-aware database configuration
@@ -41,16 +41,22 @@ class EventProcessor:
     - Coordinated resource lifecycle management
     - Integrated version management for entity changes
     """
-    
-    def __init__(self, 
-                 database_url: str, 
-                 poll_interval: float = 1.0, 
+
+    # Configuration constants
+    NLP_PIPELINE_FLAVOR = 'analyze_text'
+    MAX_TITLE_LENGTH = 500
+    NLP_RETRY_ATTEMPTS = 3
+    NLP_RETRY_DELAY = 1.0  # seconds, will use exponential backoff
+
+    def __init__(self,
+                 database_url: str,
+                 poll_interval: float = 1.0,
                  max_events: int = 100,
                  version_manager = None,
                  working_tree_manager = None):
         """
         Initialize the EventProcessor.
-        
+
         Args:
             database_url: The database URL to connect to
             poll_interval: Polling interval in seconds for event checking
@@ -63,30 +69,34 @@ class EventProcessor:
         self.max_events = max_events
         self.version_manager = version_manager  # Will be injected for version creation
         self.working_tree_manager = working_tree_manager  # Will be injected for working tree management
-        
+
         self._stop_event = threading.Event()
         self._thread = None
         self._cleanup_thread = None
-        
+
         # Database Manager integration
         self.db_manager = get_database_manager()
         self.engine_id = f"event_processor_{id(self)}"
-        
+
         # Ensure logger is always set
         self.logger = get_logger(__name__)
-        
+
         # Track last processed event ID for efficiency
         self._last_processed_id = 0
         self._initialize_last_processed_id()
-        
+
         # Performance tracking
         self._events_processed = 0
         self._last_performance_log = datetime.now()
         self._performance_log_interval = timedelta(minutes=5)
-        
+
+        # Node-level locks for preventing concurrent title change updates
+        self._title_change_locks: Dict[str, threading.Lock] = {}
+        self._title_change_locks_mutex = threading.Lock()
+
         # Register as global event processor for dataset switching
         set_global_event_processor(self)
-        
+
         self.logger.info("EventProcessor initialized")
     
     def _get_optimized_session(self):
@@ -304,7 +314,7 @@ class EventProcessor:
     def process_structure_node_event(self, event):
         """Process structure_node-related events with version management integration."""
         self.logger.info(f"Processing structure_node event: {event.operation}")
-        
+
         # Create version when entity is modified (only for create/update operations)
         if self.version_manager and event.operation in ['create', 'update'] and event.record_id:
             try:
@@ -320,10 +330,10 @@ class EventProcessor:
                         content = json.loads(event.old_data) if isinstance(event.old_data, str) else event.old_data
                     except (json.JSONDecodeError, TypeError):
                         content = event.old_data if event.old_data else {}
-                
+
                 if content:
                     from services.version_manager import ChangeState
-                    
+
                     # Create version for this entity change
                     version = self.version_manager.create_version(
                         entity_type='structure_node',
@@ -332,10 +342,10 @@ class EventProcessor:
                         author_id='system',
                         state=ChangeState.WORKING
                     )
-                    
+
                     # Link the change event to the created version
                     self._link_event_to_version(event.id, version.id, ChangeState.WORKING)
-                    
+
                     # Update working tree if working tree manager is available
                     if self.working_tree_manager:
                         try:
@@ -357,12 +367,20 @@ class EventProcessor:
                                 self.logger.debug(f"[EventProcessor] Updated working tree for structure_node {event.record_id}")
                         except Exception as wt_e:
                             self.logger.error(f"[EventProcessor] Failed to manage working tree: {wt_e}")
-                    
+
                     self.logger.debug(f"[EventProcessor] Created version {version.version_number} for structure_node {event.record_id}")
-                
+
             except Exception as e:
                 self.logger.error(f"[EventProcessor] Failed to create version for structure_node {event.record_id}: {e}")
                 # Continue processing even if version creation fails
+
+        # Detect title changes and trigger NLP re-analysis
+        if event.operation == 'update' and event.old_data and event.new_data:
+            try:
+                self._handle_title_change(event)
+            except Exception as e:
+                self.logger.error(f"[EventProcessor] Failed to handle title change for structure_node {event.record_id}: {e}")
+                # Continue processing even if title change handling fails
 
     def process_structure_node_link_event(self, event):
         """Process structure_node_link-related events with version management integration."""
@@ -438,7 +456,7 @@ class EventProcessor:
         try:
             with self._get_optimized_session() as db:
                 db.execute(text("""
-                    UPDATE change_events 
+                    UPDATE change_events
                     SET version_id = :version_id, change_state = :change_state
                     WHERE id = :event_id
                 """), {
@@ -447,9 +465,264 @@ class EventProcessor:
                     "event_id": event_id
                 })
                 # Session commits automatically via context manager
-                
+
         except Exception as e:
             self.logger.error(f"[EventProcessor] Failed to link event {event_id} to version {version_id}: {e}")
+
+    def _get_node_lock(self, node_id: str) -> threading.Lock:
+        """
+        Get or create a lock for a specific node ID to prevent concurrent updates.
+
+        Args:
+            node_id: The structure node ID
+
+        Returns:
+            Threading lock for this node
+        """
+        with self._title_change_locks_mutex:
+            if node_id not in self._title_change_locks:
+                self._title_change_locks[node_id] = threading.Lock()
+            return self._title_change_locks[node_id]
+
+    def _handle_title_change(self, event):
+        """
+        Detect title changes and trigger asynchronous NLP re-analysis.
+
+        Args:
+            event: The structure_node update event
+        """
+        try:
+            # Parse old and new data
+            old_data = json.loads(event.old_data) if isinstance(event.old_data, str) else event.old_data
+            new_data = json.loads(event.new_data) if isinstance(event.new_data, str) else event.new_data
+
+            old_title = old_data.get('title', '') if old_data else ''
+            new_title = new_data.get('title', '') if new_data else ''
+
+            # Check if title has actually changed
+            if old_title and new_title and old_title != new_title:
+                # Validate new title
+                if not new_title.strip():
+                    raise ValueError(f"Empty title detected for structure_node {event.record_id}")
+
+                if len(new_title) > self.MAX_TITLE_LENGTH:
+                    raise ValueError(
+                        f"Title exceeds maximum length ({len(new_title)} > {self.MAX_TITLE_LENGTH}) "
+                        f"for structure_node {event.record_id}"
+                    )
+
+                self.logger.info(
+                    f"[EventProcessor] Title change detected for structure_node {event.record_id}: "
+                    f"'{old_title}' -> '{new_title}'"
+                )
+
+                # Acquire node-specific lock to prevent concurrent updates
+                node_lock = self._get_node_lock(event.record_id)
+
+                # Try to acquire lock without blocking
+                if node_lock.acquire(blocking=False):
+                    try:
+                        # Enqueue async NLP re-analysis task
+                        self._enqueue_nlp_reanalysis(event.record_id, new_title)
+                    finally:
+                        node_lock.release()
+                else:
+                    self.logger.info(
+                        f"[EventProcessor] Skipping title change for node {event.record_id}: "
+                        f"already processing another title change"
+                    )
+
+        except json.JSONDecodeError as e:
+            self.logger.error(
+                f"[EventProcessor] Failed to parse event data for title change detection: {e}",
+                exc_info=True
+            )
+        except ValueError as e:
+            # Expected validation errors
+            self.logger.warning(f"[EventProcessor] Title validation error: {e}")
+        except RuntimeError as e:
+            # Expected runtime errors (e.g., TaskManager not initialized)
+            self.logger.warning(f"[EventProcessor] Runtime error in title change handling: {e}")
+        except Exception as e:
+            # Unexpected system errors
+            self.logger.error(
+                f"[EventProcessor] Unexpected error in title change detection for node {event.record_id}: {e}",
+                exc_info=True
+            )
+
+    def _enqueue_nlp_reanalysis(self, node_id: str, new_title: str):
+        """
+        Enqueue an asynchronous NLP re-analysis task for a structure node.
+
+        Args:
+            node_id: The structure node ID
+            new_title: The new title to analyze
+        """
+        try:
+            # Get the task manager (will be None if not initialized)
+            from services.task_manager import get_task_manager
+
+            try:
+                task_manager = get_task_manager()
+            except RuntimeError:
+                self.logger.warning(
+                    f"[EventProcessor] TaskManager not initialized, skipping NLP re-analysis for node {node_id}"
+                )
+                return
+
+            # Import asyncio for creating the coroutine
+            import asyncio
+
+            # Create the async task coroutine
+            async def nlp_reanalysis_task():
+                return await self._perform_nlp_reanalysis(node_id, new_title)
+
+            # Submit the task asynchronously (this is called from sync context)
+            # We need to use asyncio.create_task or submit it to the task manager
+            # Since EventProcessor runs in a background thread, we need to handle this carefully
+
+            # Get or create an event loop for this thread
+            try:
+                loop = asyncio.get_event_loop()
+            except RuntimeError:
+                # No event loop in current thread, create a new one
+                loop = asyncio.new_event_loop()
+                asyncio.set_event_loop(loop)
+
+            # Submit the task to the task manager
+            async def submit_task():
+                await task_manager.submit_task(
+                    task_type='nlp_reanalysis',
+                    coroutine=nlp_reanalysis_task(),
+                    metadata={
+                        'node_id': node_id,
+                        'new_title': new_title
+                    }
+                )
+
+            # Run the submission in the event loop
+            asyncio.run_coroutine_threadsafe(submit_task(), loop)
+
+            self.logger.info(f"[EventProcessor] Enqueued NLP re-analysis task for node {node_id}")
+
+        except Exception as e:
+            self.logger.error(f"[EventProcessor] Failed to enqueue NLP re-analysis task: {e}")
+
+    async def _perform_nlp_reanalysis(self, node_id: str, new_title: str):
+        """
+        Perform NLP re-analysis and update word senses for a structure node with retry logic.
+
+        Args:
+            node_id: The structure node ID
+            new_title: The new title to analyze
+
+        Returns:
+            Dictionary with results
+        """
+        import asyncio
+
+        last_error = None
+
+        # Retry loop with exponential backoff
+        for attempt in range(1, self.NLP_RETRY_ATTEMPTS + 1):
+            try:
+                self.logger.info(
+                    f"[EventProcessor] Starting NLP re-analysis for node {node_id} (attempt {attempt}/{self.NLP_RETRY_ATTEMPTS})"
+                )
+
+                # Import required modules
+                from nlp.pipeline import get_pipeline
+                from nlp.processors import process_nlp_result
+                from services.word_sense_service import WordSenseService
+
+                # Get NLP pipeline
+                pipeline = get_pipeline()
+                if not pipeline.is_initialized():
+                    raise RuntimeError("NLP pipeline not initialized")
+
+                nlp = pipeline.get_nlp()
+                if not nlp:
+                    raise RuntimeError("NLP pipeline unavailable")
+
+                # Process the new title
+                doc = nlp(new_title)
+                nlp_response = process_nlp_result(new_title, doc)
+
+                # Extract word senses from NLP analysis with transaction
+                with self._get_optimized_session() as db:
+                    word_sense_service = WordSenseService(db)
+
+                    # Extract new senses
+                    new_senses = word_sense_service.extract_word_senses(nlp_response)
+
+                    self.logger.debug(
+                        f"[EventProcessor] Extracted {len(new_senses)} word senses from NLP analysis"
+                    )
+
+                    # Begin explicit transaction for atomic word sense updates
+                    with db.begin():
+                        # Update word senses with conservative filtering
+                        # This will preserve existing senses that match and remove only obsolete ones
+                        updated_senses = word_sense_service.update_word_senses(
+                            node_id=node_id,
+                            new_senses=new_senses,
+                            conservative=True
+                        )
+
+                        self.logger.info(
+                            f"[EventProcessor] Successfully updated word senses for node {node_id}: "
+                            f"{len(updated_senses)} total senses"
+                        )
+
+                    # Success - return results
+                    return {
+                        'success': True,
+                        'node_id': node_id,
+                        'new_title': new_title,
+                        'senses_count': len(updated_senses),
+                        'attempts': attempt
+                    }
+
+            except (RuntimeError, ConnectionError, TimeoutError) as e:
+                # Transient errors - retry with exponential backoff
+                last_error = e
+                self.logger.warning(
+                    f"[EventProcessor] NLP re-analysis attempt {attempt} failed for node {node_id} "
+                    f"with transient error: {e}"
+                )
+
+                if attempt < self.NLP_RETRY_ATTEMPTS:
+                    delay = self.NLP_RETRY_DELAY * (2 ** (attempt - 1))
+                    self.logger.info(f"[EventProcessor] Retrying in {delay} seconds...")
+                    await asyncio.sleep(delay)
+                else:
+                    self.logger.error(
+                        f"[EventProcessor] NLP re-analysis failed for node {node_id} after {attempt} attempts",
+                        exc_info=True
+                    )
+
+            except Exception as e:
+                # Non-transient errors - fail immediately
+                self.logger.error(
+                    f"[EventProcessor] NLP re-analysis failed for node {node_id} with non-retryable error: {e}",
+                    exc_info=True
+                )
+                return {
+                    'success': False,
+                    'node_id': node_id,
+                    'new_title': new_title,
+                    'error': str(e),
+                    'attempts': attempt
+                }
+
+        # All retries exhausted
+        return {
+            'success': False,
+            'node_id': node_id,
+            'new_title': new_title,
+            'error': str(last_error) if last_error else 'Unknown error after retries',
+            'attempts': self.NLP_RETRY_ATTEMPTS
+        }
 
     def _cleanup_loop(self):
         """Background loop for cleaning up old processed events."""

@@ -7,6 +7,9 @@ import { PipelineFlavorEditor } from "@/components/llm_pipelines/PipelineFlavorE
 // Mock the pipeline flavors hooks - use simpler approach
 vi.mock("@/api/hooks/pipelineFlavors");
 
+// Mock the model capabilities hooks
+vi.mock("@/api/hooks/modelCapabilities");
+
 // Mock data
 const mockExistingFlavor = {
   id: "existing-flavor-1",
@@ -61,6 +64,11 @@ describe("PipelineFlavorEditor - Default Population", () => {
       useUpdatePipelineFlavor,
     } = await import("@/api/hooks/pipelineFlavors");
 
+    const {
+      useTypedModelCapabilities,
+      useValidateLLMConfig,
+    } = await import("@/api/hooks/modelCapabilities");
+
     vi.mocked(usePipelineFlavors).mockReturnValue({
       data: {
         flavors: [mockExistingFlavor],
@@ -78,6 +86,18 @@ describe("PipelineFlavorEditor - Default Population", () => {
     vi.mocked(useUpdatePipelineFlavor).mockReturnValue({
       mutate: vi.fn(),
       isPending: false,
+    } as any);
+
+    vi.mocked(useTypedModelCapabilities).mockReturnValue({
+      data: undefined,
+      isLoading: false,
+      error: null,
+    } as any);
+
+    vi.mocked(useValidateLLMConfig).mockReturnValue({
+      data: undefined,
+      isLoading: false,
+      error: null,
     } as any);
 
     const mockOnClose = vi.fn();
@@ -108,6 +128,11 @@ describe("PipelineFlavorEditor - Default Population", () => {
       useUpdatePipelineFlavor,
     } = await import("@/api/hooks/pipelineFlavors");
 
+    const {
+      useTypedModelCapabilities,
+      useValidateLLMConfig,
+    } = await import("@/api/hooks/modelCapabilities");
+
     vi.mocked(usePipelineFlavors).mockReturnValue({
       data: {
         flavors: [mockExistingFlavor],
@@ -125,6 +150,18 @@ describe("PipelineFlavorEditor - Default Population", () => {
     vi.mocked(useUpdatePipelineFlavor).mockReturnValue({
       mutate: vi.fn(),
       isPending: false,
+    } as any);
+
+    vi.mocked(useTypedModelCapabilities).mockReturnValue({
+      data: undefined,
+      isLoading: false,
+      error: null,
+    } as any);
+
+    vi.mocked(useValidateLLMConfig).mockReturnValue({
+      data: undefined,
+      isLoading: false,
+      error: null,
     } as any);
 
     const mockOnClose = vi.fn();
@@ -150,6 +187,11 @@ describe("PipelineFlavorEditor - Default Population", () => {
       useUpdatePipelineFlavor,
     } = await import("@/api/hooks/pipelineFlavors");
 
+    const {
+      useTypedModelCapabilities,
+      useValidateLLMConfig,
+    } = await import("@/api/hooks/modelCapabilities");
+
     vi.mocked(usePipelineFlavors).mockReturnValue({
       data: null,
       isLoading: true,
@@ -164,6 +206,18 @@ describe("PipelineFlavorEditor - Default Population", () => {
     vi.mocked(useUpdatePipelineFlavor).mockReturnValue({
       mutate: vi.fn(),
       isPending: false,
+    } as any);
+
+    vi.mocked(useTypedModelCapabilities).mockReturnValue({
+      data: undefined,
+      isLoading: false,
+      error: null,
+    } as any);
+
+    vi.mocked(useValidateLLMConfig).mockReturnValue({
+      data: undefined,
+      isLoading: false,
+      error: null,
     } as any);
 
     const mockOnClose = vi.fn();
@@ -189,6 +243,11 @@ describe("PipelineFlavorEditor - Default Population", () => {
       useUpdatePipelineFlavor,
     } = await import("@/api/hooks/pipelineFlavors");
 
+    const {
+      useTypedModelCapabilities,
+      useValidateLLMConfig,
+    } = await import("@/api/hooks/modelCapabilities");
+
     vi.mocked(usePipelineFlavors).mockReturnValue({
       data: {
         flavors: [],
@@ -206,6 +265,18 @@ describe("PipelineFlavorEditor - Default Population", () => {
     vi.mocked(useUpdatePipelineFlavor).mockReturnValue({
       mutate: vi.fn(),
       isPending: false,
+    } as any);
+
+    vi.mocked(useTypedModelCapabilities).mockReturnValue({
+      data: undefined,
+      isLoading: false,
+      error: null,
+    } as any);
+
+    vi.mocked(useValidateLLMConfig).mockReturnValue({
+      data: undefined,
+      isLoading: false,
+      error: null,
     } as any);
 
     const mockOnClose = vi.fn();

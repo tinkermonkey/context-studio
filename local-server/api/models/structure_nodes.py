@@ -134,3 +134,23 @@ class NodeHierarchy(BaseModel):
 
 # Update forward references
 NodeHierarchy.model_rebuild()
+
+
+# Models for Reference Links and Word Senses
+class ReferenceLink(BaseModel):
+    """Model for reference data links from external knowledge sources."""
+    source: str = Field(..., min_length=1, max_length=255, description="Source identifier (e.g., 'schema.org', 'wikidata', 'conceptnet')")
+    external_id: str = Field(..., min_length=1, max_length=255, description="Source-specific identifier")
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class WordSense(BaseModel):
+    """Model for word sense identifiers from NLP analysis."""
+    term: str = Field(..., min_length=1, max_length=255, description="The term/word this sense refers to")
+    sense_type: str = Field(..., description="Type of sense system (e.g., 'wordnet')")
+    sense_id: str = Field(..., description="Unique identifier for the sense (e.g., 'bank.n.01')")
+    definition: str = Field(..., description="Human-readable definition of the sense")
+    domain: Optional[str] = Field(None, description="Semantic domain or category (e.g., 'noun.group')")
+
+    model_config = ConfigDict(from_attributes=True)

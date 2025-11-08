@@ -111,7 +111,7 @@ context-studio/
     │   │   └── test-helpers.ts
     │   ├── tests/                   # Test files
     │   │   ├── example.spec.ts
-    │   │   └── structure-nodes.spec.ts
+    │   │   └── layers.spec.ts
     │   ├── global-setup.ts          # Server startup
     │   ├── global-teardown.ts       # Server shutdown
     │   └── README.md                # Detailed testing guide
@@ -311,7 +311,7 @@ jobs:
 ## Next Steps
 
 1. ✅ Setup complete - you can now run E2E tests
-2. 📝 Write tests for your features (see `e2e/tests/structure-nodes.spec.ts` for examples)
+2. 📝 Write tests for your features (see `e2e/tests/layers.spec.ts` for examples)
 3. 🏷️ Add `data-testid` attributes to your UI components
 4. 🔄 Integrate into your CI/CD pipeline
 5. 📚 Read `/ux/e2e/README.md` for detailed testing guide

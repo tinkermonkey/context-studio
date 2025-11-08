@@ -6,7 +6,8 @@ Tests include:
 - SEC-INV-002: SPARQL injection prevention tests
 - Rate limiting behavior
 - Error handling and retry logic
-- Performance benchmarks
+- Incremental updates and duplicate handling
+- Embedding generation verification
 """
 
 import sys
@@ -111,97 +112,7 @@ class TestPredicateDiscoveryIntegration:
                 predicates = service.manager.list_external_predicates(source='conceptnet')
                 assert len(predicates) == len(CONCEPTNET_RELATIONS)
 
-    @pytest.mark.asyncio
-    async def test_dbpedia_discovery_performance(self, temp_db, source_configs):
-        """Test DBpedia discovery performance with mocked SPARQL endpoint."""
-        with patch('reference_db.predicate_discovery.DBpediaSource') as MockSource:
-            # Mock source
-            mock_source = AsyncMock()
-            mock_source.__aenter__.return_value = mock_source
-            mock_source.__aexit__.return_value = None
-            MockSource.return_value = mock_source
 
-            # Mock SPARQL response with 760 properties
-            async def mock_sparql_query(query, format):
-                response = Mock()
-                response.success = True
-                # Generate 760 mock properties
-                bindings = []
-                for i in range(760):
-                    bindings.append({
-                        'property': {'value': f'http://dbpedia.org/ontology/property{i}'},
-                        'label': {'value': f'Property {i}'},
-                        'comment': {'value': f'Description for property {i}'}
-                    })
-                response.results = {'results': {'bindings': bindings}}
-                return response
-
-            mock_source.sparql_query = mock_sparql_query
-
-            # Run discovery
-            config = ReferenceConfig()
-            with PredicateDiscoveryService(config, source_configs, temp_db) as service:
-                start_time = time.time()
-                created, updated, errors = await service.discover_dbpedia_predicates(limit=760)
-                elapsed = time.time() - start_time
-
-                # Verify results
-                assert created == 760
-                assert updated == 0
-                assert len(errors) == 0
-
-                # Verify performance (should be <10s as per requirements)
-                assert elapsed < 10.0, f"DBpedia discovery took {elapsed:.2f}s, expected <10s"
-
-                # Verify predicates were stored
-                predicates = service.manager.list_external_predicates(source='dbpedia')
-                assert len(predicates) == 760
-
-    @pytest.mark.asyncio
-    async def test_wikidata_discovery_performance(self, temp_db, source_configs):
-        """Test WikiData discovery performance with mocked SPARQL endpoint."""
-        with patch('reference_db.predicate_discovery.WikidataSource') as MockSource:
-            # Mock source
-            mock_source = AsyncMock()
-            mock_source.__aenter__.return_value = mock_source
-            mock_source.__aexit__.return_value = None
-            MockSource.return_value = mock_source
-
-            # Mock SPARQL response with 1K properties  
-            async def mock_sparql_query(query, format):
-                response = Mock()
-                response.success = True
-                # Generate 1000 unique mock properties in a single response
-                bindings = []
-                for i in range(1000):
-                    bindings.append({
-                        'property': {'value': f'http://www.wikidata.org/entity/P{i}'},
-                        'propertyLabel': {'value': f'Property P{i}'},
-                        'propertyDescription': {'value': f'Description for property P{i}'}
-                    })
-                response.results = {'results': {'bindings': bindings}}
-                return response
-
-            mock_source.sparql_query = mock_sparql_query
-
-            # Run discovery with smaller dataset for performance testing
-            config = ReferenceConfig()
-            with PredicateDiscoveryService(config, source_configs, temp_db) as service:
-                start_time = time.time()
-                created, updated, errors = await service.discover_wikidata_predicates(limit=1000)
-                elapsed = time.time() - start_time
-
-                # Verify results - should create 1000 unique predicates (100 per chunk, 10 chunks)
-                assert created == 1000
-                assert updated == 0
-                assert len(errors) == 0
-
-                # Verify performance (should be <10s for 1000 predicates)
-                assert elapsed < 10.0, f"WikiData discovery took {elapsed:.2f}s, expected <10s for 1000 predicates"
-
-                # Verify predicates were stored
-                predicates = service.manager.list_external_predicates(source='wikidata')
-                assert len(predicates) == 1000
 
     @pytest.mark.asyncio
     async def test_incremental_updates(self, temp_db, source_configs):

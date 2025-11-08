@@ -126,7 +126,10 @@ class PredicateDiscoveryService:
             return batch_size
 
         except Exception as e:
-            logger.warning(f"Error calculating batch size: {e}, using default {min_size}")
+            logger.warning(
+                f"Error calculating batch size: {type(e).__name__}: {e}, using default {min_size}",
+                exc_info=True
+            )
             return min_size
 
     def _generate_embeddings_batch(
