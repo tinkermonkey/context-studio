@@ -282,6 +282,7 @@ export const StructureNodeDetails: React.FC<StructureNodeDetailsProps> = ({
                 : parentDomain?.id
             }
             termId={node.node_type === NodeType.TERM ? node.id : undefined}
+            nodeId={node.id}
           />
 
           {/* Definition */}
