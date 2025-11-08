@@ -335,10 +335,7 @@ class TestWordSenseUpdateAPI:
         term_response = client.post("/api/structure_nodes/", json=term_data)
         term = term_response.json()
         node_id = term["id"]
-
-        # Get initial version
-        initial_node = client.get(f"/api/structure_nodes/{node_id}").json()
-        initial_version = initial_node["version"]
+        initial_version = term["version"]  # Get initial version from create response
 
         # Update word senses
         word_senses_data = {
@@ -357,7 +354,7 @@ class TestWordSenseUpdateAPI:
             json=word_senses_data
         )
 
-        # Get updated node
+        # Get updated node to verify version increment
         updated_node = client.get(f"/api/structure_nodes/{node_id}").json()
 
         # Version should be incremented

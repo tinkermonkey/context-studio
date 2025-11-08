@@ -387,8 +387,12 @@ class WordSenseService:
                 logger.error(f"Invalid sense in update: {e}")
                 raise ValueError(f"Invalid sense: {e}")
 
-        # Get existing senses
-        existing_senses = self.get_word_senses(node_id)
+        # Get existing senses with error handling for malformed JSON
+        try:
+            existing_senses = self.get_word_senses(node_id)
+        except ValueError as e:
+            logger.error(f"Failed to load existing word senses for node {node_id}: {e}")
+            raise ValueError(f"Cannot update word senses: existing data is corrupted. {e}")
 
         # Create set of words (terms) being updated
         updated_terms = {sense.term.lower() for sense in selected_senses}
