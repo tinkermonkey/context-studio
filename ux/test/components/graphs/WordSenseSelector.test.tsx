@@ -112,7 +112,8 @@ describe("WordSenseSelector", () => {
       const gridContainer = container.querySelector(".grid");
       expect(gridContainer).toHaveClass("grid-cols-1");
       expect(gridContainer).toHaveClass("sm:grid-cols-2");
-      expect(gridContainer).toHaveClass("md:grid-cols-3");
+      expect(gridContainer).toHaveClass("lg:grid-cols-3");
+      expect(gridContainer).toHaveClass("xl:grid-cols-4");
     });
   });
 
