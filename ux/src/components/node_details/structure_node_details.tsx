@@ -19,6 +19,7 @@ import {
   Check,
   X,
   Plus,
+  Move,
 } from "lucide-react";
 import { NodeType } from "@/api/types/structureNodes";
 import { useTermHierarchy } from "@/api/hooks/graph/useGraph";
@@ -42,6 +43,8 @@ import { useNlpAnalysisStore } from "@/stores/nlpAnalysisStore";
 import { useUpdateStructureNode } from "@/api/hooks/structure_nodes/useStructureNodeMutations";
 import { toast } from "@/utils/toast";
 import { ReferenceNodePanel } from "@/components/reference_nodes";
+import { DomainMoveForm } from "@/components/forms/domain_move_form";
+import { TermMoveForm } from "@/components/forms/term_move_form";
 
 type NodeOut = components["schemas"]["NodeOut"];
 
@@ -54,6 +57,7 @@ export const StructureNodeDetails: React.FC<StructureNodeDetailsProps> = ({
 }) => {
   const [isEditOpen, setIsEditOpen] = React.useState(false);
   const [isAddChildOpen, setIsAddChildOpen] = React.useState(false);
+  const [isMoveOpen, setIsMoveOpen] = React.useState(false);
   const { setText, triggerAnalysis } = useNlpAnalysisStore();
 
   // Handle analyze button click
@@ -241,6 +245,12 @@ export const StructureNodeDetails: React.FC<StructureNodeDetailsProps> = ({
                 <Plus className="mr-2 h-4 w-4" />
                 Add Child
               </Button>
+              {node.node_type !== NodeType.LAYER && (
+                <Button color="gray" size="sm" onClick={() => setIsMoveOpen(true)}>
+                  <Move className="mr-2 h-4 w-4" />
+                  Move
+                </Button>
+              )}
               <Button color="gray" size="sm" onClick={() => setIsEditOpen(true)}>
                 <Edit3 className="mr-2 h-4 w-4" />
                 Edit
@@ -320,6 +330,11 @@ export const StructureNodeDetails: React.FC<StructureNodeDetailsProps> = ({
         node={node}
         isOpen={isAddChildOpen}
         onClose={() => setIsAddChildOpen(false)}
+      />
+      <MoveModal
+        node={node}
+        isOpen={isMoveOpen}
+        onClose={() => setIsMoveOpen(false)}
       />
     </>
   );
@@ -567,6 +582,69 @@ const AddChildModal: React.FC<{
             parentTerm={node}
             mode="child"
             onSuccess={handleSuccess}
+          />
+        );
+      default:
+        return null;
+    }
+  };
+
+  return (
+    <Modal show={isOpen} onClose={onClose}>
+      <ModalHeader className="border-b-0">{getModalTitle()}</ModalHeader>
+      <ModalBody>{getForm()}</ModalBody>
+    </Modal>
+  );
+};
+
+// Move Modal
+const MoveModal: React.FC<{
+  node: StructureNode;
+  isOpen: boolean;
+  onClose: () => void;
+}> = ({ node, isOpen, onClose }) => {
+  const queryClient = useQueryClient();
+
+  const handleSuccess = () => {
+    onClose();
+
+    try {
+      queryClient.invalidateQueries({
+        queryKey: [QUERY_KEYS.STRUCTURE_NODES, node.id],
+      });
+      queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.STRUCTURE_NODES] });
+    } catch (e) {
+      console.warn("Failed to invalidate node queries", e);
+    }
+  };
+
+  const getModalTitle = () => {
+    switch (node.node_type) {
+      case NodeType.DOMAIN:
+        return "Move Domain";
+      case NodeType.TERM:
+        return "Move Term";
+      default:
+        return "Move Node";
+    }
+  };
+
+  const getForm = () => {
+    switch (node.node_type) {
+      case NodeType.DOMAIN:
+        return (
+          <DomainMoveForm
+            selectedNodes={[node]}
+            onSuccess={handleSuccess}
+            onCancel={onClose}
+          />
+        );
+      case NodeType.TERM:
+        return (
+          <TermMoveForm
+            selectedNodes={[node]}
+            onSuccess={handleSuccess}
+            onCancel={onClose}
           />
         );
       default:

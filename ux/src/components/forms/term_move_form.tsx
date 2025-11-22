@@ -86,9 +86,9 @@ export function TermMoveForm({
         <Button
           type="submit"
           color="blue"
-          disabled={!targetDomainId || moveTerms.isPending}
+          disabled={!targetDomainId || updateTerm.isPending}
         >
-          {moveTerms.isPending ? "Moving..." : "Move Terms"}
+          {updateTerm.isPending ? "Moving..." : "Move Terms"}
         </Button>
       </div>
     </form>

@@ -85,9 +85,9 @@ export function DomainMoveForm({
         <Button
           type="submit"
           color="blue"
-          disabled={!targetLayerId || moveDomains.isPending}
+          disabled={!targetLayerId || updateDomain.isPending}
         >
-          {moveDomains.isPending ? "Moving..." : "Move Domains"}
+          {updateDomain.isPending ? "Moving..." : "Move Domains"}
         </Button>
       </div>
     </form>

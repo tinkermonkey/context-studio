@@ -60,6 +60,25 @@ export const ReferenceNodeSearch: React.FC<ReferenceNodeSearchProps> = ({
 
   const sourceLoadingStates = useSourceLoadingStates(searchState);
 
+  // Filter results based on currently selected sources
+  const filteredResults = React.useMemo(() => {
+    return searchResults.filter((node) => selectedSources.includes(node.source));
+  }, [searchResults, selectedSources]);
+
+  // Clear selections when filtered results change
+  useEffect(() => {
+    const validSelections = new Set(
+      Array.from(selectedResultIds).filter((nodeKey) => {
+        return filteredResults.some(
+          (node) => `${node.source}-${node.id}` === nodeKey
+        );
+      })
+    );
+    if (validSelections.size !== selectedResultIds.size) {
+      setSelectedResultIds(validSelections);
+    }
+  }, [filteredResults]);
+
   // Debounce the search query
   useEffect(() => {
     // Clear any existing timer
@@ -79,13 +98,6 @@ export const ReferenceNodeSearch: React.FC<ReferenceNodeSearchProps> = ({
       }
     };
   }, [query]);
-
-  // Automatically trigger search when debounced query changes
-  useEffect(() => {
-    if (debouncedQuery.trim().length >= 2 && selectedSources.length > 0) {
-      performSearchInternal();
-    }
-  }, [debouncedQuery, selectedSources]);
 
   const performSearchInternal = () => {
     if (debouncedQuery.trim().length >= 2 && selectedSources.length > 0) {
@@ -131,7 +143,7 @@ export const ReferenceNodeSearch: React.FC<ReferenceNodeSearchProps> = ({
   };
 
   const handleAddSelected = () => {
-    const nodesToAdd = searchResults.filter((node) => {
+    const nodesToAdd = filteredResults.filter((node) => {
       const nodeKey = `${node.source}-${node.id}`;
       return selectedResultIds.has(nodeKey);
     });
@@ -292,14 +304,14 @@ export const ReferenceNodeSearch: React.FC<ReferenceNodeSearchProps> = ({
             </div>
           )}
 
-          {searchResults.length === 0 && !isSearching && (
+          {filteredResults.length === 0 && !isSearching && (
             <Alert color="info" icon={Info}>
               No results found. Try adjusting your search query or selecting different
               sources.
             </Alert>
           )}
 
-          {searchResults.map((node) => {
+          {filteredResults.map((node) => {
             const nodeKey = `${node.source}-${node.id}`;
             const isSelected = selectedResultIds.has(nodeKey);
             const alreadyAdded = isNodeAlreadySelected(node);
@@ -356,7 +368,7 @@ export const ReferenceNodeSearch: React.FC<ReferenceNodeSearchProps> = ({
           })}
 
           {/* Additional loading indicator at bottom */}
-          {isSearching && searchResults.length > 0 && (
+          {isSearching && filteredResults.length > 0 && (
             <div className="py-4 text-center">
               <Spinner size="sm" className="mr-2" />
               <span className="text-sm text-gray-600">
