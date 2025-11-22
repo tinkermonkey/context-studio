@@ -17,6 +17,7 @@ import { getSourceBadgeColor, getSourceLabel } from "@/utils/sourceUtils";
 interface ReferenceNodeSearchProps {
   onAddNode: (node: UnifiedNode) => void;
   selectedNodes: UnifiedNode[];
+  defaultSearchQuery?: string;
 }
 
 // Debounce delay in milliseconds
@@ -25,8 +26,9 @@ const SEARCH_DEBOUNCE_DELAY = 500;
 export const ReferenceNodeSearch: React.FC<ReferenceNodeSearchProps> = ({
   onAddNode,
   selectedNodes,
+  defaultSearchQuery,
 }) => {
-  const [query, setQuery] = useState("");
+  const [query, setQuery] = useState(defaultSearchQuery || "");
   const [debouncedQuery, setDebouncedQuery] = useState("");
   const [selectedSources, setSelectedSources] = useState<SourceType[]>([
     "dbpedia",
@@ -363,13 +365,6 @@ export const ReferenceNodeSearch: React.FC<ReferenceNodeSearchProps> = ({
             </div>
           )}
         </div>
-      )}
-
-      {/* Empty State */}
-      {!hasSearched && (
-        <Alert color="info" icon={Info}>
-          Enter a search term and select sources to find reference nodes.
-        </Alert>
       )}
     </div>
   );

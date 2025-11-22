@@ -286,15 +286,15 @@ export const StructureNodeDetails: React.FC<StructureNodeDetailsProps> = ({
             nodeId={node.id}
           />
 
-          {/* Reference Nodes */}
-          <div className="pt-4">
-            <ReferenceNodePanel nodeId={node.id} />
-          </div>
-
           {/* Definition */}
           <div className="pt-4">
             <h2 className="mb-3 text-xl font-semibold">Definition</h2>
             <EditableDefinition node={node} />
+          </div>
+
+          {/* Reference Nodes */}
+          <div className="pt-4">
+            <ReferenceNodePanel nodeId={node.id} nodeTitle={node.title} />
           </div>
 
           {/* Term Hierarchy */}
