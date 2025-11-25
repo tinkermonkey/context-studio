@@ -1,0 +1,6 @@
+NetworkService:
+  name: NetworkService
+  description: NetworkX-based graph analytics including centrality, community detection,
+    and path finding
+  criticality: high
+  id: application.service.network-service.network-service

@@ -13,6 +13,7 @@ interface SourceSelectorProps {
   selectedSources: SourceType[];
   onSourcesChange: (sources: SourceType[]) => void;
   disabled?: boolean;
+  'data-testid'?: string;
 }
 
 const ALL_SOURCES: SourceType[] = ["conceptnet", "dbpedia", "wikidata", "schema_org"];
@@ -21,6 +22,7 @@ export const SourceSelector: React.FC<SourceSelectorProps> = ({
   selectedSources,
   onSourcesChange,
   disabled = false,
+  'data-testid': dataTestId,
 }) => {
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -70,7 +72,7 @@ export const SourceSelector: React.FC<SourceSelectorProps> = ({
   };
 
   return (
-    <div className="relative" ref={dropdownRef}>
+    <div className="relative" ref={dropdownRef} data-testid={dataTestId}>
       <Button
         color={getButtonColor()}
         onClick={() => setIsOpen(!isOpen)}

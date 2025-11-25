@@ -23,6 +23,7 @@ interface SearchResultsProps {
   compact?: boolean;
   streamingState?: StreamingSearchState | null;
   showSourceProgress?: boolean;
+  'data-testid'?: string;
 }
 
 interface ResultCardProps {
@@ -120,6 +121,7 @@ export const SearchResults: React.FC<SearchResultsProps> = ({
   compact = false,
   streamingState = null,
   showSourceProgress = true,
+  'data-testid': dataTestId,
 }) => {
   const hasResults = results.length > 0;
   const hasErrors = Object.keys(sourceErrors).length > 0;
@@ -223,7 +225,7 @@ export const SearchResults: React.FC<SearchResultsProps> = ({
   }
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4" data-testid={dataTestId}>
       {/* Source Progress */}
       {renderSourceProgress()}
 

@@ -146,6 +146,7 @@ const DomainForm: React.FC<DomainFormProps> = ({
                 onChange={(e) => field.handleChange(e.target.value)}
                 required
                 autoFocus
+                data-testid="domain-title-input"
               />
               {field.state.meta.errors.length > 0 && (
                 <div className="mt-1 text-sm text-red-600">
@@ -169,6 +170,7 @@ const DomainForm: React.FC<DomainFormProps> = ({
                 placeholder="Definition"
                 value={field.state.value}
                 onChange={(e) => field.handleChange(e.target.value)}
+                data-testid="domain-definition-input"
               />
               {field.state.meta.errors.length > 0 && (
                 <div className="mt-1 text-sm text-red-600">
@@ -199,6 +201,7 @@ const DomainForm: React.FC<DomainFormProps> = ({
                 <LayerSelector
                   value={field.state.value}
                   onSelect={(layer) => field.handleChange(layer?.id || "")}
+                  data-testid="domain-layer-selector"
                 />
                 {field.state.meta.errors.length > 0 && (
                   <div className="mt-1 text-sm text-red-600">
@@ -255,6 +258,7 @@ const DomainForm: React.FC<DomainFormProps> = ({
               createDomainMutation.isPending ||
               updateDomainMutation.isPending
             }
+            data-testid="domain-submit-button"
           >
             {form.state.isSubmitting ||
             createDomainMutation.isPending ||

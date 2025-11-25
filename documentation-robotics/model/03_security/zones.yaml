@@ -1,0 +1,263 @@
+# Security Zones for Context Studio
+# Defines trust boundaries and security domains for the application architecture
+
+LocalUserZone:
+  name: Local User Zone
+  description: User's local machine where Context Studio runs - highest trust zone with direct file system access and full application control
+  id: local-user-zone
+  type: zone
+  trust_level: high
+  zone_type: internal
+  location: User workstation
+  components:
+    - local-database
+    - operations-database
+    - reference-database
+    - python-runtime
+    - react-runtime
+    - fastapi-framework
+    - node-service
+    - graph-service
+    - llm-service
+    - dataset-manager
+    - working-tree-manager
+  data_sensitivity:
+    - Proprietary knowledge graphs
+    - User-generated content
+    - Application configuration
+    - LLM execution traces
+    - Local cache data
+  policies:
+    - data-sovereignty-policy
+    - local-storage-security
+  access_control:
+    - OS-level file permissions
+    - No network authentication
+    - Direct localhost access
+  boundaries:
+    ingress:
+      - "React frontend → FastAPI backend (localhost:8100)"
+      - "User file system → SQLite databases"
+    egress:
+      - "FastAPI backend → External LLM APIs (HTTPS)"
+      - "FastAPI backend → External knowledge APIs (HTTPS)"
+      - "S3 sync → Cloud storage (HTTPS, optional)"
+  threat_exposure:
+    - Malware on user machine
+    - Physical access to device
+    - Local privilege escalation
+  security_assumption: "User's machine is trusted and physically secured"
+
+ExternalLLMZone:
+  name: External LLM Provider Zone
+  description: External LLM API providers (OpenAI, Anthropic) - controlled trust with API key authentication
+  id: external-llm-zone
+  type: zone
+  trust_level: medium
+  zone_type: external
+  location: Cloud services
+  components:
+    - openai-api
+    - anthropic-api
+  data_exchanged:
+    outbound:
+      - Knowledge content for processing
+      - User prompts and context
+      - System prompts from pipeline flavors
+    inbound:
+      - LLM-generated responses
+      - Token usage metrics
+      - Error messages
+  policies:
+    - api-key-protection-policy
+    - secure-communication-policy
+    - rate-limiting-policy
+  controls:
+    - api-key-management
+    - https-enforcement
+    - rate-limiting
+    - llm-response-caching
+  boundaries:
+    ingress:
+      - "None (Context Studio does not accept inbound from LLM providers)"
+    egress:
+      - "LLM service → OpenAI API (HTTPS)"
+      - "LLM service → Anthropic API (HTTPS)"
+  authentication:
+    - "API key in Authorization header (Bearer token)"
+    - "Provider-specific key validation"
+  rate_limits:
+    openai: "10 req/min, 500 req/hour"
+    anthropic: "50 req/min, 3000 req/hour"
+  threat_exposure:
+    - LLM provider outage
+    - API key compromise
+    - Cost overruns
+    - Data retention by provider
+  security_assumption: "LLM providers protect data in transit and at rest per their terms of service"
+
+ExternalKnowledgeZone:
+  name: External Knowledge Source Zone
+  description: External knowledge APIs (DBpedia, ConceptNet, Wikidata) - moderate trust for semantic enrichment
+  id: external-knowledge-zone
+  type: zone
+  trust_level: medium
+  zone_type: external
+  location: Public knowledge bases
+  components:
+    - dbpedia-knowledge-base
+    - conceptnet-knowledge-base
+    - wikidata-knowledge-base
+  data_exchanged:
+    outbound:
+      - Entity names for lookup
+      - SPARQL queries
+      - Search terms
+    inbound:
+      - Entity definitions
+      - Semantic relationships
+      - Ontology mappings
+  policies:
+    - secure-communication-policy
+    - rate-limiting-policy
+  controls:
+    - https-enforcement
+    - rate-limiting
+  boundaries:
+    ingress:
+      - "None (Context Studio does not accept inbound from knowledge bases)"
+    egress:
+      - "Reference service → DBpedia (HTTPS)"
+      - "Reference service → ConceptNet (HTTPS)"
+      - "Reference service → Wikidata (HTTPS)"
+  authentication:
+    - "None (public APIs)"
+    - "Rate limiting by IP address"
+  rate_limits:
+    conceptnet: "1 req/sec, 60 req/min"
+    dbpedia: "100 req/sec"
+    wikidata: "2 req/sec, 50 req/min"
+  threat_exposure:
+    - Service availability (no SLA)
+    - Data quality variations
+    - Rate limit enforcement
+    - Malicious data injection
+  security_assumption: "Public knowledge bases provide best-effort data quality and availability"
+
+CloudStorageZone:
+  name: Cloud Storage Zone
+  description: Optional S3-compatible cloud storage for backup and collaboration - user-controlled trust
+  id: cloud-storage-zone
+  type: zone
+  trust_level: medium
+  zone_type: external-optional
+  location: User-configured cloud
+  components:
+    - aws-s3-storage
+  data_exchanged:
+    outbound:
+      - Parquet exports of knowledge graphs
+      - Dataset snapshots
+      - Changeset packages
+    inbound:
+      - Remote dataset versions
+      - Collaboration changesets
+  policies:
+    - data-sovereignty-policy
+    - api-key-protection-policy
+    - secure-communication-policy
+  controls:
+    - api-key-management
+    - https-enforcement
+  boundaries:
+    ingress:
+      - "S3 sync manager → S3 bucket (HTTPS, user-initiated download)"
+    egress:
+      - "S3 sync manager → S3 bucket (HTTPS, user-initiated upload)"
+  authentication:
+    - "AWS access key and secret key"
+    - "Optional IAM role-based access"
+  encryption:
+    - "HTTPS for data in transit"
+    - "Optional S3 server-side encryption (SSE-S3, SSE-KMS)"
+  threat_exposure:
+    - Misconfigured S3 bucket permissions
+    - Compromised AWS credentials
+    - Data exposure in cloud
+    - Compliance implications
+  security_assumption: "User properly configures S3 bucket permissions and encryption"
+  user_control:
+    - "Sync is opt-in only"
+    - "User provides their own S3 credentials"
+    - "User controls bucket permissions"
+    - "Transparent sync status and data location"
+
+PublicInternetZone:
+  name: Public Internet Zone
+  description: Untrusted public internet - lowest trust level, transit-only zone
+  id: public-internet-zone
+  type: zone
+  trust_level: low
+  zone_type: external-untrusted
+  location: Global network
+  components: []
+  data_exchanged:
+    - "All external API traffic transits this zone"
+  policies:
+    - secure-communication-policy
+  controls:
+    - https-enforcement
+  boundaries:
+    - "Local machine ↔ LLM providers (HTTPS tunnel)"
+    - "Local machine ↔ Knowledge bases (HTTPS tunnel)"
+    - "Local machine ↔ Cloud storage (HTTPS tunnel)"
+  threat_exposure:
+    - Man-in-the-middle attacks
+    - Network eavesdropping
+    - DNS spoofing
+    - Certificate attacks
+  security_assumption: "HTTPS provides adequate confidentiality and integrity for data in transit"
+
+LocalDevEnvironmentZone:
+  name: Local Development Environment Zone
+  description: Developer workstation during development - trusted but less controlled than production
+  id: local-dev-environment-zone
+  type: zone
+  trust_level: medium
+  zone_type: internal-dev
+  location: Developer machine
+  components:
+    - python-runtime
+    - react-runtime
+    - nodejs-runtime
+    - git
+    - vscode
+  data_sensitivity:
+    - Source code
+    - API keys in .env files
+    - Development databases
+    - Test data
+  policies:
+    - secrets-management-policy
+    - dependency-security-policy
+  controls:
+    - gitignore-protection
+    - dependency-scanning
+  boundaries:
+    ingress:
+      - "npm install → npm registry"
+      - "pip install → PyPI"
+      - "git pull → GitHub"
+    egress:
+      - "git push → GitHub"
+  threat_exposure:
+    - Accidental secret commits
+    - Malicious dependencies
+    - Developer machine compromise
+    - Unencrypted backups
+  security_assumption: "Developers follow secure coding practices and use code review"
+  development_controls:
+    - ".env.example for safe configuration templates"
+    - ".gitignore for sensitive files"
+    - "Pre-commit hooks (future)"
+    - "Secret scanning in CI/CD (future)"

@@ -149,6 +149,7 @@ const TermForm: React.FC<TermFormProps> = ({
                 onChange={(e) => field.handleChange(e.target.value)}
                 required
                 autoFocus
+                data-testid="term-title-input"
               />
             </div>
           )}
@@ -175,6 +176,7 @@ const TermForm: React.FC<TermFormProps> = ({
                 color={field.state.meta.errors.length ? "failure" : undefined}
                 onChange={(e) => field.handleChange(e.target.value)}
                 required
+                data-testid="term-definition-input"
               />
             </div>
           )}
@@ -203,6 +205,7 @@ const TermForm: React.FC<TermFormProps> = ({
                     onSelect={(domain) => {
                       field.handleChange(domain?.id || "");
                     }}
+                    data-testid="term-domain-selector"
                   />
                   {field.state.meta.errors.length > 0 && (
                     <div className="mt-1 text-sm text-red-600">
@@ -230,6 +233,7 @@ const TermForm: React.FC<TermFormProps> = ({
               createTermMutation.isPending ||
               updateTermMutation.isPending
             }
+            data-testid="term-submit-button"
           >
             {form.state.isSubmitting ||
             createTermMutation.isPending ||

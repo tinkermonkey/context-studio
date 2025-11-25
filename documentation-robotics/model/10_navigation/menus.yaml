@@ -1,0 +1,264 @@
+# Navigation Layer - Menu Structure
+# Defines navigation menus and their organization
+
+MainNavigationMenu:
+  name: Main Navigation Menu
+  description: Primary navigation menu in the top navbar
+  id: main-navigation-menu
+  type: horizontal
+  location: navbar
+  responsive: true
+  items:
+    - menu-item-dashboard
+    - menu-group-knowledge-graph
+    - menu-group-rag-testing
+    - menu-group-external-reference
+    - menu-item-datasets
+    - menu-item-configuration
+
+MenuItemDashboard:
+  name: Dashboard Menu Item
+  description: Link to main dashboard
+  id: menu-item-dashboard
+  type: link
+  label: Dashboard
+  route: dashboard-route
+  icon: home
+  order: 1
+
+MenuGroupKnowledgeGraph:
+  name: Knowledge Graph Menu Group
+  description: Dropdown menu for knowledge graph management
+  id: menu-group-knowledge-graph
+  type: dropdown
+  label: Knowledge Graph
+  order: 2
+  items:
+    - menu-item-layers
+    - menu-item-domains
+    - menu-item-terms
+    - menu-item-predicates
+
+MenuItemLayers:
+  name: Layers Menu Item
+  description: Link to layers management
+  id: menu-item-layers
+  type: link
+  label: Layers
+  route: layers-route
+  parent: menu-group-knowledge-graph
+  order: 1
+
+MenuItemDomains:
+  name: Domains Menu Item
+  description: Link to domains management
+  id: menu-item-domains
+  type: link
+  label: Domains
+  route: domains-route
+  parent: menu-group-knowledge-graph
+  order: 2
+
+MenuItemTerms:
+  name: Terms Menu Item
+  description: Link to terms management
+  id: menu-item-terms
+  type: link
+  label: Terms
+  route: terms-route
+  parent: menu-group-knowledge-graph
+  order: 3
+
+MenuItemPredicates:
+  name: Predicates Menu Item
+  description: Link to predicates management
+  id: menu-item-predicates
+  type: link
+  label: Predicates
+  route: predicates-route
+  parent: menu-group-knowledge-graph
+  order: 4
+
+MenuGroupRAGTesting:
+  name: RAG & Testing Menu Group
+  description: Dropdown menu for RAG pipeline testing
+  id: menu-group-rag-testing
+  type: dropdown
+  label: RAG & Testing
+  order: 3
+  items:
+    - menu-item-rag-experiments
+    - menu-item-rag-comparison
+    - menu-item-rag-test-runner
+
+MenuItemRAGExperiments:
+  name: RAG Experiments Menu Item
+  description: Link to RAG experiments
+  id: menu-item-rag-experiments
+  type: link
+  label: Experiments
+  route: rag-experiments-route
+  parent: menu-group-rag-testing
+  order: 1
+
+MenuItemRAGComparison:
+  name: RAG Pipeline Comparison Menu Item
+  description: Link to pipeline comparison
+  id: menu-item-rag-comparison
+  type: link
+  label: Pipeline Comparison
+  route: rag-pipeline-comparison-route
+  parent: menu-group-rag-testing
+  order: 2
+
+MenuItemRAGTestRunner:
+  name: RAG Test Runner Menu Item
+  description: Link to automated test runner
+  id: menu-item-rag-test-runner
+  type: link
+  label: Test Runner
+  route: rag-test-runner-route
+  parent: menu-group-rag-testing
+  order: 3
+
+MenuGroupExternalReference:
+  name: External Reference Menu Group
+  description: Dropdown menu for external reference features
+  id: menu-group-external-reference
+  type: dropdown
+  label: External Reference
+  order: 4
+  items:
+    - menu-item-reference-search
+    - menu-item-reference-predicates
+
+MenuItemReferenceSearch:
+  name: Reference Search Menu Item
+  description: Link to unified reference search
+  id: menu-item-reference-search
+  type: link
+  label: Search
+  route: reference-search-route
+  parent: menu-group-external-reference
+  order: 1
+
+MenuItemReferencePredicates:
+  name: Reference Predicates Menu Item
+  description: Link to predicate mapping
+  id: menu-item-reference-predicates
+  type: link
+  label: Predicate Mapping
+  route: reference-predicate-mapping-route
+  parent: menu-group-external-reference
+  order: 2
+
+MenuItemDatasets:
+  name: Datasets Menu Item
+  description: Link to datasets management
+  id: menu-item-datasets
+  type: link
+  label: Datasets
+  route: datasets-route
+  icon: database
+  order: 5
+
+MenuItemConfiguration:
+  name: Configuration Menu Item
+  description: Link to configuration hub
+  id: menu-item-configuration
+  type: link
+  label: Configuration
+  route: config-index-route
+  icon: settings
+  order: 10
+
+ConfigurationMenu:
+  name: Configuration Menu
+  description: Configuration settings dropdown in navbar
+  id: configuration-menu
+  type: dropdown
+  location: navbar-right
+  trigger: settings-icon
+  items:
+    - menu-item-config-home
+    - menu-item-config-pipelines
+    - menu-item-config-models
+    - menu-item-config-data-sources
+    - menu-item-config-monitoring
+
+MenuItemConfigHome:
+  name: Configuration Home Menu Item
+  description: Link to configuration index
+  id: menu-item-config-home
+  type: link
+  label: Configuration
+  route: config-index-route
+  parent: configuration-menu
+  order: 1
+
+MenuItemConfigPipelines:
+  name: Configuration Pipelines Menu Item
+  description: Link to pipeline flavors
+  id: menu-item-config-pipelines
+  type: link
+  label: Pipeline Flavors
+  route: pipelines-index-route
+  parent: configuration-menu
+  order: 2
+
+MenuItemConfigModels:
+  name: Configuration Models Menu Item
+  description: Link to model configuration
+  id: menu-item-config-models
+  type: link
+  label: Models
+  route: config-models-route
+  parent: configuration-menu
+  order: 3
+
+MenuItemConfigDataSources:
+  name: Configuration Data Sources Menu Item
+  description: Link to data source configuration
+  id: menu-item-config-data-sources
+  type: link
+  label: Data Sources
+  route: config-data-sources-route
+  parent: configuration-menu
+  order: 4
+
+MenuItemConfigMonitoring:
+  name: Configuration Monitoring Menu Item
+  description: Link to monitoring dashboard
+  id: menu-item-config-monitoring
+  type: link
+  label: Monitoring
+  route: monitoring-performance-route
+  parent: configuration-menu
+  order: 5
+
+MobileNavigationMenu:
+  name: Mobile Navigation Menu
+  description: Flat navigation menu for mobile devices
+  id: mobile-navigation-menu
+  type: vertical
+  location: navbar-collapse
+  responsive_breakpoint: lg
+  visible_when: mobile
+  items:
+    - All main menu items in flat structure with category prefixes
+    - "KG: Layers", "KG: Domains", etc.
+    - "RAG: Experiments", "RAG: Pipeline Comparison", etc.
+    - "Ref: Search", "Ref: Predicate Mapping"
+    - "Configuration"
+
+BreadcrumbNavigation:
+  name: Breadcrumb Navigation
+  description: Contextual breadcrumb navigation showing current location
+  id: breadcrumb-navigation
+  type: breadcrumb
+  location: page-header
+  auto_generated: true
+  examples:
+    - "Home > Knowledge Graph > Domains"
+    - "Home > Configuration > Pipelines > Extract Entities > Edit Flavor"
+    - "Home > RAG & Testing > Experiments"

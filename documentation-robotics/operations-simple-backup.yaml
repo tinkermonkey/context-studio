@@ -1,0 +1,260 @@
+Create Structure Node:
+  name: Create Structure Node
+  description: POST /api/structure_nodes - Create new structure node (layer, domain,
+    or term) with type-specific validation
+  method: POST
+  path: /api/structure_nodes
+  id: create-structure-node
+List Structure Nodes:
+  name: List Structure Nodes
+  description: GET /api/structure_nodes - List structure nodes with filtering, pagination,
+    and sorting
+  method: GET
+  path: /api/structure_nodes
+  id: list-structure-nodes
+Get Structure Node:
+  name: Get Structure Node
+  description: GET /api/structure_nodes/{node_id} - Retrieve specific structure node
+    by ID
+  method: GET
+  path: /api/structure_nodes/{node_id}
+  id: get-structure-node
+Update Structure Node:
+  name: Update Structure Node
+  description: PUT /api/structure_nodes/{node_id} - Update structure node with circular
+    reference validation
+  method: PUT
+  path: /api/structure_nodes/{node_id}
+  id: update-structure-node
+Delete Structure Node:
+  name: Delete Structure Node
+  description: DELETE /api/structure_nodes/{node_id} - Delete structure node and cascade
+    to children
+  method: DELETE
+  path: /api/structure_nodes/{node_id}
+  id: delete-structure-node
+Search Structure Nodes:
+  name: Search Structure Nodes
+  description: POST /api/structure_nodes/find - Vector similarity search across structure
+    nodes
+  method: POST
+  path: /api/structure_nodes/find
+  id: search-structure-nodes
+Create Node Link:
+  name: Create Node Link
+  description: POST /api/structure_nodes/links - Create semantic link between structure
+    nodes
+  method: POST
+  path: /api/structure_nodes/links
+  id: create-node-link
+List Node Links:
+  name: List Node Links
+  description: GET /api/structure_nodes/links - List node links with filtering
+  method: GET
+  path: /api/structure_nodes/links
+  id: list-node-links
+Update Node Link:
+  name: Update Node Link
+  description: PUT /api/structure_nodes/links/{link_id} - Update node link predicate
+  method: PUT
+  path: /api/structure_nodes/links/{link_id}
+  id: update-node-link
+Delete Node Link:
+  name: Delete Node Link
+  description: DELETE /api/structure_nodes/links/{link_id} - Remove semantic link
+  method: DELETE
+  path: /api/structure_nodes/links/{link_id}
+  id: delete-node-link
+Get Graph Statistics:
+  name: Get Graph Statistics
+  description: GET /api/graph/stats - Retrieve comprehensive graph statistics from
+    SPARQL and NetworkX
+  method: GET
+  path: /api/graph/stats
+  id: get-graph-stats
+Refresh Graph:
+  name: Refresh Graph
+  description: POST /api/graph/refresh - Refresh SPARQL and NetworkX graphs from database
+  method: POST
+  path: /api/graph/refresh
+  id: refresh-graph
+Execute SPARQL Query:
+  name: Execute SPARQL Query
+  description: POST /api/graph/sparql/query - Execute SPARQL query against RDF graph
+  method: POST
+  path: /api/graph/sparql/query
+  id: execute-sparql-query
+Export RDF:
+  name: Export RDF
+  description: GET /api/graph/sparql/export - Export RDF graph in various formats
+  method: GET
+  path: /api/graph/sparql/export
+  id: export-rdf
+Calculate Node Centrality:
+  name: Calculate Node Centrality
+  description: POST /api/graph/analytics/centrality - Calculate node centrality using
+    NetworkX algorithms
+  method: POST
+  path: /api/graph/analytics/centrality
+  id: calculate-centrality
+Detect Graph Communities:
+  name: Detect Graph Communities
+  description: GET /api/graph/analytics/communities - Detect communities using NetworkX
+    algorithms
+  method: GET
+  path: /api/graph/analytics/communities
+  id: detect-communities
+Find Shortest Path:
+  name: Find Shortest Path
+  description: POST /api/graph/path/shortest - Find shortest path between two nodes
+  method: POST
+  path: /api/graph/path/shortest
+  id: find-shortest-path
+List Datasets:
+  name: List Datasets
+  description: GET /api/datasets - List all datasets with metrics and active status
+  method: GET
+  path: /api/datasets
+  id: list-datasets
+Create Dataset:
+  name: Create Dataset
+  description: POST /api/datasets - Create new dataset with unique title and filename
+  method: POST
+  path: /api/datasets
+  id: create-dataset
+Activate Dataset:
+  name: Activate Dataset
+  description: POST /api/datasets/{dataset_id}/activate - Switch to specified dataset
+  method: POST
+  path: /api/datasets/{dataset_id}/activate
+  id: activate-dataset
+Create Predicate:
+  name: Create Predicate
+  description: POST /api/predicates - Create semantic predicate with optional external
+    mappings
+  method: POST
+  path: /api/predicates
+  id: create-predicate
+List Predicates:
+  name: List Predicates
+  description: GET /api/predicates - List predicates with pagination and sorting
+  method: GET
+  path: /api/predicates
+  id: list-predicates
+Update Predicate:
+  name: Update Predicate
+  description: PUT /api/predicates/{id} - Update predicate with mapping validation
+  method: PUT
+  path: /api/predicates/{id}
+  id: update-predicate
+Delete Predicate:
+  name: Delete Predicate
+  description: DELETE /api/predicates/{id} - Delete predicate with usage check
+  method: DELETE
+  path: /api/predicates/{id}
+  id: delete-predicate
+Search External Predicates:
+  name: Search External Predicates
+  description: GET /api/predicates/external/search - Vector similarity search for
+    external predicates
+  method: GET
+  path: /api/predicates/external/search
+  id: search-external-predicates
+Find Similar Predicates:
+  name: Find Similar Predicates
+  description: POST /api/predicates/{id}/find-similar - Find similar external predicates
+    using vector similarity
+  method: POST
+  path: /api/predicates/{id}/find-similar
+  id: find-similar-predicates
+Cluster Predicates:
+  name: Cluster Predicates
+  description: POST /api/predicates/cluster-predicates - Cluster predicates using
+    DBSCAN algorithm
+  method: POST
+  path: /api/predicates/cluster-predicates
+  id: cluster-predicates
+Discover External Predicates:
+  name: Discover External Predicates
+  description: POST /api/predicates/discover - Background task to discover predicates
+    from external sources
+  method: POST
+  path: /api/predicates/discover
+  id: discover-external-predicates
+RAG Extract Entities:
+  name: RAG Extract Entities
+  description: POST /api/rag/extract - Extract entities using multi-layer RAG pipeline
+  method: POST
+  path: /api/rag/extract
+  id: rag-extract-entities
+Get RAG Metrics:
+  name: Get RAG Metrics
+  description: GET /api/rag/metrics/{request_id} - Retrieve metrics for RAG execution
+  method: GET
+  path: /api/rag/metrics/{request_id}
+  id: get-rag-metrics
+Get Entity Versions:
+  name: Get Entity Versions
+  description: GET /api/versions/entities/{entity_type}/{entity_id}/versions - Retrieve
+    version history
+  method: GET
+  path: /api/versions/entities/{entity_type}/{entity_id}/versions
+  id: get-entity-versions
+Rollback Entity:
+  name: Rollback Entity
+  description: POST /api/versions/entities/{entity_type}/{entity_id}/rollback - Rollback
+    to specific version
+  method: POST
+  path: /api/versions/entities/{entity_type}/{entity_id}/rollback
+  id: rollback-entity
+Get Working Tree Status:
+  name: Get Working Tree Status
+  description: GET /api/versions/working-tree/status - Git-inspired working tree status
+  method: GET
+  path: /api/versions/working-tree/status
+  id: get-working-tree-status
+Commit Working Changes:
+  name: Commit Working Changes
+  description: POST /api/versions/working-tree/commit - Commit staged changes with
+    message
+  method: POST
+  path: /api/versions/working-tree/commit
+  id: commit-working-changes
+List Conflicts:
+  name: List Conflicts
+  description: GET /api/conflicts - List all conflicts with filtering
+  method: GET
+  path: /api/conflicts
+  id: list-conflicts
+Resolve Conflict:
+  name: Resolve Conflict
+  description: POST /api/conflicts/{conflict_id}/resolve - Manually resolve conflict
+    with chosen strategy
+  method: POST
+  path: /api/conflicts/{conflict_id}/resolve
+  id: resolve-conflict
+Auto Resolve Conflict:
+  name: Auto Resolve Conflict
+  description: POST /api/conflicts/{conflict_id}/auto-resolve - Attempt automatic
+    conflict resolution
+  method: POST
+  path: /api/conflicts/{conflict_id}/auto-resolve
+  id: auto-resolve-conflict
+Sync to Remote:
+  name: Sync to Remote
+  description: POST /api/sync/push - Push local changes to S3 remote
+  method: POST
+  path: /api/sync/push
+  id: sync-to-remote
+Sync from Remote:
+  name: Sync from Remote
+  description: POST /api/sync/pull - Pull changes from S3 remote
+  method: POST
+  path: /api/sync/pull
+  id: sync-from-remote
+Get System Health:
+  name: Get System Health
+  description: GET /health - Health check endpoint for system status
+  method: GET
+  path: /health
+  id: get-system-health

@@ -1,0 +1,221 @@
+KnowledgeGraphCreationProcess:
+  name: Knowledge Graph Creation Process
+  description: End-to-end workflow for creating a new knowledge graph from initial layer definition through domain modeling, term population, and semantic relationship establishment
+  id: knowledge-graph-creation-process
+  type: process
+  triggers:
+    - User creates new dataset
+    - User selects "New Knowledge Graph" workflow
+    - User imports structured data for knowledge graph creation
+  steps:
+    - Create root layer with domain definition and description
+    - Define domains within layer with hierarchical organization
+    - Create terms within domains with definitions and metadata
+    - Establish cross-domain relationships using semantic predicates
+    - Apply validation rules and constraints
+    - Generate embeddings for semantic search capabilities
+    - Verify graph structure and connectivity
+  services:
+    - knowledge-asset-management
+    - ai-knowledge-processing
+  outcomes:
+    - Structured knowledge graph ready for use
+    - Searchable knowledge base with semantic embeddings
+    - Foundation for RAG applications and intelligent queries
+    - Validated and consistent knowledge structure
+
+ContentEnrichmentProcess:
+  name: Content Enrichment Process
+  description: Automated workflow for enhancing knowledge graph content with NLP analysis, entity linking, external references, and semantic relationships from unstructured text
+  id: content-enrichment-process
+  type: process
+  triggers:
+    - User uploads text document for analysis
+    - User runs enrichment on selected nodes
+    - Scheduled batch enrichment job
+    - RAG pipeline extraction request
+  steps:
+    - Extract entities from text using spaCy NLP pipeline
+    - Match entities to existing knowledge graph terms
+    - Link entities to external ontologies (DBpedia, ConceptNet, Wikidata)
+    - Resolve word senses using WordNet for disambiguation
+    - Generate semantic embeddings for new entities
+    - Create or update node relationships based on co-occurrence
+    - Store enrichment metadata and provenance
+  services:
+    - ai-knowledge-processing
+    - semantic-data-integration
+    - knowledge-asset-management
+  outcomes:
+    - Enhanced knowledge completeness with external links
+    - External ontology references for validation
+    - Improved semantic search through better embeddings
+    - Documented enrichment provenance
+
+RAGPipelineOptimizationProcess:
+  name: RAG Pipeline Optimization Process
+  description: Iterative experimentation workflow for testing and optimizing LLM pipeline configurations to improve accuracy, recall, and cost-efficiency through A/B testing
+  id: rag-pipeline-optimization-process
+  type: process
+  triggers:
+    - User creates new pipeline flavor configuration
+    - User runs A/B testing experiment
+    - Automated scheduled optimization
+    - Performance degradation detected
+  steps:
+    - Create pipeline flavor configuration with model and prompts
+    - Define test paragraphs with ground truth entities
+    - Execute pipeline on test data with tracing enabled
+    - Collect performance metrics (precision, recall, F1, latency)
+    - Compare with baseline flavors and historical results
+    - Analyze failure cases and trace data
+    - Iterate on prompts, parameters, and models
+    - Deploy best performing flavor to production
+    - Monitor production performance
+  services:
+    - llm-pipeline-management
+    - operational-excellence
+  outcomes:
+    - Optimized LLM performance with higher accuracy
+    - Lower operational costs through efficient model selection
+    - Documented pipeline configurations and test results
+    - Baseline metrics for future optimization
+
+CollaborativeReviewProcess:
+  name: Collaborative Review Process
+  description: Workflow for proposing, reviewing, voting on, and merging knowledge graph changes with conflict resolution and team consensus building
+  id: collaborative-review-process
+  type: process
+  triggers:
+    - User creates changeset proposal for review
+    - Scheduled review cycle
+    - Major knowledge graph update
+  steps:
+    - Create changeset with proposed modifications
+    - Submit changeset for team review
+    - Collect votes and feedback from reviewers
+    - Address review comments and update proposal
+    - Detect and resolve merge conflicts using CRDT engine
+    - Apply CRDT merge algorithm for conflict-free resolution
+    - Integrate approved changes to main working tree
+    - Notify team of acceptance and changes
+    - Update version history and audit trail
+  services:
+    - workspace-collaboration
+    - knowledge-asset-management
+  outcomes:
+    - Quality-controlled knowledge updates
+    - Team consensus on significant changes
+    - Conflict-free knowledge graph state
+    - Complete audit trail of collaborative decisions
+
+DataSyncProcess:
+  name: Data Synchronization Process
+  description: Automated synchronization of knowledge graph datasets between local workspace and cloud storage with incremental updates and conflict resolution
+  id: data-sync-process
+  type: process
+  triggers:
+    - User saves changes (auto-sync enabled)
+    - Scheduled sync interval
+    - Manual sync request
+    - Offline mode re-connection
+  steps:
+    - Detect local changes since last sync
+    - Generate incremental changeset with DuckDB
+    - Compress and convert to Parquet format
+    - Upload to S3 storage with versioning
+    - Download remote changes from S3
+    - Apply remote updates to local database
+    - Resolve any sync conflicts using CRDT merge
+    - Update sync metadata and timestamps
+  services:
+    - data-synchronization-service
+    - workspace-collaboration
+  outcomes:
+    - Synchronized knowledge across devices
+    - Cloud backup of knowledge assets
+    - Offline work capability with eventual consistency
+    - Conflict-free data convergence
+
+KnowledgeGraphAnalysisProcess:
+  name: Knowledge Graph Analysis Process
+  description: Comprehensive analysis workflow to assess graph quality, identify patterns, detect issues, and generate optimization recommendations
+  id: knowledge-graph-analysis-process
+  type: process
+  triggers:
+    - User requests graph analysis report
+    - Scheduled quality assessment
+    - After major knowledge updates
+  steps:
+    - Calculate graph statistics (nodes, edges, depth)
+    - Compute centrality metrics to identify key concepts
+    - Detect communities and clusters
+    - Identify isolated nodes and knowledge gaps
+    - Analyze predicate usage patterns
+    - Generate SPARQL queries for quality checks
+    - Create visualization data for interactive exploration
+    - Generate optimization recommendations
+  services:
+    - graph-intelligence
+    - knowledge-asset-management
+  outcomes:
+    - Comprehensive graph quality report
+    - Identification of structural issues and gaps
+    - Recommendations for knowledge improvement
+    - Visualization data for stakeholder review
+
+BulkImportProcess:
+  name: Bulk Import Process
+  description: Large-scale import of knowledge graph data from external sources with validation, transformation, conflict resolution, and progress tracking
+  id: bulk-import-process
+  type: process
+  triggers:
+    - User initiates bulk import from CSV/JSON/RDF
+    - Scheduled data integration job
+    - Migration from external knowledge base
+  steps:
+    - Validate import data format and schema
+    - Transform data to Context Studio format
+    - Create batch operation plan
+    - Execute parallel import with transaction safety
+    - Track progress and handle errors
+    - Resolve conflicts with existing data
+    - Generate embeddings for new entities
+    - Validate imported graph structure
+    - Create audit trail of import operations
+  services:
+    - bulk-data-operations
+    - knowledge-asset-management
+    - ai-knowledge-processing
+  outcomes:
+    - Successfully imported knowledge assets
+    - Validated and consistent graph structure
+    - Complete audit trail of import
+    - Progress report with success/failure metrics
+
+ExternalKnowledgeLinkingProcess:
+  name: External Knowledge Linking Process
+  description: Process for discovering and linking knowledge graph elements to external ontologies and semantic web resources
+  id: external-knowledge-linking-process
+  type: process
+  triggers:
+    - User requests external linking for nodes
+    - Automatic linking during enrichment
+    - Scheduled batch linking job
+  steps:
+    - Select knowledge graph elements for linking
+    - Query external sources (DBpedia, Wikidata, ConceptNet)
+    - Calculate semantic similarity scores
+    - Rank and filter potential matches
+    - Create bidirectional links with confidence scores
+    - Store external definitions and metadata
+    - Update embeddings with external context
+    - Validate link quality and relevance
+  services:
+    - semantic-data-integration
+    - knowledge-asset-management
+  outcomes:
+    - External ontology links established
+    - Enhanced entity definitions from authoritative sources
+    - Improved semantic search through external context
+    - Semantic web compatibility

@@ -1,0 +1,15 @@
+NodeLinkService:
+  name: NodeLinkService
+  description: Manages relationships between structure nodes with predicate-based
+    semantic linking
+  criticality: critical
+  id: application.service.node-link-service.node-link-service
+  exposes:
+    - create-node-link
+    - list-node-links
+    - update-node-link
+    - delete-node-link
+  accesses:
+    - structure-node-link-schema
+    - structure-node-schema
+    - predicate-schema

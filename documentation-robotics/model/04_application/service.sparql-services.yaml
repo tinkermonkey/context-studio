@@ -1,0 +1,6 @@
+SPARQLService:
+  name: SPARQLService
+  description: RDFLib-based SPARQL query engine for semantic graph operations and
+    RDF export
+  criticality: high
+  id: application.service.sparql-service.sparqlservice

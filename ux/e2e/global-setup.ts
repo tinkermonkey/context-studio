@@ -65,10 +65,36 @@ async function globalSetup(config: FullConfig) {
   fs.mkdirSync(testDbDir, { recursive: true });
   console.log('✅ Test databases cleaned\n');
 
-  // 2. Start Python backend
-  console.log('🐍 Starting Python backend (port 8888)...');
+  // 2. Run database migrations
+  console.log('🔄 Running database migrations...');
   const backendPath = path.resolve(__dirname, '../../local-server');
   const venvPythonPath = path.join(backendPath, '.venv/bin/python');
+  const migrationScript = `
+import sys
+sys.path.insert(0, '.')
+from database.migrations.migration_manager import MigrationManager
+import os
+
+db_path = './datafiles/e2e-test/local.db'
+os.makedirs(os.path.dirname(db_path), exist_ok=True)
+MigrationManager(db_path).migrate_to_latest()
+print('Migrations completed')
+`;
+
+  try {
+    const { execSync } = await import('child_process');
+    execSync(`${venvPythonPath} -c "${migrationScript.replace(/"/g, '\\"')}"`, {
+      cwd: backendPath,
+      stdio: 'inherit'
+    });
+    console.log('✅ Database migrations completed\n');
+  } catch (error) {
+    console.error('❌ Failed to run migrations:', error);
+    throw error;
+  }
+
+  // 3. Start Python backend
+  console.log('🐍 Starting Python backend (port 8888)...');
 
   // Check if virtual environment exists
   if (!fs.existsSync(venvPythonPath)) {
@@ -132,7 +158,7 @@ async function globalSetup(config: FullConfig) {
     }
   });
 
-  // 3. Wait for backend to be ready (60s timeout for initial NLP model loading)
+  // 4. Wait for backend to be ready (60s timeout for initial NLP model loading)
   try {
     await waitForUrl('http://localhost:8888/health', 60000);
     console.log('✅ Backend ready\n');
@@ -144,7 +170,7 @@ async function globalSetup(config: FullConfig) {
     throw error;
   }
 
-  // 4. Start frontend dev server
+  // 5. Start frontend dev server
   console.log('⚛️  Starting frontend (port 3888)...');
   const frontendPath = path.resolve(__dirname, '..');
 
@@ -188,7 +214,7 @@ async function globalSetup(config: FullConfig) {
     }
   });
 
-  // 5. Wait for frontend to be ready
+  // 6. Wait for frontend to be ready
   try {
     await waitForUrl('http://localhost:3888', 60000);
     console.log('✅ Frontend ready\n');
@@ -203,7 +229,7 @@ async function globalSetup(config: FullConfig) {
     throw error;
   }
 
-  // 6. Store process PIDs for teardown
+  // 7. Store process PIDs for teardown
   if (backendProcess.pid) {
     process.env.E2E_BACKEND_PID = backendProcess.pid.toString();
   }

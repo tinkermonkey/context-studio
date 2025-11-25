@@ -1,0 +1,245 @@
+# Security Controls for Context Studio
+# Defines implemented security mechanisms and protective measures
+
+APIKeyManagement:
+  name: API Key Management
+  description: Secure storage and handling of LLM provider and external service API keys using environment variables and encrypted configuration
+  id: api-key-management
+  type: control
+  control_type: preventive
+  criticality: critical
+  implements:
+    - api-key-protection-policy
+    - secrets-management-policy
+  implementation:
+    - Store keys in .env file (gitignored)
+    - Load via python-dotenv
+    - Access via config.py properties
+    - Never log key values
+    - Mask keys in error messages
+  technologies:
+    - python-dotenv
+    - pydantic-settings
+  mitigates:
+    - api-key-exposure-threat
+    - unauthorized-llm-usage-threat
+  configuration_file: local-server/config.py
+  validation: Startup validation checks for required API keys (lines 55-84 in llm/service.py)
+
+InputValidation:
+  name: Input Validation
+  description: Comprehensive input validation using Pydantic schemas and FastAPI automatic validation
+  id: input-validation
+  type: control
+  control_type: preventive
+  criticality: high
+  implements:
+    - input-validation-policy
+  implementation:
+    - Pydantic BaseModel validation on all API inputs
+    - FastAPI automatic request validation
+    - SQLAlchemy parameterized queries
+    - React DOMPurify for user content
+    - Max length constraints
+  technologies:
+    - pydantic
+    - fastapi-framework
+    - sqlalchemy-orm
+  mitigates:
+    - sql-injection-threat
+    - xss-threat
+    - prompt-injection-threat
+  validation_examples:
+    - "_validate_node_creation() in services/node_service.py"
+    - "_validate_node_update() in services/node_service.py"
+    - "Pydantic models in database/models.py"
+
+RateLimiting:
+  name: Rate Limiting
+  description: Request rate limiting for external API calls with configurable limits and progressive backoff
+  id: rate-limiting
+  type: control
+  control_type: preventive
+  criticality: high
+  implements:
+    - rate-limiting-policy
+  implementation:
+    - pyrate-limiter for request throttling
+    - Per-service rate limit configs
+    - Request queueing with delays
+    - Usage tracking and logging
+  technologies:
+    - pyrate-limiter library
+    - reference-api-buddy proxy
+  mitigates:
+    - resource-abuse-threat
+    - cost-overrun-threat
+  configuration:
+    openai: "10 req/min, 500 req/hour (config.json lines 160-174)"
+    anthropic: "50 req/min, 3000 req/hour (config.json lines 176-191)"
+    conceptnet: "1 req/sec, 60 req/min (config.json lines 50-64)"
+    dbpedia: "100 req/sec (config.json lines 66-112)"
+
+HTTPSEnforcement:
+  name: HTTPS Enforcement
+  description: All external API communication uses HTTPS with certificate validation
+  id: https-enforcement
+  type: control
+  control_type: preventive
+  criticality: high
+  implements:
+    - secure-communication-policy
+  implementation:
+    - requests library with verify=True
+    - httpx with TLS verification
+    - No SSL verification bypass
+  technologies:
+    - requests library
+    - httpx library
+  mitigates:
+    - mitm-threat
+    - data-interception-threat
+  upstream_urls:
+    - "https://api.openai.com"
+    - "https://api.anthropic.com"
+    - "https://api.conceptnet.io"
+    - "https://dbpedia.org"
+
+CORSConfiguration:
+  name: CORS Configuration
+  description: Cross-Origin Resource Sharing configured for local development with production hardening
+  id: cors-configuration
+  type: control
+  control_type: preventive
+  criticality: medium
+  implements:
+    - cors-policy
+  implementation:
+    - FastAPI CORSMiddleware
+    - Configurable allowed origins
+    - Credentials support
+    - Wildcard only in development
+  technologies:
+    - fastapi-framework
+  mitigates:
+    - csrf-threat
+    - unauthorized-access-threat
+  configuration_file: local-server/app.py (lines 9, application setup)
+  current_setting: "cors_origins: ['*'] in config.json (development mode)"
+
+LocalStorageSecurity:
+  name: Local Storage Security
+  description: SQLite databases stored locally with file system permissions
+  id: local-storage-security
+  type: control
+  control_type: detective
+  criticality: high
+  implements:
+    - data-sovereignty-policy
+  implementation:
+    - SQLite files in ./datafiles/
+    - OS file permissions
+    - No cloud sync by default
+    - Optional S3 sync user-initiated
+  technologies:
+    - sqlite-database
+  mitigates:
+    - data-exposure-threat
+    - unauthorized-cloud-sync-threat
+  database_files:
+    - "./datafiles/local.db - User workspace database"
+    - "./datafiles/reference.db - Knowledge graph reference data"
+    - "./datafiles/operations.db - Pipeline configs and audit logs"
+    - "./datafiles/reference_api_cache.db - API response cache"
+
+AutomatedDataCleanup:
+  name: Automated Data Cleanup
+  description: Scheduled cleanup of sensitive logs and traces based on retention policies
+  id: automated-data-cleanup
+  type: control
+  control_type: detective
+  criticality: medium
+  implements:
+    - data-retention-policy
+  implementation:
+    - Background task for old trace deletion
+    - Configurable retention periods
+    - SQL DELETE with timestamp filtering
+  technologies:
+    - task-manager
+  mitigates:
+    - data-accumulation-threat
+    - storage-exhaustion-threat
+  configuration:
+    trace_retention: "7 days (config.json line 108)"
+    metrics_retention: "30 days (config.json line 107)"
+
+DependencyScanning:
+  name: Dependency Scanning
+  description: Automated vulnerability scanning of third-party dependencies
+  id: dependency-scanning
+  type: control
+  control_type: detective
+  criticality: medium
+  implements:
+    - dependency-security-policy
+  implementation:
+    - pip-audit for Python dependencies
+    - npm audit for Node dependencies
+    - Automated PR checks
+    - Regular scan schedule
+  technologies:
+    - python-runtime
+    - react-runtime
+  mitigates:
+    - supply-chain-threat
+  scan_scope:
+    - "local-server/requirements.txt - 80+ Python packages"
+    - "ux/package.json - 100+ Node packages"
+
+GitignoreProtection:
+  name: Gitignore Protection
+  description: Prevent accidental commits of sensitive files through .gitignore configuration
+  id: gitignore-protection
+  type: control
+  control_type: preventive
+  criticality: high
+  implements:
+    - secrets-management-policy
+  implementation:
+    - .env files gitignored
+    - .env.example with placeholders
+    - datafiles/ directory gitignored
+    - logs/ directory gitignored
+  technologies:
+    - git
+  mitigates:
+    - api-key-exposure-threat
+    - data-exposure-threat
+  protected_patterns:
+    - "**/.env"
+    - "**/.env.local"
+    - "**/datafiles/"
+    - "**/logs/"
+    - "**/*.db"
+
+LLMResponseCaching:
+  name: LLM Response Caching
+  description: Cache LLM responses to reduce API costs and improve performance
+  id: llm-response-caching
+  type: control
+  control_type: detective
+  criticality: medium
+  implements:
+    - rate-limiting-policy
+  implementation:
+    - LangChain built-in cache
+    - SQLite-based cache storage
+    - TTL-based expiration
+  technologies:
+    - langchain-core
+    - sqlite-database
+  mitigates:
+    - cost-overrun-threat
+    - resource-abuse-threat
+  note: "LLM proxy caching disabled (use_proxy: false) due to HTTPS CONNECT tunneling requirements"

@@ -100,7 +100,7 @@ export const PipelineTestRunner: React.FC<PipelineTestRunnerProps> = ({
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6" data-testid="pipeline-test-runner">
       {/* Pipeline Selection */}
       <div className="rounded-lg border border-gray-200 bg-white p-4">
         <h3 className="mb-3 text-lg font-medium text-gray-900">
@@ -250,6 +250,7 @@ export const PipelineTestRunner: React.FC<PipelineTestRunnerProps> = ({
               onClick={handleRunTests}
               disabled={!canRun || isRunning}
               size="lg"
+              data-testid="pipeline-run-tests-button"
             >
               {isRunning ? (
                 <>

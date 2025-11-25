@@ -1,0 +1,184 @@
+KnowledgeAssetManagement:
+  name: Knowledge Asset Management
+  description: Comprehensive service for managing knowledge graph assets including creation, curation, search, versioning, and lifecycle management across layers, domains, and terms
+  id: knowledge-asset-management
+  type: service
+  criticality: critical
+  business_objectives:
+    - Enable efficient knowledge capture and organization
+    - Ensure knowledge quality and consistency through validation
+    - Support knowledge reuse across applications and use cases
+    - Provide comprehensive search and discovery capabilities
+  capabilities:
+    - knowledge-graph-curation
+    - knowledge-enrichment
+    - collaborative-knowledge-development
+    - semantic-embedding-management
+  realized_by:
+    - node-service
+    - graph-service
+    - node-link-service
+    - predicate-service
+    - version-manager
+    - reference-service
+    - embedding-regeneration-service
+
+AIKnowledgeProcessing:
+  name: AI Knowledge Processing
+  description: Apply AI and machine learning to automate knowledge extraction, classification, entity linking, and enhancement from text and structured sources using configurable LLM pipelines
+  id: ai-knowledge-processing
+  type: service
+  criticality: high
+  business_objectives:
+    - Automate knowledge extraction from documents and web sources
+    - Improve knowledge graph completeness through AI-driven enrichment
+    - Enable semantic search and intelligent retrieval
+    - Reduce manual curation effort through automation
+  capabilities:
+    - ai-content-processing
+    - knowledge-enrichment
+    - semantic-embedding-management
+  realized_by:
+    - rag-pipeline-service
+    - llm-service
+    - word-sense-service
+    - embedding-regeneration-service
+    - reference-service
+
+WorkspaceCollaboration:
+  name: Workspace Collaboration
+  description: Enable team-based knowledge curation with isolated workspaces, change proposals, version control, voting workflows, and collaborative editing with conflict resolution
+  id: workspace-collaboration
+  type: service
+  criticality: high
+  business_objectives:
+    - Support distributed knowledge curation teams
+    - Ensure knowledge quality through peer review processes
+    - Enable safe experimentation with working trees and branches
+    - Facilitate consensus-building through voting and proposals
+  capabilities:
+    - dataset-workspace-management
+    - collaborative-knowledge-development
+  realized_by:
+    - dataset-manager
+    - changeset-manager
+    - proposal-manager
+    - working-tree-manager
+    - identity-manager
+    - conflict-resolution-engine
+    - crdt-merge-engine
+
+LLMPipelineManagement:
+  name: LLM Pipeline Management
+  description: Configure, test, deploy, and monitor language model pipelines for knowledge tasks including entity extraction, classification, and generation with cost optimization and quality metrics
+  id: llm-pipeline-management
+  type: service
+  criticality: high
+  business_objectives:
+    - Optimize AI model performance for knowledge tasks
+    - Reduce LLM operational costs through experimentation
+    - Ensure consistent AI output quality across pipelines
+    - Provide full observability and traceability of LLM operations
+  capabilities:
+    - llm-pipeline-experimentation
+    - system-monitoring-analytics
+  realized_by:
+    - pipeline-flavor-service
+    - llm-service
+    - execution-tracker
+    - rag-observability-store
+
+SemanticDataIntegration:
+  name: Semantic Data Integration
+  description: Connect internal knowledge graphs to external ontologies, semantic web resources, and reference datasets for enrichment, validation, and semantic web compatibility
+  id: semantic-data-integration
+  type: service
+  criticality: medium
+  business_objectives:
+    - Link knowledge to global semantic web (DBpedia, Wikidata)
+    - Validate knowledge against authoritative sources
+    - Enhance knowledge with external references and definitions
+    - Enable RDF export and SPARQL compatibility
+  capabilities:
+    - external-knowledge-integration
+    - knowledge-enrichment
+  realized_by:
+    - reference-service
+    - reference-link-service
+    - predicate-similarity-service
+    - graph-service
+
+GraphIntelligence:
+  name: Graph Intelligence
+  description: Analyze knowledge graph structures to discover patterns, identify quality issues, optimize organization, and generate insights through network analysis and SPARQL queries
+  id: graph-intelligence
+  type: service
+  criticality: medium
+  business_objectives:
+    - Discover hidden knowledge patterns and relationships
+    - Identify structural quality issues and knowledge gaps
+    - Optimize knowledge organization through centrality analysis
+    - Provide actionable insights for knowledge improvement
+  capabilities:
+    - graph-analysis-visualization
+    - system-monitoring-analytics
+  realized_by:
+    - graph-service
+    - change-analytics-engine
+    - performance-monitor
+
+DataSynchronizationService:
+  name: Data Synchronization Service
+  description: Synchronize knowledge graphs across devices and cloud storage with incremental updates, conflict resolution, offline support, and S3-based remote backup
+  id: data-synchronization-service
+  type: service
+  criticality: medium
+  business_objectives:
+    - Enable multi-device knowledge access
+    - Support offline knowledge work with automatic sync
+    - Provide reliable cloud backup for data durability
+    - Minimize sync bandwidth through incremental updates
+  capabilities:
+    - data-synchronization
+  realized_by:
+    - s3-sync-manager
+    - s3-storage-optimizer
+    - incremental-sync-engine
+    - duckdb-service
+
+OperationalExcellence:
+  name: Operational Excellence
+  description: Monitor system health, track performance metrics, analyze usage patterns, and optimize resource utilization for reliable operations with comprehensive observability
+  id: operational-excellence
+  type: service
+  criticality: medium
+  business_objectives:
+    - Ensure 99.9% platform availability and reliability
+    - Optimize resource usage and reduce operational costs
+    - Proactively identify and resolve performance issues
+    - Provide comprehensive audit trails and analytics
+  capabilities:
+    - system-monitoring-analytics
+  realized_by:
+    - performance-monitor
+    - task-manager
+    - execution-tracker
+    - rag-observability-store
+    - change-analytics-engine
+
+BulkDataOperations:
+  name: Bulk Data Operations
+  description: Execute large-scale batch operations on knowledge graph elements with transaction safety, progress tracking, parallel processing, and rollback capabilities
+  id: bulk-data-operations
+  type: service
+  criticality: medium
+  business_objectives:
+    - Enable efficient large-scale knowledge modifications
+    - Ensure transactional safety for bulk operations
+    - Provide progress tracking for long-running operations
+    - Support rollback for failed batch operations
+  capabilities:
+    - batch-operation-processing
+  realized_by:
+    - batch-operation-processor
+    - task-manager

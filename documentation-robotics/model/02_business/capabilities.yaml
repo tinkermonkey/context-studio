@@ -1,0 +1,175 @@
+KnowledgeGraphCuration:
+  name: Knowledge Graph Curation
+  description: Create, manage, and curate hierarchical knowledge structures with layers, domains, and terms for organizing domain knowledge with semantic relationships and predicate-based linking
+  id: knowledge-graph-curation
+  type: capability
+  criticality: critical
+  business_value: Enables users to build structured, reusable knowledge assets that form the foundation for AI-powered applications, semantic search, and intelligent knowledge management
+  realized_by:
+    - node-service
+    - graph-service
+    - node-link-service
+    - predicate-service
+  supports:
+    - knowledge-asset-management
+
+AIContentProcessing:
+  name: AI-Powered Content Processing
+  description: Apply natural language processing, entity extraction, and semantic analysis to text content using spaCy, LangChain, and configurable LLM pipelines for automated knowledge discovery
+  id: ai-content-processing
+  type: capability
+  criticality: high
+  business_value: Automates knowledge extraction and enrichment from unstructured text, reducing manual curation effort by 80% and enabling rapid knowledge base population
+  realized_by:
+    - rag-pipeline-service
+    - llm-service
+    - word-sense-service
+  supports:
+    - ai-knowledge-processing
+    - knowledge-enrichment
+
+DatasetWorkspaceManagement:
+  name: Dataset Workspace Management
+  description: Manage multiple independent knowledge graph workspaces with switching, history tracking, and isolated datasets for different projects, clients, or knowledge domains
+  id: dataset-workspace-management
+  type: capability
+  criticality: critical
+  business_value: Enables multi-project knowledge management and organizational isolation, supporting enterprise scenarios where different teams or clients require separate knowledge spaces
+  realized_by:
+    - dataset-manager
+    - working-tree-manager
+    - changeset-manager
+  supports:
+    - workspace-collaboration
+    - knowledge-asset-management
+
+LLMPipelineExperimentation:
+  name: LLM Pipeline Experimentation
+  description: Configure, test, and optimize language model pipelines with different providers, models, prompts, and parameters for various knowledge tasks with A/B testing and performance analytics
+  id: llm-pipeline-experimentation
+  type: capability
+  criticality: high
+  business_value: Enables continuous improvement of AI-powered knowledge operations, reducing LLM costs by 30-50% through optimization while improving accuracy and recall metrics
+  realized_by:
+    - pipeline-flavor-service
+    - llm-service
+    - execution-tracker
+    - rag-observability-store
+  supports:
+    - llm-pipeline-management
+
+ExternalKnowledgeIntegration:
+  name: External Knowledge Integration
+  description: Connect knowledge graphs to external ontologies and knowledge bases (DBpedia, ConceptNet, Wikidata, Schema.org) for enrichment, validation, and semantic web compatibility
+  id: external-knowledge-integration
+  type: capability
+  criticality: medium
+  business_value: Enhances knowledge completeness and links internal knowledge to the global semantic web, providing access to millions of verified entities and relationships
+  realized_by:
+    - reference-service
+    - reference-link-service
+    - predicate-similarity-service
+  supports:
+    - semantic-data-integration
+    - knowledge-enrichment
+
+CollaborativeKnowledgeDevelopment:
+  name: Collaborative Knowledge Development
+  description: Enable team collaboration on knowledge graphs with version control, change proposals, voting, conflict resolution, and CRDT-based merge capabilities for distributed curation
+  id: collaborative-knowledge-development
+  type: capability
+  criticality: high
+  business_value: Supports distributed knowledge curation teams and quality control processes, enabling 10+ team members to collaborate safely on shared knowledge assets with automatic conflict resolution
+  realized_by:
+    - version-manager
+    - proposal-manager
+    - conflict-resolution-engine
+    - crdt-merge-engine
+  supports:
+    - workspace-collaboration
+
+GraphAnalysisVisualization:
+  name: Graph Analysis & Visualization
+  description: Analyze knowledge graph structures with network metrics (centrality, communities), path finding, SPARQL queries, and RDF export for semantic web interoperability
+  id: graph-analysis-visualization
+  type: capability
+  criticality: medium
+  business_value: Provides insights into knowledge structure and relationships, identifying knowledge gaps, central concepts, and organizational patterns for optimization
+  realized_by:
+    - graph-service
+    - performance-monitor
+  supports:
+    - graph-intelligence
+
+KnowledgeEnrichment:
+  name: Knowledge Enrichment
+  description: Enhance knowledge graph quality through automated entity linking, concept extraction, similarity matching, word sense disambiguation, and external source integration
+  id: knowledge-enrichment
+  type: capability
+  criticality: high
+  business_value: Improves knowledge completeness and semantic connections, increasing knowledge graph coverage by 40-60% through automated enrichment from text and external sources
+  realized_by:
+    - reference-service
+    - rag-pipeline-service
+    - predicate-similarity-service
+    - word-sense-service
+  supports:
+    - knowledge-asset-management
+    - ai-knowledge-processing
+
+SystemMonitoringAnalytics:
+  name: System Monitoring & Analytics
+  description: Track system performance, LLM execution metrics, change analytics, resource utilization, and operational health for optimization, troubleshooting, and cost management
+  id: system-monitoring-analytics
+  type: capability
+  criticality: medium
+  business_value: Ensures platform reliability with 99.9% uptime and identifies optimization opportunities, reducing operational costs and preventing performance degradation
+  realized_by:
+    - performance-monitor
+    - execution-tracker
+    - change-analytics-engine
+    - rag-observability-store
+  supports:
+    - operational-excellence
+
+DataSynchronization:
+  name: Data Synchronization
+  description: Synchronize knowledge graphs across devices and cloud storage with incremental updates, offline support, conflict resolution, and S3-based remote backup using DuckDB and Parquet
+  id: data-synchronization
+  type: capability
+  criticality: medium
+  business_value: Enables multi-device knowledge access and provides reliable cloud backup, supporting offline work scenarios and ensuring data durability across distributed environments
+  realized_by:
+    - s3-sync-manager
+    - incremental-sync-engine
+    - duckdb-service
+    - s3-storage-optimizer
+  supports:
+    - knowledge-asset-management
+
+BatchOperationProcessing:
+  name: Batch Operation Processing
+  description: Execute bulk operations on knowledge graph elements with transaction management, progress tracking, rollback capabilities, and parallel processing for efficient large-scale modifications
+  id: batch-operation-processing
+  type: capability
+  criticality: medium
+  business_value: Enables efficient large-scale knowledge operations, reducing processing time for bulk updates by 90% through parallelization and transactional safety
+  realized_by:
+    - batch-operation-processor
+    - task-manager
+  supports:
+    - knowledge-asset-management
+
+SemanticEmbeddingManagement:
+  name: Semantic Embedding Management
+  description: Generate, store, and manage vector embeddings for knowledge graph elements with batch regeneration, similarity search, and configurable embedding models
+  id: semantic-embedding-management
+  type: capability
+  criticality: high
+  business_value: Enables semantic search and similarity-based knowledge discovery, powering RAG applications and intelligent query capabilities with sub-second response times
+  realized_by:
+    - embedding-regeneration-service
+    - predicate-similarity-service
+  supports:
+    - ai-knowledge-processing
+    - knowledge-asset-management

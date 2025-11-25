@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Button, Card, Spinner, Alert, Modal } from "flowbite-react";
+import { Button, Spinner, Alert, Modal } from "flowbite-react";
 import { Plus, Trash2 } from "lucide-react";
 import { Link } from "@tanstack/react-router";
 import { useQueryClient } from "@tanstack/react-query";
@@ -86,7 +86,7 @@ export const PipelineFlavorsList: React.FC<PipelineFlavorsListProps> = ({
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6" data-testid="pipeline-flavors-list">
 
       {/* Flavors Management */}
         <div className="mb-4 flex items-center justify-between">
@@ -103,29 +103,30 @@ export const PipelineFlavorsList: React.FC<PipelineFlavorsListProps> = ({
             to="/app/config/pipelines/$pipelineType/create"
             params={{ pipelineType: pipelineType }}
           >
-            <Button color="blue">
+            <Button color="blue" data-testid="pipeline-flavor-create-button">
               <Plus className="mr-2 h-4 w-4" />
               Create New Flavor
             </Button>
           </Link>
         </div>
 
-        <div className="space-y-4">
+        <div className="space-y-4" data-testid="pipeline-flavors-container">
           {flavors.map((flavor) => (
             <div
               key={flavor.id}
+              data-testid={`pipeline-flavor-card-${flavor.id}`}
               className="rounded-lg border border-gray-200 p-4 dark:border-gray-700"
             >
               <div className="flex items-center justify-between">
                 <div>
-                  <h4 className="font-medium text-gray-900 dark:text-white">
+                  <h4 className="font-medium text-gray-900 dark:text-white" data-testid={`pipeline-flavor-title-${flavor.id}`}>
                     {flavor.title}
                   </h4>
-                  <p className="text-sm text-gray-500 dark:text-gray-400">
+                  <p className="text-sm text-gray-500 dark:text-gray-400" data-testid={`pipeline-flavor-details-${flavor.id}`}>
                     Provider: {flavor.llm_provider} | Model: {flavor.llm_model}{" "}
                     | Version: {flavor.version}
                   </p>
-                  <p className="mt-1 text-sm text-gray-600 dark:text-gray-300">
+                  <p className="mt-1 text-sm text-gray-600 dark:text-gray-300" data-testid={`pipeline-flavor-status-${flavor.id}`}>
                     {flavor.enabled ? "Enabled" : "Disabled"} | Created:{" "}
                     {new Date(flavor.date_created).toLocaleDateString()}
                   </p>
@@ -142,6 +143,7 @@ export const PipelineFlavorsList: React.FC<PipelineFlavorsListProps> = ({
                       size="sm"
                       color="gray"
                       disabled={flavor.title === "Default"}
+                      data-testid={`pipeline-flavor-edit-button-${flavor.id}`}
                       title={
                         flavor.title === "Default"
                           ? "The Default flavor cannot be edited or deleted."
@@ -158,7 +160,7 @@ export const PipelineFlavorsList: React.FC<PipelineFlavorsListProps> = ({
                       flavorId: flavor.id,
                     }}
                   >
-                    <Button size="sm" color="blue">
+                    <Button size="sm" color="blue" data-testid={`pipeline-flavor-test-button-${flavor.id}`}>
                       Test
                     </Button>
                   </Link>
@@ -167,6 +169,7 @@ export const PipelineFlavorsList: React.FC<PipelineFlavorsListProps> = ({
                     color="yellow"
                     disabled={flavor.title === "Default" || deleteMutation.isPending}
                     onClick={() => handleDeleteClick(flavor)}
+                    data-testid={`pipeline-flavor-delete-button-${flavor.id}`}
                     title={
                       flavor.title === "Default"
                         ? "The Default flavor cannot be edited or deleted."
@@ -183,7 +186,7 @@ export const PipelineFlavorsList: React.FC<PipelineFlavorsListProps> = ({
 
       {/* Delete Confirmation Modal */}
       <Modal show={showDeleteModal} onClose={handleCancelDelete}>
-        <div className="p-6">
+        <div className="p-6" data-testid="pipeline-flavor-delete-modal">
           <h3 className="mb-4 text-lg font-medium text-gray-900 dark:text-white">
             Confirm Delete
           </h3>
@@ -203,6 +206,7 @@ export const PipelineFlavorsList: React.FC<PipelineFlavorsListProps> = ({
               color="red"
               onClick={handleConfirmDelete}
               disabled={deleteMutation.isPending}
+              data-testid="pipeline-flavor-delete-confirm-button"
             >
               {deleteMutation.isPending ? (
                 <>
@@ -217,6 +221,7 @@ export const PipelineFlavorsList: React.FC<PipelineFlavorsListProps> = ({
               color="gray"
               onClick={handleCancelDelete}
               disabled={deleteMutation.isPending}
+              data-testid="pipeline-flavor-delete-cancel-button"
             >
               Cancel
             </Button>

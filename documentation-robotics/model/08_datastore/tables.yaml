@@ -1,0 +1,366 @@
+# Datastore Tables - Physical Table Implementations
+
+# Local Database Tables
+StructureNodesTable:
+  name: structure_nodes
+  description: Physical table storing layers, domains, and terms with hierarchy, embeddings, and references. Implements StructureNodeSchema
+  id: structure-nodes-table
+  database: local-database
+  schema: structure-node-schema
+  row_count_estimate: 10000-100000
+  indexes:
+    - columns: [node_type]
+      type: standard
+    - columns: [parent_node_id]
+      type: standard
+    - columns: [title]
+      type: standard
+    - columns: [title_embedding]
+      type: vector
+      description: SQLiteVector index for semantic search
+    - columns: [definition_embedding]
+      type: vector
+      description: SQLiteVector index for semantic search
+  constraints:
+    - type: foreign_key
+      columns: [parent_node_id]
+      references: structure_nodes(id)
+      on_delete: CASCADE
+    - type: foreign_key
+      columns: [structural_predicate_id]
+      references: predicates(id)
+
+StructureNodeLinksTable:
+  name: structure_node_links
+  description: Physical table storing semantic relationships between structure nodes. Implements StructureNodeLinkSchema
+  id: structure-node-links-table
+  database: local-database
+  schema: structure-node-link-schema
+  row_count_estimate: 50000-500000
+  indexes:
+    - columns: [source_node_id]
+      type: standard
+    - columns: [target_node_id]
+      type: standard
+    - columns: [predicate]
+      type: standard
+  constraints:
+    - type: unique
+      columns: [source_node_id, target_node_id, predicate]
+    - type: foreign_key
+      columns: [source_node_id]
+      references: structure_nodes(id)
+      on_delete: CASCADE
+    - type: foreign_key
+      columns: [target_node_id]
+      references: structure_nodes(id)
+      on_delete: CASCADE
+    - type: foreign_key
+      columns: [predicate_id]
+      references: predicates(id)
+
+PredicatesTable:
+  name: predicates
+  description: Physical table storing semantic predicates with external ontology mappings. Implements PredicateSchema
+  id: predicates-table
+  database: local-database
+  schema: predicate-schema
+  row_count_estimate: 1000-10000
+  indexes:
+    - columns: [identifier]
+      type: unique
+    - columns: [title]
+      type: unique
+    - columns: [is_relevant]
+      type: standard
+
+ChangeEventsTable:
+  name: change_events
+  description: Physical audit trail table for all database changes. Implements ChangeEventSchema
+  id: change-events-table
+  database: local-database
+  schema: change-event-schema
+  row_count_estimate: 100000-1000000
+  retention_policy: Configurable, typically 90 days
+  indexes:
+    - columns: [event_type]
+      type: standard
+    - columns: [record_type]
+      type: standard
+    - columns: [record_id]
+      type: standard
+    - columns: [timestamp]
+      type: standard
+    - columns: [processed]
+      type: standard
+
+PipelineFlavorsTable:
+  name: pipeline_flavors
+  description: Physical table storing LLM pipeline configurations. Implements PipelineFlavorSchema
+  id: pipeline-flavors-table
+  database: local-database
+  schema: pipeline-flavor-schema
+  row_count_estimate: 10-100
+  indexes:
+    - columns: [pipeline]
+      type: standard
+    - columns: [enabled]
+      type: standard
+  constraints:
+    - type: unique
+      columns: [pipeline, title]
+
+ChangesetsTable:
+  name: changesets
+  description: Physical table storing collaboration changesets. Implements ChangesetSchema
+  id: changesets-table
+  database: local-database
+  schema: changeset-schema
+  row_count_estimate: 100-10000
+  indexes:
+    - columns: [state]
+      type: standard
+    - columns: [author_id]
+      type: standard
+    - columns: [created_at]
+      type: standard
+  constraints:
+    - type: foreign_key
+      columns: [parent_changeset_id]
+      references: changesets(id)
+
+ProposalsTable:
+  name: proposals
+  description: Physical table storing collaboration proposals. Implements ProposalSchema
+  id: proposals-table
+  database: local-database
+  schema: proposal-schema
+  row_count_estimate: 100-10000
+  indexes:
+    - columns: [changeset_id]
+      type: standard
+    - columns: [status]
+      type: standard
+    - columns: [author_id]
+      type: standard
+  constraints:
+    - type: foreign_key
+      columns: [changeset_id]
+      references: changesets(id)
+
+ProposalVotesTable:
+  name: proposal_votes
+  description: Physical table storing proposal voting records. Implements ProposalVoteSchema
+  id: proposal-votes-table
+  database: local-database
+  schema: proposal-vote-schema
+  row_count_estimate: 500-50000
+  indexes:
+    - columns: [proposal_id]
+      type: standard
+    - columns: [user_id]
+      type: standard
+  constraints:
+    - type: foreign_key
+      columns: [proposal_id]
+      references: proposals(id)
+    - type: foreign_key
+      columns: [user_id]
+      references: user_identities(id)
+
+UserIdentitiesTable:
+  name: user_identities
+  description: Physical table storing user identities for collaboration. Implements UserIdentitySchema
+  id: user-identities-table
+  database: local-database
+  schema: user-identity-schema
+  row_count_estimate: 1-1000
+  indexes:
+    - columns: [username]
+      type: unique
+    - columns: [device_id]
+      type: standard
+
+UserTrustRelationshipsTable:
+  name: user_trust_relationships
+  description: Physical table storing trust relationships between users for collaboration
+  id: user-trust-relationships-table
+  database: local-database
+  row_count_estimate: 10-10000
+  indexes:
+    - columns: [user_id]
+      type: standard
+    - columns: [trusted_user_id]
+      type: standard
+  constraints:
+    - type: foreign_key
+      columns: [user_id]
+      references: user_identities(id)
+    - type: foreign_key
+      columns: [trusted_user_id]
+      references: user_identities(id)
+
+VerificationCodesTable:
+  name: verification_codes
+  description: Physical table storing verification codes for user authentication
+  id: verification-codes-table
+  database: local-database
+  row_count_estimate: 100-1000
+  retention_policy: Auto-expire after use or timeout
+  indexes:
+    - columns: [user_id]
+      type: standard
+    - columns: [code]
+      type: standard
+    - columns: [expires_at]
+      type: standard
+
+RAGProcessingMetricsTable:
+  name: rag_processing_metrics
+  description: Physical table storing RAG pipeline performance metrics. Implements RAGProcessingMetricsSchema
+  id: rag-processing-metrics-table
+  database: local-database
+  schema: rag-processing-metrics-schema
+  row_count_estimate: 10000-1000000
+  retention_policy: 30 days
+  indexes:
+    - columns: [request_id]
+      type: standard
+    - columns: [timestamp]
+      type: standard
+
+RAGObservabilityTraceTable:
+  name: rag_observability_trace
+  description: Physical table storing detailed RAG pipeline traces. Implements RAGObservabilityTraceSchema
+  id: rag-observability-trace-table
+  database: local-database
+  schema: rag-observability-trace-schema
+  row_count_estimate: 50000-5000000
+  retention_policy: 7 days for detailed traces
+  indexes:
+    - columns: [request_id]
+      type: standard
+    - columns: [layer_name]
+      type: standard
+    - columns: [timestamp]
+      type: standard
+
+# Reference Database Tables
+ReferenceNodesTable:
+  name: reference_nodes
+  description: Physical table storing external reference entities. Implements ReferenceNodeSchema
+  id: reference-nodes-table
+  database: reference-database
+  schema: reference-node-schema
+  row_count_estimate: 100000-10000000
+  indexes:
+    - columns: [title]
+      type: standard
+    - columns: [source]
+      type: standard
+    - columns: [external_id]
+      type: standard
+    - columns: [title_embedding]
+      type: vector
+    - columns: [definition_embedding]
+      type: vector
+  constraints:
+    - type: unique
+      columns: [source, external_id]
+
+ReferenceLinksTable:
+  name: reference_links
+  description: Physical table storing relationships between reference nodes. Implements ReferenceLinkSchema
+  id: reference-links-table
+  database: reference-database
+  schema: reference-link-schema
+  row_count_estimate: 500000-50000000
+  indexes:
+    - columns: [subject_node]
+      type: standard
+    - columns: [object_node]
+      type: standard
+    - columns: [predicate]
+      type: standard
+  constraints:
+    - type: foreign_key
+      columns: [subject_node]
+      references: reference_nodes(id)
+      on_delete: CASCADE
+    - type: foreign_key
+      columns: [object_node]
+      references: reference_nodes(id)
+      on_delete: CASCADE
+
+# Operations Database Tables
+LLMPipelinesTable:
+  name: llm_pipelines
+  description: Physical table storing LLM pipeline configurations in operations database. Implements LLMPipelineSchema
+  id: llm-pipelines-table
+  database: operations-database
+  schema: llm-pipeline-schema
+  row_count_estimate: 10-100
+  indexes:
+    - columns: [name]
+      type: unique
+
+PipelineFlavorExecutionsTable:
+  name: pipeline_flavor_executions
+  description: Physical table tracking LLM pipeline execution history for traceability and debugging
+  id: pipeline-flavor-executions-table
+  database: operations-database
+  row_count_estimate: 10000-1000000
+  retention_policy: 90 days
+  indexes:
+    - columns: [flavor_id]
+      type: standard
+    - columns: [executed_at]
+      type: standard
+    - columns: [status]
+      type: standard
+
+BackgroundTasksTable:
+  name: background_tasks
+  description: Physical table managing async background task queue with progress tracking
+  id: background-tasks-table
+  database: operations-database
+  row_count_estimate: 1000-100000
+  retention_policy: Completed tasks purged after 30 days
+  indexes:
+    - columns: [status]
+      type: standard
+    - columns: [task_type]
+      type: standard
+    - columns: [created_at]
+      type: standard
+
+SystemAuditLogsTable:
+  name: system_audit_logs
+  description: Physical table storing system-level operational audit logs
+  id: system-audit-logs-table
+  database: operations-database
+  row_count_estimate: 100000-10000000
+  retention_policy: 180 days
+  indexes:
+    - columns: [log_level]
+      type: standard
+    - columns: [timestamp]
+      type: standard
+    - columns: [component]
+      type: standard
+
+# Reference API Cache Database Tables
+APICacheTable:
+  name: api_cache
+  description: Physical table caching external API responses with TTL-based expiration
+  id: api-cache-table
+  database: reference-api-cache-database
+  row_count_estimate: 10000-1000000
+  retention_policy: TTL-based, typically 24-72 hours
+  indexes:
+    - columns: [cache_key]
+      type: unique
+    - columns: [expires_at]
+      type: standard
+    - columns: [source]
+      type: standard

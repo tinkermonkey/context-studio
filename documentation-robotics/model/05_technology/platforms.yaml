@@ -1,0 +1,92 @@
+# Core runtime platforms for Context Studio
+# These are the foundational execution environments for the application
+
+PythonRuntime:
+  name: Python Runtime
+  description: Python 3.x runtime environment for backend services, NLP, and LLM processing
+  id: python-runtime
+  type: runtime
+  version: "3.12"
+  criticality: critical
+  capabilities:
+    - FastAPI web service hosting
+    - NLP and machine learning model execution
+    - SQLite database management
+    - Async I/O operations
+    - Scientific computing with NumPy/SciPy
+  used_by:
+    - node-service
+    - predicate-service
+    - graph-service
+    - rag-pipeline-service
+    - llm-service
+    - reference-service
+    - dataset-manager
+    - s3-sync-manager
+    - duckdb-service
+    - pipeline-flavor-service
+    - execution-tracker
+    - word-sense-service
+    - predicate-similarity-service
+
+NodeJSRuntime:
+  name: Node.js Runtime
+  description: Node.js runtime for frontend build tooling and development server
+  id: nodejs-runtime
+  type: runtime
+  version: "20.x"
+  criticality: critical
+  capabilities:
+    - Vite build tool execution
+    - Development server hosting
+    - NPM package management
+    - TypeScript compilation
+  used_by:
+    - vite-framework
+    - playwright-test-framework
+
+ReactRuntime:
+  name: React Runtime
+  description: React 19 runtime for frontend user interface with concurrent features
+  id: react-runtime
+  type: runtime
+  version: "19.1.0"
+  platform: nodejs-runtime
+  criticality: critical
+  capabilities:
+    - Component-based UI rendering
+    - Virtual DOM reconciliation
+    - Concurrent rendering
+    - Server components support
+    - Hooks for state and effects
+
+RustRuntime:
+  name: Rust Runtime
+  description: Rust runtime for Tauri desktop application framework
+  id: rust-runtime
+  type: runtime
+  version: "1.70+"
+  criticality: critical
+  capabilities:
+    - Native desktop application execution
+    - System integration
+    - High-performance native code
+    - Memory safety guarantees
+  used_by:
+    - tauri-framework
+
+BrowserRuntime:
+  name: Browser Runtime
+  description: Modern web browser runtime for frontend application execution
+  id: browser-runtime
+  type: runtime
+  criticality: critical
+  capabilities:
+    - JavaScript execution
+    - DOM manipulation
+    - WebAssembly support
+    - Local storage and IndexedDB
+    - WebGL rendering
+  used_by:
+    - react-runtime
+    - reagraph-visualization

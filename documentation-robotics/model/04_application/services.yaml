@@ -1,0 +1,254 @@
+VersionManager:
+  name: VersionManager
+  description: Manages entity versioning with snapshot creation, version history tracking,
+    and rollback capabilities
+  criticality: critical
+  id: version-manager
+  exposes:
+    - get-entity-versions
+    - rollback-entity
+  accesses:
+    - change-event-schema
+    - structure-node-schema
+WorkingTreeManager:
+  name: WorkingTreeManager
+  description: Git-inspired working tree state management with staging, commit, and
+    diff tracking
+  criticality: critical
+  id: working-tree-manager
+  exposes:
+    - get-working-tree-status
+    - commit-working-changes
+  accesses:
+    - change-event-schema
+    - structure-node-schema
+DiffGenerator:
+  name: DiffGenerator
+  description: Generates detailed diffs between entity versions with support for multiple
+    formats and conflict detection
+  criticality: high
+  id: diff-generator
+ChangesetManager:
+  name: ChangesetManager
+  description: Manages changesets for collaboration with packaging, unpacking, and
+    remote sync capabilities
+  criticality: high
+  id: changeset-manager
+  accesses:
+    - changeset-schema
+    - change-event-schema
+ProposalManager:
+  name: ProposalManager
+  description: Manages collaboration proposals with review workflows and approval
+    processes
+  criticality: high
+  id: proposal-manager
+  accesses:
+    - proposal-schema
+    - proposal-vote-schema
+    - changeset-schema
+ConflictResolutionEngine:
+  name: ConflictResolutionEngine
+  description: Intelligent conflict detection and resolution for collaborative editing
+    with automatic and manual resolution strategies
+  criticality: high
+  id: conflict-resolution-engine
+  exposes:
+    - list-conflicts
+    - resolve-conflict
+    - auto-resolve-conflict
+  accesses:
+    - changeset-schema
+    - structure-node-schema
+    - change-event-schema
+CRDTMergeEngine:
+  name: CRDTMergeEngine
+  description: CRDT-based merge engine for conflict-free replicated data with automatic
+    convergence
+  criticality: high
+  id: crdt-merge-engine
+IdentityManager:
+  name: IdentityManager
+  description: Manages user identities and device registrations for collaboration
+    features
+  criticality: high
+  id: identity-manager
+  accesses:
+    - user-identity-schema
+S3SyncManager:
+  name: S3SyncManager
+  description: Manages S3-based remote synchronization for datasets and changesets
+  criticality: medium
+  id: s3-sync-manager
+  exposes:
+    - sync-to-remote
+    - sync-from-remote
+DuckDBService:
+  name: DuckDBService
+  description: DuckDB analytics engine for fast analytical queries over change history
+  criticality: medium
+  id: duckdb-service
+IncrementalSyncEngine:
+  name: IncrementalSyncEngine
+  description: Incremental synchronization engine for efficient delta-based remote
+    sync
+  criticality: medium
+  id: incremental-sync-engine
+ChangeAnalyticsEngine:
+  name: ChangeAnalyticsEngine
+  description: Analytics engine for change patterns, hot paths, and collaboration
+    metrics
+  criticality: medium
+  id: change-analytics-engine
+LLMService:
+  name: LLMService
+  description: LLM integration service with configurable models, caching, and traceability
+  criticality: high
+  id: llm-service
+  accesses:
+    - llm-pipeline-schema
+PipelineFlavorService:
+  name: PipelineFlavorService
+  description: Manages LLM pipeline configurations (flavors) for different processing
+    tasks
+  criticality: high
+  id: pipeline-flavor-service
+  accesses:
+    - pipeline-flavor-schema
+ExecutionTracker:
+  name: ExecutionTracker
+  description: Tracks LLM pipeline executions for observability and debugging
+  criticality: medium
+  id: execution-tracker
+RAGPipelineService:
+  name: RAGPipelineService
+  description: Multi-layer RAG pipeline for entity extraction combining KG context,
+    LLM, spaCy, and concept resolution
+  criticality: high
+  id: rag-pipeline-service
+  exposes:
+    - rag-extract-entities
+  accesses:
+    - structure-node-schema
+    - reference-node-schema
+    - rag-processing-metrics-schema
+    - rag-observability-trace-schema
+RAGObservabilityStore:
+  name: RAGObservabilityStore
+  description: Stores and manages RAG pipeline traces, metrics, and execution history
+  criticality: medium
+  id: rag-observability-store
+  exposes:
+    - get-rag-metrics
+  accesses:
+    - rag-processing-metrics-schema
+    - rag-observability-trace-schema
+ReferenceService:
+  name: ReferenceService
+  description: Manages access to external reference knowledge sources (ConceptNet,
+    DBpedia, Wikidata, Schema.org)
+  criticality: high
+  id: reference-service
+  accesses:
+    - reference-node-schema
+    - reference-link-schema
+ReferenceLinkService:
+  name: ReferenceLinkService
+  description: Manages bidirectional links between structure nodes and external reference
+    entities
+  criticality: medium
+  id: reference-link-service
+  accesses:
+    - structure-node-schema
+    - reference-node-schema
+WordSenseService:
+  name: WordSenseService
+  description: Manages word sense annotations from NLP analysis (WordNet synsets)
+  criticality: medium
+  id: word-sense-service
+PerformanceMonitor:
+  name: PerformanceMonitor
+  description: Monitors service performance, database operations, and system health
+    metrics
+  criticality: medium
+  id: performance-monitor
+ServiceFactory:
+  name: ServiceFactory
+  description: Centralized service instantiation with caching, metrics tracking, and
+    lifecycle management
+  criticality: critical
+  id: service-factory
+TaskManager:
+  name: TaskManager
+  description: Async task queue manager for background operations with progress tracking
+    and cancellation
+  criticality: high
+  id: task-manager
+BatchOperationProcessor:
+  name: BatchOperationProcessor
+  description: Processes batch operations with transaction management and rollback
+    capabilities
+  criticality: medium
+  id: batch-operation-processor
+HierarchicalDiffEngine:
+  name: HierarchicalDiffEngine
+  description: Advanced diff engine with hierarchical awareness and semantic analysis
+  criticality: medium
+  id: hierarchical-diff-engine
+PredicateSimilarityService:
+  name: PredicateSimilarityService
+  description: Vector similarity search for predicates with clustering and caching
+  criticality: medium
+  id: predicate-similarity-service
+  exposes:
+    - find-similar-predicates
+    - cluster-predicates
+    - search-external-predicates
+  accesses:
+    - predicate-schema
+    - reference-node-schema
+EmbeddingRegenerationService:
+  name: EmbeddingRegenerationService
+  description: Batch regeneration of embeddings with progress tracking
+  criticality: medium
+  id: embedding-regeneration-service
+DuckDBQueryOptimizer:
+  name: DuckDBQueryOptimizer
+  description: Query optimization for DuckDB analytics workloads
+  criticality: low
+  id: duckdb-query-optimizer
+S3StorageOptimizer:
+  name: S3StorageOptimizer
+  description: Optimizes S3 storage with compression and deduplication
+  criticality: low
+  id: s3-storage-optimizer
+DatasetManager:
+  name: DatasetManager
+  description: Manages multiple datasets with database switching, metrics tracking,
+    and schema migrations
+  criticality: critical
+  id: dataset-manager
+  exposes:
+    - list-datasets
+    - create-dataset
+    - activate-dataset
+  accesses:
+    - structure-node-schema
+    - predicate-schema
+    - change-event-schema
+PredicateService:
+  name: PredicateService
+  description: Manages semantic predicates with external ontology mappings and validation
+  criticality: high
+  id: predicate-service
+  exposes:
+    - create-predicate
+    - list-predicates
+    - update-predicate
+    - delete-predicate
+    - discover-external-predicates
+  accesses:
+    - predicate-schema
+    - reference-node-schema
+
+# Cross-layer references added

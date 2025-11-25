@@ -1,0 +1,569 @@
+# UX Layer - Reusable UI Components
+# Component library for the Context Studio user interface
+
+# Layout Components
+CsNavbar:
+  name: Context Studio Navbar
+  description: Main navigation bar with dropdown menus for desktop and flat navigation for mobile. Includes search, datasets switcher, and configuration access
+  id: cs-navbar
+  type: layout
+  technology: React + Flowbite
+  responsive: true
+  interactions:
+    - Navigate to routes
+    - Search (future)
+
+CsMain:
+  name: Context Studio Main Layout
+  description: Main content area layout wrapper with responsive sizing and padding
+  id: cs-main
+  type: layout
+  technology: React
+  responsive: true
+
+CsSidebar:
+  name: Context Studio Sidebar
+  description: Collapsible sidebar for secondary navigation and filters
+  id: cs-sidebar
+  type: layout
+  technology: React + Flowbite
+  responsive: true
+
+# Table Components
+LayersTable:
+  name: Layers Table
+  description: TanStack Table displaying knowledge graph layers with sorting, filtering, and CRUD actions
+  id: layers-table
+  type: table
+  technology: React + TanStack Table
+  data_source: structure-node-schema
+  interactions:
+    - list-structure-nodes
+    - delete-structure-node
+  features:
+    - Sorting
+    - Filtering
+    - Pagination
+    - Row actions (edit, delete)
+
+DomainsTable:
+  name: Domains Table
+  description: Table for displaying and managing knowledge graph domains with parent layer context
+  id: domains-table
+  type: table
+  technology: React + TanStack Table
+  data_source: structure-node-schema
+  interactions:
+    - list-structure-nodes
+    - delete-structure-node
+  features:
+    - Hierarchical display
+    - Sorting
+    - Filtering
+    - Parent layer filtering
+
+TermsTable:
+  name: Terms Table
+  description: Comprehensive table for managing knowledge graph terms with domain/layer context
+  id: terms-table
+  type: table
+  technology: React + TanStack Table
+  data_source: structure-node-schema
+  interactions:
+    - list-structure-nodes
+    - delete-structure-node
+    - search-structure-nodes
+  features:
+    - Full-text search
+    - Multi-column filtering
+    - Hierarchical breadcrumbs
+    - Bulk actions
+
+PredicatesTable:
+  name: Predicates Table
+  description: Table for managing semantic predicates with external mapping indicators
+  id: predicates-table
+  type: table
+  technology: React + TanStack Table
+  data_source: predicate-schema
+  interactions:
+    - list-predicates
+    - delete-predicate
+  features:
+    - Mapping status indicators
+    - Relevance filtering
+    - Quick edit
+
+DatasetsTable:
+  name: Datasets Table
+  description: Table displaying available datasets with activation status and metrics
+  id: datasets-table
+  type: table
+  technology: React + TanStack Table
+  data_source: dataset-schema
+  interactions:
+    - list-datasets
+    - activate-dataset
+  features:
+    - Active dataset highlighting
+    - Size metrics
+    - Quick activation
+
+NodeTable:
+  name: Generic Node Table
+  description: Reusable table component for displaying any type of structure nodes with configurable columns
+  id: node-table
+  type: table
+  technology: React + TanStack Table
+  data_source: structure-node-schema
+  reusable: true
+  features:
+    - Configurable columns
+    - Type-based rendering
+    - Relationship display
+
+# Form Components
+LayerForm:
+  name: Layer Form
+  description: Form for creating and editing knowledge graph layers with validation
+  id: layer-form
+  type: form
+  technology: React + TanStack Form
+  data_schema: structure-node-schema
+  interactions:
+    - create-structure-node
+    - update-structure-node
+  fields:
+    - title
+    - definition
+    - structural_predicate_id
+  validation: true
+
+DomainForm:
+  name: Domain Form
+  description: Form for creating and editing domains with parent layer selection
+  id: domain-form
+  type: form
+  technology: React + TanStack Form
+  data_schema: structure-node-schema
+  interactions:
+    - create-structure-node
+    - update-structure-node
+  fields:
+    - title
+    - definition
+    - parent_node_id (layer)
+    - structural_predicate_id
+  validation: true
+
+TermForm:
+  name: Term Form
+  description: Form for creating and editing terms with domain and layer hierarchy
+  id: term-form
+  type: form
+  technology: React + TanStack Form
+  data_schema: structure-node-schema
+  interactions:
+    - create-structure-node
+    - update-structure-node
+  fields:
+    - title
+    - definition
+    - parent_node_id (domain)
+    - structural_predicate_id
+    - reference_links
+    - word_senses
+  validation: true
+
+PredicateForm:
+  name: Predicate Form
+  description: Form for creating and editing semantic predicates with external ontology mapping
+  id: predicate-form
+  type: form
+  technology: React + TanStack Form
+  data_schema: predicate-schema
+  interactions:
+    - create-predicate
+    - update-predicate
+  fields:
+    - identifier
+    - title
+    - definition
+    - mapping (external ontology)
+    - is_relevant
+  validation: true
+
+DomainMoveForm:
+  name: Domain Move Form
+  description: Form for moving domains to different parent layers
+  id: domain-move-form
+  type: form
+  technology: React + TanStack Form
+  interactions:
+    - update-structure-node
+
+TermMoveForm:
+  name: Term Move Form
+  description: Form for moving terms to different parent domains
+  id: term-move-form
+  type: form
+  technology: React + TanStack Form
+  interactions:
+    - update-structure-node
+
+DatasetForm:
+  name: Dataset Form
+  description: Form for creating new datasets with title and filename
+  id: dataset-form
+  type: form
+  technology: React + TanStack Form
+  interactions:
+    - create-dataset
+  fields:
+    - title
+    - filename
+  validation: true
+
+# Selector Components
+LayerSelector:
+  name: Layer Selector
+  description: Dropdown selector for choosing a knowledge graph layer
+  id: layer-selector
+  type: selector
+  technology: React + Flowbite
+  data_source: structure-node-schema
+  interactions:
+    - list-structure-nodes
+
+DomainSelector:
+  name: Domain Selector
+  description: Dropdown selector for choosing a domain with optional layer filtering
+  id: domain-selector
+  type: selector
+  technology: React + Flowbite
+  data_source: structure-node-schema
+  interactions:
+    - list-structure-nodes
+
+TermSelector:
+  name: Term Selector
+  description: Dropdown selector for choosing a term with hierarchical context
+  id: term-selector
+  type: selector
+  technology: React + Flowbite
+  data_source: structure-node-schema
+  interactions:
+    - list-structure-nodes
+
+PredicateSelector:
+  name: Predicate Selector
+  description: Dropdown selector for choosing a semantic predicate
+  id: predicate-selector
+  type: selector
+  technology: React + Flowbite
+  data_source: predicate-schema
+  interactions:
+    - list-predicates
+
+PortalRecordSelector:
+  name: Portal Record Selector
+  description: Advanced selector with search and filtering for any structure node type
+  id: portal-record-selector
+  type: selector
+  technology: React + Flowbite
+  data_source: structure-node-schema
+  interactions:
+    - list-structure-nodes
+    - search-structure-nodes
+  features:
+    - Type filtering
+    - Full-text search
+    - Recent selections
+
+# Detail View Components
+StructureNodeDetails:
+  name: Structure Node Details
+  description: Comprehensive detail view for structure nodes showing all properties, relationships, history, and actions
+  id: structure-node-details
+  type: detail-view
+  technology: React
+  data_source: structure-node-schema
+  interactions:
+    - get-structure-node
+    - update-structure-node
+    - list-node-links
+  sections:
+    - Basic properties
+    - Relationships (incoming/outgoing)
+    - External references
+    - Word senses
+    - Change history
+    - Actions menu
+
+DatasetHistory:
+  name: Dataset History
+  description: Timeline view of dataset changes and activations
+  id: dataset-history
+  type: detail-view
+  technology: React
+  interactions:
+    - get-dataset-history
+
+# RAG Experiment Components
+TestParagraphList:
+  name: Test Paragraph List
+  description: List of test paragraphs for RAG pipeline experimentation with selection and management
+  id: test-paragraph-list
+  type: list
+  technology: React
+  interactions:
+    - list-test-paragraphs
+    - delete-test-paragraph
+
+TestParagraphEditor:
+  name: Test Paragraph Editor
+  description: Rich text editor for creating and editing RAG test paragraphs
+  id: test-paragraph-editor
+  type: editor
+  technology: React
+  interactions:
+    - create-test-paragraph
+    - update-test-paragraph
+
+AnnotationSelector:
+  name: Annotation Selector
+  description: Interface for selecting and managing entity annotations on test paragraphs
+  id: annotation-selector
+  type: widget
+  technology: React
+  interactions:
+    - list-annotations
+    - create-annotation
+    - delete-annotation
+
+PipelineTestRunner:
+  name: Pipeline Test Runner
+  description: Batch test execution interface for RAG pipelines with progress tracking
+  id: pipeline-test-runner
+  type: widget
+  technology: React
+  interactions:
+    - rag-extract-entities
+    - get-rag-metrics
+  features:
+    - Batch execution
+    - Progress tracking
+    - Results comparison
+
+TestResultsViewer:
+  name: Test Results Viewer
+  description: Detailed viewer for RAG pipeline test results with metrics and comparison
+  id: test-results-viewer
+  type: widget
+  technology: React
+  data_source: rag-processing-metrics-schema
+  interactions:
+    - get-rag-metrics
+  features:
+    - Layer-by-layer metrics
+    - Accuracy visualization
+    - Performance charts
+
+# Reference Components
+UnifiedSearch:
+  name: Unified Search Widget
+  description: Multi-source search interface for external reference databases
+  id: unified-search-widget
+  type: search
+  technology: React
+  interactions:
+    - search-external-predicates
+  features:
+    - Source selection (ConceptNet, DBpedia, Wikidata, Schema.org)
+    - Auto-complete
+    - Result preview
+
+SearchResultsList:
+  name: Search Results List
+  description: Display component for external reference search results with source indicators
+  id: search-results-list
+  type: list
+  technology: React
+  data_source: reference-node-schema
+
+SourceSelector:
+  name: Source Selector
+  description: Checkbox group for selecting which external sources to query
+  id: source-selector
+  type: selector
+  technology: React + Flowbite
+  sources:
+    - ConceptNet
+    - DBpedia
+    - Wikidata
+    - Schema.org
+
+# Graph Visualization Components
+TreeMenuGraph:
+  name: Tree Menu Graph
+  description: Interactive hierarchical tree visualization of knowledge graph structure
+  id: tree-menu-graph
+  type: visualization
+  technology: React + D3.js
+  data_source: structure-node-schema
+  interactions:
+    - list-structure-nodes
+    - list-node-links
+  features:
+    - Interactive navigation
+    - Expand/collapse nodes
+    - Node selection
+
+TreeChartGraph:
+  name: Tree Chart Graph
+  description: Visual tree chart representation of knowledge graph hierarchy
+  id: tree-chart-graph
+  type: visualization
+  technology: React + Visualization Library
+  data_source: structure-node-schema
+
+NLPConceptGraph:
+  name: NLP Concept Graph
+  description: Force-directed graph showing NLP-extracted concept relationships
+  id: nlp-concept-graph
+  type: visualization
+  technology: React + D3.js
+  data_source: structure-node-schema
+
+# Monitoring Components
+PerformanceCharts:
+  name: Performance Charts
+  description: Time-series charts for system performance metrics
+  id: performance-charts
+  type: visualization
+  technology: React + Charting Library
+  metrics:
+    - Response time
+    - Throughput
+    - Error rate
+    - Resource usage
+
+TaskQueueViewer:
+  name: Task Queue Viewer
+  description: Real-time viewer for background task queue status
+  id: task-queue-viewer
+  type: widget
+  technology: React
+  features:
+    - Live updates
+    - Task filtering
+    - Status indicators
+
+LLMExecutionLog:
+  name: LLM Execution Log
+  description: Searchable log of LLM pipeline executions with details
+  id: llm-execution-log
+  type: list
+  technology: React
+  data_source: rag-processing-metrics-schema
+  interactions:
+    - get-rag-metrics
+  features:
+    - Timestamp filtering
+    - Pipeline filtering
+    - Execution details
+
+HealthStatusDashboard:
+  name: Health Status Dashboard
+  description: Overview dashboard showing system health status across all components
+  id: health-status-dashboard
+  type: dashboard
+  technology: React
+  interactions:
+    - get-system-health
+  components:
+    - Database health
+    - API health
+    - Service health
+    - External connection health
+
+# Configuration Components
+PipelineFlavorsTable:
+  name: Pipeline Flavors Table
+  description: Table displaying LLM pipeline flavors with test and edit actions
+  id: pipeline-flavors-table
+  type: table
+  technology: React + TanStack Table
+  data_source: pipeline-flavor-schema
+  interactions:
+    - list-pipeline-flavors
+    - delete-pipeline-flavor
+
+PipelineFlavorForm:
+  name: Pipeline Flavor Form
+  description: Comprehensive form for configuring LLM pipeline flavors
+  id: pipeline-flavor-form
+  type: form
+  technology: React + TanStack Form
+  data_schema: pipeline-flavor-schema
+  interactions:
+    - create-pipeline-flavor
+    - update-pipeline-flavor
+  fields:
+    - title
+    - llm_provider
+    - llm_model
+    - llm_config (temperature, top_p, max_tokens)
+    - system_prompt
+    - user_prompt
+    - enabled
+  validation: true
+
+ModelSelector:
+  name: Model Selector
+  description: Dropdown selector for LLM models grouped by provider
+  id: model-selector
+  type: selector
+  technology: React + Flowbite
+  providers:
+    - OpenAI
+    - Anthropic
+    - Local models
+
+PromptEditor:
+  name: Prompt Editor
+  description: Rich text editor for LLM prompts with template variable support
+  id: prompt-editor
+  type: editor
+  technology: React
+  features:
+    - Syntax highlighting
+    - Template variables
+    - Preview mode
+
+# Utility Components
+ButterToast:
+  name: Butter Toast
+  description: Toast notification system for user feedback
+  id: butter-toast
+  type: utility
+  technology: React
+  features:
+    - Success messages
+    - Error messages
+    - Warning messages
+    - Auto-dismiss
+
+LoadingSpinner:
+  name: Loading Spinner
+  description: Loading indicator for async operations
+  id: loading-spinner
+  type: utility
+  technology: React + Flowbite
+
+ErrorBoundary:
+  name: Error Boundary
+  description: React error boundary for graceful error handling
+  id: error-boundary
+  type: utility
+  technology: React

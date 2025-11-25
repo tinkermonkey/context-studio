@@ -1,0 +1,280 @@
+# Security Threats for Context Studio
+# Documents potential security threats, attack vectors, and risk assessments
+
+APIKeyExposureThreat:
+  name: API Key Exposure
+  description: LLM provider API keys could be exposed in logs, error messages, or git history leading to unauthorized usage and cost overruns
+  id: api-key-exposure-threat
+  type: threat
+  severity: critical
+  likelihood: medium
+  impact: critical
+  attack_vectors:
+    - Accidental commit to git repository
+    - Logging in error messages or debug output
+    - Exposure in API responses or stack traces
+    - Memory dumps or process inspection
+    - Unencrypted backup files
+  mitigated_by:
+    - api-key-management
+    - gitignore-protection
+  residual_risk: low
+  risk_calculation: "Critical impact (unauthorized API usage, cost overruns) × Medium likelihood (developer error) = High risk before mitigation"
+  impact_details:
+    financial: "Unlimited LLM API usage could cost thousands of dollars per day"
+    reputation: "Exposed keys in public repos damage credibility"
+    operational: "Forced API key rotation disrupts service"
+
+DataExposureThreat:
+  name: Data Exposure
+  description: Proprietary knowledge graph data stored in local SQLite databases could be accessed by malicious actors or malware
+  id: data-exposure-threat
+  type: threat
+  severity: high
+  likelihood: medium
+  impact: high
+  attack_vectors:
+    - Malware on user's machine
+    - Unauthorized file system access
+    - Stolen or compromised backups
+    - Unencrypted S3 sync
+    - Insider threat with physical access
+  mitigated_by:
+    - local-storage-security
+    - data-sovereignty-policy
+  residual_risk: medium
+  risk_calculation: "High impact (loss of proprietary knowledge) × Medium likelihood (malware, stolen laptop) = Medium risk"
+  impact_details:
+    business: "Loss of proprietary domain knowledge and competitive intelligence"
+    compliance: "Potential GDPR/privacy violations if knowledge contains PII"
+    operational: "Knowledge reconstruction effort"
+  future_mitigation: "Encryption at rest planned for enterprise deployments"
+
+SQLInjectionThreat:
+  name: SQL Injection
+  description: Malicious SQL could be injected through user inputs to access or modify database contents
+  id: sql-injection-threat
+  type: threat
+  severity: high
+  likelihood: low
+  impact: high
+  attack_vectors:
+    - Unsanitized search queries
+    - Malicious node titles or descriptions
+    - Crafted predicate definitions
+    - SPARQL query injection
+  mitigated_by:
+    - input-validation
+  residual_risk: low
+  risk_calculation: "High impact (database compromise) × Low likelihood (SQLAlchemy parameterization) = Medium risk before mitigation"
+  impact_details:
+    data_integrity: "Corruption or deletion of knowledge graph data"
+    confidentiality: "Unauthorized access to all database contents"
+  technical_note: "SQLAlchemy ORM provides automatic parameterization, making SQL injection extremely difficult"
+
+PromptInjectionThreat:
+  name: Prompt Injection
+  description: Malicious prompts in knowledge content could manipulate LLM behavior or extract sensitive information
+  id: prompt-injection-threat
+  type: threat
+  severity: medium
+  likelihood: medium
+  impact: medium
+  attack_vectors:
+    - Crafted term definitions with prompt injection
+    - Malicious text in document annotations
+    - Adversarial examples in knowledge content
+    - System prompt leakage attempts
+  mitigated_by:
+    - input-validation
+    - rate-limiting
+  residual_risk: medium
+  risk_calculation: "Medium impact (LLM manipulation) × Medium likelihood (user-generated content) = Medium risk"
+  impact_details:
+    operational: "LLM produces incorrect or manipulated results"
+    financial: "Excessive token usage from adversarial prompts"
+    security: "Potential extraction of system prompts or API keys"
+  technical_note: "Inherent LLM vulnerability with no perfect mitigation"
+
+ResourceAbuseThreat:
+  name: Resource Abuse
+  description: Unlimited LLM API calls could lead to cost overruns or service throttling
+  id: resource-abuse-threat
+  type: threat
+  severity: high
+  likelihood: high
+  impact: high
+  attack_vectors:
+    - Accidental infinite loops in RAG pipeline
+    - Malicious batch operations
+    - No rate limits on pipeline execution
+    - Large document processing without chunking
+  mitigated_by:
+    - rate-limiting
+    - llm-response-caching
+  residual_risk: low
+  risk_calculation: "High impact (cost overrun) × High likelihood (user error) = Critical risk before mitigation"
+  impact_details:
+    financial: "OpenAI GPT-4 costs $0.03/1K tokens - large batch could cost hundreds"
+    operational: "API throttling disrupts service availability"
+  example_scenario: "RAG experiment with 1000 test paragraphs × 5 pipeline layers × 2000 tokens = $300 cost"
+
+MITMThreat:
+  name: Man-in-the-Middle Attack
+  description: Network traffic to LLM APIs could be intercepted if HTTPS is not enforced
+  id: mitm-threat
+  type: threat
+  severity: high
+  likelihood: low
+  impact: high
+  attack_vectors:
+    - Compromised network infrastructure
+    - SSL stripping attacks
+    - Certificate validation bypass
+    - Malicious proxy servers
+  mitigated_by:
+    - https-enforcement
+  residual_risk: very-low
+  risk_calculation: "High impact (data interception) × Low likelihood (HTTPS standard) = Low risk"
+  impact_details:
+    confidentiality: "Knowledge content exposed in transit"
+    integrity: "Potential response manipulation"
+  technical_note: "All major LLM providers require HTTPS, making this difficult to exploit"
+
+SupplyChainThreat:
+  name: Supply Chain Attack
+  description: Vulnerabilities in third-party dependencies (Python, Node packages) could compromise the application
+  id: supply-chain-threat
+  type: threat
+  severity: high
+  likelihood: medium
+  impact: high
+  attack_vectors:
+    - Malicious package updates
+    - Known CVEs in dependencies
+    - Typosquatting attacks
+    - Compromised package maintainer accounts
+  mitigated_by:
+    - dependency-scanning
+  residual_risk: medium
+  risk_calculation: "High impact (code execution) × Medium likelihood (dependency vulnerabilities) = High risk"
+  impact_details:
+    security: "Arbitrary code execution on user machine"
+    data: "Access to local databases and API keys"
+  dependency_scope:
+    python: "80+ packages in requirements.txt"
+    node: "100+ packages in package.json"
+    critical_dependencies: "langchain, openai, anthropic, fastapi, react"
+
+XSSThreat:
+  name: Cross-Site Scripting (XSS)
+  description: Malicious scripts in user content could be executed in the React frontend
+  id: xss-threat
+  type: threat
+  severity: medium
+  likelihood: low
+  impact: medium
+  attack_vectors:
+    - Unsanitized term definitions
+    - Malicious markdown in descriptions
+    - Script tags in knowledge content
+    - Event handlers in HTML attributes
+  mitigated_by:
+    - input-validation
+  residual_risk: low
+  risk_calculation: "Medium impact (session hijacking) × Low likelihood (React escaping) = Low risk"
+  impact_details:
+    security: "Session hijacking or credential theft"
+    user_experience: "Malicious behavior in UI"
+  technical_note: "React JSX provides automatic XSS protection through escaping"
+
+CSRFThreat:
+  name: Cross-Site Request Forgery
+  description: Malicious websites could trigger unwanted actions in Context Studio
+  id: csrf-threat
+  type: threat
+  severity: low
+  likelihood: low
+  impact: low
+  attack_vectors:
+    - Malicious website crafting requests
+    - Social engineering to visit attack site
+    - Drive-by request forgery
+  mitigated_by:
+    - cors-configuration
+  residual_risk: very-low
+  risk_calculation: "Low impact (limited scope) × Low likelihood (local-first) = Very low risk"
+  impact_details:
+    operational: "Unauthorized knowledge graph modifications"
+  technical_note: "Local-first architecture limits CSRF attack surface"
+
+CostOverrunThreat:
+  name: Cost Overrun
+  description: Excessive LLM API usage could result in unexpected high costs
+  id: cost-overrun-threat
+  type: threat
+  severity: high
+  likelihood: medium
+  impact: high
+  attack_vectors:
+    - No usage limits or budgets
+    - Expensive model selection (GPT-4, Claude Opus)
+    - Large batch operations without cost estimation
+    - Inefficient prompt engineering
+  mitigated_by:
+    - rate-limiting
+    - llm-response-caching
+  residual_risk: low
+  risk_calculation: "High impact (financial loss) × Medium likelihood (user error) = High risk before mitigation"
+  impact_details:
+    financial: "Uncontrolled GPT-4 usage could exceed hundreds of dollars per day"
+    operational: "Budget exhaustion halts knowledge operations"
+  cost_examples:
+    gpt4: "$0.03 per 1K input tokens, $0.06 per 1K output tokens"
+    claude_opus: "$15 per 1M input tokens, $75 per 1M output tokens"
+  mitigation_effectiveness: "Rate limiting reduces uncontrolled spending by 90%"
+
+UnauthorizedLLMUsageThreat:
+  name: Unauthorized LLM Usage
+  description: Compromised API keys could be used by unauthorized parties for their own purposes
+  id: unauthorized-llm-usage-threat
+  type: threat
+  severity: critical
+  likelihood: low
+  impact: critical
+  attack_vectors:
+    - Stolen API keys from exposed .env files
+    - Keys leaked in public repositories
+    - Compromised developer machines
+    - Social engineering
+  mitigated_by:
+    - api-key-management
+    - gitignore-protection
+  residual_risk: low
+  risk_calculation: "Critical impact (unlimited usage) × Low likelihood (protection controls) = Medium risk"
+  impact_details:
+    financial: "Attacker usage billed to legitimate account"
+    compliance: "Attacker may violate LLM provider terms of service"
+    detection: "Difficult to distinguish legitimate vs unauthorized usage"
+
+DataAccumulationThreat:
+  name: Data Accumulation
+  description: Unlimited retention of LLM execution traces and logs could exhaust storage and contain sensitive data
+  id: data-accumulation-threat
+  type: threat
+  severity: medium
+  likelihood: high
+  impact: medium
+  attack_vectors:
+    - No automatic cleanup of old traces
+    - Unbounded growth of execution logs
+    - Retention of sensitive prompts and responses
+  mitigated_by:
+    - automated-data-cleanup
+  residual_risk: low
+  risk_calculation: "Medium impact (storage/privacy) × High likelihood (continuous usage) = Medium risk"
+  impact_details:
+    storage: "Execution traces can grow to gigabytes over time"
+    privacy: "Traces contain user knowledge content and prompts"
+    performance: "Large operations.db degrades query performance"
+  retention_policy: "7 days for traces, 30 days for metrics"

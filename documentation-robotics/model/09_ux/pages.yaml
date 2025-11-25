@@ -1,0 +1,363 @@
+# UX Layer - Pages and Views
+# Top-level page components that represent complete user interfaces
+
+DashboardPage:
+  name: Dashboard Page
+  description: Main landing page showing system overview, quick stats, and recent activity
+  id: dashboard-page
+  route: /app
+  layout: cs_main
+  components:
+    - dashboard-stats-widget
+    - recent-activity-list
+  interactions:
+    - get-system-health
+
+LayersPage:
+  name: Layers Page
+  description: Knowledge graph layers management page with table view, create/edit capabilities
+  id: layers-page
+  route: /app/layers
+  layout: cs_main
+  components:
+    - layers-table
+    - layer-form
+  interactions:
+    - list-structure-nodes
+    - create-structure-node
+    - update-structure-node
+    - delete-structure-node
+
+DomainsPage:
+  name: Domains Page
+  description: Knowledge graph domains management page with hierarchical view and CRUD operations
+  id: domains-page
+  route: /app/domains
+  layout: cs_main
+  components:
+    - domains-table
+    - domain-form
+    - domain-move-form
+  interactions:
+    - list-structure-nodes
+    - create-structure-node
+    - update-structure-node
+    - delete-structure-node
+
+TermsPage:
+  name: Terms Page
+  description: Knowledge graph terms management page with search, filtering, and editing
+  id: terms-page
+  route: /app/terms
+  layout: cs_main
+  components:
+    - terms-table
+    - term-form
+    - term-move-form
+  interactions:
+    - list-structure-nodes
+    - create-structure-node
+    - update-structure-node
+    - delete-structure-node
+    - search-structure-nodes
+
+PredicatesPage:
+  name: Predicates Page
+  description: Semantic predicates management with external mapping and similarity search
+  id: predicates-page
+  route: /app/predicates
+  layout: cs_main
+  components:
+    - predicates-table
+    - predicate-form
+    - external-predicate-search
+  interactions:
+    - list-predicates
+    - create-predicate
+    - update-predicate
+    - delete-predicate
+    - search-external-predicates
+    - find-similar-predicates
+
+StructureNodeDetailPage:
+  name: Structure Node Detail Page
+  description: Detailed view of a single structure node with all properties, relationships, and history
+  id: structure-node-detail-page
+  route: /app/structure_nodes/:nodeId
+  layout: cs_main
+  components:
+    - structure-node-details
+    - node-relationships-view
+    - node-history-view
+  interactions:
+    - get-structure-node
+    - update-structure-node
+    - list-node-links
+
+DatasetsPage:
+  name: Datasets Page
+  description: Dataset management page for switching between databases and viewing dataset history
+  id: datasets-page
+  route: /app/datasets
+  layout: cs_main
+  components:
+    - datasets-table
+    - dataset-form
+    - dataset-history
+  interactions:
+    - list-datasets
+    - create-dataset
+    - activate-dataset
+
+RAGExperimentsPage:
+  name: RAG Experiments Page
+  description: RAG pipeline experimentation interface with test paragraphs and annotation management
+  id: rag-experiments-page
+  route: /app/rag/experiments
+  layout: cs_main
+  components:
+    - test-paragraph-list
+    - test-paragraph-editor
+    - annotation-selector
+  interactions:
+    - rag-extract-entities
+
+RAGPipelineComparisonPage:
+  name: RAG Pipeline Comparison Page
+  description: Compare performance of different RAG pipeline configurations side-by-side
+  id: rag-pipeline-comparison-page
+  route: /app/rag/pipeline-comparison
+  layout: cs_main
+  components:
+    - pipeline-comparison-grid
+    - metrics-comparison-chart
+  interactions:
+    - rag-extract-entities
+    - get-rag-metrics
+
+RAGTestRunnerPage:
+  name: RAG Test Runner Page
+  description: Automated RAG pipeline testing interface with batch execution and results analysis
+  id: rag-test-runner-page
+  route: /app/rag/test-runner
+  layout: cs_main
+  components:
+    - pipeline-test-runner
+    - test-results-viewer
+  interactions:
+    - rag-extract-entities
+    - get-rag-metrics
+
+ReferenceSearchPage:
+  name: Reference Search Page
+  description: Unified search across external reference sources (ConceptNet, DBpedia, Wikidata, Schema.org)
+  id: reference-search-page
+  route: /app/reference/search
+  layout: cs_main
+  components:
+    - unified-search-widget
+    - search-results-list
+    - source-selector
+  interactions:
+    - search-external-predicates
+
+ReferencePredicateMappingPage:
+  name: Reference Predicate Mapping Page
+  description: Map internal predicates to external ontology predicates with similarity matching
+  id: reference-predicate-mapping-page
+  route: /app/reference/predicates
+  layout: cs_main
+  components:
+    - predicate-mapping-widget
+    - external-predicate-browser
+  interactions:
+    - list-predicates
+    - find-similar-predicates
+    - search-external-predicates
+
+ConfigurationIndexPage:
+  name: Configuration Index Page
+  description: Main configuration hub with links to all configuration subsections
+  id: configuration-index-page
+  route: /app/config
+  layout: cs_main
+  components:
+    - config-navigation-menu
+    - config-overview-widget
+
+PipelineFlavorsIndexPage:
+  name: Pipeline Flavors Index Page
+  description: Overview of all LLM pipeline types and their configured flavors
+  id: pipeline-flavors-index-page
+  route: /app/config/pipelines
+  layout: cs_main
+  components:
+    - pipeline-types-grid
+    - flavor-summary-cards
+  interactions:
+    - list-pipeline-flavors
+
+PipelineFlavorListPage:
+  name: Pipeline Flavor List Page
+  description: List of pipeline flavors for a specific pipeline type with create/edit/test actions
+  id: pipeline-flavor-list-page
+  route: /app/config/pipelines/:pipelineType
+  layout: cs_main
+  components:
+    - pipeline-flavors-table
+    - flavor-actions-menu
+  interactions:
+    - list-pipeline-flavors
+
+PipelineFlavorCreatePage:
+  name: Pipeline Flavor Create Page
+  description: Create new LLM pipeline flavor with model selection and prompt configuration
+  id: pipeline-flavor-create-page
+  route: /app/config/pipelines/:pipelineType/create
+  layout: cs_main
+  components:
+    - pipeline-flavor-form
+    - model-selector
+    - prompt-editor
+  interactions:
+    - create-pipeline-flavor
+
+PipelineFlavorEditPage:
+  name: Pipeline Flavor Edit Page
+  description: Edit existing pipeline flavor configuration
+  id: pipeline-flavor-edit-page
+  route: /app/config/pipelines/:pipelineType/edit/:flavorId
+  layout: cs_main
+  components:
+    - pipeline-flavor-form
+    - model-selector
+    - prompt-editor
+  interactions:
+    - get-pipeline-flavor
+    - update-pipeline-flavor
+
+PipelineFlavorTestPage:
+  name: Pipeline Flavor Test Page
+  description: Interactive testing interface for pipeline flavors with live execution
+  id: pipeline-flavor-test-page
+  route: /app/config/pipelines/:pipelineType/test/:flavorId
+  layout: cs_main
+  components:
+    - pipeline-test-form
+    - execution-results-viewer
+  interactions:
+    - execute-pipeline-flavor
+
+ConfigModelsPage:
+  name: Configuration Models Page
+  description: LLM model configuration and provider settings
+  id: config-models-page
+  route: /app/config/models
+  layout: cs_main
+  components:
+    - model-providers-list
+    - model-config-form
+
+ConfigDataSourcesPage:
+  name: Configuration Data Sources Page
+  description: External data source configuration (ConceptNet, DBpedia, Wikidata, Schema.org)
+  id: config-data-sources-page
+  route: /app/config/data-sources
+  layout: cs_main
+  components:
+    - data-sources-list
+    - source-config-form
+
+ConfigNetworkPage:
+  name: Configuration Network Page
+  description: Network and API endpoint configuration
+  id: config-network-page
+  route: /app/config/network
+  layout: cs_main
+  components:
+    - network-settings-form
+    - endpoint-config-list
+
+ConfigProcessingPage:
+  name: Configuration Processing Page
+  description: Processing settings including batch sizes, timeouts, and concurrency
+  id: config-processing-page
+  route: /app/config/processing
+  layout: cs_main
+  components:
+    - processing-settings-form
+
+ConfigSystemPage:
+  name: Configuration System Page
+  description: System-wide settings and preferences
+  id: config-system-page
+  route: /app/config/system
+  layout: cs_main
+  components:
+    - system-settings-form
+
+ConfigAdvancedPage:
+  name: Configuration Advanced Page
+  description: Advanced configuration options and experimental features
+  id: config-advanced-page
+  route: /app/config/advanced
+  layout: cs_main
+  components:
+    - advanced-settings-form
+    - feature-flags-list
+
+MonitoringPerformancePage:
+  name: Monitoring Performance Page
+  description: System performance metrics and charts
+  id: monitoring-performance-page
+  route: /app/monitoring/performance
+  layout: cs_main
+  components:
+    - performance-charts
+    - metrics-dashboard
+  interactions:
+    - get-system-health
+
+MonitoringTaskManagerPage:
+  name: Monitoring Task Manager Page
+  description: Background task monitoring and management
+  id: monitoring-task-manager-page
+  route: /app/monitoring/task-manager
+  layout: cs_main
+  components:
+    - task-queue-viewer
+    - task-status-monitor
+
+MonitoringLLMTraceabilityPage:
+  name: Monitoring LLM Traceability Page
+  description: LLM execution tracking and traceability logs
+  id: monitoring-llm-traceability-page
+  route: /app/monitoring/llm-traceability
+  layout: cs_main
+  components:
+    - llm-execution-log
+    - execution-details-viewer
+  interactions:
+    - get-rag-metrics
+
+MonitoringSystemHealthPage:
+  name: Monitoring System Health Page
+  description: Overall system health status and diagnostics
+  id: monitoring-system-health-page
+  route: /app/monitoring/system-health
+  layout: cs_main
+  components:
+    - health-status-dashboard
+    - diagnostic-checks-list
+  interactions:
+    - get-system-health
+
+MonitoringAnalyticsPage:
+  name: Monitoring Analytics Page
+  description: Usage analytics and statistics
+  id: monitoring-analytics-page
+  route: /app/monitoring/analytics
+  layout: cs_main
+  components:
+    - analytics-charts
+    - usage-statistics-widget

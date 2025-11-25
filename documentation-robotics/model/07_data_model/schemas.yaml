@@ -1,0 +1,531 @@
+# Data Model Layer - Logical Data Structures and Schemas
+# These represent the logical data structures used across the application
+
+StructureNodeSchema:
+  name: Structure Node Schema
+  description: Unified schema for layers, domains, and terms in knowledge graph hierarchy. Supports hierarchical relationships, semantic predicates, vector embeddings for search, and reference links to external ontologies
+  id: structure-node-schema
+  stored_in: structure-nodes-table
+  attributes:
+    - name: id
+      type: UUID
+      required: true
+      description: Unique identifier
+    - name: node_type
+      type: Enum
+      values: [layer, domain, term]
+      required: true
+      description: Type of structure node
+    - name: parent_node_id
+      type: UUID
+      required: false
+      description: Parent node for hierarchy (null for layers)
+    - name: title
+      type: String
+      required: true
+      description: Display title
+    - name: definition
+      type: Text
+      required: false
+      description: Detailed definition or description
+    - name: structural_predicate_id
+      type: UUID
+      required: false
+      description: Semantic predicate defining node meaning
+    - name: title_embedding
+      type: Vector
+      required: false
+      description: Embedding for semantic search
+    - name: definition_embedding
+      type: Vector
+      required: false
+      description: Embedding for semantic search
+    - name: reference_links
+      type: JSON
+      required: false
+      description: Links to external ontologies
+    - name: word_senses
+      type: JSON
+      required: false
+      description: NLP word sense annotations
+    - name: version
+      type: Integer
+      default: 1
+      description: Version number for change tracking
+    - name: created_at
+      type: DateTime
+      required: true
+    - name: last_modified
+      type: DateTime
+      required: true
+
+StructureNodeLinkSchema:
+  name: Structure Node Link Schema
+  description: Semantic relationships between structure nodes with predicate-based linking. Supports n-ary relationships with unique constraint per source-target-predicate triple
+  id: structure-node-link-schema
+  stored_in: structure-node-links-table
+  attributes:
+    - name: id
+      type: UUID
+      required: true
+    - name: source_node_id
+      type: UUID
+      required: true
+      description: Source structure node
+    - name: target_node_id
+      type: UUID
+      required: true
+      description: Target structure node
+    - name: predicate
+      type: String
+      required: true
+      description: Relationship type
+    - name: predicate_id
+      type: UUID
+      required: false
+      description: Reference to predicate definition
+    - name: created_at
+      type: DateTime
+      required: true
+  constraints:
+    - type: unique
+      columns: [source_node_id, target_node_id, predicate]
+
+PredicateSchema:
+  name: Predicate Schema
+  description: Semantic predicates for defining relationships and node meanings. Supports mappings to external ontologies (ConceptNet, DBpedia, Wikidata) with relevance tracking
+  id: predicate-schema
+  stored_in: predicates-table
+  attributes:
+    - name: id
+      type: UUID
+      required: true
+    - name: identifier
+      type: String
+      required: true
+      unique: true
+      description: Machine-readable identifier
+    - name: title
+      type: String
+      required: true
+      unique: true
+      description: Human-readable title
+    - name: definition
+      type: Text
+      required: false
+    - name: mapping
+      type: JSON
+      required: false
+      description: External ontology mappings
+    - name: is_relevant
+      type: Boolean
+      required: false
+      description: Relevance flag for filtering
+    - name: date_created
+      type: DateTime
+      required: true
+    - name: date_modified
+      type: DateTime
+      required: true
+
+ChangeEventSchema:
+  name: Change Event Schema
+  description: Unified audit trail for all record changes. Captures create, update, delete events with before/after snapshots for complete change history
+  id: change-event-schema
+  stored_in: change-events-table
+  attributes:
+    - name: id
+      type: Integer
+      autoincrement: true
+      required: true
+    - name: event_type
+      type: Enum
+      values: [create, update, delete]
+      required: true
+    - name: record_type
+      type: Enum
+      values: [structure_node, structure_node_link, predicate]
+      required: true
+    - name: record_id
+      type: UUID
+      required: false
+    - name: old_data
+      type: JSON
+      required: false
+      description: State before change
+    - name: new_data
+      type: JSON
+      required: false
+      description: State after change
+    - name: timestamp
+      type: DateTime
+      required: true
+    - name: processed
+      type: Boolean
+      default: false
+      description: Processing status flag
+
+PipelineFlavorSchema:
+  name: Pipeline Flavor Schema
+  description: LLM pipeline configurations for different processing tasks. Defines model selection, prompts, and parameters with versioning support
+  id: pipeline-flavor-schema
+  stored_in: pipeline-flavors-table
+  attributes:
+    - name: id
+      type: UUID
+      required: true
+    - name: pipeline
+      type: Enum
+      values: [suggest_term_definition, suggest_layer_definition, suggest_domain_definition, extract_entities]
+      required: true
+      description: Pipeline type
+    - name: title
+      type: String
+      required: true
+      description: Flavor name
+    - name: llm_provider
+      type: String
+      required: true
+      description: Provider (OpenAI, Anthropic, etc.)
+    - name: llm_model
+      type: String
+      required: true
+      description: Model identifier
+    - name: llm_config
+      type: JSON
+      required: true
+      description: Temperature, top_p, max_tokens, etc.
+    - name: system_prompt
+      type: Text
+      required: true
+      description: System prompt template
+    - name: user_prompt
+      type: Text
+      required: true
+      description: User prompt template
+    - name: version
+      type: Integer
+      default: 1
+    - name: enabled
+      type: Boolean
+      default: true
+    - name: date_created
+      type: DateTime
+      required: true
+    - name: last_updated
+      type: DateTime
+      required: true
+  constraints:
+    - type: unique
+      columns: [pipeline, title]
+
+ChangesetSchema:
+  name: Changeset Schema
+  description: Collaboration changesets for bundling related changes. Supports draft, proposed, approved, merged, rejected states with branching
+  id: changeset-schema
+  stored_in: changesets-table
+  attributes:
+    - name: id
+      type: UUID
+      required: true
+    - name: title
+      type: String
+      required: true
+    - name: description
+      type: Text
+      required: false
+    - name: state
+      type: Enum
+      values: [DRAFT, PROPOSED, APPROVED, MERGED, REJECTED]
+      required: true
+    - name: branch_name
+      type: String
+      required: false
+    - name: parent_changeset_id
+      type: UUID
+      required: false
+      description: Parent for changeset chains
+    - name: author_id
+      type: UUID
+      required: true
+    - name: created_at
+      type: DateTime
+      required: true
+    - name: merged_at
+      type: DateTime
+      required: false
+    - name: metadata
+      type: JSON
+      required: false
+
+ProposalSchema:
+  name: Proposal Schema
+  description: Collaboration proposals for review workflows with voting support
+  id: proposal-schema
+  stored_in: proposals-table
+  attributes:
+    - name: id
+      type: UUID
+      required: true
+    - name: changeset_id
+      type: UUID
+      required: true
+      description: Associated changeset
+    - name: title
+      type: String
+      required: true
+    - name: description
+      type: Text
+      required: false
+    - name: status
+      type: Enum
+      values: [OPEN, APPROVED, REJECTED, WITHDRAWN]
+      required: true
+    - name: author_id
+      type: UUID
+      required: true
+    - name: created_at
+      type: DateTime
+      required: true
+    - name: updated_at
+      type: DateTime
+      required: true
+
+ProposalVoteSchema:
+  name: Proposal Vote Schema
+  description: Voting records for proposal approval workflows
+  id: proposal-vote-schema
+  stored_in: proposal-votes-table
+  attributes:
+    - name: id
+      type: UUID
+      required: true
+    - name: proposal_id
+      type: UUID
+      required: true
+    - name: user_id
+      type: UUID
+      required: true
+    - name: vote
+      type: Enum
+      values: [APPROVE, REJECT, ABSTAIN]
+      required: true
+    - name: comment
+      type: Text
+      required: false
+    - name: voted_at
+      type: DateTime
+      required: true
+
+UserIdentitySchema:
+  name: User Identity Schema
+  description: User identity management for collaboration with device registration and trust relationships
+  id: user-identity-schema
+  stored_in: user-identities-table
+  attributes:
+    - name: id
+      type: UUID
+      required: true
+    - name: username
+      type: String
+      required: true
+      unique: true
+    - name: email
+      type: String
+      required: false
+    - name: display_name
+      type: String
+      required: false
+    - name: device_id
+      type: String
+      required: true
+      description: Device identifier
+    - name: public_key
+      type: Text
+      required: false
+      description: Cryptographic public key
+    - name: created_at
+      type: DateTime
+      required: true
+    - name: last_seen
+      type: DateTime
+      required: false
+
+RAGProcessingMetricsSchema:
+  name: RAG Processing Metrics Schema
+  description: Performance metrics for RAG pipeline execution with layer-by-layer timing. Tracks KG context, LLM extraction, spaCy analysis, and concept resolution layers
+  id: rag-processing-metrics-schema
+  stored_in: rag-processing-metrics-table
+  attributes:
+    - name: id
+      type: UUID
+      required: true
+    - name: request_id
+      type: UUID
+      required: true
+    - name: sentence_text
+      type: Text
+      required: true
+    - name: layer_0_time_ms
+      type: Integer
+      description: KG context preparation time
+    - name: layer_0_count
+      type: Integer
+      description: Concepts retrieved from KG
+    - name: layer_1_time_ms
+      type: Integer
+      description: LLM extraction time
+    - name: layer_1_count
+      type: Integer
+      description: Entities extracted by LLM
+    - name: layer_2_time_ms
+      type: Integer
+      description: spaCy analysis time
+    - name: layer_2_count
+      type: Integer
+      description: Gaps identified by spaCy
+    - name: layer_3_time_ms
+      type: Integer
+      description: Concept resolution time
+    - name: layer_3_count
+      type: Integer
+      description: Concepts resolved
+    - name: total_time_ms
+      type: Integer
+      required: true
+    - name: timestamp
+      type: DateTime
+      required: true
+    - name: retention_days
+      type: Integer
+      default: 30
+
+RAGObservabilityTraceSchema:
+  name: RAG Observability Trace Schema
+  description: Detailed input/output traces for RAG pipeline debugging. Stores layer-specific trace data with shorter retention for detailed analysis
+  id: rag-observability-trace-schema
+  stored_in: rag-observability-trace-table
+  attributes:
+    - name: id
+      type: UUID
+      required: true
+    - name: request_id
+      type: UUID
+      required: true
+    - name: sentence_index
+      type: Integer
+      required: true
+    - name: layer_name
+      type: String
+      required: true
+    - name: operation_type
+      type: String
+      required: true
+    - name: trace_data
+      type: JSON
+      required: true
+      description: Full layer input/output
+    - name: timestamp
+      type: DateTime
+      required: true
+    - name: retention_days
+      type: Integer
+      default: 7
+
+ReferenceNodeSchema:
+  name: Reference Node Schema
+  description: External reference entities from ConceptNet, DBpedia, Wikidata, Schema.org. Includes vector embeddings for semantic matching
+  id: reference-node-schema
+  stored_in: reference-nodes-table
+  attributes:
+    - name: id
+      type: UUID
+      required: true
+    - name: title
+      type: String
+      required: true
+      indexed: true
+    - name: definition
+      type: Text
+      required: true
+    - name: source
+      type: String
+      required: true
+      indexed: true
+      description: Source system identifier
+    - name: external_id
+      type: String
+      required: true
+      indexed: true
+      description: Source-specific ID
+    - name: attributes
+      type: JSON
+      required: false
+      description: Additional metadata
+    - name: title_embedding
+      type: Vector
+      required: false
+    - name: definition_embedding
+      type: Vector
+      required: false
+    - name: created_at
+      type: DateTime
+      required: true
+    - name: updated_at
+      type: DateTime
+      required: true
+  constraints:
+    - type: unique
+      columns: [source, external_id]
+
+ReferenceLinkSchema:
+  name: Reference Link Schema
+  description: Semantic relationships between reference nodes from external knowledge sources
+  id: reference-link-schema
+  stored_in: reference-links-table
+  attributes:
+    - name: id
+      type: UUID
+      required: true
+    - name: subject_node
+      type: UUID
+      required: true
+      description: Source reference node
+    - name: predicate
+      type: String
+      required: true
+      description: Relationship type (subClassOf, relatedTo, etc.)
+    - name: object_node
+      type: UUID
+      required: true
+      description: Target reference node
+    - name: attributes
+      type: JSON
+      required: false
+    - name: created_at
+      type: DateTime
+      required: true
+    - name: updated_at
+      type: DateTime
+      required: true
+
+LLMPipelineSchema:
+  name: LLM Pipeline Schema
+  description: LLM pipeline configuration definitions stored in operations database
+  id: llm-pipeline-schema
+  stored_in: llm-pipelines-table
+  attributes:
+    - name: id
+      type: UUID
+      required: true
+    - name: name
+      type: String
+      required: true
+      unique: true
+    - name: description
+      type: Text
+      required: false
+    - name: config
+      type: JSON
+      required: false
+      description: Pipeline configuration

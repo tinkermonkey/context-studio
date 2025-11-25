@@ -1,0 +1,17 @@
+NodeService:
+  name: NodeService
+  description: Manages structure nodes (layers, domains, terms) with validation, hierarchy
+    enforcement, and versioning support
+  criticality: critical
+  id: application.service.node-service.node-service
+  exposes:
+    - create-structure-node
+    - list-structure-nodes
+    - get-structure-node
+    - update-structure-node
+    - delete-structure-node
+    - search-structure-nodes
+  accesses:
+    - structure-node-schema
+    - predicate-schema
+    - change-event-schema

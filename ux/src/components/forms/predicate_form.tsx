@@ -127,6 +127,7 @@ const PredicateForm: React.FC<PredicateFormProps> = ({
               </Label>
               <TextInput
                 id="predicate-title"
+                data-testid="predicate-title-input"
                 placeholder="Title"
                 value={field.state.value}
                 color={field.state.meta.errors.length ? "failure" : undefined}
@@ -167,6 +168,7 @@ const PredicateForm: React.FC<PredicateFormProps> = ({
               </Label>
               <Textarea
                 id="predicate-definition"
+                data-testid="predicate-definition-input"
                 placeholder="Definition (optional)"
                 value={field.state.value}
                 onChange={(e) => field.handleChange(e.target.value)}
@@ -202,6 +204,7 @@ const PredicateForm: React.FC<PredicateFormProps> = ({
               </Label>
               <TextInput
                 id="predicate-identifier"
+                data-testid="predicate-identifier-input"
                 placeholder="Auto-generated from title"
                 value={field.state.value}
                 color={field.state.meta.errors.length ? "failure" : undefined}
@@ -228,6 +231,7 @@ const PredicateForm: React.FC<PredicateFormProps> = ({
         <div className="flex items-center justify-end gap-2">
           <Button
             type="submit"
+            data-testid="predicate-submit-button"
             disabled={
               form.state.isSubmitting ||
               createPredicateMutation.isPending ||

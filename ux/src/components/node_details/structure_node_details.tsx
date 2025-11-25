@@ -224,15 +224,15 @@ export const StructureNodeDetails: React.FC<StructureNodeDetailsProps> = ({
           {/* Header */}
           <div className="mb-6 flex items-center justify-between">
             <div>
-              <CsMainTitle icon={NodeIcon}>{node.title}</CsMainTitle>
+              <CsMainTitle icon={NodeIcon} data-testid="node-detail-title">{node.title}</CsMainTitle>
               <div className="flex items-center gap-4 text-sm text-gray-600 dark:text-gray-400">
                 <div className="flex items-center gap-1">
                   <Hash className="h-4 w-4" />
-                  <span className="font-mono">{node.id}</span>
+                  <span className="font-mono" data-testid="node-detail-id">{node.id}</span>
                 </div>
                 <div className="flex items-center gap-1">
                   <Calendar className="h-4 w-4" />
-                  <span>Version {node.version}</span>
+                  <span data-testid="node-detail-type">{node.node_type} - Version {node.version}</span>
                 </div>
               </div>
             </div>
@@ -297,9 +297,11 @@ export const StructureNodeDetails: React.FC<StructureNodeDetailsProps> = ({
           />
 
           {/* Definition */}
-          <div className="pt-4">
+          <div className="pt-4" data-testid="node-detail-definition-section">
             <h2 className="mb-3 text-xl font-semibold">Definition</h2>
-            <EditableDefinition node={node} />
+            <div data-testid="node-detail-definition">
+              <EditableDefinition node={node} />
+            </div>
           </div>
 
           {/* Reference Nodes */}
@@ -308,7 +310,7 @@ export const StructureNodeDetails: React.FC<StructureNodeDetailsProps> = ({
           </div>
 
           {/* Term Hierarchy */}
-          <div className="pt-4">
+          <div className="pt-4" data-testid="node-children-section">
             <h2 className="text-xl font-semibold">Hierarchy</h2>
             <TreeChartPanel
               layerId={node.node_type === NodeType.LAYER ? node.id : undefined}

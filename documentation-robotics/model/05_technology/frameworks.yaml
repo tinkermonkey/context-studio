@@ -1,0 +1,223 @@
+# Application frameworks for Context Studio
+# Major frameworks that provide structure and capabilities to the application
+
+FastAPIFramework:
+  name: FastAPI Framework
+  description: Modern Python web framework for building APIs with automatic OpenAPI documentation, async support, and type validation
+  id: fastapi-framework
+  type: framework
+  version: "0.116.0"
+  platform: python-runtime
+  criticality: critical
+  capabilities:
+    - Automatic OpenAPI/Swagger documentation generation
+    - Asynchronous request handling
+    - Dependency injection system
+    - Request/response validation with Pydantic
+    - WebSocket support
+    - Background task execution
+  used_by:
+    - context-studio-api
+    - node-service
+    - predicate-service
+    - graph-service
+    - rag-pipeline-service
+    - reference-service
+
+ViteFramework:
+  name: Vite Framework
+  description: Next-generation frontend build tool with instant hot module replacement and optimized production builds
+  id: vite-framework
+  type: framework
+  version: "6.2.6"
+  platform: nodejs-runtime
+  criticality: critical
+  capabilities:
+    - Lightning-fast HMR (Hot Module Replacement)
+    - Optimized production builds
+    - Native ES modules support
+    - Plugin ecosystem
+    - TypeScript support
+    - CSS preprocessing
+  used_by:
+    - context-studio-frontend
+
+TauriFramework:
+  name: Tauri Framework
+  description: Rust-based desktop application framework for building lightweight native applications with web technologies
+  id: tauri-framework
+  type: framework
+  version: "2.0"
+  platform: rust-runtime
+  criticality: critical
+  capabilities:
+    - Native desktop application packaging
+    - System tray integration
+    - File system access
+    - Native dialogs
+    - Secure inter-process communication
+    - Cross-platform support (Windows, macOS, Linux)
+  used_by:
+    - context-studio-desktop-app
+
+TanStackRouterFramework:
+  name: TanStack Router Framework
+  description: Type-safe routing library for React applications with automatic code splitting and data loading
+  id: tanstack-router-framework
+  type: framework
+  version: "1.116.0"
+  platform: react-runtime
+  criticality: critical
+  capabilities:
+    - Type-safe route definitions
+    - Automatic code splitting
+    - Nested routing
+    - Route-based data loading
+    - Search parameter validation
+  used_by:
+    - context-studio-frontend
+
+TanStackQueryFramework:
+  name: TanStack Query Framework
+  description: Powerful data synchronization and caching framework for React applications
+  id: tanstack-query-framework
+  type: framework
+  version: "5.83.0"
+  platform: react-runtime
+  criticality: critical
+  capabilities:
+    - Automatic background refetching
+    - Optimistic updates
+    - Request deduplication
+    - Pagination and infinite queries
+    - Cache management
+    - Devtools integration
+  used_by:
+    - context-studio-frontend
+
+TanStackTableFramework:
+  name: TanStack Table Framework
+  description: Headless UI library for building powerful tables and data grids with React
+  id: tanstack-table-framework
+  type: framework
+  version: "8.21.3"
+  platform: react-runtime
+  criticality: high
+  capabilities:
+    - Virtualization for large datasets
+    - Sorting and filtering
+    - Column resizing and reordering
+    - Row selection
+    - Pagination
+    - Grouping and aggregation
+  used_by:
+    - context-studio-frontend
+
+TanStackFormFramework:
+  name: TanStack Form Framework
+  description: Type-safe form state management library for React with validation and submission handling
+  id: tanstack-form-framework
+  type: framework
+  version: "1.14.2"
+  platform: react-runtime
+  criticality: high
+  capabilities:
+    - Type-safe form definitions
+    - Field-level validation
+    - Async validation support
+    - Form state management
+    - Nested form fields
+  used_by:
+    - context-studio-frontend
+
+TailwindCSSFramework:
+  name: Tailwind CSS Framework
+  description: Utility-first CSS framework for rapid UI development with consistent design
+  id: tailwind-css-framework
+  type: framework
+  version: "4.1.4"
+  platform: browser-runtime
+  criticality: high
+  capabilities:
+    - Utility-first CSS classes
+    - Responsive design utilities
+    - Dark mode support
+    - Component composition
+    - JIT compilation
+    - Custom design system configuration
+  used_by:
+    - context-studio-frontend
+
+FlowbiteReactFramework:
+  name: Flowbite React Framework
+  description: React component library built on Tailwind CSS with accessible, customizable UI components
+  id: flowbite-react-framework
+  type: framework
+  version: "0.11.7"
+  platform: react-runtime
+  criticality: high
+  capabilities:
+    - Pre-built accessible components
+    - Tailwind CSS integration
+    - Dark mode support
+    - Form components
+    - Navigation components
+    - Modal and overlay components
+  used_by:
+    - context-studio-frontend
+
+LangChainFramework:
+  name: LangChain Framework
+  description: Framework for developing applications powered by language models with composable chains and agents
+  id: langchain-framework
+  type: framework
+  version: "0.3.0"
+  platform: python-runtime
+  criticality: high
+  capabilities:
+    - LLM chain composition
+    - Prompt template management
+    - Memory and context management
+    - Agent orchestration
+    - Tool integration
+    - Multiple LLM provider support
+  used_by:
+    - llm-service
+    - rag-pipeline-service
+    - pipeline-flavor-service
+
+PlaywrightTestFramework:
+  name: Playwright Test Framework
+  description: End-to-end testing framework for modern web applications with cross-browser support
+  id: playwright-test-framework
+  type: framework
+  version: "1.48.0"
+  platform: nodejs-runtime
+  criticality: high
+  capabilities:
+    - Cross-browser testing (Chromium, Firefox, WebKit)
+    - Auto-waiting for elements
+    - Network interception
+    - Visual regression testing
+    - Parallel test execution
+    - Test recording and debugging
+  used_by:
+    - context-studio-e2e-tests
+
+VitestFramework:
+  name: Vitest Framework
+  description: Vite-native unit testing framework with fast execution and Jest-compatible API
+  id: vitest-framework
+  type: framework
+  version: "1.6.1"
+  platform: nodejs-runtime
+  criticality: high
+  capabilities:
+    - Vite-native test execution
+    - Jest-compatible API
+    - Instant watch mode
+    - Multi-threading support
+    - Coverage reporting
+    - Snapshot testing
+  used_by:
+    - context-studio-unit-tests
