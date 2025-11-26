@@ -286,30 +286,7 @@ export interface paths {
          *         500: If an unexpected error occurs
          */
         get: operations["get_word_senses_api_structure_nodes__node_id__word_senses_get"];
-        /**
-         * Update Word Senses
-         * @description Update selected word senses for a structure node.
-         *
-         *     Allows user to persist their selected word senses from NLP analysis.
-         *     Uses a conservative merge strategy: preserves existing word senses for words
-         *     not included in this update, while replacing senses for words that are included.
-         *
-         *     For example, if a node has existing senses for words "bank" and "account", and
-         *     you update only "bank", the existing "account" senses will be preserved.
-         *
-         *     Args:
-         *         node_id: UUID of the structure node
-         *         update_request: Selected word senses to persist
-         *
-         *     Returns:
-         *         List of all word senses after update (including preserved senses)
-         *
-         *     Raises:
-         *         400: If validation fails (invalid sense_id format)
-         *         404: If structure node not found
-         *         500: If an unexpected error occurs
-         */
-        put: operations["update_word_senses_api_structure_nodes__node_id__word_senses_put"];
+        put?: never;
         post?: never;
         delete?: never;
         options?: never;
@@ -8299,17 +8276,17 @@ export interface components {
              */
             enabled: boolean;
             /**
-             * Last Updated
-             * Format: date-time
-             * @description Last update timestamp
-             */
-            last_updated: string;
-            /**
-             * Date Created
+             * Created At
              * Format: date-time
              * @description Creation timestamp
              */
-            date_created: string;
+            created_at: string;
+            /**
+             * Updated At
+             * Format: date-time
+             * @description Last update timestamp
+             */
+            updated_at: string;
         };
         /**
          * PipelineFlavorListResponse
@@ -9086,17 +9063,6 @@ export interface components {
              * @default 1
              */
             analysis_depth: number | null;
-        };
-        /**
-         * SelectedWordSensesUpdate
-         * @description Model for updating selected word senses on a structure node.
-         */
-        SelectedWordSensesUpdate: {
-            /**
-             * Selected Senses
-             * @description List of word senses to persist as selected
-             */
-            selected_senses: components["schemas"]["WordSense"][];
         };
         /**
          * SelectionResponse
@@ -10602,44 +10568,6 @@ export interface operations {
             cookie?: never;
         };
         requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["WordSense"][];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    update_word_senses_api_structure_nodes__node_id__word_senses_put: {
-        parameters: {
-            query?: {
-                SessionLocal?: unknown;
-            };
-            header?: never;
-            path: {
-                /** @description The ID of the structure node */
-                node_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["SelectedWordSensesUpdate"];
-            };
-        };
         responses: {
             /** @description Successful Response */
             200: {

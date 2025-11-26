@@ -42,6 +42,6 @@
     "level": "WARNING",
     "enable_console": false,
     "enable_file": true,
-    "file_path": "./logs/context_studio_e2e.log"
+    "file_path": "./logs/context_studio.log"
   }
 }

@@ -37,8 +37,8 @@ class PipelineFlavor(BaseModel):
     user_prompt: str = Field(..., min_length=1, description="User prompt template")
     version: int = Field(..., ge=1, description="Version number")
     enabled: bool = Field(default=True, description="Whether flavor is enabled")
-    last_updated: datetime = Field(..., description="Last update timestamp")
-    date_created: datetime = Field(..., description="Creation timestamp")
+    created_at: datetime = Field(..., description="Creation timestamp")
+    updated_at: datetime = Field(..., description="Last update timestamp")
 
 
 class CreatePipelineFlavorRequest(BaseModel):

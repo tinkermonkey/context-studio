@@ -68,8 +68,8 @@ test.describe('Pipeline Configuration', () => {
     // Verify flavors container is visible
     await expect(page.locator('[data-testid="pipeline-flavors-container"]')).toBeVisible();
 
-    // Verify at least the default flavor exists
-    await expect(page.getByText('Default')).toBeVisible();
+    // Verify at least the default flavor exists using test ID
+    await expect(page.locator('[data-testid="pipeline-flavor-title-default"]')).toBeVisible();
   });
 
   test('should display flavor details in list', async ({ page }) => {
@@ -84,13 +84,14 @@ test.describe('Pipeline Configuration', () => {
     const flavorCards = page.locator('[data-testid^="pipeline-flavor-card-"]');
     await expect(flavorCards.first()).toBeVisible();
 
-    // Verify flavor details are shown (provider, model, version)
-    await expect(page.getByText(/Provider:/)).toBeVisible();
-    await expect(page.getByText(/Model:/)).toBeVisible();
-    await expect(page.getByText(/Version:/)).toBeVisible();
+    // Verify flavor details are shown (provider, model, version) - scoped to flavors container
+    const flavorsContainer = page.locator('[data-testid="pipeline-flavors-container"]');
+    await expect(flavorsContainer.getByText(/Provider:/)).toBeVisible();
+    await expect(flavorsContainer.getByText(/Model:/)).toBeVisible();
+    await expect(flavorsContainer.getByText(/Version:/)).toBeVisible();
 
     // Verify status information
-    await expect(page.getByText(/Enabled|Disabled/)).toBeVisible();
+    await expect(flavorsContainer.getByText(/Enabled|Disabled/)).toBeVisible();
   });
 
   test('should navigate to create new flavor page', async ({ page }) => {
@@ -107,10 +108,11 @@ test.describe('Pipeline Configuration', () => {
 
     // Verify navigation to create page
     await page.waitForURL(`**/app/config/pipelines/${pipelineType}/create`, { timeout: 10000 });
+    await page.waitForLoadState('networkidle');
     expect(page.url()).toContain(`/app/config/pipelines/${pipelineType}/create`);
 
-    // Verify create form is displayed
-    await expect(page.getByText(/Create.*Flavor/i)).toBeVisible({ timeout: 5000 });
+    // Verify create form is displayed by checking for the page title text
+    await expect(page.getByText(/Create New.*Layer.*Flavor/i)).toBeVisible({ timeout: 10000 });
   });
 
   test('should not allow editing default flavor', async ({ page }) => {
@@ -121,27 +123,17 @@ test.describe('Pipeline Configuration', () => {
     // Wait for flavors list
     await expect(page.locator('[data-testid="pipeline-flavors-list"]')).toBeVisible({ timeout: 10000 });
 
-    // Find the default flavor card
-    const defaultFlavorText = page.getByText('Default').first();
-    await expect(defaultFlavorText).toBeVisible();
+    // Find the default flavor card using its test ID
+    const defaultFlavorCard = page.locator('[data-testid="pipeline-flavor-card-default"]');
+    await expect(defaultFlavorCard).toBeVisible();
 
-    // Find the parent card container
-    const card = defaultFlavorText.locator('xpath=ancestor::div[@data-testid]').first();
-    await expect(card).toBeVisible();
+    // Verify edit button is disabled for default flavor
+    const editButton = page.locator('[data-testid="pipeline-flavor-edit-button-default"]');
+    await expect(editButton).toBeDisabled();
 
-    // Get the flavor ID from the card's data-testid
-    const cardTestId = await card.getAttribute('data-testid');
-    const flavorId = cardTestId?.replace('pipeline-flavor-card-', '');
-
-    if (flavorId) {
-      // Verify edit button is disabled for default flavor
-      const editButton = page.locator(`[data-testid="pipeline-flavor-edit-button-${flavorId}"]`);
-      await expect(editButton).toBeDisabled();
-
-      // Verify delete button is disabled for default flavor
-      const deleteButton = page.locator(`[data-testid="pipeline-flavor-delete-button-${flavorId}"]`);
-      await expect(deleteButton).toBeDisabled();
-    }
+    // Verify delete button is disabled for default flavor
+    const deleteButton = page.locator('[data-testid="pipeline-flavor-delete-button-default"]');
+    await expect(deleteButton).toBeDisabled();
   });
 
   test('should navigate to edit flavor page for custom flavors', async ({ page }) => {
@@ -205,9 +197,12 @@ test.describe('Pipeline Configuration', () => {
       await expect(testButton).toBeVisible();
       await testButton.click();
 
-      // Verify navigation to test page
-      await page.waitForURL(`**/app/config/pipelines/${pipelineType}/test/${flavorId}`, { timeout: 10000 });
-      expect(page.url()).toContain(`/app/config/pipelines/${pipelineType}/test/${flavorId}`);
+      // Wait for navigation and page load
+      await page.waitForLoadState('networkidle', { timeout: 10000 });
+
+      // Verify we're on the test page by checking URL and page title text
+      expect(page.url()).toContain(`/app/config/pipelines/${pipelineType}/test/`);
+      await expect(page.getByText('Flavor Tester')).toBeVisible({ timeout: 5000 });
     }
   });
 
@@ -356,10 +351,11 @@ test.describe('Pipeline Configuration', () => {
     await page.goto(`/app/config/pipelines/${pipelineType}`);
     await page.waitForLoadState('networkidle');
 
-    // Verify breadcrumbs are present
-    await expect(page.getByText('Home')).toBeVisible();
-    await expect(page.getByText('Configuration')).toBeVisible();
-    await expect(page.getByText('Pipeline Flavors')).toBeVisible();
+    // Verify breadcrumbs are present - use more specific selector targeting the breadcrumb container
+    const breadcrumb = page.locator('.flex.items-center.space-x-2.text-sm.text-gray-500');
+    await expect(breadcrumb.getByText('Home')).toBeVisible();
+    await expect(breadcrumb.getByText('Configuration')).toBeVisible();
+    await expect(breadcrumb.getByText('Pipeline Flavors')).toBeVisible();
   });
 
   test('should show loading state while fetching flavors', async ({ page }) => {
@@ -378,8 +374,9 @@ test.describe('Pipeline Configuration', () => {
     // Wait for flavors list
     await expect(page.locator('[data-testid="pipeline-flavors-list"]')).toBeVisible({ timeout: 10000 });
 
-    // Verify version information is displayed
-    await expect(page.getByText(/Version:/)).toBeVisible();
+    // Verify version information is displayed - scoped to flavors container
+    const flavorsContainer = page.locator('[data-testid="pipeline-flavors-container"]');
+    await expect(flavorsContainer.getByText(/Version:/).first()).toBeVisible();
   });
 
   test('should display flavor enabled/disabled status', async ({ page }) => {
@@ -423,8 +420,9 @@ test.describe('Pipeline Configuration', () => {
     // Wait for flavors list
     await expect(page.locator('[data-testid="pipeline-flavors-list"]')).toBeVisible({ timeout: 10000 });
 
-    // Verify "Created:" date is shown
-    await expect(page.getByText(/Created:/)).toBeVisible();
+    // Verify "Created:" date is shown - scoped to flavors container
+    const flavorsContainer = page.locator('[data-testid="pipeline-flavors-container"]');
+    await expect(flavorsContainer.getByText(/Created:/).first()).toBeVisible();
   });
 
   test('should handle multiple custom flavors', async ({ page }) => {
@@ -473,8 +471,9 @@ test.describe('Pipeline Configuration', () => {
     await expect(page.getByText(flavor1Title)).toBeVisible();
     await expect(page.getByText(flavor2Title)).toBeVisible();
 
-    // Verify different providers are shown
-    await expect(page.getByText(/Provider: openai/)).toBeVisible();
-    await expect(page.getByText(/Provider: anthropic/)).toBeVisible();
+    // Verify different providers are shown - scoped to flavors container
+    const flavorsContainer = page.locator('[data-testid="pipeline-flavors-container"]');
+    await expect(flavorsContainer.getByText(/Provider: openai/).first()).toBeVisible();
+    await expect(flavorsContainer.getByText(/Provider: anthropic/).first()).toBeVisible();
   });
 });

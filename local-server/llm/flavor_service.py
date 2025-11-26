@@ -246,7 +246,7 @@ class PipelineFlavorService:
         """Convert database row to PipelineFlavor model"""
         return PipelineFlavor(
             id=row[0],                                          # id
-            pipeline=PipelineType(row[1]),                      # pipeline  
+            pipeline=PipelineType(row[1]),                      # pipeline
             title=row[2],                                       # title
             llm_provider=row[3],                                # llm_provider
             llm_model=row[4],                                   # llm_model
@@ -255,8 +255,8 @@ class PipelineFlavorService:
             user_prompt=row[7],                                 # user_prompt
             version=row[8],                                     # version
             enabled=bool(row[9]),                               # enabled
-            date_created=row[10],                               # created_at
-            last_updated=row[11]                                # updated_at
+            created_at=row[10],                                 # created_at
+            updated_at=row[11]                                  # updated_at
         )
     
     def _get_user_flavors(self, pipeline: PipelineType, enabled_only: bool = False) -> List[PipelineFlavor]:

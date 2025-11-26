@@ -128,7 +128,7 @@ export const PipelineFlavorsList: React.FC<PipelineFlavorsListProps> = ({
                   </p>
                   <p className="mt-1 text-sm text-gray-600 dark:text-gray-300" data-testid={`pipeline-flavor-status-${flavor.id}`}>
                     {flavor.enabled ? "Enabled" : "Disabled"} | Created:{" "}
-                    {new Date(flavor.date_created).toLocaleDateString()}
+                    {new Date(flavor.created_at).toLocaleDateString()}
                   </p>
                 </div>
                 <div className="flex gap-2">
