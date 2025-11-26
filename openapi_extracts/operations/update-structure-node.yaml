@@ -1,0 +1,54 @@
+openapi:
+  openapi: 3.0.3
+  info:
+    title: Update Node
+    version: 1.0.0
+  paths:
+    /api/structure_nodes/{node_id}:
+      put:
+        operationId: update_node_api_structure_nodes__node_id__put
+        summary: Update Node
+        description: 'Update a structure_node.
+
+
+          Supports updating title, definition, parent relationships, and structural
+          predicates.
+
+          Circular reference validation is automatically enforced.'
+        parameters:
+        - name: node_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+            description: The ID of the structure_node to update
+            title: Node Id
+          description: The ID of the structure_node to update
+        - name: SessionLocal
+          in: query
+          required: false
+          schema:
+            title: Sessionlocal
+        requestBody:
+          required: true
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NodeUpdate'
+        responses:
+          '200':
+            description: Successful Response
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/NodeOut'
+          '422':
+            description: Validation Error
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/HTTPValidationError'
+        tags:
+        - structure_nodes
+        - structure_nodes

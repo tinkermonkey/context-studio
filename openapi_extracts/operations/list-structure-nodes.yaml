@@ -1,0 +1,93 @@
+openapi:
+  openapi: 3.0.3
+  info:
+    title: List Nodes
+    version: 1.0.0
+  paths:
+    /api/structure_nodes/:
+      get:
+        operationId: list_nodes_api_structure_nodes__get
+        summary: List Nodes
+        description: 'List structure_nodes with filtering and pagination.
+
+
+          Supports filtering by structure_node type and parent, with configurable
+          pagination
+
+          and sorting. This replaces the separate endpoints for layers, domains, and
+          terms.'
+        parameters:
+        - name: node_type
+          in: query
+          required: false
+          schema:
+            anyOf:
+            - $ref: '#/components/schemas/NodeTypeEnum'
+            - type: 'null'
+            description: Filter by structure_node type
+            title: Node Type
+          description: Filter by structure_node type
+        - name: parent_node_id
+          in: query
+          required: false
+          schema:
+            anyOf:
+            - type: string
+              format: uuid
+            - type: 'null'
+            description: Filter by parent structure_node ID
+            title: Parent Node Id
+          description: Filter by parent structure_node ID
+        - name: skip
+          in: query
+          required: false
+          schema:
+            type: integer
+            minimum: 0
+            description: Number of structure_nodes to skip
+            default: 0
+            title: Skip
+          description: Number of structure_nodes to skip
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+            maximum: 1000
+            minimum: 1
+            description: Maximum number of structure_nodes to return
+            default: 50
+            title: Limit
+          description: Maximum number of structure_nodes to return
+        - name: sort_by
+          in: query
+          required: false
+          schema:
+            type: string
+            pattern: ^(title|created_at)$
+            description: Sort field
+            default: title
+            title: Sort By
+          description: Sort field
+        - name: SessionLocal
+          in: query
+          required: false
+          schema:
+            title: Sessionlocal
+        requestBody: null
+        responses:
+          '200':
+            description: Successful Response
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/PaginatedNodesResponse'
+          '422':
+            description: Validation Error
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/HTTPValidationError'
+        tags:
+        - structure_nodes
+        - structure_nodes

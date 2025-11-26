@@ -1,0 +1,176 @@
+home-page:
+  name: home-page
+  description: Landing/dashboard page with tree chart visualization of knowledge graph
+    structure
+  criticality: high
+  route: /app
+  id: ux.view.home-page
+  version: 1.0.0
+layers-page:
+  name: layers-page
+  description: Layers management page with hierarchical tree view and CRUD operations
+    for knowledge graph layers
+  criticality: high
+  route: /app/layers
+  id: ux.view.layers-page
+  relationships.uses: application.service.structure-node-management
+  version: 1.0.0
+domains-page:
+  name: domains-page
+  description: Domains management page with filterable table and layer-based navigation
+  criticality: high
+  route: /app/domains
+  id: ux.view.domains-page
+  relationships.uses: application.service.structure-node-management
+  version: 1.0.0
+terms-page:
+  name: terms-page
+  description: Terms management page with domain filtering and semantic predicate
+    editing
+  criticality: high
+  route: /app/terms
+  id: ux.view.terms-page
+  relationships.uses: application.service.structure-node-management
+  version: 1.0.0
+predicates-page:
+  name: predicates-page
+  description: Predicates management page for semantic relationship definitions and
+    ConceptNet mappings
+  criticality: medium
+  route: /app/predicates
+  id: ux.view.predicates-page
+  relationships.uses: application.service.predicate-management
+  version: 1.0.0
+datasets-page:
+  name: datasets-page
+  description: Dataset management page with current dataset card and version history
+  criticality: medium
+  route: /app/datasets
+  id: ux.view.datasets-page
+  relationships.uses: application.service.dataset-management
+  version: 1.0.0
+config-hub-page:
+  name: config-hub-page
+  description: Configuration hub page with sidebar navigation to system settings
+  criticality: medium
+  route: /app/config
+  id: ux.view.config-hub-page
+  version: 1.0.0
+pipelines-config-page:
+  name: pipelines-config-page
+  description: Pipeline flavors management page for LLM configurations with create,
+    edit, and test workflows
+  criticality: high
+  route: /app/config/pipelines
+  id: ux.view.pipelines-config-page
+  relationships.uses: application.service.pipeline-flavor-management
+  version: 1.0.0
+models-config-page:
+  name: models-config-page
+  description: LLM models configuration page for provider and model settings
+  criticality: medium
+  route: /app/config/models
+  id: ux.view.models-config-page
+  version: 1.0.0
+data-sources-config-page:
+  name: data-sources-config-page
+  description: Reference data sources configuration page for ConceptNet, DBpedia,
+    and Wikidata
+  criticality: medium
+  route: /app/config/data-sources
+  id: ux.view.data-sources-config-page
+  version: 1.0.0
+network-config-page:
+  name: network-config-page
+  description: Network configuration page for API endpoints and connectivity settings
+  criticality: low
+  route: /app/config/network
+  id: ux.view.network-config-page
+  version: 1.0.0
+system-config-page:
+  name: system-config-page
+  description: System configuration page for application settings and preferences
+  criticality: low
+  route: /app/config/system
+  id: ux.view.system-config-page
+  version: 1.0.0
+reference-search-page:
+  name: reference-search-page
+  description: Unified reference search page for browsing ConceptNet, DBpedia, and
+    Wikidata
+  criticality: medium
+  route: /app/reference
+  id: ux.view.reference-search-page
+  relationships.uses: application.service.reference-integration
+  version: 1.0.0
+structure-node-details-page:
+  name: structure-node-details-page
+  description: Structure node details page with word senses, reference links, and
+    semantic analysis
+  criticality: high
+  route: /app/structure_nodes/:nodeId
+  id: ux.view.structure-node-details-page
+  relationships.uses: application.service.structure-node-management
+  version: 1.0.0
+node-tables-group:
+  name: node-tables-group
+  description: Data table components for displaying and managing structure nodes,
+    links, and predicates with sorting and filtering
+  criticality: high
+  component-type: group
+  id: ux.view.node-tables-group
+  relationships.uses: application.component.node-tables
+  version: 1.0.0
+tree-visualization-group:
+  name: tree-visualization-group
+  description: Tree chart and hierarchical menu components for visualizing knowledge
+    graph structure
+  criticality: high
+  component-type: group
+  id: ux.view.tree-visualization-group
+  relationships.uses: application.component.tree-chart
+  version: 1.0.0
+reference-nodes-group:
+  name: reference-nodes-group
+  description: Reference data browsing components for ConceptNet, DBpedia, and Wikidata
+    integration
+  criticality: medium
+  component-type: group
+  id: ux.view.reference-nodes-group
+  relationships.uses: application.component.reference-viewer
+  version: 1.0.0
+datasets-group:
+  name: datasets-group
+  description: Dataset management components for current dataset card and history
+    visualization
+  criticality: medium
+  component-type: group
+  id: ux.view.datasets-group
+  relationships.uses: application.component.dataset-manager
+  version: 1.0.0
+nlp-concept-group:
+  name: nlp-concept-group
+  description: NLP analysis and word sense disambiguation components for semantic
+    understanding
+  criticality: medium
+  component-type: group
+  id: ux.view.nlp-concept-group
+  relationships.uses: application.component.nlp-analysis-panel
+  version: 1.0.0
+node-selectors-group:
+  name: node-selectors-group
+  description: Selector and picker components for choosing layers, domains, terms,
+    and predicates
+  criticality: high
+  component-type: group
+  id: ux.view.node-selectors-group
+  relationships.uses: application.component.node-selectors
+  version: 1.0.0
+pipeline-management-group:
+  name: pipeline-management-group
+  description: Pipeline flavor configuration and testing components for LLM workflows
+  criticality: high
+  component-type: group
+  id: ux.view.pipeline-management-group
+  relationships.uses: application.component.pipeline-flavor-editor
+  version: 1.0.0

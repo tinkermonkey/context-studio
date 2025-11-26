@@ -1,0 +1,37 @@
+openapi:
+  openapi: 3.0.3
+  info:
+    title: Get Graph Stats
+    version: 1.0.0
+  paths:
+    /api/graph/stats:
+      get:
+        operationId: get_graph_stats_api_graph_stats_get
+        summary: Get Graph Stats
+        description: Get comprehensive graph statistics from both SPARQL and NetworkX
+          services.
+        parameters:
+        - name: SessionLocal
+          in: query
+          required: false
+          schema:
+            title: Sessionlocal
+        requestBody: null
+        responses:
+          '200':
+            description: Successful Response
+            content:
+              application/json:
+                schema:
+                  type: object
+                  additionalProperties: true
+                  title: Response Get Graph Stats Api Graph Stats Get
+          '422':
+            description: Validation Error
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/HTTPValidationError'
+        tags:
+        - graph
+        - Graph

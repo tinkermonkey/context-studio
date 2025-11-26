@@ -1,0 +1,62 @@
+Knowledge Graph Management:
+  name: Knowledge Graph Management
+  description: Capability to manage hierarchical taxonomical knowledge graphs with
+    layers, domains, terms, and semantic relationships
+  id: knowledge-graph-management
+  relationships:
+    realizes:
+      - motivation.goal.enable-knowledge-graph-curation
+Semantic Search:
+  name: Semantic Search
+  description: Capability to perform vector-based semantic search across entities
+    using embeddings and similarity algorithms
+  id: semantic-search
+  relationships:
+    realizes:
+      - motivation.goal.enable-knowledge-graph-curation
+Dataset Management:
+  name: Dataset Management
+  description: Capability to manage multiple independent datasets with versioning
+    and switching capabilities
+  id: dataset-management
+NLP Processing:
+  name: NLP Processing
+  description: Capability to process and analyze text using NLP pipelines for entity
+    recognition and linguistic analysis
+  id: nlp-processing
+Reference Integration:
+  name: Reference Integration
+  description: Capability to integrate external knowledge sources including ConceptNet,
+    DBpedia, Wikidata, and Schema.org
+  id: reference-integration
+  relationships:
+    realizes:
+      - motivation.goal.enable-knowledge-graph-curation
+RAG Pipeline Execution:
+  name: RAG Pipeline Execution
+  description: Capability to execute RAG pipelines with LLM integration for context-aware
+    AI responses
+  id: rag-pipeline-execution
+  relationships:
+    realizes:
+      - motivation.goal.support-rag-workflows
+Graph Analytics:
+  name: Graph Analytics
+  description: Capability to analyze graph structure and relationships using network
+    analysis algorithms
+  id: graph-analytics
+Embedding Generation:
+  name: Embedding Generation
+  description: Capability to generate semantic embeddings for search and similarity
+    computation
+  id: embedding-generation
+Data Import Export:
+  name: Data Import Export
+  description: Capability to import and export knowledge graph data in various formats
+    including CSV
+  id: data-import-export
+Change Tracking:
+  name: Change Tracking
+  description: Capability to track and audit all data changes with comprehensive change
+    event logging
+  id: change-tracking

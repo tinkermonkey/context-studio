@@ -1,0 +1,43 @@
+openapi:
+  openapi: 3.0.3
+  info:
+    title: Get Trace
+    version: 1.0.0
+  paths:
+    /api/rag/trace/{request_id}:
+      get:
+        operationId: get_trace_api_rag_trace__request_id__get
+        summary: Get Trace
+        description: "Retrieve all trace entries for a specific RAG extraction request.\n\
+          \nTrace data includes detailed input/output information for each layer,\n\
+          useful for debugging and algorithm tuning.\n\nArgs:\n    request_id: Unique\
+          \ identifier for the extraction request\n    observability_store: Injected\
+          \ observability store\n\nReturns:\n    List of trace entries ordered by\
+          \ sentence index and timestamp\n\nRaises:\n    HTTPException 404: If request_id\
+          \ has no trace data\n    HTTPException 500: If trace retrieval fails"
+        parameters:
+        - name: request_id
+          in: path
+          required: true
+          schema:
+            type: string
+            title: Request Id
+        requestBody: null
+        responses:
+          '200':
+            description: Successful Response
+            content:
+              application/json:
+                schema: {}
+          '404':
+            description: Request ID not found or trace not enabled
+          '500':
+            description: Failed to retrieve trace data
+          '422':
+            description: Validation Error
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/HTTPValidationError'
+        tags:
+        - rag-pipeline

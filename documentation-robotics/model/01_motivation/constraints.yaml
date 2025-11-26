@@ -1,173 +1,47 @@
-# Context Studio - Constraints
-# Motivation Layer - Documentation Robotics Model
-# Defines limitations and constraints affecting strategic choices
-
-LocalFirstConstraint:
-  name: Local-First Architecture Constraint
-  description: Commitment to local-first design philosophy limits certain centralized features and requires offline-first thinking in all architectural decisions
-  id: local-first-constraint
-  type: constraint
-  category: architectural
-  impact: moderate
-  permanence: strategic-choice
-  rationale: Core differentiator and privacy commitment to users
-  implications:
-    - Real-time collaboration requires CRDT-based conflict resolution
-    - Server-side processing must be optional or replicable locally
-    - Cloud features must gracefully degrade when offline
-    - Synchronization logic more complex than centralized approach
-  affects:
-    - workspace-collaboration
-    - data-synchronization-service
-    - enterprise-scalability-goal
-    - operational-excellence
-  mitigation:
-    - Optional cloud sync for users who want it
-    - CRDT merge engine for eventual consistency
-    - Local-first sync protocols (like Automerge)
-    - Clear documentation of offline vs online features
-
-ResourceLimitationsConstraint:
-  name: Resource Limitations
-  description: As an independent or small team project, development resources, marketing budget, and support capacity are limited compared to large enterprise vendors
-  id: resource-limitations-constraint
-  type: constraint
-  category: organizational
-  impact: high
-  permanence: temporary
-  rationale: Early-stage product with constrained funding
-  implications:
-    - Must prioritize ruthlessly on core differentiators
-    - Cannot match feature breadth of large competitors
-    - Documentation and support rely heavily on community
-    - Sales and marketing reach limited
-  affects:
-    - market-competitiveness-goal
-    - enterprise-scalability-goal
-    - developer-experience-goal
-    - user-experience-goal
-  mitigation:
-    - Focus on niche where local-first + AI-native wins
-    - Leverage open source community for contributions
-    - Partner with complementary products vs building everything
-    - Prioritize high-impact features with clear ROI
-
-DesktopFirstConstraint:
-  name: Desktop-First Limitation
-  description: Initial focus on desktop platforms means mobile support is delayed, limiting use cases requiring mobile access
-  id: desktop-first-constraint
-  type: constraint
-  category: technical
-  impact: moderate
-  permanence: temporary
-  rationale: Desktop provides best UX for knowledge work and graph visualization
-  implications:
-    - Mobile users cannot access Context Studio natively
-    - On-the-go knowledge capture requires workarounds
-    - Competitive disadvantage vs mobile-friendly solutions
-    - Limits casual user adoption
-  affects:
-    - market-competitiveness-goal
-    - user-experience-goal
-  mitigation:
-    - Responsive web interface works on tablets
-    - Mobile apps on 12-18 month roadmap
-    - Integration with mobile note apps (Obsidian, Notion)
-    - Mobile companion app for light tasks
-
-SingleUserOriginConstraint:
-  name: Single-User Origin
-  description: Platform designed initially for single users means multi-user features require significant architectural evolution and refactoring
-  id: single-user-origin-constraint
-  type: constraint
-  category: architectural
-  impact: moderate
-  permanence: temporary
-  rationale: MVP focused on individual knowledge workers
-  implications:
-    - Access control and permissions require retrofit
-    - Audit logging and compliance features not native
-    - Multi-tenant isolation requires careful implementation
-    - Collaboration workflows more complex to add post-hoc
-  affects:
-    - enterprise-scalability-goal
-    - workspace-collaboration
-    - operational-excellence
-  mitigation:
-    - CRDT merge engine provides collaboration foundation
-    - Version control and change events enable audit trails
-    - Gradual evolution path through knowledge instances
-    - Clear roadmap for enterprise features
-
-TechnologyStackConstraint:
-  name: Technology Stack Dependencies
-  description: Reliance on specific technologies (Python, SQLite, React, SQLiteVector) constrains some architectural choices and platform capabilities
-  id: technology-stack-constraint
-  type: constraint
-  category: technical
-  impact: low
-  permanence: semi-permanent
-  rationale: Pragmatic choices for local-first architecture
-  implications:
-    - Python ecosystem for backend (GIL limitations)
-    - SQLite scalability limits (write concurrency)
-    - Vector search capabilities bounded by SQLiteVector
-    - Web technologies for cross-platform UI
-  affects:
-    - extensibility-goal
-    - enterprise-scalability-goal
-    - operational-excellence
-  mitigation:
-    - Well-defined APIs abstract technology choices
-    - SQLite excellent for local-first use case
-    - Python ecosystem rich for AI/ML integrations
-    - Electron enables true cross-platform desktop
-
-OfflineFirstPerformanceConstraint:
-  name: Offline-First Performance Constraint
-  description: Local processing and storage on user devices means performance bounded by end-user hardware capabilities rather than scalable cloud infrastructure
-  id: offline-first-performance-constraint
-  type: constraint
-  category: technical
-  impact: moderate
-  permanence: strategic-choice
-  rationale: Inherent tradeoff of local-first architecture
-  implications:
-    - Large graphs may strain lower-end devices
-    - Compute-intensive operations limited by local CPU/GPU
-    - Cannot offload heavy processing to cloud easily
-    - User experience varies based on hardware
-  affects:
-    - ai-optimized-knowledge-goal
-    - enterprise-scalability-goal
-    - user-experience-goal
-  mitigation:
-    - Optimization focus on efficient algorithms
-    - Progressive enhancement based on device capabilities
-    - Optional cloud processing for heavy operations
-    - Clear guidance on recommended hardware specs
-    - Streaming and pagination for large datasets
-
-MarketEducationConstraint:
-  name: Market Education Required
-  description: Local-first and knowledge graph concepts require significant market education compared to familiar cloud SaaS products
-  id: market-education-constraint
-  type: constraint
-  category: market
-  impact: moderate
-  permanence: temporary
-  rationale: Paradigm shift from cloud-first mental models
-  implications:
-    - Longer sales cycles explaining benefits
-    - More documentation and educational content needed
-    - User onboarding more complex
-    - Word-of-mouth adoption slower initially
-  affects:
-    - market-competitiveness-goal
-    - user-experience-goal
-  mitigation:
-    - Comprehensive documentation and tutorials
-    - Clear value proposition messaging
-    - Case studies demonstrating ROI
-    - Community evangelism and advocacy
-    - Free tier to enable try-before-buy
+Desktop Deployment:
+  name: Desktop Deployment
+  description: Must operate as desktop application on user workstations without requiring
+    server infrastructure
+  constraintType: technology
+  constraint.negotiable: 'false'
+  id: desktop-deployment
+  relationships:
+    constrains:
+      - motivation.goal.ensure-local-first-operation
+SQLite Database Limitation:
+  name: SQLite Database Limitation
+  description: Limited to SQLite database capabilities for portability and simplicity,
+    constraining scale and concurrency
+  constraintType: technology
+  constraint.negotiable: 'false'
+  id: sqlite-database-limitation
+  relationships:
+    constrains:
+      - motivation.goal.enable-knowledge-graph-curation
+Offline Operation Requirement:
+  name: Offline Operation Requirement
+  description: Must function fully offline without internet connectivity for privacy
+    and availability
+  constraintType: technology
+  constraint.negotiable: 'false'
+  id: offline-operation-requirement
+  relationships:
+    constrains:
+      - motivation.goal.ensure-local-first-operation
+LLM Provider Dependency:
+  name: LLM Provider Dependency
+  description: Depends on external LLM providers for AI features, requiring API keys
+    and network access when AI features are used
+  constraintType: technology
+  constraint.negotiable: 'true'
+  id: llm-provider-dependency
+Local Compute Constraints:
+  name: Local Compute Constraints
+  description: Limited by local machine compute resources for embedding generation
+    and NLP processing
+  constraintType: resource
+  constraint.negotiable: 'false'
+  id: local-compute-constraints
+  relationships:
+    constrains:
+      - motivation.goal.support-rag-workflows

@@ -1,0 +1,30 @@
+Local Data Access Policy:
+  name: Local Data Access Policy
+  description: Local data access policy allowing unrestricted access to local SQLite
+    databases as application runs on user-controlled workstation
+  criticality: medium
+  id: local-data-access-policy
+HTTPS Requirement Policy:
+  name: HTTPS Requirement Policy
+  description: HTTPS requirement for external API connections to ConceptNet, DBpedia,
+    Wikidata, and Schema.org reference sources
+  criticality: high
+  id: https-requirement-policy
+LLM API Key Policy:
+  name: LLM API Key Policy
+  description: LLM API key management policy for secure storage of OpenAI, Anthropic,
+    and other provider credentials in config.json
+  criticality: high
+  id: llm-api-key-policy
+Data Integrity Policy:
+  name: Data Integrity Policy
+  description: Data integrity policy ensuring atomic database transactions, rollback
+    on errors, and comprehensive change event tracking
+  criticality: high
+  id: data-integrity-policy
+Reference Source Validation Policy:
+  name: Reference Source Validation Policy
+  description: External reference source validation policy for HTTPS enforcement and
+    secure upstream URL configuration
+  criticality: medium
+  id: reference-source-validation-policy

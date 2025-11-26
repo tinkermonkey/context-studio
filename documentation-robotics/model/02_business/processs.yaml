@@ -1,0 +1,40 @@
+Knowledge Curation Process:
+  name: Knowledge Curation Process
+  description: Process for curating knowledge graph content including creating layers,
+    domains, terms, and establishing semantic relationships
+  id: knowledge-curation-process
+  relationships:
+    realizes:
+      - business.function.knowledge-graph-management
+RAG Query Process:
+  name: RAG Query Process
+  description: Process for executing RAG queries with context retrieval, embedding
+    search, and LLM response generation
+  id: rag-query-process
+  relationships:
+    realizes:
+      - business.function.rag-pipeline-execution
+Dataset Versioning Process:
+  name: Dataset Versioning Process
+  description: Process for managing dataset versions including creation, switching,
+    and synchronization operations
+  id: dataset-versioning-process
+  relationships:
+    realizes:
+      - business.function.dataset-management
+Semantic Enrichment Process:
+  name: Semantic Enrichment Process
+  description: Process for enriching entities with NLP analysis including entity recognition,
+    embedding generation, and linguistic features
+  id: semantic-enrichment-process
+  relationships:
+    realizes:
+      - business.function.nlp-processing
+Reference Linking Process:
+  name: Reference Linking Process
+  description: Process for linking terms to external references including search,
+    disambiguation, and integration with ConceptNet, DBpedia, and Wikidata
+  id: reference-linking-process
+  relationships:
+    realizes:
+      - business.function.reference-integration

@@ -1,0 +1,39 @@
+sqlite-local:
+  name: sqlite-local
+  description: Primary SQLite database (local.db) storing structure nodes, links,
+    and predicates with SQLiteVector extension
+  location: local.db
+  id: technology.artifact.sqlite-local
+sqlite-reference:
+  name: sqlite-reference
+  description: Reference database (reference.db) storing consolidated external knowledge
+    from ConceptNet, DBpedia, Wikidata, Schema.org
+  location: reference.db
+  id: technology.artifact.sqlite-reference
+sqlite-operations:
+  name: sqlite-operations
+  description: Operations database (operations.db) for pipeline flavors, executions,
+    tasks, and audit logs
+  location: operations.db
+  id: technology.artifact.sqlite-operations
+Local Workstation Zone:
+  name: Local Workstation Zone
+  description: Local workstation trust zone (trusted) containing SQLite databases
+    and local application services
+  trust_level: trusted
+  criticality: high
+  id: local-workstation-zone
+External API Zone:
+  name: External API Zone
+  description: External API trust zone (untrusted) containing ConceptNet, DBpedia,
+    Wikidata, and Schema.org services
+  trust_level: untrusted
+  criticality: medium
+  id: external-api-zone
+LLM Provider Zone:
+  name: LLM Provider Zone
+  description: LLM provider trust zone (semi-trusted) containing OpenAI, Anthropic,
+    and other LLM API services
+  trust_level: semi-trusted
+  criticality: high
+  id: llm-provider-zone

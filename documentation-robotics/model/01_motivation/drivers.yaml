@@ -1,153 +1,45 @@
-# Context Studio - Business Drivers
-# Motivation Layer - Documentation Robotics Model
-# Defines external forces and market trends driving strategy
-
-AIRevolutionDriver:
-  name: AI Revolution
-  description: The rapid advancement and widespread adoption of large language models, AI agents, and generative AI creates unprecedented demand for structured, AI-ready knowledge infrastructure
-  id: ai-revolution-driver
-  type: driver
+Need for Structured Knowledge:
+  name: Need for Structured Knowledge
+  description: Need for organizing and structuring unstructured knowledge to enable
+    effective discovery, reuse, and AI-enhanced workflows
+  category: operational
+  id: need-for-structured-knowledge
+  relationships:
+    motivates:
+      - motivation.goal.enable-knowledge-graph-curation
+AI Agent Integration Demand:
+  name: AI Agent Integration Demand
+  description: Increasing demand for AI agent integration with human workflows requiring
+    structured context and knowledge representation
   category: technology
-  strength: high
-  trend: accelerating
-  evidence:
-    - LLM adoption growing 300%+ year-over-year
-    - Enterprise AI investment exceeding $200B annually
-    - RAG becoming standard pattern for production AI
-    - AI agents requiring structured knowledge bases
-  influences:
-    - ai-optimized-knowledge-goal
-    - cost-efficiency-goal
-    - market-competitiveness-goal
-    - rag-pipeline-optimization
-
-DataPrivacyConcernsDriver:
-  name: Data Privacy & Sovereignty
-  description: Growing awareness of data privacy risks, increasing regulation (GDPR, CCPA), and desire for data sovereignty drives demand for local-first, privacy-respecting knowledge management
-  id: data-privacy-concerns-driver
-  type: driver
+  id: ai-agent-integration-demand
+  relationships:
+    motivates:
+      - motivation.goal.facilitate-human-agent-communication
+Privacy and Control Concerns:
+  name: Privacy and Control Concerns
+  description: Privacy and data control concerns driving local-first architecture
+    to keep sensitive knowledge on user-controlled devices
   category: regulatory
-  strength: high
-  trend: increasing
-  evidence:
-    - GDPR fines exceeding 1.5B EUR since 2018
-    - 75% of global population covered by privacy laws by 2024
-    - Enterprise data breach costs averaging $4.5M
-    - Customer trust issues with cloud-only solutions
-  influences:
-    - local-first-architecture-goal
-    - enterprise-scalability-goal
-    - operational-excellence
-
-RAGAdoptionDriver:
-  name: RAG Adoption Growth
-  description: Widespread adoption of Retrieval-Augmented Generation patterns in AI applications increases need for optimized, high-quality knowledge bases that improve LLM accuracy
-  id: rag-adoption-driver
-  type: driver
+  id: privacy-and-control-concerns
+  relationships:
+    motivates:
+      - motivation.goal.ensure-local-first-operation
+RAG Effectiveness Requirement:
+  name: RAG Effectiveness Requirement
+  description: Requirement for context-rich RAG to improve AI response accuracy and
+    relevance through curated knowledge
   category: technology
-  strength: high
-  trend: accelerating
-  evidence:
-    - 70%+ of production LLM apps use RAG architecture
-    - RAG market projected to reach $10B by 2027
-    - Documented 40-60% improvement in factual accuracy
-    - Major vendors (OpenAI, Anthropic) promoting RAG patterns
-  influences:
-    - ai-optimized-knowledge-goal
-    - knowledge-quality-goal
-    - rag-pipeline-optimization
-    - semantic-embedding-management
-
-EnterpriseAINeedsDriver:
-  name: Enterprise AI Requirements
-  description: Enterprises require secure, scalable, governable AI infrastructure for proprietary knowledge with quality control, compliance, and auditability
-  id: enterprise-ai-needs-driver
-  type: driver
-  category: business
-  strength: high
-  trend: increasing
-  evidence:
-    - 85% of enterprises consider AI strategic priority
-    - Proprietary knowledge 10x more valuable than public data
-    - Compliance and audit requirements delaying AI adoption
-    - Need for explainable, traceable AI decisions
-  influences:
-    - enterprise-scalability-goal
-    - knowledge-quality-goal
-    - operational-excellence
-    - workspace-collaboration
-
-OpenSourceTrendDriver:
-  name: Open Source & Transparency
-  description: Developer and enterprise preference for open, extensible, transparent platforms over proprietary black boxes, especially for critical infrastructure
-  id: open-source-trend-driver
-  type: driver
-  category: cultural
-  strength: medium
-  trend: stable
-  evidence:
-    - 90% of enterprises use open source software
-    - Developer trust in open source higher than proprietary
-    - Vendor lock-in cited as top concern in 65% of surveys
-    - Open source AI models gaining enterprise adoption
-  influences:
-    - developer-experience-goal
-    - extensibility-goal
-    - api-stability-goal
-    - market-competitiveness-goal
-
-LLMCostPressuresDriver:
-  name: LLM Cost Pressures
-  description: High and unpredictable operational costs of LLM APIs drive urgent need for optimization, efficiency tools, and cost management solutions
-  id: llm-cost-pressures-driver
-  type: driver
-  category: economic
-  strength: high
-  trend: stable
-  evidence:
-    - LLM API costs 50-70% of AI application budgets
-    - Prompt engineering can reduce costs 30-50%
-    - Caching and optimization ROI documented at 5-10x
-    - CFOs demanding visibility into AI spending
-  influences:
-    - cost-efficiency-goal
-    - llm-pipeline-experimentation
-    - llm-pipeline-management
-    - rag-pipeline-optimization
-
-KnowledgeGraphRenaissanceDriver:
-  name: Knowledge Graph Renaissance
-  description: Resurgence of interest in knowledge graphs as foundation for AI reasoning, combining symbolic AI with neural approaches for superior results
-  id: knowledge-graph-renaissance-driver
-  type: driver
-  category: technology
-  strength: medium
-  trend: increasing
-  evidence:
-    - Graph databases growing 50%+ annually
-    - Major tech companies (Google, Amazon) investing in KG
-    - Academic research combining KG with LLMs accelerating
-    - Semantic web standards gaining renewed attention
-  influences:
-    - ai-optimized-knowledge-goal
-    - knowledge-quality-goal
-    - graph-intelligence
-    - semantic-data-integration
-
-RemoteWorkTransformationDriver:
-  name: Remote Work Transformation
-  description: Shift to distributed work creates need for better knowledge sharing, collaboration tools, and institutional memory preservation
-  id: remote-work-transformation-driver
-  type: driver
-  category: social
-  strength: medium
-  trend: stable
-  evidence:
-    - 30% of workforce fully remote, 60% hybrid
-    - Knowledge silos cited as top productivity barrier
-    - Collaboration tool spending up 200% since 2020
-    - Onboarding challenges in distributed teams
-  influences:
-    - workspace-collaboration
-    - collaborative-knowledge-development
-    - knowledge-asset-management
+  id: rag-effectiveness-requirement
+  relationships:
+    motivates:
+      - motivation.goal.support-rag-workflows
+Semantic Understanding Need:
+  name: Semantic Understanding Need
+  description: Need for semantic understanding beyond keyword search to enable intelligent
+    knowledge discovery and reasoning
+  category: strategic
+  id: semantic-understanding-need
+  relationships:
+    motivates:
+      - motivation.goal.enable-knowledge-graph-curation

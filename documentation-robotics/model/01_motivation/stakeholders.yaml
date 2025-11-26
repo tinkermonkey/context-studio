@@ -1,153 +1,42 @@
-# Context Studio - Stakeholders
-# Motivation Layer - Documentation Robotics Model
-# Defines key stakeholders and their primary concerns
-
-KnowledgeEngineers:
-  name: Knowledge Engineers
-  description: Professionals who design, build, and maintain taxonomies, ontologies, and knowledge graph structures for organizations, ensuring semantic consistency and knowledge quality
-  id: knowledge-engineers
-  type: stakeholder
-  concerns:
-    - Efficient knowledge modeling and graph design tools
-    - Quality assurance and semantic validation
-    - Reusable knowledge assets and templates
-    - Collaboration with subject matter experts
-    - Ontology alignment with standards
-    - Performance at scale for large graphs
-  satisfied_by:
-    - knowledge-graph-curation
-    - collaborative-knowledge-development
-    - knowledge-asset-management
-    - semantic-embedding-management
-    - knowledge-enrichment
-
-AIMLEngineers:
-  name: AI/ML Engineers
-  description: Engineers who configure, optimize, and deploy AI systems including RAG pipelines, LLM applications, and embedding models for production use
-  id: ai-ml-engineers
-  type: stakeholder
-  concerns:
-    - LLM performance optimization and cost reduction
-    - Reliable knowledge retrieval accuracy
-    - Experiment tracking and reproducibility
-    - Pipeline configuration management
-    - Embedding quality and semantic search
-    - Integration with existing AI infrastructure
-  satisfied_by:
-    - llm-pipeline-experimentation
-    - rag-pipeline-optimization
-    - llm-pipeline-management
-    - semantic-embedding-management
-    - ai-content-processing
-
-DataScientists:
-  name: Data Scientists
-  description: Analysts who explore knowledge graphs to discover patterns, generate insights, validate hypotheses, and inform data-driven business decisions
-  id: data-scientists
-  type: stakeholder
-  concerns:
-    - Graph analysis and visualization capabilities
-    - Data quality metrics and validation
-    - Export to analysis tools and formats
-    - Performance at scale for large datasets
-    - Statistical insights from graph structure
-    - Integration with notebook environments
-  satisfied_by:
-    - graph-analysis-visualization
-    - graph-intelligence
-    - system-monitoring-analytics
-    - semantic-data-integration
-    - bulk-data-operations
-
-ContentCurators:
-  name: Content Curators
-  description: Domain experts and subject matter specialists who contribute, review, and maintain knowledge content to ensure accuracy and relevance
-  id: content-curators
-  type: stakeholder
-  concerns:
-    - Intuitive content editing workflows
-    - Quality review and approval processes
-    - Change tracking and version history
-    - Bulk operations for efficiency
-    - Search and discovery of existing content
-    - Validation and error detection
-  satisfied_by:
-    - knowledge-asset-management
-    - workspace-collaboration
-    - bulk-data-operations
-    - collaborative-knowledge-development
-    - knowledge-enrichment
-
-SystemAdministrators:
-  name: System Administrators
-  description: IT professionals responsible for deploying, maintaining, securing, and monitoring the Context Studio platform infrastructure
-  id: system-administrators
-  type: stakeholder
-  concerns:
-    - System reliability and uptime
-    - Resource optimization and capacity planning
-    - Backup and disaster recovery
-    - Monitoring and alerting
-    - Security and access control
-    - Update and patch management
-  satisfied_by:
-    - operational-excellence
-    - data-synchronization-service
-    - dataset-workspace-management
-    - system-monitoring-analytics
-
-OrganizationDecisionMakers:
-  name: Organization Decision Makers
-  description: Business leaders, executives, and technology directors who evaluate Context Studio for adoption, investment, and strategic knowledge management initiatives
-  id: organization-decision-makers
-  type: stakeholder
-  concerns:
-    - Return on investment and business value
-    - Vendor independence and data portability
-    - Data privacy and regulatory compliance
-    - Scalability to enterprise needs
-    - Total cost of ownership
-    - Competitive advantage through AI
-  satisfied_by:
-    - local-first-architecture-goal
-    - cost-efficiency-goal
-    - enterprise-scalability-goal
-    - ai-optimized-knowledge-goal
-    - operational-excellence
-
-DeveloperCommunity:
-  name: Developer Community
-  description: Software developers building integrations, extensions, plugins, and applications on top of Context Studio APIs and protocols
-  id: developer-community
-  type: stakeholder
-  concerns:
-    - API stability and comprehensive documentation
-    - Extension points and plugin architecture
-    - Open source licensing and contribution process
-    - Community support and examples
-    - Standards compliance (MCP, RDF, etc.)
-    - Development tools and SDKs
-  satisfied_by:
-    - extensibility-goal
-    - api-stability-goal
-    - developer-experience-goal
-    - semantic-data-integration
-    - external-knowledge-integration
-
-EndUsers:
+Knowledge Workers:
+  name: Knowledge Workers
+  description: Knowledge workers curating domain expertise and building structured
+    knowledge bases for their work
+  type: customer
+  id: knowledge-workers
+  relationships:
+    has_interest:
+      - motivation.goal.enable-knowledge-graph-curation
+Researchers:
+  name: Researchers
+  description: Researchers building structured research knowledge bases to organize
+    findings, references, and domain knowledge
+  type: customer
+  id: researchers
+  relationships:
+    has_interest:
+      - motivation.goal.enable-knowledge-graph-curation
+AI Developers:
+  name: AI Developers
+  description: AI developers integrating knowledge graphs with LLM applications to
+    provide context for RAG and agent workflows
+  type: customer
+  id: ai-developers
+  relationships:
+    has_interest:
+      - motivation.goal.support-rag-workflows
+End Users:
   name: End Users
-  description: Individual knowledge workers, researchers, and professionals using Context Studio for personal knowledge management and AI-assisted work
+  description: End users consuming AI-enhanced applications that leverage curated
+    knowledge graphs for improved responses
+  type: external
   id: end-users
-  type: stakeholder
-  concerns:
-    - Intuitive user experience
-    - Fast performance and responsiveness
-    - Privacy and data ownership
-    - Offline capability
-    - Integration with daily workflows
-    - Learning curve and onboarding
-  satisfied_by:
-    - local-first-architecture-goal
-    - knowledge-asset-management
-    - semantic-embedding-management
-    - dataset-workspace-management
+  relationships:
+    has_interest:
+      - motivation.goal.facilitate-human-agent-communication
+System Administrators:
+  name: System Administrators
+  description: System administrators managing Context Studio deployments and ensuring
+    data integrity and performance
+  type: internal
+  id: system-administrators

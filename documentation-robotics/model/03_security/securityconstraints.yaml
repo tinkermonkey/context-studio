@@ -1,0 +1,43 @@
+SQLite File Permissions:
+  name: SQLite File Permissions
+  description: SQLite database file permissions restricted to user account through
+    OS-level file permissions for local.db, reference.db, reference_api_cache.db,
+    and operations.db
+  criticality: medium
+  id: sqlite-file-permissions
+HTTPS Enforcement:
+  name: HTTPS Enforcement
+  description: HTTPS enforcement for external API calls with URL validation in ReferenceSourceConfig
+    preventing HTTP URLs
+  criticality: high
+  id: https-enforcement
+API Key Encryption:
+  name: API Key Encryption
+  description: API key encryption and secure storage in config.json with environment
+    variable override support for sensitive credentials
+  criticality: high
+  id: api-key-encryption
+Transaction Rollback:
+  name: Transaction Rollback
+  description: Database transaction rollback on errors through SQLAlchemy session
+    management ensuring data integrity
+  criticality: high
+  id: transaction-rollback
+Input Validation:
+  name: Input Validation
+  description: Pydantic-based input validation for all API requests ensuring type
+    safety and preventing malformed data
+  criticality: high
+  id: input-validation
+SQL Injection Prevention:
+  name: SQL Injection Prevention
+  description: SQL injection prevention through SQLAlchemy ORM parameterized queries
+    and proper escaping
+  criticality: critical
+  id: sql-injection-prevention
+Change Event Logging:
+  name: Change Event Logging
+  description: Comprehensive change event logging for audit trail of all database
+    changes across structure_nodes, structure_node_links, and predicates
+  criticality: medium
+  id: change-event-logging

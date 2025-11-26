@@ -1,384 +1,133 @@
-# Navigation Layer - Application Routes
-# Defines the complete route structure and navigation hierarchy
-
-RootRoute:
-  name: Root Route
-  description: Application root providing theme context and query client
-  id: root-route
+home-route:
+  name: home-route
+  description: Landing page route displaying dashboard with tree chart
   path: /
-  component: RootComponent
-  layout: none
-  children:
-    - app-route
-
-AppRoute:
-  name: App Route
-  description: Main application layout with navbar and content area
-  id: app-route
+  criticality: high
+  id: navigation.route.home-route
+  relationships.navigates_to: ux.view.home-page
+  version: 1.0.0
+app-route:
+  name: app-route
+  description: Main application route container for authenticated views
   path: /app
-  component: AppComponent
-  layout: cs_navbar
-  landing_page: dashboard-page
-  children:
-    - dashboard-route
-    - knowledge-graph-routes
-    - rag-routes
-    - reference-routes
-    - datasets-route
-    - config-routes
-    - monitoring-routes
-
-DashboardRoute:
-  name: Dashboard Route
-  description: Application dashboard and landing page
-  id: dashboard-route
-  path: /app
-  exact: true
-  page: dashboard-page
-  public: false
-  menu_visible: true
-  menu_label: Dashboard
-  menu_order: 1
-
-# Knowledge Graph Routes
-LayersRoute:
-  name: Layers Route
-  description: Knowledge graph layers management
-  id: layers-route
+  criticality: high
+  id: navigation.route.app-route
+  version: 1.0.0
+layers-route:
+  name: layers-route
+  description: Route to layers management page for knowledge graph structure
   path: /app/layers
-  page: layers-page
-  public: false
-  menu_group: Knowledge Graph
-  menu_visible: true
-  menu_label: Layers
-  menu_order: 1
-
-DomainsRoute:
-  name: Domains Route
-  description: Knowledge graph domains management
-  id: domains-route
+  criticality: high
+  id: navigation.route.layers-route
+  relationships.navigates_to: ux.view.layers-page
+  version: 1.0.0
+domains-route:
+  name: domains-route
+  description: Route to domains management page with layer filtering
   path: /app/domains
-  page: domains-page
-  public: false
-  menu_group: Knowledge Graph
-  menu_visible: true
-  menu_label: Domains
-  menu_order: 2
-
-TermsRoute:
-  name: Terms Route
-  description: Knowledge graph terms management
-  id: terms-route
+  criticality: high
+  id: navigation.route.domains-route
+  relationships.navigates_to: ux.view.domains-page
+  version: 1.0.0
+terms-route:
+  name: terms-route
+  description: Route to terms management page with domain filtering
   path: /app/terms
-  page: terms-page
-  public: false
-  menu_group: Knowledge Graph
-  menu_visible: true
-  menu_label: Terms
-  menu_order: 3
-
-PredicatesRoute:
-  name: Predicates Route
-  description: Semantic predicates management
-  id: predicates-route
+  criticality: high
+  id: navigation.route.terms-route
+  relationships.navigates_to: ux.view.terms-page
+  version: 1.0.0
+predicates-route:
+  name: predicates-route
+  description: Route to predicates management page for semantic relationships
   path: /app/predicates
-  page: predicates-page
-  public: false
-  menu_group: Knowledge Graph
-  menu_visible: true
-  menu_label: Predicates
-  menu_order: 4
-
-StructureNodeDetailRoute:
-  name: Structure Node Detail Route
-  description: Individual structure node detail view
-  id: structure-node-detail-route
-  path: /app/structure_nodes/:nodeId
-  page: structure-node-detail-page
-  public: false
-  menu_visible: false
-  parameters:
-    - nodeId (UUID)
-
-# RAG & Testing Routes
-RAGExperimentsRoute:
-  name: RAG Experiments Route
-  description: RAG pipeline experimentation interface
-  id: rag-experiments-route
-  path: /app/rag/experiments
-  page: rag-experiments-page
-  public: false
-  menu_group: RAG & Testing
-  menu_visible: true
-  menu_label: Experiments
-  menu_order: 1
-
-RAGPipelineComparisonRoute:
-  name: RAG Pipeline Comparison Route
-  description: Compare RAG pipeline performance
-  id: rag-pipeline-comparison-route
-  path: /app/rag/pipeline-comparison
-  page: rag-pipeline-comparison-page
-  public: false
-  menu_group: RAG & Testing
-  menu_visible: true
-  menu_label: Pipeline Comparison
-  menu_order: 2
-
-RAGTestRunnerRoute:
-  name: RAG Test Runner Route
-  description: Automated RAG pipeline testing
-  id: rag-test-runner-route
-  path: /app/rag/test-runner
-  page: rag-test-runner-page
-  public: false
-  menu_group: RAG & Testing
-  menu_visible: true
-  menu_label: Test Runner
-  menu_order: 3
-
-# External Reference Routes
-ReferenceSearchRoute:
-  name: Reference Search Route
-  description: Unified external reference search
-  id: reference-search-route
-  path: /app/reference/search
-  page: reference-search-page
-  public: false
-  menu_group: External Reference
-  menu_visible: true
-  menu_label: Search
-  menu_order: 1
-
-ReferencePredicateMappingRoute:
-  name: Reference Predicate Mapping Route
-  description: Map predicates to external ontologies
-  id: reference-predicate-mapping-route
-  path: /app/reference/predicates
-  page: reference-predicate-mapping-page
-  public: false
-  menu_group: External Reference
-  menu_visible: true
-  menu_label: Predicate Mapping
-  menu_order: 2
-
-ReferenceIndexRoute:
-  name: Reference Index Route
-  description: Reference section landing page
-  id: reference-index-route
-  path: /app/reference
-  page: reference-index-page
-  public: false
-  menu_visible: false
-
-# Datasets Route
-DatasetsRoute:
-  name: Datasets Route
-  description: Dataset management and switching
-  id: datasets-route
+  criticality: medium
+  id: navigation.route.predicates-route
+  relationships.navigates_to: ux.view.predicates-page
+  version: 1.0.0
+datasets-route:
+  name: datasets-route
+  description: Route to datasets management page for version control
   path: /app/datasets
-  page: datasets-page
-  public: false
-  menu_visible: true
-  menu_label: Datasets
-  menu_order: 5
-
-# Configuration Routes
-ConfigIndexRoute:
-  name: Configuration Index Route
-  description: Configuration section hub
-  id: config-index-route
+  criticality: medium
+  id: navigation.route.datasets-route
+  relationships.navigates_to: ux.view.datasets-page
+  version: 1.0.0
+config-route:
+  name: config-route
+  description: Route to configuration hub page with system settings access
   path: /app/config
-  exact: true
-  page: configuration-index-page
-  public: false
-  menu_visible: true
-  menu_label: Configuration
-  menu_icon: settings
-  menu_order: 10
-
-PipelinesIndexRoute:
-  name: Pipelines Index Route
-  description: Pipeline types overview
-  id: pipelines-index-route
+  criticality: medium
+  id: navigation.route.config-route
+  relationships.navigates_to: ux.view.config-hub-page
+  version: 1.0.0
+pipelines-route:
+  name: pipelines-route
+  description: Route to pipeline flavors management page
   path: /app/config/pipelines
-  exact: true
-  page: pipeline-flavors-index-page
-  public: false
-  menu_group: Configuration
-  menu_visible: true
-  menu_label: Pipeline Flavors
-  parent: config-index-route
-
-PipelineTypeRoute:
-  name: Pipeline Type Route
-  description: List flavors for a specific pipeline type
-  id: pipeline-type-route
-  path: /app/config/pipelines/:pipelineType
-  exact: true
-  page: pipeline-flavor-list-page
-  public: false
-  menu_visible: false
-  parameters:
-    - pipelineType (suggest_term_definition | suggest_layer_definition | suggest_domain_definition | extract_entities)
-
-PipelineFlavorCreateRoute:
-  name: Pipeline Flavor Create Route
-  description: Create new pipeline flavor
-  id: pipeline-flavor-create-route
-  path: /app/config/pipelines/:pipelineType/create
-  page: pipeline-flavor-create-page
-  public: false
-  menu_visible: false
-
-PipelineFlavorEditRoute:
-  name: Pipeline Flavor Edit Route
-  description: Edit existing pipeline flavor
-  id: pipeline-flavor-edit-route
-  path: /app/config/pipelines/:pipelineType/edit/:flavorId
-  page: pipeline-flavor-edit-page
-  public: false
-  menu_visible: false
-  parameters:
-    - pipelineType
-    - flavorId (UUID)
-
-PipelineFlavorTestRoute:
-  name: Pipeline Flavor Test Route
-  description: Test pipeline flavor interactively
-  id: pipeline-flavor-test-route
-  path: /app/config/pipelines/:pipelineType/test/:flavorId
-  page: pipeline-flavor-test-page
-  public: false
-  menu_visible: false
-  parameters:
-    - pipelineType
-    - flavorId (UUID)
-
-ConfigModelsRoute:
-  name: Configuration Models Route
-  description: LLM model configuration
-  id: config-models-route
+  criticality: high
+  id: navigation.route.pipelines-route
+  relationships.navigates_to: ux.view.pipelines-config-page
+  version: 1.0.0
+pipelines-create-route:
+  name: pipelines-create-route
+  description: Route to create new pipeline flavor with type specification
+  path: /app/config/pipelines/:type/create
+  criticality: medium
+  id: navigation.route.pipelines-create-route
+  version: 1.0.0
+pipelines-test-route:
+  name: pipelines-test-route
+  description: Route to test pipeline flavor execution with sample inputs
+  path: /app/config/pipelines/:type/test/:id
+  criticality: medium
+  id: navigation.route.pipelines-test-route
+  version: 1.0.0
+models-route:
+  name: models-route
+  description: Route to LLM models configuration page
   path: /app/config/models
-  page: config-models-page
-  public: false
-  menu_group: Configuration
-  menu_visible: true
-  menu_label: Models
-  parent: config-index-route
-
-ConfigDataSourcesRoute:
-  name: Configuration Data Sources Route
-  description: External data source configuration
-  id: config-data-sources-route
+  criticality: medium
+  id: navigation.route.models-route
+  relationships.navigates_to: ux.view.models-config-page
+  version: 1.0.0
+data-sources-route:
+  name: data-sources-route
+  description: Route to reference data sources configuration page
   path: /app/config/data-sources
-  page: config-data-sources-page
-  public: false
-  menu_group: Configuration
-  menu_visible: true
-  menu_label: Data Sources
-  parent: config-index-route
-
-ConfigNetworkRoute:
-  name: Configuration Network Route
-  description: Network and API configuration
-  id: config-network-route
+  criticality: medium
+  id: navigation.route.data-sources-route
+  relationships.navigates_to: ux.view.data-sources-config-page
+  version: 1.0.0
+network-route:
+  name: network-route
+  description: Route to network configuration page
   path: /app/config/network
-  page: config-network-page
-  public: false
-  menu_group: Configuration
-  menu_visible: true
-  menu_label: Network
-  parent: config-index-route
-
-ConfigProcessingRoute:
-  name: Configuration Processing Route
-  description: Processing settings configuration
-  id: config-processing-route
-  path: /app/config/processing
-  page: config-processing-page
-  public: false
-  menu_group: Configuration
-  menu_visible: true
-  menu_label: Processing
-  parent: config-index-route
-
-ConfigSystemRoute:
-  name: Configuration System Route
-  description: System-wide settings
-  id: config-system-route
+  criticality: low
+  id: navigation.route.network-route
+  relationships.navigates_to: ux.view.network-config-page
+  version: 1.0.0
+system-route:
+  name: system-route
+  description: Route to system configuration page
   path: /app/config/system
-  page: config-system-page
-  public: false
-  menu_group: Configuration
-  menu_visible: true
-  menu_label: System
-  parent: config-index-route
-
-ConfigAdvancedRoute:
-  name: Configuration Advanced Route
-  description: Advanced configuration options
-  id: config-advanced-route
-  path: /app/config/advanced
-  page: config-advanced-page
-  public: false
-  menu_group: Configuration
-  menu_visible: true
-  menu_label: Advanced
-  parent: config-index-route
-
-# Monitoring Routes
-MonitoringPerformanceRoute:
-  name: Monitoring Performance Route
-  description: System performance monitoring
-  id: monitoring-performance-route
-  path: /app/monitoring/performance
-  page: monitoring-performance-page
-  public: false
-  menu_group: Monitoring
-  menu_visible: true
-  menu_label: Performance
-
-MonitoringTaskManagerRoute:
-  name: Monitoring Task Manager Route
-  description: Background task monitoring
-  id: monitoring-task-manager-route
-  path: /app/monitoring/task-manager
-  page: monitoring-task-manager-page
-  public: false
-  menu_group: Monitoring
-  menu_visible: true
-  menu_label: Task Manager
-
-MonitoringLLMTraceabilityRoute:
-  name: Monitoring LLM Traceability Route
-  description: LLM execution tracking
-  id: monitoring-llm-traceability-route
-  path: /app/monitoring/llm-traceability
-  page: monitoring-llm-traceability-page
-  public: false
-  menu_group: Monitoring
-  menu_visible: true
-  menu_label: LLM Traceability
-
-MonitoringSystemHealthRoute:
-  name: Monitoring System Health Route
-  description: System health monitoring
-  id: monitoring-system-health-route
-  path: /app/monitoring/system-health
-  page: monitoring-system-health-page
-  public: false
-  menu_group: Monitoring
-  menu_visible: true
-  menu_label: System Health
-
-MonitoringAnalyticsRoute:
-  name: Monitoring Analytics Route
-  description: Usage analytics and statistics
-  id: monitoring-analytics-route
-  path: /app/monitoring/analytics
-  page: monitoring-analytics-page
-  public: false
-  menu_group: Monitoring
-  menu_visible: true
-  menu_label: Analytics
+  criticality: low
+  id: navigation.route.system-route
+  relationships.navigates_to: ux.view.system-config-page
+  version: 1.0.0
+reference-search-route:
+  name: reference-search-route
+  description: Route to unified reference search page
+  path: /app/reference
+  criticality: medium
+  id: navigation.route.reference-search-route
+  relationships.navigates_to: ux.view.reference-search-page
+  version: 1.0.0
+structure-node-details-route:
+  name: structure-node-details-route
+  description: Route to structure node details page with dynamic node ID
+  path: /app/structure_nodes/:nodeId
+  criticality: high
+  id: navigation.route.structure-node-details-route
+  relationships.navigates_to: ux.view.structure-node-details-page
+  version: 1.0.0

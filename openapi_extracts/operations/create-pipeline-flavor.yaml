@@ -1,0 +1,34 @@
+openapi:
+  openapi: 3.0.3
+  info:
+    title: Create Flavor
+    version: 1.0.0
+  paths:
+    /api/pipeline-flavors:
+      post:
+        operationId: create_flavor_api_pipeline_flavors_post
+        summary: Create Flavor
+        description: Create a new pipeline flavor
+        parameters: []
+        requestBody:
+          required: true
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreatePipelineFlavorRequest'
+        responses:
+          '201':
+            description: Successful Response
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/PipelineFlavor'
+          '422':
+            description: Validation Error
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/HTTPValidationError'
+        tags:
+        - pipeline-flavors
+        - Pipeline Flavors

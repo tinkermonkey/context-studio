@@ -1,0 +1,57 @@
+fastapi:
+  name: fastapi
+  description: Python FastAPI framework for REST API endpoints and request validation
+  language: Python
+  id: technology.systemsoftware.fastapi
+react:
+  name: react
+  description: React framework for building interactive UI components
+  language: TypeScript
+  id: technology.systemsoftware.react
+sqlalchemy:
+  name: sqlalchemy
+  description: Python SQLAlchemy ORM for database models and query building
+  language: Python
+  id: technology.systemsoftware.sqlalchemy
+pydantic:
+  name: pydantic
+  description: Python data validation and settings management using type annotations
+  language: Python
+  id: technology.systemsoftware.pydantic
+flowbite-react:
+  name: flowbite-react
+  description: React UI components library built on Tailwind CSS
+  language: TypeScript
+  id: technology.systemsoftware.flowbite-react
+sqlite-vector:
+  name: sqlite-vector
+  description: SQLite extension for vector similarity search and embeddings storage
+  id: technology.systemsoftware.sqlite-vector
+vite:
+  name: vite
+  description: Frontend build tool for fast development and optimized production builds
+  id: technology.systemsoftware.vite
+duckdb:
+  name: duckdb
+  description: In-process SQL OLAP database for data sync and Parquet file processing
+  id: technology.systemsoftware.duckdb
+spacy:
+  name: spacy
+  description: Industrial-strength NLP library for text processing and analysis
+  language: Python
+  id: technology.systemsoftware.spacy
+networkx:
+  name: networkx
+  description: Python library for graph analytics and network analysis algorithms
+  language: Python
+  id: technology.systemsoftware.networkx
+rdflib:
+  name: rdflib
+  description: Python library for working with RDF and SPARQL queries
+  language: Python
+  id: technology.systemsoftware.rdflib
+tanstack:
+  name: tanstack
+  description: TanStack suite for routing, state management, tables, and forms
+  language: TypeScript
+  id: technology.systemsoftware.tanstack

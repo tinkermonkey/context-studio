@@ -1,0 +1,33 @@
+openapi:
+  openapi: 3.0.3
+  info:
+    title: Activate Dataset
+    version: 1.0.0
+  paths:
+    /api/datasets/{dataset_id}/activate:
+      post:
+        operationId: activate_dataset_api_datasets__dataset_id__activate_post
+        summary: Activate Dataset
+        description: Switch to the specified dataset.
+        parameters:
+        - name: dataset_id
+          in: path
+          required: true
+          schema:
+            type: string
+            title: Dataset Id
+        requestBody: null
+        responses:
+          '200':
+            description: Successful Response
+            content:
+              application/json:
+                schema: {}
+          '422':
+            description: Validation Error
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/HTTPValidationError'
+        tags:
+        - datasets

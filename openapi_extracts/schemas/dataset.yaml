@@ -1,0 +1,58 @@
+$schema: http://json-schema.org/draft-07/schema#
+type: object
+title: dataset schemas
+description: Combined schemas for dataset data model
+definitions:
+  DatasetResponse:
+    properties:
+      id:
+        type: string
+        title: Id
+      title:
+        type: string
+        title: Title
+      filename:
+        type: string
+        title: Filename
+      created_at:
+        type: string
+        format: date-time
+        title: Created At
+      last_accessed:
+        type: string
+        format: date-time
+        title: Last Accessed
+      schema_version:
+        type: integer
+        title: Schema Version
+      metrics:
+        $ref: '#/components/schemas/DatasetMetrics'
+      is_active:
+        type: boolean
+        title: Is Active
+    type: object
+    required:
+    - id
+    - title
+    - filename
+    - created_at
+    - last_accessed
+    - schema_version
+    - metrics
+    - is_active
+    title: DatasetResponse
+    description: Response model for dataset operations.
+  CreateDatasetRequest:
+    properties:
+      title:
+        type: string
+        title: Title
+      filename:
+        type: string
+        title: Filename
+    type: object
+    required:
+    - title
+    - filename
+    title: CreateDatasetRequest
+    description: Request to create a new dataset.

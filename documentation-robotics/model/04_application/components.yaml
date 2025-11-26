@@ -1,0 +1,115 @@
+structure-node-details:
+  name: structure-node-details
+  description: Displays detailed information for layers, domains, and terms with hierarchy
+    navigation
+  criticality: high
+  id: application.component.structure-node-details
+node-tables:
+  name: node-tables
+  description: Data tables for listing and managing structure nodes with pagination
+    and filtering
+  criticality: high
+  id: application.component.node-tables
+tree-chart:
+  name: tree-chart
+  description: Hierarchical tree visualization for knowledge graph structure with
+    interactive navigation
+  criticality: medium
+  id: application.component.tree-chart
+predicate-mapping-manager:
+  name: predicate-mapping-manager
+  description: Interface for managing predicate mappings to external ontologies with
+    similarity search
+  criticality: medium
+  id: application.component.predicate-mapping-manager
+reference-viewer:
+  name: reference-viewer
+  description: Browser for external knowledge sources with graph visualization and
+    link exploration
+  criticality: medium
+  id: application.component.reference-viewer
+rag-test-interface:
+  name: rag-test-interface
+  description: Testing interface for RAG pipeline with trace visualization and performance
+    metrics
+  criticality: low
+  id: application.component.rag-test-interface
+nlp-analysis-panel:
+  name: nlp-analysis-panel
+  description: NLP analysis interface with word sense selection and token visualization
+  criticality: medium
+  id: application.component.nlp-analysis-panel
+pipeline-flavor-editor:
+  name: pipeline-flavor-editor
+  description: Editor for LLM pipeline configurations with prompt management and model
+    selection
+  criticality: medium
+  id: application.component.pipeline-flavor-editor
+dataset-manager:
+  name: dataset-manager
+  description: Interface for managing multiple datasets with switching and history
+    tracking
+  criticality: high
+  id: application.component.dataset-manager
+node-selectors:
+  name: node-selectors
+  description: Reusable selector components for layers, domains, terms, and predicates
+  criticality: high
+  id: application.component.node-selectors
+Application Logs:
+  name: Application Logs
+  description: Application log events with color-coded severity levels (DEBUG, INFO,
+    WARNING, ERROR, CRITICAL) written to console and daily rotated log files with
+    5-day retention
+  criticality: high
+  component_type: logging
+  id: application-logs
+Dataset Action Log:
+  name: Dataset Action Log
+  description: Dataset operation action log in structured JSON format capturing create,
+    update, delete, and sync operations
+  criticality: medium
+  component_type: logging
+  id: dataset-action-log
+LLM Token Usage:
+  name: LLM Token Usage
+  description: LLM token usage metrics for cost tracking across OpenAI, Anthropic,
+    and other providers via pipeline_flavor_executions table
+  criticality: medium
+  component_type: metric
+  id: llm-token-usage
+RAG Pipeline Performance:
+  name: RAG Pipeline Performance
+  description: RAG pipeline execution performance metrics tracking layer execution
+    times and success rates
+  criticality: high
+  component_type: metric
+  id: rag-pipeline-performance
+API Response Times:
+  name: API Response Times
+  description: API endpoint response time metrics tracked via AccessLogMiddleware
+    with status-based logging levels
+  criticality: high
+  component_type: metric
+  id: api-response-times
+Database Query Performance:
+  name: Database Query Performance
+  description: Database query performance metrics for SQLite operations across local.db,
+    reference.db, and operations.db
+  criticality: medium
+  component_type: metric
+  id: database-query-performance
+Embedding Generation Time:
+  name: Embedding Generation Time
+  description: Embedding generation time metrics for title and definition embeddings
+    using sentence transformers
+  criticality: medium
+  component_type: metric
+  id: embedding-generation-time
+Change Event Volume:
+  name: Change Event Volume
+  description: Change event volume metrics tracking activity across structure_nodes,
+    structure_node_links, and predicates for audit trail
+  criticality: low
+  component_type: metric
+  id: change-event-volume

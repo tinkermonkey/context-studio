@@ -1,38 +1,35 @@
-# Datastore Layer - Physical Databases and Tables
-# These represent the actual database instances and table implementations
-
-LocalDatabase:
-  name: Local Database
-  description: Primary user workspace database (local.db) containing knowledge graph structure, predicates, collaboration features, and change tracking. SQLite with SQLiteVector extension for semantic search
-  id: local-database
-  technology: SQLite 3.x with SQLiteVector
-  location: ./local.db
-  purpose: User workspace data storage
-  criticality: critical
-
-ReferenceDatabase:
-  name: Reference Database
-  description: Multi-source knowledge graph database (reference.db) containing consolidated reference data from ConceptNet, DBpedia, Wikidata, and Schema.org. Optimized for semantic lookups
-  id: reference-database
-  technology: SQLite 3.x with SQLiteVector
-  location: ./reference.db
-  purpose: External knowledge source integration
+sqlite-local:
+  name: sqlite-local
+  description: Primary user workspace database with structure nodes, predicates, links,
+    and change tracking
   criticality: high
-
-ReferenceAPICacheDatabase:
-  name: Reference API Cache Database
-  description: Cache database (reference_api_cache.db) for storing API responses from external reference sources to reduce API calls and improve performance
-  id: reference-api-cache-database
-  technology: SQLite 3.x
-  location: ./reference_api_cache.db
-  purpose: API response caching
+  type: sqlite
+  id: datastore.database.sqlite-local
+  version: 1.0.0
+  database: local.db
+sqlite-operations:
+  name: sqlite-operations
+  description: Operational database for pipeline configurations, execution logs, and
+    system tracking
+  criticality: high
+  type: sqlite
+  id: datastore.database.sqlite-operations
+  version: 1.0.0
+  database: operations.db
+sqlite-reference:
+  name: sqlite-reference
+  description: Multi-source reference knowledge graph from ConceptNet, DBpedia, and
+    Wikidata
   criticality: medium
-
-OperationsDatabase:
-  name: Operations Database
-  description: Operational database (operations.db) for pipeline configurations, execution tracking, background task management, and system operational logs
-  id: operations-database
-  technology: SQLite 3.x
-  location: ./operations.db
-  purpose: System operations and pipeline management
-  criticality: high
+  type: sqlite
+  id: datastore.database.sqlite-reference
+  version: 1.0.0
+  database: reference.db
+sqlite-reference-api-cache:
+  name: sqlite-reference-api-cache
+  description: API response cache for external reference sources to improve performance
+  criticality: low
+  type: sqlite
+  id: datastore.database.sqlite-reference-api-cache
+  version: 1.0.0
+  database: reference_api_cache.db

@@ -1,0 +1,70 @@
+$schema: http://json-schema.org/draft-07/schema#
+type: object
+title: predicate schemas
+description: Combined schemas for predicate data model
+definitions:
+  PredicateOut:
+    properties:
+      title:
+        type: string
+        maxLength: 255
+        minLength: 1
+        title: Title
+      definition:
+        anyOf:
+        - type: string
+        - type: 'null'
+        title: Definition
+      mapping:
+        anyOf:
+        - additionalProperties: true
+          type: object
+        - type: 'null'
+        title: Mapping
+      id:
+        type: string
+        title: Id
+      identifier:
+        type: string
+        title: Identifier
+      date_created:
+        type: string
+        title: Date Created
+      date_modified:
+        type: string
+        title: Date Modified
+    type: object
+    required:
+    - title
+    - id
+    - identifier
+    - date_created
+    - date_modified
+    title: PredicateOut
+  PredicateCreate:
+    properties:
+      title:
+        type: string
+        maxLength: 255
+        minLength: 1
+        title: Title
+      definition:
+        anyOf:
+        - type: string
+        - type: 'null'
+        title: Definition
+      mapping:
+        anyOf:
+        - additionalProperties: true
+          type: object
+        - type: 'null'
+        title: Mapping
+      identifier:
+        anyOf:
+        - type: string
+        - type: 'null'
+        title: Identifier
+    type: object
+    required:
+    - title
+    title: PredicateCreate

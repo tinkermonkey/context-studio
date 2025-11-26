@@ -1,0 +1,25 @@
+openapi:
+  openapi: 3.0.3
+  info:
+    title: List Datasets
+    version: 1.0.0
+  paths:
+    /api/datasets:
+      get:
+        operationId: list_datasets_api_datasets_get
+        summary: List Datasets
+        description: List all known datasets with metrics.
+        parameters: []
+        requestBody: null
+        responses:
+          '200':
+            description: Successful Response
+            content:
+              application/json:
+                schema:
+                  items:
+                    $ref: '#/components/schemas/DatasetResponse'
+                  type: array
+                  title: Response List Datasets Api Datasets Get
+        tags:
+        - datasets

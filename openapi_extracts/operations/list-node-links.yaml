@@ -1,0 +1,96 @@
+openapi:
+  openapi: 3.0.3
+  info:
+    title: List Node Links
+    version: 1.0.0
+  paths:
+    /api/structure_nodes/links:
+      get:
+        operationId: list_node_links_api_structure_nodes_links_get
+        summary: List Node Links
+        description: 'List structure_node links with filtering.
+
+
+          Supports filtering by source structure_node, target structure_node, and
+          predicate.
+
+          Returns all relationships in the unified structure_node graph.'
+        parameters:
+        - name: source_node_id
+          in: query
+          required: false
+          schema:
+            anyOf:
+            - type: string
+              format: uuid
+            - type: 'null'
+            description: Filter by source structure_node ID
+            title: Source Node Id
+          description: Filter by source structure_node ID
+        - name: target_node_id
+          in: query
+          required: false
+          schema:
+            anyOf:
+            - type: string
+              format: uuid
+            - type: 'null'
+            description: Filter by target structure_node ID
+            title: Target Node Id
+          description: Filter by target structure_node ID
+        - name: predicate
+          in: query
+          required: false
+          schema:
+            anyOf:
+            - type: string
+            - type: 'null'
+            description: Filter by predicate
+            title: Predicate
+          description: Filter by predicate
+        - name: skip
+          in: query
+          required: false
+          schema:
+            type: integer
+            minimum: 0
+            description: Number of links to skip
+            default: 0
+            title: Skip
+          description: Number of links to skip
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+            maximum: 500
+            minimum: 1
+            description: Maximum number of links to return
+            default: 100
+            title: Limit
+          description: Maximum number of links to return
+        - name: SessionLocal
+          in: query
+          required: false
+          schema:
+            title: Sessionlocal
+        requestBody: null
+        responses:
+          '200':
+            description: Successful Response
+            content:
+              application/json:
+                schema:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/NodeLinkOut'
+                  title: Response List Node Links Api Structure Nodes Links Get
+          '422':
+            description: Validation Error
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/HTTPValidationError'
+        tags:
+        - structure_nodes
+        - structure_nodes

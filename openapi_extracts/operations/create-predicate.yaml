@@ -1,0 +1,38 @@
+openapi:
+  openapi: 3.0.3
+  info:
+    title: Create Predicate
+    version: 1.0.0
+  paths:
+    /api/predicates/:
+      post:
+        operationId: create_predicate_api_predicates__post
+        summary: Create Predicate
+        description: Create a new predicate.
+        parameters:
+        - name: SessionLocal
+          in: query
+          required: false
+          schema:
+            title: Sessionlocal
+        requestBody:
+          required: true
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PredicateCreate'
+        responses:
+          '201':
+            description: Successful Response
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/PredicateOut'
+          '422':
+            description: Validation Error
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/HTTPValidationError'
+        tags:
+        - predicates

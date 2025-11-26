@@ -1,0 +1,50 @@
+openapi:
+  openapi: 3.0.3
+  info:
+    title: Create Node
+    version: 1.0.0
+  paths:
+    /api/structure_nodes/:
+      post:
+        operationId: create_node_api_structure_nodes__post
+        summary: Create Node
+        description: 'Create a new structure_node.
+
+
+          This endpoint handles creation of layers, domains, and terms through
+
+          the unified structure_nodes interface. Type-specific validation is enforced:
+
+          - Layers cannot have parent structure_nodes
+
+          - Domains must have a layer parent
+
+          - Terms must have a domain parent'
+        parameters:
+        - name: SessionLocal
+          in: query
+          required: false
+          schema:
+            title: Sessionlocal
+        requestBody:
+          required: true
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NodeCreate'
+        responses:
+          '201':
+            description: Successful Response
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/NodeOut'
+          '422':
+            description: Validation Error
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/HTTPValidationError'
+        tags:
+        - structure_nodes
+        - structure_nodes
