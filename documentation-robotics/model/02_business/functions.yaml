@@ -1,62 +1,92 @@
 Knowledge Graph Management:
   name: Knowledge Graph Management
-  description: Capability to manage hierarchical taxonomical knowledge graphs with
-    layers, domains, terms, and semantic relationships
-  id: knowledge-graph-management
-  relationships:
-    realizes:
-      - motivation.goal.enable-knowledge-graph-curation
+  id: business.function.knowledge-graph-management
+  realizes:
+  - motivation.goal.enable-knowledge-graph-curation
+  description: Description for Knowledge Graph Management
+  realizedBy:
+  - business.service.KnowledgeGraphService
+  - knowledge-curation-process
+  supports-goals: []
+  fulfills-requirements: []
 Semantic Search:
   name: Semantic Search
-  description: Capability to perform vector-based semantic search across entities
-    using embeddings and similarity algorithms
-  id: semantic-search
-  relationships:
-    realizes:
-      - motivation.goal.enable-knowledge-graph-curation
+  id: business.function.semantic-search
+  realizes:
+  - motivation.goal.enable-knowledge-graph-curation
+  description: Description for Semantic Search
+  realizedBy:
+  - business.service.SemanticSearchService
+  supports-goals: []
+  fulfills-requirements: []
 Dataset Management:
   name: Dataset Management
-  description: Capability to manage multiple independent datasets with versioning
-    and switching capabilities
-  id: dataset-management
+  id: business.function.dataset-management
+  description: Description for Dataset Management
+  realizedBy:
+  - dataset-versioning-process
+  supports-goals: []
+  fulfills-requirements: []
 NLP Processing:
   name: NLP Processing
-  description: Capability to process and analyze text using NLP pipelines for entity
-    recognition and linguistic analysis
-  id: nlp-processing
+  id: business.function.nlp-processing
+  description: Description for NLP Processing
+  realizedBy:
+  - business.service.NlpService
+  - semantic-enrichment-process
+  supports-goals: []
+  fulfills-requirements: []
 Reference Integration:
   name: Reference Integration
-  description: Capability to integrate external knowledge sources including ConceptNet,
-    DBpedia, Wikidata, and Schema.org
-  id: reference-integration
-  relationships:
-    realizes:
-      - motivation.goal.enable-knowledge-graph-curation
+  id: business.function.reference-integration
+  realizes:
+  - motivation.goal.enable-knowledge-graph-curation
+  description: Description for Reference Integration
+  realizedBy:
+  - business.service.ReferenceService
+  - reference-linking-process
+  supports-goals: []
+  fulfills-requirements: []
 RAG Pipeline Execution:
   name: RAG Pipeline Execution
-  description: Capability to execute RAG pipelines with LLM integration for context-aware
-    AI responses
-  id: rag-pipeline-execution
-  relationships:
-    realizes:
-      - motivation.goal.support-rag-workflows
+  id: business.function.rag-pipeline-execution
+  realizes:
+  - motivation.goal.support-rag-workflows
+  description: Description for RAG Pipeline Execution
+  realizedBy:
+  - business.service.RagService
+  - rag-query-process
+  supports-goals: []
+  fulfills-requirements: []
 Graph Analytics:
   name: Graph Analytics
   description: Capability to analyze graph structure and relationships using network
     analysis algorithms
   id: graph-analytics
+  realizedBy: []
+  supports-goals: []
+  fulfills-requirements: []
 Embedding Generation:
   name: Embedding Generation
   description: Capability to generate semantic embeddings for search and similarity
     computation
   id: embedding-generation
+  realizedBy: []
+  supports-goals: []
+  fulfills-requirements: []
 Data Import Export:
   name: Data Import Export
   description: Capability to import and export knowledge graph data in various formats
     including CSV
   id: data-import-export
+  realizedBy: []
+  supports-goals: []
+  fulfills-requirements: []
 Change Tracking:
   name: Change Tracking
   description: Capability to track and audit all data changes with comprehensive change
     event logging
   id: change-tracking
+  realizedBy: []
+  supports-goals: []
+  fulfills-requirements: []

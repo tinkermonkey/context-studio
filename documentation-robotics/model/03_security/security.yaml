@@ -1,0 +1,67 @@
+Security-configuration:
+  version: 1.0.0
+  application: context-studio
+  authentication:
+    provider: session
+    sessionTimeout: 60
+  roles:
+  - name: admin
+    displayName: Administrator
+  - name: user
+    displayName: User
+  resources:
+  - resource: knowledge-graph-service-api
+    type: api
+    description: API for accessing and manipulating the knowledge graph
+    archimateRef: business.service.knowledge-graph-service
+    operations:
+    - operation: access
+      allowRoles:
+      - admin
+  - resource: semantic-search-service-api
+    type: api
+    description: API for semantic search
+    archimateRef: business.service.semantic-search-service
+    operations:
+    - operation: access
+      allowRoles:
+      - user
+  - resource: rag-service-api
+    type: api
+    description: API for RAG pipeline
+    archimateRef: business.service.rag-service
+    operations:
+    - operation: access
+      allowRoles:
+      - user
+  - resource: reference-service-api
+    type: api
+    description: API for reference data
+    archimateRef: business.service.reference-service
+    operations:
+    - operation: access
+      allowRoles:
+      - user
+  - resource: nlp-service-api
+    type: api
+    description: API for NLP analysis
+    archimateRef: business.service.nlp-service
+    operations:
+    - operation: access
+      allowRoles:
+      - user
+  dataClassification:
+    classifications:
+    - level: public
+      label: Public
+      description: Public info
+      encryption: none
+      retention:
+        period: 1year
+        deleteAfter: true
+        reviewRequired: false
+      accessControl: open
+      auditLevel: none
+  id: security.configuration
+  description: Security configuration for Context Studio
+  name: Security Configuration

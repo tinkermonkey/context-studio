@@ -1,5 +1,5 @@
-structure-node:
-  name: structure-node
+Structure-node:
+  name: Structure-node
   description: Combined schemas for structure-node data model
   id: data_model.schema.structure-node
   $schema: http://json-schema.org/draft-07/schema#
@@ -255,8 +255,8 @@ structure-node:
       type: object
       title: NodeUpdate
       description: Model for updating an existing structure_node.
-structure-node-link:
-  name: structure-node-link
+Structure-node-link:
+  name: Structure-node-link
   description: Combined schemas for structure-node-link data model
   id: data_model.schema.structure-node-link
   $schema: http://json-schema.org/draft-07/schema#
@@ -386,8 +386,8 @@ structure-node-link:
       - predicate
       title: NodeLinkCreate
       description: Model for creating a new structure_node link.
-predicate:
-  name: predicate
+Predicate:
+  name: Predicate
   description: Combined schemas for predicate data model
   id: data_model.schema.predicate
   $schema: http://json-schema.org/draft-07/schema#
@@ -525,8 +525,8 @@ predicate:
       required:
       - title
       title: PredicateCreate
-pipeline-flavor:
-  name: pipeline-flavor
+Pipeline-flavor:
+  name: Pipeline-flavor
   description: Combined schemas for pipeline-flavor data model
   id: data_model.schema.pipeline-flavor
   $schema: http://json-schema.org/draft-07/schema#
@@ -870,15 +870,15 @@ pipeline-flavor:
       type: object
       title: UpdatePipelineFlavorRequest
       description: Request model for updating a pipeline flavor
-change-event:
-  name: change-event
+Change-event:
+  name: Change-event
   description: Schema for audit trail of database changes
   id: data_model.schema.change-event
   $schema: http://json-schema.org/draft-07/schema#
   type: object
   title: ChangeEvent
-external-predicate:
-  name: external-predicate
+External-predicate:
+  name: External-predicate
   description: Combined schemas for external-predicate data model
   id: data_model.schema.external-predicate
   $schema: http://json-schema.org/draft-07/schema#
@@ -1054,15 +1054,15 @@ external-predicate:
       - similarity_score
       title: ExternalPredicateSearchResult
       description: Search result for external predicates with similarity score.
-external-concept:
-  name: external-concept
+External-concept:
+  name: External-concept
   description: Schema for concepts from external knowledge sources
   id: data_model.schema.external-concept
   $schema: http://json-schema.org/draft-07/schema#
   type: object
   title: ExternalConcept
-dataset:
-  name: dataset
+Dataset:
+  name: Dataset
   description: Combined schemas for dataset data model
   id: data_model.schema.dataset
   $schema: http://json-schema.org/draft-07/schema#
@@ -1176,8 +1176,8 @@ dataset:
       - filename
       title: CreateDatasetRequest
       description: Request to create a new dataset.
-rag-trace:
-  name: rag-trace
+Rag-trace:
+  name: Rag-trace
   description: Combined schemas for rag-trace data model
   id: data_model.schema.rag-trace
   $schema: http://json-schema.org/draft-07/schema#
@@ -1243,8 +1243,8 @@ rag-trace:
 
 
         Contains extracted entities, processing metrics, and trace availability information.'
-rag-metrics:
-  name: rag-metrics
+Rag-metrics:
+  name: Rag-metrics
   description: Schema for RAG pipeline performance metrics
   id: data_model.schema.rag-metrics
   $schema: http://json-schema.org/draft-07/schema#

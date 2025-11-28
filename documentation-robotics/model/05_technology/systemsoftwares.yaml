@@ -1,57 +1,57 @@
-fastapi:
-  name: fastapi
+Fastapi:
+  name: Fastapi
   description: Python FastAPI framework for REST API endpoints and request validation
   language: Python
   id: technology.systemsoftware.fastapi
-react:
-  name: react
+React:
+  name: React
   description: React framework for building interactive UI components
   language: TypeScript
   id: technology.systemsoftware.react
-sqlalchemy:
-  name: sqlalchemy
+Sqlalchemy:
+  name: Sqlalchemy
   description: Python SQLAlchemy ORM for database models and query building
   language: Python
   id: technology.systemsoftware.sqlalchemy
-pydantic:
-  name: pydantic
+Pydantic:
+  name: Pydantic
   description: Python data validation and settings management using type annotations
   language: Python
   id: technology.systemsoftware.pydantic
-flowbite-react:
-  name: flowbite-react
+Flowbite-react:
+  name: Flowbite-react
   description: React UI components library built on Tailwind CSS
   language: TypeScript
   id: technology.systemsoftware.flowbite-react
-sqlite-vector:
-  name: sqlite-vector
+Sqlite-vector:
+  name: Sqlite-vector
   description: SQLite extension for vector similarity search and embeddings storage
   id: technology.systemsoftware.sqlite-vector
-vite:
-  name: vite
+Vite:
+  name: Vite
   description: Frontend build tool for fast development and optimized production builds
   id: technology.systemsoftware.vite
-duckdb:
-  name: duckdb
+Duckdb:
+  name: Duckdb
   description: In-process SQL OLAP database for data sync and Parquet file processing
   id: technology.systemsoftware.duckdb
-spacy:
-  name: spacy
+Spacy:
+  name: Spacy
   description: Industrial-strength NLP library for text processing and analysis
   language: Python
   id: technology.systemsoftware.spacy
-networkx:
-  name: networkx
+Networkx:
+  name: Networkx
   description: Python library for graph analytics and network analysis algorithms
   language: Python
   id: technology.systemsoftware.networkx
-rdflib:
-  name: rdflib
+Rdflib:
+  name: Rdflib
   description: Python library for working with RDF and SPARQL queries
   language: Python
   id: technology.systemsoftware.rdflib
-tanstack:
-  name: tanstack
+Tanstack:
+  name: Tanstack
   description: TanStack suite for routing, state management, tables, and forms
   language: TypeScript
   id: technology.systemsoftware.tanstack

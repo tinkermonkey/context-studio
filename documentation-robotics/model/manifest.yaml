@@ -1,7 +1,7 @@
 version: 0.1.0
 schema: documentation-robotics-v1
 created: '2025-11-26T12:55:57.414993Z'
-updated: '2025-11-26T18:51:24.120227Z'
+updated: '2025-11-28T18:37:36.562189Z'
 project:
   name: context-studio
   description: Architecture model for context-studio
@@ -15,9 +15,9 @@ layers:
     schema: .dr/schemas/01-motivation-layer.schema.json
     enabled: true
     elements:
-      goal: 5
+      goal: 9
       driver: 5
-      stakeholder: 5
+      stakeholder: 6
       constraint: 5
       assessment: 1
   business:
@@ -27,7 +27,7 @@ layers:
     schema: .dr/schemas/02-business-layer.schema.json
     enabled: true
     elements:
-      function: 10
+      function: 16
       process: 5
       service: 5
   security:
@@ -40,6 +40,7 @@ layers:
       policy: 5
       securityconstraint: 7
       threat: 4
+      resource: 5
   application:
     order: 4
     name: Application
@@ -47,7 +48,7 @@ layers:
     schema: .dr/schemas/04-application-layer.schema.json
     enabled: true
     elements:
-      service: 15
+      service: 20
       component: 18
   technology:
     order: 5
@@ -65,7 +66,7 @@ layers:
     schema: .dr/schemas/06-api-layer.schema.json
     enabled: true
     elements:
-      operation: 20
+      operation: 35
   data_model:
     order: 7
     name: Data Model
@@ -90,6 +91,7 @@ layers:
     enabled: true
     elements:
       view: 21
+      action: 20
   navigation:
     order: 10
     name: Navigation
@@ -110,14 +112,21 @@ cross_references:
   total: 0
   by_type: {}
 statistics:
-  total_elements: 182
+  total_elements: 238
   total_relationships: 0
   completeness: 0.0
-  last_validation: '2025-11-26T15:46:20.411469Z'
-  validation_status: failed
+  last_validation: '2025-11-28T18:37:36.562030Z'
+  validation_status: passed
 conventions:
   id_format: '{layer}.{type}.{kebab-case-name}'
   file_naming:
     api: '{service-name}-api.yaml'
     schema: '{entity-name}.schema.json'
     ux: '{screen-name}.ux.yaml'
+cli_version: 0.4.1
+spec_version: 0.2.0
+upgrade_history:
+- from_version: 0.1.0
+  to_version: 0.4.1
+  upgraded_at: '2025-11-28T13:53:26.729095Z'
+upgraded_at: '2025-11-28T13:53:26.745236Z'

@@ -11,7 +11,7 @@ paths:
 defaults:
   output_format: "yaml"
   validation_mode: "standard"
-  auto_project: false
+  auto_project: true
   backup_before_update: true
 
 # Validation rules

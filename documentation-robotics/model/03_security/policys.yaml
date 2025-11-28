@@ -4,27 +4,162 @@ Local Data Access Policy:
     databases as application runs on user-controlled workstation
   criticality: medium
   id: local-data-access-policy
+  version: '1.0'
+  application: App
+  authentication:
+    provider: api-key
+    sessionTimeout: 60
+    mfaRequired: false
+  roles:
+  - name: user
+    displayName: User
+  resources:
+  - resource: '*'
+    type: data
+    operations:
+    - operation: access
+  dataClassification:
+    classifications:
+    - level: internal
+      label: Legacy Classification
+      description: Legacy data converted from CIA format
+      encryption: none
+      retention:
+        period: indefinite
+        deleteAfter: false
+        reviewRequired: false
+      accessControl: role-based
+      auditLevel: standard
+      masking: none
 HTTPS Requirement Policy:
   name: HTTPS Requirement Policy
   description: HTTPS requirement for external API connections to ConceptNet, DBpedia,
     Wikidata, and Schema.org reference sources
   criticality: high
   id: https-requirement-policy
+  version: '1.0'
+  application: App
+  authentication:
+    provider: api-key
+    sessionTimeout: 60
+    mfaRequired: false
+  roles:
+  - name: user
+    displayName: User
+  resources:
+  - resource: '*'
+    type: data
+    operations:
+    - operation: access
+  dataClassification:
+    classifications:
+    - level: internal
+      label: Legacy Classification
+      description: Legacy data converted from CIA format
+      encryption: none
+      retention:
+        period: indefinite
+        deleteAfter: false
+        reviewRequired: false
+      accessControl: role-based
+      auditLevel: standard
+      masking: none
 LLM API Key Policy:
   name: LLM API Key Policy
   description: LLM API key management policy for secure storage of OpenAI, Anthropic,
     and other provider credentials in config.json
   criticality: high
   id: llm-api-key-policy
+  version: '1.0'
+  application: App
+  authentication:
+    provider: api-key
+    sessionTimeout: 60
+    mfaRequired: false
+  roles:
+  - name: user
+    displayName: User
+  resources:
+  - resource: '*'
+    type: data
+    operations:
+    - operation: access
+  dataClassification:
+    classifications:
+    - level: internal
+      label: Legacy Classification
+      description: Legacy data converted from CIA format
+      encryption: none
+      retention:
+        period: indefinite
+        deleteAfter: false
+        reviewRequired: false
+      accessControl: role-based
+      auditLevel: standard
+      masking: none
 Data Integrity Policy:
   name: Data Integrity Policy
   description: Data integrity policy ensuring atomic database transactions, rollback
     on errors, and comprehensive change event tracking
   criticality: high
   id: data-integrity-policy
+  version: '1.0'
+  application: App
+  authentication:
+    provider: api-key
+    sessionTimeout: 60
+    mfaRequired: false
+  roles:
+  - name: user
+    displayName: User
+  resources:
+  - resource: '*'
+    type: data
+    operations:
+    - operation: access
+  dataClassification:
+    classifications:
+    - level: internal
+      label: Legacy Classification
+      description: Legacy data converted from CIA format
+      encryption: none
+      retention:
+        period: indefinite
+        deleteAfter: false
+        reviewRequired: false
+      accessControl: role-based
+      auditLevel: standard
+      masking: none
 Reference Source Validation Policy:
   name: Reference Source Validation Policy
   description: External reference source validation policy for HTTPS enforcement and
     secure upstream URL configuration
   criticality: medium
   id: reference-source-validation-policy
+  version: '1.0'
+  application: App
+  authentication:
+    provider: api-key
+    sessionTimeout: 60
+    mfaRequired: false
+  roles:
+  - name: user
+    displayName: User
+  resources:
+  - resource: '*'
+    type: data
+    operations:
+    - operation: access
+  dataClassification:
+    classifications:
+    - level: internal
+      label: Legacy Classification
+      description: Legacy data converted from CIA format
+      encryption: none
+      retention:
+        period: indefinite
+        deleteAfter: false
+        reviewRequired: false
+      accessControl: role-based
+      auditLevel: standard
+      masking: none

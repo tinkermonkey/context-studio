@@ -1,0 +1,41 @@
+Apm-configuration:
+  version: 1.0.0
+  application: context-studio
+  tracing:
+    serviceName: context-studio
+    sampler:
+      type: always_on
+    propagators:
+    - w3c-trace-context
+    exporters:
+    - type: console
+      endpoint: stdout
+  logging:
+    serviceName: context-studio
+    logLevel: INFO
+    exporters:
+    - type: console
+      endpoint: stdout
+  metrics:
+    serviceName: context-studio
+    meters:
+    - name: application-metrics
+      instruments:
+      - name: success-rate
+        type: gauge
+        unit: percentage
+        description: Success rate of operations
+        motivationMapping:
+          contributesToGoal: motivation.goal.enable-knowledge-graph-curation
+      - name: latency
+        type: gauge
+        unit: ms
+        description: Operation latency
+        motivationMapping:
+          contributesToGoal: motivation.goal.ensure-local-first-operation
+    exporters:
+    - type: console
+      endpoint: stdout
+  id: apm.configuration
+  description: APM configuration for Context Studio
+  name: APM Configuration

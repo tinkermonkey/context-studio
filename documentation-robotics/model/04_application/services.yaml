@@ -1,107 +1,216 @@
-structure-node-management:
-  name: structure-node-management
-  description: Manages knowledge graph structure nodes including layers, domains,
-    and terms with hierarchy validation
+StructureNodeManagement:
+  name: Structure-node-management
+  description: Manages the lifecycle of structure nodes (terms, concepts) in the knowledge
+    graph.
   criticality: high
-  id: application.service.structure-node-management
+  id: application.service.StructureNodeManagement
   relationships.accesses: datastore.database.sqlite-local
   relationships.realizes: business.service.knowledge-graph-service
-node-link-management:
-  name: node-link-management
+  realizes: business.service.KnowledgeGraphService
+  supports-goals:
+  - motivation.goal.enable-knowledge-graph-curation
+  fulfills-requirements:
+  - motivation.requirement.general-requirement
+  servedBy:
+  - application.component.tree-chart
+  - application.component.node-tables
+  - application.component.node-selectors
+  - application.component.structure-node-details
+  - api-response-times
+  - database-query-performance
+NodeLinkManagement:
+  name: Node-link-management
   description: Manages relationships between structure nodes with semantic predicates
     and type validation
   criticality: high
-  id: application.service.node-link-management
+  id: application.service.NodeLinkManagement
   relationships.accesses: datastore.database.sqlite-local
   relationships.realizes: business.service.knowledge-graph-service
-predicate-management:
-  name: predicate-management
+  realizes:
+  - business.service.KnowledgeGraphService
+  supports-goals:
+  - motivation.goal.enable-knowledge-graph-curation
+  fulfills-requirements:
+  - motivation.requirement.general-requirement
+PredicateManagement:
+  name: Predicate-management
   description: Manages semantic predicates with ConceptNet integration and ontology
     mappings
   criticality: high
-  id: application.service.predicate-management
+  id: application.service.PredicateManagement
   relationships.accesses: datastore.database.sqlite-local
   relationships.realizes: business.service.knowledge-graph-service
-graph-analytics:
-  name: graph-analytics
+  realizes:
+  - business.service.KnowledgeGraphService
+  supports-goals:
+  - motivation.goal.enable-knowledge-graph-curation
+  fulfills-requirements:
+  - motivation.requirement.general-requirement
+  servedBy:
+  - application.component.predicate-mapping-manager
+GraphAnalytics:
+  name: Graph-analytics
   description: Provides SPARQL queries and NetworkX graph analytics including centrality
-    and community detection
+    and community detection.
   criticality: medium
-  id: application.service.graph-analytics
+  id: application.service.GraphAnalytics
   relationships.accesses: datastore.database.sqlite-local
-embedding-generation:
-  name: embedding-generation
+  realizes: business.service.KnowledgeGraphService
+  supports-goals:
+  - motivation.goal.enable-knowledge-graph-curation
+  fulfills-requirements:
+  - motivation.requirement.general-requirement
+EmbeddingGeneration:
+  name: Embedding-generation
   description: Generates and manages vector embeddings for semantic search across
     structure nodes
   criticality: high
-  id: application.service.embedding-generation
+  id: application.service.EmbeddingGeneration
   relationships.accesses: datastore.database.sqlite-local
   relationships.realizes: business.service.semantic-search-service
-rag-pipeline:
-  name: rag-pipeline
+  realizes:
+  - business.service.SemanticSearchService
+  supports-goals:
+  - motivation.goal.enable-knowledge-graph-curation
+  fulfills-requirements:
+  - motivation.requirement.general-requirement
+  servedBy:
+  - embedding-generation-time
+RagPipeline:
+  name: Rag-pipeline
   description: Four-layer RAG pipeline for entity extraction with KG context, LLM
-    processing, spaCy gap analysis, and concept resolution
+    processing, spaCy gap analysis, and concept resolution.
   criticality: high
-  id: application.service.rag-pipeline
+  id: application.service.RagPipeline
   relationships.realizes: business.service.rag-service
-reference-integration:
-  name: reference-integration
+  realizes: business.service.RagService
+  supports-goals:
+  - motivation.goal.enable-knowledge-graph-curation
+  fulfills-requirements:
+  - motivation.requirement.general-requirement
+  servedBy:
+  - application.component.rag-test-interface
+  - rag-pipeline-performance
+ReferenceIntegration:
+  name: Reference-integration
   description: Integrates external knowledge sources including ConceptNet, DBpedia,
-    Wikidata, and Schema.org
+    Wikidata, and Schema.org.
   criticality: medium
-  id: application.service.reference-integration
+  id: application.service.ReferenceIntegration
   relationships.accesses: datastore.database.sqlite-reference
   relationships.realizes: business.service.reference-service
-pipeline-flavor-management:
-  name: pipeline-flavor-management
+  realizes: business.service.ReferenceService
+  supports-goals:
+  - motivation.goal.enable-knowledge-graph-curation
+  fulfills-requirements:
+  - motivation.requirement.general-requirement
+  servedBy:
+  - application.component.reference-viewer
+PipelineFlavorManagement:
+  name: Pipeline-flavor-management
   description: Manages LLM pipeline configurations with provider settings, prompts,
-    and version control
+    and version control.
   criticality: medium
-  id: application.service.pipeline-flavor-management
+  id: application.service.PipelineFlavorManagement
   relationships.accesses: datastore.database.sqlite-operations
-nlp-analysis:
-  name: nlp-analysis
+  realizes: business.service.RagService
+  supports-goals:
+  - motivation.goal.enable-knowledge-graph-curation
+  fulfills-requirements:
+  - motivation.requirement.general-requirement
+  servedBy:
+  - application.component.pipeline-flavor-editor
+  - llm-token-usage
+NlpAnalysis:
+  name: Nlp-analysis
   description: Provides NLP capabilities including word sense disambiguation, token
-    analysis, and text processing
+    analysis, and text processing.
   criticality: medium
-  id: application.service.nlp-analysis
+  id: application.service.NlpAnalysis
   relationships.realizes: business.service.nlp-service
-change-event-tracking:
-  name: change-event-tracking
+  realizes: business.service.NlpService
+  supports-goals:
+  - motivation.goal.enable-knowledge-graph-curation
+  fulfills-requirements:
+  - motivation.requirement.general-requirement
+  servedBy:
+  - application.component.nlp-analysis-panel
+ChangeEventTracking:
+  name: Change-event-tracking
   description: Tracks and audits all changes to structure nodes, links, and predicates
-    with event processing
+    with event processing.
   criticality: high
-  id: application.service.change-event-tracking
+  id: application.service.ChangeEventTracking
   relationships.accesses: datastore.database.sqlite-local
-reference-link-management:
-  name: reference-link-management
+  realizes: business.service.KnowledgeGraphService
+  supports-goals:
+  - motivation.goal.enable-knowledge-graph-curation
+  fulfills-requirements:
+  - motivation.requirement.general-requirement
+  servedBy:
+  - change-event-volume
+  - application-logs
+ReferenceLinkManagement:
+  name: Reference-link-management
   description: Manages links between structure nodes and external knowledge sources
     with validation
   criticality: medium
-  id: application.service.reference-link-management
-word-sense-management:
-  name: word-sense-management
+  id: application.service.ReferenceLinkManagement
+  realizes:
+  - business.service.ReferenceService
+  supports-goals:
+  - motivation.goal.enable-knowledge-graph-curation
+  fulfills-requirements:
+  - motivation.requirement.general-requirement
+WordSenseManagement:
+  name: Word-sense-management
   description: Manages word sense associations from WordNet and NLP analysis for structure
     nodes
   criticality: low
-  id: application.service.word-sense-management
+  id: application.service.WordSenseManagement
   relationships.accesses: datastore.database.sqlite-local
-dataset-management:
-  name: dataset-management
+  realizes:
+  - business.service.NlpService
+  supports-goals:
+  - motivation.goal.enable-knowledge-graph-curation
+  fulfills-requirements:
+  - motivation.requirement.general-requirement
+DatasetManagement:
+  name: Dataset-management
   description: Manages multiple datasets with switching, history tracking, and DuckDB
-    sync
+    sync.
   criticality: high
-  id: application.service.dataset-management
+  id: application.service.DatasetManagement
   relationships.accesses: datastore.database.sqlite-local
-sync-management:
-  name: sync-management
+  realizes: business.service.KnowledgeGraphService
+  supports-goals:
+  - motivation.goal.enable-knowledge-graph-curation
+  fulfills-requirements:
+  - motivation.requirement.general-requirement
+  servedBy:
+  - application.component.dataset-manager
+  - dataset-action-log
+SyncManagement:
+  name: Sync-management
   description: Handles incremental sync with remote storage using DuckDB and Parquet
     files
   criticality: medium
-  id: application.service.sync-management
-predicate-similarity:
-  name: predicate-similarity
+  id: application.service.SyncManagement
+  realizes:
+  - business.service.KnowledgeGraphService
+  supports-goals:
+  - motivation.goal.enable-knowledge-graph-curation
+  fulfills-requirements:
+  - motivation.requirement.general-requirement
+PredicateSimilarity:
+  name: Predicate-similarity
   description: Performs vector similarity search and clustering for predicate discovery
     and mapping
   criticality: medium
-  id: application.service.predicate-similarity
+  id: application.service.PredicateSimilarity
+  realizes:
+  - business.service.KnowledgeGraphService
+  supports-goals:
+  - motivation.goal.enable-knowledge-graph-curation
+  fulfills-requirements:
+  - motivation.requirement.general-requirement

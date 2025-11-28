@@ -1,31 +1,43 @@
-Enable Knowledge Graph Curation:
+motivation.goal.enable-knowledge-graph-curation:
   name: Enable Knowledge Graph Curation
-  description: Enable users to create and curate structured knowledge graphs locally
-    with hierarchical organization, semantic relationships, and external reference
-    integration
-  priority: high
-  id: enable-knowledge-graph-curation
-Support RAG Workflows:
+  id: motivation.goal.enable-knowledge-graph-curation
+  description: Description for Enable Knowledge Graph Curation
+  stakeholder: knowledge-workers
+  realizedBy:
+  - business.function.semantic-search
+  - business.function.reference-integration
+  - business.function.knowledge-graph-management
+  kpi: Completion Rate > 90%
+  apm_metric: apm.configuration
+motivation.goal.support-rag-workflows:
   name: Support RAG Workflows
-  description: Support retrieval-augmented generation workflows using curated knowledge
-    graphs to enhance AI responses with accurate context
-  priority: high
-  id: support-rag-workflows
-Facilitate Human-Agent Communication:
+  id: motivation.goal.support-rag-workflows
+  description: Description for Support RAG Workflows
+  stakeholder: ai-developers
+  realizedBy:
+  - business.function.rag-pipeline-execution
+  kpi: Completion Rate > 90%
+  apm_metric: apm.configuration
+motivation.goal.facilitate-human-agent-communication:
   name: Facilitate Human-Agent Communication
-  description: Facilitate effective communication between humans and AI agents through
-    structured knowledge representation and semantic understanding
-  priority: high
-  id: facilitate-human-agent-communication
-Ensure Local-First Operation:
+  id: motivation.goal.facilitate-human-agent-communication
+  description: Description for Facilitate Human-Agent Communication
+  stakeholder: end-users
+  kpi: Completion Rate > 90%
+  apm_metric: apm.configuration
+motivation.goal.ensure-local-first-operation:
   name: Ensure Local-First Operation
-  description: Ensure all operations work offline with local data storage, providing
-    privacy, control, and independence from cloud services
-  priority: high
-  id: ensure-local-first-operation
-Enable Collaborative Sync:
+  id: motivation.goal.ensure-local-first-operation
+  description: Description for Ensure Local-First Operation
+  stakeholder: knowledge-workers
+  kpi: Completion Rate > 90%
+  apm_metric: apm.configuration
+motivation.goal.enable-collaborative-sync:
   name: Enable Collaborative Sync
+  id: motivation.goal.enable-collaborative-sync
   description: Enable collaboration through remote synchronization while maintaining
     local-first principles using duckdb and parquet formats
   priority: medium
-  id: enable-collaborative-sync
+  stakeholder: knowledge-workers
+  kpi: Completion Rate > 90%
+  apm_metric: apm.configuration

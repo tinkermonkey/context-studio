@@ -1,35 +1,59 @@
-sqlite-local:
-  name: sqlite-local
+Sqlite-local:
+  name: Sqlite-local
   description: Primary user workspace database with structure nodes, predicates, links,
     and change tracking
   criticality: high
   type: sqlite
   id: datastore.database.sqlite-local
   version: 1.0.0
-  database: local.db
-sqlite-operations:
-  name: sqlite-operations
+  database:
+    filename: local.db
+    name: local.db
+    type: SQLite
+    schemas:
+    - name: main
+      tables: []
+Sqlite-operations:
+  name: Sqlite-operations
   description: Operational database for pipeline configurations, execution logs, and
     system tracking
   criticality: high
   type: sqlite
   id: datastore.database.sqlite-operations
   version: 1.0.0
-  database: operations.db
-sqlite-reference:
-  name: sqlite-reference
+  database:
+    filename: operations.db
+    name: operations.db
+    type: SQLite
+    schemas:
+    - name: main
+      tables: []
+Sqlite-reference:
+  name: Sqlite-reference
   description: Multi-source reference knowledge graph from ConceptNet, DBpedia, and
     Wikidata
   criticality: medium
   type: sqlite
   id: datastore.database.sqlite-reference
   version: 1.0.0
-  database: reference.db
-sqlite-reference-api-cache:
-  name: sqlite-reference-api-cache
+  database:
+    filename: reference.db
+    name: reference.db
+    type: SQLite
+    schemas:
+    - name: main
+      tables: []
+Sqlite-reference-api-cache:
+  name: Sqlite-reference-api-cache
   description: API response cache for external reference sources to improve performance
   criticality: low
   type: sqlite
   id: datastore.database.sqlite-reference-api-cache
   version: 1.0.0
-  database: reference_api_cache.db
+  database:
+    filename: reference_api_cache.db
+    name: reference_api_cache.db
+    type: SQLite
+    schemas:
+    - name: main
+      tables: []

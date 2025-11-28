@@ -1,17 +1,17 @@
-sqlite-local:
-  name: sqlite-local
+Sqlite-local:
+  name: Sqlite-local
   description: Primary SQLite database (local.db) storing structure nodes, links,
     and predicates with SQLiteVector extension
   location: local.db
   id: technology.artifact.sqlite-local
-sqlite-reference:
-  name: sqlite-reference
+Sqlite-reference:
+  name: Sqlite-reference
   description: Reference database (reference.db) storing consolidated external knowledge
     from ConceptNet, DBpedia, Wikidata, Schema.org
   location: reference.db
   id: technology.artifact.sqlite-reference
-sqlite-operations:
-  name: sqlite-operations
+Sqlite-operations:
+  name: Sqlite-operations
   description: Operations database (operations.db) for pipeline flavors, executions,
     tasks, and audit logs
   location: operations.db

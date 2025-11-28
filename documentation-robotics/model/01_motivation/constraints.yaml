@@ -5,9 +5,8 @@ Desktop Deployment:
   constraintType: technology
   constraint.negotiable: 'false'
   id: desktop-deployment
-  relationships:
-    constrains:
-      - motivation.goal.ensure-local-first-operation
+  constrains:
+  - motivation.goal.ensure-local-first-operation
 SQLite Database Limitation:
   name: SQLite Database Limitation
   description: Limited to SQLite database capabilities for portability and simplicity,
@@ -15,9 +14,8 @@ SQLite Database Limitation:
   constraintType: technology
   constraint.negotiable: 'false'
   id: sqlite-database-limitation
-  relationships:
-    constrains:
-      - motivation.goal.enable-knowledge-graph-curation
+  constrains:
+  - motivation.goal.enable-knowledge-graph-curation
 Offline Operation Requirement:
   name: Offline Operation Requirement
   description: Must function fully offline without internet connectivity for privacy
@@ -25,9 +23,8 @@ Offline Operation Requirement:
   constraintType: technology
   constraint.negotiable: 'false'
   id: offline-operation-requirement
-  relationships:
-    constrains:
-      - motivation.goal.ensure-local-first-operation
+  constrains:
+  - motivation.goal.ensure-local-first-operation
 LLM Provider Dependency:
   name: LLM Provider Dependency
   description: Depends on external LLM providers for AI features, requiring API keys
@@ -42,6 +39,5 @@ Local Compute Constraints:
   constraintType: resource
   constraint.negotiable: 'false'
   id: local-compute-constraints
-  relationships:
-    constrains:
-      - motivation.goal.support-rag-workflows
+  constrains:
+  - motivation.goal.support-rag-workflows

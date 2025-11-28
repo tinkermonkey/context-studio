@@ -1,0 +1,284 @@
+CreateStructureNode:
+  id: ux.action.CreateStructureNode
+  name: CreateStructureNode
+  api-call: operation
+  properties:
+    realizes: api.operation.CreateStructureNode
+  version: 1.0.0
+  description: UX action for CreateStructureNode
+  experience: Default Experience
+  channel: visual
+  states:
+  - &id001
+    name: initial
+    type: state
+  views:
+  - &id002
+    name: default
+    type: custom
+ListStructureNodes:
+  id: ux.action.ListStructureNodes
+  name: ListStructureNodes
+  api-call: operation
+  properties:
+    realizes: api.operation.ListStructureNodes
+  version: 1.0.0
+  description: UX action for ListStructureNodes
+  experience: Default Experience
+  channel: visual
+  states:
+  - *id001
+  views:
+  - *id002
+GetStructureNode:
+  id: ux.action.GetStructureNode
+  name: GetStructureNode
+  api-call: operation
+  properties:
+    realizes: api.operation.GetStructureNode
+  version: 1.0.0
+  description: UX action for GetStructureNode
+  experience: Default Experience
+  channel: visual
+  states:
+  - *id001
+  views:
+  - *id002
+UpdateStructureNode:
+  id: ux.action.UpdateStructureNode
+  name: UpdateStructureNode
+  api-call: operation
+  properties:
+    realizes: api.operation.UpdateStructureNode
+  version: 1.0.0
+  description: UX action for UpdateStructureNode
+  experience: Default Experience
+  channel: visual
+  states:
+  - *id001
+  views:
+  - *id002
+DeleteStructureNode:
+  id: ux.action.DeleteStructureNode
+  name: DeleteStructureNode
+  api-call: operation
+  properties:
+    realizes: api.operation.DeleteStructureNode
+  version: 1.0.0
+  description: UX action for DeleteStructureNode
+  experience: Default Experience
+  channel: visual
+  states:
+  - *id001
+  views:
+  - *id002
+SearchStructureNodes:
+  id: ux.action.SearchStructureNodes
+  name: SearchStructureNodes
+  api-call: operation
+  properties:
+    realizes: api.operation.SearchStructureNodes
+  version: 1.0.0
+  description: UX action for SearchStructureNodes
+  experience: Default Experience
+  channel: visual
+  states:
+  - *id001
+  views:
+  - *id002
+CreateNodeLink:
+  id: ux.action.CreateNodeLink
+  name: CreateNodeLink
+  api-call: operation
+  properties:
+    realizes: api.operation.CreateNodeLink
+  version: 1.0.0
+  description: UX action for CreateNodeLink
+  experience: Default Experience
+  channel: visual
+  states:
+  - *id001
+  views:
+  - *id002
+ListNodeLinks:
+  id: ux.action.ListNodeLinks
+  name: ListNodeLinks
+  api-call: operation
+  properties:
+    realizes: api.operation.ListNodeLinks
+  version: 1.0.0
+  description: UX action for ListNodeLinks
+  experience: Default Experience
+  channel: visual
+  states:
+  - *id001
+  views:
+  - *id002
+CreatePredicate:
+  id: ux.action.CreatePredicate
+  name: CreatePredicate
+  api-call: operation
+  properties:
+    realizes: api.operation.CreatePredicate
+  version: 1.0.0
+  description: UX action for CreatePredicate
+  experience: Default Experience
+  channel: visual
+  states:
+  - *id001
+  views:
+  - *id002
+ListPredicates:
+  id: ux.action.ListPredicates
+  name: ListPredicates
+  api-call: operation
+  properties:
+    realizes: api.operation.ListPredicates
+  version: 1.0.0
+  description: UX action for ListPredicates
+  experience: Default Experience
+  channel: visual
+  states:
+  - *id001
+  views:
+  - *id002
+FindSimilarPredicates:
+  id: ux.action.FindSimilarPredicates
+  name: FindSimilarPredicates
+  api-call: operation
+  properties:
+    realizes: api.operation.FindSimilarPredicates
+  version: 1.0.0
+  description: UX action for FindSimilarPredicates
+  experience: Default Experience
+  channel: visual
+  states:
+  - *id001
+  views:
+  - *id002
+GraphQuery:
+  id: ux.action.GraphQuery
+  name: GraphQuery
+  api-call: operation
+  properties:
+    realizes: api.operation.GraphQuery
+  version: 1.0.0
+  description: UX action for GraphQuery
+  experience: Default Experience
+  channel: visual
+  states:
+  - *id001
+  views:
+  - *id002
+GraphStats:
+  id: ux.action.GraphStats
+  name: GraphStats
+  api-call: operation
+  properties:
+    realizes: api.operation.GraphStats
+  version: 1.0.0
+  description: UX action for GraphStats
+  experience: Default Experience
+  channel: visual
+  states:
+  - *id001
+  views:
+  - *id002
+RagExtract:
+  id: ux.action.RagExtract
+  name: RagExtract
+  api-call: operation
+  properties:
+    realizes: api.operation.RagExtract
+  version: 1.0.0
+  description: UX action for RagExtract
+  experience: Default Experience
+  channel: visual
+  states:
+  - *id001
+  views:
+  - *id002
+RagGetTrace:
+  id: ux.action.RagGetTrace
+  name: RagGetTrace
+  api-call: operation
+  properties:
+    realizes: api.operation.RagGetTrace
+  version: 1.0.0
+  description: UX action for RagGetTrace
+  experience: Default Experience
+  channel: visual
+  states:
+  - *id001
+  views:
+  - *id002
+ReferenceSearch:
+  id: ux.action.ReferenceSearch
+  name: ReferenceSearch
+  api-call: operation
+  properties:
+    realizes: api.operation.ReferenceSearch
+  version: 1.0.0
+  description: UX action for ReferenceSearch
+  experience: Default Experience
+  channel: visual
+  states:
+  - *id001
+  views:
+  - *id002
+CreatePipelineFlavor:
+  id: ux.action.CreatePipelineFlavor
+  name: CreatePipelineFlavor
+  api-call: operation
+  properties:
+    realizes: api.operation.CreatePipelineFlavor
+  version: 1.0.0
+  description: UX action for CreatePipelineFlavor
+  experience: Default Experience
+  channel: visual
+  states:
+  - *id001
+  views:
+  - *id002
+ListPipelineFlavors:
+  id: ux.action.ListPipelineFlavors
+  name: ListPipelineFlavors
+  api-call: operation
+  properties:
+    realizes: api.operation.ListPipelineFlavors
+  version: 1.0.0
+  description: UX action for ListPipelineFlavors
+  experience: Default Experience
+  channel: visual
+  states:
+  - *id001
+  views:
+  - *id002
+ListDatasets:
+  id: ux.action.ListDatasets
+  name: ListDatasets
+  api-call: operation
+  properties:
+    realizes: api.operation.ListDatasets
+  version: 1.0.0
+  description: UX action for ListDatasets
+  experience: Default Experience
+  channel: visual
+  states:
+  - *id001
+  views:
+  - *id002
+SwitchDataset:
+  id: ux.action.SwitchDataset
+  name: SwitchDataset
+  api-call: operation
+  properties:
+    realizes: api.operation.SwitchDataset
+  version: 1.0.0
+  description: UX action for SwitchDataset
+  experience: Default Experience
+  channel: visual
+  states:
+  - *id001
+  views:
+  - *id002
