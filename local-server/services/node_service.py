@@ -960,6 +960,7 @@ class NodeService:
 
         moved_nodes = []
         updated_children = []
+        converted_nodes = []
         warnings = []
         errors = []
 
@@ -987,6 +988,7 @@ class NodeService:
 
                     moved_nodes.append(result["moved_node"])
                     updated_children.extend(result["updated_children"])
+                    converted_nodes.extend(result["converted_nodes"])
                     warnings.extend(result["warnings"])
 
                 except ValueError as e:
@@ -1000,6 +1002,7 @@ class NodeService:
             return {
                 "moved_nodes": moved_nodes,
                 "updated_children": updated_children,
+                "converted_nodes": converted_nodes,
                 "warnings": warnings,
                 "errors": errors,
             }
@@ -1018,7 +1021,7 @@ class NodeService:
         handle_conflicts: str,
     ) -> Dict[str, Any]:
         """
-        Move a single structure_node with validation and conflict handling.
+        Move a single structure_node with automatic type conversion.
 
         Args:
             node_id: StructureNode ID to move
@@ -1028,22 +1031,32 @@ class NodeService:
             handle_conflicts: How to handle conflicts
 
         Returns:
-            Dictionary with moved structure_node, updated children, and warnings
+            Dictionary with moved structure_node, updated children, converted nodes, and warnings
         """
         warnings = []
         updated_children = []
+        converted_nodes = []  # NEW: Track type conversions
 
         # Get the structure_node to move
         structure_node = self.get_node(node_id)
         if not structure_node:
             raise NotFoundError("StructureNode", node_id)
 
-        # Validate the move is allowed
-        self._validate_node_move(structure_node, target_parent)
+        # NEW: Infer target type from parent
+        target_type = self._infer_node_type_from_parent(target_parent)
 
-        # Check for title conflicts
-        conflict_warning = self._check_move_conflicts(
-            structure_node, target_parent_id, handle_conflicts
+        # NEW: Validate with target type (not current type)
+        # Temporarily set type for validation
+        original_type = structure_node.node_type
+        structure_node.node_type = target_type
+        try:
+            self._validate_node_move(structure_node, target_parent)
+        finally:
+            structure_node.node_type = original_type  # Restore for actual conversion
+
+        # Check for title conflicts with NEW type
+        conflict_warning = self._check_move_conflicts_with_type(
+            structure_node, target_parent_id, target_type, handle_conflicts
         )
         if conflict_warning:
             warnings.append(conflict_warning)
@@ -1052,25 +1065,29 @@ class NodeService:
         old_parent_id = structure_node.parent_node_id
         structure_node.parent_node_id = target_parent_id
 
+        # NEW: Convert node type and all children recursively
+        self._convert_node_type_and_children(structure_node, target_type, converted_nodes)
+
         # Save changes
         self.db.add(structure_node)
         self.db.flush()  # Ensure changes are visible within transaction
 
-        # Move children if requested
+        # Move children if requested (note: children are already converted by _convert_node_type_and_children)
         if move_children:
             children = self._get_all_descendants(node_id)
             for child in children:
-                # Children keep their current parent relationships but may need validation
-                # No direct changes needed unless we're enforcing hierarchy rules
+                # Children have already been type-converted, just track them
                 updated_children.append(child)
 
         logger.info(
-            f"Moved structure_node {node_id} from parent {old_parent_id} to {target_parent_id}"
+            f"Moved structure_node {node_id} from parent {old_parent_id} to {target_parent_id}, "
+            f"converted {len(converted_nodes)} nodes"
         )
 
         return {
             "moved_node": structure_node,
             "updated_children": updated_children,
+            "converted_nodes": converted_nodes,  # NEW
             "warnings": warnings,
         }
 
@@ -1102,15 +1119,77 @@ class NodeService:
         # Term moves
         elif structure_node.node_type == NodeType.TERM:
             if target_parent is None:
-                raise InvalidHierarchyError("Terms must have a parent domain")
-            if target_parent.node_type != NodeType.DOMAIN:
-                raise InvalidHierarchyError("Terms can only be placed under domains")
+                raise InvalidHierarchyError("Terms must have a parent")
+            if target_parent.node_type not in [NodeType.DOMAIN, NodeType.TERM]:
+                raise InvalidHierarchyError("Terms can only be placed under domains or other terms")
 
         # Prevent circular references
         if target_parent and self._would_create_cycle(
             structure_node.id, target_parent.id
         ):
             raise CircularReferenceError("Move would create circular reference")
+
+    def _infer_node_type_from_parent(
+        self,
+        target_parent: Optional[StructureNode]
+    ) -> NodeType:
+        """
+        Infer the appropriate node type based on the target parent.
+
+        Args:
+            target_parent: Target parent node (None for root)
+
+        Returns:
+            NodeType appropriate for the parent level
+        """
+        if target_parent is None:
+            return NodeType.LAYER
+        elif target_parent.node_type == NodeType.LAYER:
+            return NodeType.DOMAIN
+        elif target_parent.node_type in [NodeType.DOMAIN, NodeType.TERM]:
+            return NodeType.TERM
+        else:
+            raise ValueError(f"Invalid parent type: {target_parent.node_type}")
+
+    def _convert_node_type_and_children(
+        self,
+        node: StructureNode,
+        new_type: NodeType,
+        converted_nodes: List[StructureNode]
+    ) -> None:
+        """
+        Recursively convert a node and all its descendants to appropriate types.
+
+        Args:
+            node: Node to convert
+            new_type: Target type for this node
+            converted_nodes: List to accumulate converted nodes for response
+        """
+        old_type = node.node_type
+
+        # Only convert if type actually changes
+        if old_type != new_type:
+            logger.info(f"Converting node {node.id} from {old_type} to {new_type}")
+            node.node_type = new_type
+            converted_nodes.append(node)
+            self.db.add(node)
+            # Database trigger will generate 'update-type' event automatically
+
+        # Recursively convert all direct children
+        children = self.db.query(StructureNode).filter(
+            StructureNode.parent_node_id == str(node.id)
+        ).all()
+
+        for child in children:
+            # Determine child's new type based on parent's new type
+            if new_type == NodeType.LAYER:
+                child_new_type = NodeType.DOMAIN
+            elif new_type in [NodeType.DOMAIN, NodeType.TERM]:
+                child_new_type = NodeType.TERM
+            else:
+                continue
+
+            self._convert_node_type_and_children(child, child_new_type, converted_nodes)
 
     def _check_move_conflicts(
         self,
@@ -1176,6 +1255,116 @@ class NodeService:
                 return conflict_msg
 
         return None
+
+    def _check_move_conflicts_with_type(
+        self,
+        structure_node: StructureNode,
+        target_parent_id: Optional[str],
+        target_type: NodeType,
+        handle_conflicts: str,
+    ) -> Optional[str]:
+        """
+        Check for title conflicts using the TARGET type's uniqueness rules.
+
+        Args:
+            structure_node: Node being moved
+            target_parent_id: Target parent ID
+            target_type: Type the node will become
+            handle_conflicts: How to handle conflicts
+
+        Returns:
+            Warning message if conflict found, None otherwise
+
+        Raises:
+            ValueError: If handle_conflicts="error" and conflict found
+        """
+        # Check uniqueness based on TARGET type
+        if target_type == NodeType.LAYER:
+            # Layers must be globally unique
+            existing = (
+                self.db.query(StructureNode)
+                .filter(
+                    StructureNode.title == structure_node.title,
+                    StructureNode.node_type == NodeType.LAYER,
+                    StructureNode.id != structure_node.id,
+                )
+                .first()
+            )
+        elif target_type == NodeType.DOMAIN:
+            # Domains must be unique within layer
+            existing = (
+                self.db.query(StructureNode)
+                .filter(
+                    StructureNode.title == structure_node.title,
+                    StructureNode.node_type == NodeType.DOMAIN,
+                    StructureNode.parent_node_id == target_parent_id,
+                    StructureNode.id != structure_node.id,
+                )
+                .first()
+            )
+        elif target_type == NodeType.TERM:
+            # Terms must be unique within parent (domain or term)
+            existing = (
+                self.db.query(StructureNode)
+                .filter(
+                    StructureNode.title == structure_node.title,
+                    StructureNode.node_type == NodeType.TERM,
+                    StructureNode.parent_node_id == target_parent_id,
+                    StructureNode.id != structure_node.id,
+                )
+                .first()
+            )
+        else:
+            existing = None
+
+        if existing:
+            conflict_msg = (
+                f"Node with title '{structure_node.title}' already exists "
+                f"at target location as {target_type}"
+            )
+
+            if handle_conflicts == "error":
+                raise ValueError(conflict_msg)
+            elif handle_conflicts == "rename":
+                # Generate unique title with TARGET type
+                counter = 1
+                new_title = f"{structure_node.title} ({counter})"
+                while self._title_exists_at_target(new_title, target_parent_id, target_type, structure_node.id):
+                    counter += 1
+                    new_title = f"{structure_node.title} ({counter})"
+
+                structure_node.title = new_title
+                return f"Renamed node to '{new_title}' to avoid conflict with existing {target_type}"
+            else:  # handle_conflicts == "warn"
+                return conflict_msg
+
+        return None
+
+    def _title_exists_at_target(
+        self, title: str, target_parent_id: Optional[str], target_type: NodeType, exclude_id: str
+    ) -> bool:
+        """Helper to check if a title exists at the target location."""
+        if target_type == NodeType.LAYER:
+            return self.db.query(StructureNode).filter(
+                StructureNode.title == title,
+                StructureNode.node_type == NodeType.LAYER,
+                StructureNode.id != exclude_id,
+            ).first() is not None
+        elif target_type == NodeType.DOMAIN:
+            return self.db.query(StructureNode).filter(
+                StructureNode.title == title,
+                StructureNode.node_type == NodeType.DOMAIN,
+                StructureNode.parent_node_id == target_parent_id,
+                StructureNode.id != exclude_id,
+            ).first() is not None
+        elif target_type == NodeType.TERM:
+            return self.db.query(StructureNode).filter(
+                StructureNode.title == title,
+                StructureNode.node_type == NodeType.TERM,
+                StructureNode.parent_node_id == target_parent_id,
+                StructureNode.id != exclude_id,
+            ).first() is not None
+        return False
 
     def _would_create_cycle(self, node_id: str, target_parent_id: str) -> bool:
         """

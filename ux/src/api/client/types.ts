@@ -401,12 +401,24 @@ export interface paths {
         put?: never;
         /**
          * Move Nodes
-         * @description Move structure_nodes to a new parent location.
+         * @description Move structure_nodes to a new parent location with automatic type conversion.
          *
-         *     This endpoint supports moving multiple structure_nodes at once, with options for:
+         *     **Type Conversion Rules:**
+         *     - Moving to root (null parent) → becomes Layer
+         *     - Moving under Layer → becomes Domain
+         *     - Moving under Domain or Term → becomes Term
+         *
+         *     **Recursive Conversion:**
+         *     When a node's type changes, all descendants are recursively converted:
+         *     - Layer's children become Domains
+         *     - Domain's/Term's children become Terms
+         *
+         *     This endpoint supports:
+         *     - Moving multiple structure_nodes at once
+         *     - Automatic type conversion based on target parent
          *     - Moving all child structure_nodes along with parents
          *     - Handling title conflicts through warnings, renaming, or errors
-         *     - Maintaining referential integrity throughout the move operation
+         *     - Maintaining referential integrity throughout the operation
          *
          *     The move operation is atomic - either all structure_nodes are moved successfully,
          *     or the entire operation is rolled back.
@@ -7622,7 +7634,7 @@ export interface components {
         };
         /**
          * MoveNodesResponse
-         * @description Model for move operation results.
+         * @description Model for move operation results with automatic type conversion.
          */
         MoveNodesResponse: {
             /**
@@ -7635,6 +7647,11 @@ export interface components {
              * @description List of child structure_nodes that were also moved
              */
             updated_children: components["schemas"]["NodeOut"][];
+            /**
+             * Converted Nodes
+             * @description List of nodes that had their type automatically converted
+             */
+            converted_nodes?: components["schemas"]["NodeOut"][];
             /**
              * Warnings
              * @description List of warnings encountered during the move

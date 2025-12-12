@@ -19,6 +19,8 @@ import {
   WordSense,
   ReferenceLink,
   SelectedWordSensesUpdate,
+  MoveNodesRequest,
+  MoveNodesResponse,
 } from "../types/structureNodes";
 
 export class StructureNodeService extends BaseService {
@@ -359,6 +361,24 @@ export class StructureNodeService extends BaseService {
         { reference_links: referenceLinks },
       );
     }, "removeReferenceLinks");
+  }
+
+  /**
+   * Move structure nodes to a new parent with automatic type conversion
+   */
+  async move(request: MoveNodesRequest): Promise<MoveNodesResponse> {
+    return this.withErrorContext(async () => {
+      this.validateRequired(request.node_ids, "node_ids");
+
+      if (request.node_ids.length === 0) {
+        throw new Error("At least one node_id must be provided");
+      }
+
+      return this.postResource<MoveNodesResponse>(
+        `${ENDPOINTS.STRUCTURE_NODES}/move`,
+        request,
+      );
+    }, "move");
   }
 
   /**

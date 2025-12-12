@@ -124,9 +124,10 @@ class MoveNodesRequest(BaseModel):
 
 
 class MoveNodesResponse(BaseModel):
-    """Model for move operation results."""
+    """Model for move operation results with automatic type conversion."""
     moved_nodes: List[NodeOut] = Field(description="List of successfully moved structure_nodes")
     updated_children: List[NodeOut] = Field(description="List of child structure_nodes that were also moved")
+    converted_nodes: List[NodeOut] = Field(default_factory=list, description="List of nodes that had their type automatically converted")
     warnings: List[str] = Field(description="List of warnings encountered during the move")
     errors: List[str] = Field(description="List of errors that prevented some moves")
 

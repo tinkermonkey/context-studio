@@ -1,14 +1,16 @@
 /**
  * Domain Move Form
  *
- * Form for moving domains between layers
+ * Form for moving domains to different hierarchy levels with automatic type conversion
  */
 
 import React, { useState } from "react";
-import { Button, Label, Checkbox } from "flowbite-react";
+import { Button, Label, Checkbox, Alert } from "flowbite-react";
+import { Info } from "lucide-react";
 import { StructureNode } from "@/api/types/structureNodes";
-import { LayerSelector } from "@/components/node_selectors/layer_selector";
-import { useUpdateStructureNode } from "@/api/hooks/structure_nodes/useStructureNodeMutations";
+import { StructureNodeSelector } from "@/components/node_selectors/structure_node_selector";
+import { useMoveStructureNodes } from "@/api/hooks/structure_nodes/useStructureNodeMutations";
+import { useButterToast } from "@/hooks/useButterToast";
 
 interface DomainMoveFormProps {
   selectedNodes: StructureNode[];
@@ -21,61 +23,89 @@ export function DomainMoveForm({
   onSuccess,
   onCancel,
 }: DomainMoveFormProps) {
-  const [targetLayerId, setTargetLayerId] = useState<string>("");
-  const [moveTerms, setMoveTerms] = useState(true);
-  const updateDomain = useUpdateStructureNode();
+  const [targetParentId, setTargetParentId] = useState<string>("");
+  const [moveChildren, setMoveChildren] = useState(true);
+  const moveNodes = useMoveStructureNodes();
+  const toast = useButterToast();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!targetLayerId) {
+    if (!targetParentId) {
       return;
     }
 
     try {
-      // Move each domain individually using the structure node update API
-      await Promise.all(
-        selectedNodes.map((domain) =>
-          updateDomain.mutateAsync({
-            id: domain.id,
-            data: {
-              parent_node_id: targetLayerId,
-            },
-          }),
-        ),
-      );
+      const result = await moveNodes.mutateAsync({
+        node_ids: selectedNodes.map((node) => node.id),
+        target_parent_id: targetParentId,
+        move_children: moveChildren,
+        handle_conflicts: "warn",
+      });
+
+      // Show success message with conversion info
+      let message = `Moved ${result.moved_nodes.length} node(s) successfully`;
+      if (result.converted_nodes.length > 0) {
+        message += ` (${result.converted_nodes.length} node(s) had type automatically converted)`;
+      }
+      toast.success(message);
+
+      // Show warnings if any
+      if (result.warnings.length > 0) {
+        result.warnings.forEach((warning) => toast.warning(warning));
+      }
 
       onSuccess();
     } catch (error) {
       console.error("Failed to move domains:", error);
+      toast.error("Failed to move nodes. Please try again.");
     }
   };
 
+  const excludeNodeIds = selectedNodes.map((node) => node.id);
+
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
+      {/* Informational Alert about Type Conversion */}
+      <Alert color="info" icon={Info}>
+        <span className="font-medium">Automatic Type Conversion</span>
+        <p className="mt-1 text-sm">
+          Moving to a different hierarchy level will automatically convert node
+          types:
+        </p>
+        <ul className="mt-2 ml-4 list-disc text-sm">
+          <li>Moving to root (no parent) → becomes a layer</li>
+          <li>Moving under a layer → becomes a domain</li>
+          <li>Moving under a domain or term → becomes a term</li>
+          <li>All child nodes will be converted recursively</li>
+        </ul>
+      </Alert>
+
       <div>
-        <Label htmlFor="target-layer">Target Layer</Label>
-        <LayerSelector
-          value={targetLayerId}
-          onSelect={(layer) => setTargetLayerId(layer?.id || "")}
+        <Label htmlFor="target-parent">Target Parent Node</Label>
+        <StructureNodeSelector
+          value={targetParentId}
+          onSelect={(node) => setTargetParentId(node?.id || "")}
+          excludeNodeIds={excludeNodeIds}
+          placeholder="Select target parent (or leave empty for root)"
         />
       </div>
 
       <div className="flex items-center gap-2">
         <Checkbox
-          id="move-terms"
-          checked={moveTerms}
-          onChange={(e) => setMoveTerms(e.target.checked)}
+          id="move-children"
+          checked={moveChildren}
+          onChange={(e) => setMoveChildren(e.target.checked)}
         />
-        <Label htmlFor="move-terms" className="text-sm">
-          Also move all terms contained in these domains
+        <Label htmlFor="move-children" className="text-sm">
+          Also move all child nodes
         </Label>
       </div>
 
       <div className="text-sm text-gray-600">
-        Moving {selectedNodes.length} domain
-        {selectedNodes.length > 1 ? "s" : ""} to a new layer.
-        {moveTerms && " All terms in these domains will also be moved."}
+        Moving {selectedNodes.length} node
+        {selectedNodes.length > 1 ? "s" : ""}.
+        {moveChildren && " All child nodes will also be moved."}
       </div>
 
       <div className="flex justify-end gap-2 pt-4">
@@ -85,9 +115,9 @@ export function DomainMoveForm({
         <Button
           type="submit"
           color="blue"
-          disabled={!targetLayerId || updateDomain.isPending}
+          disabled={!targetParentId || moveNodes.isPending}
         >
-          {updateDomain.isPending ? "Moving..." : "Move Domains"}
+          {moveNodes.isPending ? "Moving..." : "Move Nodes"}
         </Button>
       </div>
     </form>

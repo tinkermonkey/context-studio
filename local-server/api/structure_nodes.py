@@ -871,13 +871,25 @@ def move_nodes(
     node_service: NodeService = Depends(get_node_service)
 ):
     """
-    Move structure_nodes to a new parent location.
-    
-    This endpoint supports moving multiple structure_nodes at once, with options for:
+    Move structure_nodes to a new parent location with automatic type conversion.
+
+    **Type Conversion Rules:**
+    - Moving to root (null parent) → becomes Layer
+    - Moving under Layer → becomes Domain
+    - Moving under Domain or Term → becomes Term
+
+    **Recursive Conversion:**
+    When a node's type changes, all descendants are recursively converted:
+    - Layer's children become Domains
+    - Domain's/Term's children become Terms
+
+    This endpoint supports:
+    - Moving multiple structure_nodes at once
+    - Automatic type conversion based on target parent
     - Moving all child structure_nodes along with parents
     - Handling title conflicts through warnings, renaming, or errors
-    - Maintaining referential integrity throughout the move operation
-    
+    - Maintaining referential integrity throughout the operation
+
     The move operation is atomic - either all structure_nodes are moved successfully,
     or the entire operation is rolled back.
     """
@@ -885,21 +897,22 @@ def move_nodes(
         # Convert UUID objects to strings for service
         node_ids = [str(node_id) for node_id in move_request.node_ids]
         target_parent_id = str(move_request.target_parent_id) if move_request.target_parent_id else None
-        
+
         result = node_service.move_nodes(
             node_ids=node_ids,
             target_parent_id=target_parent_id,
             move_children=move_request.move_children,
             handle_conflicts=move_request.handle_conflicts
         )
-        
+
         return MoveNodesResponse(
             moved_nodes=[to_node_out(node) for node in result['moved_nodes']],
             updated_children=[to_node_out(child) for child in result['updated_children']],
+            converted_nodes=[to_node_out(node) for node in result.get('converted_nodes', [])],
             warnings=result['warnings'],
             errors=result['errors']
         )
-        
+
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
     except Exception as e:

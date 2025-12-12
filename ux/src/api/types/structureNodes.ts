@@ -184,6 +184,22 @@ export interface TermCreate extends Omit<StructureNodeCreate, "node_type"> {
   parent_node_id: string; // Required for terms (domain_id or parent_term_id)
 }
 
+// Move operation types
+export interface MoveNodesRequest {
+  node_ids: string[];
+  target_parent_id?: string | null;
+  move_children?: boolean;
+  handle_conflicts?: "warn" | "rename" | "error";
+}
+
+export interface MoveNodesResponse {
+  moved_nodes: StructureNode[];
+  updated_children: StructureNode[];
+  converted_nodes: StructureNode[];
+  warnings: string[];
+  errors: string[];
+}
+
 // Validation constants
 export const VALIDATION_RULES = {
   MAX_TITLE_LENGTH: 255,
