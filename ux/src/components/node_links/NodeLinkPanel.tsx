@@ -33,7 +33,7 @@ export const NodeLinkPanel: React.FC<NodeLinkPanelProps> = ({
   } = useNodeLinksByNode(nodeId);
 
   const hasLinks = links.length > 0;
-  const shouldShowForm = isFormActive || (!hasLinks && !isLoading);
+  const shouldShowForm = isFormActive;
 
   const handleSuccess = () => {
     setIsFormActive(false);
@@ -41,6 +41,10 @@ export const NodeLinkPanel: React.FC<NodeLinkPanelProps> = ({
 
   const handleCancel = () => {
     setIsFormActive(false);
+  };
+
+  const handleAddLink = () => {
+    setIsFormActive(true);
   };
 
   return (
@@ -74,7 +78,7 @@ export const NodeLinkPanel: React.FC<NodeLinkPanelProps> = ({
         </Alert>
       )}
 
-      {/* Form - shown when active OR when no links exist */}
+      {/* Form - shown when active */}
       {shouldShowForm && !isLoading && !error && (
         <NodeLinkForm
           currentNode={node}
@@ -114,7 +118,13 @@ export const NodeLinkPanel: React.FC<NodeLinkPanelProps> = ({
       {/* Empty State - shown when no links and form not active */}
       {!isLoading && !error && !hasLinks && !isFormActive && (
         <Alert color="info" icon={Info}>
-          No links for this node. Links will be created automatically when you add them above.
+          <div className="flex items-center justify-between">
+            <span>No links for this node.</span>
+            <Button size="sm" color="blue" onClick={handleAddLink}>
+              <Plus className="mr-2 h-4 w-4" />
+              Add Link
+            </Button>
+          </div>
         </Alert>
       )}
     </div>
