@@ -1,7 +1,7 @@
 version: 0.1.0
 schema: documentation-robotics-v1
 created: '2025-11-26T12:55:57.414993Z'
-updated: '2025-11-28T18:37:36.562189Z'
+updated: '2025-12-04T10:58:40.325136Z'
 project:
   name: context-studio
   description: Architecture model for context-studio
@@ -123,10 +123,19 @@ conventions:
     api: '{service-name}-api.yaml'
     schema: '{entity-name}.schema.json'
     ux: '{screen-name}.ux.yaml'
-cli_version: 0.4.1
-spec_version: 0.2.0
+cli_version: 0.6.2
+spec_version: 0.3.0
 upgrade_history:
 - from_version: 0.1.0
   to_version: 0.4.1
   upgraded_at: '2025-11-28T13:53:26.729095Z'
-upgraded_at: '2025-11-28T13:53:26.745236Z'
+- from_version: 0.1.0
+  to_version: 0.5.0
+  upgraded_at: '2025-12-03T21:24:00.926148Z'
+- from_version: 0.1.0
+  to_version: 0.6.1
+  upgraded_at: '2025-12-04T01:34:45.062031Z'
+- from_version: 0.1.0
+  to_version: 0.6.2
+  upgraded_at: '2025-12-04T10:58:16.316230Z'
+upgraded_at: '2025-12-04T10:58:16.459941Z'
