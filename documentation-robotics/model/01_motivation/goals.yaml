@@ -9,6 +9,7 @@ motivation.goal.enable-knowledge-graph-curation:
   - business.function.knowledge-graph-management
   kpi: Completion Rate > 90%
   apm_metric: apm.configuration
+  measuredBy: [apm.metric.ApiLatency]
 motivation.goal.support-rag-workflows:
   name: Support RAG Workflows
   id: motivation.goal.support-rag-workflows
@@ -18,6 +19,7 @@ motivation.goal.support-rag-workflows:
   - business.function.rag-pipeline-execution
   kpi: Completion Rate > 90%
   apm_metric: apm.configuration
+  measuredBy: [apm.metric.ApiLatency]
 motivation.goal.facilitate-human-agent-communication:
   name: Facilitate Human-Agent Communication
   id: motivation.goal.facilitate-human-agent-communication
@@ -25,6 +27,7 @@ motivation.goal.facilitate-human-agent-communication:
   stakeholder: end-users
   kpi: Completion Rate > 90%
   apm_metric: apm.configuration
+  measuredBy: [apm.metric.ApiLatency]
 motivation.goal.ensure-local-first-operation:
   name: Ensure Local-First Operation
   id: motivation.goal.ensure-local-first-operation
@@ -32,6 +35,7 @@ motivation.goal.ensure-local-first-operation:
   stakeholder: knowledge-workers
   kpi: Completion Rate > 90%
   apm_metric: apm.configuration
+  measuredBy: [apm.metric.ApiLatency]
 motivation.goal.enable-collaborative-sync:
   name: Enable Collaborative Sync
   id: motivation.goal.enable-collaborative-sync
@@ -41,3 +45,4 @@ motivation.goal.enable-collaborative-sync:
   stakeholder: knowledge-workers
   kpi: Completion Rate > 90%
   apm_metric: apm.configuration
+  measuredBy: [apm.metric.ApiLatency]

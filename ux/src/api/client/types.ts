@@ -99,10 +99,10 @@ export interface paths {
         };
         /**
          * List Node Links
-         * @description List structure_node links with filtering.
+         * @description List structure_node links with filtering and pagination.
          *
          *     Supports filtering by source structure_node, target structure_node, and predicate.
-         *     Returns all relationships in the unified structure_node graph.
+         *     Returns all relationships in the unified structure_node graph with pagination metadata.
          */
         get: operations["list_node_links_api_structure_nodes_links_get"];
         put?: never;
@@ -286,7 +286,30 @@ export interface paths {
          *         500: If an unexpected error occurs
          */
         get: operations["get_word_senses_api_structure_nodes__node_id__word_senses_get"];
-        put?: never;
+        /**
+         * Update Word Senses
+         * @description Update selected word senses for a structure node.
+         *
+         *     Allows user to persist their selected word senses from NLP analysis.
+         *     Uses a conservative merge strategy: preserves existing word senses for words
+         *     not included in this update, while replacing senses for words that are included.
+         *
+         *     For example, if a node has existing senses for words "bank" and "account", and
+         *     you update only "bank", the existing "account" senses will be preserved.
+         *
+         *     Args:
+         *         node_id: UUID of the structure node
+         *         update_request: Selected word senses to persist
+         *
+         *     Returns:
+         *         List of all word senses after update (including preserved senses)
+         *
+         *     Raises:
+         *         400: If validation fails (invalid sense_id format)
+         *         404: If structure node not found
+         *         500: If an unexpected error occurs
+         */
+        put: operations["update_word_senses_api_structure_nodes__node_id__word_senses_put"];
         post?: never;
         delete?: never;
         options?: never;
@@ -8015,6 +8038,20 @@ export interface components {
             source?: string | null;
         };
         /**
+         * PaginatedNodeLinksResponse
+         * @description Model for paginated structure_node link responses.
+         */
+        PaginatedNodeLinksResponse: {
+            /** Data */
+            data: components["schemas"]["NodeLinkOut"][];
+            /** Total */
+            total: number;
+            /** Skip */
+            skip: number;
+            /** Limit */
+            limit: number;
+        };
+        /**
          * PaginatedNodesResponse
          * @description Model for paginated structure_node responses.
          */
@@ -9063,6 +9100,17 @@ export interface components {
              * @default 1
              */
             analysis_depth: number | null;
+        };
+        /**
+         * SelectedWordSensesUpdate
+         * @description Model for updating selected word senses on a structure node.
+         */
+        SelectedWordSensesUpdate: {
+            /**
+             * Selected Senses
+             * @description List of word senses to persist as selected
+             */
+            selected_senses: components["schemas"]["WordSense"][];
         };
         /**
          * SelectionResponse
@@ -10222,7 +10270,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["NodeLinkOut"][];
+                    "application/json": components["schemas"]["PaginatedNodeLinksResponse"];
                 };
             };
             /** @description Validation Error */
@@ -10568,6 +10616,44 @@ export interface operations {
             cookie?: never;
         };
         requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WordSense"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_word_senses_api_structure_nodes__node_id__word_senses_put: {
+        parameters: {
+            query?: {
+                SessionLocal?: unknown;
+            };
+            header?: never;
+            path: {
+                /** @description The ID of the structure node */
+                node_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SelectedWordSensesUpdate"];
+            };
+        };
         responses: {
             /** @description Successful Response */
             200: {

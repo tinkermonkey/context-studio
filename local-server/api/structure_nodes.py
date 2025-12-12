@@ -32,7 +32,7 @@ from services.word_sense_service import WordSenseService
 from services.exceptions import NotFoundError, ValidationError, ConflictError, CircularReferenceError, InvalidHierarchyError, ReferenceNotFoundError
 from api.models.structure_nodes import (
     NodeCreate, NodeUpdate, NodeOut, NodeLinkCreate, NodeLinkOut,
-    NodeSearchRequest, NodeSearchResult, PaginatedNodesResponse, NodeTypeEnum,
+    NodeSearchRequest, NodeSearchResult, PaginatedNodesResponse, PaginatedNodeLinksResponse, NodeTypeEnum,
     MoveNodesRequest, MoveNodesResponse, ReferenceLink, WordSense, SelectedWordSensesUpdate
 )
 from api.utils.node_conversion import (
@@ -323,7 +323,7 @@ def create_node_link(
         raise HTTPException(status_code=500, detail=f"Internal server error: {str(e)}")
 
 
-@router.get("/links", response_model=List[NodeLinkOut])
+@router.get("/links", response_model=PaginatedNodeLinksResponse)
 def list_node_links(
     source_node_id: Optional[UUID] = Query(None, description="Filter by source structure_node ID"),
     target_node_id: Optional[UUID] = Query(None, description="Filter by target structure_node ID"),
@@ -333,16 +333,24 @@ def list_node_links(
     link_service: NodeLinkService = Depends(get_node_link_service)
 ):
     """
-    List structure_node links with filtering.
-    
+    List structure_node links with filtering and pagination.
+
     Supports filtering by source structure_node, target structure_node, and predicate.
-    Returns all relationships in the unified structure_node graph.
+    Returns all relationships in the unified structure_node graph with pagination metadata.
     """
     try:
         # Convert UUID to string for filtering
         source_node_id_str = str(source_node_id) if source_node_id else None
         target_node_id_str = str(target_node_id) if target_node_id else None
-        
+
+        # Get total count
+        total = link_service.count_links(
+            source_node_id=source_node_id_str,
+            target_node_id=target_node_id_str,
+            predicate=predicate
+        )
+
+        # Get links with pagination
         links = link_service.list_links(
             source_node_id=source_node_id_str,
             target_node_id=target_node_id_str,
@@ -350,9 +358,15 @@ def list_node_links(
             skip=skip,
             limit=limit
         )
-        
-        return [to_node_link_out(link) for link in links]
-        
+
+        # Convert to response format
+        return PaginatedNodeLinksResponse(
+            data=[to_node_link_out(link) for link in links],
+            total=total,
+            skip=skip,
+            limit=limit
+        )
+
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Internal server error: {str(e)}")
 

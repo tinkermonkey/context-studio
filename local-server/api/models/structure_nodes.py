@@ -106,6 +106,14 @@ class PaginatedNodesResponse(BaseModel):
     limit: int
 
 
+class PaginatedNodeLinksResponse(BaseModel):
+    """Model for paginated structure_node link responses."""
+    data: List[NodeLinkOut]
+    total: int
+    skip: int
+    limit: int
+
+
 # Move operation models
 class MoveNodesRequest(BaseModel):
     """Model for moving structure_nodes to a new parent."""

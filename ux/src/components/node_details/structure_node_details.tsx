@@ -43,6 +43,7 @@ import { useNlpAnalysisStore } from "@/stores/nlpAnalysisStore";
 import { useUpdateStructureNode } from "@/api/hooks/structure_nodes/useStructureNodeMutations";
 import { toast } from "@/utils/toast";
 import { ReferenceNodePanel } from "@/components/reference_nodes";
+import { NodeLinkPanel } from "@/components/node_links";
 import { DomainMoveForm } from "@/components/forms/domain_move_form";
 import { TermMoveForm } from "@/components/forms/term_move_form";
 
@@ -307,6 +308,11 @@ export const StructureNodeDetails: React.FC<StructureNodeDetailsProps> = ({
           {/* Reference Nodes */}
           <div className="pt-4">
             <ReferenceNodePanel nodeId={node.id} nodeTitle={node.title} />
+          </div>
+
+          {/* Node Links */}
+          <div className="pt-4">
+            <NodeLinkPanel nodeId={node.id} node={node} />
           </div>
 
           {/* Term Hierarchy */}

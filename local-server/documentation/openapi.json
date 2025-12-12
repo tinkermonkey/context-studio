@@ -317,7 +317,7 @@
           "structure_nodes"
         ],
         "summary": "List Node Links",
-        "description": "List structure_node links with filtering.\n\nSupports filtering by source structure_node, target structure_node, and predicate.\nReturns all relationships in the unified structure_node graph.",
+        "description": "List structure_node links with filtering and pagination.\n\nSupports filtering by source structure_node, target structure_node, and predicate.\nReturns all relationships in the unified structure_node graph with pagination metadata.",
         "operationId": "list_node_links_api_structure_nodes_links_get",
         "parameters": [
           {
@@ -418,11 +418,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/NodeLinkOut"
-                  },
-                  "title": "Response List Node Links Api Structure Nodes Links Get"
+                  "$ref": "#/components/schemas/PaginatedNodeLinksResponse"
                 }
               }
             }
@@ -1025,166 +1021,6 @@
                     "$ref": "#/components/schemas/WordSense"
                   },
                   "title": "Response Update Word Senses Api Structure Nodes  Node Id  Word Senses Put"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/structure_nodes/reference_links/validate": {
-      "post": {
-        "tags": [
-          "structure_nodes",
-          "structure_nodes"
-        ],
-        "summary": "Validate All Reference Links",
-        "description": "Validate all reference links across all structure nodes.\n\nPerforms bulk validation of reference links to identify:\n- Orphaned links (references that no longer exist in reference.db)\n- Malformed links (invalid JSON or missing required fields)\n- Nodes with problematic links\n\nUses batching to efficiently handle large datasets without loading all nodes into memory.\nThis endpoint is useful for maintenance and data integrity checking.\nGracefully degrades if reference.db is unavailable.\n\nArgs:\n    check_existence: If True, validates each link exists in reference.db\n    limit: Optional limit on number of nodes to check\n    batch_size: Number of nodes to process per batch (default: 100, min: 10, max: 1000)\n\nReturns:\n    Validation results with statistics and list of problematic nodes",
-        "operationId": "validate_all_reference_links_api_structure_nodes_reference_links_validate_post",
-        "parameters": [
-          {
-            "name": "check_existence",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "boolean",
-              "description": "Check if references exist in reference.db",
-              "default": true,
-              "title": "Check Existence"
-            },
-            "description": "Check if references exist in reference.db"
-          },
-          {
-            "name": "limit",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "integer",
-                  "maximum": 1000,
-                  "minimum": 1
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "description": "Limit number of nodes to validate",
-              "title": "Limit"
-            },
-            "description": "Limit number of nodes to validate"
-          },
-          {
-            "name": "batch_size",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "integer",
-              "maximum": 1000,
-              "minimum": 10,
-              "description": "Number of nodes to process per batch",
-              "default": 100,
-              "title": "Batch Size"
-            },
-            "description": "Number of nodes to process per batch"
-          },
-          {
-            "name": "SessionLocal",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "title": "Sessionlocal"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "additionalProperties": true,
-                  "title": "Response Validate All Reference Links Api Structure Nodes Reference Links Validate Post"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/structure_nodes/{node_id}/reference_links/validate": {
-      "post": {
-        "tags": [
-          "structure_nodes",
-          "structure_nodes"
-        ],
-        "summary": "Validate Node Reference Links",
-        "description": "Validate reference links for a specific structure node.\n\nChecks all reference links on a single node to identify:\n- Orphaned links (references that no longer exist in reference.db)\n- Malformed links (invalid JSON or missing required fields)\n- Valid links\n\nArgs:\n    node_id: UUID of the structure node\n    check_existence: If True, validates each link exists in reference.db\n\nReturns:\n    Validation results with counts of valid, invalid, and malformed links\n\nRaises:\n    404: If structure node not found\n    500: If an unexpected error occurs",
-        "operationId": "validate_node_reference_links_api_structure_nodes__node_id__reference_links_validate_post",
-        "parameters": [
-          {
-            "name": "node_id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid",
-              "description": "The ID of the structure node",
-              "title": "Node Id"
-            },
-            "description": "The ID of the structure node"
-          },
-          {
-            "name": "check_existence",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "boolean",
-              "description": "Check if references exist in reference.db",
-              "default": true,
-              "title": "Check Existence"
-            },
-            "description": "Check if references exist in reference.db"
-          },
-          {
-            "name": "SessionLocal",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "title": "Sessionlocal"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "additionalProperties": true,
-                  "title": "Response Validate Node Reference Links Api Structure Nodes  Node Id  Reference Links Validate Post"
                 }
               }
             }
@@ -19531,6 +19367,38 @@
         ],
         "title": "PaginatedExternalPredicatesResponse",
         "description": "Paginated response for external predicates."
+      },
+      "PaginatedNodeLinksResponse": {
+        "properties": {
+          "data": {
+            "items": {
+              "$ref": "#/components/schemas/NodeLinkOut"
+            },
+            "type": "array",
+            "title": "Data"
+          },
+          "total": {
+            "type": "integer",
+            "title": "Total"
+          },
+          "skip": {
+            "type": "integer",
+            "title": "Skip"
+          },
+          "limit": {
+            "type": "integer",
+            "title": "Limit"
+          }
+        },
+        "type": "object",
+        "required": [
+          "data",
+          "total",
+          "skip",
+          "limit"
+        ],
+        "title": "PaginatedNodeLinksResponse",
+        "description": "Model for paginated structure_node link responses."
       },
       "PaginatedNodesResponse": {
         "properties": {
