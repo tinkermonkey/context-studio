@@ -119,7 +119,7 @@ describe("ReferenceNodePanel", () => {
     );
 
     expect(screen.getByText(/no reference nodes associated/i)).toBeInTheDocument();
-    expect(screen.getByText(/search external reference sources/i)).toBeInTheDocument();
+    expect(screen.getByPlaceholderText(/search reference sources/i)).toBeInTheDocument();
   });
 
   it("displays persisted reference links when available", () => {

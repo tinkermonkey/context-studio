@@ -168,7 +168,9 @@ def test_create_get_update_delete_term_relationship(shared_client):
         f"/api/structure_nodes/links?source_node_id={t1['id']}&target_node_id={t2['id']}"
     )
     assert resp.status_code == 200
-    links = resp.json()
+    response_data = resp.json()
+    assert response_data["total"] == 1
+    links = response_data["data"]
     assert len(links) == 1
     assert links[0]["predicate"] == "rel"
     # Update
@@ -190,7 +192,9 @@ def test_create_get_update_delete_term_relationship(shared_client):
         f"/api/structure_nodes/links?source_node_id={t1['id']}&target_node_id={t2['id']}"
     )
     assert resp.status_code == 200
-    assert len(resp.json()) == 0
+    response_data = resp.json()
+    assert response_data["total"] == 0
+    assert len(response_data["data"]) == 0
 
 
 def test_term_relationship_invalid_cases(shared_client):
