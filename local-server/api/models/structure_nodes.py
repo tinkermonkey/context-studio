@@ -170,3 +170,20 @@ class SelectedWordSensesUpdate(BaseModel):
     selected_senses: List[WordSense] = Field(..., description="List of word senses to persist as selected")
 
     model_config = ConfigDict(from_attributes=True)
+
+
+class StructureNodeAttribute(BaseModel):
+    """Model for structure node attributes."""
+    key: str = Field(..., min_length=1, max_length=255, description="Attribute key/name")
+    value: str = Field(..., description="Attribute value")
+    data_type: Optional[str] = Field(None, description="Data type hint (e.g., 'string', 'integer', 'date')")
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class ResolvedAttribute(StructureNodeAttribute):
+    """Model for resolved attributes with inheritance information."""
+    inherited: bool = Field(..., description="Whether this attribute is inherited from a parent node")
+    source_node_id: UUID = Field(..., description="ID of the node that provides this attribute value")
+
+    model_config = ConfigDict(from_attributes=True)

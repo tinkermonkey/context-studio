@@ -5,11 +5,14 @@ This service implements the business logic for the normalized structure_node str
 handling type-specific validations and constraints for layers, domains, and terms.
 """
 
+import json
 from typing import List, Optional, Dict, Any
+from uuid import UUID
 from sqlalchemy.orm import Session
 from sqlalchemy import and_
 
 from database.models import StructureNode, ChangeEvent, Predicate
+from api.models.structure_nodes import StructureNodeAttribute, ResolvedAttribute
 from database.enums import NodeType
 from graph.graph_service import GraphService
 from embeddings.generate_embeddings import generate_embedding
@@ -530,6 +533,150 @@ class NodeService:
                 break
 
         return ancestors
+
+    def _parse_attributes_json(self, attributes_json: Optional[str]) -> List[StructureNodeAttribute]:
+        """
+        Parse attributes JSON string into list of StructureNodeAttribute objects.
+
+        Args:
+            attributes_json: JSON string containing attributes array
+
+        Returns:
+            List of StructureNodeAttribute instances (empty list if attributes_json is None/empty)
+        """
+        if not attributes_json:
+            return []
+        try:
+            data = json.loads(attributes_json)
+            return [StructureNodeAttribute(**attr) for attr in data]
+        except Exception as e:
+            logger.error(f"Failed to parse attributes JSON: {e}")
+            return []
+
+    def set_node_attributes(self, node_id: UUID, attributes: List[StructureNodeAttribute]) -> StructureNode:
+        """
+        Set local attributes on a node, replacing existing attributes.
+
+        Args:
+            node_id: ID of the structure node
+            attributes: List of StructureNodeAttribute instances to set
+
+        Returns:
+            Updated StructureNode instance
+
+        Raises:
+            ValueError: If node not found or validation fails
+        """
+        node = self.get_node(str(node_id))
+        if not node:
+            raise ValueError(f"Node {node_id} not found")
+
+        # Validate attributes by constructing them
+        for attr in attributes:
+            attr.model_validate(attr.model_dump())
+
+        # Serialize to JSON
+        attributes_json = json.dumps([attr.model_dump(mode='json') for attr in attributes])
+        node.attributes = attributes_json
+        node.version = node.version + 1
+        self.db.commit()
+        self.db.refresh(node)
+        return node
+
+    def get_local_attributes(self, node_id: UUID) -> List[StructureNodeAttribute]:
+        """
+        Get only the node's own attributes (not inherited).
+
+        Args:
+            node_id: ID of the structure node
+
+        Returns:
+            List of StructureNodeAttribute instances for this node only
+
+        Raises:
+            ValueError: If node not found
+        """
+        node = self.get_node(str(node_id))
+        if not node:
+            raise ValueError(f"Node {node_id} not found")
+        return self._parse_attributes_json(node.attributes)
+
+    def resolve_node_attributes(self, node_id: UUID) -> List[ResolvedAttribute]:
+        """
+        Walk ancestor chain and return merged attributes with inheritance information.
+
+        Child values override parent values for matching keys. The chain is walked
+        from most distant ancestor to target node, with child values taking precedence.
+
+        Args:
+            node_id: ID of the structure node
+
+        Returns:
+            List of ResolvedAttribute instances with inherited flags and source node IDs
+
+        Raises:
+            ValueError: If node not found
+        """
+        node = self.get_node(str(node_id))
+        if not node:
+            raise ValueError(f"Node {node_id} not found")
+
+        # Get all ancestors using existing method (no depth limit)
+        ancestors = self.get_node_ancestors(str(node_id))
+
+        # Build attribute map from most distant ancestor to target node
+        attribute_map = {}
+        for ancestor in reversed(ancestors):  # Most distant first
+            ancestor_attrs = self._parse_attributes_json(ancestor.attributes)
+            for attr in ancestor_attrs:
+                attribute_map[attr.key] = ResolvedAttribute(
+                    key=attr.key,
+                    value=attr.value,
+                    data_type=attr.data_type,
+                    inherited=(ancestor.id != node.id),
+                    source_node_id=UUID(ancestor.id)
+                )
+
+        # Add local attributes last (override inherited)
+        local_attrs = self._parse_attributes_json(node.attributes)
+        for attr in local_attrs:
+            attribute_map[attr.key] = ResolvedAttribute(
+                key=attr.key,
+                value=attr.value,
+                data_type=attr.data_type,
+                inherited=False,
+                source_node_id=UUID(node.id)
+            )
+
+        return list(attribute_map.values())
+
+    def remove_node_attribute(self, node_id: UUID, key: str) -> StructureNode:
+        """
+        Remove a specific attribute by key.
+
+        Args:
+            node_id: ID of the structure node
+            key: Attribute key to remove
+
+        Returns:
+            Updated StructureNode instance
+
+        Raises:
+            ValueError: If node not found
+        """
+        node = self.get_node(str(node_id))
+        if not node:
+            raise ValueError(f"Node {node_id} not found")
+
+        attributes = self._parse_attributes_json(node.attributes)
+        attributes = [attr for attr in attributes if attr.key != key]
+
+        attributes_json = json.dumps([attr.model_dump(mode='json') for attr in attributes])
+        node.attributes = attributes_json
+        node.version = node.version + 1
+        self.db.commit()
+        self.db.refresh(node)
+        return node
 
     # Private validation methods
 
