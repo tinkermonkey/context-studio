@@ -14,6 +14,7 @@ from unittest.mock import Mock, MagicMock
 from sqlalchemy.orm import Session
 
 from services.word_sense_service import WordSenseService
+from services.exceptions import ValidationError
 from api.models.structure_nodes import WordSense
 from database.models import StructureNode
 from database.enums import NodeType
@@ -318,17 +319,15 @@ class TestWordSenseService:
             assert result == []
 
     def test_get_word_senses_malformed_json(self, service, mock_db, sample_node):
-        """Test handling of malformed JSON."""
+        """Test handling of malformed JSON - should raise ValidationError."""
         # Setup
         sample_node.word_senses = "{invalid json"
 
         mock_db.query.return_value.filter.return_value.first.return_value = sample_node
 
-        # Execute
-        result = service.get_word_senses("test-node-123")
-
-        # Assert - should return empty list, not raise exception
-        assert result == []
+        # Execute & Assert - should raise ValidationError for corrupted data
+        with pytest.raises(ValidationError, match="Word sense data.*corrupted"):
+            service.get_word_senses("test-node-123")
 
     def test_get_word_senses_not_array(self, service, mock_db, sample_node):
         """Test handling when JSON is not an array."""
@@ -344,7 +343,7 @@ class TestWordSenseService:
         assert result == []
 
     def test_get_word_senses_invalid_sense_data(self, service, mock_db, sample_node):
-        """Test handling when sense data is invalid."""
+        """Test handling when sense data is invalid - should raise ValidationError."""
         # Setup - one valid sense, one invalid
         sample_node.word_senses = json.dumps([
             {
@@ -358,12 +357,9 @@ class TestWordSenseService:
 
         mock_db.query.return_value.filter.return_value.first.return_value = sample_node
 
-        # Execute
-        result = service.get_word_senses("test-node-123")
-
-        # Assert - should return only valid sense
-        assert len(result) == 1
-        assert result[0].sense_id == "bank.n.01"
+        # Execute & Assert - should raise ValidationError for partially corrupted data
+        with pytest.raises(ValidationError, match="Word sense data is partially corrupted"):
+            service.get_word_senses("test-node-123")
 
     def test_remove_word_senses_success(self, service, mock_db, sample_node, sample_word_senses):
         """Test successfully removing word senses."""

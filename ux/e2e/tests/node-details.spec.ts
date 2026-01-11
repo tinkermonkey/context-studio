@@ -396,4 +396,136 @@ test.describe('Structure Node Detail View', () => {
     await expect(typeElement).toBeVisible();
     await expect(typeElement).toContainText('Version');
   });
+
+  test('should persist word sense selections across page reload', async ({ page }) => {
+    // Create term with multi-word title to trigger NLP
+    const termResponse = await apiRequest<any>(page, '/api/structure_nodes', {
+      method: 'POST',
+      body: {
+        title: `machine learning ${Date.now()}`,
+        definition: 'A multi-word test term for word sense testing',
+        node_type: 'term',
+      },
+    });
+    const termId = termResponse.id;
+
+    // Navigate to term detail page
+    await page.goto(`/app/structure_nodes/${termId}`);
+    await page.waitForLoadState('networkidle');
+
+    // Verify NLP Analysis panel is visible
+    await expect(page.locator('[data-testid="nlp-analysis-panel"]')).toBeVisible({ timeout: 10000 });
+
+    // Click on first word to expand NLP analysis
+    const firstWord = page.locator('[data-testid="nlp-word-token"]').first();
+    await firstWord.click();
+
+    // Wait for concept chart to appear
+    await page.waitForSelector('[data-testid="nlp-concept-chart"]', { timeout: 10000 });
+
+    // Select first synset/sense
+    const firstSynset = page.locator('[data-testid^="synset-"]').first();
+    await firstSynset.click();
+
+    // Verify save button appears (indicates dirty state)
+    const saveButton = page.locator('button:has-text("Save Word Senses")');
+    await expect(saveButton).toBeVisible({ timeout: 5000 });
+
+    // Click save button
+    await saveButton.click();
+
+    // Wait for API response
+    await page.waitForResponse(
+      (resp) => resp.url().includes('/word_senses') && resp.status() === 200,
+      { timeout: 10000 }
+    );
+
+    // Verify save button disappears (no longer dirty)
+    await expect(saveButton).not.toBeVisible({ timeout: 5000 });
+
+    // Refresh page to verify persistence
+    await page.reload();
+    await page.waitForLoadState('networkidle');
+
+    // Verify selected sense is still visible after reload
+    await expect(page.locator('[data-testid="nlp-analysis-panel"]')).toBeVisible({ timeout: 10000 });
+
+    // The selected sense should be visible in the persisted senses section
+    // (exact selector depends on implementation, adjust as needed)
+    const persistedSense = page.locator('[data-testid="persisted-word-sense"]').first();
+    await expect(persistedSense).toBeVisible({ timeout: 5000 });
+
+    // Verify save button is NOT visible (not dirty)
+    await expect(page.locator('button:has-text("Save Word Senses")')).not.toBeVisible();
+  });
+
+  test('should add and remove reference node links', async ({ page }) => {
+    // Create term for reference linking
+    const termResponse = await apiRequest<any>(page, '/api/structure_nodes', {
+      method: 'POST',
+      body: {
+        title: `algorithm ${Date.now()}`,
+        definition: 'A test term for reference node linking',
+        node_type: 'term',
+      },
+    });
+    const termId = termResponse.id;
+
+    // Navigate to term detail page
+    await page.goto(`/app/structure_nodes/${termId}`);
+    await page.waitForLoadState('networkidle');
+
+    // Verify Reference Node panel is visible
+    await expect(page.locator('[data-testid="reference-node-panel"]')).toBeVisible({ timeout: 10000 });
+
+    // Initially should show "no references" message
+    await expect(page.locator('text=/no reference.*associated/i')).toBeVisible({ timeout: 5000 });
+
+    // Reference search should be visible in empty state
+    const searchInput = page.locator('input[placeholder*="Search reference"]');
+    await expect(searchInput).toBeVisible();
+
+    // Search for "algorithm"
+    await searchInput.fill('algorithm');
+
+    // Wait for search results (may take a few seconds for API call)
+    await page.waitForSelector('[data-testid="reference-search-result"]', { timeout: 15000 });
+
+    // Click first search result to add it
+    const firstResult = page.locator('[data-testid="reference-search-result"]').first();
+    await firstResult.click();
+
+    // Wait for add operation to complete
+    await page.waitForResponse(
+      (resp) => resp.url().includes('/reference_links') && resp.method() === 'POST' && resp.status() === 200,
+      { timeout: 10000 }
+    );
+
+    // Verify reference link now appears in the list
+    await expect(page.locator('[data-testid="reference-link-item"]')).toBeVisible({ timeout: 5000 });
+
+    // Verify "no references" message is gone
+    await expect(page.locator('text=/no reference.*associated/i')).not.toBeVisible();
+
+    // Refresh page to verify persistence
+    await page.reload();
+    await page.waitForLoadState('networkidle');
+
+    // Reference should still be there after reload
+    await expect(page.locator('[data-testid="reference-link-item"]')).toBeVisible({ timeout: 10000 });
+
+    // Remove the reference link
+    const removeButton = page.locator('[data-testid="remove-reference-button"]').first();
+    await removeButton.click();
+
+    // Wait for remove operation to complete
+    await page.waitForResponse(
+      (resp) => resp.url().includes('/reference_links') && resp.method() === 'DELETE' && resp.status() === 200,
+      { timeout: 10000 }
+    );
+
+    // Verify reference is removed and "no references" message returns
+    await expect(page.locator('text=/no reference.*associated/i')).toBeVisible({ timeout: 5000 });
+    await expect(page.locator('[data-testid="reference-link-item"]')).not.toBeVisible();
+  });
 });

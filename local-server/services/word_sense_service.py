@@ -12,6 +12,7 @@ from sqlalchemy.orm import Session
 from database.models import StructureNode
 from api.models.structure_nodes import WordSense
 from nlp.models import NLPAnalysisResponse, TokenData
+from services.exceptions import ValidationError
 from utils.logger import get_logger
 
 logger = get_logger(__name__)
@@ -217,24 +218,42 @@ class WordSenseService:
 
             # Parse each sense into a WordSense model
             senses = []
+            parse_failures = []
             for sense_dict in senses_data:
                 try:
                     senses.append(WordSense(**sense_dict))
                 except Exception as e:
-                    logger.warning(
+                    logger.error(
                         f"Failed to parse word sense for node {node_id}: {e}. "
-                        f"Skipping invalid entry: {sense_dict}"
+                        f"Invalid entry: {sense_dict}"
                     )
-                    continue
+                    parse_failures.append({
+                        "data": sense_dict,
+                        "error": str(e)
+                    })
+
+            # If any senses failed to parse, raise error - data is corrupted
+            if parse_failures:
+                logger.error(
+                    f"CRITICAL: {len(parse_failures)} word senses for node {node_id} "
+                    f"could not be parsed due to data corruption"
+                )
+                raise ValidationError(
+                    f"Word sense data is partially corrupted: {len(parse_failures)} of "
+                    f"{len(senses_data)} senses could not be loaded. Node ID: {node_id}"
+                )
 
             return senses
 
         except json.JSONDecodeError as e:
             logger.error(
-                f"Failed to parse word_senses JSON for node {node_id}: {e}. "
-                f"Returning empty list."
+                f"CRITICAL: word_senses JSON for node {node_id} is corrupted and cannot be parsed: {e}. "
+                f"Raw data (first 200 chars): {node.word_senses[:200] if node.word_senses else 'null'}"
             )
-            return []
+            raise ValidationError(
+                f"Word sense data for node {node_id} is corrupted (JSON parse error). "
+                f"Please contact support to recover this data."
+            )
 
     def remove_word_senses(
         self, node_id: str, sense_ids: List[str]

@@ -87,13 +87,28 @@ class NodeService:
             try:
                 title_embedding = generate_embedding(node_data["title"])
             except Exception as e:
-                logger.warning(f"Failed to generate title embedding: {e}")
+                logger.error(
+                    f"Failed to generate title embedding for '{node_data['title']}': {e}",
+                    exc_info=True
+                )
+                raise ValidationError(
+                    f"Cannot create node: embedding generation failed. "
+                    f"This may indicate LLM service issues. Please try again or contact support. "
+                    f"Error: {str(e)}"
+                )
 
         if node_data.get("definition"):
             try:
                 definition_embedding = generate_embedding(node_data["definition"])
             except Exception as e:
-                logger.warning(f"Failed to generate definition embedding: {e}")
+                logger.error(
+                    f"Failed to generate definition embedding: {e}",
+                    exc_info=True
+                )
+                raise ValidationError(
+                    f"Cannot create node: definition embedding generation failed. "
+                    f"Error: {str(e)}"
+                )
 
         # Create structure_node
         structure_node = StructureNode(
@@ -380,14 +395,20 @@ class NodeService:
         execution_start = time.time()
         result = query.all()
         execution_time = time.time() - execution_start
-        
-        # Handle case where result might be a Mock object in tests
-        try:
-            result_length = len(result)
-        except TypeError:
-            # If result is a Mock object, use a default value for logging
-            result_length = "?"
-        
+
+        # Validate result type - should always be a list from SQLAlchemy
+        if not isinstance(result, list):
+            logger.error(
+                f"Database query returned invalid type {type(result).__name__}, expected list. "
+                f"This indicates a serious database or ORM failure. "
+                f"Query params: node_type={node_type}, parent_node_id={parent_node_id}, skip={skip}, limit={limit}"
+            )
+            raise ValueError(
+                f"Database query failed: expected list, got {type(result).__name__}. "
+                f"This indicates a database connection or ORM issue."
+            )
+
+        result_length = len(result)
         logger.debug(f"Query execution time: {execution_time*1000:.2f}ms for {result_length} nodes (skip={skip})")
 
         return result
@@ -940,12 +961,18 @@ class NodeService:
         handle_conflicts: str = "warn",
     ) -> Dict[str, Any]:
         """
-        Move structure_nodes to a new parent with their children.
+        Move structure_nodes to a new parent with automatic type conversion.
+
+        IMPORTANT: When a node is moved to a parent with a different type constraint,
+        the node AND ALL ITS CHILDREN are automatically converted to the appropriate type.
+        This conversion happens regardless of the move_children parameter.
 
         Args:
             node_ids: List of structure_node IDs to move
             target_parent_id: Target parent structure_node ID (None for root level)
-            move_children: Whether to move all child structure_nodes
+            move_children: If True, include all descendants in the response.
+                          Note: Children are ALWAYS type-converted, this only controls
+                          whether they're included in the response.
             handle_conflicts: How to handle title conflicts ("warn", "rename", "error")
 
         Returns:
@@ -1045,14 +1072,8 @@ class NodeService:
         # NEW: Infer target type from parent
         target_type = self._infer_node_type_from_parent(target_parent)
 
-        # NEW: Validate with target type (not current type)
-        # Temporarily set type for validation
-        original_type = structure_node.node_type
-        structure_node.node_type = target_type
-        try:
-            self._validate_node_move(structure_node, target_parent)
-        finally:
-            structure_node.node_type = original_type  # Restore for actual conversion
+        # NEW: Validate with target type (pass as parameter instead of mutating node)
+        self._validate_node_move(structure_node, target_parent, target_type=target_type)
 
         # Check for title conflicts with NEW type
         conflict_warning = self._check_move_conflicts_with_type(
@@ -1061,22 +1082,25 @@ class NodeService:
         if conflict_warning:
             warnings.append(conflict_warning)
 
-        # Update the structure_node's parent
+        # NEW: Convert node type and all children recursively BEFORE updating parent
+        # This ensures database consistency - if conversion fails, parent isn't changed
+        self._convert_node_type_and_children(structure_node, target_type, converted_nodes)
+
+        # Update the structure_node's parent AFTER successful conversion
         old_parent_id = structure_node.parent_node_id
         structure_node.parent_node_id = target_parent_id
-
-        # NEW: Convert node type and all children recursively
-        self._convert_node_type_and_children(structure_node, target_type, converted_nodes)
 
         # Save changes
         self.db.add(structure_node)
         self.db.flush()  # Ensure changes are visible within transaction
 
-        # Move children if requested (note: children are already converted by _convert_node_type_and_children)
+        # Move children if requested
+        # NOTE: Children are ALWAYS type-converted along with their parent.
+        # This flag only controls whether they're included in the response.
         if move_children:
             children = self._get_all_descendants(node_id)
             for child in children:
-                # Children have already been type-converted, just track them
+                # Children have already been type-converted, just track them for response
                 updated_children.append(child)
 
         logger.info(
@@ -1092,7 +1116,10 @@ class NodeService:
         }
 
     def _validate_node_move(
-        self, structure_node: StructureNode, target_parent: Optional[StructureNode]
+        self,
+        structure_node: StructureNode,
+        target_parent: Optional[StructureNode],
+        target_type: Optional[NodeType] = None
     ):
         """
         Validate that a structure_node move is allowed based on type hierarchy rules.
@@ -1100,24 +1127,28 @@ class NodeService:
         Args:
             structure_node: StructureNode to move
             target_parent: Target parent StructureNode (None for root)
+            target_type: The type the node will be converted to (if None, use current type)
 
         Raises:
             ValueError: If the move violates hierarchy rules
         """
+        # Use target_type if provided, otherwise use current node type
+        node_type = target_type if target_type else structure_node.node_type
+
         # Layer moves
-        if structure_node.node_type == NodeType.LAYER:
+        if node_type == NodeType.LAYER:
             if target_parent is not None:
                 raise InvalidHierarchyError("Layers must be at root level (no parent)")
 
         # Domain moves
-        elif structure_node.node_type == NodeType.DOMAIN:
+        elif node_type == NodeType.DOMAIN:
             if target_parent is None:
                 raise InvalidHierarchyError("Domains must have a parent layer")
             if target_parent.node_type != NodeType.LAYER:
                 raise InvalidHierarchyError("Domains can only be placed under layers")
 
         # Term moves
-        elif structure_node.node_type == NodeType.TERM:
+        elif node_type == NodeType.TERM:
             if target_parent is None:
                 raise InvalidHierarchyError("Terms must have a parent")
             if target_parent.node_type not in [NodeType.DOMAIN, NodeType.TERM]:

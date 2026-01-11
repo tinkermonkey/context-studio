@@ -1088,3 +1088,117 @@ class TestMoveWithTypeConversionAPI:
         updated_node = node_response.json()
         assert updated_node["node_type"] == "term"
         assert updated_node["parent_node_id"] == term1["id"]
+
+
+    def test_list_node_links_pagination_metadata(self, client):
+        """Test pagination metadata in node links endpoint."""
+        import time
+        from uuid import uuid4
+
+        # Helper to create a test node
+        def create_test_node(title, node_type, parent_id=None):
+            node_data = {
+                "title": f"{title} {int(time.time() * 1000)}",
+                "node_type": node_type,
+                "definition": f"Test {node_type} for pagination test"
+            }
+            if parent_id:
+                node_data["parent_node_id"] = parent_id
+
+            response = client.post("/api/structure_nodes", json=node_data)
+            assert response.status_code == 201
+            return response.json()
+
+        # Create test nodes - need terms to link between (links must be same type)
+        layer = create_test_node("Layer", node_type="layer")
+        domain = create_test_node("Domain", node_type="domain", parent_id=layer["id"])
+
+        # Create a source term that will have 15 outgoing links
+        source_term = create_test_node("SourceTerm", node_type="term", parent_id=domain["id"])
+
+        # Create a predicate for linking with unique identifier
+        unique_id = uuid4().hex[:8]
+        predicate_data = {
+            "title": f"TestRelationship{unique_id}",
+            "identifier": f"test_rel_{unique_id}",
+            "definition": "Test predicate for pagination"
+        }
+        predicate_resp = client.post("/api/predicates/", json=predicate_data)
+        assert predicate_resp.status_code == 201, f"Failed to create predicate: {predicate_resp.json()}"
+        predicate = predicate_resp.json()
+
+        # Create 15 test links from source_term to various target terms
+        link_ids = []
+        for i in range(15):
+            # Create target term
+            target_term = create_test_node(
+                f"TargetTerm{i}",
+                node_type="term",
+                parent_id=domain["id"]
+            )
+
+            # Create link (term to term)
+            link_data = {
+                "source_node_id": source_term["id"],
+                "target_node_id": target_term["id"],
+                "predicate": predicate["identifier"]
+            }
+            link_resp = client.post("/api/structure_nodes/links", json=link_data)
+            assert link_resp.status_code == 201, f"Failed to create link {i}: {link_resp.json() if link_resp.status_code != 201 else ''}"
+            link_ids.append(link_resp.json()["id"])
+
+        # Test pagination with skip=5, limit=5
+        response = client.get(
+            f"/api/structure_nodes/links",
+            params={
+                "source_node_id": source_term["id"],
+                "skip": 5,
+                "limit": 5
+            }
+        )
+
+        assert response.status_code == 200
+        data = response.json()
+
+        # Verify pagination metadata
+        assert "total" in data, "Response should include 'total' count"
+        assert "skip" in data, "Response should include 'skip' offset"
+        assert "limit" in data, "Response should include 'limit' page size"
+        assert "data" in data, "Response should include 'data' array"
+
+        assert data["total"] == 15, f"Total should be 15, got {data['total']}"
+        assert data["skip"] == 5, f"Skip should be 5, got {data['skip']}"
+        assert data["limit"] == 5, f"Limit should be 5, got {data['limit']}"
+        assert len(data["data"]) == 5, f"Should return 5 links, got {len(data['data'])}"
+
+        # Test last page (skip=10, limit=5 should return 5 links)
+        response = client.get(
+            f"/api/structure_nodes/links",
+            params={
+                "source_node_id": source_term["id"],
+                "skip": 10,
+                "limit": 5
+            }
+        )
+
+        assert response.status_code == 200
+        data = response.json()
+        assert data["total"] == 15
+        assert data["skip"] == 10
+        assert len(data["data"]) == 5
+
+        # Test beyond last page (skip=15, limit=5 should return 0 links)
+        response = client.get(
+            f"/api/structure_nodes/links",
+            params={
+                "source_node_id": source_term["id"],
+                "skip": 15,
+                "limit": 5
+            }
+        )
+
+        assert response.status_code == 200
+        data = response.json()
+        assert data["total"] == 15
+        assert data["skip"] == 15
+        assert len(data["data"]) == 0

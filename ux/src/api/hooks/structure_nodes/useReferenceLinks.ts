@@ -15,6 +15,7 @@ import { structureNodeService } from "@/api/services/structureNodes";
 import { QUERY_KEYS } from "@/api/config";
 import { createQueryKey } from "@/api/utils/queryClient";
 import { ReferenceLink } from "@/api/types/structureNodes";
+import { toast } from "@/utils/toast";
 
 /**
  * Hook to fetch reference links for a structure node
@@ -59,6 +60,14 @@ export const useAddReferenceLinks = (
       queryClient.invalidateQueries({
         queryKey: createQueryKey(QUERY_KEYS.STRUCTURE_NODES, nodeId),
       });
+
+      // Show success feedback
+      toast.success(`Added ${data.length} reference link(s)`);
+    },
+    onError: (err, variables) => {
+      console.error(`Failed to add reference links to node ${nodeId}:`, err);
+      const message = err instanceof Error ? err.message : "Failed to add reference links";
+      toast.error(`Failed to add reference links: ${message}. Please try again.`);
     },
     ...options,
   });
@@ -124,6 +133,11 @@ export const useRemoveReferenceLink = (
           context.previousReferenceLinks,
         );
       }
+
+      // Show error feedback
+      console.error(`Failed to remove reference links from node ${nodeId}:`, err);
+      const message = err instanceof Error ? err.message : "Failed to remove reference links";
+      toast.error(`Failed to remove reference link: ${message}. Please try again.`);
     },
     onSuccess: (data) => {
       // Update the cache with the server response
@@ -136,6 +150,9 @@ export const useRemoveReferenceLink = (
       queryClient.invalidateQueries({
         queryKey: createQueryKey(QUERY_KEYS.STRUCTURE_NODES, nodeId),
       });
+
+      // Show success feedback
+      toast.success("Reference link removed successfully");
     },
     ...options,
   });
