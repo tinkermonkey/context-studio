@@ -317,7 +317,7 @@
           "structure_nodes"
         ],
         "summary": "List Node Links",
-        "description": "List structure_node links with filtering.\n\nSupports filtering by source structure_node, target structure_node, and predicate.\nReturns all relationships in the unified structure_node graph.",
+        "description": "List structure_node links with filtering and pagination.\n\nSupports filtering by source structure_node, target structure_node, and predicate.\nReturns all relationships in the unified structure_node graph with pagination metadata.",
         "operationId": "list_node_links_api_structure_nodes_links_get",
         "parameters": [
           {
@@ -418,11 +418,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/NodeLinkOut"
-                  },
-                  "title": "Response List Node Links Api Structure Nodes Links Get"
+                  "$ref": "#/components/schemas/PaginatedNodeLinksResponse"
                 }
               }
             }
@@ -973,6 +969,233 @@
             }
           }
         }
+      },
+      "put": {
+        "tags": [
+          "structure_nodes",
+          "structure_nodes"
+        ],
+        "summary": "Update Word Senses",
+        "description": "Update selected word senses for a structure node.\n\nAllows user to persist their selected word senses from NLP analysis.\nUses a conservative merge strategy: preserves existing word senses for words\nnot included in this update, while replacing senses for words that are included.\n\nFor example, if a node has existing senses for words \"bank\" and \"account\", and\nyou update only \"bank\", the existing \"account\" senses will be preserved.\n\nArgs:\n    node_id: UUID of the structure node\n    update_request: Selected word senses to persist\n\nReturns:\n    List of all word senses after update (including preserved senses)\n\nRaises:\n    400: If validation fails (invalid sense_id format)\n    404: If structure node not found\n    500: If an unexpected error occurs",
+        "operationId": "update_word_senses_api_structure_nodes__node_id__word_senses_put",
+        "parameters": [
+          {
+            "name": "node_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "description": "The ID of the structure node",
+              "title": "Node Id"
+            },
+            "description": "The ID of the structure node"
+          },
+          {
+            "name": "SessionLocal",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "title": "Sessionlocal"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SelectedWordSensesUpdate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/WordSense"
+                  },
+                  "title": "Response Update Word Senses Api Structure Nodes  Node Id  Word Senses Put"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/structure_nodes/reference_links/validate": {
+      "post": {
+        "tags": [
+          "structure_nodes",
+          "structure_nodes"
+        ],
+        "summary": "Validate All Reference Links",
+        "description": "Validate all reference links across all structure nodes.\n\nPerforms bulk validation of reference links to identify:\n- Orphaned links (references that no longer exist in reference.db)\n- Malformed links (invalid JSON or missing required fields)\n- Nodes with problematic links\n\nUses batching to efficiently handle large datasets without loading all nodes into memory.\nThis endpoint is useful for maintenance and data integrity checking.\nGracefully degrades if reference.db is unavailable.\n\nArgs:\n    check_existence: If True, validates each link exists in reference.db\n    limit: Optional limit on number of nodes to check\n    batch_size: Number of nodes to process per batch (default: 100, min: 10, max: 1000)\n\nReturns:\n    Validation results with statistics and list of problematic nodes",
+        "operationId": "validate_all_reference_links_api_structure_nodes_reference_links_validate_post",
+        "parameters": [
+          {
+            "name": "check_existence",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "description": "Check if references exist in reference.db",
+              "default": true,
+              "title": "Check Existence"
+            },
+            "description": "Check if references exist in reference.db"
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer",
+                  "maximum": 1000,
+                  "minimum": 1
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Limit number of nodes to validate",
+              "title": "Limit"
+            },
+            "description": "Limit number of nodes to validate"
+          },
+          {
+            "name": "batch_size",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 1000,
+              "minimum": 10,
+              "description": "Number of nodes to process per batch",
+              "default": 100,
+              "title": "Batch Size"
+            },
+            "description": "Number of nodes to process per batch"
+          },
+          {
+            "name": "SessionLocal",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "title": "Sessionlocal"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": true,
+                  "title": "Response Validate All Reference Links Api Structure Nodes Reference Links Validate Post"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/structure_nodes/{node_id}/reference_links/validate": {
+      "post": {
+        "tags": [
+          "structure_nodes",
+          "structure_nodes"
+        ],
+        "summary": "Validate Node Reference Links",
+        "description": "Validate reference links for a specific structure node.\n\nChecks all reference links on a single node to identify:\n- Orphaned links (references that no longer exist in reference.db)\n- Malformed links (invalid JSON or missing required fields)\n- Valid links\n\nArgs:\n    node_id: UUID of the structure node\n    check_existence: If True, validates each link exists in reference.db\n\nReturns:\n    Validation results with counts of valid, invalid, and malformed links\n\nRaises:\n    404: If structure node not found\n    500: If an unexpected error occurs",
+        "operationId": "validate_node_reference_links_api_structure_nodes__node_id__reference_links_validate_post",
+        "parameters": [
+          {
+            "name": "node_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "description": "The ID of the structure node",
+              "title": "Node Id"
+            },
+            "description": "The ID of the structure node"
+          },
+          {
+            "name": "check_existence",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "description": "Check if references exist in reference.db",
+              "default": true,
+              "title": "Check Existence"
+            },
+            "description": "Check if references exist in reference.db"
+          },
+          {
+            "name": "SessionLocal",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "title": "Sessionlocal"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": true,
+                  "title": "Response Validate Node Reference Links Api Structure Nodes  Node Id  Reference Links Validate Post"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
       }
     },
     "/api/structure_nodes/move": {
@@ -982,7 +1205,7 @@
           "structure_nodes"
         ],
         "summary": "Move Nodes",
-        "description": "Move structure_nodes to a new parent location.\n\nThis endpoint supports moving multiple structure_nodes at once, with options for:\n- Moving all child structure_nodes along with parents\n- Handling title conflicts through warnings, renaming, or errors\n- Maintaining referential integrity throughout the move operation\n\nThe move operation is atomic - either all structure_nodes are moved successfully,\nor the entire operation is rolled back.",
+        "description": "Move structure_nodes to a new parent location with automatic type conversion.\n\n**Type Conversion Rules:**\n- Moving to root (null parent) \u2192 becomes Layer\n- Moving under Layer \u2192 becomes Domain\n- Moving under Domain or Term \u2192 becomes Term\n\n**Recursive Conversion:**\nWhen a node's type changes, all descendants are recursively converted:\n- Layer's children become Domains\n- Domain's/Term's children become Terms\n\nThis endpoint supports:\n- Moving multiple structure_nodes at once\n- Automatic type conversion based on target parent\n- Moving all child structure_nodes along with parents\n- Handling title conflicts through warnings, renaming, or errors\n- Maintaining referential integrity throughout the operation\n\nThe move operation is atomic - either all structure_nodes are moved successfully,\nor the entire operation is rolled back.",
         "operationId": "move_nodes_api_structure_nodes_move_post",
         "parameters": [
           {
@@ -18258,6 +18481,14 @@
             "title": "Updated Children",
             "description": "List of child structure_nodes that were also moved"
           },
+          "converted_nodes": {
+            "items": {
+              "$ref": "#/components/schemas/NodeOut"
+            },
+            "type": "array",
+            "title": "Converted Nodes",
+            "description": "List of nodes that had their type automatically converted"
+          },
           "warnings": {
             "items": {
               "type": "string"
@@ -18283,7 +18514,7 @@
           "errors"
         ],
         "title": "MoveNodesResponse",
-        "description": "Model for move operation results."
+        "description": "Model for move operation results with automatic type conversion."
       },
       "MultiSourceSearchRequest": {
         "properties": {
@@ -19145,6 +19376,38 @@
         "title": "PaginatedExternalPredicatesResponse",
         "description": "Paginated response for external predicates."
       },
+      "PaginatedNodeLinksResponse": {
+        "properties": {
+          "data": {
+            "items": {
+              "$ref": "#/components/schemas/NodeLinkOut"
+            },
+            "type": "array",
+            "title": "Data"
+          },
+          "total": {
+            "type": "integer",
+            "title": "Total"
+          },
+          "skip": {
+            "type": "integer",
+            "title": "Skip"
+          },
+          "limit": {
+            "type": "integer",
+            "title": "Limit"
+          }
+        },
+        "type": "object",
+        "required": [
+          "data",
+          "total",
+          "skip",
+          "limit"
+        ],
+        "title": "PaginatedNodeLinksResponse",
+        "description": "Model for paginated structure_node link responses."
+      },
       "PaginatedNodesResponse": {
         "properties": {
           "data": {
@@ -19585,17 +19848,17 @@
             "description": "Whether flavor is enabled",
             "default": true
           },
-          "last_updated": {
+          "created_at": {
             "type": "string",
             "format": "date-time",
-            "title": "Last Updated",
-            "description": "Last update timestamp"
-          },
-          "date_created": {
-            "type": "string",
-            "format": "date-time",
-            "title": "Date Created",
+            "title": "Created At",
             "description": "Creation timestamp"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Updated At",
+            "description": "Last update timestamp"
           }
         },
         "type": "object",
@@ -19609,8 +19872,8 @@
           "system_prompt",
           "user_prompt",
           "version",
-          "last_updated",
-          "date_created"
+          "created_at",
+          "updated_at"
         ],
         "title": "PipelineFlavor",
         "description": "Database model for pipeline flavors"
@@ -21080,6 +21343,24 @@
           "term"
         ],
         "title": "SearchRequest"
+      },
+      "SelectedWordSensesUpdate": {
+        "properties": {
+          "selected_senses": {
+            "items": {
+              "$ref": "#/components/schemas/WordSense"
+            },
+            "type": "array",
+            "title": "Selected Senses",
+            "description": "List of word senses to persist as selected"
+          }
+        },
+        "type": "object",
+        "required": [
+          "selected_senses"
+        ],
+        "title": "SelectedWordSensesUpdate",
+        "description": "Model for updating selected word senses on a structure node."
       },
       "SelectionResponse": {
         "properties": {

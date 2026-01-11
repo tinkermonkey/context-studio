@@ -4,3 +4,5 @@
 .mcp.json
 PRPs/
 .serena/
+.venv/
+.dr/

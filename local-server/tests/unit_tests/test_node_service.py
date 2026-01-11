@@ -492,3 +492,341 @@ class TestTitleUniquenessValidation:
 
         # Should be False because no other structure_nodes (excluding the specified one) have the title
         assert result is False
+
+
+class TestMoveWithTypeConversion:
+    """Test move operations with automatic type conversion."""
+
+    def test_infer_node_type_from_parent_root(self, node_service):
+        """Test type inference when moving to root (no parent)."""
+        result = node_service._infer_node_type_from_parent(None)
+        assert result == NodeType.LAYER
+
+    def test_infer_node_type_from_parent_layer(self, node_service):
+        """Test type inference when moving under a layer."""
+        parent = Mock(spec=StructureNode)
+        parent.node_type = NodeType.LAYER
+
+        result = node_service._infer_node_type_from_parent(parent)
+        assert result == NodeType.DOMAIN
+
+    def test_infer_node_type_from_parent_domain(self, node_service):
+        """Test type inference when moving under a domain."""
+        parent = Mock(spec=StructureNode)
+        parent.node_type = NodeType.DOMAIN
+
+        result = node_service._infer_node_type_from_parent(parent)
+        assert result == NodeType.TERM
+
+    def test_infer_node_type_from_parent_term(self, node_service):
+        """Test type inference when moving under a term."""
+        parent = Mock(spec=StructureNode)
+        parent.node_type = NodeType.TERM
+
+        result = node_service._infer_node_type_from_parent(parent)
+        assert result == NodeType.TERM
+
+    def test_convert_node_type_no_change_needed(self, node_service, mock_db):
+        """Test conversion when node already has correct type."""
+        node = Mock(spec=StructureNode)
+        node.id = str(uuid.uuid4())
+        node.node_type = NodeType.DOMAIN
+
+        converted_nodes = []
+
+        # Mock query to return no children
+        query_mock = Mock()
+        query_mock.filter.return_value.all.return_value = []
+        mock_db.query.return_value = query_mock
+
+        node_service._convert_node_type_and_children(
+            node, NodeType.DOMAIN, converted_nodes
+        )
+
+        # Node should not be in converted list since type didn't change
+        assert len(converted_nodes) == 0
+        assert node.node_type == NodeType.DOMAIN
+
+    def test_convert_node_type_with_change(self, node_service, mock_db):
+        """Test conversion when node type needs to change."""
+        node = Mock(spec=StructureNode)
+        node.id = str(uuid.uuid4())
+        node.node_type = NodeType.DOMAIN
+
+        converted_nodes = []
+
+        # Mock query to return no children
+        query_mock = Mock()
+        query_mock.filter.return_value.all.return_value = []
+        mock_db.query.return_value = query_mock
+
+        node_service._convert_node_type_and_children(
+            node, NodeType.TERM, converted_nodes
+        )
+
+        # Node should be converted to TERM
+        assert node.node_type == NodeType.TERM
+        assert len(converted_nodes) == 1
+        assert converted_nodes[0] == node
+        mock_db.add.assert_called_with(node)
+
+    def test_convert_node_type_recursive_layer_to_domain(self, node_service, mock_db):
+        """Test recursive conversion: layer becomes domain, children become domains."""
+        parent_node = Mock(spec=StructureNode)
+        parent_node.id = str(uuid.uuid4())
+        parent_node.node_type = NodeType.LAYER
+
+        child1 = Mock(spec=StructureNode)
+        child1.id = str(uuid.uuid4())
+        child1.node_type = NodeType.DOMAIN
+
+        child2 = Mock(spec=StructureNode)
+        child2.id = str(uuid.uuid4())
+        child2.node_type = NodeType.DOMAIN
+
+        converted_nodes = []
+
+        # Mock query to return children
+        def mock_query_side_effect(*args):
+            query_mock = Mock()
+            filter_mock = Mock()
+            query_mock.filter.return_value = filter_mock
+
+            # First call: parent's children
+            if mock_db.query.call_count == 1:
+                filter_mock.all.return_value = [child1, child2]
+            # Second call: child1's children (none)
+            elif mock_db.query.call_count == 2:
+                filter_mock.all.return_value = []
+            # Third call: child2's children (none)
+            else:
+                filter_mock.all.return_value = []
+
+            return query_mock
+
+        mock_db.query.side_effect = mock_query_side_effect
+
+        # Convert layer to domain (children should become terms)
+        node_service._convert_node_type_and_children(
+            parent_node, NodeType.DOMAIN, converted_nodes
+        )
+
+        # Parent should be converted to DOMAIN
+        assert parent_node.node_type == NodeType.DOMAIN
+        # Children should be converted to TERM
+        assert child1.node_type == NodeType.TERM
+        assert child2.node_type == NodeType.TERM
+        # All three nodes should be in converted list
+        assert len(converted_nodes) == 3
+        assert parent_node in converted_nodes
+        assert child1 in converted_nodes
+        assert child2 in converted_nodes
+
+    def test_convert_node_type_recursive_deep_hierarchy(self, node_service, mock_db):
+        """Test recursive conversion through multiple levels."""
+        # Create hierarchy: domain -> term -> term (3 levels)
+        domain = Mock(spec=StructureNode)
+        domain.id = str(uuid.uuid4())
+        domain.node_type = NodeType.DOMAIN
+
+        term1 = Mock(spec=StructureNode)
+        term1.id = str(uuid.uuid4())
+        term1.node_type = NodeType.TERM
+
+        term2 = Mock(spec=StructureNode)
+        term2.id = str(uuid.uuid4())
+        term2.node_type = NodeType.TERM
+
+        converted_nodes = []
+
+        # Mock query to return children at each level
+        def mock_query_side_effect(*args):
+            query_mock = Mock()
+            filter_mock = Mock()
+            query_mock.filter.return_value = filter_mock
+
+            call_count = mock_db.query.call_count
+            if call_count == 1:  # domain's children
+                filter_mock.all.return_value = [term1]
+            elif call_count == 2:  # term1's children
+                filter_mock.all.return_value = [term2]
+            else:  # term2's children (none)
+                filter_mock.all.return_value = []
+
+            return query_mock
+
+        mock_db.query.side_effect = mock_query_side_effect
+
+        # Convert domain to TERM (should cascade down)
+        node_service._convert_node_type_and_children(
+            domain, NodeType.TERM, converted_nodes
+        )
+
+        # Domain should be converted to TERM
+        assert domain.node_type == NodeType.TERM
+        # term1 and term2 should remain TERM (no change)
+        assert term1.node_type == NodeType.TERM
+        assert term2.node_type == NodeType.TERM
+        # Only domain should be in converted list (others didn't change)
+        assert len(converted_nodes) == 1
+        assert domain in converted_nodes
+
+    def test_check_move_conflicts_layer_global_uniqueness(self, node_service, mock_db):
+        """Test conflict checking for layers (global uniqueness)."""
+        node = Mock(spec=StructureNode)
+        node.id = str(uuid.uuid4())
+        node.title = "Existing Layer"
+
+        # Mock existing layer with same title
+        existing_layer = Mock(spec=StructureNode)
+        existing_layer.title = "Existing Layer"
+
+        query_mock = Mock()
+        query_mock.filter.return_value.first.return_value = existing_layer
+        mock_db.query.return_value = query_mock
+
+        # Should detect conflict (handle_conflicts="error")
+        with pytest.raises(ValueError, match="already exists at target location"):
+            node_service._check_move_conflicts_with_type(
+                node, None, NodeType.LAYER, "error"
+            )
+
+    def test_check_move_conflicts_domain_scoped_uniqueness(self, node_service, mock_db):
+        """Test conflict checking for domains (unique within layer)."""
+        node = Mock(spec=StructureNode)
+        node.id = str(uuid.uuid4())
+        node.title = "Existing Domain"
+
+        target_layer_id = str(uuid.uuid4())
+
+        # Mock existing domain with same title in same layer
+        existing_domain = Mock(spec=StructureNode)
+        existing_domain.title = "Existing Domain"
+        existing_domain.parent_node_id = target_layer_id
+
+        query_mock = Mock()
+        query_mock.filter.return_value.first.return_value = existing_domain
+        mock_db.query.return_value = query_mock
+
+        # Should detect conflict with error mode
+        with pytest.raises(ValueError, match="already exists at target location"):
+            node_service._check_move_conflicts_with_type(
+                node, target_layer_id, NodeType.DOMAIN, "error"
+            )
+
+    def test_check_move_conflicts_term_scoped_uniqueness(self, node_service, mock_db):
+        """Test conflict checking for terms (unique within parent)."""
+        node = Mock(spec=StructureNode)
+        node.id = str(uuid.uuid4())
+        node.title = "Existing Term"
+
+        target_parent_id = str(uuid.uuid4())
+
+        # Mock existing term with same title under same parent
+        existing_term = Mock(spec=StructureNode)
+        existing_term.title = "Existing Term"
+        existing_term.parent_node_id = target_parent_id
+
+        query_mock = Mock()
+        query_mock.filter.return_value.first.return_value = existing_term
+        mock_db.query.return_value = query_mock
+
+        # Should detect conflict with error mode
+        with pytest.raises(ValueError, match="already exists at target location"):
+            node_service._check_move_conflicts_with_type(
+                node, target_parent_id, NodeType.TERM, "error"
+            )
+
+    def test_check_move_conflicts_warn_mode(self, node_service, mock_db):
+        """Test conflict checking with warn mode (returns warning)."""
+        node = Mock(spec=StructureNode)
+        node.id = str(uuid.uuid4())
+        node.title = "Existing Layer"
+
+        # Mock existing layer with same title
+        existing_layer = Mock(spec=StructureNode)
+        existing_layer.title = "Existing Layer"
+
+        query_mock = Mock()
+        query_mock.filter.return_value.first.return_value = existing_layer
+        mock_db.query.return_value = query_mock
+
+        # Should return warning instead of raising
+        warning = node_service._check_move_conflicts_with_type(
+            node, None, NodeType.LAYER, "warn"
+        )
+
+        assert warning is not None
+        assert "already exists" in warning.lower()
+
+    def test_check_move_conflicts_rename_mode(self, node_service, mock_db):
+        """Test conflict checking with rename mode (renames node)."""
+        node = Mock(spec=StructureNode)
+        node.id = str(uuid.uuid4())
+        node.title = "Conflicting Title"
+        original_title = node.title
+
+        # Mock existing layer with same title
+        existing_layer = Mock(spec=StructureNode)
+        existing_layer.title = "Conflicting Title"
+
+        # Mock _title_exists_at_target to simulate finding conflict then no conflict
+        def mock_title_exists(title, parent_id, target_type, exclude_id):
+            return title == original_title
+
+        node_service._title_exists_at_target = Mock(side_effect=mock_title_exists)
+
+        query_mock = Mock()
+        query_mock.filter.return_value.first.return_value = existing_layer
+        mock_db.query.return_value = query_mock
+
+        # Should rename the node
+        warning = node_service._check_move_conflicts_with_type(
+            node, None, NodeType.LAYER, "rename"
+        )
+
+        # Title should be changed (with suffix)
+        assert node.title != original_title
+        assert original_title in node.title
+        assert warning is not None
+        assert "renamed" in warning.lower()
+
+    def test_validate_node_move_allows_term_under_term(self, node_service, mock_db):
+        """Test that validation allows terms to be placed under other terms."""
+        term = Mock(spec=StructureNode)
+        term.id = str(uuid.uuid4())
+        term.node_type = NodeType.TERM
+
+        parent_term = Mock(spec=StructureNode)
+        parent_term.id = str(uuid.uuid4())
+        parent_term.node_type = NodeType.TERM
+        parent_term.parent_node_id = str(uuid.uuid4())
+
+        # Mock methods to avoid circular reference checks
+        node_service.get_node_ancestors = Mock(return_value=[])
+        node_service._get_all_descendants = Mock(return_value=[])
+
+        # Should not raise any exception
+        try:
+            node_service._validate_node_move(term, parent_term)
+        except InvalidHierarchyError:
+            pytest.fail("Should allow term under term")
+
+    def test_validate_node_move_term_requires_parent(self, node_service):
+        """Test that terms cannot be moved to root."""
+        term = Mock(spec=StructureNode)
+        term.node_type = NodeType.TERM
+
+        with pytest.raises(InvalidHierarchyError, match="Terms must have a parent"):
+            node_service._validate_node_move(term, None)
+
+    def test_validate_node_move_layer_no_parent(self, node_service):
+        """Test that layers can only be moved to root."""
+        layer = Mock(spec=StructureNode)
+        layer.node_type = NodeType.LAYER
+
+        parent = Mock(spec=StructureNode)
+        parent.node_type = NodeType.LAYER
+
+        with pytest.raises(InvalidHierarchyError, match="at root level"):
+            node_service._validate_node_move(layer, parent)

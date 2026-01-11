@@ -1,0 +1,50 @@
+openapi:
+  openapi: 3.0.3
+  info:
+    title: Extract Entities
+    version: 1.0.0
+  paths:
+    /api/rag/extract:
+      post:
+        operationId: extract_entities_api_rag_extract_post
+        summary: Extract Entities
+        description: "Extract entities from text using the RAG pipeline.\n\nThe pipeline\
+          \ processes text through four layers:\n- Layer 0: Knowledge Graph Context\
+          \ Preparation\n- Layer 1: LLM-based Entity Extraction\n- Layer 2: spaCy\
+          \ Syntactic Gap Analysis\n- Layer 3: Concept Resolution via KG and Web Search\n\
+          \nArgs:\n    request: RAGExtractionRequest containing text and trace enablement\
+          \ flag\n    pipeline_service: Injected RAG pipeline service\n\nReturns:\n\
+          \    RAGExtractionResponse with extracted entities, metrics, and request\
+          \ ID\n\nRaises:\n    HTTPException 400: If text is empty or invalid\n  \
+          \  HTTPException 500: If pipeline execution fails"
+        parameters:
+        - name: SessionLocal
+          in: query
+          required: false
+          schema:
+            title: Sessionlocal
+        requestBody:
+          required: true
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RAGExtractionRequest'
+        responses:
+          '200':
+            description: Successful Response
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/RAGExtractionResponse'
+          '400':
+            description: Invalid request parameters
+          '500':
+            description: Pipeline execution failed
+          '422':
+            description: Validation Error
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/HTTPValidationError'
+        tags:
+        - rag-pipeline

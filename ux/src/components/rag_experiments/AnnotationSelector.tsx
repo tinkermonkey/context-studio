@@ -214,7 +214,7 @@ export const AnnotationSelector: React.FC<AnnotationSelectorProps> = ({
     : undefined;
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4" data-testid="annotation-selector">
       {/* Paragraph text with annotations */}
       <div className="rounded-lg border border-gray-300 bg-white p-4">
         <div

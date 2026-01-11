@@ -17,6 +17,8 @@ import {
   StructureNodeCreate,
   StructureNodeUpdate,
   NodeType,
+  MoveNodesRequest,
+  MoveNodesResponse,
 } from "@/api/types/structureNodes";
 
 /**
@@ -339,6 +341,59 @@ export const useUpdateTerm = (
   return useMutation({
     mutationFn: ({ id, data }: { id: string; data: StructureNodeUpdate }) =>
       updateStructureNode.mutateAsync({ id, data }),
+    ...options,
+  });
+};
+
+/**
+ * Hook to move structure nodes with automatic type conversion
+ */
+export const useMoveStructureNodes = (
+  options?: UseMutationOptions<MoveNodesResponse, Error, MoveNodesRequest>,
+) => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (request: MoveNodesRequest) =>
+      structureNodeService.move(request),
+    onSuccess: (data) => {
+      // Invalidate all structure node queries to refresh the UI
+      queryClient.invalidateQueries({
+        queryKey: [QUERY_KEYS.STRUCTURE_NODES],
+      });
+
+      // Invalidate type-specific queries for all affected types
+      [NodeType.LAYER, NodeType.DOMAIN, NodeType.TERM].forEach((nodeType) => {
+        queryClient.invalidateQueries({
+          queryKey: createQueryKey(QUERY_KEYS.STRUCTURE_NODES, "type", {
+            nodeType,
+          }),
+        });
+      });
+
+      // Collect all unique parent IDs from moved, updated, and converted nodes
+      const allNodes = [
+        ...data.moved_nodes,
+        ...data.updated_children,
+        ...data.converted_nodes,
+      ];
+      const parentIds = new Set<string>();
+
+      allNodes.forEach((node) => {
+        if (node.parent_node_id) {
+          parentIds.add(node.parent_node_id);
+        }
+      });
+
+      // Invalidate parent-specific queries
+      parentIds.forEach((parentId) => {
+        queryClient.invalidateQueries({
+          queryKey: createQueryKey(QUERY_KEYS.STRUCTURE_NODES, "parent", {
+            parentId,
+          }),
+        });
+      });
+    },
     ...options,
   });
 };

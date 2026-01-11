@@ -1,0 +1,845 @@
+CreateStructureNode:
+  name: CreateStructureNode
+  description: POST /api/structure_nodes - Create a new structure node with type validation
+  method: POST
+  path: /api/structure_nodes
+  id: api.operation.CreateStructureNode
+  openapi: 3.0.3
+  info:
+    title: Create Node
+    version: 1.0.0
+  applicationServiceRef: application.service.StructureNodeManagement
+  paths: {}
+  spec: '{"openapi": "3.0.3", "info": {"title": "Create Node", "version": "1.0.0"},
+    "paths": {"/api/structure_nodes/": {"post": {"operationId": "create_node_api_structure_nodes__post",
+    "summary": "Create Node", "description": "Create a new structure_node.\n\nThis
+    endpoint handles creation of layers, domains, and terms through\nthe unified structure_nodes
+    interface. Type-specific validation is enforced:\n- Layers cannot have parent
+    structure_nodes\n- Domains must have a layer parent\n- Terms must have a domain
+    parent", "parameters": [{"name": "SessionLocal", "in": "query", "required": false,
+    "schema": {"title": "Sessionlocal"}}], "requestBody": {"required": true, "content":
+    {"application/json": {"schema": {"$ref": "#/components/schemas/NodeCreate"}}}},
+    "responses": {"201": {"description": "Successful Response", "content": {"application/json":
+    {"schema": {"$ref": "#/components/schemas/NodeOut"}}}}, "422": {"description":
+    "Validation Error", "content": {"application/json": {"schema": {"$ref": "#/components/schemas/HTTPValidationError"}}}}},
+    "tags": ["structure_nodes", "structure_nodes"]}}}}'
+  security:
+  - api-key: []
+  realizedBy:
+  - ux.action.CreateStructureNode
+  securedBy: security.policy.AuthenticatedUser
+  instrumentedBy: apm.metric.ApiLatency
+ListStructureNodes:
+  name: ListStructureNodes
+  description: GET /api/structure_nodes - List structure nodes with filtering and
+    pagination
+  method: GET
+  path: /api/structure_nodes
+  id: api.operation.ListStructureNodes
+  openapi: 3.0.3
+  info:
+    title: List Nodes
+    version: 1.0.0
+  applicationServiceRef: application.service.StructureNodeManagement
+  paths: {}
+  spec: '{"openapi": "3.0.3", "info": {"title": "List Nodes", "version": "1.0.0"},
+    "paths": {"/api/structure_nodes/": {"get": {"operationId": "list_nodes_api_structure_nodes__get",
+    "summary": "List Nodes", "description": "List structure_nodes with filtering and
+    pagination.\n\nSupports filtering by structure_node type and parent, with configurable
+    pagination\nand sorting. This replaces the separate endpoints for layers, domains,
+    and terms.", "parameters": [{"name": "node_type", "in": "query", "required": false,
+    "schema": {"anyOf": [{"$ref": "#/components/schemas/NodeTypeEnum"}, {"type": "null"}],
+    "description": "Filter by structure_node type", "title": "Node Type"}, "description":
+    "Filter by structure_node type"}, {"name": "parent_node_id", "in": "query", "required":
+    false, "schema": {"anyOf": [{"type": "string", "format": "uuid"}, {"type": "null"}],
+    "description": "Filter by parent structure_node ID", "title": "Parent Node Id"},
+    "description": "Filter by parent structure_node ID"}, {"name": "skip", "in": "query",
+    "required": false, "schema": {"type": "integer", "minimum": 0, "description":
+    "Number of structure_nodes to skip", "default": 0, "title": "Skip"}, "description":
+    "Number of structure_nodes to skip"}, {"name": "limit", "in": "query", "required":
+    false, "schema": {"type": "integer", "maximum": 1000, "minimum": 1, "description":
+    "Maximum number of structure_nodes to return", "default": 50, "title": "Limit"},
+    "description": "Maximum number of structure_nodes to return"}, {"name": "sort_by",
+    "in": "query", "required": false, "schema": {"type": "string", "pattern": "^(title|created_at)$",
+    "description": "Sort field", "default": "title", "title": "Sort By"}, "description":
+    "Sort field"}, {"name": "SessionLocal", "in": "query", "required": false, "schema":
+    {"title": "Sessionlocal"}}], "requestBody": null, "responses": {"200": {"description":
+    "Successful Response", "content": {"application/json": {"schema": {"$ref": "#/components/schemas/PaginatedNodesResponse"}}}},
+    "422": {"description": "Validation Error", "content": {"application/json": {"schema":
+    {"$ref": "#/components/schemas/HTTPValidationError"}}}}}, "tags": ["structure_nodes",
+    "structure_nodes"]}}}}'
+  security:
+  - api-key: []
+  realizedBy:
+  - ux.action.ListStructureNodes
+  securedBy: security.policy.AuthenticatedUser
+  instrumentedBy: apm.metric.ApiLatency
+GetStructureNode:
+  name: GetStructureNode
+  description: GET /api/structure_nodes/{node_id} - Get a specific structure node
+    by ID
+  method: GET
+  path: /api/structure_nodes/{node_id}
+  id: api.operation.GetStructureNode
+  openapi: 3.0.3
+  info:
+    title: Get Node
+    version: 1.0.0
+  applicationServiceRef: application.service.StructureNodeManagement
+  paths: {}
+  spec: '{"openapi": "3.0.3", "info": {"title": "Get Node", "version": "1.0.0"}, "paths":
+    {"/api/structure_nodes/{node_id}": {"get": {"operationId": "get_node_api_structure_nodes__node_id__get",
+    "summary": "Get Node", "description": "Get a specific structure_node by ID.\n\nReturns
+    the complete structure_node information including embeddings,\nhierarchy information,
+    and metadata.", "parameters": [{"name": "node_id", "in": "path", "required": true,
+    "schema": {"type": "string", "format": "uuid", "description": "The ID of the structure_node
+    to retrieve", "title": "Node Id"}, "description": "The ID of the structure_node
+    to retrieve"}, {"name": "SessionLocal", "in": "query", "required": false, "schema":
+    {"title": "Sessionlocal"}}], "requestBody": null, "responses": {"200": {"description":
+    "Successful Response", "content": {"application/json": {"schema": {"$ref": "#/components/schemas/NodeOut"}}}},
+    "422": {"description": "Validation Error", "content": {"application/json": {"schema":
+    {"$ref": "#/components/schemas/HTTPValidationError"}}}}}, "tags": ["structure_nodes",
+    "structure_nodes"]}}}}'
+  security:
+  - api-key: []
+  realizedBy:
+  - ux.action.GetStructureNode
+  securedBy: security.policy.AuthenticatedUser
+  instrumentedBy: apm.metric.ApiLatency
+UpdateStructureNode:
+  name: UpdateStructureNode
+  description: PUT /api/structure_nodes/{node_id} - Update a structure node with circular
+    reference validation
+  method: PUT
+  path: /api/structure_nodes/{node_id}
+  id: api.operation.UpdateStructureNode
+  openapi: 3.0.3
+  info:
+    title: Update Node
+    version: 1.0.0
+  applicationServiceRef: application.service.StructureNodeManagement
+  paths: {}
+  spec: '{"openapi": "3.0.3", "info": {"title": "Update Node", "version": "1.0.0"},
+    "paths": {"/api/structure_nodes/{node_id}": {"put": {"operationId": "update_node_api_structure_nodes__node_id__put",
+    "summary": "Update Node", "description": "Update a structure_node.\n\nSupports
+    updating title, definition, parent relationships, and structural predicates.\nCircular
+    reference validation is automatically enforced.", "parameters": [{"name": "node_id",
+    "in": "path", "required": true, "schema": {"type": "string", "format": "uuid",
+    "description": "The ID of the structure_node to update", "title": "Node Id"},
+    "description": "The ID of the structure_node to update"}, {"name": "SessionLocal",
+    "in": "query", "required": false, "schema": {"title": "Sessionlocal"}}], "requestBody":
+    {"required": true, "content": {"application/json": {"schema": {"$ref": "#/components/schemas/NodeUpdate"}}}},
+    "responses": {"200": {"description": "Successful Response", "content": {"application/json":
+    {"schema": {"$ref": "#/components/schemas/NodeOut"}}}}, "422": {"description":
+    "Validation Error", "content": {"application/json": {"schema": {"$ref": "#/components/schemas/HTTPValidationError"}}}}},
+    "tags": ["structure_nodes", "structure_nodes"]}}}}'
+  security:
+  - api-key: []
+  realizedBy:
+  - ux.action.UpdateStructureNode
+  securedBy: security.policy.AuthenticatedUser
+  instrumentedBy: apm.metric.ApiLatency
+DeleteStructureNode:
+  name: DeleteStructureNode
+  description: DELETE /api/structure_nodes/{node_id} - Delete a structure node and
+    its children
+  method: DELETE
+  path: /api/structure_nodes/{node_id}
+  id: api.operation.DeleteStructureNode
+  openapi: 3.0.3
+  info:
+    title: Delete Node
+    version: 1.0.0
+  applicationServiceRef: application.service.StructureNodeManagement
+  paths: {}
+  spec: '{"openapi": "3.0.3", "info": {"title": "Delete Node", "version": "1.0.0"},
+    "paths": {"/api/structure_nodes/{node_id}": {"delete": {"operationId": "delete_node_api_structure_nodes__node_id__delete",
+    "summary": "Delete Node", "description": "Delete a structure_node and its children.\n\nThis
+    operation cascades to all child structure_nodes and their relationships.\nUse
+    with caution as this operation cannot be undone.", "parameters": [{"name": "node_id",
+    "in": "path", "required": true, "schema": {"type": "string", "format": "uuid",
+    "description": "The ID of the structure_node to delete", "title": "Node Id"},
+    "description": "The ID of the structure_node to delete"}, {"name": "SessionLocal",
+    "in": "query", "required": false, "schema": {"title": "Sessionlocal"}}], "requestBody":
+    null, "responses": {"204": {"description": "Successful Response"}, "422": {"description":
+    "Validation Error", "content": {"application/json": {"schema": {"$ref": "#/components/schemas/HTTPValidationError"}}}}},
+    "tags": ["structure_nodes", "structure_nodes"]}}}}'
+  security:
+  - api-key: []
+  realizedBy:
+  - ux.action.DeleteStructureNode
+  securedBy: security.policy.AuthenticatedUser
+  instrumentedBy: apm.metric.ApiLatency
+SearchStructureNodes:
+  name: SearchStructureNodes
+  description: POST /api/structure_nodes/find - Vector similarity search across structure
+    nodes
+  method: POST
+  path: /api/structure_nodes/find
+  id: api.operation.SearchStructureNodes
+  openapi: 3.0.3
+  info:
+    title: Search Nodes
+    version: 1.0.0
+  applicationServiceRef: application.service.StructureNodeManagement
+  paths: {}
+  spec: '{"openapi": "3.0.3", "info": {"title": "Search Nodes", "version": "1.0.0"},
+    "paths": {"/api/structure_nodes/find": {"post": {"operationId": "search_nodes_api_structure_nodes_find_post",
+    "summary": "Search Nodes", "description": "Vector search across structure_nodes.\n\nThis
+    endpoint replaces the separate find endpoints for layers, domains, and terms.\nSupports
+    semantic search across structure_node titles and definitions with optional\ntype
+    filtering and configurable similarity thresholds.", "parameters": [{"name": "SessionLocal",
+    "in": "query", "required": false, "schema": {"title": "Sessionlocal"}}], "requestBody":
+    {"required": true, "content": {"application/json": {"schema": {"$ref": "#/components/schemas/NodeSearchRequest"}}}},
+    "responses": {"200": {"description": "Successful Response", "content": {"application/json":
+    {"schema": {"type": "array", "items": {"$ref": "#/components/schemas/NodeSearchResult"},
+    "title": "Response Search Nodes Api Structure Nodes Find Post"}}}}, "422": {"description":
+    "Validation Error", "content": {"application/json": {"schema": {"$ref": "#/components/schemas/HTTPValidationError"}}}}},
+    "tags": ["structure_nodes", "structure_nodes"]}}}}'
+  security:
+  - api-key: []
+  realizedBy:
+  - ux.action.SearchStructureNodes
+  securedBy: security.policy.AuthenticatedUser
+  instrumentedBy: apm.metric.ApiLatency
+CreateNodeLink:
+  name: CreateNodeLink
+  description: POST /api/structure_nodes/links - Create a relationship between structure
+    nodes
+  method: POST
+  path: /api/structure_nodes/links
+  id: api.operation.CreateNodeLink
+  openapi: 3.0.3
+  info:
+    title: Create Node Link
+    version: 1.0.0
+  applicationServiceRef: application.service.NodeLinkManagement
+  paths: {}
+  spec: '{"openapi": "3.0.3", "info": {"title": "Create Node Link", "version": "1.0.0"},
+    "paths": {"/api/structure_nodes/links": {"post": {"operationId": "create_node_link_api_structure_nodes_links_post",
+    "summary": "Create Node Link", "description": "Create a new structure_node link.\n\nLinks
+    can only be created between structure_nodes of the same type (layers to layers,\ndomains
+    to domains, terms to terms) as per the Great Normalization requirements.", "parameters":
+    [{"name": "SessionLocal", "in": "query", "required": false, "schema": {"title":
+    "Sessionlocal"}}], "requestBody": {"required": true, "content": {"application/json":
+    {"schema": {"$ref": "#/components/schemas/NodeLinkCreate"}}}}, "responses": {"201":
+    {"description": "Successful Response", "content": {"application/json": {"schema":
+    {"$ref": "#/components/schemas/NodeLinkOut"}}}}, "422": {"description": "Validation
+    Error", "content": {"application/json": {"schema": {"$ref": "#/components/schemas/HTTPValidationError"}}}}},
+    "tags": ["structure_nodes", "structure_nodes"]}}}}'
+  security:
+  - api-key: []
+  realizedBy:
+  - ux.action.CreateNodeLink
+  securedBy: security.policy.AuthenticatedUser
+  instrumentedBy: apm.metric.ApiLatency
+ListNodeLinks:
+  name: ListNodeLinks
+  description: GET /api/structure_nodes/links - List structure node links with filtering
+  method: GET
+  path: /api/structure_nodes/links
+  id: api.operation.ListNodeLinks
+  openapi: 3.0.3
+  info:
+    title: List Node Links
+    version: 1.0.0
+  applicationServiceRef: application.service.NodeLinkManagement
+  paths: {}
+  spec: '{"openapi": "3.0.3", "info": {"title": "List Node Links", "version": "1.0.0"},
+    "paths": {"/api/structure_nodes/links": {"get": {"operationId": "list_node_links_api_structure_nodes_links_get",
+    "summary": "List Node Links", "description": "List structure_node links with filtering.\n\nSupports
+    filtering by source structure_node, target structure_node, and predicate.\nReturns
+    all relationships in the unified structure_node graph.", "parameters": [{"name":
+    "source_node_id", "in": "query", "required": false, "schema": {"anyOf": [{"type":
+    "string", "format": "uuid"}, {"type": "null"}], "description": "Filter by source
+    structure_node ID", "title": "Source Node Id"}, "description": "Filter by source
+    structure_node ID"}, {"name": "target_node_id", "in": "query", "required": false,
+    "schema": {"anyOf": [{"type": "string", "format": "uuid"}, {"type": "null"}],
+    "description": "Filter by target structure_node ID", "title": "Target Node Id"},
+    "description": "Filter by target structure_node ID"}, {"name": "predicate", "in":
+    "query", "required": false, "schema": {"anyOf": [{"type": "string"}, {"type":
+    "null"}], "description": "Filter by predicate", "title": "Predicate"}, "description":
+    "Filter by predicate"}, {"name": "skip", "in": "query", "required": false, "schema":
+    {"type": "integer", "minimum": 0, "description": "Number of links to skip", "default":
+    0, "title": "Skip"}, "description": "Number of links to skip"}, {"name": "limit",
+    "in": "query", "required": false, "schema": {"type": "integer", "maximum": 500,
+    "minimum": 1, "description": "Maximum number of links to return", "default": 100,
+    "title": "Limit"}, "description": "Maximum number of links to return"}, {"name":
+    "SessionLocal", "in": "query", "required": false, "schema": {"title": "Sessionlocal"}}],
+    "requestBody": null, "responses": {"200": {"description": "Successful Response",
+    "content": {"application/json": {"schema": {"type": "array", "items": {"$ref":
+    "#/components/schemas/NodeLinkOut"}, "title": "Response List Node Links Api Structure
+    Nodes Links Get"}}}}, "422": {"description": "Validation Error", "content": {"application/json":
+    {"schema": {"$ref": "#/components/schemas/HTTPValidationError"}}}}}, "tags": ["structure_nodes",
+    "structure_nodes"]}}}}'
+  security:
+  - api-key: []
+  realizedBy:
+  - ux.action.ListNodeLinks
+  securedBy: security.policy.AuthenticatedUser
+  instrumentedBy: apm.metric.ApiLatency
+CreatePredicate:
+  name: CreatePredicate
+  description: POST /api/predicates - Create a new semantic predicate
+  method: POST
+  path: /api/predicates
+  id: api.operation.CreatePredicate
+  openapi: 3.0.3
+  info:
+    title: Create Predicate
+    version: 1.0.0
+  applicationServiceRef: application.service.PredicateManagement
+  paths: {}
+  spec: '{"openapi": "3.0.3", "info": {"title": "Create Predicate", "version": "1.0.0"},
+    "paths": {"/api/predicates/": {"post": {"operationId": "create_predicate_api_predicates__post",
+    "summary": "Create Predicate", "description": "Create a new predicate.", "parameters":
+    [{"name": "SessionLocal", "in": "query", "required": false, "schema": {"title":
+    "Sessionlocal"}}], "requestBody": {"required": true, "content": {"application/json":
+    {"schema": {"$ref": "#/components/schemas/PredicateCreate"}}}}, "responses": {"201":
+    {"description": "Successful Response", "content": {"application/json": {"schema":
+    {"$ref": "#/components/schemas/PredicateOut"}}}}, "422": {"description": "Validation
+    Error", "content": {"application/json": {"schema": {"$ref": "#/components/schemas/HTTPValidationError"}}}}},
+    "tags": ["predicates"]}}}}'
+  security:
+  - api-key: []
+  realizedBy:
+  - ux.action.CreatePredicate
+  securedBy: security.policy.AuthenticatedUser
+  instrumentedBy: apm.metric.ApiLatency
+ListPredicates:
+  name: ListPredicates
+  description: GET /api/predicates - List predicates with pagination and sorting
+  method: GET
+  path: /api/predicates
+  id: api.operation.ListPredicates
+  openapi: 3.0.3
+  info:
+    title: List Predicates
+    version: 1.0.0
+  applicationServiceRef: application.service.PredicateManagement
+  paths: {}
+  spec: '{"openapi": "3.0.3", "info": {"title": "List Predicates", "version": "1.0.0"},
+    "paths": {"/api/predicates/": {"get": {"operationId": "list_predicates_api_predicates__get",
+    "summary": "List Predicates", "description": "List predicates with pagination
+    and sorting.", "parameters": [{"name": "skip", "in": "query", "required": false,
+    "schema": {"type": "integer", "minimum": 0, "default": 0, "title": "Skip"}}, {"name":
+    "limit", "in": "query", "required": false, "schema": {"type": "integer", "maximum":
+    100, "minimum": 1, "default": 50, "title": "Limit"}}, {"name": "sortBy", "in":
+    "query", "required": false, "schema": {"type": "string", "pattern": "^(title|identifier|date_created)$",
+    "default": "title", "title": "Sortby"}}, {"name": "SessionLocal", "in": "query",
+    "required": false, "schema": {"title": "Sessionlocal"}}], "requestBody": null,
+    "responses": {"200": {"description": "Successful Response", "content": {"application/json":
+    {"schema": {"$ref": "#/components/schemas/PaginatedPredicatesResponse"}}}}, "422":
+    {"description": "Validation Error", "content": {"application/json": {"schema":
+    {"$ref": "#/components/schemas/HTTPValidationError"}}}}}, "tags": ["predicates"]}}}}'
+  security:
+  - api-key: []
+  realizedBy:
+  - ux.action.ListPredicates
+  securedBy: security.policy.AuthenticatedUser
+  instrumentedBy: apm.metric.ApiLatency
+FindSimilarPredicates:
+  name: FindSimilarPredicates
+  description: POST /api/predicates/{id}/find-similar - Find similar external predicates
+    using vector similarity
+  method: POST
+  path: /api/predicates/{id}/find-similar
+  id: api.operation.FindSimilarPredicates
+  openapi: 3.0.3
+  info:
+    title: Find Similar Predicates
+    version: 1.0.0
+  applicationServiceRef: application.service.PredicateManagement
+  paths: {}
+  spec: '{"openapi": "3.0.3", "info": {"title": "Find Similar Predicates", "version":
+    "1.0.0"}, "paths": {"/api/predicates/{id}/find-similar": {"post": {"operationId":
+    "find_similar_predicates_api_predicates__id__find_similar_post", "summary": "Find
+    Similar Predicates", "description": "Find similar external predicates for a given
+    predicate using vector similarity search.\n\nThis endpoint:\n1. Retrieves the
+    predicate by ID\n2. Performs vector similarity search against external predicates\n3.
+    Returns ranked results with confidence scores\n4. Caches results for 1 hour (TTL-based)\n\n**Performance
+    targets:**\n- <200ms p95 for 10K-50K predicates (PT-VS-001, PT-VS-002)\n- <50ms
+    p95 for cached searches (PT-VS-006)\n\n**Confidence scores:**\n- High: similarity
+    >= 0.85\n- Medium: similarity >= 0.70\n- Low: similarity >= 0.60\n- Results below
+    0.60 are rejected\n\nArgs:\n    id: UUID of the predicate to find similar predicates
+    for\n    source: Optional source filter\n    limit: Maximum number of results
+    (default: 100, max: 100)\n    threshold: Minimum similarity threshold (default:
+    0.7)\n    use_cache: Whether to use cached results (default: True)\n\nReturns:\n    FindSimilarResponse
+    with ranked similarity results", "parameters": [{"name": "id", "in": "path", "required":
+    true, "schema": {"type": "string", "title": "Id"}}, {"name": "source", "in": "query",
+    "required": false, "schema": {"anyOf": [{"type": "string"}, {"type": "null"}],
+    "description": "Filter by source (conceptnet, dbpedia, wikidata)", "title": "Source"},
+    "description": "Filter by source (conceptnet, dbpedia, wikidata)"}, {"name": "limit",
+    "in": "query", "required": false, "schema": {"type": "integer", "maximum": 100,
+    "minimum": 1, "default": 100, "title": "Limit"}}, {"name": "threshold", "in":
+    "query", "required": false, "schema": {"type": "number", "maximum": 1.0, "minimum":
+    0.0, "default": 0.7, "title": "Threshold"}}, {"name": "use_cache", "in": "query",
+    "required": false, "schema": {"type": "boolean", "description": "Use cached results
+    if available", "default": true, "title": "Use Cache"}, "description": "Use cached
+    results if available"}, {"name": "SessionLocal", "in": "query", "required": false,
+    "schema": {"title": "Sessionlocal"}}], "requestBody": null, "responses": {"200":
+    {"description": "Successful Response", "content": {"application/json": {"schema":
+    {"$ref": "#/components/schemas/FindSimilarResponse"}}}}, "422": {"description":
+    "Validation Error", "content": {"application/json": {"schema": {"$ref": "#/components/schemas/HTTPValidationError"}}}}},
+    "tags": ["predicates"]}}}}'
+  security:
+  - api-key: []
+  realizedBy:
+  - ux.action.FindSimilarPredicates
+  securedBy: security.policy.AuthenticatedUser
+  instrumentedBy: apm.metric.ApiLatency
+GraphQuery:
+  name: GraphQuery
+  description: POST /graph/sparql/query - Execute SPARQL queries against the knowledge
+    graph
+  method: POST
+  path: /graph/sparql/query
+  id: api.operation.GraphQuery
+  openapi: 3.0.3
+  info:
+    title: Execute Sparql Query
+    version: 1.0.0
+  applicationServiceRef: application.service.GraphAnalytics
+  paths: {}
+  spec: '{"openapi": "3.0.3", "info": {"title": "Execute Sparql Query", "version":
+    "1.0.0"}, "paths": {"/api/graph/sparql/query": {"post": {"operationId": "execute_sparql_query_api_graph_sparql_query_post",
+    "summary": "Execute Sparql Query", "description": "Execute a SPARQL query against
+    the RDF graph.", "parameters": [{"name": "SessionLocal", "in": "query", "required":
+    false, "schema": {"title": "Sessionlocal"}}], "requestBody": {"required": true,
+    "content": {"application/json": {"schema": {"$ref": "#/components/schemas/SPARQLQuery"}}}},
+    "responses": {"200": {"description": "Successful Response", "content": {"application/json":
+    {"schema": {"type": "array", "items": {"type": "object", "additionalProperties":
+    true}, "title": "Response Execute Sparql Query Api Graph Sparql Query Post"}}}},
+    "422": {"description": "Validation Error", "content": {"application/json": {"schema":
+    {"$ref": "#/components/schemas/HTTPValidationError"}}}}}, "tags": ["graph", "Graph"]}}}}'
+  security:
+  - api-key: []
+  realizedBy:
+  - ux.action.GraphQuery
+  securedBy: security.policy.AuthenticatedUser
+  instrumentedBy: apm.metric.ApiLatency
+GraphStats:
+  name: GraphStats
+  description: GET /graph/stats - Get comprehensive graph statistics from SPARQL and
+    NetworkX
+  method: GET
+  path: /graph/stats
+  id: api.operation.GraphStats
+  openapi: 3.0.3
+  info:
+    title: Get Graph Stats
+    version: 1.0.0
+  applicationServiceRef: application.service.GraphAnalytics
+  paths: {}
+  spec: '{"openapi": "3.0.3", "info": {"title": "Get Graph Stats", "version": "1.0.0"},
+    "paths": {"/api/graph/stats": {"get": {"operationId": "get_graph_stats_api_graph_stats_get",
+    "summary": "Get Graph Stats", "description": "Get comprehensive graph statistics
+    from both SPARQL and NetworkX services.", "parameters": [{"name": "SessionLocal",
+    "in": "query", "required": false, "schema": {"title": "Sessionlocal"}}], "requestBody":
+    null, "responses": {"200": {"description": "Successful Response", "content": {"application/json":
+    {"schema": {"type": "object", "additionalProperties": true, "title": "Response
+    Get Graph Stats Api Graph Stats Get"}}}}, "422": {"description": "Validation Error",
+    "content": {"application/json": {"schema": {"$ref": "#/components/schemas/HTTPValidationError"}}}}},
+    "tags": ["graph", "Graph"]}}}}'
+  security:
+  - api-key: []
+  realizedBy:
+  - ux.action.GraphStats
+  securedBy: security.policy.AuthenticatedUser
+  instrumentedBy: apm.metric.ApiLatency
+RagExtract:
+  name: RagExtract
+  description: POST /api/rag/extract - Extract entities from text using four-layer
+    RAG pipeline
+  method: POST
+  path: /api/rag/extract
+  id: api.operation.RagExtract
+  openapi: 3.0.3
+  info:
+    title: Extract Entities
+    version: 1.0.0
+  applicationServiceRef: application.service.RagPipeline
+  paths: {}
+  spec: '{"openapi": "3.0.3", "info": {"title": "Extract Entities", "version": "1.0.0"},
+    "paths": {"/api/rag/extract": {"post": {"operationId": "extract_entities_api_rag_extract_post",
+    "summary": "Extract Entities", "description": "Extract entities from text using
+    the RAG pipeline.\n\nThe pipeline processes text through four layers:\n- Layer
+    0: Knowledge Graph Context Preparation\n- Layer 1: LLM-based Entity Extraction\n-
+    Layer 2: spaCy Syntactic Gap Analysis\n- Layer 3: Concept Resolution via KG and
+    Web Search\n\nArgs:\n    request: RAGExtractionRequest containing text and trace
+    enablement flag\n    pipeline_service: Injected RAG pipeline service\n\nReturns:\n    RAGExtractionResponse
+    with extracted entities, metrics, and request ID\n\nRaises:\n    HTTPException
+    400: If text is empty or invalid\n    HTTPException 500: If pipeline execution
+    fails", "parameters": [{"name": "SessionLocal", "in": "query", "required": false,
+    "schema": {"title": "Sessionlocal"}}], "requestBody": {"required": true, "content":
+    {"application/json": {"schema": {"$ref": "#/components/schemas/RAGExtractionRequest"}}}},
+    "responses": {"200": {"description": "Successful Response", "content": {"application/json":
+    {"schema": {"$ref": "#/components/schemas/RAGExtractionResponse"}}}}, "400": {"description":
+    "Invalid request parameters"}, "500": {"description": "Pipeline execution failed"},
+    "422": {"description": "Validation Error", "content": {"application/json": {"schema":
+    {"$ref": "#/components/schemas/HTTPValidationError"}}}}}, "tags": ["rag-pipeline"]}}}}'
+  security:
+  - api-key: []
+  realizedBy:
+  - ux.action.RagExtract
+  securedBy: security.policy.AuthenticatedUser
+  instrumentedBy: apm.metric.ApiLatency
+RagGetTrace:
+  name: RagGetTrace
+  description: GET /api/rag/trace/{request_id} - Retrieve RAG pipeline trace data
+    for debugging
+  method: GET
+  path: /api/rag/trace/{request_id}
+  id: api.operation.RagGetTrace
+  openapi: 3.0.3
+  info:
+    title: Get Trace
+    version: 1.0.0
+  applicationServiceRef: application.service.RagPipeline
+  paths: {}
+  spec: '{"openapi": "3.0.3", "info": {"title": "Get Trace", "version": "1.0.0"},
+    "paths": {"/api/rag/trace/{request_id}": {"get": {"operationId": "get_trace_api_rag_trace__request_id__get",
+    "summary": "Get Trace", "description": "Retrieve all trace entries for a specific
+    RAG extraction request.\n\nTrace data includes detailed input/output information
+    for each layer,\nuseful for debugging and algorithm tuning.\n\nArgs:\n    request_id:
+    Unique identifier for the extraction request\n    observability_store: Injected
+    observability store\n\nReturns:\n    List of trace entries ordered by sentence
+    index and timestamp\n\nRaises:\n    HTTPException 404: If request_id has no trace
+    data\n    HTTPException 500: If trace retrieval fails", "parameters": [{"name":
+    "request_id", "in": "path", "required": true, "schema": {"type": "string", "title":
+    "Request Id"}}], "requestBody": null, "responses": {"200": {"description": "Successful
+    Response", "content": {"application/json": {"schema": {}}}}, "404": {"description":
+    "Request ID not found or trace not enabled"}, "500": {"description": "Failed to
+    retrieve trace data"}, "422": {"description": "Validation Error", "content": {"application/json":
+    {"schema": {"$ref": "#/components/schemas/HTTPValidationError"}}}}}, "tags": ["rag-pipeline"]}}}}'
+  security:
+  - api-key: []
+  realizedBy:
+  - ux.action.RagGetTrace
+  securedBy: security.policy.AuthenticatedUser
+  instrumentedBy: apm.metric.ApiLatency
+ReferenceSearch:
+  name: ReferenceSearch
+  description: GET /api/reference/{source}/search - Search external knowledge sources
+  method: GET
+  path: /api/reference/{source}/search
+  id: api.operation.ReferenceSearch
+  openapi: 3.0.3
+  info:
+    title: Multi Source Search Get
+    version: 1.0.0
+  applicationServiceRef: application.service.ReferenceIntegration
+  paths: {}
+  spec: '{"openapi": "3.0.3", "info": {"title": "Multi Source Search Get", "version":
+    "1.0.0"}, "paths": {"/api/reference/search": {"get": {"operationId": "multi_source_search_get_api_reference_search_get",
+    "summary": "Multi Source Search Get", "description": "Search across multiple reference
+    sources via GET request\n\nAlternative GET endpoint for multi-source search with
+    query parameters.", "parameters": [{"name": "query", "in": "query", "required":
+    true, "schema": {"type": "string", "minLength": 1, "description": "Search query",
+    "title": "Query"}, "description": "Search query"}, {"name": "sources", "in": "query",
+    "required": false, "schema": {"anyOf": [{"type": "string"}, {"type": "null"}],
+    "description": "Comma-separated list of source types", "title": "Sources"}, "description":
+    "Comma-separated list of source types"}, {"name": "limit", "in": "query", "required":
+    false, "schema": {"type": "integer", "maximum": 100, "minimum": 1, "description":
+    "Maximum results per source", "default": 20, "title": "Limit"}, "description":
+    "Maximum results per source"}, {"name": "offset", "in": "query", "required": false,
+    "schema": {"type": "integer", "minimum": 0, "description": "Result offset", "default":
+    0, "title": "Offset"}, "description": "Result offset"}], "requestBody": null,
+    "responses": {"200": {"description": "Successful Response", "content": {"application/json":
+    {"schema": {"$ref": "#/components/schemas/MultiSourceSearchResponse"}}}}, "422":
+    {"description": "Validation Error", "content": {"application/json": {"schema":
+    {"$ref": "#/components/schemas/HTTPValidationError"}}}}}, "tags": ["nlp-reference",
+    "reference"]}}}}'
+  security:
+  - api-key: []
+  realizedBy:
+  - ux.action.ReferenceSearch
+  securedBy: security.policy.AuthenticatedUser
+  instrumentedBy: apm.metric.ApiLatency
+CreatePipelineFlavor:
+  name: CreatePipelineFlavor
+  description: POST /api/pipeline-flavors - Create a new LLM pipeline configuration
+  method: POST
+  path: /api/pipeline-flavors
+  id: api.operation.CreatePipelineFlavor
+  openapi: 3.0.3
+  info:
+    title: Create Flavor
+    version: 1.0.0
+  applicationServiceRef: application.service.PipelineFlavorManagement
+  paths: {}
+  spec: '{"openapi": "3.0.3", "info": {"title": "Create Flavor", "version": "1.0.0"},
+    "paths": {"/api/pipeline-flavors": {"post": {"operationId": "create_flavor_api_pipeline_flavors_post",
+    "summary": "Create Flavor", "description": "Create a new pipeline flavor", "parameters":
+    [], "requestBody": {"required": true, "content": {"application/json": {"schema":
+    {"$ref": "#/components/schemas/CreatePipelineFlavorRequest"}}}}, "responses":
+    {"201": {"description": "Successful Response", "content": {"application/json":
+    {"schema": {"$ref": "#/components/schemas/PipelineFlavor"}}}}, "422": {"description":
+    "Validation Error", "content": {"application/json": {"schema": {"$ref": "#/components/schemas/HTTPValidationError"}}}}},
+    "tags": ["pipeline-flavors", "Pipeline Flavors"]}}}}'
+  security:
+  - api-key: []
+  realizedBy:
+  - ux.action.CreatePipelineFlavor
+  securedBy: security.policy.AuthenticatedUser
+  instrumentedBy: apm.metric.ApiLatency
+ListPipelineFlavors:
+  name: ListPipelineFlavors
+  description: GET /api/pipeline-flavors - List available pipeline configurations
+  method: GET
+  path: /api/pipeline-flavors
+  id: api.operation.ListPipelineFlavors
+  openapi: 3.0.3
+  info:
+    title: List Flavors
+    version: 1.0.0
+  applicationServiceRef: application.service.PipelineFlavorManagement
+  paths: {}
+  spec: '{"openapi": "3.0.3", "info": {"title": "List Flavors", "version": "1.0.0"},
+    "paths": {"/api/pipeline-flavors": {"get": {"operationId": "list_flavors_api_pipeline_flavors_get",
+    "summary": "List Flavors", "description": "List all flavors, optionally filtered
+    by pipeline", "parameters": [{"name": "pipeline", "in": "query", "required": false,
+    "schema": {"anyOf": [{"$ref": "#/components/schemas/PipelineType"}, {"type": "null"}],
+    "description": "Filter by pipeline type", "title": "Pipeline"}, "description":
+    "Filter by pipeline type"}], "requestBody": null, "responses": {"200": {"description":
+    "Successful Response", "content": {"application/json": {"schema": {"$ref": "#/components/schemas/PipelineFlavorListResponse"}}}},
+    "422": {"description": "Validation Error", "content": {"application/json": {"schema":
+    {"$ref": "#/components/schemas/HTTPValidationError"}}}}}, "tags": ["pipeline-flavors",
+    "Pipeline Flavors"]}}}}'
+  security:
+  - api-key: []
+  realizedBy:
+  - ux.action.ListPipelineFlavors
+  securedBy: security.policy.AuthenticatedUser
+  instrumentedBy: apm.metric.ApiLatency
+ListDatasets:
+  name: ListDatasets
+  description: GET /api/datasets - List all datasets with metadata
+  method: GET
+  path: /api/datasets
+  id: api.operation.ListDatasets
+  openapi: 3.0.3
+  info:
+    title: List Datasets
+    version: 1.0.0
+  applicationServiceRef: application.service.DatasetManagement
+  paths: {}
+  spec: '{"openapi": "3.0.3", "info": {"title": "List Datasets", "version": "1.0.0"},
+    "paths": {"/api/datasets": {"get": {"operationId": "list_datasets_api_datasets_get",
+    "summary": "List Datasets", "description": "List all known datasets with metrics.",
+    "parameters": [], "requestBody": null, "responses": {"200": {"description": "Successful
+    Response", "content": {"application/json": {"schema": {"items": {"$ref": "#/components/schemas/DatasetResponse"},
+    "type": "array", "title": "Response List Datasets Api Datasets Get"}}}}}, "tags":
+    ["datasets"]}}}}'
+  security:
+  - api-key: []
+  realizedBy:
+  - ux.action.ListDatasets
+  securedBy: security.policy.AuthenticatedUser
+  instrumentedBy: apm.metric.ApiLatency
+SwitchDataset:
+  name: SwitchDataset
+  description: POST /api/datasets/{dataset_id}/activate - Switch to a different dataset
+  method: POST
+  path: /api/datasets/{dataset_id}/activate
+  id: api.operation.SwitchDataset
+  openapi: 3.0.3
+  info:
+    title: Activate Dataset
+    version: 1.0.0
+  applicationServiceRef: application.service.DatasetManagement
+  paths: {}
+  spec: '{"openapi": "3.0.3", "info": {"title": "Activate Dataset", "version": "1.0.0"},
+    "paths": {"/api/datasets/{dataset_id}/activate": {"post": {"operationId": "activate_dataset_api_datasets__dataset_id__activate_post",
+    "summary": "Activate Dataset", "description": "Switch to the specified dataset.",
+    "parameters": [{"name": "dataset_id", "in": "path", "required": true, "schema":
+    {"type": "string", "title": "Dataset Id"}}], "requestBody": null, "responses":
+    {"200": {"description": "Successful Response", "content": {"application/json":
+    {"schema": {}}}}, "422": {"description": "Validation Error", "content": {"application/json":
+    {"schema": {"$ref": "#/components/schemas/HTTPValidationError"}}}}}, "tags": ["datasets"]}}}}'
+  security:
+  - api-key: []
+  realizedBy:
+  - ux.action.SwitchDataset
+  securedBy: security.policy.AuthenticatedUser
+  instrumentedBy: apm.metric.ApiLatency
+StructureNodeManagementOperations:
+  id: api.operation.structure-node-management-operations
+  name: StructureNodeManagementOperations
+  openapi: 3.0.0
+  description: API operation for StructureNodeManagementOperations
+  applicationServiceRef: application.service.StructureNodeManagement
+  security:
+  - bearerAuth: []
+  info:
+    title: StructureNodeManagementOperations
+    version: 1.0.0
+  paths: {}
+NodeLinkManagementOperations:
+  id: api.operation.node-link-management-operations
+  name: NodeLinkManagementOperations
+  openapi: 3.0.0
+  description: API operation for NodeLinkManagementOperations
+  applicationServiceRef: application.service.NodeLinkManagement
+  security:
+  - bearerAuth: []
+  info:
+    title: NodeLinkManagementOperations
+    version: 1.0.0
+  paths: {}
+PredicateManagementOperations:
+  id: api.operation.predicate-management-operations
+  name: PredicateManagementOperations
+  openapi: 3.0.0
+  description: API operation for PredicateManagementOperations
+  applicationServiceRef: application.service.PredicateManagement
+  security:
+  - bearerAuth: []
+  info:
+    title: PredicateManagementOperations
+    version: 1.0.0
+  paths: {}
+GraphAnalyticsOperations:
+  id: api.operation.graph-analytics-operations
+  name: GraphAnalyticsOperations
+  openapi: 3.0.0
+  description: API operation for GraphAnalyticsOperations
+  applicationServiceRef: application.service.GraphAnalytics
+  security:
+  - bearerAuth: []
+  info:
+    title: GraphAnalyticsOperations
+    version: 1.0.0
+  paths: {}
+EmbeddingGenerationOperations:
+  id: api.operation.embedding-generation-operations
+  name: EmbeddingGenerationOperations
+  openapi: 3.0.0
+  description: API operation for EmbeddingGenerationOperations
+  applicationServiceRef: application.service.EmbeddingGeneration
+  security:
+  - bearerAuth: []
+  info:
+    title: EmbeddingGenerationOperations
+    version: 1.0.0
+  paths: {}
+RagPipelineOperations:
+  id: api.operation.rag-pipeline-operations
+  name: RagPipelineOperations
+  openapi: 3.0.0
+  description: API operation for RagPipelineOperations
+  applicationServiceRef: application.service.RagPipeline
+  security:
+  - bearerAuth: []
+  info:
+    title: RagPipelineOperations
+    version: 1.0.0
+  paths: {}
+ReferenceIntegrationOperations:
+  id: api.operation.reference-integration-operations
+  name: ReferenceIntegrationOperations
+  openapi: 3.0.0
+  description: API operation for ReferenceIntegrationOperations
+  applicationServiceRef: application.service.ReferenceIntegration
+  security:
+  - bearerAuth: []
+  info:
+    title: ReferenceIntegrationOperations
+    version: 1.0.0
+  paths: {}
+PipelineFlavorManagementOperations:
+  id: api.operation.pipeline-flavor-management-operations
+  name: PipelineFlavorManagementOperations
+  openapi: 3.0.0
+  description: API operation for PipelineFlavorManagementOperations
+  applicationServiceRef: application.service.PipelineFlavorManagement
+  security:
+  - bearerAuth: []
+  info:
+    title: PipelineFlavorManagementOperations
+    version: 1.0.0
+  paths: {}
+NlpAnalysisOperations:
+  id: api.operation.nlp-analysis-operations
+  name: NlpAnalysisOperations
+  openapi: 3.0.0
+  description: API operation for NlpAnalysisOperations
+  applicationServiceRef: application.service.NlpAnalysis
+  security:
+  - bearerAuth: []
+  info:
+    title: NlpAnalysisOperations
+    version: 1.0.0
+  paths: {}
+ChangeEventTrackingOperations:
+  id: api.operation.change-event-tracking-operations
+  name: ChangeEventTrackingOperations
+  openapi: 3.0.0
+  description: API operation for ChangeEventTrackingOperations
+  applicationServiceRef: application.service.ChangeEventTracking
+  security:
+  - bearerAuth: []
+  info:
+    title: ChangeEventTrackingOperations
+    version: 1.0.0
+  paths: {}
+ReferenceLinkManagementOperations:
+  id: api.operation.reference-link-management-operations
+  name: ReferenceLinkManagementOperations
+  openapi: 3.0.0
+  description: API operation for ReferenceLinkManagementOperations
+  applicationServiceRef: application.service.ReferenceLinkManagement
+  security:
+  - bearerAuth: []
+  info:
+    title: ReferenceLinkManagementOperations
+    version: 1.0.0
+  paths: {}
+WordSenseManagementOperations:
+  id: api.operation.word-sense-management-operations
+  name: WordSenseManagementOperations
+  openapi: 3.0.0
+  description: API operation for WordSenseManagementOperations
+  applicationServiceRef: application.service.WordSenseManagement
+  security:
+  - bearerAuth: []
+  info:
+    title: WordSenseManagementOperations
+    version: 1.0.0
+  paths: {}
+DatasetManagementOperations:
+  id: api.operation.dataset-management-operations
+  name: DatasetManagementOperations
+  openapi: 3.0.0
+  description: API operation for DatasetManagementOperations
+  applicationServiceRef: application.service.DatasetManagement
+  security:
+  - bearerAuth: []
+  info:
+    title: DatasetManagementOperations
+    version: 1.0.0
+  paths: {}
+SyncManagementOperations:
+  id: api.operation.sync-management-operations
+  name: SyncManagementOperations
+  openapi: 3.0.0
+  description: API operation for SyncManagementOperations
+  applicationServiceRef: application.service.SyncManagement
+  security:
+  - bearerAuth: []
+  info:
+    title: SyncManagementOperations
+    version: 1.0.0
+  paths: {}
+PredicateSimilarityOperations:
+  id: api.operation.predicate-similarity-operations
+  name: PredicateSimilarityOperations
+  openapi: 3.0.0
+  description: API operation for PredicateSimilarityOperations
+  applicationServiceRef: application.service.PredicateSimilarity
+  security:
+  - bearerAuth: []
+  info:
+    title: PredicateSimilarityOperations
+    version: 1.0.0
+  paths: {}

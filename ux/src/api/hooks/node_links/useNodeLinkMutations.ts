@@ -32,7 +32,7 @@ export const useCreateNodeLink = (
 
   return useMutation({
     mutationFn: (data: StructureNodeLinkCreate) => nodeLinkService.create(data),
-    onSuccess: (data, variables) => {
+    onSuccess: (data, variables, context) => {
       // Invalidate all node links queries
       queryClient.invalidateQueries({
         queryKey: [QUERY_KEYS.NODE_LINKS],
@@ -70,6 +70,13 @@ export const useCreateNodeLink = (
           variables.target_node_id,
         ),
       });
+
+      // Call user-provided onSuccess if it exists
+      options?.onSuccess?.(data, variables, context);
+    },
+    onError: (error, variables, context) => {
+      // Call user-provided onError if it exists
+      options?.onError?.(error, variables, context);
     },
     ...options,
   });
@@ -91,9 +98,12 @@ export const useDeleteNodeLink = (
         createQueryKey(QUERY_KEYS.NODE_LINKS, id),
       );
 
-      return { linkToDelete };
+      // Call user-provided onMutate if it exists
+      const userContext = await options?.onMutate?.(id);
+
+      return { linkToDelete, userContext };
     },
-    onSuccess: (_, id, context) => {
+    onSuccess: (data, id, context) => {
       // Remove the link from cache
       queryClient.removeQueries({
         queryKey: createQueryKey(QUERY_KEYS.NODE_LINKS, id),
@@ -135,6 +145,13 @@ export const useDeleteNodeLink = (
           ),
         });
       }
+
+      // Call user-provided onSuccess if it exists
+      options?.onSuccess?.(data, id, context);
+    },
+    onError: (error, variables, context) => {
+      // Call user-provided onError if it exists
+      options?.onError?.(error, variables, context);
     },
     ...options,
   });

@@ -1,0 +1,42 @@
+Knowledge Workers:
+  name: Knowledge Workers
+  description: Knowledge workers curating domain expertise and building structured
+    knowledge bases for their work
+  type: customer
+  id: knowledge-workers
+  has_interest:
+  - motivation.goal.enable-knowledge-graph-curation
+Researchers:
+  name: Researchers
+  description: Researchers building structured research knowledge bases to organize
+    findings, references, and domain knowledge
+  type: customer
+  id: researchers
+  has_interest:
+  - motivation.goal.enable-knowledge-graph-curation
+AI Developers:
+  name: AI Developers
+  description: AI developers integrating knowledge graphs with LLM applications to
+    provide context for RAG and agent workflows
+  type: customer
+  id: ai-developers
+  has_interest:
+  - motivation.goal.support-rag-workflows
+End Users:
+  name: End Users
+  description: End users consuming AI-enhanced applications that leverage curated
+    knowledge graphs for improved responses
+  type: external
+  id: end-users
+  has_interest:
+  - motivation.goal.facilitate-human-agent-communication
+System Administrators:
+  name: System Administrators
+  description: System administrators managing Context Studio deployments and ensuring
+    data integrity and performance
+  type: internal
+  id: system-administrators
+Test Stakeholder:
+  name: Test Stakeholder
+  id: motivation.stakeholder.test-stakeholder
+  description: Test

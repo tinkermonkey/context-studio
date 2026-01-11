@@ -1,0 +1,141 @@
+version: 0.1.0
+schema: documentation-robotics-v1
+created: '2025-11-26T12:55:57.414993Z'
+updated: '2025-12-04T10:58:40.325136Z'
+project:
+  name: context-studio
+  description: Architecture model for context-studio
+  version: 1.0.0
+documentation: .dr/README.md
+layers:
+  motivation:
+    order: 1
+    name: Motivation
+    path: documentation-robotics/model/01_motivation/
+    schema: .dr/schemas/01-motivation-layer.schema.json
+    enabled: true
+    elements:
+      goal: 9
+      driver: 5
+      stakeholder: 6
+      constraint: 5
+      assessment: 1
+  business:
+    order: 2
+    name: Business
+    path: documentation-robotics/model/02_business/
+    schema: .dr/schemas/02-business-layer.schema.json
+    enabled: true
+    elements:
+      function: 16
+      process: 5
+      service: 5
+  security:
+    order: 3
+    name: Security
+    path: documentation-robotics/model/03_security/
+    schema: .dr/schemas/03-security-layer.schema.json
+    enabled: true
+    elements:
+      policy: 5
+      securityconstraint: 7
+      threat: 4
+      resource: 5
+  application:
+    order: 4
+    name: Application
+    path: documentation-robotics/model/04_application/
+    schema: .dr/schemas/04-application-layer.schema.json
+    enabled: true
+    elements:
+      service: 20
+      component: 18
+  technology:
+    order: 5
+    name: Technology
+    path: documentation-robotics/model/05_technology/
+    schema: .dr/schemas/05-technology-layer.schema.json
+    enabled: true
+    elements:
+      artifact: 6
+      systemsoftware: 12
+  api:
+    order: 6
+    name: API
+    path: documentation-robotics/model/06_api/
+    schema: .dr/schemas/06-api-layer.schema.json
+    enabled: true
+    elements:
+      operation: 35
+  data_model:
+    order: 7
+    name: Data Model
+    path: documentation-robotics/model/07_data_model/
+    schema: .dr/schemas/07-data-model-layer.schema.json
+    enabled: true
+    elements:
+      schema: 10
+  datastore:
+    order: 8
+    name: Data Store
+    path: documentation-robotics/model/08_datastore/
+    schema: .dr/schemas/08-datastore-layer.schema.json
+    enabled: true
+    elements:
+      database: 4
+  ux:
+    order: 9
+    name: UX
+    path: documentation-robotics/model/09_ux/
+    schema: .dr/schemas/09-ux-layer.schema.json
+    enabled: true
+    elements:
+      view: 21
+      action: 20
+  navigation:
+    order: 10
+    name: Navigation
+    path: documentation-robotics/model/10_navigation/
+    schema: .dr/schemas/10-navigation-layer.schema.json
+    enabled: true
+    elements:
+      route: 17
+      flow: 2
+  apm:
+    order: 11
+    name: APM/Observability
+    path: documentation-robotics/model/11_apm/
+    schema: .dr/schemas/11-apm-observability-layer.schema.json
+    enabled: true
+    elements: {}
+cross_references:
+  total: 0
+  by_type: {}
+statistics:
+  total_elements: 238
+  total_relationships: 0
+  completeness: 0.0
+  last_validation: '2025-11-28T18:37:36.562030Z'
+  validation_status: passed
+conventions:
+  id_format: '{layer}.{type}.{kebab-case-name}'
+  file_naming:
+    api: '{service-name}-api.yaml'
+    schema: '{entity-name}.schema.json'
+    ux: '{screen-name}.ux.yaml'
+cli_version: 0.6.2
+spec_version: 0.3.0
+upgrade_history:
+- from_version: 0.1.0
+  to_version: 0.4.1
+  upgraded_at: '2025-11-28T13:53:26.729095Z'
+- from_version: 0.1.0
+  to_version: 0.5.0
+  upgraded_at: '2025-12-03T21:24:00.926148Z'
+- from_version: 0.1.0
+  to_version: 0.6.1
+  upgraded_at: '2025-12-04T01:34:45.062031Z'
+- from_version: 0.1.0
+  to_version: 0.6.2
+  upgraded_at: '2025-12-04T10:58:16.316230Z'
+upgraded_at: '2025-12-04T10:58:16.459941Z'

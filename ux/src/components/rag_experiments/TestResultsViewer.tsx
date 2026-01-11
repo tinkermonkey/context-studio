@@ -254,7 +254,7 @@ export const TestResultsViewer: React.FC<TestResultsViewerProps> = ({
   }
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4" data-testid="test-results-viewer">
       {/* Summary */}
       {summary && (
         <div className="rounded-lg border border-blue-200 bg-blue-50 p-4">

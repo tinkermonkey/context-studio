@@ -7,7 +7,7 @@ This includes pipeline configurations, audit logs, and task management.
 import os
 from sqlalchemy import create_engine, text
 from sqlalchemy.orm import sessionmaker
-from sqlalchemy.pool import StaticPool
+from sqlalchemy.pool import StaticPool, NullPool
 
 from utils.logger import get_logger
 
@@ -46,13 +46,14 @@ class OperationsDatabaseManager:
         """Initialize the operations database connection and schema."""
         try:
             # Create SQLite engine for operations database
+            # Use NullPool to avoid readonly connection caching issues in E2E tests
             self.engine = create_engine(
                 f"sqlite:///{self.operations_db_path}",
                 connect_args={
                     "check_same_thread": False,
                     "timeout": 20
                 },
-                poolclass=StaticPool,
+                poolclass=NullPool,  # Don't pool connections - create fresh each time
                 echo=False
             )
             

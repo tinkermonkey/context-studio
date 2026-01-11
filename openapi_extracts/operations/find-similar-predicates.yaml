@@ -1,0 +1,88 @@
+openapi:
+  openapi: 3.0.3
+  info:
+    title: Find Similar Predicates
+    version: 1.0.0
+  paths:
+    /api/predicates/{id}/find-similar:
+      post:
+        operationId: find_similar_predicates_api_predicates__id__find_similar_post
+        summary: Find Similar Predicates
+        description: "Find similar external predicates for a given predicate using\
+          \ vector similarity search.\n\nThis endpoint:\n1. Retrieves the predicate\
+          \ by ID\n2. Performs vector similarity search against external predicates\n\
+          3. Returns ranked results with confidence scores\n4. Caches results for\
+          \ 1 hour (TTL-based)\n\n**Performance targets:**\n- <200ms p95 for 10K-50K\
+          \ predicates (PT-VS-001, PT-VS-002)\n- <50ms p95 for cached searches (PT-VS-006)\n\
+          \n**Confidence scores:**\n- High: similarity >= 0.85\n- Medium: similarity\
+          \ >= 0.70\n- Low: similarity >= 0.60\n- Results below 0.60 are rejected\n\
+          \nArgs:\n    id: UUID of the predicate to find similar predicates for\n\
+          \    source: Optional source filter\n    limit: Maximum number of results\
+          \ (default: 100, max: 100)\n    threshold: Minimum similarity threshold\
+          \ (default: 0.7)\n    use_cache: Whether to use cached results (default:\
+          \ True)\n\nReturns:\n    FindSimilarResponse with ranked similarity results"
+        parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            title: Id
+        - name: source
+          in: query
+          required: false
+          schema:
+            anyOf:
+            - type: string
+            - type: 'null'
+            description: Filter by source (conceptnet, dbpedia, wikidata)
+            title: Source
+          description: Filter by source (conceptnet, dbpedia, wikidata)
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+            maximum: 100
+            minimum: 1
+            default: 100
+            title: Limit
+        - name: threshold
+          in: query
+          required: false
+          schema:
+            type: number
+            maximum: 1.0
+            minimum: 0.0
+            default: 0.7
+            title: Threshold
+        - name: use_cache
+          in: query
+          required: false
+          schema:
+            type: boolean
+            description: Use cached results if available
+            default: true
+            title: Use Cache
+          description: Use cached results if available
+        - name: SessionLocal
+          in: query
+          required: false
+          schema:
+            title: Sessionlocal
+        requestBody: null
+        responses:
+          '200':
+            description: Successful Response
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/FindSimilarResponse'
+          '422':
+            description: Validation Error
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/HTTPValidationError'
+        tags:
+        - predicates

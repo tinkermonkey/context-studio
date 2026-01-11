@@ -233,12 +233,13 @@ def test_list_terms(client):
 
 
 def test_find_term_invalid_created_at(client):
-    # Test vector search endpoint
-    resp = client.post(
-        "/api/structure_nodes/find",
-        json={"title": "test", "created_at": "invalid-date"},
-    )
-    assert resp.status_code == 501  # API returns 501 (Not Implemented) currently
+    # This test is not applicable to the current structure_nodes API
+    # as the find endpoint returns 501 (not implemented)
+    # We'll test invalid query parameters instead
+
+    # Test invalid node_type parameter
+    resp = client.get("/api/structure_nodes/?node_type=invalid_type")
+    assert resp.status_code == 422  # Validation error for invalid enum value
 
 
 @pytest.mark.skip_suite

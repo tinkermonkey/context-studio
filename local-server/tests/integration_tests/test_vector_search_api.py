@@ -123,15 +123,20 @@ class TestVectorSearchAPI:
         """Test basic vector search API endpoint."""
         db_path, nodes, links, create_embedding = test_database
 
-        with patch('api.reference.ReferenceManager') as mock_manager_class:
-            # Create a real manager with the test database
-            from reference_db.config import ReferenceConfig
-            from reference_db.manager import ReferenceManager
+        # Create a custom context manager that uses our test database
+        from contextlib import contextmanager
+        from reference_db.config import ReferenceConfig
+        from reference_db.manager import ReferenceManager
 
-            real_manager = ReferenceManager(ReferenceConfig(), db_path=db_path)
-            mock_manager_class.return_value.__enter__.return_value = real_manager
-            mock_manager_class.return_value.__exit__.return_value = False
+        @contextmanager
+        def test_reference_manager_context(config):
+            manager = ReferenceManager(config, db_path=db_path)
+            try:
+                yield manager
+            finally:
+                manager.close()
 
+        with patch('reference_db.dependencies.reference_manager_context', side_effect=test_reference_manager_context):
             with patch('embeddings.generate_embeddings.generate_embedding') as mock_embed:
                 mock_embed.return_value = create_embedding(0.5)
 
@@ -153,21 +158,24 @@ class TestVectorSearchAPI:
                 assert "results" in data
                 assert isinstance(data["results"], list)
 
-            # Clean up
-            real_manager.close()
-
     def test_search_endpoint_with_source_filter(self, client, test_database):
         """Test vector search with source filtering."""
         db_path, nodes, links, create_embedding = test_database
 
-        with patch('api.reference.ReferenceManager') as mock_manager_class:
-            from reference_db.config import ReferenceConfig
-            from reference_db.manager import ReferenceManager
+        # Create a custom context manager that uses our test database
+        from contextlib import contextmanager
+        from reference_db.config import ReferenceConfig
+        from reference_db.manager import ReferenceManager
 
-            real_manager = ReferenceManager(ReferenceConfig(), db_path=db_path)
-            mock_manager_class.return_value.__enter__.return_value = real_manager
-            mock_manager_class.return_value.__exit__.return_value = False
+        @contextmanager
+        def test_reference_manager_context(config):
+            manager = ReferenceManager(config, db_path=db_path)
+            try:
+                yield manager
+            finally:
+                manager.close()
 
+        with patch('reference_db.dependencies.reference_manager_context', side_effect=test_reference_manager_context):
             with patch('embeddings.generate_embeddings.generate_embedding') as mock_embed:
                 mock_embed.return_value = create_embedding(0.5)
 
@@ -187,8 +195,6 @@ class TestVectorSearchAPI:
                 # All results should be from schema.org
                 for result in data["results"]:
                     assert result["source"] == "schema.org"
-
-            real_manager.close()
 
     def test_search_endpoint_threshold_validation(self, client):
         """Test that search endpoint validates threshold parameter."""
@@ -253,14 +259,20 @@ class TestVectorSearchAPI:
         """Test that search results include similarity scores."""
         db_path, nodes, links, create_embedding = test_database
 
-        with patch('api.reference.ReferenceManager') as mock_manager_class:
-            from reference_db.config import ReferenceConfig
-            from reference_db.manager import ReferenceManager
+        # Create a custom context manager that uses our test database
+        from contextlib import contextmanager
+        from reference_db.config import ReferenceConfig
+        from reference_db.manager import ReferenceManager
 
-            real_manager = ReferenceManager(ReferenceConfig(), db_path=db_path)
-            mock_manager_class.return_value.__enter__.return_value = real_manager
-            mock_manager_class.return_value.__exit__.return_value = False
+        @contextmanager
+        def test_reference_manager_context(config):
+            manager = ReferenceManager(config, db_path=db_path)
+            try:
+                yield manager
+            finally:
+                manager.close()
 
+        with patch('reference_db.dependencies.reference_manager_context', side_effect=test_reference_manager_context):
             with patch('embeddings.generate_embeddings.generate_embedding') as mock_embed:
                 mock_embed.return_value = create_embedding(0.5)
 
@@ -282,15 +294,18 @@ class TestVectorSearchAPI:
                     assert isinstance(result["similarity_score"], (int, float))
                     assert -1.0 <= result["similarity_score"] <= 1.0
 
-            real_manager.close()
-
     def test_search_endpoint_fails_fast_on_error(self, client):
         """Test that search endpoint returns 500 on vector search errors."""
-        with patch('api.reference.ReferenceManager') as mock_manager:
-            # Simulate database error
-            mock_manager.return_value.__enter__.return_value.search_by_similarity.side_effect = \
-                RuntimeError("Vector search failed")
+        # Create a custom context manager that raises an error
+        from contextlib import contextmanager
 
+        @contextmanager
+        def test_reference_manager_context_error(config):
+            mock_manager = MagicMock()
+            mock_manager.search_by_similarity.side_effect = RuntimeError("Vector search failed")
+            yield mock_manager
+
+        with patch('reference_db.dependencies.reference_manager_context', side_effect=test_reference_manager_context_error):
             response = client.get(
                 "/api/reference/ref-db/search",
                 params={
@@ -310,14 +325,20 @@ class TestNodeRetrievalAPI:
         """Test retrieving a node by ID."""
         db_path, (node1_id, node2_id, node3_id), link_ids, create_embedding = test_database
 
-        with patch('api.reference.ReferenceManager') as mock_manager_class:
-            from reference_db.config import ReferenceConfig
-            from reference_db.manager import ReferenceManager
+        # Create a custom context manager that uses our test database
+        from contextlib import contextmanager
+        from reference_db.config import ReferenceConfig
+        from reference_db.manager import ReferenceManager
 
-            real_manager = ReferenceManager(ReferenceConfig(), db_path=db_path)
-            mock_manager_class.return_value.__enter__.return_value = real_manager
-            mock_manager_class.return_value.__exit__.return_value = False
+        @contextmanager
+        def test_reference_manager_context(config):
+            manager = ReferenceManager(config, db_path=db_path)
+            try:
+                yield manager
+            finally:
+                manager.close()
 
+        with patch('reference_db.dependencies.reference_manager_context', side_effect=test_reference_manager_context):
             response = client.get(f"/api/reference/ref-db/nodes/{node1_id}")
 
             assert response.status_code == 200
@@ -331,26 +352,28 @@ class TestNodeRetrievalAPI:
             assert "created_at" in data
             assert "updated_at" in data
 
-            real_manager.close()
-
     def test_get_node_not_found(self, client, test_database):
         """Test retrieving a non-existent node returns 404."""
         db_path, nodes, links, create_embedding = test_database
 
-        with patch('api.reference.ReferenceManager') as mock_manager_class:
-            from reference_db.config import ReferenceConfig
-            from reference_db.manager import ReferenceManager
+        # Create a custom context manager that uses our test database
+        from contextlib import contextmanager
+        from reference_db.config import ReferenceConfig
+        from reference_db.manager import ReferenceManager
 
-            real_manager = ReferenceManager(ReferenceConfig(), db_path=db_path)
-            mock_manager_class.return_value.__enter__.return_value = real_manager
-            mock_manager_class.return_value.__exit__.return_value = False
+        @contextmanager
+        def test_reference_manager_context(config):
+            manager = ReferenceManager(config, db_path=db_path)
+            try:
+                yield manager
+            finally:
+                manager.close()
 
+        with patch('reference_db.dependencies.reference_manager_context', side_effect=test_reference_manager_context):
             response = client.get("/api/reference/ref-db/nodes/nonexistent-id")
 
             assert response.status_code == 404
             assert "Node not found" in response.json()["detail"]
-
-            real_manager.close()
 
 
 class TestLinkRetrievalAPI:
@@ -360,14 +383,20 @@ class TestLinkRetrievalAPI:
         """Test retrieving outbound links for a node."""
         db_path, (node1_id, node2_id, node3_id), (link1_id, link2_id, link3_id), create_embedding = test_database
 
-        with patch('api.reference.ReferenceManager') as mock_manager_class:
-            from reference_db.config import ReferenceConfig
-            from reference_db.manager import ReferenceManager
+        # Create a custom context manager that uses our test database
+        from contextlib import contextmanager
+        from reference_db.config import ReferenceConfig
+        from reference_db.manager import ReferenceManager
 
-            real_manager = ReferenceManager(ReferenceConfig(), db_path=db_path)
-            mock_manager_class.return_value.__enter__.return_value = real_manager
-            mock_manager_class.return_value.__exit__.return_value = False
+        @contextmanager
+        def test_reference_manager_context(config):
+            manager = ReferenceManager(config, db_path=db_path)
+            try:
+                yield manager
+            finally:
+                manager.close()
 
+        with patch('reference_db.dependencies.reference_manager_context', side_effect=test_reference_manager_context):
             response = client.get(
                 f"/api/reference/ref-db/nodes/{node1_id}/links",
                 params={"direction": "outbound"}
@@ -384,20 +413,24 @@ class TestLinkRetrievalAPI:
             for link in data["links"]:
                 assert link["subject_node"] == node1_id
 
-            real_manager.close()
-
     def test_get_inbound_links(self, client, test_database):
         """Test retrieving inbound links for a node."""
         db_path, (node1_id, node2_id, node3_id), (link1_id, link2_id, link3_id), create_embedding = test_database
 
-        with patch('api.reference.ReferenceManager') as mock_manager_class:
-            from reference_db.config import ReferenceConfig
-            from reference_db.manager import ReferenceManager
+        # Create a custom context manager that uses our test database
+        from contextlib import contextmanager
+        from reference_db.config import ReferenceConfig
+        from reference_db.manager import ReferenceManager
 
-            real_manager = ReferenceManager(ReferenceConfig(), db_path=db_path)
-            mock_manager_class.return_value.__enter__.return_value = real_manager
-            mock_manager_class.return_value.__exit__.return_value = False
+        @contextmanager
+        def test_reference_manager_context(config):
+            manager = ReferenceManager(config, db_path=db_path)
+            try:
+                yield manager
+            finally:
+                manager.close()
 
+        with patch('reference_db.dependencies.reference_manager_context', side_effect=test_reference_manager_context):
             response = client.get(
                 f"/api/reference/ref-db/nodes/{node3_id}/links",
                 params={"direction": "inbound"}
@@ -412,20 +445,24 @@ class TestLinkRetrievalAPI:
             for link in data["links"]:
                 assert link["object_node"] == node3_id
 
-            real_manager.close()
-
     def test_get_both_direction_links(self, client, test_database):
         """Test retrieving links in both directions."""
         db_path, (node1_id, node2_id, node3_id), (link1_id, link2_id, link3_id), create_embedding = test_database
 
-        with patch('api.reference.ReferenceManager') as mock_manager_class:
-            from reference_db.config import ReferenceConfig
-            from reference_db.manager import ReferenceManager
+        # Create a custom context manager that uses our test database
+        from contextlib import contextmanager
+        from reference_db.config import ReferenceConfig
+        from reference_db.manager import ReferenceManager
 
-            real_manager = ReferenceManager(ReferenceConfig(), db_path=db_path)
-            mock_manager_class.return_value.__enter__.return_value = real_manager
-            mock_manager_class.return_value.__exit__.return_value = False
+        @contextmanager
+        def test_reference_manager_context(config):
+            manager = ReferenceManager(config, db_path=db_path)
+            try:
+                yield manager
+            finally:
+                manager.close()
 
+        with patch('reference_db.dependencies.reference_manager_context', side_effect=test_reference_manager_context):
             response = client.get(
                 f"/api/reference/ref-db/nodes/{node1_id}/links",
                 params={"direction": "both"}
@@ -436,20 +473,24 @@ class TestLinkRetrievalAPI:
 
             assert data["total_links"] == 2  # node1 has 2 total links (both outbound)
 
-            real_manager.close()
-
     def test_get_links_with_predicate_filter(self, client, test_database):
         """Test retrieving links filtered by predicate."""
         db_path, (node1_id, node2_id, node3_id), (link1_id, link2_id, link3_id), create_embedding = test_database
 
-        with patch('api.reference.ReferenceManager') as mock_manager_class:
-            from reference_db.config import ReferenceConfig
-            from reference_db.manager import ReferenceManager
+        # Create a custom context manager that uses our test database
+        from contextlib import contextmanager
+        from reference_db.config import ReferenceConfig
+        from reference_db.manager import ReferenceManager
 
-            real_manager = ReferenceManager(ReferenceConfig(), db_path=db_path)
-            mock_manager_class.return_value.__enter__.return_value = real_manager
-            mock_manager_class.return_value.__exit__.return_value = False
+        @contextmanager
+        def test_reference_manager_context(config):
+            manager = ReferenceManager(config, db_path=db_path)
+            try:
+                yield manager
+            finally:
+                manager.close()
 
+        with patch('reference_db.dependencies.reference_manager_context', side_effect=test_reference_manager_context):
             response = client.get(
                 f"/api/reference/ref-db/nodes/{node1_id}/links",
                 params={
@@ -467,20 +508,24 @@ class TestLinkRetrievalAPI:
             for link in data["links"]:
                 assert link["predicate"] == "subClassOf"
 
-            real_manager.close()
-
     def test_get_links_with_limit(self, client, test_database):
         """Test that link retrieval respects limit parameter."""
         db_path, (node1_id, node2_id, node3_id), (link1_id, link2_id, link3_id), create_embedding = test_database
 
-        with patch('api.reference.ReferenceManager') as mock_manager_class:
-            from reference_db.config import ReferenceConfig
-            from reference_db.manager import ReferenceManager
+        # Create a custom context manager that uses our test database
+        from contextlib import contextmanager
+        from reference_db.config import ReferenceConfig
+        from reference_db.manager import ReferenceManager
 
-            real_manager = ReferenceManager(ReferenceConfig(), db_path=db_path)
-            mock_manager_class.return_value.__enter__.return_value = real_manager
-            mock_manager_class.return_value.__exit__.return_value = False
+        @contextmanager
+        def test_reference_manager_context(config):
+            manager = ReferenceManager(config, db_path=db_path)
+            try:
+                yield manager
+            finally:
+                manager.close()
 
+        with patch('reference_db.dependencies.reference_manager_context', side_effect=test_reference_manager_context):
             response = client.get(
                 f"/api/reference/ref-db/nodes/{node1_id}/links",
                 params={
@@ -494,20 +539,24 @@ class TestLinkRetrievalAPI:
 
             assert len(data["links"]) == 1
 
-            real_manager.close()
-
     def test_get_links_node_not_found(self, client, test_database):
         """Test that getting links for non-existent node returns 404."""
         db_path, nodes, links, create_embedding = test_database
 
-        with patch('api.reference.ReferenceManager') as mock_manager_class:
-            from reference_db.config import ReferenceConfig
-            from reference_db.manager import ReferenceManager
+        # Create a custom context manager that uses our test database
+        from contextlib import contextmanager
+        from reference_db.config import ReferenceConfig
+        from reference_db.manager import ReferenceManager
 
-            real_manager = ReferenceManager(ReferenceConfig(), db_path=db_path)
-            mock_manager_class.return_value.__enter__.return_value = real_manager
-            mock_manager_class.return_value.__exit__.return_value = False
+        @contextmanager
+        def test_reference_manager_context(config):
+            manager = ReferenceManager(config, db_path=db_path)
+            try:
+                yield manager
+            finally:
+                manager.close()
 
+        with patch('reference_db.dependencies.reference_manager_context', side_effect=test_reference_manager_context):
             response = client.get(
                 "/api/reference/ref-db/nodes/nonexistent-id/links",
                 params={"direction": "both"}
@@ -516,20 +565,24 @@ class TestLinkRetrievalAPI:
             assert response.status_code == 404
             assert "Node not found" in response.json()["detail"]
 
-            real_manager.close()
-
     def test_get_links_invalid_direction(self, client, test_database):
         """Test that invalid direction parameter returns error."""
         db_path, (node1_id, node2_id, node3_id), link_ids, create_embedding = test_database
 
-        with patch('api.reference.ReferenceManager') as mock_manager_class:
-            from reference_db.config import ReferenceConfig
-            from reference_db.manager import ReferenceManager
+        # Create a custom context manager that uses our test database
+        from contextlib import contextmanager
+        from reference_db.config import ReferenceConfig
+        from reference_db.manager import ReferenceManager
 
-            real_manager = ReferenceManager(ReferenceConfig(), db_path=db_path)
-            mock_manager_class.return_value.__enter__.return_value = real_manager
-            mock_manager_class.return_value.__exit__.return_value = False
+        @contextmanager
+        def test_reference_manager_context(config):
+            manager = ReferenceManager(config, db_path=db_path)
+            try:
+                yield manager
+            finally:
+                manager.close()
 
+        with patch('reference_db.dependencies.reference_manager_context', side_effect=test_reference_manager_context):
             response = client.get(
                 f"/api/reference/ref-db/nodes/{node1_id}/links",
                 params={"direction": "invalid"}
@@ -538,20 +591,24 @@ class TestLinkRetrievalAPI:
             # Should return 400 or 500 depending on where validation happens
             assert response.status_code in [400, 500]
 
-            real_manager.close()
-
     def test_get_links_ordered_by_created_at(self, client, test_database):
         """Test that links are returned ordered by created_at DESC."""
         db_path, (node1_id, node2_id, node3_id), (link1_id, link2_id, link3_id), create_embedding = test_database
 
-        with patch('api.reference.ReferenceManager') as mock_manager_class:
-            from reference_db.config import ReferenceConfig
-            from reference_db.manager import ReferenceManager
+        # Create a custom context manager that uses our test database
+        from contextlib import contextmanager
+        from reference_db.config import ReferenceConfig
+        from reference_db.manager import ReferenceManager
 
-            real_manager = ReferenceManager(ReferenceConfig(), db_path=db_path)
-            mock_manager_class.return_value.__enter__.return_value = real_manager
-            mock_manager_class.return_value.__exit__.return_value = False
+        @contextmanager
+        def test_reference_manager_context(config):
+            manager = ReferenceManager(config, db_path=db_path)
+            try:
+                yield manager
+            finally:
+                manager.close()
 
+        with patch('reference_db.dependencies.reference_manager_context', side_effect=test_reference_manager_context):
             response = client.get(
                 f"/api/reference/ref-db/nodes/{node1_id}/links",
                 params={"direction": "outbound"}
@@ -569,5 +626,3 @@ class TestLinkRetrievalAPI:
                 created_ats = [link["created_at"] for link in data["links"]]
                 assert created_ats == sorted(created_ats, reverse=True), \
                     "Links should be ordered by created_at DESC"
-
-            real_manager.close()

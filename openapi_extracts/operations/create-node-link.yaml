@@ -1,0 +1,45 @@
+openapi:
+  openapi: 3.0.3
+  info:
+    title: Create Node Link
+    version: 1.0.0
+  paths:
+    /api/structure_nodes/links:
+      post:
+        operationId: create_node_link_api_structure_nodes_links_post
+        summary: Create Node Link
+        description: 'Create a new structure_node link.
+
+
+          Links can only be created between structure_nodes of the same type (layers
+          to layers,
+
+          domains to domains, terms to terms) as per the Great Normalization requirements.'
+        parameters:
+        - name: SessionLocal
+          in: query
+          required: false
+          schema:
+            title: Sessionlocal
+        requestBody:
+          required: true
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NodeLinkCreate'
+        responses:
+          '201':
+            description: Successful Response
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/NodeLinkOut'
+          '422':
+            description: Validation Error
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/HTTPValidationError'
+        tags:
+        - structure_nodes
+        - structure_nodes

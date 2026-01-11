@@ -1,0 +1,48 @@
+openapi:
+  openapi: 3.0.3
+  info:
+    title: Get Node
+    version: 1.0.0
+  paths:
+    /api/structure_nodes/{node_id}:
+      get:
+        operationId: get_node_api_structure_nodes__node_id__get
+        summary: Get Node
+        description: 'Get a specific structure_node by ID.
+
+
+          Returns the complete structure_node information including embeddings,
+
+          hierarchy information, and metadata.'
+        parameters:
+        - name: node_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+            description: The ID of the structure_node to retrieve
+            title: Node Id
+          description: The ID of the structure_node to retrieve
+        - name: SessionLocal
+          in: query
+          required: false
+          schema:
+            title: Sessionlocal
+        requestBody: null
+        responses:
+          '200':
+            description: Successful Response
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/NodeOut'
+          '422':
+            description: Validation Error
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/HTTPValidationError'
+        tags:
+        - structure_nodes
+        - structure_nodes

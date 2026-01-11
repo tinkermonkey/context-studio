@@ -1,0 +1,89 @@
+$schema: http://json-schema.org/draft-07/schema#
+type: object
+title: external-predicate schemas
+description: Combined schemas for external-predicate data model
+definitions:
+  ExternalPredicateOut:
+    properties:
+      id:
+        type: string
+        title: Id
+      title:
+        type: string
+        title: Title
+      definition:
+        type: string
+        title: Definition
+      source:
+        type: string
+        title: Source
+      external_id:
+        type: string
+        title: External Id
+      attributes:
+        anyOf:
+        - additionalProperties: true
+          type: object
+        - type: 'null'
+        title: Attributes
+      created_at:
+        type: string
+        title: Created At
+      updated_at:
+        type: string
+        title: Updated At
+    type: object
+    required:
+    - id
+    - title
+    - definition
+    - source
+    - external_id
+    - created_at
+    - updated_at
+    title: ExternalPredicateOut
+    description: Response model for external predicates.
+  ExternalPredicateSearchResult:
+    properties:
+      id:
+        type: string
+        title: Id
+      title:
+        type: string
+        title: Title
+      definition:
+        type: string
+        title: Definition
+      source:
+        type: string
+        title: Source
+      external_id:
+        type: string
+        title: External Id
+      attributes:
+        anyOf:
+        - additionalProperties: true
+          type: object
+        - type: 'null'
+        title: Attributes
+      created_at:
+        type: string
+        title: Created At
+      updated_at:
+        type: string
+        title: Updated At
+      similarity_score:
+        type: number
+        title: Similarity Score
+    type: object
+    required:
+    - id
+    - title
+    - definition
+    - source
+    - external_id
+    - created_at
+    - updated_at
+    - similarity_score
+    title: ExternalPredicateSearchResult
+    description: Search result for external predicates with similarity score.

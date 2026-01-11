@@ -65,10 +65,62 @@ async function globalSetup(config: FullConfig) {
   fs.mkdirSync(testDbDir, { recursive: true });
   console.log('✅ Test databases cleaned\n');
 
-  // 2. Start Python backend
-  console.log('🐍 Starting Python backend (port 8888)...');
+  // 2. Run database migrations and initialize operations database
+  console.log('🔄 Running database migrations...');
   const backendPath = path.resolve(__dirname, '../../local-server');
   const venvPythonPath = path.join(backendPath, '.venv/bin/python');
+  const migrationScript = `
+import sys
+import os
+sys.path.insert(0, '.')
+os.environ['CONFIG_PATH'] = './config.e2e.json'
+
+# Migrate main database
+from database.migrations.migration_manager import MigrationManager
+db_path = './datafiles/e2e-test/local.db'
+os.makedirs(os.path.dirname(db_path), exist_ok=True)
+MigrationManager(db_path).migrate_to_latest()
+print('✓ Created local.db with migrations')
+
+# Initialize operations database
+from pipeline.manager import get_operations_database_manager
+from operations.models import OperationsBase
+manager = get_operations_database_manager()
+OperationsBase.metadata.create_all(bind=manager.get_engine())
+print('✓ Created operations.db with schema')
+
+# CRITICAL: Dispose engine to release file handles and prevent readonly errors
+manager.get_engine().dispose()
+print('✓ Disposed database connections')
+
+# Clear the global singleton to force fresh connection when backend starts
+import pipeline.manager as pm
+pm._operations_db_manager = None
+print('✓ Cleared manager singleton')
+
+# Create a pristine template for test isolation
+import shutil
+template_path = './datafiles/e2e-test/operations.template.db'
+shutil.copy('./datafiles/e2e-test/operations.db', template_path)
+print(f'✓ Created template database: {template_path}')
+
+print('Migrations completed')
+`;
+
+  try {
+    const { execSync } = await import('child_process');
+    execSync(`${venvPythonPath} -c "${migrationScript.replace(/"/g, '\\"')}"`, {
+      cwd: backendPath,
+      stdio: 'inherit'
+    });
+    console.log('✅ Database migrations completed\n');
+  } catch (error) {
+    console.error('❌ Failed to run migrations:', error);
+    throw error;
+  }
+
+  // 3. Start Python backend
+  console.log('🐍 Starting Python backend (port 8888)...');
 
   // Check if virtual environment exists
   if (!fs.existsSync(venvPythonPath)) {
@@ -132,7 +184,7 @@ async function globalSetup(config: FullConfig) {
     }
   });
 
-  // 3. Wait for backend to be ready (60s timeout for initial NLP model loading)
+  // 4. Wait for backend to be ready (60s timeout for initial NLP model loading)
   try {
     await waitForUrl('http://localhost:8888/health', 60000);
     console.log('✅ Backend ready\n');
@@ -144,7 +196,7 @@ async function globalSetup(config: FullConfig) {
     throw error;
   }
 
-  // 4. Start frontend dev server
+  // 5. Start frontend dev server
   console.log('⚛️  Starting frontend (port 3888)...');
   const frontendPath = path.resolve(__dirname, '..');
 
@@ -188,7 +240,7 @@ async function globalSetup(config: FullConfig) {
     }
   });
 
-  // 5. Wait for frontend to be ready
+  // 6. Wait for frontend to be ready
   try {
     await waitForUrl('http://localhost:3888', 60000);
     console.log('✅ Frontend ready\n');
@@ -203,7 +255,7 @@ async function globalSetup(config: FullConfig) {
     throw error;
   }
 
-  // 6. Store process PIDs for teardown
+  // 7. Store process PIDs for teardown
   if (backendProcess.pid) {
     process.env.E2E_BACKEND_PID = backendProcess.pid.toString();
   }

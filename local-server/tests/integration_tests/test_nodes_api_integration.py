@@ -768,3 +768,437 @@ class TestNodesAPIErrorHandling:
 
         assert response.status_code == 404
         assert "not found" in response.json()["detail"].lower()
+
+
+class TestMoveWithTypeConversionAPI:
+    """Integration tests for move operations with automatic type conversion."""
+
+    def test_move_domain_to_term_conversion(self, client):
+        """Test moving a domain under another domain converts it to a term."""
+        # Create: Layer1 -> Domain1, Layer2 -> Domain2
+        layer1 = client.post("/api/structure_nodes/", json={
+            "node_type": "layer",
+            "title": f"Layer1 {uuid4()}",
+        }).json()
+
+        layer2 = client.post("/api/structure_nodes/", json={
+            "node_type": "layer",
+            "title": f"Layer2 {uuid4()}",
+        }).json()
+
+        domain1 = client.post("/api/structure_nodes/", json={
+            "node_type": "domain",
+            "title": f"Domain1 {uuid4()}",
+            "parent_node_id": layer1["id"],
+        }).json()
+
+        domain2 = client.post("/api/structure_nodes/", json={
+            "node_type": "domain",
+            "title": f"Domain2 {uuid4()}",
+            "parent_node_id": layer2["id"],
+        }).json()
+
+        # Verify initial types
+        assert domain1["node_type"] == "domain"
+        assert domain2["node_type"] == "domain"
+
+        # Move domain1 under domain2 (should convert domain1 to term)
+        move_response = client.post("/api/structure_nodes/move", json={
+            "node_ids": [domain1["id"]],
+            "target_parent_id": domain2["id"],
+            "move_children": True,
+            "handle_conflicts": "warn",
+        })
+
+        assert move_response.status_code == 200
+        move_result = move_response.json()
+
+        # Verify conversion happened
+        assert len(move_result["moved_nodes"]) == 1
+        assert len(move_result["converted_nodes"]) == 1
+        assert move_result["converted_nodes"][0]["id"] == domain1["id"]
+        assert move_result["converted_nodes"][0]["node_type"] == "term"
+
+        # Verify in database
+        node_response = client.get(f"/api/structure_nodes/{domain1['id']}")
+        assert node_response.status_code == 200
+        updated_node = node_response.json()
+        assert updated_node["node_type"] == "term"
+        assert updated_node["parent_node_id"] == domain2["id"]
+
+    def test_move_term_to_domain_conversion(self, client):
+        """Test moving a term under a layer converts it to a domain."""
+        # Create: Layer -> Domain -> Term
+        layer = client.post("/api/structure_nodes/", json={
+            "node_type": "layer",
+            "title": f"Layer {uuid4()}",
+        }).json()
+
+        domain = client.post("/api/structure_nodes/", json={
+            "node_type": "domain",
+            "title": f"Domain {uuid4()}",
+            "parent_node_id": layer["id"],
+        }).json()
+
+        term = client.post("/api/structure_nodes/", json={
+            "node_type": "term",
+            "title": f"Term {uuid4()}",
+            "parent_node_id": domain["id"],
+        }).json()
+
+        # Verify initial type
+        assert term["node_type"] == "term"
+
+        # Move term under layer (should convert to domain)
+        move_response = client.post("/api/structure_nodes/move", json={
+            "node_ids": [term["id"]],
+            "target_parent_id": layer["id"],
+            "move_children": True,
+            "handle_conflicts": "warn",
+        })
+
+        assert move_response.status_code == 200
+        move_result = move_response.json()
+
+        # Verify conversion happened
+        assert len(move_result["moved_nodes"]) == 1
+        assert len(move_result["converted_nodes"]) == 1
+        assert move_result["converted_nodes"][0]["node_type"] == "domain"
+
+        # Verify in database
+        node_response = client.get(f"/api/structure_nodes/{term['id']}")
+        assert node_response.status_code == 200
+        updated_node = node_response.json()
+        assert updated_node["node_type"] == "domain"
+        assert updated_node["parent_node_id"] == layer["id"]
+
+    def test_move_with_recursive_child_conversion(self, client):
+        """Test moving a node converts all children recursively."""
+        # Create: Layer1 -> Domain -> Term1 -> Term2, Layer2
+        layer1 = client.post("/api/structure_nodes/", json={
+            "node_type": "layer",
+            "title": f"Layer1 {uuid4()}",
+        }).json()
+
+        layer2 = client.post("/api/structure_nodes/", json={
+            "node_type": "layer",
+            "title": f"Layer2 {uuid4()}",
+        }).json()
+
+        domain = client.post("/api/structure_nodes/", json={
+            "node_type": "domain",
+            "title": f"Domain {uuid4()}",
+            "parent_node_id": layer1["id"],
+        }).json()
+
+        term1 = client.post("/api/structure_nodes/", json={
+            "node_type": "term",
+            "title": f"Term1 {uuid4()}",
+            "parent_node_id": domain["id"],
+        }).json()
+
+        term2 = client.post("/api/structure_nodes/", json={
+            "node_type": "term",
+            "title": f"Term2 {uuid4()}",
+            "parent_node_id": term1["id"],
+        }).json()
+
+        # Move domain under layer2 (domain stays domain, but children should convert)
+        move_response = client.post("/api/structure_nodes/move", json={
+            "node_ids": [domain["id"]],
+            "target_parent_id": layer2["id"],
+            "move_children": True,
+            "handle_conflicts": "warn",
+        })
+
+        assert move_response.status_code == 200
+        move_result = move_response.json()
+
+        # Domain doesn't change type (domain under layer is correct)
+        # Children were already terms and remain terms
+        assert len(move_result["moved_nodes"]) == 1
+        assert len(move_result["converted_nodes"]) == 0  # No type changes needed
+
+        # Now move domain under another domain (should convert to term + children)
+        domain2 = client.post("/api/structure_nodes/", json={
+            "node_type": "domain",
+            "title": f"Domain2 {uuid4()}",
+            "parent_node_id": layer2["id"],
+        }).json()
+
+        move_response2 = client.post("/api/structure_nodes/move", json={
+            "node_ids": [domain["id"]],
+            "target_parent_id": domain2["id"],
+            "move_children": True,
+            "handle_conflicts": "warn",
+        })
+
+        assert move_response2.status_code == 200
+        move_result2 = move_response2.json()
+
+        # Domain converts to term (children stay terms)
+        assert len(move_result2["moved_nodes"]) == 1
+        assert len(move_result2["converted_nodes"]) == 1
+        assert move_result2["converted_nodes"][0]["node_type"] == "term"
+
+    def test_move_with_title_conflict_warn_mode(self, client):
+        """Test move with title conflict in warn mode."""
+        # Create two layers with same title structure
+        layer1 = client.post("/api/structure_nodes/", json={
+            "node_type": "layer",
+            "title": f"Layer1 {uuid4()}",
+        }).json()
+
+        layer2 = client.post("/api/structure_nodes/", json={
+            "node_type": "layer",
+            "title": f"Layer2 {uuid4()}",
+        }).json()
+
+        conflicting_title = f"ConflictDomain {uuid4()}"
+
+        # Create domain under layer1
+        domain1 = client.post("/api/structure_nodes/", json={
+            "node_type": "domain",
+            "title": conflicting_title,
+            "parent_node_id": layer1["id"],
+        }).json()
+
+        # Create domain under layer2 with SAME title
+        domain2 = client.post("/api/structure_nodes/", json={
+            "node_type": "domain",
+            "title": conflicting_title,
+            "parent_node_id": layer2["id"],
+        }).json()
+
+        # Try to move domain1 under layer2 (conflict with domain2)
+        move_response = client.post("/api/structure_nodes/move", json={
+            "node_ids": [domain1["id"]],
+            "target_parent_id": layer2["id"],
+            "move_children": True,
+            "handle_conflicts": "warn",
+        })
+
+        assert move_response.status_code == 200
+        move_result = move_response.json()
+
+        # Should have warnings about conflict
+        assert len(move_result["warnings"]) > 0
+        assert any("exists" in w.lower() for w in move_result["warnings"])
+
+    def test_move_with_title_conflict_rename_mode(self, client):
+        """Test move with title conflict in rename mode."""
+        # Create hierarchy with conflict
+        layer = client.post("/api/structure_nodes/", json={
+            "node_type": "layer",
+            "title": f"Layer {uuid4()}",
+        }).json()
+
+        conflicting_title = f"ConflictDomain {uuid4()}"
+
+        domain1 = client.post("/api/structure_nodes/", json={
+            "node_type": "domain",
+            "title": conflicting_title,
+            "parent_node_id": layer["id"],
+        }).json()
+
+        # Create another layer and domain
+        layer2 = client.post("/api/structure_nodes/", json={
+            "node_type": "layer",
+            "title": f"Layer2 {uuid4()}",
+        }).json()
+
+        domain2 = client.post("/api/structure_nodes/", json={
+            "node_type": "domain",
+            "title": f"OtherDomain {uuid4()}",
+            "parent_node_id": layer2["id"],
+        }).json()
+
+        # Move domain1 to layer2 (no conflict initially)
+        # Then create a conflict and try rename mode
+        domain3 = client.post("/api/structure_nodes/", json={
+            "node_type": "domain",
+            "title": conflicting_title,
+            "parent_node_id": layer2["id"],
+        }).json()
+
+        # Move domain1 under layer2 with rename mode (should rename domain1)
+        move_response = client.post("/api/structure_nodes/move", json={
+            "node_ids": [domain1["id"]],
+            "target_parent_id": layer2["id"],
+            "move_children": True,
+            "handle_conflicts": "rename",
+        })
+
+        assert move_response.status_code == 200
+        move_result = move_response.json()
+
+        # Should have warnings about rename
+        assert len(move_result["warnings"]) > 0
+        assert any("renamed" in w.lower() for w in move_result["warnings"])
+
+        # Verify node was renamed
+        node_response = client.get(f"/api/structure_nodes/{domain1['id']}")
+        updated_node = node_response.json()
+        assert updated_node["title"] != conflicting_title
+        assert conflicting_title in updated_node["title"]  # Original title in renamed version
+
+    def test_move_term_under_term_allowed(self, client):
+        """Test that terms can be moved under other terms."""
+        # Create: Layer -> Domain -> Term1, Term2
+        layer = client.post("/api/structure_nodes/", json={
+            "node_type": "layer",
+            "title": f"Layer {uuid4()}",
+        }).json()
+
+        domain = client.post("/api/structure_nodes/", json={
+            "node_type": "domain",
+            "title": f"Domain {uuid4()}",
+            "parent_node_id": layer["id"],
+        }).json()
+
+        term1 = client.post("/api/structure_nodes/", json={
+            "node_type": "term",
+            "title": f"Term1 {uuid4()}",
+            "parent_node_id": domain["id"],
+        }).json()
+
+        term2 = client.post("/api/structure_nodes/", json={
+            "node_type": "term",
+            "title": f"Term2 {uuid4()}",
+            "parent_node_id": domain["id"],
+        }).json()
+
+        # Move term2 under term1 (should be allowed)
+        move_response = client.post("/api/structure_nodes/move", json={
+            "node_ids": [term2["id"]],
+            "target_parent_id": term1["id"],
+            "move_children": True,
+            "handle_conflicts": "warn",
+        })
+
+        assert move_response.status_code == 200
+        move_result = move_response.json()
+
+        # No conversion needed (term under term is valid)
+        assert len(move_result["moved_nodes"]) == 1
+        assert len(move_result["converted_nodes"]) == 0
+
+        # Verify in database
+        node_response = client.get(f"/api/structure_nodes/{term2['id']}")
+        updated_node = node_response.json()
+        assert updated_node["node_type"] == "term"
+        assert updated_node["parent_node_id"] == term1["id"]
+
+
+    def test_list_node_links_pagination_metadata(self, client):
+        """Test pagination metadata in node links endpoint."""
+        import time
+        from uuid import uuid4
+
+        # Helper to create a test node
+        def create_test_node(title, node_type, parent_id=None):
+            node_data = {
+                "title": f"{title} {int(time.time() * 1000)}",
+                "node_type": node_type,
+                "definition": f"Test {node_type} for pagination test"
+            }
+            if parent_id:
+                node_data["parent_node_id"] = parent_id
+
+            response = client.post("/api/structure_nodes", json=node_data)
+            assert response.status_code == 201
+            return response.json()
+
+        # Create test nodes - need terms to link between (links must be same type)
+        layer = create_test_node("Layer", node_type="layer")
+        domain = create_test_node("Domain", node_type="domain", parent_id=layer["id"])
+
+        # Create a source term that will have 15 outgoing links
+        source_term = create_test_node("SourceTerm", node_type="term", parent_id=domain["id"])
+
+        # Create a predicate for linking with unique identifier
+        unique_id = uuid4().hex[:8]
+        predicate_data = {
+            "title": f"TestRelationship{unique_id}",
+            "identifier": f"test_rel_{unique_id}",
+            "definition": "Test predicate for pagination"
+        }
+        predicate_resp = client.post("/api/predicates/", json=predicate_data)
+        assert predicate_resp.status_code == 201, f"Failed to create predicate: {predicate_resp.json()}"
+        predicate = predicate_resp.json()
+
+        # Create 15 test links from source_term to various target terms
+        link_ids = []
+        for i in range(15):
+            # Create target term
+            target_term = create_test_node(
+                f"TargetTerm{i}",
+                node_type="term",
+                parent_id=domain["id"]
+            )
+
+            # Create link (term to term)
+            link_data = {
+                "source_node_id": source_term["id"],
+                "target_node_id": target_term["id"],
+                "predicate": predicate["identifier"]
+            }
+            link_resp = client.post("/api/structure_nodes/links", json=link_data)
+            assert link_resp.status_code == 201, f"Failed to create link {i}: {link_resp.json() if link_resp.status_code != 201 else ''}"
+            link_ids.append(link_resp.json()["id"])
+
+        # Test pagination with skip=5, limit=5
+        response = client.get(
+            f"/api/structure_nodes/links",
+            params={
+                "source_node_id": source_term["id"],
+                "skip": 5,
+                "limit": 5
+            }
+        )
+
+        assert response.status_code == 200
+        data = response.json()
+
+        # Verify pagination metadata
+        assert "total" in data, "Response should include 'total' count"
+        assert "skip" in data, "Response should include 'skip' offset"
+        assert "limit" in data, "Response should include 'limit' page size"
+        assert "data" in data, "Response should include 'data' array"
+
+        assert data["total"] == 15, f"Total should be 15, got {data['total']}"
+        assert data["skip"] == 5, f"Skip should be 5, got {data['skip']}"
+        assert data["limit"] == 5, f"Limit should be 5, got {data['limit']}"
+        assert len(data["data"]) == 5, f"Should return 5 links, got {len(data['data'])}"
+
+        # Test last page (skip=10, limit=5 should return 5 links)
+        response = client.get(
+            f"/api/structure_nodes/links",
+            params={
+                "source_node_id": source_term["id"],
+                "skip": 10,
+                "limit": 5
+            }
+        )
+
+        assert response.status_code == 200
+        data = response.json()
+        assert data["total"] == 15
+        assert data["skip"] == 10
+        assert len(data["data"]) == 5
+
+        # Test beyond last page (skip=15, limit=5 should return 0 links)
+        response = client.get(
+            f"/api/structure_nodes/links",
+            params={
+                "source_node_id": source_term["id"],
+                "skip": 15,
+                "limit": 5
+            }
+        )
+
+        assert response.status_code == 200
+        data = response.json()
+        assert data["total"] == 15
+        assert data["skip"] == 15
+        assert len(data["data"]) == 0

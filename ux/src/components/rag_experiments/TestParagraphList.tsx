@@ -79,10 +79,10 @@ export const TestParagraphList: React.FC<TestParagraphListProps> = ({
 
   if (paragraphs.length === 0) {
     return (
-      <div className="rounded-lg border border-gray-200 bg-gray-50 p-8 text-center">
+      <div className="rounded-lg border border-gray-200 bg-gray-50 p-8 text-center" data-testid="test-paragraph-list">
         <p className="mb-4 text-gray-600">No test paragraphs yet.</p>
         {onCreateNew && (
-          <Button size="sm" onClick={onCreateNew}>
+          <Button size="sm" onClick={onCreateNew} data-testid="test-paragraph-create-button">
             <Plus className="mr-2 h-4 w-4" />
             Create First Paragraph
           </Button>
@@ -92,7 +92,7 @@ export const TestParagraphList: React.FC<TestParagraphListProps> = ({
   }
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4" data-testid="test-paragraph-list">
       <div className="flex items-center justify-between">
         <div>
           <p className="text-sm text-gray-600">
@@ -100,7 +100,7 @@ export const TestParagraphList: React.FC<TestParagraphListProps> = ({
           </p>
         </div>
         {onCreateNew && (
-          <Button size="sm" onClick={onCreateNew}>
+          <Button size="sm" onClick={onCreateNew} data-testid="test-paragraph-create-button">
             <Plus className="mr-2 h-4 w-4" />
             Create New
           </Button>
@@ -108,7 +108,7 @@ export const TestParagraphList: React.FC<TestParagraphListProps> = ({
       </div>
 
       <div className="overflow-x-auto">
-        <Table>
+        <Table data-testid="test-paragraph-table">
           <TableHead>
             <TableRow>
               <TableHeadCell>Text Preview</TableHeadCell>
@@ -154,6 +154,7 @@ export const TestParagraphList: React.FC<TestParagraphListProps> = ({
                       size="xs"
                       color="gray"
                       onClick={() => onEdit?.(paragraph)}
+                      data-testid={`test-paragraph-edit-button-${paragraph.id}`}
                     >
                       <Edit className="h-3 w-3" />
                     </Button>
@@ -162,6 +163,7 @@ export const TestParagraphList: React.FC<TestParagraphListProps> = ({
                       color="failure"
                       onClick={() => handleDelete(paragraph.id)}
                       disabled={deletingId === paragraph.id}
+                      data-testid={`test-paragraph-delete-button-${paragraph.id}`}
                     >
                       {deletingId === paragraph.id ? (
                         <Spinner size="xs" />

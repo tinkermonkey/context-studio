@@ -29,6 +29,7 @@ export interface PortalRecordSelectorProps<T = any> {
   onSelect?: (record?: T) => void; // single select
   onSelectionChange?: (ids: string[]) => void; // multi select
   maxSelections?: number;
+  'data-testid'?: string;
 }
 
 export function PortalRecordSelector<T = any>(
@@ -46,6 +47,7 @@ export function PortalRecordSelector<T = any>(
     onSelect,
     onSelectionChange,
     maxSelections,
+    'data-testid': dataTestId,
   } = props;
 
   const [searchTerm, setSearchTerm] = useState("");
@@ -191,7 +193,7 @@ export function PortalRecordSelector<T = any>(
   };
 
   return (
-    <div className="relative">
+    <div className="relative" data-testid={dataTestId}>
       <div className="flex w-full items-center gap-0">
         <Button
           color="light"

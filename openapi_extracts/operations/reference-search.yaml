@@ -1,0 +1,72 @@
+openapi:
+  openapi: 3.0.3
+  info:
+    title: Multi Source Search Get
+    version: 1.0.0
+  paths:
+    /api/reference/search:
+      get:
+        operationId: multi_source_search_get_api_reference_search_get
+        summary: Multi Source Search Get
+        description: 'Search across multiple reference sources via GET request
+
+
+          Alternative GET endpoint for multi-source search with query parameters.'
+        parameters:
+        - name: query
+          in: query
+          required: true
+          schema:
+            type: string
+            minLength: 1
+            description: Search query
+            title: Query
+          description: Search query
+        - name: sources
+          in: query
+          required: false
+          schema:
+            anyOf:
+            - type: string
+            - type: 'null'
+            description: Comma-separated list of source types
+            title: Sources
+          description: Comma-separated list of source types
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+            maximum: 100
+            minimum: 1
+            description: Maximum results per source
+            default: 20
+            title: Limit
+          description: Maximum results per source
+        - name: offset
+          in: query
+          required: false
+          schema:
+            type: integer
+            minimum: 0
+            description: Result offset
+            default: 0
+            title: Offset
+          description: Result offset
+        requestBody: null
+        responses:
+          '200':
+            description: Successful Response
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/MultiSourceSearchResponse'
+          '422':
+            description: Validation Error
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/HTTPValidationError'
+        tags:
+        - nlp-reference
+        - reference

@@ -1,0 +1,7 @@
+Knowledge Curation Assessment:
+  name: Knowledge Curation Assessment
+  description: Assessment of Context Studio's ability to meet knowledge graph curation
+    and RAG requirements driven by semantic understanding needs and AI integration
+    demands
+  assessmentType: strength
+  id: knowledge-curation-assessment

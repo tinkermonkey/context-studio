@@ -1,14 +1,16 @@
 /**
  * Term Move Form
  *
- * Form for moving terms between domains
+ * Form for moving terms to different hierarchy levels with automatic type conversion
  */
 
 import React, { useState } from "react";
-import { Button, Label, Checkbox } from "flowbite-react";
+import { Button, Label, Checkbox, Alert } from "flowbite-react";
+import { Info } from "lucide-react";
 import { StructureNode } from "@/api/types/structureNodes";
-import { DomainSelector } from "@/components/node_selectors/domain_selector";
-import { useUpdateStructureNode } from "@/api/hooks/structure_nodes/useStructureNodeMutations";
+import { StructureNodeSelector } from "@/components/node_selectors/structure_node_selector";
+import { useMoveStructureNodes } from "@/api/hooks/structure_nodes/useStructureNodeMutations";
+import { useButterToast } from "@/hooks/useButterToast";
 
 interface TermMoveFormProps {
   selectedNodes: StructureNode[];
@@ -21,44 +23,71 @@ export function TermMoveForm({
   onSuccess,
   onCancel,
 }: TermMoveFormProps) {
-  const [targetDomainId, setTargetDomainId] = useState<string>("");
+  const [targetParentId, setTargetParentId] = useState<string>("");
   const [moveChildren, setMoveChildren] = useState(true);
-  const updateTerm = useUpdateStructureNode();
+  const moveNodes = useMoveStructureNodes();
+  const toast = useButterToast();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!targetDomainId) {
+    if (!targetParentId) {
       return;
     }
 
     try {
-      // Move each term individually using the structure node update API
-      await Promise.all(
-        selectedNodes.map((term) =>
-          updateTerm.mutateAsync({
-            id: term.id,
-            data: {
-              parent_node_id: targetDomainId,
-            },
-          }),
-        ),
-      );
+      const result = await moveNodes.mutateAsync({
+        node_ids: selectedNodes.map((node) => node.id),
+        target_parent_id: targetParentId,
+        move_children: moveChildren,
+        handle_conflicts: "warn",
+      });
+
+      // Show success message with conversion info
+      let message = `Moved ${result.moved_nodes.length} node(s) successfully`;
+      if (result.converted_nodes.length > 0) {
+        message += ` (${result.converted_nodes.length} node(s) had type automatically converted)`;
+      }
+      toast.success(message);
+
+      // Show warnings if any
+      if (result.warnings.length > 0) {
+        result.warnings.forEach((warning) => toast.warning(warning));
+      }
 
       onSuccess();
     } catch (error) {
       console.error("Failed to move terms:", error);
+      toast.error("Failed to move nodes. Please try again.");
     }
   };
 
+  const excludeNodeIds = selectedNodes.map((node) => node.id);
+
   return (
     <form onSubmit={handleSubmit} className="z-10 space-y-4">
+      {/* Informational Alert about Type Conversion */}
+      <Alert color="info" icon={Info}>
+        <span className="font-medium">Automatic Type Conversion</span>
+        <p className="mt-1 text-sm">
+          Moving to a different hierarchy level will automatically convert node
+          types:
+        </p>
+        <ul className="mt-2 ml-4 list-disc text-sm">
+          <li>Moving to root (no parent) → becomes a layer</li>
+          <li>Moving under a layer → becomes a domain</li>
+          <li>Moving under a domain or term → becomes a term</li>
+          <li>All child nodes will be converted recursively</li>
+        </ul>
+      </Alert>
+
       <div>
-        <Label htmlFor="target-domain">Target Domain</Label>
-        <DomainSelector
-          value={targetDomainId}
-          onSelect={(domain) => setTargetDomainId(domain?.id || "")}
-          className="z-10"
+        <Label htmlFor="target-parent">Target Parent Node</Label>
+        <StructureNodeSelector
+          value={targetParentId}
+          onSelect={(node) => setTargetParentId(node?.id || "")}
+          excludeNodeIds={excludeNodeIds}
+          placeholder="Select target parent (or leave empty for root)"
         />
       </div>
 
@@ -69,14 +98,13 @@ export function TermMoveForm({
           onChange={(e) => setMoveChildren(e.target.checked)}
         />
         <Label htmlFor="move-children" className="text-sm">
-          Also move all child terms recursively
+          Also move all child nodes recursively
         </Label>
       </div>
 
       <div className="text-sm text-gray-600">
-        Moving {selectedNodes.length} term{selectedNodes.length > 1 ? "s" : ""}{" "}
-        to a new domain.
-        {moveChildren && " All child terms will also be moved recursively."}
+        Moving {selectedNodes.length} node{selectedNodes.length > 1 ? "s" : ""}.
+        {moveChildren && " All child nodes will also be moved recursively."}
       </div>
 
       <div className="flex justify-end gap-2 pt-4">
@@ -86,9 +114,9 @@ export function TermMoveForm({
         <Button
           type="submit"
           color="blue"
-          disabled={!targetDomainId || moveTerms.isPending}
+          disabled={!targetParentId || moveNodes.isPending}
         >
-          {moveTerms.isPending ? "Moving..." : "Move Terms"}
+          {moveNodes.isPending ? "Moving..." : "Move Nodes"}
         </Button>
       </div>
     </form>

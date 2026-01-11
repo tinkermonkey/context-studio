@@ -1,0 +1,173 @@
+$schema: http://json-schema.org/draft-07/schema#
+type: object
+title: pipeline-flavor schemas
+description: Combined schemas for pipeline-flavor data model
+definitions:
+  PipelineFlavor:
+    properties:
+      id:
+        type: string
+        title: Id
+        description: Unique identifier
+      pipeline:
+        $ref: '#/components/schemas/PipelineType'
+        description: Pipeline type
+      title:
+        type: string
+        maxLength: 200
+        minLength: 1
+        title: Title
+        description: Flavor title
+      llm_provider:
+        type: string
+        title: Llm Provider
+        description: LLM provider identifier
+      llm_model:
+        type: string
+        title: Llm Model
+        description: LLM model name
+      llm_config:
+        $ref: '#/components/schemas/LLMConfig'
+        description: LLM configuration
+      system_prompt:
+        type: string
+        minLength: 1
+        title: System Prompt
+        description: System prompt template
+      user_prompt:
+        type: string
+        minLength: 1
+        title: User Prompt
+        description: User prompt template
+      version:
+        type: integer
+        minimum: 1.0
+        title: Version
+        description: Version number
+      enabled:
+        type: boolean
+        title: Enabled
+        description: Whether flavor is enabled
+        default: true
+      created_at:
+        type: string
+        format: date-time
+        title: Created At
+        description: Creation timestamp
+      updated_at:
+        type: string
+        format: date-time
+        title: Updated At
+        description: Last update timestamp
+    type: object
+    required:
+    - id
+    - pipeline
+    - title
+    - llm_provider
+    - llm_model
+    - llm_config
+    - system_prompt
+    - user_prompt
+    - version
+    - created_at
+    - updated_at
+    title: PipelineFlavor
+    description: Database model for pipeline flavors
+  CreatePipelineFlavorRequest:
+    properties:
+      pipeline:
+        $ref: '#/components/schemas/PipelineType'
+        description: Pipeline type
+      title:
+        type: string
+        maxLength: 200
+        minLength: 1
+        title: Title
+        description: Flavor title
+      llm_provider:
+        type: string
+        title: Llm Provider
+        description: LLM provider identifier
+      llm_model:
+        type: string
+        title: Llm Model
+        description: LLM model name
+      llm_config:
+        $ref: '#/components/schemas/LLMConfig'
+        description: LLM configuration
+      system_prompt:
+        type: string
+        minLength: 1
+        title: System Prompt
+        description: System prompt template
+      user_prompt:
+        type: string
+        minLength: 1
+        title: User Prompt
+        description: User prompt template
+      enabled:
+        type: boolean
+        title: Enabled
+        description: Whether flavor is enabled
+        default: true
+    type: object
+    required:
+    - pipeline
+    - title
+    - llm_provider
+    - llm_model
+    - system_prompt
+    - user_prompt
+    title: CreatePipelineFlavorRequest
+    description: Request model for creating a new pipeline flavor
+  UpdatePipelineFlavorRequest:
+    properties:
+      title:
+        anyOf:
+        - type: string
+          maxLength: 200
+          minLength: 1
+        - type: 'null'
+        title: Title
+        description: Flavor title
+      llm_provider:
+        anyOf:
+        - type: string
+        - type: 'null'
+        title: Llm Provider
+        description: LLM provider identifier
+      llm_model:
+        anyOf:
+        - type: string
+        - type: 'null'
+        title: Llm Model
+        description: LLM model name
+      llm_config:
+        anyOf:
+        - $ref: '#/components/schemas/LLMConfig'
+        - type: 'null'
+        description: LLM configuration
+      system_prompt:
+        anyOf:
+        - type: string
+          minLength: 1
+        - type: 'null'
+        title: System Prompt
+        description: System prompt template
+      user_prompt:
+        anyOf:
+        - type: string
+          minLength: 1
+        - type: 'null'
+        title: User Prompt
+        description: User prompt template
+      enabled:
+        anyOf:
+        - type: boolean
+        - type: 'null'
+        title: Enabled
+        description: Whether flavor is enabled
+    type: object
+    title: UpdatePipelineFlavorRequest
+    description: Request model for updating a pipeline flavor

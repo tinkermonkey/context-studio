@@ -1,0 +1,58 @@
+openapi:
+  openapi: 3.0.3
+  info:
+    title: List Predicates
+    version: 1.0.0
+  paths:
+    /api/predicates/:
+      get:
+        operationId: list_predicates_api_predicates__get
+        summary: List Predicates
+        description: List predicates with pagination and sorting.
+        parameters:
+        - name: skip
+          in: query
+          required: false
+          schema:
+            type: integer
+            minimum: 0
+            default: 0
+            title: Skip
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+            maximum: 100
+            minimum: 1
+            default: 50
+            title: Limit
+        - name: sortBy
+          in: query
+          required: false
+          schema:
+            type: string
+            pattern: ^(title|identifier|date_created)$
+            default: title
+            title: Sortby
+        - name: SessionLocal
+          in: query
+          required: false
+          schema:
+            title: Sessionlocal
+        requestBody: null
+        responses:
+          '200':
+            description: Successful Response
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/PaginatedPredicatesResponse'
+          '422':
+            description: Validation Error
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/HTTPValidationError'
+        tags:
+        - predicates

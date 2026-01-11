@@ -1,0 +1,51 @@
+openapi:
+  openapi: 3.0.3
+  info:
+    title: Search Nodes
+    version: 1.0.0
+  paths:
+    /api/structure_nodes/find:
+      post:
+        operationId: search_nodes_api_structure_nodes_find_post
+        summary: Search Nodes
+        description: 'Vector search across structure_nodes.
+
+
+          This endpoint replaces the separate find endpoints for layers, domains,
+          and terms.
+
+          Supports semantic search across structure_node titles and definitions with
+          optional
+
+          type filtering and configurable similarity thresholds.'
+        parameters:
+        - name: SessionLocal
+          in: query
+          required: false
+          schema:
+            title: Sessionlocal
+        requestBody:
+          required: true
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NodeSearchRequest'
+        responses:
+          '200':
+            description: Successful Response
+            content:
+              application/json:
+                schema:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/NodeSearchResult'
+                  title: Response Search Nodes Api Structure Nodes Find Post
+          '422':
+            description: Validation Error
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/HTTPValidationError'
+        tags:
+        - structure_nodes
+        - structure_nodes

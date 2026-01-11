@@ -1,5 +1,5 @@
 import * as React from "react";
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import {
   Button,
   Spinner,
@@ -14,10 +14,13 @@ import { NlpTokenAnalysisPanel } from "@/components/nlp/NlpTokenAnalysisPanel";
 import { NlpRefinementPanel } from "@/components/nlp/NlpRefinementPanel";
 import { NlpGenerationResult } from "@/components/nlp/NlpGenerationResult";
 import { useNlpAnalysisStore } from "@/stores/nlpAnalysisStore";
+import { useWordSenses } from "@/api/hooks/structure_nodes/useWordSenses";
+import { WordSenseSelector } from "@/components/graphs/nlp_concept/WordSenseSelector";
 import type {
   NodeContext,
   SelectedNodeContextEntry,
 } from "@/components/nlp/types";
+import type { WordSense } from "@/api/types/structureNodes";
 
 interface NlpAnalysisPanelProps {
   text: string;
@@ -38,6 +41,8 @@ interface NlpAnalysisPanelProps {
   layerId?: string | null;
   // Optional list of pipeline flavor IDs to use instead of enabled flavors
   flavorList?: string[] | null;
+  // Optional structure node ID for word sense management
+  nodeId?: string | null;
 }
 
 export const NlpAnalysisPanel: React.FC<NlpAnalysisPanelProps> = ({
@@ -50,10 +55,26 @@ export const NlpAnalysisPanel: React.FC<NlpAnalysisPanelProps> = ({
   domainId = null,
   layerId = null,
   flavorList = null,
+  nodeId = null,
 }) => {
   // Subscribe to the NLP analysis store
   const { shouldAnalyze, currentText, reset } = useNlpAnalysisStore();
   const [hasAnalyzed, setHasAnalyzed] = useState(false);
+
+  // Determine if title is multi-word (more than one word after splitting on whitespace)
+  const isMultiWord = useMemo(() => {
+    const words = text.trim().split(/\s+/).filter((w) => w.length > 0);
+    return words.length > 1;
+  }, [text]);
+
+  // Fetch persisted word senses if nodeId is provided
+  const {
+    data: persistedWordSenses = [],
+    isLoading: wordSensesLoading,
+    refetch: refetchWordSenses,
+  } = useWordSenses(nodeId || "", {
+    enabled: !!nodeId && isMultiWord,
+  } as any);
 
   // Custom hook for API call
   const lowercasedText = text.toLowerCase();
@@ -71,8 +92,8 @@ export const NlpAnalysisPanel: React.FC<NlpAnalysisPanelProps> = ({
     enabled: false,
     queryKey,
     staleTime: 1000 * 60 * 5, // Cache for 5 minutes
-    cacheTime: 1000 * 60 * 30, // Keep in cache for 30 minutes
-  });
+    gcTime: 1000 * 60 * 30, // Keep in cache for 30 minutes
+  } as any);
 
   // Watch for analyze trigger from store
   useEffect(() => {
@@ -278,6 +299,11 @@ export const NlpAnalysisPanel: React.FC<NlpAnalysisPanelProps> = ({
     [getNodeContext],
   );
 
+  // Callback to refetch word senses after save
+  const handleWordSensesSaved = useCallback(() => {
+    refetchWordSenses();
+  }, [refetchWordSenses]);
+
   return (
     <>
       {loading ? (
@@ -289,6 +315,30 @@ export const NlpAnalysisPanel: React.FC<NlpAnalysisPanelProps> = ({
         </div>
       ) : analysisResult ? (
         <div className="space-y-3">
+          {/* Multi-word chart for titles with multiple words */}
+          {isMultiWord && nodeId && (
+            <div>
+              <h4 className="mb-2 text-lg font-bold">
+                {textTitle} Word Sense Analysis
+              </h4>
+              {wordSensesLoading ? (
+                <div className="flex items-center gap-3 py-4">
+                  <Spinner size="sm" />
+                  <span className="text-sm text-gray-600">
+                    Loading word senses...
+                  </span>
+                </div>
+              ) : (
+                <WordSenseSelector
+                  title={text}
+                  persistedSenses={persistedWordSenses}
+                  nodeId={nodeId}
+                  onSaveComplete={handleWordSensesSaved}
+                />
+              )}
+            </div>
+          )}
+
           <div>
             <h4 className="mb-2 text-lg font-bold">
               {textTitle} Token Analysis

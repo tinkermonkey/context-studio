@@ -82,6 +82,26 @@ export interface ChangeEvent {
   processed: boolean;
 }
 
+// Word sense from NLP analysis
+export interface WordSense {
+  term: string;
+  sense_type: string;
+  sense_id: string;
+  definition: string;
+  domain?: string | null;
+}
+
+// Reference link to external knowledge sources
+export interface ReferenceLink {
+  source: string;
+  external_id: string;
+}
+
+// Update request for word senses
+export interface SelectedWordSensesUpdate {
+  selected_senses: WordSense[];
+}
+
 // Structure node links (replaces term relationships)
 export interface StructureNodeLink {
   id: string;
@@ -162,6 +182,22 @@ export interface DomainCreate extends Omit<StructureNodeCreate, "node_type"> {
 
 export interface TermCreate extends Omit<StructureNodeCreate, "node_type"> {
   parent_node_id: string; // Required for terms (domain_id or parent_term_id)
+}
+
+// Move operation types
+export interface MoveNodesRequest {
+  node_ids: string[];
+  target_parent_id?: string | null;
+  move_children?: boolean;
+  handle_conflicts?: "warn" | "rename" | "error";
+}
+
+export interface MoveNodesResponse {
+  moved_nodes: StructureNode[];
+  updated_children: StructureNode[];
+  converted_nodes: StructureNode[];
+  warnings: string[];
+  errors: string[];
 }
 
 // Validation constants

@@ -1,0 +1,33 @@
+$schema: http://json-schema.org/draft-07/schema#
+type: object
+title: rag-trace schemas
+description: Combined schemas for rag-trace data model
+definitions:
+  RAGExtractionResponse:
+    properties:
+      request_id:
+        type: string
+        title: Request Id
+        description: Unique identifier for this extraction request.
+      entities:
+        items:
+          $ref: '#/components/schemas/ExtractedEntity'
+        type: array
+        title: Entities
+        description: List of extracted entities with enrichment data.
+      metrics:
+        $ref: '#/components/schemas/ProcessingMetrics'
+        description: Performance metrics for the extraction pipeline.
+      trace_available:
+        type: boolean
+        title: Trace Available
+        description: Indicates whether detailed trace data is available for this request.
+        default: false
+    type: object
+    required:
+    - metrics
+    title: RAGExtractionResponse
+    description: 'Response model for RAG entity extraction.
+
+
+      Contains extracted entities, processing metrics, and trace availability information.'

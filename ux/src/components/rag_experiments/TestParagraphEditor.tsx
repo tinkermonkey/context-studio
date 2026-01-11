@@ -93,11 +93,12 @@ export const TestParagraphEditor: React.FC<TestParagraphEditorProps> = ({
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
+    <form onSubmit={handleSubmit} className="space-y-4" data-testid="test-paragraph-editor">
       <div>
         <Label htmlFor="paragraph-text">Paragraph Text</Label>
         <Textarea
           id="paragraph-text"
+          data-testid="test-paragraph-text-input"
           placeholder="Enter the test paragraph text..."
           rows={6}
           value={text}
@@ -132,7 +133,7 @@ export const TestParagraphEditor: React.FC<TestParagraphEditorProps> = ({
       )}
 
       <div className="flex items-center gap-2">
-        <Button type="submit" disabled={isLoading || !text.trim()}>
+        <Button type="submit" disabled={isLoading || !text.trim()} data-testid="test-paragraph-submit-button">
           {isLoading ? (
             <>
               <Spinner size="sm" className="mr-2" />
@@ -145,7 +146,7 @@ export const TestParagraphEditor: React.FC<TestParagraphEditorProps> = ({
             </>
           )}
         </Button>
-        <Button type="button" color="gray" onClick={handleCancel} disabled={isLoading}>
+        <Button type="button" color="gray" onClick={handleCancel} disabled={isLoading} data-testid="test-paragraph-cancel-button">
           <X className="mr-2 h-4 w-4" />
           Cancel
         </Button>

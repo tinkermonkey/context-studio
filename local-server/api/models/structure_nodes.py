@@ -106,6 +106,14 @@ class PaginatedNodesResponse(BaseModel):
     limit: int
 
 
+class PaginatedNodeLinksResponse(BaseModel):
+    """Model for paginated structure_node link responses."""
+    data: List[NodeLinkOut]
+    total: int
+    skip: int
+    limit: int
+
+
 # Move operation models
 class MoveNodesRequest(BaseModel):
     """Model for moving structure_nodes to a new parent."""
@@ -116,9 +124,10 @@ class MoveNodesRequest(BaseModel):
 
 
 class MoveNodesResponse(BaseModel):
-    """Model for move operation results."""
+    """Model for move operation results with automatic type conversion."""
     moved_nodes: List[NodeOut] = Field(description="List of successfully moved structure_nodes")
     updated_children: List[NodeOut] = Field(description="List of child structure_nodes that were also moved")
+    converted_nodes: List[NodeOut] = Field(default_factory=list, description="List of nodes that had their type automatically converted")
     warnings: List[str] = Field(description="List of warnings encountered during the move")
     errors: List[str] = Field(description="List of errors that prevented some moves")
 
@@ -152,5 +161,12 @@ class WordSense(BaseModel):
     sense_id: str = Field(..., description="Unique identifier for the sense (e.g., 'bank.n.01')")
     definition: str = Field(..., description="Human-readable definition of the sense")
     domain: Optional[str] = Field(None, description="Semantic domain or category (e.g., 'noun.group')")
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class SelectedWordSensesUpdate(BaseModel):
+    """Model for updating selected word senses on a structure node."""
+    selected_senses: List[WordSense] = Field(..., description="List of word senses to persist as selected")
 
     model_config = ConfigDict(from_attributes=True)

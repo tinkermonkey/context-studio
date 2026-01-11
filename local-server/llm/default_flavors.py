@@ -50,8 +50,8 @@ class DefaultFlavorProvider:
             user_prompt=user_prompt,
             version=1,
             enabled=True,
-            last_updated=now,
-            date_created=now
+            created_at=now,
+            updated_at=now
         )
     
     @staticmethod

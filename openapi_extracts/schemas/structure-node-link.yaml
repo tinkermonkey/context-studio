@@ -1,0 +1,66 @@
+$schema: http://json-schema.org/draft-07/schema#
+type: object
+title: structure-node-link schemas
+description: Combined schemas for structure-node-link data model
+definitions:
+  NodeLinkOut:
+    properties:
+      source_node_id:
+        type: string
+        format: uuid
+        title: Source Node Id
+      target_node_id:
+        type: string
+        format: uuid
+        title: Target Node Id
+      predicate:
+        type: string
+        title: Predicate
+      predicate_id:
+        anyOf:
+        - type: string
+          format: uuid
+        - type: 'null'
+        title: Predicate Id
+      id:
+        type: string
+        format: uuid
+        title: Id
+      created_at:
+        type: string
+        title: Created At
+    type: object
+    required:
+    - source_node_id
+    - target_node_id
+    - predicate
+    - id
+    - created_at
+    title: NodeLinkOut
+    description: Model for structure_node link output/response.
+  NodeLinkCreate:
+    properties:
+      source_node_id:
+        type: string
+        format: uuid
+        title: Source Node Id
+      target_node_id:
+        type: string
+        format: uuid
+        title: Target Node Id
+      predicate:
+        type: string
+        title: Predicate
+      predicate_id:
+        anyOf:
+        - type: string
+          format: uuid
+        - type: 'null'
+        title: Predicate Id
+    type: object
+    required:
+    - source_node_id
+    - target_node_id
+    - predicate
+    title: NodeLinkCreate
+    description: Model for creating a new structure_node link.

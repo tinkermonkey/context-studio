@@ -1,0 +1,365 @@
+Home-page:
+  name: Home-page
+  description: Landing/dashboard page with tree chart visualization of knowledge graph
+    structure
+  criticality: high
+  route: /app
+  id: ux.view.home-page
+  version: 1.0.0
+  experience: Home page experience
+  channel: visual
+  states:
+  - name: default
+    type: state
+  views:
+  - name: default
+    type: custom
+  type: custom
+Layers-page:
+  name: Layers-page
+  description: Layers management page with hierarchical tree view and CRUD operations
+    for knowledge graph layers
+  criticality: high
+  route: /app/layers
+  id: ux.view.layers-page
+  relationships.uses: application.service.StructureNodeManagement
+  version: 1.0.0
+  experience: Layers page experience
+  channel: visual
+  states:
+  - name: default
+    type: state
+  views:
+  - name: default
+    type: custom
+  type: custom
+Domains-page:
+  name: Domains-page
+  description: Domains management page with filterable table and layer-based navigation
+  criticality: high
+  route: /app/domains
+  id: ux.view.domains-page
+  relationships.uses: application.service.StructureNodeManagement
+  version: 1.0.0
+  experience: Domains page experience
+  channel: visual
+  states:
+  - name: default
+    type: state
+  views:
+  - name: default
+    type: custom
+  type: custom
+Terms-page:
+  name: Terms-page
+  description: Terms management page with domain filtering and semantic predicate
+    editing
+  criticality: high
+  route: /app/terms
+  id: ux.view.terms-page
+  relationships.uses: application.service.StructureNodeManagement
+  version: 1.0.0
+  experience: Terms page experience
+  channel: visual
+  states:
+  - name: default
+    type: state
+  views:
+  - name: default
+    type: custom
+  type: custom
+Predicates-page:
+  name: Predicates-page
+  description: Predicates management page for semantic relationship definitions and
+    ConceptNet mappings
+  criticality: medium
+  route: /app/predicates
+  id: ux.view.predicates-page
+  relationships.uses: application.service.PredicateManagement
+  version: 1.0.0
+  experience: Predicates page experience
+  channel: visual
+  states:
+  - name: default
+    type: state
+  views:
+  - name: default
+    type: custom
+  type: custom
+Datasets-page:
+  name: Datasets-page
+  description: Dataset management page with current dataset card and version history
+  criticality: medium
+  route: /app/datasets
+  id: ux.view.datasets-page
+  relationships.uses: application.service.DatasetManagement
+  version: 1.0.0
+  experience: Datasets page experience
+  channel: visual
+  states:
+  - name: default
+    type: state
+  views:
+  - name: default
+    type: custom
+  type: custom
+Config-hub-page:
+  name: Config-hub-page
+  description: Configuration hub page with sidebar navigation to system settings
+  criticality: medium
+  route: /app/config
+  id: ux.view.config-hub-page
+  version: 1.0.0
+  experience: Config hub page experience
+  channel: visual
+  states:
+  - name: default
+    type: state
+  views:
+  - name: default
+    type: custom
+  type: custom
+Pipelines-config-page:
+  name: Pipelines-config-page
+  description: Pipeline flavors management page for LLM configurations with create,
+    edit, and test workflows
+  criticality: high
+  route: /app/config/pipelines
+  id: ux.view.pipelines-config-page
+  relationships.uses: application.service.PipelineFlavorManagement
+  version: 1.0.0
+  experience: Pipelines config page experience
+  channel: visual
+  states:
+  - name: default
+    type: state
+  views:
+  - name: default
+    type: custom
+  type: custom
+Models-config-page:
+  name: Models-config-page
+  description: LLM models configuration page for provider and model settings
+  criticality: medium
+  route: /app/config/models
+  id: ux.view.models-config-page
+  version: 1.0.0
+  experience: Models config page experience
+  channel: visual
+  states:
+  - name: default
+    type: state
+  views:
+  - name: default
+    type: custom
+  type: custom
+Data-sources-config-page:
+  name: Data-sources-config-page
+  description: Reference data sources configuration page for ConceptNet, DBpedia,
+    and Wikidata
+  criticality: medium
+  route: /app/config/data-sources
+  id: ux.view.data-sources-config-page
+  version: 1.0.0
+  experience: Data sources config page experience
+  channel: visual
+  states:
+  - name: default
+    type: state
+  views:
+  - name: default
+    type: custom
+  type: custom
+Network-config-page:
+  name: Network-config-page
+  description: Network configuration page for API endpoints and connectivity settings
+  criticality: low
+  route: /app/config/network
+  id: ux.view.network-config-page
+  version: 1.0.0
+  experience: Network config page experience
+  channel: visual
+  states:
+  - name: default
+    type: state
+  views:
+  - name: default
+    type: custom
+  type: custom
+System-config-page:
+  name: System-config-page
+  description: System configuration page for application settings and preferences
+  criticality: low
+  route: /app/config/system
+  id: ux.view.system-config-page
+  version: 1.0.0
+  experience: System config page experience
+  channel: visual
+  states:
+  - name: default
+    type: state
+  views:
+  - name: default
+    type: custom
+  type: custom
+Reference-search-page:
+  name: Reference-search-page
+  description: Unified reference search page for browsing ConceptNet, DBpedia, and
+    Wikidata
+  criticality: medium
+  route: /app/reference
+  id: ux.view.reference-search-page
+  relationships.uses: application.service.ReferenceIntegration
+  version: 1.0.0
+  experience: Reference search page experience
+  channel: visual
+  states:
+  - name: default
+    type: state
+  views:
+  - name: default
+    type: custom
+  type: custom
+Structure-node-details-page:
+  name: Structure-node-details-page
+  description: Structure node details page with word senses, reference links, and
+    semantic analysis
+  criticality: high
+  route: /app/structure_nodes/:nodeId
+  id: ux.view.structure-node-details-page
+  relationships.uses: application.service.StructureNodeManagement
+  version: 1.0.0
+  experience: Structure node details page experience
+  channel: visual
+  states:
+  - name: default
+    type: state
+  views:
+  - name: default
+    type: custom
+  type: custom
+Node-tables-group:
+  name: Node-tables-group
+  description: Data table components for displaying and managing structure nodes,
+    links, and predicates with sorting and filtering
+  criticality: high
+  component-type: group
+  id: ux.view.node-tables-group
+  relationships.uses: application.component.node-tables
+  version: 1.0.0
+  experience: Node tables group experience
+  channel: visual
+  states:
+  - name: default
+    type: state
+  views:
+  - name: default
+    type: custom
+  type: group
+Tree-visualization-group:
+  name: Tree-visualization-group
+  description: Tree chart and hierarchical menu components for visualizing knowledge
+    graph structure
+  criticality: high
+  component-type: group
+  id: ux.view.tree-visualization-group
+  relationships.uses: application.component.tree-chart
+  version: 1.0.0
+  experience: Tree visualization group experience
+  channel: visual
+  states:
+  - name: default
+    type: state
+  views:
+  - name: default
+    type: custom
+  type: group
+Reference-nodes-group:
+  name: Reference-nodes-group
+  description: Reference data browsing components for ConceptNet, DBpedia, and Wikidata
+    integration
+  criticality: medium
+  component-type: group
+  id: ux.view.reference-nodes-group
+  relationships.uses: application.component.reference-viewer
+  version: 1.0.0
+  experience: Reference nodes group experience
+  channel: visual
+  states:
+  - name: default
+    type: state
+  views:
+  - name: default
+    type: custom
+  type: group
+Datasets-group:
+  name: Datasets-group
+  description: Dataset management components for current dataset card and history
+    visualization
+  criticality: medium
+  component-type: group
+  id: ux.view.datasets-group
+  relationships.uses: application.component.dataset-manager
+  version: 1.0.0
+  experience: Datasets group experience
+  channel: visual
+  states:
+  - name: default
+    type: state
+  views:
+  - name: default
+    type: custom
+  type: group
+Nlp-concept-group:
+  name: Nlp-concept-group
+  description: NLP analysis and word sense disambiguation components for semantic
+    understanding
+  criticality: medium
+  component-type: group
+  id: ux.view.nlp-concept-group
+  relationships.uses: application.component.nlp-analysis-panel
+  version: 1.0.0
+  experience: NLP concept group experience
+  channel: visual
+  states:
+  - name: default
+    type: state
+  views:
+  - name: default
+    type: custom
+  type: group
+Node-selectors-group:
+  name: Node-selectors-group
+  description: Selector and picker components for choosing layers, domains, terms,
+    and predicates
+  criticality: high
+  component-type: group
+  id: ux.view.node-selectors-group
+  relationships.uses: application.component.node-selectors
+  version: 1.0.0
+  experience: Node selectors group experience
+  channel: visual
+  states:
+  - name: default
+    type: state
+  views:
+  - name: default
+    type: custom
+  type: group
+Pipeline-management-group:
+  name: Pipeline-management-group
+  description: Pipeline flavor configuration and testing components for LLM workflows
+  criticality: high
+  component-type: group
+  id: ux.view.pipeline-management-group
+  relationships.uses: application.component.pipeline-flavor-editor
+  version: 1.0.0
+  experience: Pipeline management group experience
+  channel: visual
+  states:
+  - name: default
+    type: state
+  views:
+  - name: default
+    type: custom
+  type: group

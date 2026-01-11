@@ -32,8 +32,8 @@ from services.word_sense_service import WordSenseService
 from services.exceptions import NotFoundError, ValidationError, ConflictError, CircularReferenceError, InvalidHierarchyError, ReferenceNotFoundError
 from api.models.structure_nodes import (
     NodeCreate, NodeUpdate, NodeOut, NodeLinkCreate, NodeLinkOut,
-    NodeSearchRequest, NodeSearchResult, PaginatedNodesResponse, NodeTypeEnum,
-    MoveNodesRequest, MoveNodesResponse, ReferenceLink, WordSense
+    NodeSearchRequest, NodeSearchResult, PaginatedNodesResponse, PaginatedNodeLinksResponse, NodeTypeEnum,
+    MoveNodesRequest, MoveNodesResponse, ReferenceLink, WordSense, SelectedWordSensesUpdate
 )
 from api.utils.node_conversion import (
     to_node_out, to_node_link_out, nodes_to_paginated_response,
@@ -323,7 +323,7 @@ def create_node_link(
         raise HTTPException(status_code=500, detail=f"Internal server error: {str(e)}")
 
 
-@router.get("/links", response_model=List[NodeLinkOut])
+@router.get("/links", response_model=PaginatedNodeLinksResponse)
 def list_node_links(
     source_node_id: Optional[UUID] = Query(None, description="Filter by source structure_node ID"),
     target_node_id: Optional[UUID] = Query(None, description="Filter by target structure_node ID"),
@@ -333,16 +333,24 @@ def list_node_links(
     link_service: NodeLinkService = Depends(get_node_link_service)
 ):
     """
-    List structure_node links with filtering.
-    
+    List structure_node links with filtering and pagination.
+
     Supports filtering by source structure_node, target structure_node, and predicate.
-    Returns all relationships in the unified structure_node graph.
+    Returns all relationships in the unified structure_node graph with pagination metadata.
     """
     try:
         # Convert UUID to string for filtering
         source_node_id_str = str(source_node_id) if source_node_id else None
         target_node_id_str = str(target_node_id) if target_node_id else None
-        
+
+        # Get total count
+        total = link_service.count_links(
+            source_node_id=source_node_id_str,
+            target_node_id=target_node_id_str,
+            predicate=predicate
+        )
+
+        # Get links with pagination
         links = link_service.list_links(
             source_node_id=source_node_id_str,
             target_node_id=target_node_id_str,
@@ -350,9 +358,15 @@ def list_node_links(
             skip=skip,
             limit=limit
         )
-        
-        return [to_node_link_out(link) for link in links]
-        
+
+        # Convert to response format
+        return PaginatedNodeLinksResponse(
+            data=[to_node_link_out(link) for link in links],
+            total=total,
+            skip=skip,
+            limit=limit
+        )
+
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Internal server error: {str(e)}")
 
@@ -709,6 +723,57 @@ def get_word_senses(
         raise HTTPException(status_code=500, detail=f"Internal server error: {str(e)}")
 
 
+@router.put("/{node_id}/word_senses", response_model=List[WordSense])
+def update_word_senses(
+    node_id: UUID = Path(..., description="The ID of the structure node"),
+    update_request: SelectedWordSensesUpdate = ...,
+    word_sense_service: WordSenseService = Depends(get_word_sense_service)
+):
+    """
+    Update selected word senses for a structure node.
+
+    Allows user to persist their selected word senses from NLP analysis.
+    Uses a conservative merge strategy: preserves existing word senses for words
+    not included in this update, while replacing senses for words that are included.
+
+    For example, if a node has existing senses for words "bank" and "account", and
+    you update only "bank", the existing "account" senses will be preserved.
+
+    Args:
+        node_id: UUID of the structure node
+        update_request: Selected word senses to persist
+
+    Returns:
+        List of all word senses after update (including preserved senses)
+
+    Raises:
+        400: If validation fails (invalid sense_id format)
+        404: If structure node not found
+        500: If an unexpected error occurs
+    """
+    from utils.logger import get_logger
+    logger = get_logger(__name__)
+
+    try:
+        result = word_sense_service.update_selected_senses(
+            str(node_id),
+            update_request.selected_senses
+        )
+        return result
+
+    except ValueError as e:
+        error_msg = str(e).lower()
+        if "not found" in error_msg:
+            raise HTTPException(status_code=404, detail=str(e))
+        else:
+            raise HTTPException(status_code=400, detail=str(e))
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Unexpected error updating word senses for node {node_id}: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail=f"Internal server error: {str(e)}")
+
+
 # Reference Link Validation endpoints
 @router.post("/reference_links/validate", response_model=dict)
 def validate_all_reference_links(
@@ -806,13 +871,25 @@ def move_nodes(
     node_service: NodeService = Depends(get_node_service)
 ):
     """
-    Move structure_nodes to a new parent location.
-    
-    This endpoint supports moving multiple structure_nodes at once, with options for:
+    Move structure_nodes to a new parent location with automatic type conversion.
+
+    **Type Conversion Rules:**
+    - Moving to root (null parent) → becomes Layer
+    - Moving under Layer → becomes Domain
+    - Moving under Domain or Term → becomes Term
+
+    **Recursive Conversion:**
+    When a node's type changes, all descendants are recursively converted:
+    - Layer's children become Domains
+    - Domain's/Term's children become Terms
+
+    This endpoint supports:
+    - Moving multiple structure_nodes at once
+    - Automatic type conversion based on target parent
     - Moving all child structure_nodes along with parents
     - Handling title conflicts through warnings, renaming, or errors
-    - Maintaining referential integrity throughout the move operation
-    
+    - Maintaining referential integrity throughout the operation
+
     The move operation is atomic - either all structure_nodes are moved successfully,
     or the entire operation is rolled back.
     """
@@ -820,21 +897,22 @@ def move_nodes(
         # Convert UUID objects to strings for service
         node_ids = [str(node_id) for node_id in move_request.node_ids]
         target_parent_id = str(move_request.target_parent_id) if move_request.target_parent_id else None
-        
+
         result = node_service.move_nodes(
             node_ids=node_ids,
             target_parent_id=target_parent_id,
             move_children=move_request.move_children,
             handle_conflicts=move_request.handle_conflicts
         )
-        
+
         return MoveNodesResponse(
             moved_nodes=[to_node_out(node) for node in result['moved_nodes']],
             updated_children=[to_node_out(child) for child in result['updated_children']],
+            converted_nodes=[to_node_out(node) for node in result.get('converted_nodes', [])],
             warnings=result['warnings'],
             errors=result['errors']
         )
-        
+
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
     except Exception as e:

@@ -1,0 +1,1252 @@
+Structure-node:
+  name: Structure-node
+  description: Combined schemas for structure-node data model
+  id: data_model.schema.structure-node
+  $schema: http://json-schema.org/draft-07/schema#
+  schemas:
+    NodeOut:
+      properties:
+        node_type:
+          $ref: '#/components/schemas/NodeTypeEnum'
+        parent_node_id:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          title: Parent Node Id
+        title:
+          type: string
+          maxLength: 255
+          minLength: 2
+          title: Title
+        definition:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Definition
+        structural_predicate_id:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          title: Structural Predicate Id
+        id:
+          type: string
+          format: uuid
+          title: Id
+        title_embedding:
+          anyOf:
+          - items:
+              type: number
+            type: array
+          - type: 'null'
+          title: Title Embedding
+        definition_embedding:
+          anyOf:
+          - items:
+              type: number
+            type: array
+          - type: 'null'
+          title: Definition Embedding
+        created_at:
+          type: string
+          title: Created At
+        version:
+          type: integer
+          title: Version
+        last_modified:
+          type: string
+          title: Last Modified
+      type: object
+      required:
+      - node_type
+      - title
+      - id
+      - created_at
+      - version
+      - last_modified
+      title: NodeOut
+      description: Model for structure_node output/response.
+    NodeCreate:
+      properties:
+        node_type:
+          $ref: '#/components/schemas/NodeTypeEnum'
+        parent_node_id:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          title: Parent Node Id
+        title:
+          type: string
+          maxLength: 255
+          minLength: 2
+          title: Title
+        definition:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Definition
+        structural_predicate_id:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          title: Structural Predicate Id
+      type: object
+      required:
+      - node_type
+      - title
+      title: NodeCreate
+      description: Model for creating a new structure_node.
+    NodeUpdate:
+      properties:
+        title:
+          anyOf:
+          - type: string
+            maxLength: 255
+            minLength: 2
+          - type: 'null'
+          title: Title
+        definition:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Definition
+        parent_node_id:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          title: Parent Node Id
+        structural_predicate_id:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          title: Structural Predicate Id
+      type: object
+      title: NodeUpdate
+      description: Model for updating an existing structure_node.
+  type: object
+  title: structure-node schemas
+  definitions:
+    NodeOut:
+      properties:
+        node_type:
+          $ref: '#/components/schemas/NodeTypeEnum'
+        parent_node_id:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          title: Parent Node Id
+        title:
+          type: string
+          maxLength: 255
+          minLength: 2
+          title: Title
+        definition:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Definition
+        structural_predicate_id:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          title: Structural Predicate Id
+        id:
+          type: string
+          format: uuid
+          title: Id
+        title_embedding:
+          anyOf:
+          - items:
+              type: number
+            type: array
+          - type: 'null'
+          title: Title Embedding
+        definition_embedding:
+          anyOf:
+          - items:
+              type: number
+            type: array
+          - type: 'null'
+          title: Definition Embedding
+        created_at:
+          type: string
+          title: Created At
+        version:
+          type: integer
+          title: Version
+        last_modified:
+          type: string
+          title: Last Modified
+      type: object
+      required:
+      - node_type
+      - title
+      - id
+      - created_at
+      - version
+      - last_modified
+      title: NodeOut
+      description: Model for structure_node output/response.
+    NodeCreate:
+      properties:
+        node_type:
+          $ref: '#/components/schemas/NodeTypeEnum'
+        parent_node_id:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          title: Parent Node Id
+        title:
+          type: string
+          maxLength: 255
+          minLength: 2
+          title: Title
+        definition:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Definition
+        structural_predicate_id:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          title: Structural Predicate Id
+      type: object
+      required:
+      - node_type
+      - title
+      title: NodeCreate
+      description: Model for creating a new structure_node.
+    NodeUpdate:
+      properties:
+        title:
+          anyOf:
+          - type: string
+            maxLength: 255
+            minLength: 2
+          - type: 'null'
+          title: Title
+        definition:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Definition
+        parent_node_id:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          title: Parent Node Id
+        structural_predicate_id:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          title: Structural Predicate Id
+      type: object
+      title: NodeUpdate
+      description: Model for updating an existing structure_node.
+Structure-node-link:
+  name: Structure-node-link
+  description: Combined schemas for structure-node-link data model
+  id: data_model.schema.structure-node-link
+  $schema: http://json-schema.org/draft-07/schema#
+  schemas:
+    NodeLinkOut:
+      properties:
+        source_node_id:
+          type: string
+          format: uuid
+          title: Source Node Id
+        target_node_id:
+          type: string
+          format: uuid
+          title: Target Node Id
+        predicate:
+          type: string
+          title: Predicate
+        predicate_id:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          title: Predicate Id
+        id:
+          type: string
+          format: uuid
+          title: Id
+        created_at:
+          type: string
+          title: Created At
+      type: object
+      required:
+      - source_node_id
+      - target_node_id
+      - predicate
+      - id
+      - created_at
+      title: NodeLinkOut
+      description: Model for structure_node link output/response.
+    NodeLinkCreate:
+      properties:
+        source_node_id:
+          type: string
+          format: uuid
+          title: Source Node Id
+        target_node_id:
+          type: string
+          format: uuid
+          title: Target Node Id
+        predicate:
+          type: string
+          title: Predicate
+        predicate_id:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          title: Predicate Id
+      type: object
+      required:
+      - source_node_id
+      - target_node_id
+      - predicate
+      title: NodeLinkCreate
+      description: Model for creating a new structure_node link.
+  type: object
+  title: structure-node-link schemas
+  definitions:
+    NodeLinkOut:
+      properties:
+        source_node_id:
+          type: string
+          format: uuid
+          title: Source Node Id
+        target_node_id:
+          type: string
+          format: uuid
+          title: Target Node Id
+        predicate:
+          type: string
+          title: Predicate
+        predicate_id:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          title: Predicate Id
+        id:
+          type: string
+          format: uuid
+          title: Id
+        created_at:
+          type: string
+          title: Created At
+      type: object
+      required:
+      - source_node_id
+      - target_node_id
+      - predicate
+      - id
+      - created_at
+      title: NodeLinkOut
+      description: Model for structure_node link output/response.
+    NodeLinkCreate:
+      properties:
+        source_node_id:
+          type: string
+          format: uuid
+          title: Source Node Id
+        target_node_id:
+          type: string
+          format: uuid
+          title: Target Node Id
+        predicate:
+          type: string
+          title: Predicate
+        predicate_id:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          title: Predicate Id
+      type: object
+      required:
+      - source_node_id
+      - target_node_id
+      - predicate
+      title: NodeLinkCreate
+      description: Model for creating a new structure_node link.
+Predicate:
+  name: Predicate
+  description: Combined schemas for predicate data model
+  id: data_model.schema.predicate
+  $schema: http://json-schema.org/draft-07/schema#
+  schemas:
+    PredicateOut:
+      properties:
+        title:
+          type: string
+          maxLength: 255
+          minLength: 1
+          title: Title
+        definition:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Definition
+        mapping:
+          anyOf:
+          - additionalProperties: true
+            type: object
+          - type: 'null'
+          title: Mapping
+        id:
+          type: string
+          title: Id
+        identifier:
+          type: string
+          title: Identifier
+        date_created:
+          type: string
+          title: Date Created
+        date_modified:
+          type: string
+          title: Date Modified
+      type: object
+      required:
+      - title
+      - id
+      - identifier
+      - date_created
+      - date_modified
+      title: PredicateOut
+    PredicateCreate:
+      properties:
+        title:
+          type: string
+          maxLength: 255
+          minLength: 1
+          title: Title
+        definition:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Definition
+        mapping:
+          anyOf:
+          - additionalProperties: true
+            type: object
+          - type: 'null'
+          title: Mapping
+        identifier:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Identifier
+      type: object
+      required:
+      - title
+      title: PredicateCreate
+  type: object
+  title: predicate schemas
+  definitions:
+    PredicateOut:
+      properties:
+        title:
+          type: string
+          maxLength: 255
+          minLength: 1
+          title: Title
+        definition:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Definition
+        mapping:
+          anyOf:
+          - additionalProperties: true
+            type: object
+          - type: 'null'
+          title: Mapping
+        id:
+          type: string
+          title: Id
+        identifier:
+          type: string
+          title: Identifier
+        date_created:
+          type: string
+          title: Date Created
+        date_modified:
+          type: string
+          title: Date Modified
+      type: object
+      required:
+      - title
+      - id
+      - identifier
+      - date_created
+      - date_modified
+      title: PredicateOut
+    PredicateCreate:
+      properties:
+        title:
+          type: string
+          maxLength: 255
+          minLength: 1
+          title: Title
+        definition:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Definition
+        mapping:
+          anyOf:
+          - additionalProperties: true
+            type: object
+          - type: 'null'
+          title: Mapping
+        identifier:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Identifier
+      type: object
+      required:
+      - title
+      title: PredicateCreate
+Pipeline-flavor:
+  name: Pipeline-flavor
+  description: Combined schemas for pipeline-flavor data model
+  id: data_model.schema.pipeline-flavor
+  $schema: http://json-schema.org/draft-07/schema#
+  schemas:
+    PipelineFlavor:
+      properties:
+        id:
+          type: string
+          title: Id
+          description: Unique identifier
+        pipeline:
+          $ref: '#/components/schemas/PipelineType'
+          description: Pipeline type
+        title:
+          type: string
+          maxLength: 200
+          minLength: 1
+          title: Title
+          description: Flavor title
+        llm_provider:
+          type: string
+          title: Llm Provider
+          description: LLM provider identifier
+        llm_model:
+          type: string
+          title: Llm Model
+          description: LLM model name
+        llm_config:
+          $ref: '#/components/schemas/LLMConfig'
+          description: LLM configuration
+        system_prompt:
+          type: string
+          minLength: 1
+          title: System Prompt
+          description: System prompt template
+        user_prompt:
+          type: string
+          minLength: 1
+          title: User Prompt
+          description: User prompt template
+        version:
+          type: integer
+          minimum: 1.0
+          title: Version
+          description: Version number
+        enabled:
+          type: boolean
+          title: Enabled
+          description: Whether flavor is enabled
+          default: true
+        created_at:
+          type: string
+          format: date-time
+          title: Created At
+          description: Creation timestamp
+        updated_at:
+          type: string
+          format: date-time
+          title: Updated At
+          description: Last update timestamp
+      type: object
+      required:
+      - id
+      - pipeline
+      - title
+      - llm_provider
+      - llm_model
+      - llm_config
+      - system_prompt
+      - user_prompt
+      - version
+      - created_at
+      - updated_at
+      title: PipelineFlavor
+      description: Database model for pipeline flavors
+    CreatePipelineFlavorRequest:
+      properties:
+        pipeline:
+          $ref: '#/components/schemas/PipelineType'
+          description: Pipeline type
+        title:
+          type: string
+          maxLength: 200
+          minLength: 1
+          title: Title
+          description: Flavor title
+        llm_provider:
+          type: string
+          title: Llm Provider
+          description: LLM provider identifier
+        llm_model:
+          type: string
+          title: Llm Model
+          description: LLM model name
+        llm_config:
+          $ref: '#/components/schemas/LLMConfig'
+          description: LLM configuration
+        system_prompt:
+          type: string
+          minLength: 1
+          title: System Prompt
+          description: System prompt template
+        user_prompt:
+          type: string
+          minLength: 1
+          title: User Prompt
+          description: User prompt template
+        enabled:
+          type: boolean
+          title: Enabled
+          description: Whether flavor is enabled
+          default: true
+      type: object
+      required:
+      - pipeline
+      - title
+      - llm_provider
+      - llm_model
+      - system_prompt
+      - user_prompt
+      title: CreatePipelineFlavorRequest
+      description: Request model for creating a new pipeline flavor
+    UpdatePipelineFlavorRequest:
+      properties:
+        title:
+          anyOf:
+          - type: string
+            maxLength: 200
+            minLength: 1
+          - type: 'null'
+          title: Title
+          description: Flavor title
+        llm_provider:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Llm Provider
+          description: LLM provider identifier
+        llm_model:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Llm Model
+          description: LLM model name
+        llm_config:
+          anyOf:
+          - $ref: '#/components/schemas/LLMConfig'
+          - type: 'null'
+          description: LLM configuration
+        system_prompt:
+          anyOf:
+          - type: string
+            minLength: 1
+          - type: 'null'
+          title: System Prompt
+          description: System prompt template
+        user_prompt:
+          anyOf:
+          - type: string
+            minLength: 1
+          - type: 'null'
+          title: User Prompt
+          description: User prompt template
+        enabled:
+          anyOf:
+          - type: boolean
+          - type: 'null'
+          title: Enabled
+          description: Whether flavor is enabled
+      type: object
+      title: UpdatePipelineFlavorRequest
+      description: Request model for updating a pipeline flavor
+  type: object
+  title: pipeline-flavor schemas
+  definitions:
+    PipelineFlavor:
+      properties:
+        id:
+          type: string
+          title: Id
+          description: Unique identifier
+        pipeline:
+          $ref: '#/components/schemas/PipelineType'
+          description: Pipeline type
+        title:
+          type: string
+          maxLength: 200
+          minLength: 1
+          title: Title
+          description: Flavor title
+        llm_provider:
+          type: string
+          title: Llm Provider
+          description: LLM provider identifier
+        llm_model:
+          type: string
+          title: Llm Model
+          description: LLM model name
+        llm_config:
+          $ref: '#/components/schemas/LLMConfig'
+          description: LLM configuration
+        system_prompt:
+          type: string
+          minLength: 1
+          title: System Prompt
+          description: System prompt template
+        user_prompt:
+          type: string
+          minLength: 1
+          title: User Prompt
+          description: User prompt template
+        version:
+          type: integer
+          minimum: 1.0
+          title: Version
+          description: Version number
+        enabled:
+          type: boolean
+          title: Enabled
+          description: Whether flavor is enabled
+          default: true
+        created_at:
+          type: string
+          format: date-time
+          title: Created At
+          description: Creation timestamp
+        updated_at:
+          type: string
+          format: date-time
+          title: Updated At
+          description: Last update timestamp
+      type: object
+      required:
+      - id
+      - pipeline
+      - title
+      - llm_provider
+      - llm_model
+      - llm_config
+      - system_prompt
+      - user_prompt
+      - version
+      - created_at
+      - updated_at
+      title: PipelineFlavor
+      description: Database model for pipeline flavors
+    CreatePipelineFlavorRequest:
+      properties:
+        pipeline:
+          $ref: '#/components/schemas/PipelineType'
+          description: Pipeline type
+        title:
+          type: string
+          maxLength: 200
+          minLength: 1
+          title: Title
+          description: Flavor title
+        llm_provider:
+          type: string
+          title: Llm Provider
+          description: LLM provider identifier
+        llm_model:
+          type: string
+          title: Llm Model
+          description: LLM model name
+        llm_config:
+          $ref: '#/components/schemas/LLMConfig'
+          description: LLM configuration
+        system_prompt:
+          type: string
+          minLength: 1
+          title: System Prompt
+          description: System prompt template
+        user_prompt:
+          type: string
+          minLength: 1
+          title: User Prompt
+          description: User prompt template
+        enabled:
+          type: boolean
+          title: Enabled
+          description: Whether flavor is enabled
+          default: true
+      type: object
+      required:
+      - pipeline
+      - title
+      - llm_provider
+      - llm_model
+      - system_prompt
+      - user_prompt
+      title: CreatePipelineFlavorRequest
+      description: Request model for creating a new pipeline flavor
+    UpdatePipelineFlavorRequest:
+      properties:
+        title:
+          anyOf:
+          - type: string
+            maxLength: 200
+            minLength: 1
+          - type: 'null'
+          title: Title
+          description: Flavor title
+        llm_provider:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Llm Provider
+          description: LLM provider identifier
+        llm_model:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Llm Model
+          description: LLM model name
+        llm_config:
+          anyOf:
+          - $ref: '#/components/schemas/LLMConfig'
+          - type: 'null'
+          description: LLM configuration
+        system_prompt:
+          anyOf:
+          - type: string
+            minLength: 1
+          - type: 'null'
+          title: System Prompt
+          description: System prompt template
+        user_prompt:
+          anyOf:
+          - type: string
+            minLength: 1
+          - type: 'null'
+          title: User Prompt
+          description: User prompt template
+        enabled:
+          anyOf:
+          - type: boolean
+          - type: 'null'
+          title: Enabled
+          description: Whether flavor is enabled
+      type: object
+      title: UpdatePipelineFlavorRequest
+      description: Request model for updating a pipeline flavor
+Change-event:
+  name: Change-event
+  description: Schema for audit trail of database changes
+  id: data_model.schema.change-event
+  $schema: http://json-schema.org/draft-07/schema#
+  type: object
+  title: ChangeEvent
+External-predicate:
+  name: External-predicate
+  description: Combined schemas for external-predicate data model
+  id: data_model.schema.external-predicate
+  $schema: http://json-schema.org/draft-07/schema#
+  schemas:
+    ExternalPredicateOut:
+      properties:
+        id:
+          type: string
+          title: Id
+        title:
+          type: string
+          title: Title
+        definition:
+          type: string
+          title: Definition
+        source:
+          type: string
+          title: Source
+        external_id:
+          type: string
+          title: External Id
+        attributes:
+          anyOf:
+          - additionalProperties: true
+            type: object
+          - type: 'null'
+          title: Attributes
+        created_at:
+          type: string
+          title: Created At
+        updated_at:
+          type: string
+          title: Updated At
+      type: object
+      required:
+      - id
+      - title
+      - definition
+      - source
+      - external_id
+      - created_at
+      - updated_at
+      title: ExternalPredicateOut
+      description: Response model for external predicates.
+    ExternalPredicateSearchResult:
+      properties:
+        id:
+          type: string
+          title: Id
+        title:
+          type: string
+          title: Title
+        definition:
+          type: string
+          title: Definition
+        source:
+          type: string
+          title: Source
+        external_id:
+          type: string
+          title: External Id
+        attributes:
+          anyOf:
+          - additionalProperties: true
+            type: object
+          - type: 'null'
+          title: Attributes
+        created_at:
+          type: string
+          title: Created At
+        updated_at:
+          type: string
+          title: Updated At
+        similarity_score:
+          type: number
+          title: Similarity Score
+      type: object
+      required:
+      - id
+      - title
+      - definition
+      - source
+      - external_id
+      - created_at
+      - updated_at
+      - similarity_score
+      title: ExternalPredicateSearchResult
+      description: Search result for external predicates with similarity score.
+  type: object
+  title: external-predicate schemas
+  definitions:
+    ExternalPredicateOut:
+      properties:
+        id:
+          type: string
+          title: Id
+        title:
+          type: string
+          title: Title
+        definition:
+          type: string
+          title: Definition
+        source:
+          type: string
+          title: Source
+        external_id:
+          type: string
+          title: External Id
+        attributes:
+          anyOf:
+          - additionalProperties: true
+            type: object
+          - type: 'null'
+          title: Attributes
+        created_at:
+          type: string
+          title: Created At
+        updated_at:
+          type: string
+          title: Updated At
+      type: object
+      required:
+      - id
+      - title
+      - definition
+      - source
+      - external_id
+      - created_at
+      - updated_at
+      title: ExternalPredicateOut
+      description: Response model for external predicates.
+    ExternalPredicateSearchResult:
+      properties:
+        id:
+          type: string
+          title: Id
+        title:
+          type: string
+          title: Title
+        definition:
+          type: string
+          title: Definition
+        source:
+          type: string
+          title: Source
+        external_id:
+          type: string
+          title: External Id
+        attributes:
+          anyOf:
+          - additionalProperties: true
+            type: object
+          - type: 'null'
+          title: Attributes
+        created_at:
+          type: string
+          title: Created At
+        updated_at:
+          type: string
+          title: Updated At
+        similarity_score:
+          type: number
+          title: Similarity Score
+      type: object
+      required:
+      - id
+      - title
+      - definition
+      - source
+      - external_id
+      - created_at
+      - updated_at
+      - similarity_score
+      title: ExternalPredicateSearchResult
+      description: Search result for external predicates with similarity score.
+External-concept:
+  name: External-concept
+  description: Schema for concepts from external knowledge sources
+  id: data_model.schema.external-concept
+  $schema: http://json-schema.org/draft-07/schema#
+  type: object
+  title: ExternalConcept
+Dataset:
+  name: Dataset
+  description: Combined schemas for dataset data model
+  id: data_model.schema.dataset
+  $schema: http://json-schema.org/draft-07/schema#
+  schemas:
+    DatasetResponse:
+      properties:
+        id:
+          type: string
+          title: Id
+        title:
+          type: string
+          title: Title
+        filename:
+          type: string
+          title: Filename
+        created_at:
+          type: string
+          format: date-time
+          title: Created At
+        last_accessed:
+          type: string
+          format: date-time
+          title: Last Accessed
+        schema_version:
+          type: integer
+          title: Schema Version
+        metrics:
+          $ref: '#/components/schemas/DatasetMetrics'
+        is_active:
+          type: boolean
+          title: Is Active
+      type: object
+      required:
+      - id
+      - title
+      - filename
+      - created_at
+      - last_accessed
+      - schema_version
+      - metrics
+      - is_active
+      title: DatasetResponse
+      description: Response model for dataset operations.
+    CreateDatasetRequest:
+      properties:
+        title:
+          type: string
+          title: Title
+        filename:
+          type: string
+          title: Filename
+      type: object
+      required:
+      - title
+      - filename
+      title: CreateDatasetRequest
+      description: Request to create a new dataset.
+  type: object
+  title: dataset schemas
+  definitions:
+    DatasetResponse:
+      properties:
+        id:
+          type: string
+          title: Id
+        title:
+          type: string
+          title: Title
+        filename:
+          type: string
+          title: Filename
+        created_at:
+          type: string
+          format: date-time
+          title: Created At
+        last_accessed:
+          type: string
+          format: date-time
+          title: Last Accessed
+        schema_version:
+          type: integer
+          title: Schema Version
+        metrics:
+          $ref: '#/components/schemas/DatasetMetrics'
+        is_active:
+          type: boolean
+          title: Is Active
+      type: object
+      required:
+      - id
+      - title
+      - filename
+      - created_at
+      - last_accessed
+      - schema_version
+      - metrics
+      - is_active
+      title: DatasetResponse
+      description: Response model for dataset operations.
+    CreateDatasetRequest:
+      properties:
+        title:
+          type: string
+          title: Title
+        filename:
+          type: string
+          title: Filename
+      type: object
+      required:
+      - title
+      - filename
+      title: CreateDatasetRequest
+      description: Request to create a new dataset.
+Rag-trace:
+  name: Rag-trace
+  description: Combined schemas for rag-trace data model
+  id: data_model.schema.rag-trace
+  $schema: http://json-schema.org/draft-07/schema#
+  schemas:
+    RAGExtractionResponse:
+      properties:
+        request_id:
+          type: string
+          title: Request Id
+          description: Unique identifier for this extraction request.
+        entities:
+          items:
+            $ref: '#/components/schemas/ExtractedEntity'
+          type: array
+          title: Entities
+          description: List of extracted entities with enrichment data.
+        metrics:
+          $ref: '#/components/schemas/ProcessingMetrics'
+          description: Performance metrics for the extraction pipeline.
+        trace_available:
+          type: boolean
+          title: Trace Available
+          description: Indicates whether detailed trace data is available for this
+            request.
+          default: false
+      type: object
+      required:
+      - metrics
+      title: RAGExtractionResponse
+      description: 'Response model for RAG entity extraction.
+
+
+        Contains extracted entities, processing metrics, and trace availability information.'
+  type: object
+  title: rag-trace schemas
+  definitions:
+    RAGExtractionResponse:
+      properties:
+        request_id:
+          type: string
+          title: Request Id
+          description: Unique identifier for this extraction request.
+        entities:
+          items:
+            $ref: '#/components/schemas/ExtractedEntity'
+          type: array
+          title: Entities
+          description: List of extracted entities with enrichment data.
+        metrics:
+          $ref: '#/components/schemas/ProcessingMetrics'
+          description: Performance metrics for the extraction pipeline.
+        trace_available:
+          type: boolean
+          title: Trace Available
+          description: Indicates whether detailed trace data is available for this
+            request.
+          default: false
+      type: object
+      required:
+      - metrics
+      title: RAGExtractionResponse
+      description: 'Response model for RAG entity extraction.
+
+
+        Contains extracted entities, processing metrics, and trace availability information.'
+Rag-metrics:
+  name: Rag-metrics
+  description: Schema for RAG pipeline performance metrics
+  id: data_model.schema.rag-metrics
+  $schema: http://json-schema.org/draft-07/schema#
+  type: object
+  title: RAGMetrics

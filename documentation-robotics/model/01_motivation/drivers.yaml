@@ -1,0 +1,40 @@
+Need for Structured Knowledge:
+  name: Need for Structured Knowledge
+  description: Need for organizing and structuring unstructured knowledge to enable
+    effective discovery, reuse, and AI-enhanced workflows
+  category: operational
+  id: need-for-structured-knowledge
+  motivates:
+  - motivation.goal.enable-knowledge-graph-curation
+AI Agent Integration Demand:
+  name: AI Agent Integration Demand
+  description: Increasing demand for AI agent integration with human workflows requiring
+    structured context and knowledge representation
+  category: technology
+  id: ai-agent-integration-demand
+  motivates:
+  - motivation.goal.facilitate-human-agent-communication
+Privacy and Control Concerns:
+  name: Privacy and Control Concerns
+  description: Privacy and data control concerns driving local-first architecture
+    to keep sensitive knowledge on user-controlled devices
+  category: regulatory
+  id: privacy-and-control-concerns
+  motivates:
+  - motivation.goal.ensure-local-first-operation
+RAG Effectiveness Requirement:
+  name: RAG Effectiveness Requirement
+  description: Requirement for context-rich RAG to improve AI response accuracy and
+    relevance through curated knowledge
+  category: technology
+  id: rag-effectiveness-requirement
+  motivates:
+  - motivation.goal.support-rag-workflows
+Semantic Understanding Need:
+  name: Semantic Understanding Need
+  description: Need for semantic understanding beyond keyword search to enable intelligent
+    knowledge discovery and reasoning
+  category: strategic
+  id: semantic-understanding-need
+  motivates:
+  - motivation.goal.enable-knowledge-graph-curation

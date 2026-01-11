@@ -136,6 +136,7 @@ export const UnifiedSearchPage: React.FC<UnifiedSearchPageProps> = ({
         {/* Search Input Row */}
         <div className="flex gap-2 items-center">
           <TextInput
+            data-testid="reference-search-input"
             icon={Search}
             placeholder="Enter search term..."
             value={query}
@@ -145,12 +146,14 @@ export const UnifiedSearchPage: React.FC<UnifiedSearchPageProps> = ({
             className="flex-1"
           />
           <Button
+            data-testid="reference-search-button"
             onClick={handleSearch}
             disabled={!canSearch || isSearching}
           >
             {isSearching ? <Spinner size="sm" /> : "Search"}
           </Button>
           <SourceSelector
+            data-testid="reference-source-filter"
             selectedSources={selectedSources}
             onSourcesChange={setSelectedSources}
             disabled={isSearching}
@@ -241,6 +244,7 @@ export const UnifiedSearchPage: React.FC<UnifiedSearchPageProps> = ({
             </TabItem>
             <TabItem title="List View" icon={List}>
               <SearchResults
+                data-testid="reference-results-list"
                 results={searchResults}
                 totalResults={totalResults}
                 onSelectNode={handleNodeSelect}

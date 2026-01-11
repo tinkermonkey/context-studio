@@ -1,0 +1,43 @@
+openapi:
+  openapi: 3.0.3
+  info:
+    title: Execute Sparql Query
+    version: 1.0.0
+  paths:
+    /api/graph/sparql/query:
+      post:
+        operationId: execute_sparql_query_api_graph_sparql_query_post
+        summary: Execute Sparql Query
+        description: Execute a SPARQL query against the RDF graph.
+        parameters:
+        - name: SessionLocal
+          in: query
+          required: false
+          schema:
+            title: Sessionlocal
+        requestBody:
+          required: true
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SPARQLQuery'
+        responses:
+          '200':
+            description: Successful Response
+            content:
+              application/json:
+                schema:
+                  type: array
+                  items:
+                    type: object
+                    additionalProperties: true
+                  title: Response Execute Sparql Query Api Graph Sparql Query Post
+          '422':
+            description: Validation Error
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/HTTPValidationError'
+        tags:
+        - graph
+        - Graph

@@ -12,6 +12,7 @@ from sqlalchemy.orm import Session
 from database.models import StructureNode
 from api.models.structure_nodes import WordSense
 from nlp.models import NLPAnalysisResponse, TokenData
+from services.exceptions import ValidationError
 from utils.logger import get_logger
 
 logger = get_logger(__name__)
@@ -217,24 +218,42 @@ class WordSenseService:
 
             # Parse each sense into a WordSense model
             senses = []
+            parse_failures = []
             for sense_dict in senses_data:
                 try:
                     senses.append(WordSense(**sense_dict))
                 except Exception as e:
-                    logger.warning(
+                    logger.error(
                         f"Failed to parse word sense for node {node_id}: {e}. "
-                        f"Skipping invalid entry: {sense_dict}"
+                        f"Invalid entry: {sense_dict}"
                     )
-                    continue
+                    parse_failures.append({
+                        "data": sense_dict,
+                        "error": str(e)
+                    })
+
+            # If any senses failed to parse, raise error - data is corrupted
+            if parse_failures:
+                logger.error(
+                    f"CRITICAL: {len(parse_failures)} word senses for node {node_id} "
+                    f"could not be parsed due to data corruption"
+                )
+                raise ValidationError(
+                    f"Word sense data is partially corrupted: {len(parse_failures)} of "
+                    f"{len(senses_data)} senses could not be loaded. Node ID: {node_id}"
+                )
 
             return senses
 
         except json.JSONDecodeError as e:
             logger.error(
-                f"Failed to parse word_senses JSON for node {node_id}: {e}. "
-                f"Returning empty list."
+                f"CRITICAL: word_senses JSON for node {node_id} is corrupted and cannot be parsed: {e}. "
+                f"Raw data (first 200 chars): {node.word_senses[:200] if node.word_senses else 'null'}"
             )
-            return []
+            raise ValidationError(
+                f"Word sense data for node {node_id} is corrupted (JSON parse error). "
+                f"Please contact support to recover this data."
+            )
 
     def remove_word_senses(
         self, node_id: str, sense_ids: List[str]
@@ -348,6 +367,87 @@ class WordSenseService:
 
             logger.debug(f"Validated sense_id for {sense_type}: {sense_id}")
             return True
+
+    def update_selected_senses(
+        self, node_id: str, selected_senses: List[WordSense]
+    ) -> List[WordSense]:
+        """
+        Update selected word senses for a structure node.
+
+        This method uses a conservative merge strategy: it preserves existing word
+        senses that are not included in the update (for different words), while
+        replacing senses for words that are included in the update.
+
+        Args:
+            node_id: ID of the structure node
+            selected_senses: List of WordSense instances representing user selections
+
+        Returns:
+            List of all word senses after update
+
+        Raises:
+            ValueError: If node not found, validation fails, or update fails
+        """
+        logger.info(
+            f"Updating selected word senses for node {node_id} "
+            f"with {len(selected_senses)} selections"
+        )
+
+        # Get the node
+        node = self.db.query(StructureNode).filter(StructureNode.id == node_id).first()
+        if not node:
+            raise ValueError(f"StructureNode not found: {node_id}")
+
+        # Validate all sense IDs before proceeding
+        for sense in selected_senses:
+            try:
+                self.validate_sense_identifier(sense.sense_type, sense.sense_id)
+            except ValueError as e:
+                logger.error(f"Invalid sense in update: {e}")
+                raise ValueError(f"Invalid sense: {e}")
+
+        # Get existing senses with error handling for malformed JSON
+        try:
+            existing_senses = self.get_word_senses(node_id)
+        except ValueError as e:
+            logger.error(f"Failed to load existing word senses for node {node_id}: {e}")
+            raise ValueError(f"Cannot update word senses: existing data is corrupted. {e}")
+
+        # Create set of words (terms) being updated
+        updated_terms = {sense.term.lower() for sense in selected_senses}
+
+        # Preserve existing senses for words NOT included in this update
+        preserved_senses = [
+            sense for sense in existing_senses
+            if sense.term.lower() not in updated_terms
+        ]
+
+        # Combine preserved senses with new selections
+        updated_senses = preserved_senses + selected_senses
+
+        logger.info(
+            f"Conservative merge: preserved {len(preserved_senses)} senses for other words, "
+            f"updated {len(selected_senses)} senses"
+        )
+
+        # Serialize to JSON
+        senses_json = json.dumps([sense.model_dump() for sense in updated_senses])
+
+        # Update node (increment version after validation, before commit)
+        node.word_senses = senses_json
+
+        try:
+            node.version = node.version + 1
+            self.db.commit()
+            logger.info(
+                f"Successfully updated selected word senses for node {node_id} "
+                f"(total: {len(updated_senses)})"
+            )
+            return updated_senses
+        except Exception as e:
+            self.db.rollback()
+            logger.error(f"Failed to update selected word senses for node {node_id}: {e}")
+            raise ValueError(f"Failed to update selected word senses: {e}")
 
     def get_nodes_with_word_sense(
         self, sense_id: str, limit: Optional[int] = None
