@@ -21,6 +21,8 @@ import {
   SelectedWordSensesUpdate,
   MoveNodesRequest,
   MoveNodesResponse,
+  StructureNodeAttribute,
+  ResolvedAttribute,
 } from "../types/structureNodes";
 
 export class StructureNodeService extends BaseService {
@@ -379,6 +381,53 @@ export class StructureNodeService extends BaseService {
         request,
       );
     }, "move");
+  }
+
+  /**
+   * Get resolved attributes (local + inherited) for a structure node
+   */
+  async getNodeAttributes(nodeId: string): Promise<ResolvedAttribute[]> {
+    return this.withErrorContext(async () => {
+      this.validateRequired(nodeId, "nodeId");
+      return this.getResource<ResolvedAttribute[]>(
+        `${ENDPOINTS.STRUCTURE_NODES}/${nodeId}/attributes`,
+      );
+    }, "getNodeAttributes");
+  }
+
+  /**
+   * Set local attributes on a structure node
+   */
+  async setNodeAttributes(
+    nodeId: string,
+    attributes: StructureNodeAttribute[],
+  ): Promise<StructureNode> {
+    return this.withErrorContext(async () => {
+      this.validateRequired(nodeId, "nodeId");
+      this.validateRequired(attributes, "attributes");
+
+      return this.postResource<StructureNode>(
+        `${ENDPOINTS.STRUCTURE_NODES}/${nodeId}/attributes`,
+        attributes,
+      );
+    }, "setNodeAttributes");
+  }
+
+  /**
+   * Remove a specific attribute from a structure node
+   */
+  async removeNodeAttribute(
+    nodeId: string,
+    key: string,
+  ): Promise<StructureNode> {
+    return this.withErrorContext(async () => {
+      this.validateRequired(nodeId, "nodeId");
+      this.validateRequired(key, "key");
+
+      return this.deleteResource<StructureNode>(
+        `${ENDPOINTS.STRUCTURE_NODES}/${nodeId}/attributes/${key}`,
+      );
+    }, "removeNodeAttribute");
   }
 
   /**

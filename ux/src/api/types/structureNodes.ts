@@ -200,6 +200,21 @@ export interface MoveNodesResponse {
   errors: string[];
 }
 
+// Attribute types for structure nodes
+export type AttributeValueType = "string" | "number" | "boolean" | "date" | "url";
+
+export interface StructureNodeAttribute {
+  key: string;
+  title: string;
+  value_type: AttributeValueType;
+  value?: unknown | null;
+}
+
+export interface ResolvedAttribute extends StructureNodeAttribute {
+  inherited: boolean;
+  source_node_id?: string | null;
+}
+
 // Validation constants
 export const VALIDATION_RULES = {
   MAX_TITLE_LENGTH: 255,
