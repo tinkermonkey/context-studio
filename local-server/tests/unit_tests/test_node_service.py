@@ -870,15 +870,10 @@ class TestNodeAttributeParsing:
         result = node_service._parse_attributes_json(None)
         assert result == []
 
-    def test_parse_attributes_json_invalid_json(self, node_service):
+    def test_parse_attributes_json_invalid(self, node_service):
         """Test parsing invalid JSON returns empty list."""
         result = node_service._parse_attributes_json("{ invalid json }")
         assert result == []
-
-    def test_parse_attributes_json_with_null_value_type(self, node_service):
-        """Test parsing attributes where value_type is null."""
-        # Remove this test - value_type is a required field in StructureNodeAttribute
-        pass
 
 
 class TestNodeAttributeOperations:

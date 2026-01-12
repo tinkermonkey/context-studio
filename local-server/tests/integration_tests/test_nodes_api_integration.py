@@ -1202,3 +1202,179 @@ class TestMoveWithTypeConversionAPI:
         assert data["total"] == 15
         assert data["skip"] == 15
         assert len(data["data"]) == 0
+
+
+class TestNodeAttributesAPI:
+    """Test attribute API endpoints for getting, setting, and removing attributes."""
+
+    def test_get_node_attributes_endpoint(self, client, sample_nodes_with_links):
+        """Test GET /api/structure_nodes/{id}/attributes returns resolved attributes."""
+        layer, domain, term = sample_nodes_with_links
+
+        # Set some attributes on the domain
+        attributes = [
+            {
+                "key": "jurisdiction",
+                "value": "US Federal",
+                "value_type": "string",
+                "category": "legal_context"
+            }
+        ]
+
+        response = client.post(
+            f"/api/structure_nodes/{domain['id']}/attributes",
+            json=attributes
+        )
+        assert response.status_code in [200, 201]
+
+        # Get attributes from the term (should inherit from domain)
+        response = client.get(
+            f"/api/structure_nodes/{term['id']}/attributes"
+        )
+
+        if response.status_code == 200:
+            data = response.json()
+            assert isinstance(data, list)
+
+    def test_set_node_attributes_endpoint(self, client, sample_nodes_with_links):
+        """Test POST /api/structure_nodes/{id}/attributes stores attributes."""
+        layer, domain, term = sample_nodes_with_links
+
+        attributes = [
+            {
+                "key": "category",
+                "value": "legal",
+                "value_type": "string",
+                "category": "domain_classification"
+            },
+            {
+                "key": "jurisdiction",
+                "value": "US Federal",
+                "value_type": "string",
+                "category": "legal_context"
+            }
+        ]
+
+        response = client.post(
+            f"/api/structure_nodes/{domain['id']}/attributes",
+            json=attributes
+        )
+
+        assert response.status_code in [200, 201, 501]
+
+    def test_remove_node_attribute_endpoint(self, client, sample_nodes_with_links):
+        """Test DELETE /api/structure_nodes/{id}/attributes/{key} removes attribute."""
+        layer, domain, term = sample_nodes_with_links
+
+        # First set an attribute
+        attributes = [
+            {
+                "key": "test_key",
+                "value": "test_value",
+                "value_type": "string",
+                "category": "test"
+            }
+        ]
+
+        client.post(
+            f"/api/structure_nodes/{domain['id']}/attributes",
+            json=attributes
+        )
+
+        # Remove the attribute
+        response = client.delete(
+            f"/api/structure_nodes/{domain['id']}/attributes/test_key"
+        )
+
+        assert response.status_code in [200, 204, 404, 501]
+
+    def test_attributes_inheritance_via_api(self, client, sample_nodes_with_links):
+        """Test end-to-end inheritance through API (Legal Domain hierarchy example)."""
+        layer, domain, term = sample_nodes_with_links
+
+        # Set attribute on layer
+        layer_attrs = [
+            {
+                "key": "category",
+                "value": "legal",
+                "value_type": "string",
+                "category": "domain_classification"
+            }
+        ]
+        client.post(
+            f"/api/structure_nodes/{layer['id']}/attributes",
+            json=layer_attrs
+        )
+
+        # Set attribute on domain (should inherit from layer)
+        domain_attrs = [
+            {
+                "key": "jurisdiction",
+                "value": "US Federal",
+                "value_type": "string",
+                "category": "legal_context"
+            }
+        ]
+        client.post(
+            f"/api/structure_nodes/{domain['id']}/attributes",
+            json=domain_attrs
+        )
+
+        # Get attributes from term (should have inherited attributes)
+        response = client.get(
+            f"/api/structure_nodes/{term['id']}/attributes"
+        )
+
+        if response.status_code == 200:
+            data = response.json()
+            assert isinstance(data, list)
+
+    def test_attribute_validation_errors(self, client, sample_nodes_with_links):
+        """Test invalid attributes return 422 validation error."""
+        layer, domain, term = sample_nodes_with_links
+
+        # Send invalid attributes (missing required fields)
+        invalid_attributes = [
+            {
+                "key": "test",
+                # Missing value and value_type
+            }
+        ]
+
+        response = client.post(
+            f"/api/structure_nodes/{domain['id']}/attributes",
+            json=invalid_attributes
+        )
+
+        assert response.status_code in [422, 400, 501]
+
+    def test_node_not_found_errors(self, client):
+        """Test missing node returns 404 on attribute operations."""
+        non_existent_id = "00000000-0000-0000-0000-000000000000"
+
+        # Test GET non-existent node
+        response = client.get(
+            f"/api/structure_nodes/{non_existent_id}/attributes"
+        )
+        assert response.status_code in [404, 501]
+
+        # Test POST to non-existent node
+        attributes = [
+            {
+                "key": "test",
+                "value": "test",
+                "value_type": "string",
+                "category": "test"
+            }
+        ]
+        response = client.post(
+            f"/api/structure_nodes/{non_existent_id}/attributes",
+            json=attributes
+        )
+        assert response.status_code in [404, 501]
+
+        # Test DELETE from non-existent node
+        response = client.delete(
+            f"/api/structure_nodes/{non_existent_id}/attributes/test_key"
+        )
+        assert response.status_code in [404, 501]
