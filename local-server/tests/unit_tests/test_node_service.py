@@ -830,3 +830,473 @@ class TestMoveWithTypeConversion:
 
         with pytest.raises(InvalidHierarchyError, match="at root level"):
             node_service._validate_node_move(layer, parent)
+
+
+class TestNodeAttributeParsing:
+    """Test attribute parsing and serialization."""
+
+    def test_parse_attributes_json_valid(self, node_service):
+        """Test parsing valid JSON attributes."""
+        attributes_json = '[{"key":"category","value":"legal","data_type":"string"}]'
+        result = node_service._parse_attributes_json(attributes_json)
+
+        assert len(result) == 1
+        assert result[0].key == "category"
+        assert result[0].value == "legal"
+        assert result[0].data_type == "string"
+
+    def test_parse_attributes_json_multiple(self, node_service):
+        """Test parsing multiple attributes from JSON."""
+        attributes_json = '''[
+            {"key":"category","value":"legal","data_type":"string"},
+            {"key":"jurisdiction","value":"US Federal","data_type":"string"},
+            {"key":"version","value":"1","data_type":"number"}
+        ]'''
+        result = node_service._parse_attributes_json(attributes_json)
+
+        assert len(result) == 3
+        assert result[0].key == "category"
+        assert result[1].key == "jurisdiction"
+        assert result[2].key == "version"
+
+    def test_parse_attributes_json_empty_string(self, node_service):
+        """Test parsing empty string returns empty list."""
+        result = node_service._parse_attributes_json("")
+        assert result == []
+
+    def test_parse_attributes_json_none(self, node_service):
+        """Test parsing None returns empty list."""
+        result = node_service._parse_attributes_json(None)
+        assert result == []
+
+    def test_parse_attributes_json_invalid_json(self, node_service):
+        """Test parsing invalid JSON returns empty list."""
+        result = node_service._parse_attributes_json("{ invalid json }")
+        assert result == []
+
+    def test_parse_attributes_json_with_null_data_type(self, node_service):
+        """Test parsing attributes where data_type is null."""
+        attributes_json = '[{"key":"title","value":"Some Value","data_type":null}]'
+        result = node_service._parse_attributes_json(attributes_json)
+
+        assert len(result) == 1
+        assert result[0].key == "title"
+        assert result[0].data_type is None
+
+
+class TestNodeAttributeOperations:
+    """Test attribute setting, retrieval, and removal operations."""
+
+    def test_set_node_attributes_success(self, node_service, mock_db):
+        """Test successfully setting attributes on a node."""
+        node_id = str(uuid.uuid4())
+
+        # Create mock node
+        node = Mock(spec=StructureNode)
+        node.id = node_id
+        node.version = 1
+        node.attributes = None
+
+        # Mock get_node
+        node_service.get_node = Mock(return_value=node)
+        mock_db.commit = Mock()
+        mock_db.refresh = Mock()
+
+        # Create attributes
+        from services.node_service import StructureNodeAttribute
+        attributes = [
+            StructureNodeAttribute(key="category", value="legal", data_type="string"),
+            StructureNodeAttribute(key="jurisdiction", value="US Federal", data_type="string"),
+        ]
+
+        # Set attributes
+        result = node_service.set_node_attributes(node_id, attributes)
+
+        # Verify
+        assert node.version == 2
+        assert mock_db.commit.called
+        assert mock_db.refresh.called
+        assert "category" in node.attributes
+        assert "jurisdiction" in node.attributes
+
+    def test_set_node_attributes_empty_list(self, node_service, mock_db):
+        """Test setting empty attributes list."""
+        node_id = str(uuid.uuid4())
+
+        node = Mock(spec=StructureNode)
+        node.id = node_id
+        node.version = 1
+
+        node_service.get_node = Mock(return_value=node)
+        mock_db.commit = Mock()
+        mock_db.refresh = Mock()
+
+        result = node_service.set_node_attributes(node_id, [])
+
+        assert node.attributes == "[]"
+        assert mock_db.commit.called
+
+    def test_set_node_attributes_node_not_found(self, node_service):
+        """Test setting attributes on non-existent node."""
+        node_id = str(uuid.uuid4())
+        node_service.get_node = Mock(return_value=None)
+
+        from services.node_service import StructureNodeAttribute
+        attributes = [StructureNodeAttribute(key="test", value="value", data_type="string")]
+
+        with pytest.raises(ValueError, match="not found"):
+            node_service.set_node_attributes(node_id, attributes)
+
+    def test_get_local_attributes_success(self, node_service):
+        """Test retrieving only local attributes."""
+        node_id = str(uuid.uuid4())
+
+        node = Mock(spec=StructureNode)
+        node.id = node_id
+        node.attributes = '[{"key":"category","value":"legal","data_type":"string"}]'
+
+        node_service.get_node = Mock(return_value=node)
+
+        result = node_service.get_local_attributes(node_id)
+
+        assert len(result) == 1
+        assert result[0].key == "category"
+        assert result[0].value == "legal"
+
+    def test_get_local_attributes_empty(self, node_service):
+        """Test retrieving local attributes when none exist."""
+        node_id = str(uuid.uuid4())
+
+        node = Mock(spec=StructureNode)
+        node.id = node_id
+        node.attributes = None
+
+        node_service.get_node = Mock(return_value=node)
+
+        result = node_service.get_local_attributes(node_id)
+
+        assert result == []
+
+    def test_get_local_attributes_node_not_found(self, node_service):
+        """Test retrieving attributes from non-existent node."""
+        node_id = str(uuid.uuid4())
+        node_service.get_node = Mock(return_value=None)
+
+        with pytest.raises(ValueError, match="not found"):
+            node_service.get_local_attributes(node_id)
+
+    def test_remove_node_attribute_success(self, node_service, mock_db):
+        """Test removing specific attribute by key."""
+        node_id = str(uuid.uuid4())
+
+        node = Mock(spec=StructureNode)
+        node.id = node_id
+        node.version = 1
+        node.attributes = '[{"key":"category","value":"legal","data_type":"string"},{"key":"jurisdiction","value":"US","data_type":"string"}]'
+
+        node_service.get_node = Mock(return_value=node)
+        mock_db.commit = Mock()
+        mock_db.refresh = Mock()
+
+        result = node_service.remove_node_attribute(node_id, "category")
+
+        # Verify category was removed
+        remaining = node_service._parse_attributes_json(node.attributes)
+        assert len(remaining) == 1
+        assert remaining[0].key == "jurisdiction"
+        assert mock_db.commit.called
+
+    def test_remove_node_attribute_not_found(self, node_service, mock_db):
+        """Test removing non-existent attribute key."""
+        node_id = str(uuid.uuid4())
+
+        node = Mock(spec=StructureNode)
+        node.id = node_id
+        node.version = 1
+        node.attributes = '[{"key":"category","value":"legal","data_type":"string"}]'
+
+        node_service.get_node = Mock(return_value=node)
+        mock_db.commit = Mock()
+        mock_db.refresh = Mock()
+
+        result = node_service.remove_node_attribute(node_id, "nonexistent")
+
+        # Attributes should remain unchanged
+        remaining = node_service._parse_attributes_json(node.attributes)
+        assert len(remaining) == 1
+        assert remaining[0].key == "category"
+
+    def test_remove_node_attribute_all_attributes(self, node_service, mock_db):
+        """Test removing all attributes one by one."""
+        node_id = str(uuid.uuid4())
+
+        node = Mock(spec=StructureNode)
+        node.id = node_id
+        node.version = 1
+        node.attributes = '[{"key":"test","value":"value","data_type":"string"}]'
+
+        node_service.get_node = Mock(return_value=node)
+        mock_db.commit = Mock()
+        mock_db.refresh = Mock()
+
+        result = node_service.remove_node_attribute(node_id, "test")
+
+        remaining = node_service._parse_attributes_json(node.attributes)
+        assert len(remaining) == 0
+
+
+class TestNodeAttributeInheritance:
+    """Test attribute inheritance resolution."""
+
+    def test_resolve_node_attributes_no_parent(self, node_service):
+        """Test resolving attributes on single node without parent."""
+        node_id = str(uuid.uuid4())
+
+        node = Mock(spec=StructureNode)
+        node.id = node_id
+        node.attributes = '[{"key":"category","value":"legal","data_type":"string"}]'
+
+        node_service.get_node = Mock(return_value=node)
+        node_service.get_node_ancestors = Mock(return_value=[])
+
+        result = node_service.resolve_node_attributes(node_id)
+
+        assert len(result) == 1
+        assert result[0].key == "category"
+        assert result[0].value == "legal"
+        assert result[0].inherited is False
+        assert str(result[0].source_node_id) == node_id
+
+    def test_resolve_node_attributes_with_inheritance(self, node_service):
+        """Test resolving attributes with parent inheritance."""
+        layer_id = str(uuid.uuid4())
+        domain_id = str(uuid.uuid4())
+
+        layer = Mock(spec=StructureNode)
+        layer.id = layer_id
+        layer.attributes = '[{"key":"category","value":"legal","data_type":"string"}]'
+
+        domain = Mock(spec=StructureNode)
+        domain.id = domain_id
+        domain.attributes = '[{"key":"jurisdiction","value":"US Federal","data_type":"string"}]'
+
+        node_service.get_node = Mock(return_value=domain)
+        node_service.get_node_ancestors = Mock(return_value=[layer])
+
+        result = node_service.resolve_node_attributes(domain_id)
+
+        assert len(result) == 2
+        # Find inherited attribute
+        inherited = [r for r in result if r.key == "category"][0]
+        assert inherited.inherited is True
+        assert str(inherited.source_node_id) == layer_id
+        # Find local attribute
+        local = [r for r in result if r.key == "jurisdiction"][0]
+        assert local.inherited is False
+        assert str(local.source_node_id) == domain_id
+
+    def test_resolve_node_attributes_override(self, node_service):
+        """Test child attribute overrides parent value."""
+        parent_id = str(uuid.uuid4())
+        child_id = str(uuid.uuid4())
+
+        parent = Mock(spec=StructureNode)
+        parent.id = parent_id
+        parent.attributes = '[{"key":"jurisdiction","value":"US Federal","data_type":"string"}]'
+
+        child = Mock(spec=StructureNode)
+        child.id = child_id
+        child.attributes = '[{"key":"jurisdiction","value":"New York State","data_type":"string"}]'
+
+        node_service.get_node = Mock(return_value=child)
+        node_service.get_node_ancestors = Mock(return_value=[parent])
+
+        result = node_service.resolve_node_attributes(child_id)
+
+        assert len(result) == 1
+        assert result[0].key == "jurisdiction"
+        assert result[0].value == "New York State"  # Child value wins
+        assert result[0].inherited is False
+        assert str(result[0].source_node_id) == child_id
+
+    def test_resolve_node_attributes_deep_hierarchy(self, node_service):
+        """Test attribute resolution with deep 5+ level hierarchy."""
+        # Create: Layer -> Domain -> Term1 -> Term2 -> Term3
+        layer_id = str(uuid.uuid4())
+        domain_id = str(uuid.uuid4())
+        term1_id = str(uuid.uuid4())
+        term2_id = str(uuid.uuid4())
+        term3_id = str(uuid.uuid4())
+
+        layer = Mock(spec=StructureNode)
+        layer.id = layer_id
+        layer.attributes = '[{"key":"level","value":"layer","data_type":"string"}]'
+
+        domain = Mock(spec=StructureNode)
+        domain.id = domain_id
+        domain.attributes = '[{"key":"domain_attr","value":"domain_val","data_type":"string"}]'
+
+        term1 = Mock(spec=StructureNode)
+        term1.id = term1_id
+        term1.attributes = '[{"key":"term1_attr","value":"term1_val","data_type":"string"}]'
+
+        term2 = Mock(spec=StructureNode)
+        term2.id = term2_id
+        term2.attributes = '[{"key":"term2_attr","value":"term2_val","data_type":"string"}]'
+
+        term3 = Mock(spec=StructureNode)
+        term3.id = term3_id
+        term3.attributes = '[{"key":"term3_attr","value":"term3_val","data_type":"string"}]'
+
+        node_service.get_node = Mock(return_value=term3)
+        node_service.get_node_ancestors = Mock(return_value=[layer, domain, term1, term2])
+
+        result = node_service.resolve_node_attributes(term3_id)
+
+        # Should have all attributes
+        assert len(result) == 5
+        keys = {r.key for r in result}
+        assert keys == {"level", "domain_attr", "term1_attr", "term2_attr", "term3_attr"}
+        # All but last should be inherited
+        term3_attr = [r for r in result if r.key == "term3_attr"][0]
+        assert term3_attr.inherited is False
+
+    def test_resolve_node_attributes_multiple_keys(self, node_service):
+        """Test inheritance with multiple attributes at each level."""
+        parent_id = str(uuid.uuid4())
+        child_id = str(uuid.uuid4())
+
+        parent = Mock(spec=StructureNode)
+        parent.id = parent_id
+        parent.attributes = '[{"key":"attr1","value":"parent1","data_type":"string"},{"key":"attr2","value":"parent2","data_type":"string"}]'
+
+        child = Mock(spec=StructureNode)
+        child.id = child_id
+        child.attributes = '[{"key":"attr3","value":"child3","data_type":"string"}]'
+
+        node_service.get_node = Mock(return_value=child)
+        node_service.get_node_ancestors = Mock(return_value=[parent])
+
+        result = node_service.resolve_node_attributes(child_id)
+
+        assert len(result) == 3
+        keys = {r.key for r in result}
+        assert keys == {"attr1", "attr2", "attr3"}
+
+    def test_resolve_node_attributes_node_not_found(self, node_service):
+        """Test resolving attributes on non-existent node."""
+        node_id = str(uuid.uuid4())
+        node_service.get_node = Mock(return_value=None)
+
+        with pytest.raises(ValueError, match="not found"):
+            node_service.resolve_node_attributes(node_id)
+
+
+class TestAttributeValueTypeValidation:
+    """Test attribute value type validation."""
+
+    def test_attribute_value_type_string(self, node_service):
+        """Test string value type."""
+        from services.node_service import StructureNodeAttribute
+        attr = StructureNodeAttribute(key="title", value="Test String", data_type="string")
+        assert attr.data_type == "string"
+
+    def test_attribute_value_type_number(self, node_service):
+        """Test number value type."""
+        from services.node_service import StructureNodeAttribute
+        attr = StructureNodeAttribute(key="count", value="42", data_type="number")
+        assert attr.data_type == "number"
+
+    def test_attribute_value_type_boolean(self, node_service):
+        """Test boolean value type."""
+        from services.node_service import StructureNodeAttribute
+        attr = StructureNodeAttribute(key="active", value="true", data_type="boolean")
+        assert attr.data_type == "boolean"
+
+    def test_attribute_value_type_date(self, node_service):
+        """Test date value type."""
+        from services.node_service import StructureNodeAttribute
+        attr = StructureNodeAttribute(key="created", value="2025-01-15", data_type="date")
+        assert attr.data_type == "date"
+
+    def test_attribute_value_type_url(self, node_service):
+        """Test URL value type."""
+        from services.node_service import StructureNodeAttribute
+        attr = StructureNodeAttribute(key="reference", value="https://example.com", data_type="url")
+        assert attr.data_type == "url"
+
+    def test_attribute_value_type_null(self, node_service):
+        """Test null value type."""
+        from services.node_service import StructureNodeAttribute
+        attr = StructureNodeAttribute(key="test", value="value", data_type=None)
+        assert attr.data_type is None
+
+
+class TestLegalDomainHierarchyFixture:
+    """Test realistic Legal Domain hierarchy from business requirements."""
+
+    def test_legal_domain_hierarchy_structure(self, node_service):
+        """Test the complete Legal Domain hierarchy example."""
+        # Setup the hierarchy: Layer -> Domain -> Term structure
+        layer_id = str(uuid.uuid4())
+        domain_id = str(uuid.uuid4())
+        term1_id = str(uuid.uuid4())
+        term2_id = str(uuid.uuid4())
+
+        # Legal Domain layer
+        layer = Mock(spec=StructureNode)
+        layer.id = layer_id
+        layer.title = "Legal Domain"
+        layer.attributes = '[{"key":"category","value":"domain_classification","data_type":"string"}]'
+
+        # Contract Law domain
+        domain = Mock(spec=StructureNode)
+        domain.id = domain_id
+        domain.title = "Contract Law"
+        domain.parent_node_id = layer_id
+        domain.attributes = '[{"key":"jurisdiction","value":"US Federal","data_type":"string"}]'
+
+        # Force Majeure term
+        term1 = Mock(spec=StructureNode)
+        term1.id = term1_id
+        term1.title = "Force Majeure"
+        term1.parent_node_id = domain_id
+        term1.attributes = '[{"key":"jurisdiction","value":"New York State","data_type":"string"},{"key":"definition_date","value":"2025-01-15","data_type":"date"}]'
+
+        # Indemnification term (no local attributes, inherits all)
+        term2 = Mock(spec=StructureNode)
+        term2.id = term2_id
+        term2.title = "Indemnification"
+        term2.parent_node_id = domain_id
+        term2.attributes = '[]'
+
+        # Test Force Majeure resolution (term with override)
+        node_service.get_node = Mock(return_value=term1)
+        node_service.get_node_ancestors = Mock(return_value=[layer, domain])
+
+        result = node_service.resolve_node_attributes(term1_id)
+
+        # Should have category (inherited), jurisdiction (overridden), and definition_date (local)
+        assert len(result) == 3
+        keys = {r.key for r in result}
+        assert keys == {"category", "jurisdiction", "definition_date"}
+
+        # Verify overrides
+        jurisdiction = [r for r in result if r.key == "jurisdiction"][0]
+        assert jurisdiction.value == "New York State"
+        assert str(jurisdiction.source_node_id) == term1_id
+
+        # Test Indemnification resolution (term with no local attributes)
+        node_service.get_node = Mock(return_value=term2)
+        node_service.get_node_ancestors = Mock(return_value=[layer, domain])
+
+        result = node_service.resolve_node_attributes(term2_id)
+
+        # Should inherit both attributes from ancestors
+        assert len(result) == 2
+        keys = {r.key for r in result}
+        assert keys == {"category", "jurisdiction"}
+
+        # Both should be inherited
+        for attr in result:
+            assert attr.inherited is True
