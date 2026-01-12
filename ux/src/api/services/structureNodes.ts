@@ -425,7 +425,7 @@ export class StructureNodeService extends BaseService {
       this.validateRequired(key, "key");
 
       return this.deleteResource<StructureNode>(
-        `${ENDPOINTS.STRUCTURE_NODES}/${nodeId}/attributes/${key}`,
+        `${ENDPOINTS.STRUCTURE_NODES}/${nodeId}/attributes/${encodeURIComponent(key)}`,
       );
     }, "removeNodeAttribute");
   }
