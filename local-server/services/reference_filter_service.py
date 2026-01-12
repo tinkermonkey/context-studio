@@ -93,8 +93,24 @@ class ReferenceFilterService:
                     elif isinstance(mapping_data, dict) and "external_predicates" in mapping_data:
                         # Legacy dict format: {"external_predicates": [...]}
                         pred_info["external_predicates"] = mapping_data["external_predicates"]
-                except (json.JSONDecodeError, KeyError, TypeError) as e:
-                    logger.warning(f"Failed to parse mapping for predicate {pred.id}: {e}")
+                    else:
+                        # Mapping doesn't match any expected format - log detailed warning
+                        mapping_type = type(mapping_data).__name__
+                        logger.warning(
+                            f"Unsupported mapping format for predicate {pred.id}: "
+                            f"Expected dict with 'reference_predicates' or 'external_predicates' key, "
+                            f"or a list, got {mapping_type}. Mapping will be ignored."
+                        )
+                except json.JSONDecodeError as e:
+                    logger.warning(
+                        f"Failed to parse mapping JSON for predicate {pred.id}: {e}. "
+                        f"Mapping must be valid JSON (list or dict format). Mapping will be ignored."
+                    )
+                except (KeyError, TypeError) as e:
+                    logger.warning(
+                        f"Error processing mapping for predicate {pred.id}: {e}. "
+                        f"Mapping structure may be invalid. Mapping will be ignored."
+                    )
 
             mappings[pred.id] = pred_info
 

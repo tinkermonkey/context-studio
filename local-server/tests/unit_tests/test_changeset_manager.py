@@ -45,7 +45,7 @@ class TestChangesetManager:
         """Mock S3SyncManager."""
         s3_sync = Mock(spec=S3SyncManager)
         s3_sync.s3_config = {'bucket': 'test-bucket'}
-        s3_sync.parquet_writer = Mock()
+        s3_sync.write_metadata_to_s3 = Mock(return_value=True)
         return s3_sync
 
     @pytest.fixture
@@ -262,9 +262,9 @@ class TestChangesetManager:
         
         with patch.object(changeset_manager, 'get_changeset', return_value=mock_changeset):
             success = changeset_manager.push_changeset_to_s3("changeset123")
-            
+
             assert success is True
-            mock_s3_sync_manager.parquet_writer.write_metadata.assert_called_once()
+            mock_s3_sync_manager.write_metadata_to_s3.assert_called_once()
 
     def test_push_changeset_to_s3_not_found(self, changeset_manager):
         """Test S3 push when changeset not found."""
@@ -280,7 +280,7 @@ class TestChangesetManager:
         mock_changeset.to_dict.return_value = {"id": "changeset123", "title": "test"}
         
         # Mock S3 failure
-        mock_s3_sync_manager.parquet_writer.write_metadata.side_effect = Exception("S3 error")
+        mock_s3_sync_manager.write_metadata_to_s3.side_effect = Exception("S3 error")
         
         with patch.object(changeset_manager, 'get_changeset', return_value=mock_changeset):
             success = changeset_manager.push_changeset_to_s3("changeset123")

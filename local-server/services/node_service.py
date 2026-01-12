@@ -1500,7 +1500,7 @@ class NodeService:
         if existing:
             conflict_msg = (
                 f"Node with title '{structure_node.title}' already exists "
-                f"at target location as {target_type}"
+                f"at target location as {target_type.value}"
             )
 
             if handle_conflicts == "error":

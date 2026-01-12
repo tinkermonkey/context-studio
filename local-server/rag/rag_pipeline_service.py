@@ -691,6 +691,12 @@ class RAGPipelineService:
             # Use spaCy's sentence segmentation
             from nlp.pipeline import get_pipeline
             nlp = get_pipeline()
+
+            # Check if pipeline initialized successfully
+            if not nlp.get_nlp():
+                logger.debug("spaCy pipeline not initialized, using fallback sentence counting")
+                raise RuntimeError("spaCy pipeline not available")
+
             doc = nlp.process(text)
             sentences = list(doc.sents)
             return len(sentences)

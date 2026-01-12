@@ -115,10 +115,10 @@ class LLMService:
         """Get appropriate timeout based on pipeline complexity"""
         # Map pipeline types to their required timeout durations
         pipeline_timeouts = {
-            # Complex analytical tasks need more time
-            PipelineType.SUGGEST_TERM_DEFINITION: 120,
-            PipelineType.SUGGEST_LAYER_DEFINITION: 120,
-            PipelineType.SUGGEST_DOMAIN_DEFINITION: 120,
+            # Complex multi-source definition generation requires substantial reasoning time
+            PipelineType.SUGGEST_TERM_DEFINITION: 300,
+            PipelineType.SUGGEST_LAYER_DEFINITION: 300,
+            PipelineType.SUGGEST_DOMAIN_DEFINITION: 300,
             # Entity extraction is typically faster
             PipelineType.EXTRACT_ENTITIES: 60,
         }
