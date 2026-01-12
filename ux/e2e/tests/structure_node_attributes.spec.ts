@@ -1,4 +1,4 @@
-import { test, expect, Page } from '@playwright/test';
+import { test, expect } from '@playwright/test';
 import { apiRequest } from '../fixtures/test-helpers';
 
 /**
@@ -191,7 +191,7 @@ test.describe('Structure Node Attributes E2E', () => {
     const attributeKey = `test_attr_${Date.now()}`;
     await page.fill('[data-testid="attribute-key-input"]', attributeKey);
     await page.fill('[data-testid="attribute-title-input"]', 'Test Attribute');
-    await page.select('[data-testid="attribute-type-select"]', 'string');
+    await page.locator('[data-testid="attribute-type-select"]').selectOption('string');
     await page.fill('[data-testid="attribute-value-input"]', 'test_value');
 
     // Submit the form
@@ -328,7 +328,7 @@ test.describe('Structure Node Attributes E2E', () => {
     await expect(attributeForm).toBeVisible({ timeout: 5000 });
 
     // Set type to number
-    await page.select('[data-testid="attribute-type-select"]', 'number');
+    await page.locator('[data-testid="attribute-type-select"]').selectOption('number');
 
     // Enter a non-numeric value
     const valueInput = page.locator('[data-testid="attribute-value-input"]');
@@ -433,7 +433,7 @@ test.describe('Structure Node Attributes E2E', () => {
     // Verify no layout issues - check for horizontal scrolling
     const body = page.locator('body');
     const bodyWidth = await body.evaluate(el => el.scrollWidth);
-    const viewportWidth = await page.viewportSize().then(size => size?.width || 0);
+    const viewportWidth = page.viewportSize()?.width || 0;
     expect(bodyWidth).toBeLessThanOrEqual(viewportWidth + 1); // Allow 1px tolerance
   });
 
@@ -500,7 +500,7 @@ test.describe('Structure Node Attributes E2E', () => {
     // Fill in form
     await page.fill('[data-testid="attribute-key-input"]', `error_test_${Date.now()}`);
     await page.fill('[data-testid="attribute-title-input"]', 'Error Test');
-    await page.select('[data-testid="attribute-type-select"]', 'string');
+    await page.locator('[data-testid="attribute-type-select"]').selectOption('string');
     await page.fill('[data-testid="attribute-value-input"]', 'test');
 
     // Try to submit
