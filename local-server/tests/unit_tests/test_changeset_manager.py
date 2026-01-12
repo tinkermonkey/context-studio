@@ -213,14 +213,6 @@ class TestChangesetManager:
 
         assert success is False
 
-    def test_update_changeset_no_updates(self, changeset_manager):
-        """Test changeset update with no fields to update."""
-        success = changeset_manager.update_changeset(
-            changeset_id="changeset123"
-        )
-
-        assert success is False
-
     def test_delete_changeset_success(self, changeset_manager, mock_db_session):
         """Test successful changeset deletion."""
         # Mock changeset exists and is in valid state

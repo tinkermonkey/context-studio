@@ -119,23 +119,25 @@ class TaskManager:
         await task_manager.shutdown()
     """
 
-    def __init__(self, max_queue_size: int = 100, max_dlq_size: int = 1000):
+    def __init__(self, max_queue_size: int = 100, max_dlq_size: int = 1000, max_task_history: int = 10000):
         """
         Initialize the TaskManager.
 
         Args:
             max_queue_size: Maximum number of tasks in queue (default: 100)
             max_dlq_size: Maximum size of dead letter queue (default: 1000)
+            max_task_history: Maximum number of completed tasks to keep in memory (default: 10000)
         """
         self.max_queue_size = max_queue_size
         self.max_dlq_size = max_dlq_size
+        self.max_task_history = max_task_history
         self.task_queue: asyncio.Queue[BackgroundTask] = asyncio.Queue(maxsize=max_queue_size)
         self.tasks: Dict[str, BackgroundTask] = {}  # All tasks by ID
         self.dead_letter_queue: List[BackgroundTask] = []  # Failed tasks for analysis
         self._tasks_lock = asyncio.Lock()  # Protect concurrent access to tasks dict
         self._worker_task: Optional[asyncio.Task] = None
         self._running = False
-        logger.info(f"TaskManager initialized with max_queue_size={max_queue_size}, max_dlq_size={max_dlq_size}")
+        logger.info(f"TaskManager initialized with max_queue_size={max_queue_size}, max_dlq_size={max_dlq_size}, max_task_history={max_task_history}")
 
     async def start(self):
         """Start the task manager worker."""
@@ -160,19 +162,7 @@ class TaskManager:
         logger.info("Shutting down TaskManager...")
         self._running = False
 
-        # Cancel worker task and wait briefly for it to finish
-        if self._worker_task and not self._worker_task.done():
-            self._worker_task.cancel()
-            try:
-                await asyncio.wait_for(self._worker_task, timeout=2.0)
-            except asyncio.TimeoutError:
-                logger.warning("Worker task did not finish within 2.0s timeout")
-            except asyncio.CancelledError:
-                pass
-            except Exception as e:
-                logger.warning(f"Exception during worker shutdown: {e}")
-
-        # Mark all pending/running tasks as cancelled
+        # Mark all pending/running tasks as cancelled first, before stopping worker
         # We iterate over a copy since we're modifying task state
         tasks_to_cancel = [
             task for task in list(self.tasks.values())
@@ -181,6 +171,19 @@ class TaskManager:
 
         for task in tasks_to_cancel:
             await self._cancel_task_internal(task)
+
+        # Cancel worker task and wait briefly for it to finish
+        if self._worker_task and not self._worker_task.done():
+            self._worker_task.cancel()
+            try:
+                await asyncio.wait_for(self._worker_task, timeout=timeout)
+            except asyncio.TimeoutError:
+                logger.error(f"Worker task did not finish within {timeout}s timeout during shutdown")
+            except asyncio.CancelledError:
+                # This is expected when we cancel the task
+                pass
+            except Exception as e:
+                logger.error(f"Unexpected exception during worker shutdown: {type(e).__name__}: {e}")
 
         logger.info("TaskManager shutdown complete")
 
@@ -300,6 +303,35 @@ class TaskManager:
             task.progress = max(0.0, min(1.0, progress))  # Clamp to [0.0, 1.0]
             logger.debug(f"Task {task_id} progress: {task.progress:.2%}")
 
+    def _cleanup_completed_tasks(self):
+        """
+        Remove old completed tasks from memory to prevent unbounded growth.
+
+        Keeps the most recent completed/failed/cancelled tasks up to max_task_history.
+        """
+        if len(self.tasks) <= self.max_task_history:
+            return
+
+        # Sort by completion time, keeping most recent
+        completed_tasks = [
+            (task_id, task) for task_id, task in self.tasks.items()
+            if task.status in [TaskStatus.COMPLETED, TaskStatus.FAILED, TaskStatus.CANCELLED]
+        ]
+
+        if not completed_tasks:
+            return
+
+        # Sort by completed_at time (most recent last)
+        completed_tasks.sort(key=lambda x: x[1].completed_at or datetime.now(timezone.utc))
+
+        # Calculate how many to remove
+        excess = len(self.tasks) - self.max_task_history
+        tasks_to_remove = completed_tasks[:excess]
+
+        for task_id, task in tasks_to_remove:
+            del self.tasks[task_id]
+            logger.debug(f"Cleaned up completed task {task_id} from memory")
+
     async def _worker(self):
         """
         Worker coroutine that processes tasks from the queue sequentially.
@@ -314,10 +346,15 @@ class TaskManager:
                 try:
                     task = await asyncio.wait_for(self.task_queue.get(), timeout=1.0)
                 except asyncio.TimeoutError:
+                    # Periodically clean up old completed tasks
+                    self._cleanup_completed_tasks()
                     continue
 
                 # Process the task
                 await self._process_task(task)
+
+                # Clean up after processing
+                self._cleanup_completed_tasks()
 
             except asyncio.CancelledError:
                 logger.info("Worker received cancellation")
@@ -508,13 +545,14 @@ def get_task_manager() -> TaskManager:
     return _task_manager
 
 
-def initialize_task_manager(max_queue_size: int = 100, max_dlq_size: int = 1000) -> TaskManager:
+def initialize_task_manager(max_queue_size: int = 100, max_dlq_size: int = 1000, max_task_history: int = 10000) -> TaskManager:
     """
     Initialize the global TaskManager instance.
 
     Args:
         max_queue_size: Maximum number of tasks in queue
         max_dlq_size: Maximum size of dead letter queue
+        max_task_history: Maximum number of completed tasks to keep in memory
 
     Returns:
         The initialized TaskManager instance
@@ -524,7 +562,7 @@ def initialize_task_manager(max_queue_size: int = 100, max_dlq_size: int = 1000)
         logger.warning("TaskManager already initialized")
         return _task_manager
 
-    _task_manager = TaskManager(max_queue_size=max_queue_size, max_dlq_size=max_dlq_size)
+    _task_manager = TaskManager(max_queue_size=max_queue_size, max_dlq_size=max_dlq_size, max_task_history=max_task_history)
     logger.info("Global TaskManager initialized")
     return _task_manager
 

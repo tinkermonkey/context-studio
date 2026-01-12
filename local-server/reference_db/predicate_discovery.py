@@ -126,8 +126,8 @@ class PredicateDiscoveryService:
             return batch_size
 
         except Exception as e:
-            logger.warning(
-                f"Error calculating batch size: {type(e).__name__}: {e}, using default {min_size}",
+            logger.debug(
+                f"Could not calculate batch size from available RAM: {type(e).__name__}: {e}, using default {min_size}",
                 exc_info=True
             )
             return min_size

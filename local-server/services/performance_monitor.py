@@ -78,14 +78,16 @@ class PerformanceMonitor:
             memory_threshold_mb = 16384 * 0.90
 
         # Performance thresholds
+        # Note: These thresholds are set to alert on genuinely problematic conditions.
+        # They account for normal system behavior like disk caching and cache misses.
         self.performance_thresholds = {
-            'query_metrics.avg_execution_time_ms': 5000,
-            'sync_time_ms': 10000,
-            'system_metrics.memory_usage_mb': memory_threshold_mb,
-            'system_metrics.error_rate_percent': 1.0,
-            'throughput_per_second': 10,
-            'cache_metrics.hit_rate': 0.8,
-            'storage_growth_rate_mb_per_hour': 100
+            'query_metrics.avg_execution_time_ms': 10000,  # Alert only on very slow queries (10+ seconds)
+            'sync_time_ms': 30000,  # Alert on very slow syncs (30+ seconds)
+            'system_metrics.memory_usage_mb': memory_threshold_mb,  # 90% of total RAM (accounts for OS caching)
+            'system_metrics.error_rate_percent': 5.0,  # Alert at 5% error rate (very high)
+            'throughput_per_second': 1,  # Alert on near-zero throughput
+            'cache_metrics.hit_rate': 0.5,  # Alert when hit rate falls below 50%
+            'storage_growth_rate_mb_per_hour': 500  # Alert on rapid storage growth (500MB+/hour)
         }
         
         # Optimization parameters

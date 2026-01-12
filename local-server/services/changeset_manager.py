@@ -194,20 +194,22 @@ class ChangesetManager:
                         description: Optional[str] = None) -> bool:
         """
         Update changeset metadata.
-        
+
         Args:
             changeset_id: Changeset identifier
             title: New title (optional)
             description: New description (optional)
-            
+
         Returns:
             True if updated successfully
+
+        Raises:
+            ValueError: If neither title nor description is provided
         """
         logger.info(f"Updating changeset {changeset_id}")
-        
+
         if not title and not description:
-            logger.warning("No updates provided for changeset")
-            return False
+            raise ValueError("At least one of title or description must be provided")
             
         try:
             updates = []

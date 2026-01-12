@@ -89,7 +89,7 @@ class WorkingTreeManager:
         # Check if entity already exists in working tree
         existing = self.get_working_tree_entry(entity_type, entity_id)
         if existing:
-            logger.warning(
+            logger.debug(
                 f"Entity {entity_type}:{entity_id} already exists in working tree"
             )
             return existing
