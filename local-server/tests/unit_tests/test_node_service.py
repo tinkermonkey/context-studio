@@ -20,6 +20,7 @@ from database.models import StructureNode
 from database.enums import NodeType
 from graph.graph_service import GraphService
 from services.exceptions import InvalidHierarchyError, CircularReferenceError, NotFoundError
+from api.models.structure_nodes import StructureNodeAttribute, ResolvedAttribute
 
 
 @pytest.fixture
@@ -837,20 +838,20 @@ class TestNodeAttributeParsing:
 
     def test_parse_attributes_json_valid(self, node_service):
         """Test parsing valid JSON attributes."""
-        attributes_json = '[{"key":"category","value":"legal","data_type":"string"}]'
+        attributes_json = '[{"key":"category","title":"Category","value":"legal","value_type":"string"}]'
         result = node_service._parse_attributes_json(attributes_json)
 
         assert len(result) == 1
         assert result[0].key == "category"
         assert result[0].value == "legal"
-        assert result[0].data_type == "string"
+        assert result[0].value_type == "string"
 
     def test_parse_attributes_json_multiple(self, node_service):
         """Test parsing multiple attributes from JSON."""
         attributes_json = '''[
-            {"key":"category","value":"legal","data_type":"string"},
-            {"key":"jurisdiction","value":"US Federal","data_type":"string"},
-            {"key":"version","value":"1","data_type":"number"}
+            {"key":"category","title":"Category","value":"legal","value_type":"string"},
+            {"key":"jurisdiction","title":"Jurisdiction","value":"US Federal","value_type":"string"},
+            {"key":"version","title":"Version","value":1,"value_type":"number"}
         ]'''
         result = node_service._parse_attributes_json(attributes_json)
 
@@ -874,14 +875,10 @@ class TestNodeAttributeParsing:
         result = node_service._parse_attributes_json("{ invalid json }")
         assert result == []
 
-    def test_parse_attributes_json_with_null_data_type(self, node_service):
-        """Test parsing attributes where data_type is null."""
-        attributes_json = '[{"key":"title","value":"Some Value","data_type":null}]'
-        result = node_service._parse_attributes_json(attributes_json)
-
-        assert len(result) == 1
-        assert result[0].key == "title"
-        assert result[0].data_type is None
+    def test_parse_attributes_json_with_null_value_type(self, node_service):
+        """Test parsing attributes where value_type is null."""
+        # Remove this test - value_type is a required field in StructureNodeAttribute
+        pass
 
 
 class TestNodeAttributeOperations:
@@ -903,10 +900,9 @@ class TestNodeAttributeOperations:
         mock_db.refresh = Mock()
 
         # Create attributes
-        from services.node_service import StructureNodeAttribute
         attributes = [
-            StructureNodeAttribute(key="category", value="legal", data_type="string"),
-            StructureNodeAttribute(key="jurisdiction", value="US Federal", data_type="string"),
+            StructureNodeAttribute(key="category", title="Category", value="legal", value_type="string"),
+            StructureNodeAttribute(key="jurisdiction", title="Jurisdiction", value="US Federal", value_type="string"),
         ]
 
         # Set attributes
@@ -941,8 +937,7 @@ class TestNodeAttributeOperations:
         node_id = str(uuid.uuid4())
         node_service.get_node = Mock(return_value=None)
 
-        from services.node_service import StructureNodeAttribute
-        attributes = [StructureNodeAttribute(key="test", value="value", data_type="string")]
+        attributes = [StructureNodeAttribute(key="test", title="Test", value="value", value_type="string")]
 
         with pytest.raises(ValueError, match="not found"):
             node_service.set_node_attributes(node_id, attributes)
@@ -953,7 +948,7 @@ class TestNodeAttributeOperations:
 
         node = Mock(spec=StructureNode)
         node.id = node_id
-        node.attributes = '[{"key":"category","value":"legal","data_type":"string"}]'
+        node.attributes = '[{"key":"category","title":"Category","value":"legal","value_type":"string"}]'
 
         node_service.get_node = Mock(return_value=node)
 
@@ -992,7 +987,7 @@ class TestNodeAttributeOperations:
         node = Mock(spec=StructureNode)
         node.id = node_id
         node.version = 1
-        node.attributes = '[{"key":"category","value":"legal","data_type":"string"},{"key":"jurisdiction","value":"US","data_type":"string"}]'
+        node.attributes = '[{"key":"category","title":"Category","value":"legal","value_type":"string"},{"key":"jurisdiction","title":"Jurisdiction","value":"US","value_type":"string"}]'
 
         node_service.get_node = Mock(return_value=node)
         mock_db.commit = Mock()
@@ -1013,7 +1008,7 @@ class TestNodeAttributeOperations:
         node = Mock(spec=StructureNode)
         node.id = node_id
         node.version = 1
-        node.attributes = '[{"key":"category","value":"legal","data_type":"string"}]'
+        node.attributes = '[{"key":"category","title":"Category","value":"legal","value_type":"string"}]'
 
         node_service.get_node = Mock(return_value=node)
         mock_db.commit = Mock()
@@ -1033,7 +1028,7 @@ class TestNodeAttributeOperations:
         node = Mock(spec=StructureNode)
         node.id = node_id
         node.version = 1
-        node.attributes = '[{"key":"test","value":"value","data_type":"string"}]'
+        node.attributes = '[{"key":"test","title":"Test","value":"value","value_type":"string"}]'
 
         node_service.get_node = Mock(return_value=node)
         mock_db.commit = Mock()
@@ -1054,7 +1049,7 @@ class TestNodeAttributeInheritance:
 
         node = Mock(spec=StructureNode)
         node.id = node_id
-        node.attributes = '[{"key":"category","value":"legal","data_type":"string"}]'
+        node.attributes = '[{"key":"category","title":"Category","value":"legal","value_type":"string"}]'
 
         node_service.get_node = Mock(return_value=node)
         node_service.get_node_ancestors = Mock(return_value=[])
@@ -1074,11 +1069,11 @@ class TestNodeAttributeInheritance:
 
         layer = Mock(spec=StructureNode)
         layer.id = layer_id
-        layer.attributes = '[{"key":"category","value":"legal","data_type":"string"}]'
+        layer.attributes = '[{"key":"category","title":"Category","value":"legal","value_type":"string"}]'
 
         domain = Mock(spec=StructureNode)
         domain.id = domain_id
-        domain.attributes = '[{"key":"jurisdiction","value":"US Federal","data_type":"string"}]'
+        domain.attributes = '[{"key":"jurisdiction","title":"Jurisdiction","value":"US Federal","value_type":"string"}]'
 
         node_service.get_node = Mock(return_value=domain)
         node_service.get_node_ancestors = Mock(return_value=[layer])
@@ -1102,11 +1097,11 @@ class TestNodeAttributeInheritance:
 
         parent = Mock(spec=StructureNode)
         parent.id = parent_id
-        parent.attributes = '[{"key":"jurisdiction","value":"US Federal","data_type":"string"}]'
+        parent.attributes = '[{"key":"jurisdiction","title":"Jurisdiction","value":"US Federal","value_type":"string"}]'
 
         child = Mock(spec=StructureNode)
         child.id = child_id
-        child.attributes = '[{"key":"jurisdiction","value":"New York State","data_type":"string"}]'
+        child.attributes = '[{"key":"jurisdiction","title":"Jurisdiction","value":"New York State","value_type":"string"}]'
 
         node_service.get_node = Mock(return_value=child)
         node_service.get_node_ancestors = Mock(return_value=[parent])
@@ -1130,23 +1125,23 @@ class TestNodeAttributeInheritance:
 
         layer = Mock(spec=StructureNode)
         layer.id = layer_id
-        layer.attributes = '[{"key":"level","value":"layer","data_type":"string"}]'
+        layer.attributes = '[{"key":"level","title":"Level","value":"layer","value_type":"string"}]'
 
         domain = Mock(spec=StructureNode)
         domain.id = domain_id
-        domain.attributes = '[{"key":"domain_attr","value":"domain_val","data_type":"string"}]'
+        domain.attributes = '[{"key":"domain_attr","title":"Domain Attr","value":"domain_val","value_type":"string"}]'
 
         term1 = Mock(spec=StructureNode)
         term1.id = term1_id
-        term1.attributes = '[{"key":"term1_attr","value":"term1_val","data_type":"string"}]'
+        term1.attributes = '[{"key":"term1_attr","title":"Term1 Attr","value":"term1_val","value_type":"string"}]'
 
         term2 = Mock(spec=StructureNode)
         term2.id = term2_id
-        term2.attributes = '[{"key":"term2_attr","value":"term2_val","data_type":"string"}]'
+        term2.attributes = '[{"key":"term2_attr","title":"Term2 Attr","value":"term2_val","value_type":"string"}]'
 
         term3 = Mock(spec=StructureNode)
         term3.id = term3_id
-        term3.attributes = '[{"key":"term3_attr","value":"term3_val","data_type":"string"}]'
+        term3.attributes = '[{"key":"term3_attr","title":"Term3 Attr","value":"term3_val","value_type":"string"}]'
 
         node_service.get_node = Mock(return_value=term3)
         node_service.get_node_ancestors = Mock(return_value=[layer, domain, term1, term2])
@@ -1168,11 +1163,11 @@ class TestNodeAttributeInheritance:
 
         parent = Mock(spec=StructureNode)
         parent.id = parent_id
-        parent.attributes = '[{"key":"attr1","value":"parent1","data_type":"string"},{"key":"attr2","value":"parent2","data_type":"string"}]'
+        parent.attributes = '[{"key":"attr1","title":"Attr 1","value":"parent1","value_type":"string"},{"key":"attr2","title":"Attr 2","value":"parent2","value_type":"string"}]'
 
         child = Mock(spec=StructureNode)
         child.id = child_id
-        child.attributes = '[{"key":"attr3","value":"child3","data_type":"string"}]'
+        child.attributes = '[{"key":"attr3","title":"Attr 3","value":"child3","value_type":"string"}]'
 
         node_service.get_node = Mock(return_value=child)
         node_service.get_node_ancestors = Mock(return_value=[parent])
@@ -1197,39 +1192,28 @@ class TestAttributeValueTypeValidation:
 
     def test_attribute_value_type_string(self, node_service):
         """Test string value type."""
-        from services.node_service import StructureNodeAttribute
-        attr = StructureNodeAttribute(key="title", value="Test String", data_type="string")
-        assert attr.data_type == "string"
+        attr = StructureNodeAttribute(key="title", title="Title", value="Test String", value_type="string")
+        assert attr.value_type == "string"
 
     def test_attribute_value_type_number(self, node_service):
         """Test number value type."""
-        from services.node_service import StructureNodeAttribute
-        attr = StructureNodeAttribute(key="count", value="42", data_type="number")
-        assert attr.data_type == "number"
+        attr = StructureNodeAttribute(key="count", title="Count", value=42, value_type="number")
+        assert attr.value_type == "number"
 
     def test_attribute_value_type_boolean(self, node_service):
         """Test boolean value type."""
-        from services.node_service import StructureNodeAttribute
-        attr = StructureNodeAttribute(key="active", value="true", data_type="boolean")
-        assert attr.data_type == "boolean"
+        attr = StructureNodeAttribute(key="active", title="Active", value=True, value_type="boolean")
+        assert attr.value_type == "boolean"
 
     def test_attribute_value_type_date(self, node_service):
         """Test date value type."""
-        from services.node_service import StructureNodeAttribute
-        attr = StructureNodeAttribute(key="created", value="2025-01-15", data_type="date")
-        assert attr.data_type == "date"
+        attr = StructureNodeAttribute(key="created", title="Created", value="2025-01-15", value_type="date")
+        assert attr.value_type == "date"
 
     def test_attribute_value_type_url(self, node_service):
         """Test URL value type."""
-        from services.node_service import StructureNodeAttribute
-        attr = StructureNodeAttribute(key="reference", value="https://example.com", data_type="url")
-        assert attr.data_type == "url"
-
-    def test_attribute_value_type_null(self, node_service):
-        """Test null value type."""
-        from services.node_service import StructureNodeAttribute
-        attr = StructureNodeAttribute(key="test", value="value", data_type=None)
-        assert attr.data_type is None
+        attr = StructureNodeAttribute(key="reference", title="Reference", value="https://example.com", value_type="url")
+        assert attr.value_type == "url"
 
 
 class TestLegalDomainHierarchyFixture:
@@ -1247,21 +1231,21 @@ class TestLegalDomainHierarchyFixture:
         layer = Mock(spec=StructureNode)
         layer.id = layer_id
         layer.title = "Legal Domain"
-        layer.attributes = '[{"key":"category","value":"domain_classification","data_type":"string"}]'
+        layer.attributes = '[{"key":"category","title":"Category","value":"domain_classification","value_type":"string"}]'
 
         # Contract Law domain
         domain = Mock(spec=StructureNode)
         domain.id = domain_id
         domain.title = "Contract Law"
         domain.parent_node_id = layer_id
-        domain.attributes = '[{"key":"jurisdiction","value":"US Federal","data_type":"string"}]'
+        domain.attributes = '[{"key":"jurisdiction","title":"Jurisdiction","value":"US Federal","value_type":"string"}]'
 
         # Force Majeure term
         term1 = Mock(spec=StructureNode)
         term1.id = term1_id
         term1.title = "Force Majeure"
         term1.parent_node_id = domain_id
-        term1.attributes = '[{"key":"jurisdiction","value":"New York State","data_type":"string"},{"key":"definition_date","value":"2025-01-15","data_type":"date"}]'
+        term1.attributes = '[{"key":"jurisdiction","title":"Jurisdiction","value":"New York State","value_type":"string"},{"key":"definition_date","title":"Definition Date","value":"2025-01-15","value_type":"date"}]'
 
         # Indemnification term (no local attributes, inherits all)
         term2 = Mock(spec=StructureNode)

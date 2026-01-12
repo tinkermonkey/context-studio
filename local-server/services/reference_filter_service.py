@@ -73,15 +73,27 @@ class ReferenceFilterService:
             }
 
             # Parse mapping JSON if present
-            if pred.mapping:
+            if pred.mapping and pred.mapping.strip():
                 try:
                     mapping_data = json.loads(pred.mapping)
-                    # Handle both list and dict formats
-                    if isinstance(mapping_data, list):
+                    # Extract reference_predicates from the mapping structure (ADR-002 schema)
+                    if isinstance(mapping_data, dict) and "reference_predicates" in mapping_data:
+                        # New schema format: extract reference_predicates as external_predicates
+                        # Map from the new schema format to the format expected by filter logic
+                        ref_preds = mapping_data.get("reference_predicates", [])
+                        # Convert to "source:source_id" format for compatibility
+                        for ref_pred in ref_preds:
+                            pred_info["external_predicates"].append({
+                                "source": ref_pred.get("source"),
+                                "external_id": ref_pred.get("source_id")
+                            })
+                    elif isinstance(mapping_data, list):
+                        # Legacy format: list of {"source": ..., "external_id": ...}
                         pred_info["external_predicates"] = mapping_data
                     elif isinstance(mapping_data, dict) and "external_predicates" in mapping_data:
+                        # Legacy dict format: {"external_predicates": [...]}
                         pred_info["external_predicates"] = mapping_data["external_predicates"]
-                except (json.JSONDecodeError, KeyError) as e:
+                except (json.JSONDecodeError, KeyError, TypeError) as e:
                     logger.warning(f"Failed to parse mapping for predicate {pred.id}: {e}")
 
             mappings[pred.id] = pred_info

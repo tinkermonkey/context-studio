@@ -82,12 +82,12 @@ class PerformanceMonitor:
         # They account for normal system behavior like disk caching and cache misses.
         self.performance_thresholds = {
             'query_metrics.avg_execution_time_ms': 10000,  # Alert only on very slow queries (10+ seconds)
-            'sync_time_ms': 30000,  # Alert on very slow syncs (30+ seconds)
+            's3_metrics.avg_sync_time_ms': 30000,  # Alert on very slow syncs (30+ seconds)
             'system_metrics.memory_usage_mb': memory_threshold_mb,  # 90% of total RAM (accounts for OS caching)
             'system_metrics.error_rate_percent': 5.0,  # Alert at 5% error rate (very high)
-            'throughput_per_second': 1,  # Alert on near-zero throughput
+            'batch_metrics.avg_throughput_per_second': 1,  # Alert on near-zero throughput
             'cache_metrics.hit_rate': 0.5,  # Alert when hit rate falls below 50%
-            'storage_growth_rate_mb_per_hour': 500  # Alert on rapid storage growth (500MB+/hour)
+            'batch_metrics.storage_growth_rate_mb_per_hour': 500  # Alert on rapid storage growth (500MB+/hour)
         }
         
         # Optimization parameters
@@ -212,25 +212,25 @@ class PerformanceMonitor:
         optimization_actions = []
         
         # Auto-optimize queries if slow
-        if self._is_metric_above_threshold(current_metrics, 'query_metrics.avg_execution_time_ms', 'query_time_ms'):
+        if self._is_metric_above_threshold(current_metrics, 'query_metrics.avg_execution_time_ms', 'query_metrics.avg_execution_time_ms'):
             action = self._optimize_slow_queries()
             if action:
                 optimization_actions.append(action)
-        
+
         # Auto-refresh materialized views if stale
         if self._are_materialized_views_stale():
             action = self._refresh_stale_materialized_views()
             if action:
                 optimization_actions.append(action)
-        
+
         # Auto-cleanup old data if storage is growing too fast
         if self._is_storage_cleanup_needed(current_metrics):
             action = self._cleanup_old_data()
             if action:
                 optimization_actions.append(action)
-        
+
         # Auto-adjust cache settings if hit rate is low
-        if self._is_metric_below_threshold(current_metrics, 'cache_metrics.hit_rate', 'cache_hit_rate'):
+        if self._is_metric_below_threshold(current_metrics, 'cache_metrics.hit_rate', 'cache_metrics.hit_rate'):
             action = self._optimize_cache_settings()
             if action:
                 optimization_actions.append(action)
@@ -275,34 +275,46 @@ class PerformanceMonitor:
     
     def _collect_database_metrics(self) -> Dict[str, Any]:
         """Collect SQLite database performance metrics."""
-        
+
         try:
+            # Handle None connection gracefully
+            if self.sqlite_conn is None:
+                return {
+                    'database_count': 0,
+                    'total_objects': 0,
+                    'table_count': 0,
+                    'index_count': 0,
+                    'table_metrics': {},
+                    'connection_status': 'not_configured',
+                    'note': 'Database connection not available'
+                }
+
             # Check if sqlite_conn is a SQLAlchemy session or raw connection
             if hasattr(self.sqlite_conn, 'execute'):
                 # SQLAlchemy session - use text() for raw SQL
                 from sqlalchemy import text
-                
+
                 # Get database info
                 db_info_result = self.sqlite_conn.execute(text("PRAGMA database_list;"))
                 db_info = db_info_result.fetchall()
-                
+
                 # Get table statistics
                 stats_query = """
-                SELECT 
+                SELECT
                     COUNT(*) as total_objects,
                     SUM(CASE WHEN type='table' THEN 1 ELSE 0 END) as table_count,
                     SUM(CASE WHEN type='index' THEN 1 ELSE 0 END) as index_count
-                FROM sqlite_master 
+                FROM sqlite_master
                 WHERE type IN ('table', 'index', 'view')
                 """
-                
+
                 result = self.sqlite_conn.execute(text(stats_query))
                 db_stats = result.fetchone()
-                
+
                 # Get table-specific metrics
                 table_metrics = {}
                 important_tables = ['entity_versions', 'changesets', 'proposals', 'user_identities']
-                
+
                 for table_name in important_tables:
                     try:
                         result = self.sqlite_conn.execute(text(f"SELECT COUNT(*) FROM {table_name}"))
@@ -310,7 +322,7 @@ class PerformanceMonitor:
                         table_metrics[table_name] = {'row_count': row_count}
                     except Exception as e:
                         table_metrics[table_name] = {'row_count': 0, 'error': str(e)}
-                
+
                 return {
                     'database_count': len(db_info) if db_info else 0,
                     'total_objects': db_stats[0] if db_stats else 0,
@@ -322,28 +334,28 @@ class PerformanceMonitor:
             else:
                 # Raw connection - use cursor
                 cursor = self.sqlite_conn.cursor()
-                
+
                 # Get database size
                 cursor.execute("PRAGMA database_list;")
                 db_info = cursor.fetchall()
-                
+
                 # Get table statistics
                 stats_query = """
-                SELECT 
+                SELECT
                     COUNT(*) as total_objects,
                     SUM(CASE WHEN type='table' THEN 1 ELSE 0 END) as table_count,
                     SUM(CASE WHEN type='index' THEN 1 ELSE 0 END) as index_count
-                FROM sqlite_master 
+                FROM sqlite_master
                 WHERE type IN ('table', 'index', 'view')
                 """
-                
+
                 cursor.execute(stats_query)
                 db_stats = cursor.fetchone()
-                
+
                 # Get table-specific metrics
                 table_metrics = {}
                 important_tables = ['entity_versions', 'changesets', 'proposals', 'user_identities']
-                
+
                 for table_name in important_tables:
                     try:
                         cursor.execute(f"SELECT COUNT(*) FROM {table_name}")
@@ -351,7 +363,7 @@ class PerformanceMonitor:
                         table_metrics[table_name] = {'row_count': row_count}
                     except Exception as e:
                         table_metrics[table_name] = {'row_count': 0, 'error': str(e)}
-                
+
                 return {
                     'database_count': len(db_info) if db_info else 0,
                     'total_objects': db_stats[0] if db_stats else 0,
@@ -360,7 +372,7 @@ class PerformanceMonitor:
                     'table_metrics': table_metrics,
                     'connection_status': 'healthy'
                 }
-            
+
         except Exception as e:
             logger.error(f"Failed to collect database metrics: {e}")
             return {'error': str(e), 'connection_status': 'error'}
@@ -469,7 +481,7 @@ class PerformanceMonitor:
     
     def _collect_batch_metrics(self) -> Dict[str, Any]:
         """Collect batch operation performance metrics."""
-        
+
         try:
             # Mock batch metrics - would come from BatchOperationProcessor
             return {
@@ -480,9 +492,10 @@ class PerformanceMonitor:
                 'failed_operations': 2,
                 'success_rate': 0.96,
                 'current_batch_size': 1000,
-                'parallel_workers_active': 8
+                'parallel_workers_active': 8,
+                'storage_growth_rate_mb_per_hour': 100
             }
-            
+
         except Exception as e:
             logger.error(f"Failed to collect batch metrics: {e}")
             return {'error': str(e)}
@@ -704,14 +717,16 @@ class PerformanceMonitor:
                 if current_value is not None:
                     # Determine alert condition based on metric type
                     should_alert = False
-                    
-                    if 'hit_rate' in metric_path or 'cache_rate' in metric_path:
-                        # For hit rates and cache rates, alert if below threshold
+                    is_inverse_metric = False
+
+                    if 'hit_rate' in metric_path or 'cache_rate' in metric_path or 'throughput' in metric_path:
+                        # For hit rates, cache rates, and throughput, alert if below threshold
                         should_alert = current_value < threshold_value
+                        is_inverse_metric = True
                     else:
                         # For other metrics (including error rates), alert if above threshold
                         should_alert = current_value > threshold_value
-                    
+
                     if should_alert:
                         alert = PerformanceAlert(
                             alert_id=str(time.time()),
@@ -720,7 +735,7 @@ class PerformanceMonitor:
                             metric_name=metric_path,
                             current_value=current_value,
                             threshold_value=threshold_value,
-                            description=f"{metric_path} is {'below' if 'hit_rate' in metric_path or 'cache_rate' in metric_path else 'above'} threshold: {current_value:.2f} vs {threshold_value:.2f}",
+                            description=f"{metric_path} is {'below' if is_inverse_metric else 'above'} threshold: {current_value:.2f} vs {threshold_value:.2f}",
                             created_at=datetime.now(timezone.utc)
                         )
                         

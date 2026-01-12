@@ -316,6 +316,7 @@ class SchemaOrgImporter:
 
         logger.info(f"Downloading Schema.org data from {url}")
 
+        last_error = None
         for attempt in range(retry_count):
             try:
                 # Exponential backoff: 1s, 2s, 4s, ...
@@ -339,15 +340,37 @@ class SchemaOrgImporter:
                 logger.debug(f"Downloaded {len(response.text)} bytes to {tmp_file.name}")
                 return tmp_file.name
 
-            except Exception as e:
-                logger.warning(f"Download attempt {attempt + 1} failed: {e}")
+            except requests.exceptions.Timeout as e:
+                last_error = e
+                logger.warning(
+                    f"Download attempt {attempt + 1}/{retry_count} failed with timeout "
+                    f"({timeout}s): {e}"
+                )
+                if attempt == retry_count - 1:
+                    raise DownloadError(
+                        f"Failed to download after {retry_count} attempts (timeout): {e}"
+                    )
+            except requests.exceptions.RequestException as e:
+                last_error = e
+                logger.warning(
+                    f"Download attempt {attempt + 1}/{retry_count} failed with network error: {e}"
+                )
                 if attempt == retry_count - 1:
                     raise DownloadError(
                         f"Failed to download after {retry_count} attempts: {e}"
                     )
-                # Continue to next retry attempt
+            except Exception as e:
+                last_error = e
+                logger.warning(
+                    f"Download attempt {attempt + 1}/{retry_count} failed: {e}"
+                )
+                if attempt == retry_count - 1:
+                    raise DownloadError(
+                        f"Failed to download after {retry_count} attempts: {e}"
+                    )
 
-        raise DownloadError("Download failed for unknown reason")
+        # This should not be reached due to exceptions, but as a safety net
+        raise DownloadError(f"Download failed: {last_error}")
 
     def _parse_jsonld(self, file_path: str) -> Tuple[List[Dict], List[Dict]]:
         """

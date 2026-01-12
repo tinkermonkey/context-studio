@@ -37,12 +37,29 @@ async def _run_in_thread(func, *args):
     Cross-version compatible way to run blocking code in a thread.
 
     Uses asyncio.to_thread in Python 3.9+ and ThreadPoolExecutor for older versions.
+
+    Note: This function expects synchronous (non-async) callables. If an async
+    callable is passed, it will be detected and an error will be raised.
     """
+    import inspect
+
+    # Check if the callable is async - this is a common mistake in tests
+    if inspect.iscoroutinefunction(func):
+        raise TypeError(
+            f"_run_in_thread() expects a synchronous function, but received an async function: {func.__name__}. "
+            "Async functions cannot be executed in a thread pool. "
+            "Either make the function synchronous or call it with 'await' directly."
+        )
+
     if HAS_ASYNCIO_TO_THREAD:
         return await asyncio.to_thread(func, *args)
     else:
         loop = asyncio.get_event_loop()
-        return await loop.run_in_executor(_thread_pool_executor, func, *args)
+        # For older Python versions, use a lambda to properly pass arguments
+        if args:
+            return await loop.run_in_executor(_thread_pool_executor, lambda: func(*args))
+        else:
+            return await loop.run_in_executor(_thread_pool_executor, func)
 
 
 class RAGPipelineService:

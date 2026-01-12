@@ -89,14 +89,14 @@ class TestPerformanceMonitor:
     def test_performance_thresholds_configuration(self, performance_monitor):
         """Test performance thresholds configuration."""
         thresholds = performance_monitor.performance_thresholds
-        
+
         # Check all expected thresholds are present
         expected_thresholds = [
-            'query_metrics.avg_execution_time_ms', 'sync_time_ms', 'system_metrics.memory_usage_mb',
-            'system_metrics.error_rate_percent', 'throughput_per_second', 'cache_metrics.hit_rate',
-            'storage_growth_rate_mb_per_hour'
+            'query_metrics.avg_execution_time_ms', 's3_metrics.avg_sync_time_ms', 'system_metrics.memory_usage_mb',
+            'system_metrics.error_rate_percent', 'batch_metrics.avg_throughput_per_second', 'cache_metrics.hit_rate',
+            'batch_metrics.storage_growth_rate_mb_per_hour'
         ]
-        
+
         for threshold in expected_thresholds:
             assert threshold in thresholds
             assert isinstance(thresholds[threshold], (int, float))
