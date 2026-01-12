@@ -26,7 +26,9 @@ def nlp():
                 'model_name': 'en_core_web_sm',  # Use smaller model for tests
                 'concepcy_relations': [],
                 'filter_missing_text': True,
-                'edge_weight_filter': 0.1
+                'edge_weight_filter': 0.1,
+                'auto_download_models': False,  # Disable auto-download in tests
+                'download_timeout': 60
             })(),
             'reference_sources': type('RefSources', (), {
                 'conceptnet': type('ConceptNet', (), {
