@@ -711,6 +711,198 @@
         }
       }
     },
+    "/api/structure_nodes/{node_id}/attributes": {
+      "get": {
+        "tags": [
+          "structure_nodes",
+          "structure_nodes"
+        ],
+        "summary": "Get Node Attributes",
+        "description": "Get resolved attributes for a node (local + inherited).\n\nReturns all attributes for this node, including those inherited from ancestors.\nEach resolved attribute includes an `inherited` flag and `source_node_id` indicating\nwhere the attribute was defined in the hierarchy.\n\nArgs:\n    node_id: UUID of the structure node\n\nReturns:\n    List of resolved attributes with inheritance information\n\nRaises:\n    404: If structure node not found\n    500: If an unexpected error occurs",
+        "operationId": "get_node_attributes_api_structure_nodes__node_id__attributes_get",
+        "parameters": [
+          {
+            "name": "node_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "description": "The ID of the structure node",
+              "title": "Node Id"
+            },
+            "description": "The ID of the structure node"
+          },
+          {
+            "name": "SessionLocal",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "title": "Sessionlocal"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ResolvedAttribute"
+                  },
+                  "title": "Response Get Node Attributes Api Structure Nodes  Node Id  Attributes Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "structure_nodes",
+          "structure_nodes"
+        ],
+        "summary": "Set Node Attributes",
+        "description": "Set local attributes on a node (replaces existing attributes).\n\nReplaces all local attributes on this node with the provided list.\nInherited attributes from ancestors are not affected. This operation\nincrements the node's version number.\n\nArgs:\n    node_id: UUID of the structure node\n    attributes: List of StructureNodeAttribute instances to set\n\nReturns:\n    Updated structure node\n\nRaises:\n    400: If validation fails on attribute values or types\n    404: If structure node not found\n    500: If an unexpected error occurs",
+        "operationId": "set_node_attributes_api_structure_nodes__node_id__attributes_post",
+        "parameters": [
+          {
+            "name": "node_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "description": "The ID of the structure node",
+              "title": "Node Id"
+            },
+            "description": "The ID of the structure node"
+          },
+          {
+            "name": "SessionLocal",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "title": "Sessionlocal"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/StructureNodeAttribute"
+                },
+                "title": "Attributes"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NodeOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/structure_nodes/{node_id}/attributes/{key}": {
+      "delete": {
+        "tags": [
+          "structure_nodes",
+          "structure_nodes"
+        ],
+        "summary": "Remove Node Attribute",
+        "description": "Remove a specific attribute by key.\n\nRemoves a single attribute from the node's local attributes by its key.\nHas no effect if the key doesn't exist. Inherited attributes are not affected.\nThis operation increments the node's version number.\n\nArgs:\n    node_id: UUID of the structure node\n    key: Attribute key to remove\n\nReturns:\n    Updated structure node\n\nRaises:\n    404: If structure node not found\n    500: If an unexpected error occurs",
+        "operationId": "remove_node_attribute_api_structure_nodes__node_id__attributes__key__delete",
+        "parameters": [
+          {
+            "name": "node_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "description": "The ID of the structure node",
+              "title": "Node Id"
+            },
+            "description": "The ID of the structure node"
+          },
+          {
+            "name": "key",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "The attribute key to remove",
+              "title": "Key"
+            },
+            "description": "The attribute key to remove"
+          },
+          {
+            "name": "SessionLocal",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "title": "Sessionlocal"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NodeOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/structure_nodes/{node_id}/reference_links": {
       "post": {
         "tags": [
@@ -15754,6 +15946,18 @@
           }
         ]
       },
+      "AttributeValueType": {
+        "type": "string",
+        "enum": [
+          "string",
+          "number",
+          "boolean",
+          "date",
+          "url"
+        ],
+        "title": "AttributeValueType",
+        "description": "Enum for supported attribute value types."
+      },
       "AutoResolveRequest": {
         "properties": {
           "confidence_threshold": {
@@ -20984,6 +21188,63 @@
         "title": "ResolveConflictRequest",
         "description": "API model for conflict resolution request."
       },
+      "ResolvedAttribute": {
+        "properties": {
+          "key": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9_]*$",
+            "title": "Key",
+            "description": "Underscore-delimited identifier"
+          },
+          "title": {
+            "type": "string",
+            "minLength": 1,
+            "title": "Title",
+            "description": "Human-readable display name"
+          },
+          "value_type": {
+            "$ref": "#/components/schemas/AttributeValueType",
+            "description": "Type constraint for values"
+          },
+          "value": {
+            "anyOf": [
+              {},
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Value",
+            "description": "The actual attribute value"
+          },
+          "inherited": {
+            "type": "boolean",
+            "title": "Inherited",
+            "description": "True if inherited from ancestor",
+            "default": false
+          },
+          "source_node_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Source Node Id",
+            "description": "ID of the node defining this attribute"
+          }
+        },
+        "type": "object",
+        "required": [
+          "key",
+          "title",
+          "value_type"
+        ],
+        "title": "ResolvedAttribute",
+        "description": "Model for resolved attributes with inheritance information."
+      },
       "ResponseFormat": {
         "type": "string",
         "enum": [
@@ -21494,6 +21755,44 @@
         ],
         "title": "StorageOptimizationOut",
         "description": "API model for storage optimization output."
+      },
+      "StructureNodeAttribute": {
+        "properties": {
+          "key": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9_]*$",
+            "title": "Key",
+            "description": "Underscore-delimited identifier"
+          },
+          "title": {
+            "type": "string",
+            "minLength": 1,
+            "title": "Title",
+            "description": "Human-readable display name"
+          },
+          "value_type": {
+            "$ref": "#/components/schemas/AttributeValueType",
+            "description": "Type constraint for values"
+          },
+          "value": {
+            "anyOf": [
+              {},
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Value",
+            "description": "The actual attribute value"
+          }
+        },
+        "type": "object",
+        "required": [
+          "key",
+          "title",
+          "value_type"
+        ],
+        "title": "StructureNodeAttribute",
+        "description": "Model for structure node attributes with type validation."
       },
       "SupportedModelsResponse": {
         "properties": {

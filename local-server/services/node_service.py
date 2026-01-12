@@ -631,8 +631,9 @@ class NodeService:
             for attr in ancestor_attrs:
                 attribute_map[attr.key] = ResolvedAttribute(
                     key=attr.key,
+                    title=attr.title,
                     value=attr.value,
-                    data_type=attr.data_type,
+                    value_type=attr.value_type,
                     inherited=(ancestor.id != node.id),
                     source_node_id=UUID(ancestor.id)
                 )
@@ -642,8 +643,9 @@ class NodeService:
         for attr in local_attrs:
             attribute_map[attr.key] = ResolvedAttribute(
                 key=attr.key,
+                title=attr.title,
                 value=attr.value,
-                data_type=attr.data_type,
+                value_type=attr.value_type,
                 inherited=False,
                 source_node_id=UUID(node.id)
             )

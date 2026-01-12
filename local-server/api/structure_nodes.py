@@ -33,7 +33,8 @@ from services.exceptions import NotFoundError, ValidationError, ConflictError, C
 from api.models.structure_nodes import (
     NodeCreate, NodeUpdate, NodeOut, NodeLinkCreate, NodeLinkOut,
     NodeSearchRequest, NodeSearchResult, PaginatedNodesResponse, PaginatedNodeLinksResponse, NodeTypeEnum,
-    MoveNodesRequest, MoveNodesResponse, ReferenceLink, WordSense, SelectedWordSensesUpdate
+    MoveNodesRequest, MoveNodesResponse, ReferenceLink, WordSense, SelectedWordSensesUpdate,
+    StructureNodeAttribute, ResolvedAttribute
 )
 from api.utils.node_conversion import (
     to_node_out, to_node_link_out, nodes_to_paginated_response,
@@ -552,6 +553,118 @@ def delete_node(
         raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Internal server error: {str(e)}")
+
+
+# Attribute endpoints
+@router.get("/{node_id}/attributes", response_model=List[ResolvedAttribute])
+def get_node_attributes(
+    node_id: UUID = Path(..., description="The ID of the structure node"),
+    node_service: NodeService = Depends(get_node_service)
+):
+    """
+    Get resolved attributes for a node (local + inherited).
+
+    Returns all attributes for this node, including those inherited from ancestors.
+    Each resolved attribute includes an `inherited` flag and `source_node_id` indicating
+    where the attribute was defined in the hierarchy.
+
+    Args:
+        node_id: UUID of the structure node
+
+    Returns:
+        List of resolved attributes with inheritance information
+
+    Raises:
+        404: If structure node not found
+        500: If an unexpected error occurs
+    """
+    from utils.logger import get_logger
+    logger = get_logger(__name__)
+
+    try:
+        return node_service.resolve_node_attributes(node_id)
+    except ValueError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+    except Exception as e:
+        logger.error(f"Error resolving attributes for node {node_id}: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail="Internal server error")
+
+
+@router.post("/{node_id}/attributes", response_model=NodeOut)
+def set_node_attributes(
+    node_id: UUID = Path(..., description="The ID of the structure node"),
+    attributes: List[StructureNodeAttribute] = ...,
+    node_service: NodeService = Depends(get_node_service)
+):
+    """
+    Set local attributes on a node (replaces existing attributes).
+
+    Replaces all local attributes on this node with the provided list.
+    Inherited attributes from ancestors are not affected. This operation
+    increments the node's version number.
+
+    Args:
+        node_id: UUID of the structure node
+        attributes: List of StructureNodeAttribute instances to set
+
+    Returns:
+        Updated structure node
+
+    Raises:
+        400: If validation fails on attribute values or types
+        404: If structure node not found
+        500: If an unexpected error occurs
+    """
+    from utils.logger import get_logger
+    logger = get_logger(__name__)
+
+    try:
+        node = node_service.set_node_attributes(node_id, attributes)
+        return to_node_out(node)
+    except ValueError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+    except Exception as e:
+        logger.error(f"Error setting attributes for node {node_id}: {e}", exc_info=True)
+        if "validation" in str(e).lower() or "type" in str(e).lower():
+            raise HTTPException(status_code=422, detail=str(e))
+        raise HTTPException(status_code=500, detail="Internal server error")
+
+
+@router.delete("/{node_id}/attributes/{key}", response_model=NodeOut)
+def remove_node_attribute(
+    node_id: UUID = Path(..., description="The ID of the structure node"),
+    key: str = Path(..., description="The attribute key to remove"),
+    node_service: NodeService = Depends(get_node_service)
+):
+    """
+    Remove a specific attribute by key.
+
+    Removes a single attribute from the node's local attributes by its key.
+    Has no effect if the key doesn't exist. Inherited attributes are not affected.
+    This operation increments the node's version number.
+
+    Args:
+        node_id: UUID of the structure node
+        key: Attribute key to remove
+
+    Returns:
+        Updated structure node
+
+    Raises:
+        404: If structure node not found
+        500: If an unexpected error occurs
+    """
+    from utils.logger import get_logger
+    logger = get_logger(__name__)
+
+    try:
+        node = node_service.remove_node_attribute(node_id, key)
+        return to_node_out(node)
+    except ValueError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+    except Exception as e:
+        logger.error(f"Error removing attribute {key} from node {node_id}: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail="Internal server error")
 
 
 # Reference Links endpoints

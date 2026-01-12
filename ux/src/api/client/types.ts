@@ -186,6 +186,95 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/structure_nodes/{node_id}/attributes": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Node Attributes
+         * @description Get resolved attributes for a node (local + inherited).
+         *
+         *     Returns all attributes for this node, including those inherited from ancestors.
+         *     Each resolved attribute includes an `inherited` flag and `source_node_id` indicating
+         *     where the attribute was defined in the hierarchy.
+         *
+         *     Args:
+         *         node_id: UUID of the structure node
+         *
+         *     Returns:
+         *         List of resolved attributes with inheritance information
+         *
+         *     Raises:
+         *         404: If structure node not found
+         *         500: If an unexpected error occurs
+         */
+        get: operations["get_node_attributes_api_structure_nodes__node_id__attributes_get"];
+        put?: never;
+        /**
+         * Set Node Attributes
+         * @description Set local attributes on a node (replaces existing attributes).
+         *
+         *     Replaces all local attributes on this node with the provided list.
+         *     Inherited attributes from ancestors are not affected. This operation
+         *     increments the node's version number.
+         *
+         *     Args:
+         *         node_id: UUID of the structure node
+         *         attributes: List of StructureNodeAttribute instances to set
+         *
+         *     Returns:
+         *         Updated structure node
+         *
+         *     Raises:
+         *         400: If validation fails on attribute values or types
+         *         404: If structure node not found
+         *         500: If an unexpected error occurs
+         */
+        post: operations["set_node_attributes_api_structure_nodes__node_id__attributes_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/structure_nodes/{node_id}/attributes/{key}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /**
+         * Remove Node Attribute
+         * @description Remove a specific attribute by key.
+         *
+         *     Removes a single attribute from the node's local attributes by its key.
+         *     Has no effect if the key doesn't exist. Inherited attributes are not affected.
+         *     This operation increments the node's version number.
+         *
+         *     Args:
+         *         node_id: UUID of the structure node
+         *         key: Attribute key to remove
+         *
+         *     Returns:
+         *         Updated structure node
+         *
+         *     Raises:
+         *         404: If structure node not found
+         *         500: If an unexpected error occurs
+         */
+        delete: operations["remove_node_attribute_api_structure_nodes__node_id__attributes__key__delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/structure_nodes/{node_id}/reference_links": {
         parameters: {
             query?: never;
@@ -6230,6 +6319,12 @@ export interface components {
             created_at: string;
         };
         /**
+         * AttributeValueType
+         * @description Enum for supported attribute value types.
+         * @enum {string}
+         */
+        AttributeValueType: "string" | "number" | "boolean" | "date" | "url";
+        /**
          * AutoResolveRequest
          * @description API model for automatic conflict resolution.
          */
@@ -8905,6 +9000,40 @@ export interface components {
             resolved_by: string;
         };
         /**
+         * ResolvedAttribute
+         * @description Model for resolved attributes with inheritance information.
+         */
+        ResolvedAttribute: {
+            /**
+             * Key
+             * @description Underscore-delimited identifier
+             */
+            key: string;
+            /**
+             * Title
+             * @description Human-readable display name
+             */
+            title: string;
+            /** @description Type constraint for values */
+            value_type: components["schemas"]["AttributeValueType"];
+            /**
+             * Value
+             * @description The actual attribute value
+             */
+            value?: unknown | null;
+            /**
+             * Inherited
+             * @description True if inherited from ancestor
+             * @default false
+             */
+            inherited: boolean;
+            /**
+             * Source Node Id
+             * @description ID of the node defining this attribute
+             */
+            source_node_id?: string | null;
+        };
+        /**
          * ResponseFormat
          * @enum {string}
          */
@@ -9202,6 +9331,29 @@ export interface components {
             cost_reduction_estimate: number;
             /** Objects Optimized */
             objects_optimized: number;
+        };
+        /**
+         * StructureNodeAttribute
+         * @description Model for structure node attributes with type validation.
+         */
+        StructureNodeAttribute: {
+            /**
+             * Key
+             * @description Underscore-delimited identifier
+             */
+            key: string;
+            /**
+             * Title
+             * @description Human-readable display name
+             */
+            title: string;
+            /** @description Type constraint for values */
+            value_type: components["schemas"]["AttributeValueType"];
+            /**
+             * Value
+             * @description The actual attribute value
+             */
+            value?: unknown | null;
         };
         /**
          * SupportedModelsResponse
@@ -10498,6 +10650,114 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_node_attributes_api_structure_nodes__node_id__attributes_get: {
+        parameters: {
+            query?: {
+                SessionLocal?: unknown;
+            };
+            header?: never;
+            path: {
+                /** @description The ID of the structure node */
+                node_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ResolvedAttribute"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    set_node_attributes_api_structure_nodes__node_id__attributes_post: {
+        parameters: {
+            query?: {
+                SessionLocal?: unknown;
+            };
+            header?: never;
+            path: {
+                /** @description The ID of the structure node */
+                node_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["StructureNodeAttribute"][];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["NodeOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    remove_node_attribute_api_structure_nodes__node_id__attributes__key__delete: {
+        parameters: {
+            query?: {
+                SessionLocal?: unknown;
+            };
+            header?: never;
+            path: {
+                /** @description The ID of the structure node */
+                node_id: string;
+                /** @description The attribute key to remove */
+                key: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["NodeOut"];
+                };
             };
             /** @description Validation Error */
             422: {
