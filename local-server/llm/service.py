@@ -173,7 +173,7 @@ class LLMService:
                 )
             except asyncio.TimeoutError:
                 self.logger.warning(f"LLM request timed out after {timeout} seconds for pipeline: {request.pipeline_type}")
-                raise LLMTimeoutError(f"Request timed out after {timeout} seconds")
+                raise LLMTimeoutError(f"Request timed out after {timeout} seconds for pipeline: {request.pipeline_type}")
             
             # Track token usage if available
             token_usage = None
@@ -240,7 +240,7 @@ class LLMService:
                 error_message=f"API timeout: {str(e)}",
                 start_time=start_time
             )
-            raise LLMTimeoutError(f"API request timeout: {str(e)}")
+            raise LLMTimeoutError(f"API request timeout for pipeline {request.pipeline_type}: {str(e)}")
         except AuthenticationError as e:
             self.logger.error(f"OpenAI authentication error for pipeline {request.pipeline_type}: {e}")
             self.execution_tracker.complete_execution(

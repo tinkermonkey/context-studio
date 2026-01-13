@@ -470,16 +470,22 @@ class IdentityManager:
     def _store_verification_code(self, user_id: str, code: str) -> None:
         """
         Store verification code with expiration.
-        
+
         Args:
             user_id: User identifier
             code: Verification code
         """
         logger.debug(f"Storing verification code for user {user_id}")
-        
+
+        # Verify user exists before storing code to prevent orphaned verification codes
+        user = self.get_user(user_id)
+        if not user:
+            logger.error(f"Cannot store verification code for non-existent user {user_id}")
+            raise ValueError(f"User {user_id} does not exist")
+
         # Code expires in 1 hour
         expires_at = datetime.now(timezone.utc) + timedelta(hours=1)
-        
+
         # Use INSERT OR REPLACE to handle multiple verification attempts
         query = """
         INSERT OR REPLACE INTO verification_codes (

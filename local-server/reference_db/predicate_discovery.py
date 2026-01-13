@@ -327,9 +327,15 @@ class PredicateDiscoveryService:
         try:
             # Get source configuration
             source_config = self.source_configs.get('conceptnet')
-            if not source_config or not source_config.enabled:
-                error_msg = "ConceptNet source not enabled in configuration"
+            if not source_config:
+                error_msg = "ConceptNet source configuration not found"
                 logger.warning(error_msg)
+                errors.append(error_msg)
+                return (0, 0, errors)
+
+            if not source_config.enabled:
+                error_msg = "ConceptNet source not enabled in configuration"
+                logger.debug(error_msg)
                 errors.append(error_msg)
                 return (0, 0, errors)
 
@@ -441,9 +447,15 @@ class PredicateDiscoveryService:
 
             # Get source configuration
             source_config = self.source_configs.get('dbpedia')
-            if not source_config or not source_config.enabled:
-                error_msg = "DBpedia source not enabled in configuration"
+            if not source_config:
+                error_msg = "DBpedia source configuration not found"
                 logger.warning(error_msg)
+                errors.append(error_msg)
+                return (0, 0, errors)
+
+            if not source_config.enabled:
+                error_msg = "DBpedia source not enabled in configuration"
+                logger.debug(error_msg)
                 errors.append(error_msg)
                 return (0, 0, errors)
 
@@ -565,9 +577,15 @@ class PredicateDiscoveryService:
 
             # Get source configuration
             source_config = self.source_configs.get('wikidata')
-            if not source_config or not source_config.enabled:
-                error_msg = "Wikidata source not enabled in configuration"
+            if not source_config:
+                error_msg = "Wikidata source configuration not found"
                 logger.warning(error_msg)
+                errors.append(error_msg)
+                return (0, 0, errors)
+
+            if not source_config.enabled:
+                error_msg = "Wikidata source not enabled in configuration"
+                logger.debug(error_msg)
                 errors.append(error_msg)
                 return (0, 0, errors)
 

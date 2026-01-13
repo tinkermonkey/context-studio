@@ -656,10 +656,13 @@ async def _run_discovery_task(task_id: str, sources: Optional[List[str]] = None)
                     )
                     source_configs[source_name] = legacy_config
                     logger.debug(f"Configured source {source_name} (from {config_name}): enabled={ref_config.enabled}")
+                else:
+                    logger.warning(f"Source {config_name} configuration is None")
             except ValueError as e:
                 # Source not configured
-                logger.warning(f"Could not configure source {source_name} from {config_name}: {e}")
-                pass
+                logger.error(f"Could not configure source {source_name} from {config_name}: {e}")
+                # Still create a disabled config so the service knows about it
+                source_configs[source_name] = SourceConfig(enabled=False)
 
         # Create reference config
         ref_config = ReferenceConfig()

@@ -681,6 +681,9 @@ class RAGPipelineService:
         """
         Count the number of sentences in the input text.
 
+        Attempts to use spaCy's linguistic sentence segmentation, falling back to
+        punctuation-based splitting if spaCy is unavailable.
+
         Args:
             text: Input text to analyze
 
@@ -701,7 +704,7 @@ class RAGPipelineService:
             sentences = list(doc.sents)
             return len(sentences)
         except Exception as e:
-            logger.warning(f"Failed to count sentences using spaCy: {e}")
+            logger.debug(f"Failed to count sentences using spaCy: {e} - using fallback regex-based splitting")
             # Fallback: simple sentence splitting by common punctuation
             import re
             sentences = re.split(r'[.!?]+', text)
