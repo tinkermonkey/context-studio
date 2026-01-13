@@ -6,13 +6,14 @@
 
 import React, { useMemo } from "react";
 import { Badge, Tooltip, Button } from "flowbite-react";
-import { Link, Trash2 } from "lucide-react";
-import type { ResolvedAttribute } from "@/api/types/structureNodes";
+import { Link, Trash2, Edit2 } from "lucide-react";
+import type { ResolvedAttribute, StructureNodeAttribute } from "@/api/types/structureNodes";
 import { useStructureNode } from "@/api/hooks/structure_nodes/useStructureNodes";
 
 interface AttributeListProps {
   attributes: ResolvedAttribute[];
   onRemoveAttribute?: (key: string) => void;
+  onEditAttribute?: (attribute: StructureNodeAttribute) => void;
   isLoading?: boolean;
 }
 
@@ -74,6 +75,7 @@ const InheritedAttributeInfo: React.FC<{ sourceNodeId: string | null | undefined
 export const AttributeList: React.FC<AttributeListProps> = ({
   attributes,
   onRemoveAttribute,
+  onEditAttribute,
   isLoading = false,
 }) => {
   const localAttributes = useMemo(
@@ -126,16 +128,28 @@ export const AttributeList: React.FC<AttributeListProps> = ({
                     <AttributeValueDisplay value={attr.value} />
                   </div>
                 </div>
-                {onRemoveAttribute && (
-                  <Button
-                    size="sm"
-                    color="light"
-                    onClick={() => onRemoveAttribute(attr.key)}
-                    className="ml-2"
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
-                )}
+                <div className="flex gap-1 ml-2">
+                  {onEditAttribute && (
+                    <Button
+                      size="sm"
+                      color="light"
+                      onClick={() => onEditAttribute(attr as StructureNodeAttribute)}
+                      disabled={isLoading}
+                    >
+                      <Edit2 className="h-4 w-4" />
+                    </Button>
+                  )}
+                  {onRemoveAttribute && (
+                    <Button
+                      size="sm"
+                      color="light"
+                      onClick={() => onRemoveAttribute(attr.key)}
+                      disabled={isLoading}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  )}
+                </div>
               </div>
             ))}
           </div>

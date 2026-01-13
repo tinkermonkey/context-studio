@@ -7,3 +7,4 @@
 export { AttributeList } from "./AttributeList";
 export { AttributeEditor } from "./AttributeEditor";
 export { AttributeValueInput } from "./AttributeValueInput";
+export { AttributePanel } from "./AttributePanel";
