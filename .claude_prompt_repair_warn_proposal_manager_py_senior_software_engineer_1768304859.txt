@@ -1,7 +1,0 @@
-Review these warnings from a run of proposal_manager.py:
-
-- Failed to push vote to S3: S3 error
-
-For each warning:
-- Determine if it's expected in this context
-- If not expected, fix the underlying issue
