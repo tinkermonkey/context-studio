@@ -7,6 +7,7 @@ as specified in section 8.2 of the Great Normalization design.
 
 import sys
 import os
+import json
 import pytest
 import uuid
 from unittest.mock import Mock
@@ -871,9 +872,16 @@ class TestNodeAttributeParsing:
         assert result == []
 
     def test_parse_attributes_json_invalid(self, node_service):
-        """Test parsing invalid JSON returns empty list."""
-        result = node_service._parse_attributes_json("{ invalid json }")
-        assert result == []
+        """Test parsing invalid JSON raises ValueError for data corruption."""
+        with pytest.raises(ValueError, match="Node has corrupted attribute data"):
+            node_service._parse_attributes_json("{ invalid json }")
+
+    def test_parse_attributes_json_invalid_structure(self, node_service):
+        """Test parsing JSON with invalid attribute structure raises ValueError."""
+        # JSON with missing required field 'key'
+        invalid_attrs = json.dumps([{"title": "Name"}])
+        with pytest.raises(ValueError, match="Node attributes are invalid"):
+            node_service._parse_attributes_json(invalid_attrs)
 
 
 class TestNodeAttributeOperations:

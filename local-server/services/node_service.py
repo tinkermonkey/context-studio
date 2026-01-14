@@ -10,6 +10,7 @@ from typing import List, Optional, Dict, Any
 from uuid import UUID
 from sqlalchemy.orm import Session
 from sqlalchemy import and_
+from pydantic import ValidationError as PydanticValidationError
 
 from database.models import StructureNode, ChangeEvent, Predicate
 from api.models.structure_nodes import StructureNodeAttribute, ResolvedAttribute
@@ -543,15 +544,24 @@ class NodeService:
 
         Returns:
             List of StructureNodeAttribute instances (empty list if attributes_json is None/empty)
+
+        Raises:
+            ValueError: If JSON is corrupted or attribute structure is invalid
         """
         if not attributes_json:
             return []
+
         try:
             data = json.loads(attributes_json)
+        except json.JSONDecodeError as e:
+            logger.error(f"Corrupted attribute JSON: {e}", exc_info=True)
+            raise ValueError(f"Node has corrupted attribute data: {str(e)}")
+
+        try:
             return [StructureNodeAttribute(**attr) for attr in data]
-        except Exception as e:
-            logger.error(f"Failed to parse attributes JSON: {e}")
-            return []
+        except (TypeError, KeyError, ValueError, PydanticValidationError) as e:
+            logger.error(f"Invalid attribute structure: {e}", exc_info=True)
+            raise ValueError(f"Node attributes are invalid: {str(e)}")
 
     def set_node_attributes(self, node_id: UUID, attributes: List[StructureNodeAttribute]) -> StructureNode:
         """
@@ -594,7 +604,7 @@ class NodeService:
             List of StructureNodeAttribute instances for this node only
 
         Raises:
-            ValueError: If node not found
+            ValueError: If node not found, or if attribute data is corrupted or invalid
         """
         node = self.get_node(str(node_id))
         if not node:
@@ -615,7 +625,7 @@ class NodeService:
             List of ResolvedAttribute instances with inherited flags and source node IDs
 
         Raises:
-            ValueError: If node not found
+            ValueError: If node not found, or if attribute data is corrupted or invalid
         """
         node = self.get_node(str(node_id))
         if not node:
@@ -664,7 +674,7 @@ class NodeService:
             Updated StructureNode instance
 
         Raises:
-            ValueError: If node not found
+            ValueError: If node not found, or if attribute data is corrupted or invalid
         """
         node = self.get_node(str(node_id))
         if not node:
