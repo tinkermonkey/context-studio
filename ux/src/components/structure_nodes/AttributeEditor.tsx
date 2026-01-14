@@ -42,8 +42,8 @@ const validateKey = (key: string, existingKeys?: string[]): string | null => {
     return "Key is required";
   }
 
-  if (!/^[a-z_][a-z0-9_]*$/i.test(key)) {
-    return "Key must start with a letter or underscore and contain only alphanumeric characters and underscores";
+  if (!/^[a-z][a-z0-9_]*$/.test(key)) {
+    return "Key must start with a letter and contain only lowercase alphanumeric characters and underscores";
   }
 
   if (existingKeys?.includes(key)) {
