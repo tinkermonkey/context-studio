@@ -67,7 +67,7 @@ class RAGCleanupScheduler:
     def start(self):
         """Start the cleanup scheduler."""
         if self._running:
-            logger.warning("Cleanup scheduler is already running")
+            logger.debug("Cleanup scheduler is already running")
             return
 
         self._running = True

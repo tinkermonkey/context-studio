@@ -427,6 +427,61 @@ class TestResolvedAttribute:
                 value="value",
             )
 
+    def test_inherited_true_requires_source_node_id(self):
+        """Test that inherited=True requires source_node_id to be set."""
+        with pytest.raises(ValidationError) as exc_info:
+            ResolvedAttribute(
+                key="inherited_attr",
+                title="Inherited Attribute",
+                value_type=AttributeValueType.STRING,
+                value="value",
+                inherited=True,
+                source_node_id=None,  # Invalid: inherited=True but source_node_id=None
+            )
+        assert "source_node_id" in str(exc_info.value).lower()
+
+    def test_inherited_false_source_node_id_optional(self):
+        """Test that when inherited=False, source_node_id is optional."""
+        # Should not raise validation error
+        attr = ResolvedAttribute(
+            key="local_attr",
+            title="Local Attribute",
+            value_type=AttributeValueType.STRING,
+            value="value",
+            inherited=False,
+            source_node_id=None,
+        )
+        assert attr.inherited is False
+        assert attr.source_node_id is None
+
+    def test_inherited_false_with_source_node_id(self):
+        """Test that inherited=False can have source_node_id (allowed but semantically unusual)."""
+        node_id = uuid4()
+        attr = ResolvedAttribute(
+            key="local_attr",
+            title="Local Attribute",
+            value_type=AttributeValueType.STRING,
+            value="value",
+            inherited=False,
+            source_node_id=node_id,
+        )
+        assert attr.inherited is False
+        assert attr.source_node_id == node_id
+
+    def test_inherited_true_with_valid_source_node_id(self):
+        """Test that inherited=True with valid source_node_id passes validation."""
+        node_id = uuid4()
+        attr = ResolvedAttribute(
+            key="inherited_attr",
+            title="Inherited Attribute",
+            value_type=AttributeValueType.STRING,
+            value="value",
+            inherited=True,
+            source_node_id=node_id,
+        )
+        assert attr.inherited is True
+        assert attr.source_node_id == node_id
+
     def test_resolved_attribute_all_number_types(self):
         """Test resolved attributes with all value types."""
         test_cases = [

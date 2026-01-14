@@ -5,7 +5,7 @@ This module contains the Pydantic models for the unified structure_nodes API,
 supporting the Great Normalization requirements.
 """
 
-from pydantic import BaseModel, Field, field_validator, ConfigDict
+from pydantic import BaseModel, Field, field_validator, model_validator, ConfigDict
 from typing import Optional, List, Any
 from uuid import UUID
 from enum import Enum
@@ -251,3 +251,10 @@ class ResolvedAttribute(StructureNodeAttribute):
     )
 
     model_config = ConfigDict(from_attributes=True)
+
+    @model_validator(mode='after')
+    def validate_inheritance_relationship(self):
+        """Validate inherited flag matches source_node_id presence."""
+        if self.inherited and self.source_node_id is None:
+            raise ValueError("Inherited attributes must have source_node_id")
+        return self

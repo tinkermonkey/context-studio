@@ -73,44 +73,46 @@ class ReferenceFilterService:
             }
 
             # Parse mapping JSON if present
-            if pred.mapping and pred.mapping.strip():
-                try:
-                    mapping_data = json.loads(pred.mapping)
-                    # Extract reference_predicates from the mapping structure (ADR-002 schema)
-                    if isinstance(mapping_data, dict) and "reference_predicates" in mapping_data:
-                        # New schema format: extract reference_predicates as external_predicates
-                        # Map from the new schema format to the format expected by filter logic
-                        ref_preds = mapping_data.get("reference_predicates", [])
-                        # Convert to "source:source_id" format for compatibility
-                        for ref_pred in ref_preds:
-                            pred_info["external_predicates"].append({
-                                "source": ref_pred.get("source"),
-                                "external_id": ref_pred.get("source_id")
-                            })
-                    elif isinstance(mapping_data, list):
-                        # Legacy format: list of {"source": ..., "external_id": ...}
-                        pred_info["external_predicates"] = mapping_data
-                    elif isinstance(mapping_data, dict) and "external_predicates" in mapping_data:
-                        # Legacy dict format: {"external_predicates": [...]}
-                        pred_info["external_predicates"] = mapping_data["external_predicates"]
-                    else:
-                        # Mapping doesn't match any expected format - log detailed warning
-                        mapping_type = type(mapping_data).__name__
+            if pred.mapping:
+                mapping_str = pred.mapping.strip() if isinstance(pred.mapping, str) else ""
+                if mapping_str:
+                    try:
+                        mapping_data = json.loads(mapping_str)
+                        # Extract reference_predicates from the mapping structure (ADR-002 schema)
+                        if isinstance(mapping_data, dict) and "reference_predicates" in mapping_data:
+                            # New schema format: extract reference_predicates as external_predicates
+                            # Map from the new schema format to the format expected by filter logic
+                            ref_preds = mapping_data.get("reference_predicates", [])
+                            # Convert to "source:source_id" format for compatibility
+                            for ref_pred in ref_preds:
+                                pred_info["external_predicates"].append({
+                                    "source": ref_pred.get("source"),
+                                    "external_id": ref_pred.get("source_id")
+                                })
+                        elif isinstance(mapping_data, list):
+                            # Legacy format: list of {"source": ..., "external_id": ...}
+                            pred_info["external_predicates"] = mapping_data
+                        elif isinstance(mapping_data, dict) and "external_predicates" in mapping_data:
+                            # Legacy dict format: {"external_predicates": [...]}
+                            pred_info["external_predicates"] = mapping_data["external_predicates"]
+                        else:
+                            # Mapping doesn't match any expected format - log detailed warning
+                            mapping_type = type(mapping_data).__name__
+                            logger.warning(
+                                f"Unsupported mapping format for predicate {pred.id}: "
+                                f"Expected dict with 'reference_predicates' or 'external_predicates' key, "
+                                f"or a list, got {mapping_type}. Mapping will be ignored."
+                            )
+                    except json.JSONDecodeError as e:
                         logger.warning(
-                            f"Unsupported mapping format for predicate {pred.id}: "
-                            f"Expected dict with 'reference_predicates' or 'external_predicates' key, "
-                            f"or a list, got {mapping_type}. Mapping will be ignored."
+                            f"Failed to parse mapping JSON for predicate {pred.id}: {e}. "
+                            f"Mapping must be valid JSON (list or dict format). Mapping will be ignored."
                         )
-                except json.JSONDecodeError as e:
-                    logger.warning(
-                        f"Failed to parse mapping JSON for predicate {pred.id}: {e}. "
-                        f"Mapping must be valid JSON (list or dict format). Mapping will be ignored."
-                    )
-                except (KeyError, TypeError) as e:
-                    logger.warning(
-                        f"Error processing mapping for predicate {pred.id}: {e}. "
-                        f"Mapping structure may be invalid. Mapping will be ignored."
-                    )
+                    except (KeyError, TypeError) as e:
+                        logger.warning(
+                            f"Error processing mapping for predicate {pred.id}: {e}. "
+                            f"Mapping structure may be invalid. Mapping will be ignored."
+                        )
 
             mappings[pred.id] = pred_info
 
