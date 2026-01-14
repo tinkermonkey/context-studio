@@ -96,16 +96,24 @@ class TestSchemaOrgImporterDownload:
         with ReferenceManager(config, db_path=str(db_path)) as manager:
             importer = SchemaOrgImporter(config, manager)
 
-            # Mock first failure, then success
-            mock_response_fail = Mock()
-            mock_response_fail.raise_for_status.side_effect = Exception("Network error")
+            call_count = [0]
 
-            mock_response_success = Mock()
-            mock_response_success.text = json.dumps(SAMPLE_SCHEMA_ORG_JSONLD)
-            mock_response_success.raise_for_status = Mock()
+            def mock_requests_get(*args, **kwargs):
+                call_count[0] += 1
+                if call_count[0] == 1:
+                    # First call fails
+                    mock_response = Mock()
+                    mock_response.raise_for_status.side_effect = Exception("Network error")
+                    return mock_response
+                else:
+                    # Second call succeeds
+                    mock_response = Mock()
+                    mock_response.text = json.dumps(SAMPLE_SCHEMA_ORG_JSONLD)
+                    mock_response.raise_for_status = Mock()
+                    return mock_response
 
             # Patch at the module level where it's used
-            with patch('reference_db.schema_org_importer.requests.get', side_effect=[mock_response_fail, mock_response_success]):
+            with patch('reference_db.schema_org_importer.requests.get', side_effect=mock_requests_get):
                 file_path = importer._download_with_retry()
                 assert os.path.exists(file_path)
                 os.remove(file_path)

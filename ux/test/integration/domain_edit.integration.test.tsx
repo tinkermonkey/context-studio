@@ -24,6 +24,18 @@ vi.mock("@/api/hooks/layers/useLayers", () => ({
 vi.mock("@/api/hooks/terms/useTerms", () => ({
   useTerms: (_params: any) => ({ data: [], isLoading: false }),
 }));
+vi.mock("@/api/hooks/structure_nodes/useNodeAttributes", () => ({
+  useNodeAttributes: () => ({
+    data: [],
+    isLoading: false,
+    error: null,
+    refetch: vi.fn(),
+  }),
+  useNodeAttributeMutations: () => ({
+    setAttributesMutation: { mutateAsync: vi.fn(), isPending: false },
+    removeAttributeMutation: { mutateAsync: vi.fn(), isPending: false },
+  }),
+}));
 
 import {
   renderWithProviders as render,
