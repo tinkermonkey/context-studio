@@ -40,7 +40,7 @@ class DuckDBService:
         if DUCKDB_AVAILABLE:
             self._initialize_connection()
         else:
-            logger.warning("DuckDB not available - service will operate in fallback mode")
+            logger.warning("DuckDB not available - analytics features will be limited")
             
         logger.info(f"DuckDBService initialized with path: {db_path}")
     
