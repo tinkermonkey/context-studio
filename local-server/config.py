@@ -89,7 +89,7 @@ class RAGPipelineConfig(BaseModel):
     kg_vector_threshold: float = Field(default=0.6, ge=0.0, le=1.0, description="Minimum similarity threshold for vector search in knowledge graph (Layer 0 and Layer 3)")
 
     # RAG Pipeline layer timeouts (in seconds)
-    timeout_layer_0: float = Field(default=0.5, ge=0.1, le=60.0, description="Timeout for Layer 0 (KG context preparation) in seconds")
+    timeout_layer_0: float = Field(default=1.0, ge=0.1, le=60.0, description="Timeout for Layer 0 (KG context preparation) in seconds")
     timeout_layer_1: float = Field(default=30.0, ge=1.0, le=300.0, description="Timeout for Layer 1 (LLM extraction) in seconds")
     timeout_layer_2: float = Field(default=0.5, ge=0.1, le=60.0, description="Timeout for Layer 2 (spaCy gap detection) in seconds")
     timeout_layer_3: float = Field(default=30.0, ge=1.0, le=300.0, description="Timeout for Layer 3 (concept resolution) in seconds")
@@ -464,10 +464,18 @@ class Settings(BaseModel):
                 "openai": ["openai"],
                 "anthropic": ["anthropic"]
             }
-            domain_mappings[source_name] = {
+
+            # Add mapping for primary key
+            mapping_entry = {
                 "upstream": config.upstream_url,
                 "enabled_keys": legacy_keys.get(source_name, [source_name])
             }
+            domain_mappings[source_name] = mapping_entry
+
+            # Add mappings for all legacy keys pointing to the same upstream URL
+            for legacy_key in legacy_keys.get(source_name, []):
+                if legacy_key != source_name:
+                    domain_mappings[legacy_key] = mapping_entry
         
         return {
             "server": {

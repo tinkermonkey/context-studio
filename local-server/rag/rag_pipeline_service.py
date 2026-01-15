@@ -81,7 +81,7 @@ class RAGPipelineService:
     """
 
     # Default timeout budgets per layer (in seconds)
-    DEFAULT_TIMEOUT_LAYER_0 = 0.5  # 500ms for KG context preparation
+    DEFAULT_TIMEOUT_LAYER_0 = 1.0  # 1s for KG context preparation
     DEFAULT_TIMEOUT_LAYER_1 = 30.0  # 30s for LLM extraction
     DEFAULT_TIMEOUT_LAYER_2 = 0.5  # 500ms for spaCy gap detection
     DEFAULT_TIMEOUT_LAYER_3 = 30.0  # 30s for concept resolution
