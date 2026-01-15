@@ -1287,3 +1287,131 @@ class TestLegalDomainHierarchyFixture:
         # Both should be inherited
         for attr in result:
             assert attr.inherited is True
+
+
+def test_create_node_version_management_failure(mock_db, mock_graph_service):
+    """Test that node creation is aborted when version management fails.
+
+    When version_manager.create_version() or working_tree_manager.initialize_entity_in_working_tree()
+    raise exceptions, the handler should:
+    1. Log the error with full traceback
+    2. Rollback the database
+    3. Raise ValidationError with specific message (not ValueError)
+    4. NOT catch and re-raise as ValueError
+
+    This ensures the API consumer receives the correct error type and status code.
+    """
+    from services.exceptions import ValidationError
+
+    # Create node service with mocked version management
+    mock_version_manager = Mock()
+    mock_working_tree_manager = Mock()
+    node_service = NodeService(db=mock_db, graph_service=mock_graph_service)
+    node_service.version_manager = mock_version_manager
+    node_service.working_tree_manager = mock_working_tree_manager
+
+    # Setup database mocks to pass validation checks
+    # Query for unique title check should return None (no existing node)
+    mock_query = Mock()
+    mock_filter = Mock()
+    mock_query.filter.return_value = mock_filter
+    mock_filter.first.return_value = None
+    mock_db.query.return_value = mock_query
+
+    # Mock successful add, commit, and refresh
+    test_node_id = str(uuid.uuid4())
+
+    def refresh_side_effect(obj):
+        # Set ID on the object when refresh is called
+        if hasattr(obj, 'id'):
+            obj.id = test_node_id
+
+    mock_db.add = Mock()
+    mock_db.commit = Mock()
+    mock_db.refresh = Mock(side_effect=refresh_side_effect)
+    mock_db.rollback = Mock()
+
+    # Simulate version_manager.create_version() raising an exception
+    version_error = Exception("Version database connection failed")
+    mock_version_manager.create_version.side_effect = version_error
+
+    # Attempt to create node
+    with pytest.raises(ValidationError) as exc_info:
+        node_service.create_node({
+            "node_type": "layer",
+            "title": "Unique Test Layer"
+        })
+
+    # Verify the error message is specific and informative
+    assert "Cannot create node" in str(exc_info.value)
+    assert "version management initialization failed" in str(exc_info.value)
+    assert "database or configuration issue" in str(exc_info.value)
+
+    # Verify rollback was called
+    mock_db.rollback.assert_called()
+
+
+def test_create_node_version_management_failure_working_tree(mock_db, mock_graph_service):
+    """Test that node creation is aborted when working tree initialization fails.
+
+    Similar to test_create_node_version_management_failure but tests the case where
+    working_tree_manager.initialize_entity_in_working_tree() fails.
+    """
+    from services.exceptions import ValidationError
+
+    # Create node service with mocked version management
+    mock_version_manager = Mock()
+    mock_working_tree_manager = Mock()
+    node_service = NodeService(db=mock_db, graph_service=mock_graph_service)
+    node_service.version_manager = mock_version_manager
+    node_service.working_tree_manager = mock_working_tree_manager
+
+    # Setup database mocks to pass validation checks
+    # Query for unique title check should return None (no existing node)
+    mock_query = Mock()
+    mock_filter = Mock()
+    mock_query.filter.return_value = mock_filter
+    mock_filter.first.return_value = None
+    mock_db.query.return_value = mock_query
+
+    # Mock successful add, commit, and refresh
+    test_node_id = str(uuid.uuid4())
+
+    def refresh_side_effect(obj):
+        # Set ID on the object when refresh is called
+        if hasattr(obj, 'id'):
+            obj.id = test_node_id
+
+    mock_db.add = Mock()
+    mock_db.commit = Mock()
+    mock_db.refresh = Mock(side_effect=refresh_side_effect)
+    mock_db.rollback = Mock()
+
+    # Mock version_manager.create_version() to succeed but working tree init to fail
+    mock_version = Mock()
+    mock_version.id = uuid.uuid4()
+    mock_version_manager.create_version.return_value = mock_version
+
+    # Simulate working_tree_manager.initialize_entity_in_working_tree() raising an exception
+    tree_error = Exception("Working tree database transaction failed")
+    mock_working_tree_manager.initialize_entity_in_working_tree.side_effect = tree_error
+
+    # Attempt to create node
+    with pytest.raises(ValidationError) as exc_info:
+        node_service.create_node({
+            "node_type": "layer",
+            "title": "Another Unique Layer"
+        })
+
+    # Verify the error message is specific and informative
+    assert "Cannot create node" in str(exc_info.value)
+    assert "version management initialization failed" in str(exc_info.value)
+
+    # Verify rollback was called
+    mock_db.rollback.assert_called()
+
+    # Verify create_version was called
+    mock_version_manager.create_version.assert_called_once()
+
+    # Verify initialize_entity_in_working_tree was called
+    mock_working_tree_manager.initialize_entity_in_working_tree.assert_called_once()

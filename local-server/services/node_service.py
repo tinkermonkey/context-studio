@@ -20,7 +20,7 @@ from embeddings.generate_embeddings import generate_embedding
 from services.change_event_handler import ChangeEventHandler
 from services.version_manager import VersionManager, ChangeState
 from services.working_tree_manager import WorkingTreeManager
-from services.exceptions import NotFoundError, ValidationError, ConflictError, CircularReferenceError, InvalidHierarchyError
+from services.exceptions import ServiceError, NotFoundError, ValidationError, ConflictError, CircularReferenceError, InvalidHierarchyError
 from utils.logger import get_logger
 
 logger = get_logger(__name__)
@@ -187,6 +187,10 @@ class NodeService:
 
             return structure_node
 
+        except ServiceError:
+            # Re-raise service errors (ValidationError, etc.) without wrapping
+            self.db.rollback()
+            raise
         except Exception as e:
             self.db.rollback()
             logger.error(f"Failed to create structure_node: {e}")
