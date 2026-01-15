@@ -56,12 +56,10 @@ const validateKey = (key: string, existingKeys?: string[]): string | null => {
 const validateUrl = (url: string): string | null => {
   if (!url) return null;
 
-  try {
-    new URL(url);
-    return null;
-  } catch {
-    return "Invalid URL format";
+  if (!url.startsWith("http://") && !url.startsWith("https://")) {
+    return "URL must start with http:// or https://";
   }
+  return null;
 };
 
 const validateValue = (
@@ -82,9 +80,8 @@ const validateValue = (
     case "date": {
       const strValue = String(value);
       if (!strValue) return null;
-      const date = new Date(strValue);
-      if (isNaN(date.getTime())) {
-        return "Invalid date format";
+      if (!/^\d{4}-\d{2}-\d{2}/.test(strValue)) {
+        return "Date must be in ISO 8601 format (YYYY-MM-DD)";
       }
       return null;
     }
