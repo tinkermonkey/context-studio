@@ -1261,7 +1261,7 @@ class TestNodeAttributesAPI:
 
         response = client.post(
             f"/api/structure_nodes/{domain['id']}/attributes",
-            json=attributes
+            json={"attributes": attributes}
         )
         assert response.status_code == 200
 
@@ -1295,7 +1295,7 @@ class TestNodeAttributesAPI:
 
         response = client.post(
             f"/api/structure_nodes/{domain['id']}/attributes",
-            json=attributes
+            json={"attributes": attributes}
         )
 
         assert response.status_code == 200
@@ -1316,7 +1316,7 @@ class TestNodeAttributesAPI:
 
         client.post(
             f"/api/structure_nodes/{domain['id']}/attributes",
-            json=attributes
+            json={"attributes": attributes}
         )
 
         # Remove the attribute
@@ -1341,7 +1341,7 @@ class TestNodeAttributesAPI:
         ]
         client.post(
             f"/api/structure_nodes/{layer['id']}/attributes",
-            json=layer_attrs
+            json={"attributes": layer_attrs}
         )
 
         # Set attribute on domain (should inherit from layer)
@@ -1355,7 +1355,7 @@ class TestNodeAttributesAPI:
         ]
         client.post(
             f"/api/structure_nodes/{domain['id']}/attributes",
-            json=domain_attrs
+            json={"attributes": domain_attrs}
         )
 
         # Get attributes from term (should have inherited attributes)
@@ -1381,7 +1381,7 @@ class TestNodeAttributesAPI:
 
         response = client.post(
             f"/api/structure_nodes/{domain['id']}/attributes",
-            json=invalid_attributes
+            json={"attributes": invalid_attributes}
         )
 
         assert response.status_code == 422
@@ -1407,7 +1407,7 @@ class TestNodeAttributesAPI:
         ]
         response = client.post(
             f"/api/structure_nodes/{non_existent_id}/attributes",
-            json=attributes
+            json={"attributes": attributes}
         )
         assert response.status_code == 404
 
