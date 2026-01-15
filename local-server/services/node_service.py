@@ -170,8 +170,12 @@ class NodeService:
                     logger.info(f"Initialized version management for structure_node: {structure_node.id}")
 
                 except Exception as e:
-                    logger.warning(f"Failed to initialize version management for {structure_node.id}: {e}")
-                    # Don't fail the entity creation if version management fails
+                    logger.error(f"Failed to initialize version management: {e}", exc_info=True)
+                    self.db.rollback()
+                    raise ValidationError(
+                        f"Cannot create node: version management initialization failed. "
+                        f"This indicates a database or configuration issue. Error: {str(e)}"
+                    )
 
             # Fire structure_node created event using new ChangeEventHandler
             node_dict = self._node_to_dict(structure_node)
