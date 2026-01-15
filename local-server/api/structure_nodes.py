@@ -586,8 +586,8 @@ def get_node_attributes(
     except ValueError as e:
         raise HTTPException(status_code=404, detail=str(e))
     except Exception as e:
-        logger.error(f"Error resolving attributes for node {node_id}: {e}", exc_info=True)
-        raise HTTPException(status_code=500, detail="Internal server error")
+        logger.error(f"Unexpected error resolving attributes for node {node_id}: {type(e).__name__}: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail="Failed to retrieve attributes. Please try again.")
 
 
 @router.post("/{node_id}/attributes", response_model=NodeOut)
@@ -634,14 +634,13 @@ def set_node_attributes(
         return to_node_out(node)
     except ValueError as e:
         raise HTTPException(status_code=404, detail=str(e))
+    except ValidationError as e:
+        raise HTTPException(status_code=422, detail=str(e))
     except ConflictError as e:
-        # Return 409 Conflict with error details for version mismatch
         return conflict_error_response(str(e))
     except Exception as e:
-        logger.error(f"Error setting attributes for node {node_id}: {e}", exc_info=True)
-        if "validation" in str(e).lower() or "type" in str(e).lower():
-            raise HTTPException(status_code=422, detail=str(e))
-        raise HTTPException(status_code=500, detail="Internal server error")
+        logger.error(f"Unexpected error setting attributes for node {node_id}: {type(e).__name__}: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail="Failed to set attributes. Please try again.")
 
 
 @router.delete("/{node_id}/attributes/{key}", response_model=NodeOut)
@@ -677,8 +676,8 @@ def remove_node_attribute(
     except ValueError as e:
         raise HTTPException(status_code=404, detail=str(e))
     except Exception as e:
-        logger.error(f"Error removing attribute {key} from node {node_id}: {e}", exc_info=True)
-        raise HTTPException(status_code=500, detail="Internal server error")
+        logger.error(f"Unexpected error removing attribute {key} from node {node_id}: {type(e).__name__}: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail="Failed to remove attribute. Please try again.")
 
 
 # Reference Links endpoints
