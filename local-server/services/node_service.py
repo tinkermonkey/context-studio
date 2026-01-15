@@ -587,23 +587,38 @@ class NodeService:
             logger.error(f"Invalid attribute structure: {e}", exc_info=True)
             raise ValueError(f"Node attributes are invalid: {str(e)}")
 
-    def set_node_attributes(self, node_id: UUID, attributes: List[StructureNodeAttribute]) -> StructureNode:
+    def set_node_attributes(self, node_id: UUID, attributes: List[StructureNodeAttribute], expected_version: Optional[int] = None) -> StructureNode:
         """
         Set local attributes on a node, replacing existing attributes.
+
+        Implements optimistic locking to prevent lost updates in concurrent scenarios.
+        If expected_version is provided, the update will only succeed if the current
+        version matches the expected version.
 
         Args:
             node_id: ID of the structure node
             attributes: List of StructureNodeAttribute instances to set
+            expected_version: Optional version number for optimistic locking. If provided,
+                            raises ConflictError if current version doesn't match.
 
         Returns:
             Updated StructureNode instance
 
         Raises:
-            ValueError: If node not found or validation fails
+            ValueError: If node not found
+            ConflictError: If expected_version is provided and doesn't match current version
         """
         node = self.get_node(str(node_id))
         if not node:
             raise ValueError(f"Node {node_id} not found")
+
+        # Optimistic locking check
+        if expected_version is not None and node.version != expected_version:
+            raise ConflictError(
+                f"Node was modified by another user. "
+                f"Please refresh and try again. "
+                f"(Expected version {expected_version}, current version {node.version})"
+            )
 
         # Serialize to JSON
         attributes_json = json.dumps([attr.model_dump(mode='json') for attr in attributes])

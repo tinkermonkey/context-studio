@@ -775,7 +775,7 @@
           "structure_nodes"
         ],
         "summary": "Set Node Attributes",
-        "description": "Set local attributes on a node (replaces existing attributes).\n\nReplaces all local attributes on this node with the provided list.\nInherited attributes from ancestors are not affected. This operation\nincrements the node's version number.\n\nArgs:\n    node_id: UUID of the structure node\n    attributes: List of StructureNodeAttribute instances to set\n\nReturns:\n    Updated structure node\n\nRaises:\n    400: If validation fails on attribute values or types\n    404: If structure node not found\n    500: If an unexpected error occurs",
+        "description": "Set local attributes on a node (replaces existing attributes).\n\nReplaces all local attributes on this node with the provided list.\nInherited attributes from ancestors are not affected. This operation\nincrements the node's version number.\n\nSupports optimistic locking via the expected_version field. If provided,\nthe update will only succeed if the current node version matches. This prevents\nlost updates in concurrent modification scenarios.\n\nArgs:\n    node_id: UUID of the structure node\n    request: SetNodeAttributesRequest containing:\n        - attributes: List of StructureNodeAttribute instances to set\n        - expected_version: Optional version for optimistic locking\n\nReturns:\n    Updated structure node\n\nRaises:\n    400: If validation fails on attribute values or types\n    404: If structure node not found\n    409: If expected_version is provided and doesn't match current version (conflict)\n    500: If an unexpected error occurs",
         "operationId": "set_node_attributes_api_structure_nodes__node_id__attributes_post",
         "parameters": [
           {
@@ -804,11 +804,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "type": "array",
-                "items": {
-                  "$ref": "#/components/schemas/StructureNodeAttribute"
-                },
-                "title": "Attributes"
+                "$ref": "#/components/schemas/SetNodeAttributesRequest"
               }
             }
           }
@@ -21649,6 +21645,36 @@
         ],
         "title": "SelectionResponse",
         "description": "Response model for selection recording."
+      },
+      "SetNodeAttributesRequest": {
+        "properties": {
+          "attributes": {
+            "items": {
+              "$ref": "#/components/schemas/StructureNodeAttribute"
+            },
+            "type": "array",
+            "title": "Attributes",
+            "description": "List of attributes to set on the node"
+          },
+          "expected_version": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Expected Version",
+            "description": "Expected node version for optimistic locking. If provided, the update will fail with 409 Conflict if the current version doesn't match."
+          }
+        },
+        "type": "object",
+        "required": [
+          "attributes"
+        ],
+        "title": "SetNodeAttributesRequest",
+        "description": "Request model for setting node attributes with optimistic locking support."
       },
       "SimilarPredicateOut": {
         "properties": {

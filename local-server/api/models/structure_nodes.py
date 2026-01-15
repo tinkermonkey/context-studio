@@ -258,3 +258,17 @@ class ResolvedAttribute(StructureNodeAttribute):
         if self.inherited and self.source_node_id is None:
             raise ValueError("Inherited attributes must have source_node_id")
         return self
+
+
+class SetNodeAttributesRequest(BaseModel):
+    """Request model for setting node attributes with optimistic locking support."""
+    attributes: List[StructureNodeAttribute] = Field(
+        ...,
+        description="List of attributes to set on the node"
+    )
+    expected_version: Optional[int] = Field(
+        None,
+        description="Expected node version for optimistic locking. If provided, the update will fail with 409 Conflict if the current version doesn't match."
+    )
+
+    model_config = ConfigDict(from_attributes=True)

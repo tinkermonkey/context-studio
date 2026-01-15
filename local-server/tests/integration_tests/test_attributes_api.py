@@ -63,7 +63,7 @@ class TestAttributesAPIBasicOperations:
 
         set_response = client.post(
             f"/api/structure_nodes/{layer['id']}/attributes",
-            json=attributes
+            json={"attributes": attributes}
         )
         assert set_response.status_code == 200
         updated_node = set_response.json()
@@ -115,7 +115,7 @@ class TestAttributesAPIBasicOperations:
 
         set_response = client.post(
             f"/api/structure_nodes/{layer['id']}/attributes",
-            json=attributes
+            json={"attributes": attributes}
         )
         assert set_response.status_code == 200
 
@@ -159,7 +159,7 @@ class TestAttributesAPIBasicOperations:
 
         set_response = client.post(
             f"/api/structure_nodes/{layer['id']}/attributes",
-            json=attributes
+            json={"attributes": attributes}
         )
         assert set_response.status_code == 200
 
@@ -203,7 +203,7 @@ class TestAttributesAPIBasicOperations:
 
         client.post(
             f"/api/structure_nodes/{layer['id']}/attributes",
-            json=attributes_v1
+            json={"attributes": attributes_v1}
         )
 
         # Set new attributes (should replace old ones)
@@ -218,7 +218,7 @@ class TestAttributesAPIBasicOperations:
 
         client.post(
             f"/api/structure_nodes/{layer['id']}/attributes",
-            json=attributes_v2
+            json={"attributes": attributes_v2}
         )
 
         # Verify old attribute is gone
@@ -255,7 +255,7 @@ class TestAttributesInheritance:
         ]
         client.post(
             f"/api/structure_nodes/{layer['id']}/attributes",
-            json=layer_attrs
+            json={"attributes": layer_attrs}
         )
 
         # Create domain under layer
@@ -315,7 +315,7 @@ class TestAttributesInheritance:
         ]
         client.post(
             f"/api/structure_nodes/{layer['id']}/attributes",
-            json=layer_attrs
+            json={"attributes": layer_attrs}
         )
 
         # Create domain under layer
@@ -351,7 +351,7 @@ class TestAttributesInheritance:
         ]
         client.post(
             f"/api/structure_nodes/{term['id']}/attributes",
-            json=term_attrs
+            json={"attributes": term_attrs}
         )
 
         # Get term attributes
@@ -390,7 +390,7 @@ class TestAttributesInheritance:
         ]
         client.post(
             f"/api/structure_nodes/{layer['id']}/attributes",
-            json=layer_attrs
+            json={"attributes": layer_attrs}
         )
 
         # Create domain with its own attribute
@@ -415,7 +415,7 @@ class TestAttributesInheritance:
         ]
         client.post(
             f"/api/structure_nodes/{domain['id']}/attributes",
-            json=domain_attrs
+            json={"attributes": domain_attrs}
         )
 
         # Create term under domain
@@ -472,7 +472,7 @@ class TestAttributeValidation:
 
         response = client.post(
             f"/api/structure_nodes/{layer['id']}/attributes",
-            json=attributes
+            json={"attributes": attributes}
         )
         # Should fail validation
         assert response.status_code >= 400
@@ -502,7 +502,7 @@ class TestAttributeValidation:
 
         response = client.post(
             f"/api/structure_nodes/{layer['id']}/attributes",
-            json=attributes
+            json={"attributes": attributes}
         )
         # Should fail validation
         assert response.status_code >= 400
@@ -532,7 +532,7 @@ class TestAttributeValidation:
 
         response = client.post(
             f"/api/structure_nodes/{layer['id']}/attributes",
-            json=attributes
+            json={"attributes": attributes}
         )
         # Should fail validation
         assert response.status_code >= 400
@@ -562,7 +562,7 @@ class TestAttributeValidation:
 
         response = client.post(
             f"/api/structure_nodes/{layer['id']}/attributes",
-            json=attributes
+            json={"attributes": attributes}
         )
         # Should fail validation
         assert response.status_code >= 400
@@ -592,7 +592,7 @@ class TestAttributeValidation:
 
         response = client.post(
             f"/api/structure_nodes/{layer['id']}/attributes",
-            json=attributes
+            json={"attributes": attributes}
         )
         # Should succeed
         assert response.status_code == 200
@@ -622,7 +622,7 @@ class TestAttributeValidation:
 
         response = client.post(
             f"/api/structure_nodes/{layer['id']}/attributes",
-            json=attributes
+            json={"attributes": attributes}
         )
         # Should fail validation
         assert response.status_code >= 400
@@ -658,7 +658,7 @@ class TestAttributeValidation:
 
         response = client.post(
             f"/api/structure_nodes/{layer['id']}/attributes",
-            json=attributes
+            json={"attributes": attributes}
         )
         # Should succeed
         assert response.status_code == 200
@@ -690,7 +690,7 @@ class TestAttributeValidation:
 
         response = client.post(
             f"/api/structure_nodes/{layer['id']}/attributes",
-            json=attributes
+            json={"attributes": attributes}
         )
         # Should succeed - null values are allowed
         assert response.status_code == 200
@@ -724,7 +724,7 @@ class TestAttributeErrorHandling:
         ]
         response = client.post(
             f"/api/structure_nodes/{fake_id}/attributes",
-            json=attributes
+            json={"attributes": attributes}
         )
         assert response.status_code == 404
 
@@ -758,7 +758,7 @@ class TestAttributeErrorHandling:
         ]
         client.post(
             f"/api/structure_nodes/{layer['id']}/attributes",
-            json=attributes
+            json={"attributes": attributes}
         )
 
         # Remove a non-existent key
@@ -801,13 +801,13 @@ class TestAttributeEdgeCases:
         ]
         client.post(
             f"/api/structure_nodes/{layer['id']}/attributes",
-            json=initial_attrs
+            json={"attributes": initial_attrs}
         )
 
         # Set empty attributes list
         response = client.post(
             f"/api/structure_nodes/{layer['id']}/attributes",
-            json=[]
+            json={"attributes": []}
         )
         assert response.status_code == 200
 
@@ -839,7 +839,7 @@ class TestAttributeEdgeCases:
         ]
         client.post(
             f"/api/structure_nodes/{layer['id']}/attributes",
-            json=layer_attrs
+            json={"attributes": layer_attrs}
         )
 
         # Create domain
@@ -901,7 +901,7 @@ class TestAttributeEdgeCases:
         ]
         client.post(
             f"/api/structure_nodes/{layer['id']}/attributes",
-            json=layer_attrs
+            json={"attributes": layer_attrs}
         )
 
         # Create domain with same key
@@ -925,7 +925,7 @@ class TestAttributeEdgeCases:
         ]
         client.post(
             f"/api/structure_nodes/{domain['id']}/attributes",
-            json=domain_attrs
+            json={"attributes": domain_attrs}
         )
 
         # Create term under domain
@@ -997,7 +997,7 @@ class TestAttributeEdgeCases:
 
         set_response = client.post(
             f"/api/structure_nodes/{layer['id']}/attributes",
-            json=attributes
+            json={"attributes": attributes}
         )
         assert set_response.status_code == 200
 
@@ -1008,3 +1008,255 @@ class TestAttributeEdgeCases:
         assert len(result_attrs) == 5
         keys = {attr["key"] for attr in result_attrs}
         assert keys == {"str_attr", "num_attr", "bool_attr", "date_attr", "url_attr"}
+
+
+class TestOptimisticLocking:
+    """Test optimistic locking for attribute updates."""
+
+    def test_set_attributes_without_version_check_succeeds(self, client):
+        """Test setting attributes without version check always succeeds."""
+        # Create a layer
+        unique_title = f"Test Layer {uuid4()}"
+        layer_data = {
+            "node_type": "layer",
+            "title": unique_title,
+            "definition": "Test layer",
+        }
+
+        layer_response = client.post("/api/structure_nodes/", json=layer_data)
+        layer = layer_response.json()
+        initial_version = layer["version"]
+
+        # Set attributes without expected_version (first update)
+        attributes_v1 = [
+            {
+                "key": "category",
+                "title": "Category",
+                "value_type": "string",
+                "value": "legal"
+            }
+        ]
+
+        set_response = client.post(
+            f"/api/structure_nodes/{layer['id']}/attributes",
+            json={"attributes": attributes_v1}
+        )
+        assert set_response.status_code == 200
+        updated_node = set_response.json()
+        assert updated_node["version"] == initial_version + 1
+
+    def test_set_attributes_with_correct_version_succeeds(self, client):
+        """Test setting attributes with correct expected_version succeeds."""
+        # Create a layer
+        unique_title = f"Test Layer {uuid4()}"
+        layer_data = {
+            "node_type": "layer",
+            "title": unique_title,
+            "definition": "Test layer",
+        }
+
+        layer_response = client.post("/api/structure_nodes/", json=layer_data)
+        layer = layer_response.json()
+        initial_version = layer["version"]
+
+        # First update without version check
+        attributes_v1 = [
+            {
+                "key": "category",
+                "title": "Category",
+                "value_type": "string",
+                "value": "legal"
+            }
+        ]
+
+        set_response1 = client.post(
+            f"/api/structure_nodes/{layer['id']}/attributes",
+            json={"attributes": attributes_v1}
+        )
+        assert set_response1.status_code == 200
+        node_after_v1 = set_response1.json()
+        v1_version = node_after_v1["version"]
+
+        # Second update with correct expected_version
+        attributes_v2 = [
+            {
+                "key": "status",
+                "title": "Status",
+                "value_type": "string",
+                "value": "active"
+            }
+        ]
+
+        set_response2 = client.post(
+            f"/api/structure_nodes/{layer['id']}/attributes",
+            json={
+                "attributes": attributes_v2,
+                "expected_version": v1_version
+            }
+        )
+        assert set_response2.status_code == 200
+        node_after_v2 = set_response2.json()
+        assert node_after_v2["version"] == v1_version + 1
+
+    def test_set_attributes_with_stale_version_fails_with_409(self, client):
+        """Test setting attributes with stale expected_version fails with 409 Conflict."""
+        # Create a layer
+        unique_title = f"Test Layer {uuid4()}"
+        layer_data = {
+            "node_type": "layer",
+            "title": unique_title,
+            "definition": "Test layer",
+        }
+
+        layer_response = client.post("/api/structure_nodes/", json=layer_data)
+        layer = layer_response.json()
+        initial_version = layer["version"]
+
+        # First update
+        attributes_v1 = [
+            {
+                "key": "category",
+                "title": "Category",
+                "value_type": "string",
+                "value": "legal"
+            }
+        ]
+
+        set_response1 = client.post(
+            f"/api/structure_nodes/{layer['id']}/attributes",
+            json={"attributes": attributes_v1}
+        )
+        assert set_response1.status_code == 200
+
+        # Try to update with stale version
+        attributes_v2 = [
+            {
+                "key": "status",
+                "title": "Status",
+                "value_type": "string",
+                "value": "active"
+            }
+        ]
+
+        set_response2 = client.post(
+            f"/api/structure_nodes/{layer['id']}/attributes",
+            json={
+                "attributes": attributes_v2,
+                "expected_version": initial_version  # This is stale
+            }
+        )
+        assert set_response2.status_code == 409
+        error_response = set_response2.json()
+        assert "detail" in error_response
+        assert len(error_response["detail"]) > 0
+        error_msg = error_response["detail"][0]["msg"].lower()
+        assert "version" in error_msg
+
+    def test_concurrent_attribute_updates_with_locking(self, client):
+        """Test that second concurrent update fails when first succeeds with locking."""
+        # Create a layer
+        unique_title = f"Test Layer {uuid4()}"
+        layer_data = {
+            "node_type": "layer",
+            "title": unique_title,
+            "definition": "Test layer",
+        }
+
+        layer_response = client.post("/api/structure_nodes/", json=layer_data)
+        layer = layer_response.json()
+        initial_version = layer["version"]
+
+        # Simulate User A and User B both reading the same version
+        # User A updates successfully
+        attrs_user_a = [
+            {
+                "key": "category",
+                "title": "Category",
+                "value_type": "string",
+                "value": "legal"
+            }
+        ]
+
+        response_a = client.post(
+            f"/api/structure_nodes/{layer['id']}/attributes",
+            json={
+                "attributes": attrs_user_a,
+                "expected_version": initial_version
+            }
+        )
+        assert response_a.status_code == 200
+        node_a = response_a.json()
+        assert node_a["version"] == initial_version + 1
+
+        # User B tries to update with the original version (stale)
+        attrs_user_b = [
+            {
+                "key": "status",
+                "title": "Status",
+                "value_type": "string",
+                "value": "active"
+            }
+        ]
+
+        response_b = client.post(
+            f"/api/structure_nodes/{layer['id']}/attributes",
+            json={
+                "attributes": attrs_user_b,
+                "expected_version": initial_version  # Stale - User A already updated
+            }
+        )
+        assert response_b.status_code == 409
+
+        # Verify User A's attributes are still there
+        get_response = client.get(f"/api/structure_nodes/{layer['id']}/attributes")
+        result_attrs = get_response.json()
+        assert len(result_attrs) == 1
+        assert result_attrs[0]["key"] == "category"
+        assert result_attrs[0]["value"] == "legal"
+
+    def test_optimistic_locking_error_includes_version_info(self, client):
+        """Test that 409 error response includes current and expected versions."""
+        # Create a layer
+        unique_title = f"Test Layer {uuid4()}"
+        layer_data = {
+            "node_type": "layer",
+            "title": unique_title,
+            "definition": "Test layer",
+        }
+
+        layer_response = client.post("/api/structure_nodes/", json=layer_data)
+        layer = layer_response.json()
+        initial_version = layer["version"]
+
+        # Update the node
+        attrs = [
+            {
+                "key": "test",
+                "title": "Test",
+                "value_type": "string",
+                "value": "test"
+            }
+        ]
+
+        client.post(
+            f"/api/structure_nodes/{layer['id']}/attributes",
+            json={"attributes": attrs}
+        )
+
+        # Try to update with stale version
+        conflict_response = client.post(
+            f"/api/structure_nodes/{layer['id']}/attributes",
+            json={
+                "attributes": attrs,
+                "expected_version": initial_version
+            }
+        )
+
+        assert conflict_response.status_code == 409
+        error_data = conflict_response.json()
+        assert "detail" in error_data
+        assert len(error_data["detail"]) > 0
+        error_msg = error_data["detail"][0]["msg"]
+        # Error message should contain version information
+        assert "version" in error_msg.lower()
+        assert str(initial_version) in error_msg or "expected" in error_msg.lower()

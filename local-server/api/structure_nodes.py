@@ -34,7 +34,7 @@ from api.models.structure_nodes import (
     NodeCreate, NodeUpdate, NodeOut, NodeLinkCreate, NodeLinkOut,
     NodeSearchRequest, NodeSearchResult, PaginatedNodesResponse, PaginatedNodeLinksResponse, NodeTypeEnum,
     MoveNodesRequest, MoveNodesResponse, ReferenceLink, WordSense, SelectedWordSensesUpdate,
-    StructureNodeAttribute, ResolvedAttribute
+    StructureNodeAttribute, ResolvedAttribute, SetNodeAttributesRequest
 )
 from api.utils.node_conversion import (
     to_node_out, to_node_link_out, nodes_to_paginated_response,
@@ -593,7 +593,7 @@ def get_node_attributes(
 @router.post("/{node_id}/attributes", response_model=NodeOut)
 def set_node_attributes(
     node_id: UUID = Path(..., description="The ID of the structure node"),
-    attributes: List[StructureNodeAttribute] = ...,
+    request: SetNodeAttributesRequest = ...,
     node_service: NodeService = Depends(get_node_service)
 ):
     """
@@ -603,9 +603,15 @@ def set_node_attributes(
     Inherited attributes from ancestors are not affected. This operation
     increments the node's version number.
 
+    Supports optimistic locking via the expected_version field. If provided,
+    the update will only succeed if the current node version matches. This prevents
+    lost updates in concurrent modification scenarios.
+
     Args:
         node_id: UUID of the structure node
-        attributes: List of StructureNodeAttribute instances to set
+        request: SetNodeAttributesRequest containing:
+            - attributes: List of StructureNodeAttribute instances to set
+            - expected_version: Optional version for optimistic locking
 
     Returns:
         Updated structure node
@@ -613,16 +619,24 @@ def set_node_attributes(
     Raises:
         400: If validation fails on attribute values or types
         404: If structure node not found
+        409: If expected_version is provided and doesn't match current version (conflict)
         500: If an unexpected error occurs
     """
     from utils.logger import get_logger
     logger = get_logger(__name__)
 
     try:
-        node = node_service.set_node_attributes(node_id, attributes)
+        node = node_service.set_node_attributes(
+            node_id,
+            request.attributes,
+            expected_version=request.expected_version
+        )
         return to_node_out(node)
     except ValueError as e:
         raise HTTPException(status_code=404, detail=str(e))
+    except ConflictError as e:
+        # Return 409 Conflict with error details for version mismatch
+        return conflict_error_response(str(e))
     except Exception as e:
         logger.error(f"Error setting attributes for node {node_id}: {e}", exc_info=True)
         if "validation" in str(e).lower() or "type" in str(e).lower():

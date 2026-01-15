@@ -221,9 +221,15 @@ export interface paths {
          *     Inherited attributes from ancestors are not affected. This operation
          *     increments the node's version number.
          *
+         *     Supports optimistic locking via the expected_version field. If provided,
+         *     the update will only succeed if the current node version matches. This prevents
+         *     lost updates in concurrent modification scenarios.
+         *
          *     Args:
          *         node_id: UUID of the structure node
-         *         attributes: List of StructureNodeAttribute instances to set
+         *         request: SetNodeAttributesRequest containing:
+         *             - attributes: List of StructureNodeAttribute instances to set
+         *             - expected_version: Optional version for optimistic locking
          *
          *     Returns:
          *         Updated structure node
@@ -231,6 +237,7 @@ export interface paths {
          *     Raises:
          *         400: If validation fails on attribute values or types
          *         404: If structure node not found
+         *         409: If expected_version is provided and doesn't match current version (conflict)
          *         500: If an unexpected error occurs
          */
         post: operations["set_node_attributes_api_structure_nodes__node_id__attributes_post"];
@@ -9280,6 +9287,22 @@ export interface components {
             message: string;
         };
         /**
+         * SetNodeAttributesRequest
+         * @description Request model for setting node attributes with optimistic locking support.
+         */
+        SetNodeAttributesRequest: {
+            /**
+             * Attributes
+             * @description List of attributes to set on the node
+             */
+            attributes: components["schemas"]["StructureNodeAttribute"][];
+            /**
+             * Expected Version
+             * @description Expected node version for optimistic locking. If provided, the update will fail with 409 Conflict if the current version doesn't match.
+             */
+            expected_version?: number | null;
+        };
+        /**
          * SimilarPredicateOut
          * @description Response model for similar predicates.
          */
@@ -10710,7 +10733,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["StructureNodeAttribute"][];
+                "application/json": components["schemas"]["SetNodeAttributesRequest"];
             };
         };
         responses: {
