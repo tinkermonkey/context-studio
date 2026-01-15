@@ -581,10 +581,6 @@ class NodeService:
         if not node:
             raise ValueError(f"Node {node_id} not found")
 
-        # Validate attributes by constructing them
-        for attr in attributes:
-            attr.model_validate(attr.model_dump())
-
         # Serialize to JSON
         attributes_json = json.dumps([attr.model_dump(mode='json') for attr in attributes])
         node.attributes = attributes_json
