@@ -235,7 +235,15 @@ class NodeService:
             try:
                 structure_node.title_embedding = generate_embedding(node_data["title"])
             except Exception as e:
-                logger.warning(f"Failed to generate title embedding: {e}")
+                logger.error(
+                    f"Failed to generate title embedding for '{node_data['title']}': {e}",
+                    exc_info=True
+                )
+                raise ValidationError(
+                    f"Cannot update node: title embedding generation failed. "
+                    f"This may indicate LLM service issues. Please try again or contact support. "
+                    f"Error: {str(e)}"
+                )
 
         if "definition" in node_data:
             structure_node.definition = node_data["definition"]
@@ -248,7 +256,15 @@ class NodeService:
                 else:
                     structure_node.definition_embedding = None
             except Exception as e:
-                logger.warning(f"Failed to generate definition embedding: {e}")
+                logger.error(
+                    f"Failed to generate definition embedding: {e}",
+                    exc_info=True
+                )
+                raise ValidationError(
+                    f"Cannot update node: definition embedding generation failed. "
+                    f"This may indicate LLM service issues. Please try again or contact support. "
+                    f"Error: {str(e)}"
+                )
 
         if "parent_node_id" in node_data:
             structure_node.parent_node_id = node_data["parent_node_id"]
