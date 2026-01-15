@@ -552,6 +552,8 @@ class Settings(BaseModel):
                         self.reference_sources.conceptnet.use_proxy),
             "spacy_dbpedia_spotlight": (self.reference_sources.dbpedia_spotlight.enabled and
                                       self.reference_sources.dbpedia_spotlight.use_proxy),
+            "dbpedia_spotlight": (self.reference_sources.dbpedia_spotlight.enabled and
+                                self.reference_sources.dbpedia_spotlight.use_proxy),
             "conceptnet": (self.reference_sources.conceptnet.enabled and
                           self.reference_sources.conceptnet.use_proxy),
             # Map legacy 'dbpedia' to dbpedia_lookup for backward compatibility
