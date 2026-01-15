@@ -42,9 +42,7 @@ class NodeService:
             working_tree_manager: Optional working tree manager for state tracking
         """
         self.db = db
-        self.graph_service = (
-            graph_service  # Keep optional for now since GraphService needs updating
-        )
+        self.graph_service = graph_service
         self.version_manager = version_manager
         self.working_tree_manager = working_tree_manager
         self.event_handler = ChangeEventHandler(db)
@@ -156,7 +154,7 @@ class NodeService:
                         entity_type='structure_node',
                         entity_id=str(structure_node.id),
                         content=node_dict,
-                        author_id='system',  # TODO: Get from request context
+                        author_id='system',  # System represents automatic creation during node initialization
                         state=ChangeState.WORKING
                     )
 

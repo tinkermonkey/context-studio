@@ -269,7 +269,7 @@ def search_nodes(
                 definition=row.definition,
                 structural_predicate_id=row.structural_predicate_id,
                 created_at=row.created_at.isoformat() if hasattr(row.created_at, 'isoformat') else str(row.created_at),
-                version=1,  # Version tracking would come from working tree
+                version=1,  # Use version 1 as placeholder for search results
                 last_modified=row.last_modified.isoformat() if hasattr(row.last_modified, 'isoformat') else str(row.last_modified),
                 score=float(row.similarity),
                 distance=1.0 - float(row.similarity)  # distance is inverse of similarity

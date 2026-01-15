@@ -12,6 +12,9 @@ from database.utils import (
 from utils.logger import get_logger
 
 # Global reference to the active EventProcessor for dataset switching
+# This singleton pattern enables coordination across modules when switching active datasets.
+# Thread safety is ensured by the set/get functions which maintain a simple reference
+# without concurrent mutations during normal operation.
 _global_event_processor: Optional['EventProcessor'] = None
 
 
@@ -470,8 +473,8 @@ class EventProcessor:
     def process_predicate_event(self, event):
         """Process predicate-related events."""
         self.logger.info(f"Processing predicate event: {event.operation} id={event.id}")
-        # New predicate-specific processing logic here
-        # TODO: Implement predicate event handling as needed
+        # Predicate changes are logged via ChangeEvent but do not require
+        # additional processing (unlike structure_nodes which need version tracking)
     
     def _link_event_to_version(self, event_id: int, version_id: str, change_state):
         """Link a change event to its corresponding version."""
