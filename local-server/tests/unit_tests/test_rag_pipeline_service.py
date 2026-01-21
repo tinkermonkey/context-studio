@@ -224,9 +224,15 @@ class TestRAGPipelineService:
             # Setup Layer 0 to timeout
             mock_kg_proc = MockKGProcessor.return_value
 
-            async def timeout_func(*args, **kwargs):
-                await asyncio.sleep(1.0)  # Longer than 500ms timeout
-                return Mock()
+            def timeout_func(*args, **kwargs):
+                import time
+                time.sleep(1.0)  # Longer than 500ms timeout
+                return KGContextOutput(
+                    extracted_phrases=[],
+                    kg_nodes=[],
+                    total_sentences=1,
+                    trace_data={}
+                )
 
             mock_kg_proc.process.side_effect = timeout_func
 
@@ -292,11 +298,20 @@ class TestRAGPipelineService:
             # Setup Layer 1 to timeout
             mock_llm_proc = MockLLMProcessor.return_value
 
-            async def timeout_func(*args, **kwargs):
-                await asyncio.sleep(31.0)  # Longer than 30s timeout
-                return Mock()
+            def timeout_func(*args, **kwargs):
+                import time
+                time.sleep(2.0)  # Longer than 1s timeout
+                return LLMExtractionOutput(
+                    entities=[],
+                    kg_context_size=0,
+                    token_usage=None,
+                    trace_data={}
+                )
 
             mock_llm_proc.process.side_effect = timeout_func
+
+            # Create service with shorter Layer 1 timeout for testing
+            service = RAGPipelineService(kg_session, ops_session, timeout_layer_1=1.0)
 
             # Setup other layers to succeed
             mock_spacy_proc = MockSpaCyProcessor.return_value
@@ -316,9 +331,6 @@ class TestRAGPipelineService:
 
             mock_obs_store = MockObsStore.return_value
             mock_obs_store.save_metrics.return_value = "metrics123"
-
-            # Create service
-            service = RAGPipelineService(kg_session, ops_session)
 
             # Execute extraction
             response = await service.extract_entities("Test text", enable_trace=False)

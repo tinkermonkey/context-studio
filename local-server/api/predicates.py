@@ -629,18 +629,40 @@ async def _run_discovery_task(task_id: str, sources: Optional[List[str]] = None)
         config_manager = get_config_manager()
         settings = config_manager.settings
 
-        # Prepare source configs - only for sources that need API configuration
-        # (schema_org uses local database, doesn't need external API config)
+        # Prepare source configs - convert ReferenceSourceConfig to legacy SourceConfig format
+        from config import SourceConfig
         source_configs = {}
-        for source_name in ['conceptnet', 'dbpedia', 'wikidata']:
+
+        # Build source config mapping for all discovery sources
+        # ConceptNet and Wikidata use direct configs
+        # DBpedia discovery uses dbpedia_sparql endpoint
+        source_mapping = {
+            'conceptnet': 'conceptnet',
+            'dbpedia': 'dbpedia_sparql',
+            'wikidata': 'wikidata'
+        }
+
+        for source_name, config_name in source_mapping.items():
             try:
-                source_config = settings.get_source_config(source_name)
-                if source_config:
-                    source_configs[source_name] = source_config
-            except ValueError:
-                # Source not configured, skip it
-                logger.debug(f"Source {source_name} not configured, skipping")
-                pass
+                ref_config = settings.get_source_config(config_name)
+                if ref_config:
+                    # Convert ReferenceSourceConfig to legacy SourceConfig format
+                    legacy_config = SourceConfig(
+                        enabled=ref_config.enabled,
+                        use_proxy=ref_config.use_proxy,
+                        timeout=ref_config.timeout,
+                        max_retries=ref_config.max_retries,
+                        base_url=ref_config.upstream_url
+                    )
+                    source_configs[source_name] = legacy_config
+                    logger.debug(f"Configured source {source_name} (from {config_name}): enabled={ref_config.enabled}")
+                else:
+                    logger.warning(f"Source {config_name} configuration is None")
+            except ValueError as e:
+                # Source not configured
+                logger.error(f"Could not configure source {source_name} from {config_name}: {e}")
+                # Still create a disabled config so the service knows about it
+                source_configs[source_name] = SourceConfig(enabled=False)
 
         # Create reference config
         ref_config = ReferenceConfig()

@@ -28,7 +28,7 @@ class DuckDBService:
     def __init__(self, db_path: Optional[str] = None, s3_config: Optional[Dict[str, str]] = None):
         """
         Initialize DuckDB service.
-        
+
         Args:
             db_path: Path to DuckDB database file (None for in-memory)
             s3_config: S3 configuration for external data access
@@ -36,12 +36,10 @@ class DuckDBService:
         self.db_path = db_path
         self.s3_config = s3_config or {}
         self.connection = None
-        
+
         if DUCKDB_AVAILABLE:
             self._initialize_connection()
-        else:
-            logger.warning("DuckDB not available - service will operate in fallback mode")
-            
+
         logger.info(f"DuckDBService initialized with path: {db_path}")
     
     def _initialize_connection(self):

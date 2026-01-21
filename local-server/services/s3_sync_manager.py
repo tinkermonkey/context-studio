@@ -159,6 +159,33 @@ class S3SyncManager:
             "local_changes": len(pending_changes) > 0,
         }
 
+    def write_metadata_to_s3(self, metadata: Dict[str, Any], s3_path: str) -> bool:
+        """Write metadata dictionary to S3 as Parquet."""
+
+        try:
+            # Convert dict to DataFrame
+            df = pd.DataFrame([metadata])
+
+            # Write using DuckDB
+            conn = self.duckdb_service.get_connection()
+            conn.register("temp_metadata", df)
+
+            query = f"""
+            COPY (SELECT * FROM temp_metadata)
+            TO '{s3_path}'
+            (FORMAT 'parquet', COMPRESSION 'zstd')
+            """
+
+            conn.execute(query)
+            conn.unregister("temp_metadata")
+
+            logger.info(f"Successfully wrote metadata to {s3_path}")
+            return True
+
+        except Exception as e:
+            logger.error(f"Error writing metadata to S3: {e}")
+            return False
+
     def _write_changes_to_s3(self, conn, df: pd.DataFrame, s3_path: str) -> bool:
         """Write changes DataFrame to S3 as Parquet."""
 
@@ -168,8 +195,8 @@ class S3SyncManager:
 
             # Write to S3 with compression
             query = f"""
-            COPY (SELECT * FROM temp_changes) 
-            TO '{s3_path}' 
+            COPY (SELECT * FROM temp_changes)
+            TO '{s3_path}'
             (FORMAT 'parquet', COMPRESSION 'zstd')
             """
 

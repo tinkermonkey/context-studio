@@ -8,6 +8,7 @@ in section 8.3 of the Great Normalization design.
 import sys
 import os
 import uuid
+import pytest
 from uuid import uuid4
 
 sys.path.insert(
@@ -1202,3 +1203,216 @@ class TestMoveWithTypeConversionAPI:
         assert data["total"] == 15
         assert data["skip"] == 15
         assert len(data["data"]) == 0
+
+
+class TestNodeAttributesAPI:
+    """Test attribute API endpoints for getting, setting, and removing attributes."""
+
+    @pytest.fixture
+    def sample_nodes_with_links(self, client):
+        """Create sample layer->domain->term hierarchy for attribute tests."""
+        # Create layer
+        layer_data = {
+            "node_type": "layer",
+            "title": f"Attribute Test Layer {uuid4()}",
+            "definition": "Layer for attribute tests",
+        }
+        layer_response = client.post("/api/structure_nodes/", json=layer_data)
+        assert layer_response.status_code == 201
+        layer = layer_response.json()
+
+        # Create domain
+        domain_data = {
+            "node_type": "domain",
+            "title": f"Attribute Test Domain {uuid4()}",
+            "definition": "Domain for attribute tests",
+            "parent_node_id": layer["id"],
+        }
+        domain_response = client.post("/api/structure_nodes/", json=domain_data)
+        assert domain_response.status_code == 201
+        domain = domain_response.json()
+
+        # Create term
+        term_data = {
+            "node_type": "term",
+            "title": f"Attribute Test Term {uuid4()}",
+            "definition": "Term for attribute tests",
+            "parent_node_id": domain["id"],
+        }
+        term_response = client.post("/api/structure_nodes/", json=term_data)
+        assert term_response.status_code == 201
+        term = term_response.json()
+
+        return layer, domain, term
+
+    def test_get_node_attributes_endpoint(self, client, sample_nodes_with_links):
+        """Test GET /api/structure_nodes/{id}/attributes returns resolved attributes."""
+        layer, domain, term = sample_nodes_with_links
+
+        # Set some attributes on the domain
+        attributes = [
+            {
+                "key": "jurisdiction",
+                "title": "Jurisdiction",
+                "value": "US Federal",
+                "value_type": "string"
+            }
+        ]
+
+        response = client.post(
+            f"/api/structure_nodes/{domain['id']}/attributes",
+            json={"attributes": attributes}
+        )
+        assert response.status_code == 200
+
+        # Get attributes from the term (should inherit from domain)
+        response = client.get(
+            f"/api/structure_nodes/{term['id']}/attributes"
+        )
+
+        assert response.status_code == 200
+        data = response.json()
+        assert isinstance(data, list)
+
+    def test_set_node_attributes_endpoint(self, client, sample_nodes_with_links):
+        """Test POST /api/structure_nodes/{id}/attributes stores attributes."""
+        layer, domain, term = sample_nodes_with_links
+
+        attributes = [
+            {
+                "key": "category",
+                "title": "Category",
+                "value": "legal",
+                "value_type": "string"
+            },
+            {
+                "key": "jurisdiction",
+                "title": "Jurisdiction",
+                "value": "US Federal",
+                "value_type": "string"
+            }
+        ]
+
+        response = client.post(
+            f"/api/structure_nodes/{domain['id']}/attributes",
+            json={"attributes": attributes}
+        )
+
+        assert response.status_code == 200
+
+    def test_remove_node_attribute_endpoint(self, client, sample_nodes_with_links):
+        """Test DELETE /api/structure_nodes/{id}/attributes/{key} removes attribute."""
+        layer, domain, term = sample_nodes_with_links
+
+        # First set an attribute
+        attributes = [
+            {
+                "key": "test_key",
+                "title": "Test Key",
+                "value": "test_value",
+                "value_type": "string"
+            }
+        ]
+
+        client.post(
+            f"/api/structure_nodes/{domain['id']}/attributes",
+            json={"attributes": attributes}
+        )
+
+        # Remove the attribute
+        response = client.delete(
+            f"/api/structure_nodes/{domain['id']}/attributes/test_key"
+        )
+
+        assert response.status_code == 200
+
+    def test_attributes_inheritance_via_api(self, client, sample_nodes_with_links):
+        """Test end-to-end inheritance through API (Legal Domain hierarchy example)."""
+        layer, domain, term = sample_nodes_with_links
+
+        # Set attribute on layer
+        layer_attrs = [
+            {
+                "key": "category",
+                "title": "Category",
+                "value": "legal",
+                "value_type": "string"
+            }
+        ]
+        client.post(
+            f"/api/structure_nodes/{layer['id']}/attributes",
+            json={"attributes": layer_attrs}
+        )
+
+        # Set attribute on domain (should inherit from layer)
+        domain_attrs = [
+            {
+                "key": "jurisdiction",
+                "title": "Jurisdiction",
+                "value": "US Federal",
+                "value_type": "string"
+            }
+        ]
+        client.post(
+            f"/api/structure_nodes/{domain['id']}/attributes",
+            json={"attributes": domain_attrs}
+        )
+
+        # Get attributes from term (should have inherited attributes)
+        response = client.get(
+            f"/api/structure_nodes/{term['id']}/attributes"
+        )
+
+        assert response.status_code == 200
+        data = response.json()
+        assert isinstance(data, list)
+
+    def test_attribute_validation_errors(self, client, sample_nodes_with_links):
+        """Test invalid attributes return 422 validation error."""
+        layer, domain, term = sample_nodes_with_links
+
+        # Send invalid attributes (missing required fields)
+        invalid_attributes = [
+            {
+                "key": "test",
+                # Missing title and value_type
+            }
+        ]
+
+        response = client.post(
+            f"/api/structure_nodes/{domain['id']}/attributes",
+            json={"attributes": invalid_attributes}
+        )
+
+        assert response.status_code == 422
+
+    def test_node_not_found_errors(self, client):
+        """Test missing node returns 404 on attribute operations."""
+        non_existent_id = "00000000-0000-0000-0000-000000000000"
+
+        # Test GET non-existent node
+        response = client.get(
+            f"/api/structure_nodes/{non_existent_id}/attributes"
+        )
+        assert response.status_code == 404
+
+        # Test POST to non-existent node
+        attributes = [
+            {
+                "key": "test",
+                "title": "Test",
+                "value": "test",
+                "value_type": "string"
+            }
+        ]
+        response = client.post(
+            f"/api/structure_nodes/{non_existent_id}/attributes",
+            json={"attributes": attributes}
+        )
+        assert response.status_code == 404
+
+        # Test DELETE from non-existent node
+        response = client.delete(
+            f"/api/structure_nodes/{non_existent_id}/attributes/test_key"
+        )
+        assert response.status_code == 404

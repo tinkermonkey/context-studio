@@ -508,8 +508,11 @@ class ProposalManager:
 
             s3_path = f"s3://{self.s3_sync.s3_config['bucket']}/proposals/{proposal.id}/metadata.parquet"
 
-            self.s3_sync.parquet_writer.write_metadata(proposal_data, s3_path)
-            logger.debug(f"Successfully pushed proposal {proposal.id} to S3")
+            success = self.s3_sync.write_metadata_to_s3(proposal_data, s3_path)
+            if not success:
+                logger.warning(f"Failed to push proposal {proposal.id} to S3")
+            else:
+                logger.debug(f"Successfully pushed proposal {proposal.id} to S3")
 
         except Exception as e:
             logger.warning(f"Failed to push proposal {proposal.id} to S3: {e}")
@@ -534,8 +537,11 @@ class ProposalManager:
 
             s3_path = f"s3://{self.s3_sync.s3_config['bucket']}/proposals/{vote.proposal_id}/votes/vote_{vote.user_id}.parquet"
 
-            self.s3_sync.parquet_writer.write_metadata(vote_data, s3_path)
-            logger.debug("Successfully pushed vote to S3")
+            success = self.s3_sync.write_metadata_to_s3(vote_data, s3_path)
+            if not success:
+                logger.warning(f"Failed to push vote to S3 for proposal {vote.proposal_id}")
+            else:
+                logger.debug("Successfully pushed vote to S3")
 
         except Exception as e:
             logger.warning(f"Failed to push vote to S3: {e}")

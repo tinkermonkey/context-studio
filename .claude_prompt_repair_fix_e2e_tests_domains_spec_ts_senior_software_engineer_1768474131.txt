@@ -1,0 +1,9 @@
+Fix these test failures in e2e/tests/domains.spec.ts:
+
+- Domain Management › should display the domains table: browserType.launch: Executable doesn't exist - Playwright browsers not installed
+- Domain Management › should create a new domain with layer selection: browserType.launch: Executable doesn't exist - Playwright browsers not installed
+
+**IMPORTANT**: For each failure:
+- Identify the root cause in the source code, explore similar functionality elsewhere in the code to see how this is handled
+- Evaluate if the test is still relevant and necessary, if it's not, remove it completely
+- If the test is meant for functionality which is not implemented, remove the test entirely

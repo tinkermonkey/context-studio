@@ -43,7 +43,7 @@ def get_rag_pipeline_service(
         ops_db: Database session for operations/observability (operations.db)
 
     Returns:
-        RAGPipelineService instance configured with database sessions
+        RAGPipelineService instance configured with database sessions and timeout settings
     """
     from config import get_settings
     settings = get_settings()
@@ -54,13 +54,23 @@ def get_rag_pipeline_service(
     kg_vector_threshold = settings.rag_pipeline.kg_vector_threshold
     dedup_threshold = settings.rag_pipeline.deduplication_threshold
 
+    # Get timeout settings from config
+    timeout_layer_0 = settings.rag_pipeline.timeout_layer_0
+    timeout_layer_1 = settings.rag_pipeline.timeout_layer_1
+    timeout_layer_2 = settings.rag_pipeline.timeout_layer_2
+    timeout_layer_3 = settings.rag_pipeline.timeout_layer_3
+
     return RAGPipelineService(
         kg_db_session=kg_db,
         ops_db_session=ops_db,
         llm_flavor_id=llm_flavor_id,
         kg_top_k=kg_top_k,
         kg_vector_threshold=kg_vector_threshold,
-        dedup_similarity_threshold=dedup_threshold
+        dedup_similarity_threshold=dedup_threshold,
+        timeout_layer_0=timeout_layer_0,
+        timeout_layer_1=timeout_layer_1,
+        timeout_layer_2=timeout_layer_2,
+        timeout_layer_3=timeout_layer_3
     )
 
 

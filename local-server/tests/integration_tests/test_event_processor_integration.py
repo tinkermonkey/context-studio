@@ -109,7 +109,7 @@ def test_integration_event_processor_end_to_end(temp_db, capsys):
     assert "Processing structure_node event: update" in log_contents
     assert "Processing structure_node event: delete" in log_contents
     assert "Processing structure_node_link event: create" in log_contents
-    assert "Unknown record_type: unknown_record_type" in log_contents
+    assert "[EventProcessor] Event 5 has invalid record_type 'unknown_record_type'. Valid types: ['structure_node', 'structure_node_link', 'predicate']. This event will be skipped." in log_contents
 
 
 def test_integration_event_processor_cleanup(temp_db, capsys):

@@ -12,6 +12,9 @@ from database.utils import (
 from utils.logger import get_logger
 
 # Global reference to the active EventProcessor for dataset switching
+# This singleton pattern enables coordination across modules when switching active datasets.
+# Thread safety is ensured by the set/get functions which maintain a simple reference
+# without concurrent mutations during normal operation.
 _global_event_processor: Optional['EventProcessor'] = None
 
 
@@ -128,9 +131,12 @@ class EventProcessor:
 
                 if result:
                     self._last_processed_id = result[0]
+                    self.logger.debug(f"Last processed ID initialized to {self._last_processed_id}")
+                else:
+                    self.logger.debug("No processed events found; starting from ID 0")
 
         except Exception as e:
-            self.logger.warning(f"Failed to initialize last processed ID: {e}")
+            self.logger.debug(f"Could not initialize last processed ID from database (expected on first run): {e}")
             # Start from 0 if we can't get the last processed ID
             self._last_processed_id = 0
 
@@ -283,19 +289,23 @@ class EventProcessor:
     def _process_single_event(self, event_id, event_type, record_type, record_id, old_data, new_data, timestamp):
         """Process a single ChangeEvent using record_type routing."""
         self.logger.debug(f"[EventProcessor] Processing ChangeEvent {event_id}: {event_type} {record_type}")
-        
+
         # Convert string back to enum if needed (for database compatibility)
         if isinstance(record_type, str):
             try:
                 record_type = RecordType(record_type)
             except ValueError:
-                self.logger.warning(f"[EventProcessor] Unknown record_type: {record_type}")
+                valid_types = [rt.value for rt in RecordType]
+                self.logger.error(
+                    f"[EventProcessor] Event {event_id} has invalid record_type '{record_type}'. "
+                    f"Valid types: {valid_types}. This event will be skipped."
+                )
                 return
-        
+
         # Route to specific handler based on record type
         handler_name = f"process_{record_type.value}_event"
         handler = getattr(self, handler_name, None)
-        
+
         if handler:
             # Create a simple event object
             event_obj = type('Event', (), {
@@ -309,7 +319,10 @@ class EventProcessor:
             })()
             handler(event_obj)
         else:
-            self.logger.warning(f"[EventProcessor] No handler for record_type: {record_type.value}")
+            self.logger.error(
+                f"[EventProcessor] No handler found for record_type: {record_type.value}. "
+                f"Event {event_id} will be skipped."
+            )
 
     def process_structure_node_event(self, event):
         """Process structure_node-related events with version management integration."""
@@ -349,22 +362,28 @@ class EventProcessor:
                     # Update working tree if working tree manager is available
                     if self.working_tree_manager:
                         try:
-                            if event.operation == 'create':
-                                # Initialize new entity in working tree
-                                self.working_tree_manager.initialize_entity_in_working_tree(
-                                    entity_type='structure_node',
-                                    entity_id=event.record_id,
-                                    initial_version_id=version.id
-                                )
-                                self.logger.debug(f"[EventProcessor] Initialized working tree for new structure_node {event.record_id}")
-                            else:
-                                # Update existing entity's current version
+                            # Check if entity already exists in working tree
+                            existing_entry = self.working_tree_manager.get_working_tree_entry(
+                                entity_type='structure_node',
+                                entity_id=event.record_id
+                            )
+
+                            if existing_entry:
+                                # Entity already tracked - update current version
                                 self.working_tree_manager.update_current_version(
                                     entity_type='structure_node',
                                     entity_id=event.record_id,
                                     new_version_id=version.id
                                 )
                                 self.logger.debug(f"[EventProcessor] Updated working tree for structure_node {event.record_id}")
+                            else:
+                                # Entity not yet tracked - initialize it
+                                self.working_tree_manager.initialize_entity_in_working_tree(
+                                    entity_type='structure_node',
+                                    entity_id=event.record_id,
+                                    initial_version_id=version.id
+                                )
+                                self.logger.debug(f"[EventProcessor] Initialized working tree for new structure_node {event.record_id}")
                         except Exception as wt_e:
                             self.logger.error(f"[EventProcessor] Failed to manage working tree: {wt_e}")
 
@@ -420,22 +439,28 @@ class EventProcessor:
                     # Update working tree if working tree manager is available
                     if self.working_tree_manager:
                         try:
-                            if event.operation == 'create':
-                                # Initialize new entity in working tree
-                                self.working_tree_manager.initialize_entity_in_working_tree(
-                                    entity_type='structure_node_link',
-                                    entity_id=event.record_id,
-                                    initial_version_id=version.id
-                                )
-                                self.logger.debug(f"[EventProcessor] Initialized working tree for new structure_node_link {event.record_id}")
-                            else:
-                                # Update existing entity's current version
+                            # Check if entity already exists in working tree
+                            existing_entry = self.working_tree_manager.get_working_tree_entry(
+                                entity_type='structure_node_link',
+                                entity_id=event.record_id
+                            )
+
+                            if existing_entry:
+                                # Entity already tracked - update current version
                                 self.working_tree_manager.update_current_version(
                                     entity_type='structure_node_link',
                                     entity_id=event.record_id,
                                     new_version_id=version.id
                                 )
                                 self.logger.debug(f"[EventProcessor] Updated working tree for structure_node_link {event.record_id}")
+                            else:
+                                # Entity not yet tracked - initialize it
+                                self.working_tree_manager.initialize_entity_in_working_tree(
+                                    entity_type='structure_node_link',
+                                    entity_id=event.record_id,
+                                    initial_version_id=version.id
+                                )
+                                self.logger.debug(f"[EventProcessor] Initialized working tree for new structure_node_link {event.record_id}")
                         except Exception as wt_e:
                             self.logger.error(f"[EventProcessor] Failed to manage working tree: {wt_e}")
                     
@@ -448,8 +473,8 @@ class EventProcessor:
     def process_predicate_event(self, event):
         """Process predicate-related events."""
         self.logger.info(f"Processing predicate event: {event.operation} id={event.id}")
-        # New predicate-specific processing logic here
-        # TODO: Implement predicate event handling as needed
+        # Predicate changes are logged via ChangeEvent but do not require
+        # additional processing (unlike structure_nodes which need version tracking)
     
     def _link_event_to_version(self, event_id: int, version_id: str, change_state):
         """Link a change event to its corresponding version."""
@@ -727,21 +752,33 @@ class EventProcessor:
     def _cleanup_loop(self):
         """Background loop for cleaning up old processed events."""
         self.logger.debug("[EventProcessor] _cleanup_loop() starting")
-        
+
         while not self._stop_event.is_set():
             try:
                 self.logger.debug("[EventProcessor] cleanup_old_events() running...")
                 self.cleanup_old_events()
-                
-                # Also trigger Database Manager cleanup if needed
+
+                # Also trigger Database Manager health check if available
                 if hasattr(self.db_manager, 'perform_health_check'):
                     health = self.db_manager.perform_health_check()
-                    if health.get('overall_status') != 'healthy':
-                        self.logger.warning(f"[EventProcessor] Database health issue: {health.get('overall_status')}")
-                        
+                    overall_status = health.get('overall_status')
+
+                    # Only log warnings for actual errors, not degraded status from slow queries
+                    if overall_status == 'error':
+                        errors = health.get('errors', [])
+                        self.logger.warning(
+                            f"[EventProcessor] Database health error detected: {errors}"
+                        )
+                    elif overall_status == 'degraded':
+                        # Degraded can be expected during high load; log at debug level
+                        warnings = health.get('warnings', [])
+                        self.logger.debug(
+                            f"[EventProcessor] Database performance degraded: {warnings}"
+                        )
+
             except Exception as e:
                 self.logger.error(f"[EventProcessor] Cleanup error: {e}")
-                
+
             # Run once per day, but check stop event frequently
             sleep_interval = 60  # Check every minute
             total_sleep_time = 24 * 60 * 60  # 24 hours
@@ -749,7 +786,7 @@ class EventProcessor:
                 if self._stop_event.is_set():
                     break
                 time.sleep(sleep_interval)
-            
+
         self.logger.debug("[EventProcessor] _cleanup_loop() exiting")
 
     def cleanup_old_events(self, hours_to_keep: int = 48):

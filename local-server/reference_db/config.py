@@ -28,7 +28,7 @@ class ReferenceConfig(BaseModel):
         - schema_org_api_url: Standard Schema.org HTTPS endpoint for production use
         - similarity_threshold: 0.7 provides good precision/recall for semantic matching
         - batch_size: 100 balances memory usage with API efficiency
-        - retry_count: 3 retries handles transient failures without excessive delay
+        - retry_count: 5 retries handles transient failures without excessive delay
         - request_timeout: 30s accommodates slow network conditions
 
     Performance Implications:
@@ -64,7 +64,7 @@ class ReferenceConfig(BaseModel):
     )
 
     retry_count: int = Field(
-        default=3,
+        default=5,
         description="Number of retry attempts for failed API requests"
     )
 
@@ -195,8 +195,8 @@ class ReferenceConfig(BaseModel):
             ValueError: If the retry count is outside the range [0, 10]
 
         Examples:
-            >>> ReferenceConfig.validate_retry_count(3)
-            3
+            >>> ReferenceConfig.validate_retry_count(5)
+            5
 
             >>> ReferenceConfig.validate_retry_count(20)
             Traceback (most recent call last):

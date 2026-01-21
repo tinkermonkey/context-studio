@@ -84,9 +84,9 @@ class RunPipelineTestRequest(BaseModel):
     @classmethod
     def validate_pipeline_names(cls, v):
         """Validate that pipeline class names exist in the registry."""
-        from rag.pipeline_registry import PipelineRegistry
+        from rag.pipeline_registry import get_pipeline_registry
 
-        registry = PipelineRegistry()
+        registry = get_pipeline_registry()
         available_pipelines = registry.list_pipelines()
 
         invalid_pipelines = [name for name in v if name not in available_pipelines]

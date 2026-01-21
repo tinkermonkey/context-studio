@@ -5,10 +5,11 @@ This module contains the Pydantic models for the unified structure_nodes API,
 supporting the Great Normalization requirements.
 """
 
-from pydantic import BaseModel, Field, field_validator, ConfigDict
-from typing import Optional, List
+from pydantic import BaseModel, Field, field_validator, model_validator, ConfigDict
+from typing import Optional, List, Any
 from uuid import UUID
 from enum import Enum
+import re
 
 
 class NodeTypeEnum(str, Enum):
@@ -168,5 +169,106 @@ class WordSense(BaseModel):
 class SelectedWordSensesUpdate(BaseModel):
     """Model for updating selected word senses on a structure node."""
     selected_senses: List[WordSense] = Field(..., description="List of word senses to persist as selected")
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class AttributeValueType(str, Enum):
+    """Enum for supported attribute value types."""
+    STRING = "string"
+    NUMBER = "number"
+    BOOLEAN = "boolean"
+    DATE = "date"
+    URL = "url"
+
+
+class StructureNodeAttribute(BaseModel):
+    """Model for structure node attributes with type validation."""
+    key: str = Field(
+        ...,
+        pattern="^[a-z][a-z0-9_]*$",
+        description="Underscore-delimited identifier"
+    )
+    title: str = Field(
+        ...,
+        min_length=1,
+        description="Human-readable display name"
+    )
+    value_type: AttributeValueType = Field(
+        ...,
+        description="Type constraint for values"
+    )
+    value: Optional[Any] = Field(
+        None,
+        description="The actual attribute value"
+    )
+
+    model_config = ConfigDict(from_attributes=True)
+
+    @field_validator("value")
+    @classmethod
+    def validate_value_type(cls, v, info):
+        """Validate value matches declared value_type."""
+        if v is None:
+            return v
+
+        value_type = info.data.get("value_type")
+
+        if value_type == AttributeValueType.STRING:
+            return str(v)
+        elif value_type == AttributeValueType.NUMBER:
+            if not isinstance(v, (int, float)) or isinstance(v, bool):
+                raise ValueError("Value must be numeric")
+            return v
+        elif value_type == AttributeValueType.BOOLEAN:
+            if not isinstance(v, bool):
+                raise ValueError("Value must be boolean")
+            return v
+        elif value_type == AttributeValueType.DATE:
+            # Validate ISO 8601 format
+            if not re.match(r"^\d{4}-\d{2}-\d{2}", str(v)):
+                raise ValueError("Date must be ISO 8601 format")
+            return str(v)
+        elif value_type == AttributeValueType.URL:
+            # Validate RFC 3986 compliant URLs
+            url_str = str(v)
+            if not url_str.startswith(("http://", "https://")):
+                raise ValueError("URL must start with http:// or https://")
+            return url_str
+
+        return v
+
+
+class ResolvedAttribute(StructureNodeAttribute):
+    """Model for resolved attributes with inheritance information."""
+    inherited: bool = Field(
+        False,
+        description="True if inherited from ancestor"
+    )
+    source_node_id: Optional[UUID] = Field(
+        None,
+        description="ID of the node defining this attribute"
+    )
+
+    model_config = ConfigDict(from_attributes=True)
+
+    @model_validator(mode='after')
+    def validate_inheritance_relationship(self):
+        """Validate inherited flag matches source_node_id presence."""
+        if self.inherited and self.source_node_id is None:
+            raise ValueError("Inherited attributes must have source_node_id")
+        return self
+
+
+class SetNodeAttributesRequest(BaseModel):
+    """Request model for setting node attributes with optimistic locking support."""
+    attributes: List[StructureNodeAttribute] = Field(
+        ...,
+        description="List of attributes to set on the node"
+    )
+    expected_version: Optional[int] = Field(
+        None,
+        description="Expected node version for optimistic locking. If provided, the update will fail with 409 Conflict if the current version doesn't match."
+    )
 
     model_config = ConfigDict(from_attributes=True)

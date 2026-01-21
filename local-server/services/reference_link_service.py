@@ -194,7 +194,8 @@ class ReferenceLinkService:
                 except Exception as e:
                     logger.warning(
                         f"Failed to parse reference link for node {node_id}: {e}. "
-                        f"Skipping invalid entry: {link_dict}"
+                        f"Skipping invalid entry: {link_dict}. "
+                        f"ReferenceLink requires 'source' and 'external_id' fields."
                     )
                     continue
 
@@ -378,7 +379,9 @@ class ReferenceLinkService:
         except Exception as e:
             # Malformed link data
             logger.warning(
-                f"Failed to parse reference link for node {node_id}: {e}"
+                f"Failed to parse reference link for node {node_id}: {e}. "
+                f"ReferenceLink requires 'source' and 'external_id' fields. "
+                f"Invalid data: {link_dict}"
             )
             return (False, {
                 "data": link_dict,
@@ -518,7 +521,7 @@ class ReferenceLinkService:
                     # This is a lightweight check
                     result["reference_db_available"] = ref_manager is not None
                 except Exception as e:
-                    logger.warning(f"reference.db appears unavailable: {e}")
+                    logger.info(f"reference.db not available for existence checks: {e}")
                     result["reference_db_available"] = False
                     # Continue with validation but without checking existence
                     check_existence = False

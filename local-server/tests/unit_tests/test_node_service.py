@@ -7,6 +7,7 @@ as specified in section 8.2 of the Great Normalization design.
 
 import sys
 import os
+import json
 import pytest
 import uuid
 from unittest.mock import Mock
@@ -20,6 +21,7 @@ from database.models import StructureNode
 from database.enums import NodeType
 from graph.graph_service import GraphService
 from services.exceptions import InvalidHierarchyError, CircularReferenceError, NotFoundError
+from api.models.structure_nodes import StructureNodeAttribute, ResolvedAttribute
 
 
 @pytest.fixture
@@ -830,3 +832,586 @@ class TestMoveWithTypeConversion:
 
         with pytest.raises(InvalidHierarchyError, match="at root level"):
             node_service._validate_node_move(layer, parent)
+
+
+class TestNodeAttributeParsing:
+    """Test attribute parsing and serialization."""
+
+    def test_parse_attributes_json_valid(self, node_service):
+        """Test parsing valid JSON attributes."""
+        attributes_json = '[{"key":"category","title":"Category","value":"legal","value_type":"string"}]'
+        result = node_service._parse_attributes_json(attributes_json)
+
+        assert len(result) == 1
+        assert result[0].key == "category"
+        assert result[0].value == "legal"
+        assert result[0].value_type == "string"
+
+    def test_parse_attributes_json_multiple(self, node_service):
+        """Test parsing multiple attributes from JSON."""
+        attributes_json = '''[
+            {"key":"category","title":"Category","value":"legal","value_type":"string"},
+            {"key":"jurisdiction","title":"Jurisdiction","value":"US Federal","value_type":"string"},
+            {"key":"version","title":"Version","value":1,"value_type":"number"}
+        ]'''
+        result = node_service._parse_attributes_json(attributes_json)
+
+        assert len(result) == 3
+        assert result[0].key == "category"
+        assert result[1].key == "jurisdiction"
+        assert result[2].key == "version"
+
+    def test_parse_attributes_json_empty_string(self, node_service):
+        """Test parsing empty string returns empty list."""
+        result = node_service._parse_attributes_json("")
+        assert result == []
+
+    def test_parse_attributes_json_none(self, node_service):
+        """Test parsing None returns empty list."""
+        result = node_service._parse_attributes_json(None)
+        assert result == []
+
+    def test_parse_attributes_json_invalid(self, node_service):
+        """Test parsing invalid JSON raises ValueError for data corruption."""
+        with pytest.raises(ValueError, match="Node has corrupted attribute data"):
+            node_service._parse_attributes_json("{ invalid json }")
+
+    def test_parse_attributes_json_invalid_structure(self, node_service):
+        """Test parsing JSON with invalid attribute structure raises ValueError."""
+        # JSON with missing required field 'key'
+        invalid_attrs = json.dumps([{"title": "Name"}])
+        with pytest.raises(ValueError, match="Node attributes are invalid"):
+            node_service._parse_attributes_json(invalid_attrs)
+
+
+class TestNodeAttributeOperations:
+    """Test attribute setting, retrieval, and removal operations."""
+
+    def test_set_node_attributes_success(self, node_service, mock_db):
+        """Test successfully setting attributes on a node."""
+        node_id = str(uuid.uuid4())
+
+        # Create mock node
+        node = Mock(spec=StructureNode)
+        node.id = node_id
+        node.version = 1
+        node.attributes = None
+
+        # Mock get_node
+        node_service.get_node = Mock(return_value=node)
+        mock_db.commit = Mock()
+        mock_db.refresh = Mock()
+
+        # Create attributes
+        attributes = [
+            StructureNodeAttribute(key="category", title="Category", value="legal", value_type="string"),
+            StructureNodeAttribute(key="jurisdiction", title="Jurisdiction", value="US Federal", value_type="string"),
+        ]
+
+        # Set attributes
+        result = node_service.set_node_attributes(node_id, attributes)
+
+        # Verify
+        assert node.version == 2
+        assert mock_db.commit.called
+        assert mock_db.refresh.called
+        assert "category" in node.attributes
+        assert "jurisdiction" in node.attributes
+
+    def test_set_node_attributes_empty_list(self, node_service, mock_db):
+        """Test setting empty attributes list."""
+        node_id = str(uuid.uuid4())
+
+        node = Mock(spec=StructureNode)
+        node.id = node_id
+        node.version = 1
+
+        node_service.get_node = Mock(return_value=node)
+        mock_db.commit = Mock()
+        mock_db.refresh = Mock()
+
+        result = node_service.set_node_attributes(node_id, [])
+
+        assert node.attributes == "[]"
+        assert mock_db.commit.called
+
+    def test_set_node_attributes_node_not_found(self, node_service):
+        """Test setting attributes on non-existent node."""
+        node_id = str(uuid.uuid4())
+        node_service.get_node = Mock(return_value=None)
+
+        attributes = [StructureNodeAttribute(key="test", title="Test", value="value", value_type="string")]
+
+        with pytest.raises(ValueError, match="not found"):
+            node_service.set_node_attributes(node_id, attributes)
+
+    def test_get_local_attributes_success(self, node_service):
+        """Test retrieving only local attributes."""
+        node_id = str(uuid.uuid4())
+
+        node = Mock(spec=StructureNode)
+        node.id = node_id
+        node.attributes = '[{"key":"category","title":"Category","value":"legal","value_type":"string"}]'
+
+        node_service.get_node = Mock(return_value=node)
+
+        result = node_service.get_local_attributes(node_id)
+
+        assert len(result) == 1
+        assert result[0].key == "category"
+        assert result[0].value == "legal"
+
+    def test_get_local_attributes_empty(self, node_service):
+        """Test retrieving local attributes when none exist."""
+        node_id = str(uuid.uuid4())
+
+        node = Mock(spec=StructureNode)
+        node.id = node_id
+        node.attributes = None
+
+        node_service.get_node = Mock(return_value=node)
+
+        result = node_service.get_local_attributes(node_id)
+
+        assert result == []
+
+    def test_get_local_attributes_node_not_found(self, node_service):
+        """Test retrieving attributes from non-existent node."""
+        node_id = str(uuid.uuid4())
+        node_service.get_node = Mock(return_value=None)
+
+        with pytest.raises(ValueError, match="not found"):
+            node_service.get_local_attributes(node_id)
+
+    def test_remove_node_attribute_success(self, node_service, mock_db):
+        """Test removing specific attribute by key."""
+        node_id = str(uuid.uuid4())
+
+        node = Mock(spec=StructureNode)
+        node.id = node_id
+        node.version = 1
+        node.attributes = '[{"key":"category","title":"Category","value":"legal","value_type":"string"},{"key":"jurisdiction","title":"Jurisdiction","value":"US","value_type":"string"}]'
+
+        node_service.get_node = Mock(return_value=node)
+        mock_db.commit = Mock()
+        mock_db.refresh = Mock()
+
+        result = node_service.remove_node_attribute(node_id, "category")
+
+        # Verify category was removed
+        remaining = node_service._parse_attributes_json(node.attributes)
+        assert len(remaining) == 1
+        assert remaining[0].key == "jurisdiction"
+        assert mock_db.commit.called
+
+    def test_remove_node_attribute_not_found(self, node_service, mock_db):
+        """Test removing non-existent attribute key."""
+        node_id = str(uuid.uuid4())
+
+        node = Mock(spec=StructureNode)
+        node.id = node_id
+        node.version = 1
+        node.attributes = '[{"key":"category","title":"Category","value":"legal","value_type":"string"}]'
+
+        node_service.get_node = Mock(return_value=node)
+        mock_db.commit = Mock()
+        mock_db.refresh = Mock()
+
+        result = node_service.remove_node_attribute(node_id, "nonexistent")
+
+        # Attributes should remain unchanged
+        remaining = node_service._parse_attributes_json(node.attributes)
+        assert len(remaining) == 1
+        assert remaining[0].key == "category"
+
+    def test_remove_node_attribute_all_attributes(self, node_service, mock_db):
+        """Test removing all attributes one by one."""
+        node_id = str(uuid.uuid4())
+
+        node = Mock(spec=StructureNode)
+        node.id = node_id
+        node.version = 1
+        node.attributes = '[{"key":"test","title":"Test","value":"value","value_type":"string"}]'
+
+        node_service.get_node = Mock(return_value=node)
+        mock_db.commit = Mock()
+        mock_db.refresh = Mock()
+
+        result = node_service.remove_node_attribute(node_id, "test")
+
+        remaining = node_service._parse_attributes_json(node.attributes)
+        assert len(remaining) == 0
+
+
+class TestNodeAttributeInheritance:
+    """Test attribute inheritance resolution."""
+
+    def test_resolve_node_attributes_no_parent(self, node_service):
+        """Test resolving attributes on single node without parent."""
+        node_id = str(uuid.uuid4())
+
+        node = Mock(spec=StructureNode)
+        node.id = node_id
+        node.attributes = '[{"key":"category","title":"Category","value":"legal","value_type":"string"}]'
+
+        node_service.get_node = Mock(return_value=node)
+        node_service.get_node_ancestors = Mock(return_value=[])
+
+        result = node_service.resolve_node_attributes(node_id)
+
+        assert len(result) == 1
+        assert result[0].key == "category"
+        assert result[0].value == "legal"
+        assert result[0].inherited is False
+        assert str(result[0].source_node_id) == node_id
+
+    def test_resolve_node_attributes_with_inheritance(self, node_service):
+        """Test resolving attributes with parent inheritance."""
+        layer_id = str(uuid.uuid4())
+        domain_id = str(uuid.uuid4())
+
+        layer = Mock(spec=StructureNode)
+        layer.id = layer_id
+        layer.attributes = '[{"key":"category","title":"Category","value":"legal","value_type":"string"}]'
+
+        domain = Mock(spec=StructureNode)
+        domain.id = domain_id
+        domain.attributes = '[{"key":"jurisdiction","title":"Jurisdiction","value":"US Federal","value_type":"string"}]'
+
+        node_service.get_node = Mock(return_value=domain)
+        node_service.get_node_ancestors = Mock(return_value=[layer])
+
+        result = node_service.resolve_node_attributes(domain_id)
+
+        assert len(result) == 2
+        # Find inherited attribute
+        inherited = [r for r in result if r.key == "category"][0]
+        assert inherited.inherited is True
+        assert str(inherited.source_node_id) == layer_id
+        # Find local attribute
+        local = [r for r in result if r.key == "jurisdiction"][0]
+        assert local.inherited is False
+        assert str(local.source_node_id) == domain_id
+
+    def test_resolve_node_attributes_override(self, node_service):
+        """Test child attribute overrides parent value."""
+        parent_id = str(uuid.uuid4())
+        child_id = str(uuid.uuid4())
+
+        parent = Mock(spec=StructureNode)
+        parent.id = parent_id
+        parent.attributes = '[{"key":"jurisdiction","title":"Jurisdiction","value":"US Federal","value_type":"string"}]'
+
+        child = Mock(spec=StructureNode)
+        child.id = child_id
+        child.attributes = '[{"key":"jurisdiction","title":"Jurisdiction","value":"New York State","value_type":"string"}]'
+
+        node_service.get_node = Mock(return_value=child)
+        node_service.get_node_ancestors = Mock(return_value=[parent])
+
+        result = node_service.resolve_node_attributes(child_id)
+
+        assert len(result) == 1
+        assert result[0].key == "jurisdiction"
+        assert result[0].value == "New York State"  # Child value wins
+        assert result[0].inherited is False
+        assert str(result[0].source_node_id) == child_id
+
+    def test_resolve_node_attributes_deep_hierarchy(self, node_service):
+        """Test attribute resolution with deep 5+ level hierarchy."""
+        # Create: Layer -> Domain -> Term1 -> Term2 -> Term3
+        layer_id = str(uuid.uuid4())
+        domain_id = str(uuid.uuid4())
+        term1_id = str(uuid.uuid4())
+        term2_id = str(uuid.uuid4())
+        term3_id = str(uuid.uuid4())
+
+        layer = Mock(spec=StructureNode)
+        layer.id = layer_id
+        layer.attributes = '[{"key":"level","title":"Level","value":"layer","value_type":"string"}]'
+
+        domain = Mock(spec=StructureNode)
+        domain.id = domain_id
+        domain.attributes = '[{"key":"domain_attr","title":"Domain Attr","value":"domain_val","value_type":"string"}]'
+
+        term1 = Mock(spec=StructureNode)
+        term1.id = term1_id
+        term1.attributes = '[{"key":"term1_attr","title":"Term1 Attr","value":"term1_val","value_type":"string"}]'
+
+        term2 = Mock(spec=StructureNode)
+        term2.id = term2_id
+        term2.attributes = '[{"key":"term2_attr","title":"Term2 Attr","value":"term2_val","value_type":"string"}]'
+
+        term3 = Mock(spec=StructureNode)
+        term3.id = term3_id
+        term3.attributes = '[{"key":"term3_attr","title":"Term3 Attr","value":"term3_val","value_type":"string"}]'
+
+        node_service.get_node = Mock(return_value=term3)
+        node_service.get_node_ancestors = Mock(return_value=[layer, domain, term1, term2])
+
+        result = node_service.resolve_node_attributes(term3_id)
+
+        # Should have all attributes
+        assert len(result) == 5
+        keys = {r.key for r in result}
+        assert keys == {"level", "domain_attr", "term1_attr", "term2_attr", "term3_attr"}
+        # All but last should be inherited
+        term3_attr = [r for r in result if r.key == "term3_attr"][0]
+        assert term3_attr.inherited is False
+
+    def test_resolve_node_attributes_multiple_keys(self, node_service):
+        """Test inheritance with multiple attributes at each level."""
+        parent_id = str(uuid.uuid4())
+        child_id = str(uuid.uuid4())
+
+        parent = Mock(spec=StructureNode)
+        parent.id = parent_id
+        parent.attributes = '[{"key":"attr1","title":"Attr 1","value":"parent1","value_type":"string"},{"key":"attr2","title":"Attr 2","value":"parent2","value_type":"string"}]'
+
+        child = Mock(spec=StructureNode)
+        child.id = child_id
+        child.attributes = '[{"key":"attr3","title":"Attr 3","value":"child3","value_type":"string"}]'
+
+        node_service.get_node = Mock(return_value=child)
+        node_service.get_node_ancestors = Mock(return_value=[parent])
+
+        result = node_service.resolve_node_attributes(child_id)
+
+        assert len(result) == 3
+        keys = {r.key for r in result}
+        assert keys == {"attr1", "attr2", "attr3"}
+
+    def test_resolve_node_attributes_node_not_found(self, node_service):
+        """Test resolving attributes on non-existent node."""
+        node_id = str(uuid.uuid4())
+        node_service.get_node = Mock(return_value=None)
+
+        with pytest.raises(ValueError, match="not found"):
+            node_service.resolve_node_attributes(node_id)
+
+
+class TestAttributeValueTypeValidation:
+    """Test attribute value type validation."""
+
+    def test_attribute_value_type_string(self, node_service):
+        """Test string value type."""
+        attr = StructureNodeAttribute(key="title", title="Title", value="Test String", value_type="string")
+        assert attr.value_type == "string"
+
+    def test_attribute_value_type_number(self, node_service):
+        """Test number value type."""
+        attr = StructureNodeAttribute(key="count", title="Count", value=42, value_type="number")
+        assert attr.value_type == "number"
+
+    def test_attribute_value_type_boolean(self, node_service):
+        """Test boolean value type."""
+        attr = StructureNodeAttribute(key="active", title="Active", value=True, value_type="boolean")
+        assert attr.value_type == "boolean"
+
+    def test_attribute_value_type_date(self, node_service):
+        """Test date value type."""
+        attr = StructureNodeAttribute(key="created", title="Created", value="2025-01-15", value_type="date")
+        assert attr.value_type == "date"
+
+    def test_attribute_value_type_url(self, node_service):
+        """Test URL value type."""
+        attr = StructureNodeAttribute(key="reference", title="Reference", value="https://example.com", value_type="url")
+        assert attr.value_type == "url"
+
+
+class TestLegalDomainHierarchyFixture:
+    """Test realistic Legal Domain hierarchy from business requirements."""
+
+    def test_legal_domain_hierarchy_structure(self, node_service):
+        """Test the complete Legal Domain hierarchy example."""
+        # Setup the hierarchy: Layer -> Domain -> Term structure
+        layer_id = str(uuid.uuid4())
+        domain_id = str(uuid.uuid4())
+        term1_id = str(uuid.uuid4())
+        term2_id = str(uuid.uuid4())
+
+        # Legal Domain layer
+        layer = Mock(spec=StructureNode)
+        layer.id = layer_id
+        layer.title = "Legal Domain"
+        layer.attributes = '[{"key":"category","title":"Category","value":"domain_classification","value_type":"string"}]'
+
+        # Contract Law domain
+        domain = Mock(spec=StructureNode)
+        domain.id = domain_id
+        domain.title = "Contract Law"
+        domain.parent_node_id = layer_id
+        domain.attributes = '[{"key":"jurisdiction","title":"Jurisdiction","value":"US Federal","value_type":"string"}]'
+
+        # Force Majeure term
+        term1 = Mock(spec=StructureNode)
+        term1.id = term1_id
+        term1.title = "Force Majeure"
+        term1.parent_node_id = domain_id
+        term1.attributes = '[{"key":"jurisdiction","title":"Jurisdiction","value":"New York State","value_type":"string"},{"key":"definition_date","title":"Definition Date","value":"2025-01-15","value_type":"date"}]'
+
+        # Indemnification term (no local attributes, inherits all)
+        term2 = Mock(spec=StructureNode)
+        term2.id = term2_id
+        term2.title = "Indemnification"
+        term2.parent_node_id = domain_id
+        term2.attributes = '[]'
+
+        # Test Force Majeure resolution (term with override)
+        node_service.get_node = Mock(return_value=term1)
+        node_service.get_node_ancestors = Mock(return_value=[layer, domain])
+
+        result = node_service.resolve_node_attributes(term1_id)
+
+        # Should have category (inherited), jurisdiction (overridden), and definition_date (local)
+        assert len(result) == 3
+        keys = {r.key for r in result}
+        assert keys == {"category", "jurisdiction", "definition_date"}
+
+        # Verify overrides
+        jurisdiction = [r for r in result if r.key == "jurisdiction"][0]
+        assert jurisdiction.value == "New York State"
+        assert str(jurisdiction.source_node_id) == term1_id
+
+        # Test Indemnification resolution (term with no local attributes)
+        node_service.get_node = Mock(return_value=term2)
+        node_service.get_node_ancestors = Mock(return_value=[layer, domain])
+
+        result = node_service.resolve_node_attributes(term2_id)
+
+        # Should inherit both attributes from ancestors
+        assert len(result) == 2
+        keys = {r.key for r in result}
+        assert keys == {"category", "jurisdiction"}
+
+        # Both should be inherited
+        for attr in result:
+            assert attr.inherited is True
+
+
+def test_create_node_version_management_failure(mock_db, mock_graph_service):
+    """Test that node creation is aborted when version management fails.
+
+    When version_manager.create_version() or working_tree_manager.initialize_entity_in_working_tree()
+    raise exceptions, the handler should:
+    1. Log the error with full traceback
+    2. Rollback the database
+    3. Raise ValidationError with specific message (not ValueError)
+    4. NOT catch and re-raise as ValueError
+
+    This ensures the API consumer receives the correct error type and status code.
+    """
+    from services.exceptions import ValidationError
+
+    # Create node service with mocked version management
+    mock_version_manager = Mock()
+    mock_working_tree_manager = Mock()
+    node_service = NodeService(db=mock_db, graph_service=mock_graph_service)
+    node_service.version_manager = mock_version_manager
+    node_service.working_tree_manager = mock_working_tree_manager
+
+    # Setup database mocks to pass validation checks
+    # Query for unique title check should return None (no existing node)
+    mock_query = Mock()
+    mock_filter = Mock()
+    mock_query.filter.return_value = mock_filter
+    mock_filter.first.return_value = None
+    mock_db.query.return_value = mock_query
+
+    # Mock successful add, commit, and refresh
+    test_node_id = str(uuid.uuid4())
+
+    def refresh_side_effect(obj):
+        # Set ID on the object when refresh is called
+        if hasattr(obj, 'id'):
+            obj.id = test_node_id
+
+    mock_db.add = Mock()
+    mock_db.commit = Mock()
+    mock_db.refresh = Mock(side_effect=refresh_side_effect)
+    mock_db.rollback = Mock()
+
+    # Simulate version_manager.create_version() raising an exception
+    version_error = Exception("Version database connection failed")
+    mock_version_manager.create_version.side_effect = version_error
+
+    # Attempt to create node
+    with pytest.raises(ValidationError) as exc_info:
+        node_service.create_node({
+            "node_type": "layer",
+            "title": "Unique Test Layer"
+        })
+
+    # Verify the error message is specific and informative
+    assert "Cannot create node" in str(exc_info.value)
+    assert "version management initialization failed" in str(exc_info.value)
+    assert "database or configuration issue" in str(exc_info.value)
+
+    # Verify rollback was called
+    mock_db.rollback.assert_called()
+
+
+def test_create_node_version_management_failure_working_tree(mock_db, mock_graph_service):
+    """Test that node creation is aborted when working tree initialization fails.
+
+    Similar to test_create_node_version_management_failure but tests the case where
+    working_tree_manager.initialize_entity_in_working_tree() fails.
+    """
+    from services.exceptions import ValidationError
+
+    # Create node service with mocked version management
+    mock_version_manager = Mock()
+    mock_working_tree_manager = Mock()
+    node_service = NodeService(db=mock_db, graph_service=mock_graph_service)
+    node_service.version_manager = mock_version_manager
+    node_service.working_tree_manager = mock_working_tree_manager
+
+    # Setup database mocks to pass validation checks
+    # Query for unique title check should return None (no existing node)
+    mock_query = Mock()
+    mock_filter = Mock()
+    mock_query.filter.return_value = mock_filter
+    mock_filter.first.return_value = None
+    mock_db.query.return_value = mock_query
+
+    # Mock successful add, commit, and refresh
+    test_node_id = str(uuid.uuid4())
+
+    def refresh_side_effect(obj):
+        # Set ID on the object when refresh is called
+        if hasattr(obj, 'id'):
+            obj.id = test_node_id
+
+    mock_db.add = Mock()
+    mock_db.commit = Mock()
+    mock_db.refresh = Mock(side_effect=refresh_side_effect)
+    mock_db.rollback = Mock()
+
+    # Mock version_manager.create_version() to succeed but working tree init to fail
+    mock_version = Mock()
+    mock_version.id = uuid.uuid4()
+    mock_version_manager.create_version.return_value = mock_version
+
+    # Simulate working_tree_manager.initialize_entity_in_working_tree() raising an exception
+    tree_error = Exception("Working tree database transaction failed")
+    mock_working_tree_manager.initialize_entity_in_working_tree.side_effect = tree_error
+
+    # Attempt to create node
+    with pytest.raises(ValidationError) as exc_info:
+        node_service.create_node({
+            "node_type": "layer",
+            "title": "Another Unique Layer"
+        })
+
+    # Verify the error message is specific and informative
+    assert "Cannot create node" in str(exc_info.value)
+    assert "version management initialization failed" in str(exc_info.value)
+
+    # Verify rollback was called
+    mock_db.rollback.assert_called()
+
+    # Verify create_version was called
+    mock_version_manager.create_version.assert_called_once()
+
+    # Verify initialize_entity_in_working_tree was called
+    mock_working_tree_manager.initialize_entity_in_working_tree.assert_called_once()

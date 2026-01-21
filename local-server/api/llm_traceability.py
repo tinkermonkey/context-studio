@@ -26,7 +26,7 @@ async def record_selection(request: RecordSelectionRequest):
         )
         
     except ValueError as e:
-        logger.warning(f"Invalid selection request: {e}")
+        logger.debug(f"Invalid selection request: {e}")
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=str(e)
@@ -117,7 +117,7 @@ async def get_execution_history(
         )
         
     except ValueError as e:
-        logger.warning(f"Invalid execution history request: {e}")
+        logger.debug(f"Invalid execution history request: {e}")
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=str(e)
@@ -151,7 +151,7 @@ async def get_flavor_analytics(
         )
         
     except ValueError as e:
-        logger.warning(f"Invalid flavor analytics request: {e}")
+        logger.debug(f"Invalid flavor analytics request: {e}")
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=str(e)

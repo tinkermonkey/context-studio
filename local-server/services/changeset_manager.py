@@ -194,20 +194,22 @@ class ChangesetManager:
                         description: Optional[str] = None) -> bool:
         """
         Update changeset metadata.
-        
+
         Args:
             changeset_id: Changeset identifier
             title: New title (optional)
             description: New description (optional)
-            
+
         Returns:
             True if updated successfully
+
+        Raises:
+            ValueError: If neither title nor description is provided
         """
         logger.info(f"Updating changeset {changeset_id}")
-        
+
         if not title and not description:
-            logger.warning("No updates provided for changeset")
-            return False
+            raise ValueError("At least one of title or description must be provided")
             
         try:
             updates = []
@@ -452,10 +454,10 @@ class ChangesetManager:
             
             # Push to S3 (using parquet format)
             s3_path = f"s3://{self.s3_sync.s3_config['bucket']}/changesets/{changeset_id}/metadata.parquet"
-            
+
             # Use S3 sync manager to write changeset metadata
-            self.s3_sync.parquet_writer.write_metadata(changeset_data, s3_path)
-            
+            self.s3_sync.write_metadata_to_s3(changeset_data, s3_path)
+
             logger.info(f"Successfully pushed changeset {changeset_id} to S3")
             return True
             

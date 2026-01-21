@@ -46,6 +46,7 @@ import { ReferenceNodePanel } from "@/components/reference_nodes";
 import { NodeLinkPanel } from "@/components/node_links";
 import { DomainMoveForm } from "@/components/forms/domain_move_form";
 import { TermMoveForm } from "@/components/forms/term_move_form";
+import { AttributePanel } from "@/components/structure_nodes/AttributePanel";
 
 type NodeOut = components["schemas"]["NodeOut"];
 
@@ -303,6 +304,11 @@ export const StructureNodeDetails: React.FC<StructureNodeDetailsProps> = ({
             <div data-testid="node-detail-definition">
               <EditableDefinition node={node} />
             </div>
+          </div>
+
+          {/* Attributes */}
+          <div className="pt-4" data-testid="node-attributes-section">
+            <AttributePanel nodeId={node.id} />
           </div>
 
           {/* Reference Nodes */}

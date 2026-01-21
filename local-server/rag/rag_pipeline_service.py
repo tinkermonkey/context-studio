@@ -37,12 +37,29 @@ async def _run_in_thread(func, *args):
     Cross-version compatible way to run blocking code in a thread.
 
     Uses asyncio.to_thread in Python 3.9+ and ThreadPoolExecutor for older versions.
+
+    Note: This function expects synchronous (non-async) callables. If an async
+    callable is passed, it will be detected and an error will be raised.
     """
+    import inspect
+
+    # Check if the callable is async - this is a common mistake in tests
+    if inspect.iscoroutinefunction(func):
+        raise TypeError(
+            f"_run_in_thread() expects a synchronous function, but received an async function: {func.__name__}. "
+            "Async functions cannot be executed in a thread pool. "
+            "Either make the function synchronous or call it with 'await' directly."
+        )
+
     if HAS_ASYNCIO_TO_THREAD:
         return await asyncio.to_thread(func, *args)
     else:
         loop = asyncio.get_event_loop()
-        return await loop.run_in_executor(_thread_pool_executor, func, *args)
+        # For older Python versions, use a lambda to properly pass arguments
+        if args:
+            return await loop.run_in_executor(_thread_pool_executor, lambda: func(*args))
+        else:
+            return await loop.run_in_executor(_thread_pool_executor, func)
 
 
 class RAGPipelineService:
@@ -64,7 +81,7 @@ class RAGPipelineService:
     """
 
     # Default timeout budgets per layer (in seconds)
-    DEFAULT_TIMEOUT_LAYER_0 = 0.5  # 500ms for KG context preparation
+    DEFAULT_TIMEOUT_LAYER_0 = 1.0  # 1s for KG context preparation
     DEFAULT_TIMEOUT_LAYER_1 = 30.0  # 30s for LLM extraction
     DEFAULT_TIMEOUT_LAYER_2 = 0.5  # 500ms for spaCy gap detection
     DEFAULT_TIMEOUT_LAYER_3 = 30.0  # 30s for concept resolution
@@ -664,6 +681,9 @@ class RAGPipelineService:
         """
         Count the number of sentences in the input text.
 
+        Attempts to use spaCy's linguistic sentence segmentation, falling back to
+        punctuation-based splitting if spaCy is unavailable.
+
         Args:
             text: Input text to analyze
 
@@ -674,11 +694,17 @@ class RAGPipelineService:
             # Use spaCy's sentence segmentation
             from nlp.pipeline import get_pipeline
             nlp = get_pipeline()
+
+            # Check if pipeline initialized successfully
+            if not nlp.get_nlp():
+                logger.debug("spaCy pipeline not initialized, using fallback sentence counting")
+                raise RuntimeError("spaCy pipeline not available")
+
             doc = nlp.process(text)
             sentences = list(doc.sents)
             return len(sentences)
         except Exception as e:
-            logger.warning(f"Failed to count sentences using spaCy: {e}")
+            logger.debug(f"Failed to count sentences using spaCy: {e} - using fallback regex-based splitting")
             # Fallback: simple sentence splitting by common punctuation
             import re
             sentences = re.split(r'[.!?]+', text)

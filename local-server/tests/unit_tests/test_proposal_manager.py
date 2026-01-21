@@ -47,7 +47,7 @@ class TestProposalManager:
         """Mock S3SyncManager."""
         s3_sync = Mock(spec=S3SyncManager)
         s3_sync.s3_config = {'bucket': 'test-bucket'}
-        s3_sync.parquet_writer = Mock()
+        s3_sync.write_metadata_to_s3 = Mock(return_value=True)
         return s3_sync
 
     @pytest.fixture
@@ -389,7 +389,7 @@ class TestProposalManager:
 
         proposal_manager._push_vote_to_s3(mock_vote)
 
-        mock_s3_sync_manager.parquet_writer.write_metadata.assert_called_once()
+        mock_s3_sync_manager.write_metadata_to_s3.assert_called_once()
 
     def test_push_vote_to_s3_failure_handling(self, proposal_manager, mock_s3_sync_manager):
         """Test S3 push failure doesn't break operation."""
@@ -398,7 +398,7 @@ class TestProposalManager:
         mock_vote.user_id = "user456"
         mock_vote.to_dict.return_value = {"proposal_id": "proposal123", "user_id": "user456"}
 
-        mock_s3_sync_manager.parquet_writer.write_metadata.side_effect = Exception("S3 error")
+        mock_s3_sync_manager.write_metadata_to_s3.side_effect = Exception("S3 error")
 
         # Should not raise exception
         proposal_manager._push_vote_to_s3(mock_vote)

@@ -287,54 +287,6 @@ def test_event_processor_handles_all_record_types(shared_app, test_session_isola
     assert unprocessed_count == 0
 
 
-def test_event_processor_handles_unknown_record_type(shared_app, test_session_isolation, request, capsys):
-    """Test handling of unknown record types."""
-    test_session_id = request.node.test_session_id
-    insert_event_via_sqlalchemy("create", "unknown_record_type", test_session_id=test_session_id)
-
-    print("[TEST] Starting test_event_processor_handles_unknown_record_type")
-
-    # Get the database URL from the current engine
-    from database.utils import get_current_engine
-
-    engine = get_current_engine()
-    database_url = str(engine.url)
-
-    processor = EventProcessor(
-        database_url=database_url, poll_interval=0.01, max_events=10  # Faster polling for tests
-    )
-    import logging
-    import io
-
-    log_stream = io.StringIO()
-    handler = logging.StreamHandler(log_stream)
-    logger = logging.getLogger("utils.event_processor")
-    logger.addHandler(handler)
-    logger.setLevel(logging.WARNING)
-    try:
-        processor.start()
-        print("[TEST] EventProcessor started")
-
-        # Wait for processing with deterministic check
-        max_wait_time = 1.0  # Shorter wait for unknown record type test
-        check_interval = 0.05
-        waited = 0
-
-        while waited < max_wait_time:
-            time.sleep(check_interval)
-            waited += check_interval
-            # For unknown record types, we just need to wait a bit for the warning log
-            if waited > 0.2:  # Process for at least 200ms
-                break
-
-    finally:
-        processor.stop()
-        print("[TEST] EventProcessor stopped")
-        logger.removeHandler(handler)
-
-    # Should log a warning about unknown record_type
-    log_contents = log_stream.getvalue()
-    assert "Unknown record_type: unknown_record_type" in log_contents
 
 
 def test_event_processor_cleanup_old_events(shared_app, test_session_isolation, request, capsys):

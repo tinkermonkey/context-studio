@@ -5,18 +5,22 @@ This service implements the business logic for the normalized structure_node str
 handling type-specific validations and constraints for layers, domains, and terms.
 """
 
+import json
 from typing import List, Optional, Dict, Any
+from uuid import UUID
 from sqlalchemy.orm import Session
 from sqlalchemy import and_
+from pydantic import ValidationError as PydanticValidationError
 
 from database.models import StructureNode, ChangeEvent, Predicate
+from api.models.structure_nodes import StructureNodeAttribute, ResolvedAttribute
 from database.enums import NodeType
 from graph.graph_service import GraphService
 from embeddings.generate_embeddings import generate_embedding
 from services.change_event_handler import ChangeEventHandler
 from services.version_manager import VersionManager, ChangeState
 from services.working_tree_manager import WorkingTreeManager
-from services.exceptions import NotFoundError, ValidationError, ConflictError, CircularReferenceError, InvalidHierarchyError
+from services.exceptions import ServiceError, NotFoundError, ValidationError, ConflictError, CircularReferenceError, InvalidHierarchyError
 from utils.logger import get_logger
 
 logger = get_logger(__name__)
@@ -38,9 +42,7 @@ class NodeService:
             working_tree_manager: Optional working tree manager for state tracking
         """
         self.db = db
-        self.graph_service = (
-            graph_service  # Keep optional for now since GraphService needs updating
-        )
+        self.graph_service = graph_service
         self.version_manager = version_manager
         self.working_tree_manager = working_tree_manager
         self.event_handler = ChangeEventHandler(db)
@@ -152,7 +154,7 @@ class NodeService:
                         entity_type='structure_node',
                         entity_id=str(structure_node.id),
                         content=node_dict,
-                        author_id='system',  # TODO: Get from request context
+                        author_id='system',  # System represents automatic creation during node initialization
                         state=ChangeState.WORKING
                     )
 
@@ -166,8 +168,12 @@ class NodeService:
                     logger.info(f"Initialized version management for structure_node: {structure_node.id}")
 
                 except Exception as e:
-                    logger.warning(f"Failed to initialize version management for {structure_node.id}: {e}")
-                    # Don't fail the entity creation if version management fails
+                    logger.error(f"Failed to initialize version management: {e}", exc_info=True)
+                    self.db.rollback()
+                    raise ValidationError(
+                        f"Cannot create node: version management initialization failed. "
+                        f"This indicates a database or configuration issue. Error: {str(e)}"
+                    )
 
             # Fire structure_node created event using new ChangeEventHandler
             node_dict = self._node_to_dict(structure_node)
@@ -179,6 +185,10 @@ class NodeService:
 
             return structure_node
 
+        except ServiceError:
+            # Re-raise service errors (ValidationError, etc.) without wrapping
+            self.db.rollback()
+            raise
         except Exception as e:
             self.db.rollback()
             logger.error(f"Failed to create structure_node: {e}")
@@ -231,7 +241,15 @@ class NodeService:
             try:
                 structure_node.title_embedding = generate_embedding(node_data["title"])
             except Exception as e:
-                logger.warning(f"Failed to generate title embedding: {e}")
+                logger.error(
+                    f"Failed to generate title embedding for '{node_data['title']}': {e}",
+                    exc_info=True
+                )
+                raise ValidationError(
+                    f"Cannot update node: title embedding generation failed. "
+                    f"This may indicate LLM service issues. Please try again or contact support. "
+                    f"Error: {str(e)}"
+                )
 
         if "definition" in node_data:
             structure_node.definition = node_data["definition"]
@@ -244,7 +262,15 @@ class NodeService:
                 else:
                     structure_node.definition_embedding = None
             except Exception as e:
-                logger.warning(f"Failed to generate definition embedding: {e}")
+                logger.error(
+                    f"Failed to generate definition embedding: {e}",
+                    exc_info=True
+                )
+                raise ValidationError(
+                    f"Cannot update node: definition embedding generation failed. "
+                    f"This may indicate LLM service issues. Please try again or contact support. "
+                    f"Error: {str(e)}"
+                )
 
         if "parent_node_id" in node_data:
             structure_node.parent_node_id = node_data["parent_node_id"]
@@ -530,6 +556,172 @@ class NodeService:
                 break
 
         return ancestors
+
+    def _parse_attributes_json(self, attributes_json: Optional[str]) -> List[StructureNodeAttribute]:
+        """
+        Parse attributes JSON string into list of StructureNodeAttribute objects.
+
+        Args:
+            attributes_json: JSON string containing attributes array
+
+        Returns:
+            List of StructureNodeAttribute instances (empty list if attributes_json is None/empty)
+
+        Raises:
+            ValueError: If JSON is corrupted or attribute structure is invalid
+        """
+        if not attributes_json:
+            return []
+
+        try:
+            data = json.loads(attributes_json)
+        except json.JSONDecodeError as e:
+            logger.error(f"Corrupted attribute JSON: {e}", exc_info=True)
+            raise ValueError(f"Node has corrupted attribute data: {str(e)}")
+
+        try:
+            return [StructureNodeAttribute(**attr) for attr in data]
+        except (TypeError, KeyError, ValueError, PydanticValidationError) as e:
+            logger.error(f"Invalid attribute structure: {e}", exc_info=True)
+            raise ValueError(f"Node attributes are invalid: {str(e)}")
+
+    def set_node_attributes(self, node_id: UUID, attributes: List[StructureNodeAttribute], expected_version: Optional[int] = None) -> StructureNode:
+        """
+        Set local attributes on a node, replacing existing attributes.
+
+        Implements optimistic locking to prevent lost updates in concurrent scenarios.
+        If expected_version is provided, the update will only succeed if the current
+        version matches the expected version.
+
+        Args:
+            node_id: ID of the structure node
+            attributes: List of StructureNodeAttribute instances to set
+            expected_version: Optional version number for optimistic locking. If provided,
+                            raises ConflictError if current version doesn't match.
+
+        Returns:
+            Updated StructureNode instance
+
+        Raises:
+            ValueError: If node not found
+            ConflictError: If expected_version is provided and doesn't match current version
+        """
+        node = self.get_node(str(node_id))
+        if not node:
+            raise ValueError(f"Node {node_id} not found")
+
+        # Optimistic locking check
+        if expected_version is not None and node.version != expected_version:
+            raise ConflictError(
+                f"Node was modified by another user. "
+                f"Please refresh and try again. "
+                f"(Expected version {expected_version}, current version {node.version})"
+            )
+
+        # Serialize to JSON
+        attributes_json = json.dumps([attr.model_dump(mode='json') for attr in attributes])
+        node.attributes = attributes_json
+        node.version = node.version + 1
+        self.db.commit()
+        self.db.refresh(node)
+        return node
+
+    def get_local_attributes(self, node_id: UUID) -> List[StructureNodeAttribute]:
+        """
+        Get only the node's own attributes (not inherited).
+
+        Args:
+            node_id: ID of the structure node
+
+        Returns:
+            List of StructureNodeAttribute instances for this node only
+
+        Raises:
+            ValueError: If node not found, or if attribute data is corrupted or invalid
+        """
+        node = self.get_node(str(node_id))
+        if not node:
+            raise ValueError(f"Node {node_id} not found")
+        return self._parse_attributes_json(node.attributes)
+
+    def resolve_node_attributes(self, node_id: UUID) -> List[ResolvedAttribute]:
+        """
+        Walk ancestor chain and return merged attributes with inheritance information.
+
+        Child values override parent values for matching keys. The chain is walked
+        from most distant ancestor to target node, with child values taking precedence.
+
+        Args:
+            node_id: ID of the structure node
+
+        Returns:
+            List of ResolvedAttribute instances with inherited flags and source node IDs
+
+        Raises:
+            ValueError: If node not found, or if attribute data is corrupted or invalid
+        """
+        node = self.get_node(str(node_id))
+        if not node:
+            raise ValueError(f"Node {node_id} not found")
+
+        # Get all ancestors using existing method (no depth limit)
+        ancestors = self.get_node_ancestors(str(node_id))
+
+        # Build attribute map from most distant ancestor to target node
+        attribute_map = {}
+        for ancestor in reversed(ancestors):  # Most distant first
+            ancestor_attrs = self._parse_attributes_json(ancestor.attributes)
+            for attr in ancestor_attrs:
+                attribute_map[attr.key] = ResolvedAttribute(
+                    key=attr.key,
+                    title=attr.title,
+                    value=attr.value,
+                    value_type=attr.value_type,
+                    inherited=(ancestor.id != node.id),
+                    source_node_id=UUID(ancestor.id)
+                )
+
+        # Add local attributes last (override inherited)
+        local_attrs = self._parse_attributes_json(node.attributes)
+        for attr in local_attrs:
+            attribute_map[attr.key] = ResolvedAttribute(
+                key=attr.key,
+                title=attr.title,
+                value=attr.value,
+                value_type=attr.value_type,
+                inherited=False,
+                source_node_id=UUID(node.id)
+            )
+
+        return list(attribute_map.values())
+
+    def remove_node_attribute(self, node_id: UUID, key: str) -> StructureNode:
+        """
+        Remove a specific attribute by key.
+
+        Args:
+            node_id: ID of the structure node
+            key: Attribute key to remove
+
+        Returns:
+            Updated StructureNode instance
+
+        Raises:
+            ValueError: If node not found, or if attribute data is corrupted or invalid
+        """
+        node = self.get_node(str(node_id))
+        if not node:
+            raise ValueError(f"Node {node_id} not found")
+
+        attributes = self._parse_attributes_json(node.attributes)
+        attributes = [attr for attr in attributes if attr.key != key]
+
+        attributes_json = json.dumps([attr.model_dump(mode='json') for attr in attributes])
+        node.attributes = attributes_json
+        node.version = node.version + 1
+        self.db.commit()
+        self.db.refresh(node)
+        return node
 
     # Private validation methods
 
@@ -1351,7 +1543,7 @@ class NodeService:
         if existing:
             conflict_msg = (
                 f"Node with title '{structure_node.title}' already exists "
-                f"at target location as {target_type}"
+                f"at target location as {target_type.value}"
             )
 
             if handle_conflicts == "error":

@@ -89,14 +89,14 @@ class TestPerformanceMonitor:
     def test_performance_thresholds_configuration(self, performance_monitor):
         """Test performance thresholds configuration."""
         thresholds = performance_monitor.performance_thresholds
-        
+
         # Check all expected thresholds are present
         expected_thresholds = [
-            'query_metrics.avg_execution_time_ms', 'sync_time_ms', 'system_metrics.memory_usage_mb',
-            'system_metrics.error_rate_percent', 'throughput_per_second', 'cache_metrics.hit_rate',
-            'storage_growth_rate_mb_per_hour'
+            'query_metrics.avg_execution_time_ms', 's3_metrics.avg_sync_time_ms', 'system_metrics.memory_usage_mb',
+            'system_metrics.error_rate_percent', 'batch_metrics.avg_throughput_per_second', 'cache_metrics.hit_rate',
+            'batch_metrics.storage_growth_rate_mb_per_hour'
         ]
-        
+
         for threshold in expected_thresholds:
             assert threshold in thresholds
             assert isinstance(thresholds[threshold], (int, float))
@@ -242,24 +242,24 @@ class TestPerformanceMonitor:
         # Create metrics that exceed thresholds
         high_performance_metrics = {
             'timestamp': datetime.now(timezone.utc).isoformat(),
-            'query_metrics': {'avg_execution_time_ms': 8000},  # Above 5000ms threshold
+            'query_metrics': {'avg_execution_time_ms': 12000},  # Above 10000ms threshold
             'system_metrics': {
                 'memory_usage_mb': memory_threshold * 1.2,  # 20% above the dynamic threshold
-                'error_rate_percent': 2.5  # Above 1.0% threshold
+                'error_rate_percent': 6.0  # Above 5.0% threshold
             },
-            'cache_metrics': {'hit_rate': 0.5}  # Below 0.8 threshold
+            'cache_metrics': {'hit_rate': 0.4}  # Below 0.5 threshold
         }
 
         performance_monitor.metrics_history.append(high_performance_metrics)
         performance_monitor._check_performance_alerts(high_performance_metrics)
 
-        # Should have generated at least 3 alerts (query time, memory, error rate)
-        # Cache hit rate should also trigger an alert, so expecting at least 3
-        assert len(performance_monitor.alerts) >= 3
+        # Should have generated 4 alerts (query time, memory, error rate, cache hit rate)
+        assert len(performance_monitor.alerts) == 4
 
         # Check alert types - verify the key alerts are present
         alert_metrics = [alert.metric_name for alert in performance_monitor.alerts]
         assert 'query_metrics.avg_execution_time_ms' in alert_metrics
+        assert 'system_metrics.memory_usage_mb' in alert_metrics
         assert 'system_metrics.error_rate_percent' in alert_metrics
         assert 'cache_metrics.hit_rate' in alert_metrics
     
@@ -399,10 +399,10 @@ class TestPerformanceMonitor:
     def test_metric_threshold_checking(self, performance_monitor):
         """Test metric threshold checking utilities."""
         test_metrics = {
-            'query_metrics': {'avg_execution_time_ms': 6000},
-            'cache_metrics': {'hit_rate': 0.7}
+            'query_metrics': {'avg_execution_time_ms': 12000},
+            'cache_metrics': {'hit_rate': 0.3}
         }
-        
+
         # Test above threshold
         above = performance_monitor._is_metric_above_threshold(
             test_metrics, 'query_metrics.avg_execution_time_ms', 'query_metrics.avg_execution_time_ms'
