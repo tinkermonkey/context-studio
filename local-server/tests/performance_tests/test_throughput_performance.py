@@ -27,34 +27,35 @@ This test uses the shared client fixture from conftest.py, which provides a migr
 
 def create_layer(client, title=None):
     payload = {
+        "node_type": "layer",
         "title": title or f"Layer {uuid.uuid4()}",
         "definition": "Throughput test layer.",
     }
-    response = client.post("/api/layers/", json=payload)
+    response = client.post("/api/structure_nodes/", json=payload)
     assert response.status_code == 201, response.text
     return response.json()
 
 
 def create_domain(client, layer_id, title=None):
     payload = {
+        "node_type": "domain",
+        "parent_node_id": str(layer_id),
         "title": title or f"Domain {uuid.uuid4()}",
         "definition": "Throughput test domain.",
-        "layer_id": layer_id,
     }
-    response = client.post("/api/domains/", json=payload)
+    response = client.post("/api/structure_nodes/", json=payload)
     assert response.status_code == 201, response.text
     return response.json()
 
 
 def create_term(client, domain, name=None):
     payload = {
-        "name": name or f"Term {uuid.uuid4()}",
+        "node_type": "term",
+        "parent_node_id": str(domain["id"]),
         "title": name or f"Term {uuid.uuid4()}",
         "definition": "Throughput test term.",
-        "domain_id": domain["id"],
-        "layer_id": domain["layer_id"],
     }
-    response = client.post("/api/terms/", json=payload)
+    response = client.post("/api/structure_nodes/", json=payload)
     assert response.status_code == 201, response.text
     return response.json()
 

@@ -1,284 +1,260 @@
-CreateStructureNode:
-  id: ux.action.CreateStructureNode
-  name: CreateStructureNode
-  api-call: operation
+create-structure-node:
+  id: ux.action.create-structure-node
+  name: create-structure-node
+  type: action
+  documentation: UX action for CreateStructureNode
   properties:
     realizes: api.operation.CreateStructureNode
-  version: 1.0.0
-  description: UX action for CreateStructureNode
-  experience: Default Experience
-  channel: visual
-  states:
-  - &id001
-    name: initial
-    type: state
-  views:
-  - &id002
-    name: default
-    type: custom
+    source:
+      reference:
+        provenance: extracted
+        locations:
+          - file: ux/src/api/hooks/structure_nodes/useStructureNodeMutations.ts
+            symbol: useCreateStructureNode
 ListStructureNodes:
   id: ux.action.ListStructureNodes
   name: ListStructureNodes
-  api-call: operation
+  type: action
+  documentation: UX action for ListStructureNodes
   properties:
     realizes: api.operation.ListStructureNodes
-  version: 1.0.0
-  description: UX action for ListStructureNodes
-  experience: Default Experience
-  channel: visual
-  states:
-  - *id001
-  views:
-  - *id002
+    source:
+      reference:
+        provenance: extracted
+        locations:
+          - file: ux/src/api/hooks/structure_nodes/useStructureNodes.ts
+            symbol: useStructureNodes
 GetStructureNode:
   id: ux.action.GetStructureNode
   name: GetStructureNode
-  api-call: operation
+  type: action
+  documentation: UX action for GetStructureNode
   properties:
     realizes: api.operation.GetStructureNode
-  version: 1.0.0
-  description: UX action for GetStructureNode
-  experience: Default Experience
-  channel: visual
-  states:
-  - *id001
-  views:
-  - *id002
+    source:
+      reference:
+        provenance: extracted
+        locations:
+          - file: ux/src/api/hooks/structure_nodes/useStructureNodes.ts
+            symbol: useStructureNode
 UpdateStructureNode:
   id: ux.action.UpdateStructureNode
   name: UpdateStructureNode
-  api-call: operation
+  type: action
+  documentation: UX action for UpdateStructureNode
   properties:
     realizes: api.operation.UpdateStructureNode
-  version: 1.0.0
-  description: UX action for UpdateStructureNode
-  experience: Default Experience
-  channel: visual
-  states:
-  - *id001
-  views:
-  - *id002
+    source:
+      reference:
+        provenance: extracted
+        locations:
+          - file: ux/src/api/hooks/structure_nodes/useStructureNodeMutations.ts
+            symbol: useUpdateStructureNode
 DeleteStructureNode:
   id: ux.action.DeleteStructureNode
   name: DeleteStructureNode
-  api-call: operation
+  type: action
+  documentation: UX action for DeleteStructureNode
   properties:
     realizes: api.operation.DeleteStructureNode
-  version: 1.0.0
-  description: UX action for DeleteStructureNode
-  experience: Default Experience
-  channel: visual
-  states:
-  - *id001
-  views:
-  - *id002
+    source:
+      reference:
+        provenance: extracted
+        locations:
+          - file: ux/src/api/hooks/structure_nodes/useStructureNodeMutations.ts
+            symbol: useDeleteStructureNode
 SearchStructureNodes:
   id: ux.action.SearchStructureNodes
   name: SearchStructureNodes
-  api-call: operation
+  type: action
+  documentation: UX action for SearchStructureNodes
   properties:
     realizes: api.operation.SearchStructureNodes
-  version: 1.0.0
-  description: UX action for SearchStructureNodes
-  experience: Default Experience
-  channel: visual
-  states:
-  - *id001
-  views:
-  - *id002
+    source:
+      reference:
+        provenance: extracted
+        locations:
+          - file: ux/src/api/hooks/structure_nodes/useStructureNodes.ts
+            symbol: useSearchStructureNodes
 CreateNodeLink:
   id: ux.action.CreateNodeLink
   name: CreateNodeLink
-  api-call: operation
+  type: action
+  documentation: UX action for CreateNodeLink
   properties:
     realizes: api.operation.CreateNodeLink
-  version: 1.0.0
-  description: UX action for CreateNodeLink
-  experience: Default Experience
-  channel: visual
-  states:
-  - *id001
-  views:
-  - *id002
+    source:
+      reference:
+        provenance: extracted
+        locations:
+          - file: ux/src/api/hooks/node_links/useNodeLinkMutations.ts
+            symbol: useCreateNodeLink
 ListNodeLinks:
   id: ux.action.ListNodeLinks
   name: ListNodeLinks
-  api-call: operation
+  type: action
+  documentation: UX action for ListNodeLinks
   properties:
     realizes: api.operation.ListNodeLinks
-  version: 1.0.0
-  description: UX action for ListNodeLinks
-  experience: Default Experience
-  channel: visual
-  states:
-  - *id001
-  views:
-  - *id002
+    source:
+      reference:
+        provenance: extracted
+        locations:
+          - file: ux/src/api/hooks/node_links/useNodeLinks.ts
+            symbol: useNodeLinks
 CreatePredicate:
   id: ux.action.CreatePredicate
   name: CreatePredicate
-  api-call: operation
+  type: action
+  documentation: UX action for CreatePredicate
   properties:
     realizes: api.operation.CreatePredicate
-  version: 1.0.0
-  description: UX action for CreatePredicate
-  experience: Default Experience
-  channel: visual
-  states:
-  - *id001
-  views:
-  - *id002
+    source:
+      reference:
+        provenance: extracted
+        locations:
+          - file: ux/src/api/hooks/predicates/usePredicateMutations.ts
+            symbol: useCreatePredicate
 ListPredicates:
   id: ux.action.ListPredicates
   name: ListPredicates
-  api-call: operation
+  type: action
+  documentation: UX action for ListPredicates
   properties:
     realizes: api.operation.ListPredicates
-  version: 1.0.0
-  description: UX action for ListPredicates
-  experience: Default Experience
-  channel: visual
-  states:
-  - *id001
-  views:
-  - *id002
+    source:
+      reference:
+        provenance: extracted
+        locations:
+          - file: ux/src/api/hooks/predicates/usePredicates.ts
+            symbol: usePredicates
 FindSimilarPredicates:
   id: ux.action.FindSimilarPredicates
   name: FindSimilarPredicates
-  api-call: operation
+  type: action
+  documentation: UX action for FindSimilarPredicates
   properties:
     realizes: api.operation.FindSimilarPredicates
-  version: 1.0.0
-  description: UX action for FindSimilarPredicates
-  experience: Default Experience
-  channel: visual
-  states:
-  - *id001
-  views:
-  - *id002
+    source:
+      reference:
+        provenance: extracted
+        locations:
+          - file: ux/src/api/hooks/predicates/usePredicates.ts
+            symbol: useFindSimilarPredicates
 GraphQuery:
   id: ux.action.GraphQuery
   name: GraphQuery
-  api-call: operation
+  type: action
+  documentation: UX action for GraphQuery
   properties:
     realizes: api.operation.GraphQuery
-  version: 1.0.0
-  description: UX action for GraphQuery
-  experience: Default Experience
-  channel: visual
-  states:
-  - *id001
-  views:
-  - *id002
+    source:
+      reference:
+        provenance: extracted
+        locations:
+          - file: ux/src/api/hooks/graph/useGraph.ts
+            symbol: useGraphQuery
 GraphStats:
   id: ux.action.GraphStats
   name: GraphStats
-  api-call: operation
+  type: action
+  documentation: UX action for GraphStats
   properties:
     realizes: api.operation.GraphStats
-  version: 1.0.0
-  description: UX action for GraphStats
-  experience: Default Experience
-  channel: visual
-  states:
-  - *id001
-  views:
-  - *id002
+    source:
+      reference:
+        provenance: extracted
+        locations:
+          - file: ux/src/api/hooks/graph/useGraph.ts
+            symbol: useGraphStats
 RagExtract:
   id: ux.action.RagExtract
   name: RagExtract
-  api-call: operation
+  type: action
+  documentation: UX action for RagExtract
   properties:
     realizes: api.operation.RagExtract
-  version: 1.0.0
-  description: UX action for RagExtract
-  experience: Default Experience
-  channel: visual
-  states:
-  - *id001
-  views:
-  - *id002
+    source:
+      reference:
+        provenance: extracted
+        locations:
+          - file: ux/src/api/hooks/rag/useRAGMutations.ts
+            symbol: useRagExtract
 RagGetTrace:
   id: ux.action.RagGetTrace
   name: RagGetTrace
-  api-call: operation
+  type: action
+  documentation: UX action for RagGetTrace
   properties:
     realizes: api.operation.RagGetTrace
-  version: 1.0.0
-  description: UX action for RagGetTrace
-  experience: Default Experience
-  channel: visual
-  states:
-  - *id001
-  views:
-  - *id002
+    source:
+      reference:
+        provenance: extracted
+        locations:
+          - file: ux/src/api/hooks/rag/useRAGQueries.ts
+            symbol: useRagTrace
 ReferenceSearch:
   id: ux.action.ReferenceSearch
   name: ReferenceSearch
-  api-call: operation
+  type: action
+  documentation: UX action for ReferenceSearch
   properties:
     realizes: api.operation.ReferenceSearch
-  version: 1.0.0
-  description: UX action for ReferenceSearch
-  experience: Default Experience
-  channel: visual
-  states:
-  - *id001
-  views:
-  - *id002
+    source:
+      reference:
+        provenance: extracted
+        locations:
+          - file: ux/src/api/hooks/reference/useReference.ts
+            symbol: useReferenceSearch
 CreatePipelineFlavor:
   id: ux.action.CreatePipelineFlavor
   name: CreatePipelineFlavor
-  api-call: operation
+  type: action
+  documentation: UX action for CreatePipelineFlavor
   properties:
     realizes: api.operation.CreatePipelineFlavor
-  version: 1.0.0
-  description: UX action for CreatePipelineFlavor
-  experience: Default Experience
-  channel: visual
-  states:
-  - *id001
-  views:
-  - *id002
+    source:
+      reference:
+        provenance: extracted
+        locations:
+          - file: ux/src/api/hooks/pipelineFlavors/usePipelineFlavorMutations.ts
+            symbol: useCreatePipelineFlavor
 ListPipelineFlavors:
   id: ux.action.ListPipelineFlavors
   name: ListPipelineFlavors
-  api-call: operation
+  type: action
+  documentation: UX action for ListPipelineFlavors
   properties:
     realizes: api.operation.ListPipelineFlavors
-  version: 1.0.0
-  description: UX action for ListPipelineFlavors
-  experience: Default Experience
-  channel: visual
-  states:
-  - *id001
-  views:
-  - *id002
+    source:
+      reference:
+        provenance: extracted
+        locations:
+          - file: ux/src/api/hooks/pipelineFlavors/usePipelineFlavors.ts
+            symbol: usePipelineFlavors
 ListDatasets:
   id: ux.action.ListDatasets
   name: ListDatasets
-  api-call: operation
+  type: action
+  documentation: UX action for ListDatasets
   properties:
     realizes: api.operation.ListDatasets
-  version: 1.0.0
-  description: UX action for ListDatasets
-  experience: Default Experience
-  channel: visual
-  states:
-  - *id001
-  views:
-  - *id002
+    source:
+      reference:
+        provenance: extracted
+        locations:
+          - file: ux/src/api/hooks/datasets/useDatasets.ts
+            symbol: useDatasets
 SwitchDataset:
   id: ux.action.SwitchDataset
   name: SwitchDataset
-  api-call: operation
+  type: action
+  documentation: UX action for SwitchDataset
   properties:
     realizes: api.operation.SwitchDataset
-  version: 1.0.0
-  description: UX action for SwitchDataset
-  experience: Default Experience
-  channel: visual
-  states:
-  - *id001
-  views:
-  - *id002
+    source:
+      reference:
+        provenance: extracted
+        locations:
+          - file: ux/src/api/hooks/datasets/useDatasetMutations.ts
+            symbol: useSwitchDataset

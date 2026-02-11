@@ -1,40 +1,30 @@
-Need for Structured Knowledge:
-  name: Need for Structured Knowledge
-  description: Need for organizing and structuring unstructured knowledge to enable
-    effective discovery, reuse, and AI-enhanced workflows
-  category: operational
+need-for-structured-knowledge:
   id: need-for-structured-knowledge
-  motivates:
-  - motivation.goal.enable-knowledge-graph-curation
-AI Agent Integration Demand:
-  name: AI Agent Integration Demand
-  description: Increasing demand for AI agent integration with human workflows requiring
-    structured context and knowledge representation
-  category: technology
+  name: Need for Structured Knowledge
+  type: driver
+  documentation: Need for organizing and structuring unstructured knowledge to
+    enable effective discovery, reuse, and AI-enhanced workflows
+ai-agent-integration-demand:
   id: ai-agent-integration-demand
-  motivates:
-  - motivation.goal.facilitate-human-agent-communication
-Privacy and Control Concerns:
-  name: Privacy and Control Concerns
-  description: Privacy and data control concerns driving local-first architecture
-    to keep sensitive knowledge on user-controlled devices
-  category: regulatory
+  name: AI Agent Integration Demand
+  type: driver
+  documentation: Increasing demand for AI agent integration with human workflows
+    requiring structured context and knowledge representation
+privacy-and-control-concerns:
   id: privacy-and-control-concerns
-  motivates:
-  - motivation.goal.ensure-local-first-operation
-RAG Effectiveness Requirement:
-  name: RAG Effectiveness Requirement
-  description: Requirement for context-rich RAG to improve AI response accuracy and
-    relevance through curated knowledge
-  category: technology
+  name: Privacy and Control Concerns
+  type: driver
+  documentation: Privacy and data control concerns driving local-first
+    architecture to keep sensitive knowledge on user-controlled devices
+rag-effectiveness-requirement:
   id: rag-effectiveness-requirement
-  motivates:
-  - motivation.goal.support-rag-workflows
-Semantic Understanding Need:
-  name: Semantic Understanding Need
-  description: Need for semantic understanding beyond keyword search to enable intelligent
-    knowledge discovery and reasoning
-  category: strategic
+  name: RAG Effectiveness Requirement
+  type: driver
+  documentation: Requirement for context-rich RAG to improve AI response accuracy
+    and relevance through curated knowledge
+semantic-understanding-need:
   id: semantic-understanding-need
-  motivates:
-  - motivation.goal.enable-knowledge-graph-curation
+  name: Semantic Understanding Need
+  type: driver
+  documentation: Need for semantic understanding beyond keyword search to enable
+    intelligent knowledge discovery and reasoning

@@ -1,232 +1,44 @@
-SQLite File Permissions:
-  name: SQLite File Permissions
-  description: SQLite database file permissions restricted to user account through
-    OS-level file permissions for local.db, reference.db, reference_api_cache.db,
-    and operations.db
-  criticality: medium
+sqlite-file-permissions:
   id: sqlite-file-permissions
-  version: '1.0'
-  application: App
-  authentication:
-    provider: api-key
-    sessionTimeout: 60
-    mfaRequired: false
-  roles:
-  - name: user
-    displayName: User
-  resources:
-  - resource: '*'
-    type: data
-    operations:
-    - operation: access
-  dataClassification:
-    classifications:
-    - level: internal
-      label: Legacy Classification
-      description: Legacy data converted from CIA format
-      encryption: none
-      retention:
-        period: indefinite
-        deleteAfter: false
-        reviewRequired: false
-      accessControl: role-based
-      auditLevel: standard
-      masking: none
-HTTPS Enforcement:
-  name: HTTPS Enforcement
-  description: HTTPS enforcement for external API calls with URL validation in ReferenceSourceConfig
-    preventing HTTP URLs
-  criticality: high
+  name: SQLite File Permissions
+  type: securityconstraint
+  documentation: SQLite database file permissions restricted to user account
+    through OS-level file permissions for local.db, reference.db,
+    reference_api_cache.db, and operations.db
+https-enforcement:
   id: https-enforcement
-  version: '1.0'
-  application: App
-  authentication:
-    provider: api-key
-    sessionTimeout: 60
-    mfaRequired: false
-  roles:
-  - name: user
-    displayName: User
-  resources:
-  - resource: '*'
-    type: data
-    operations:
-    - operation: access
-  dataClassification:
-    classifications:
-    - level: internal
-      label: Legacy Classification
-      description: Legacy data converted from CIA format
-      encryption: none
-      retention:
-        period: indefinite
-        deleteAfter: false
-        reviewRequired: false
-      accessControl: role-based
-      auditLevel: standard
-      masking: none
-API Key Encryption:
-  name: API Key Encryption
-  description: API key encryption and secure storage in config.json with environment
-    variable override support for sensitive credentials
-  criticality: high
+  name: HTTPS Enforcement
+  type: securityconstraint
+  documentation: HTTPS enforcement for external API calls with URL validation in
+    ReferenceSourceConfig preventing HTTP URLs
+api-key-encryption:
   id: api-key-encryption
-  version: '1.0'
-  application: App
-  authentication:
-    provider: api-key
-    sessionTimeout: 60
-    mfaRequired: false
-  roles:
-  - name: user
-    displayName: User
-  resources:
-  - resource: '*'
-    type: data
-    operations:
-    - operation: access
-  dataClassification:
-    classifications:
-    - level: internal
-      label: Legacy Classification
-      description: Legacy data converted from CIA format
-      encryption: none
-      retention:
-        period: indefinite
-        deleteAfter: false
-        reviewRequired: false
-      accessControl: role-based
-      auditLevel: standard
-      masking: none
-Transaction Rollback:
-  name: Transaction Rollback
-  description: Database transaction rollback on errors through SQLAlchemy session
-    management ensuring data integrity
-  criticality: high
+  name: API Key Encryption
+  type: securityconstraint
+  documentation: API key encryption and secure storage in config.json with
+    environment variable override support for sensitive credentials
+transaction-rollback:
   id: transaction-rollback
-  version: '1.0'
-  application: App
-  authentication:
-    provider: api-key
-    sessionTimeout: 60
-    mfaRequired: false
-  roles:
-  - name: user
-    displayName: User
-  resources:
-  - resource: '*'
-    type: data
-    operations:
-    - operation: access
-  dataClassification:
-    classifications:
-    - level: internal
-      label: Legacy Classification
-      description: Legacy data converted from CIA format
-      encryption: none
-      retention:
-        period: indefinite
-        deleteAfter: false
-        reviewRequired: false
-      accessControl: role-based
-      auditLevel: standard
-      masking: none
-Input Validation:
-  name: Input Validation
-  description: Pydantic-based input validation for all API requests ensuring type
-    safety and preventing malformed data
-  criticality: high
+  name: Transaction Rollback
+  type: securityconstraint
+  documentation: Database transaction rollback on errors through SQLAlchemy
+    session management ensuring data integrity
+input-validation:
   id: input-validation
-  version: '1.0'
-  application: App
-  authentication:
-    provider: api-key
-    sessionTimeout: 60
-    mfaRequired: false
-  roles:
-  - name: user
-    displayName: User
-  resources:
-  - resource: '*'
-    type: data
-    operations:
-    - operation: access
-  dataClassification:
-    classifications:
-    - level: internal
-      label: Legacy Classification
-      description: Legacy data converted from CIA format
-      encryption: none
-      retention:
-        period: indefinite
-        deleteAfter: false
-        reviewRequired: false
-      accessControl: role-based
-      auditLevel: standard
-      masking: none
-SQL Injection Prevention:
-  name: SQL Injection Prevention
-  description: SQL injection prevention through SQLAlchemy ORM parameterized queries
-    and proper escaping
-  criticality: critical
+  name: Input Validation
+  type: securityconstraint
+  documentation: Pydantic-based input validation for all API requests ensuring
+    type safety and preventing malformed data
+sql-injection-prevention:
   id: sql-injection-prevention
-  version: '1.0'
-  application: App
-  authentication:
-    provider: api-key
-    sessionTimeout: 60
-    mfaRequired: false
-  roles:
-  - name: user
-    displayName: User
-  resources:
-  - resource: '*'
-    type: data
-    operations:
-    - operation: access
-  dataClassification:
-    classifications:
-    - level: internal
-      label: Legacy Classification
-      description: Legacy data converted from CIA format
-      encryption: none
-      retention:
-        period: indefinite
-        deleteAfter: false
-        reviewRequired: false
-      accessControl: role-based
-      auditLevel: standard
-      masking: none
-Change Event Logging:
-  name: Change Event Logging
-  description: Comprehensive change event logging for audit trail of all database
-    changes across structure_nodes, structure_node_links, and predicates
-  criticality: medium
+  name: SQL Injection Prevention
+  type: securityconstraint
+  documentation: SQL injection prevention through SQLAlchemy ORM parameterized
+    queries and proper escaping
+change-event-logging:
   id: change-event-logging
-  version: '1.0'
-  application: App
-  authentication:
-    provider: api-key
-    sessionTimeout: 60
-    mfaRequired: false
-  roles:
-  - name: user
-    displayName: User
-  resources:
-  - resource: '*'
-    type: data
-    operations:
-    - operation: access
-  dataClassification:
-    classifications:
-    - level: internal
-      label: Legacy Classification
-      description: Legacy data converted from CIA format
-      encryption: none
-      retention:
-        period: indefinite
-        deleteAfter: false
-        reviewRequired: false
-      accessControl: role-based
-      auditLevel: standard
-      masking: none
+  name: Change Event Logging
+  type: securityconstraint
+  documentation: Comprehensive change event logging for audit trail of all
+    database changes across structure_nodes, structure_node_links, and
+    predicates

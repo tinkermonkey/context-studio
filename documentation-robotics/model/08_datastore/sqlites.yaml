@@ -1,0 +1,22 @@
+sqlite-local:
+  id: datastore.database.sqlite-local
+  name: Sqlite-local
+  type: sqlite
+  documentation: Primary user workspace database with structure nodes, predicates,
+    links, and change tracking
+sqlite-operations:
+  id: datastore.database.sqlite-operations
+  name: Sqlite-operations
+  type: sqlite
+  documentation: Operational database for pipeline configurations, execution logs,
+    and system tracking
+sqlite-reference:
+  id: datastore.database.sqlite-reference
+  name: Sqlite-reference
+  type: sqlite
+  documentation: Multi-source reference knowledge graph from ConceptNet, DBpedia, and Wikidata
+sqlite-reference-api-cache:
+  id: datastore.database.sqlite-reference-api-cache
+  name: Sqlite-reference-api-cache
+  type: sqlite
+  documentation: API response cache for external reference sources to improve performance

@@ -1,132 +1,24 @@
-Protect User Data:
-  name: Protect User Data
-  description: Security requirement to protect user knowledge graph data on local
-    workstation from unauthorized access
-  criticality: high
+protect-user-data:
   id: protect-user-data
-  version: '1.0'
-  application: App
-  authentication:
-    provider: api-key
-    sessionTimeout: 60
-    mfaRequired: false
-  roles:
-  - name: user
-    displayName: User
-  resources:
-  - resource: '*'
-    type: data
-    operations:
-    - operation: access
-  dataClassification:
-    classifications:
-    - level: internal
-      label: Legacy Classification
-      description: Legacy data converted from CIA format
-      encryption: none
-      retention:
-        period: indefinite
-        deleteAfter: false
-        reviewRequired: false
-      accessControl: role-based
-      auditLevel: standard
-      masking: none
-Secure External Communications:
-  name: Secure External Communications
-  description: Security requirement for secure communications with external APIs using
-    HTTPS and proper validation
-  criticality: high
+  name: Protect User Data
+  type: threat
+  documentation: Security requirement to protect user knowledge graph data on
+    local workstation from unauthorized access
+secure-external-communications:
   id: secure-external-communications
-  version: '1.0'
-  application: App
-  authentication:
-    provider: api-key
-    sessionTimeout: 60
-    mfaRequired: false
-  roles:
-  - name: user
-    displayName: User
-  resources:
-  - resource: '*'
-    type: data
-    operations:
-    - operation: access
-  dataClassification:
-    classifications:
-    - level: internal
-      label: Legacy Classification
-      description: Legacy data converted from CIA format
-      encryption: none
-      retention:
-        period: indefinite
-        deleteAfter: false
-        reviewRequired: false
-      accessControl: role-based
-      auditLevel: standard
-      masking: none
-Prevent Data Corruption:
-  name: Prevent Data Corruption
-  description: Security requirement to prevent data corruption through transaction
-    management and atomic operations
-  criticality: critical
+  name: Secure External Communications
+  type: threat
+  documentation: Security requirement for secure communications with external APIs
+    using HTTPS and proper validation
+prevent-data-corruption:
   id: prevent-data-corruption
-  version: '1.0'
-  application: App
-  authentication:
-    provider: api-key
-    sessionTimeout: 60
-    mfaRequired: false
-  roles:
-  - name: user
-    displayName: User
-  resources:
-  - resource: '*'
-    type: data
-    operations:
-    - operation: access
-  dataClassification:
-    classifications:
-    - level: internal
-      label: Legacy Classification
-      description: Legacy data converted from CIA format
-      encryption: none
-      retention:
-        period: indefinite
-        deleteAfter: false
-        reviewRequired: false
-      accessControl: role-based
-      auditLevel: standard
-      masking: none
-Audit Data Changes:
-  name: Audit Data Changes
-  description: Security requirement to audit all data changes for traceability and
-    compliance
-  criticality: medium
+  name: Prevent Data Corruption
+  type: threat
+  documentation: Security requirement to prevent data corruption through
+    transaction management and atomic operations
+audit-data-changes:
   id: audit-data-changes
-  version: '1.0'
-  application: App
-  authentication:
-    provider: api-key
-    sessionTimeout: 60
-    mfaRequired: false
-  roles:
-  - name: user
-    displayName: User
-  resources:
-  - resource: '*'
-    type: data
-    operations:
-    - operation: access
-  dataClassification:
-    classifications:
-    - level: internal
-      label: Legacy Classification
-      description: Legacy data converted from CIA format
-      encryption: none
-      retention:
-        period: indefinite
-        deleteAfter: false
-        reviewRequired: false
-      accessControl: role-based
-      auditLevel: standard
-      masking: none
+  name: Audit Data Changes
+  type: threat
+  documentation: Security requirement to audit all data changes for traceability
+    and compliance

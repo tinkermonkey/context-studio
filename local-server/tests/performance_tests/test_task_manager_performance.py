@@ -139,7 +139,7 @@ class TestTaskExecutionPerformance:
         Target: Process >100 simple tasks per second
         """
         await shutdown_task_manager()
-        task_manager = initialize_task_manager()
+        task_manager = initialize_task_manager(max_queue_size=300)
         await task_manager.start()
 
         # Create fast tasks
@@ -211,10 +211,15 @@ class TestTaskExecutionPerformance:
                 coroutine=timed_task()
             )
 
-        # Wait for all tasks to complete
+        # Wait for all tasks to complete with timeout
+        max_wait = 10.0  # 10 second timeout
+        wait_start = time.time()
         while True:
             stats = task_manager.get_stats()
             if stats["status_counts"]["completed"] == num_tasks:
+                break
+            if time.time() - wait_start > max_wait:
+                logger.warning(f"Timeout waiting for tasks to complete. Stats: {stats}")
                 break
             await asyncio.sleep(0.01)
 
@@ -234,9 +239,11 @@ class TestTaskExecutionPerformance:
         # Assert overhead is acceptable
         assert overhead_percentage < 20, f"Overhead {overhead_percentage:.1f}% exceeds target of 20%"
 
-        # Cleanup
-        await task_manager.shutdown()
-        await shutdown_task_manager()
+        # Cleanup - ensure proper shutdown
+        try:
+            await task_manager.shutdown()
+        finally:
+            await shutdown_task_manager()
 
 
 class TestMemoryPerformance:

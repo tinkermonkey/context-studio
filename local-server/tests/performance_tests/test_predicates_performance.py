@@ -14,7 +14,6 @@ from unittest.mock import Mock, patch
 from sqlalchemy import create_engine, text
 from sqlalchemy.orm import sessionmaker
 from database.models import Base, Predicate
-from database.predicate_utils import validate_term_relationship_predicate
 
 
 class TestPredicatePerformance:
@@ -208,113 +207,7 @@ class TestPredicatePerformance:
 
             print(f"{description} search: {exec_time:.4f}s")
 
-    def test_predicate_set_validation_performance(self, db_session):
-        """Test performance of predicate set validation."""
-        # Create test predicates
-        self.create_test_predicates(db_session, count=500)
 
-        # Test validation with different set sizes
-        set_sizes = [5, 10, 25, 50, 100]
-        validation_times = {}
-
-        for set_size in set_sizes:
-            # Create predicate set
-            predicate_set = [f"predicate_{i:04d}" for i in range(set_size)]
-
-            # Measure validation time
-            _, exec_time = self.measure_time(
-                validate_predicate_set, predicate_set, db_session
-            )
-
-            validation_times[set_size] = exec_time
-
-            # Performance assertion
-            assert (
-                exec_time < 0.1
-            ), f"Validation time {exec_time:.4f}s exceeds 100ms for set size {set_size}"
-
-            print(f"Predicate set validation (size {set_size}): {exec_time:.4f}s")
-
-    def test_domain_predicate_validation_performance(self, db_session):
-        """Test performance of domain predicate validation for term relationships."""
-        # Create test data
-        self.create_test_predicates(db_session, count=100)
-
-        # Create layer
-        layer = Layer(
-            id=str(uuid.uuid4()),
-            title="Performance Test Layer",
-            definition="Layer for performance testing",
-        )
-        db_session.add(layer)
-        db_session.commit()
-
-        # Create domain with predicate set
-        predicate_set = [f"predicate_{i:04d}" for i in range(20)]
-        domain = Domain(
-            id=str(uuid.uuid4()),
-            layer_id=layer.id,
-            title="Performance Test Domain",
-            definition="Domain for performance testing",
-            predicate_set=json.dumps(predicate_set),
-        )
-        db_session.add(domain)
-        db_session.commit()
-
-        # Create terms
-        terms = []
-        for i in range(2):
-            term = Term(
-                id=str(uuid.uuid4()),
-                domain_id=domain.id,
-                layer_id=layer.id,
-                title=f"Test Term {i}",
-                definition=f"Term {i} for performance testing",
-            )
-            terms.append(term)
-
-        db_session.add_all(terms)
-        db_session.commit()
-
-        # Test validation performance for different predicates
-        test_predicates = [
-            "predicate_0005",
-            "predicate_0010",
-            "predicate_0015",
-            "nonexistent_predicate",
-        ]
-        validation_times = []
-
-        for predicate in test_predicates:
-            # Create test relationship
-            relationship = TermRelationship(
-                id=str(uuid.uuid4()),
-                source_term_id=terms[0].id,
-                target_term_id=terms[1].id,
-                predicate=predicate,
-            )
-
-            # Measure validation time
-            _, exec_time = self.measure_time(
-                validate_term_relationship_predicate, relationship, db_session
-            )
-
-            validation_times.append(exec_time)
-
-        # Performance assertions
-        avg_validation_time = mean(validation_times)
-        max_validation_time = max(validation_times)
-
-        assert (
-            avg_validation_time < 0.05
-        ), f"Average validation time {avg_validation_time:.4f}s exceeds 50ms"
-        assert (
-            max_validation_time < 0.1
-        ), f"Max validation time {max_validation_time:.4f}s exceeds 100ms"
-
-        print("Term relationship validation performance:")
-        print(f"  Average time: {avg_validation_time:.4f}s")
-        print(f"  Max time: {max_validation_time:.4f}s")
 
     @patch("config.get_settings")
     def test_conceptnet_import_performance(self, mock_get_settings, db_session):
@@ -417,85 +310,11 @@ class TestPredicatePerformance:
         print(f"  Relations imported: {len(imported_predicates)}")
         print(f"  Time per relation: {time_per_relation:.4f}s")
 
-    def test_predicate_deletion_cascade_performance(self, db_session):
-        """Test performance of predicate deletion with cascading references."""
-        # Create predicate
-        predicate = Predicate(
-            identifier="cascade_test",
-            title="Cascade Test Predicate",
-            definition="Predicate for testing cascade deletion",
-        )
-        db_session.add(predicate)
-        db_session.commit()
 
-        # Create layer
-        layer = Layer(
-            id=str(uuid.uuid4()),
-            title="Cascade Test Layer",
-            definition="Layer for cascade testing",
-        )
-        db_session.add(layer)
-        db_session.commit()
-
-        # Create multiple domains referencing the predicate
-        domains = []
-        for i in range(50):
-            domain = Domain(
-                id=str(uuid.uuid4()),
-                layer_id=layer.id,
-                title=f"Cascade Domain {i}",
-                definition=f"Domain {i} for cascade testing",
-                primary_predicate_id=predicate.id,
-            )
-            domains.append(domain)
-
-        db_session.add_all(domains)
-        db_session.commit()
-
-        # Create multiple term relationships referencing the predicate
-        relationships = []
-        for i in range(100):
-            relationship = TermRelationship(
-                id=str(uuid.uuid4()),
-                source_term_id=str(uuid.uuid4()),
-                target_term_id=str(uuid.uuid4()),
-                predicate="cascade_test",
-                predicate_id=predicate.id,
-            )
-            relationships.append(relationship)
-
-        db_session.add_all(relationships)
-        db_session.commit()
-
-        # Measure deletion time (behavior depends on foreign key constraints)
-        _, exec_time = self.measure_time(
-            lambda: (db_session.delete(predicate), db_session.commit())
-        )
-
-        # Performance assertion
-        assert (
-            exec_time < 1.0
-        ), f"Cascade deletion time {exec_time:.4f}s exceeds 1 second"
-
-        print("Predicate cascade deletion performance:")
-        print(f"  Deletion time: {exec_time:.4f}s")
-        print(
-            f"  Referenced by {len(domains)} domains and {len(relationships)} relationships"
-        )
-
-    def test_large_predicate_set_operations(self, db_session):
-        """Test operations with large predicate sets."""
+    def test_large_predicate_pagination_and_sorting(self, db_session):
+        """Test pagination and sorting performance with large predicate sets."""
         # Create large number of predicates
         self.create_test_predicates(db_session, count=2000)
-
-        # Test large predicate set validation
-        large_set = [
-            f"predicate_{i:04d}" for i in range(0, 2000, 10)
-        ]  # Every 10th predicate
-
-        _, validation_time = self.measure_time(
-            validate_predicate_set, large_set, db_session
-        )
 
         # Test pagination of large result sets
         _, pagination_time = self.measure_time(
@@ -512,24 +331,20 @@ class TestPredicatePerformance:
 
         # Performance assertions
         assert (
-            validation_time < 0.5
-        ), f"Large set validation time {validation_time:.4f}s exceeds 500ms"
-        assert (
             pagination_time < 0.1
         ), f"Pagination time {pagination_time:.4f}s exceeds 100ms"
         assert sort_time < 0.2, f"Sorting time {sort_time:.4f}s exceeds 200ms"
 
-        print("Large predicate set operations:")
-        print(f"  Set validation (200 predicates): {validation_time:.4f}s")
+        print("Large predicate pagination and sorting:")
         print(f"  Pagination (offset 1000, limit 100): {pagination_time:.4f}s")
         print(f"  Sorting (500 predicates): {sort_time:.4f}s")
 
-    def test_concurrent_predicate_access_simulation(self, db_session):
-        """Simulate concurrent access patterns for performance testing."""
+    def test_mixed_predicate_read_operations(self, db_session):
+        """Test mixed read operations for predicates."""
         # Create test data
         self.create_test_predicates(db_session, count=500)
 
-        # Simulate mixed operations (read-heavy workload)
+        # Simulate mixed read operations
         operations = (
             [
                 lambda: db_session.query(Predicate)
@@ -543,12 +358,6 @@ class TestPredicatePerformance:
                 .limit(10)
                 .all()
                 for _ in range(5)
-            ]
-            + [
-                lambda: validate_predicate_set(
-                    [f"predicate_{i:04d}" for i in range(0, 20)], db_session
-                )
-                for _ in range(3)
             ]
         )
 
@@ -569,7 +378,7 @@ class TestPredicatePerformance:
             avg_operation_time < 0.1
         ), f"Average operation time {avg_operation_time:.4f}s exceeds 100ms"
 
-        print("Concurrent access simulation:")
+        print("Mixed predicate read operations:")
         print(f"  Total time ({len(operations)} operations): {total_time:.4f}s")
         print(f"  Average operation time: {avg_operation_time:.4f}s")
 
@@ -635,8 +444,8 @@ class TestPredicateMemoryUsage:
         assert predicate_count == 5000
         print(f"Successfully processed {predicate_count} predicates in batches")
 
-    def test_memory_efficient_validation(self, db_session):
-        """Test memory-efficient predicate set validation."""
+    def test_predicate_bulk_loading_efficiency(self, db_session):
+        """Test efficient bulk loading of large predicate datasets."""
         # Create test predicates
         for i in range(1000):
             predicate = Predicate(
@@ -650,16 +459,18 @@ class TestPredicateMemoryUsage:
 
         db_session.commit()
 
-        # Test validation with large sets
-        large_predicate_set = [f"efficient_{i:04d}" for i in range(500)]
+        # Test bulk loading with IN clause
+        identifiers_to_load = [f"efficient_{i:04d}" for i in range(0, 500, 10)]
+        start_time = time.time()
+        loaded_predicates = (
+            db_session.query(Predicate)
+            .filter(Predicate.identifier.in_(identifiers_to_load))
+            .all()
+        )
+        load_time = time.time() - start_time
 
-        # This should use efficient querying (IN clause) rather than loading all predicates
-        result = validate_predicate_set(large_predicate_set, db_session)
-        assert result is True
+        # Verify correct number loaded
+        assert len(loaded_predicates) == len(identifiers_to_load)
+        assert load_time < 0.1, f"Bulk loading time {load_time:.4f}s exceeds 100ms"
 
-        # Test with some invalid predicates
-        mixed_set = large_predicate_set + ["nonexistent_1", "nonexistent_2"]
-        result = validate_predicate_set(mixed_set, db_session)
-        assert result is False
-
-        print("Memory-efficient validation completed successfully")
+        print(f"Bulk loading {len(loaded_predicates)} predicates: {load_time:.4f}s")

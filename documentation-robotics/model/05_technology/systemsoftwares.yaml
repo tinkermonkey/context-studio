@@ -1,57 +1,60 @@
-Fastapi:
-  name: Fastapi
-  description: Python FastAPI framework for REST API endpoints and request validation
-  language: Python
+fastapi:
   id: technology.systemsoftware.fastapi
-React:
-  name: React
-  description: React framework for building interactive UI components
-  language: TypeScript
+  name: Fastapi
+  type: systemsoftware
+  documentation: Python FastAPI framework for REST API endpoints and request validation
+react:
   id: technology.systemsoftware.react
-Sqlalchemy:
-  name: Sqlalchemy
-  description: Python SQLAlchemy ORM for database models and query building
-  language: Python
+  name: React
+  type: systemsoftware
+  documentation: React framework for building interactive UI components
+sqlalchemy:
   id: technology.systemsoftware.sqlalchemy
-Pydantic:
-  name: Pydantic
-  description: Python data validation and settings management using type annotations
-  language: Python
+  name: Sqlalchemy
+  type: systemsoftware
+  documentation: Python SQLAlchemy ORM for database models and query building
+pydantic:
   id: technology.systemsoftware.pydantic
-Flowbite-react:
-  name: Flowbite-react
-  description: React UI components library built on Tailwind CSS
-  language: TypeScript
+  name: Pydantic
+  type: systemsoftware
+  documentation: Python data validation and settings management using type annotations
+flowbite-react:
   id: technology.systemsoftware.flowbite-react
-Sqlite-vector:
-  name: Sqlite-vector
-  description: SQLite extension for vector similarity search and embeddings storage
+  name: Flowbite-react
+  type: systemsoftware
+  documentation: React UI components library built on Tailwind CSS
+sqlite-vector:
   id: technology.systemsoftware.sqlite-vector
-Vite:
-  name: Vite
-  description: Frontend build tool for fast development and optimized production builds
+  name: Sqlite-vector
+  type: systemsoftware
+  documentation: SQLite extension for vector similarity search and embeddings storage
+vite:
   id: technology.systemsoftware.vite
-Duckdb:
-  name: Duckdb
-  description: In-process SQL OLAP database for data sync and Parquet file processing
+  name: Vite
+  type: systemsoftware
+  documentation: Frontend build tool for fast development and optimized production builds
+duckdb:
   id: technology.systemsoftware.duckdb
-Spacy:
-  name: Spacy
-  description: Industrial-strength NLP library for text processing and analysis
-  language: Python
+  name: Duckdb
+  type: systemsoftware
+  documentation: In-process SQL OLAP database for data sync and Parquet file processing
+spacy:
   id: technology.systemsoftware.spacy
-Networkx:
-  name: Networkx
-  description: Python library for graph analytics and network analysis algorithms
-  language: Python
+  name: Spacy
+  type: systemsoftware
+  documentation: Industrial-strength NLP library for text processing and analysis
+networkx:
   id: technology.systemsoftware.networkx
-Rdflib:
-  name: Rdflib
-  description: Python library for working with RDF and SPARQL queries
-  language: Python
+  name: Networkx
+  type: systemsoftware
+  documentation: Python library for graph analytics and network analysis algorithms
+rdflib:
   id: technology.systemsoftware.rdflib
-Tanstack:
-  name: Tanstack
-  description: TanStack suite for routing, state management, tables, and forms
-  language: TypeScript
+  name: Rdflib
+  type: systemsoftware
+  documentation: Python library for working with RDF and SPARQL queries
+tanstack:
   id: technology.systemsoftware.tanstack
+  name: Tanstack
+  type: systemsoftware
+  documentation: TanStack suite for routing, state management, tables, and forms

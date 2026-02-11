@@ -1,43 +1,30 @@
-Desktop Deployment:
-  name: Desktop Deployment
-  description: Must operate as desktop application on user workstations without requiring
-    server infrastructure
-  constraintType: technology
-  constraint.negotiable: 'false'
+desktop-deployment:
   id: desktop-deployment
-  constrains:
-  - motivation.goal.ensure-local-first-operation
-SQLite Database Limitation:
-  name: SQLite Database Limitation
-  description: Limited to SQLite database capabilities for portability and simplicity,
-    constraining scale and concurrency
-  constraintType: technology
-  constraint.negotiable: 'false'
+  name: Desktop Deployment
+  type: constraint
+  documentation: Must operate as desktop application on user workstations without
+    requiring server infrastructure
+sqlite-database-limitation:
   id: sqlite-database-limitation
-  constrains:
-  - motivation.goal.enable-knowledge-graph-curation
-Offline Operation Requirement:
-  name: Offline Operation Requirement
-  description: Must function fully offline without internet connectivity for privacy
-    and availability
-  constraintType: technology
-  constraint.negotiable: 'false'
+  name: SQLite Database Limitation
+  type: constraint
+  documentation: Limited to SQLite database capabilities for portability and
+    simplicity, constraining scale and concurrency
+offline-operation-requirement:
   id: offline-operation-requirement
-  constrains:
-  - motivation.goal.ensure-local-first-operation
-LLM Provider Dependency:
-  name: LLM Provider Dependency
-  description: Depends on external LLM providers for AI features, requiring API keys
-    and network access when AI features are used
-  constraintType: technology
-  constraint.negotiable: 'true'
+  name: Offline Operation Requirement
+  type: constraint
+  documentation: Must function fully offline without internet connectivity for
+    privacy and availability
+llm-provider-dependency:
   id: llm-provider-dependency
-Local Compute Constraints:
-  name: Local Compute Constraints
-  description: Limited by local machine compute resources for embedding generation
-    and NLP processing
-  constraintType: resource
-  constraint.negotiable: 'false'
+  name: LLM Provider Dependency
+  type: constraint
+  documentation: Depends on external LLM providers for AI features, requiring API
+    keys and network access when AI features are used
+local-compute-constraints:
   id: local-compute-constraints
-  constrains:
-  - motivation.goal.support-rag-workflows
+  name: Local Compute Constraints
+  type: constraint
+  documentation: Limited by local machine compute resources for embedding
+    generation and NLP processing

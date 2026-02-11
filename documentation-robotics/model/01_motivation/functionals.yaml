@@ -1,0 +1,5 @@
+general-requirement:
+  id: motivation.requirement.general-requirement
+  name: General Requirement
+  type: functional
+  documentation: General requirement for the system

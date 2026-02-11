@@ -1,0 +1,5 @@
+user-workstation:
+  id: technology.node.user-workstation
+  name: User Workstation
+  type: device
+  documentation: The local machine where the application runs

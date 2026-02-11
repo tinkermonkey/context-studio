@@ -1,271 +1,85 @@
-Home-route:
-  name: Home-route
-  description: Landing page route displaying dashboard with tree chart
-  path: /
-  criticality: high
+home-route:
   id: navigation.route.home-route
-  relationships.navigates_to: ux.view.home-page
-  version: 1.0.0
-  application: App
-  routes:
-  - identifier: navigation.route.home-route
-    name: navigation.route.home-route
-    type: experience
+  name: Home-route
   type: route
-App-route:
-  name: App-route
-  description: Main application route container for authenticated views
-  path: /app
-  criticality: high
+  documentation: Landing page route displaying dashboard with tree chart
+app-route:
   id: navigation.route.app-route
-  version: 1.0.0
-  application: App
-  routes:
-  - identifier: navigation.route.layers-route
-    name: navigation.route.layers-route
-    type: experience
-  - identifier: navigation.route.domains-route
-    name: navigation.route.domains-route
-    type: experience
-  - identifier: navigation.route.terms-route
-    name: navigation.route.terms-route
-    type: experience
-  - identifier: navigation.route.predicates-route
-    name: navigation.route.predicates-route
-    type: experience
-  - identifier: navigation.route.datasets-route
-    name: navigation.route.datasets-route
-    type: experience
-  - identifier: navigation.route.config-route
-    name: navigation.route.config-route
-    type: experience
-  - identifier: navigation.route.reference-search-route
-    name: navigation.route.reference-search-route
-    type: experience
-  - identifier: navigation.route.structure-node-details-route
-    name: navigation.route.structure-node-details-route
-    type: experience
+  name: App-route
   type: route
-Layers-route:
-  name: Layers-route
-  description: Route to layers management page for knowledge graph structure
-  path: /app/layers
-  criticality: high
+  documentation: Main application route container for authenticated views
+layers-route:
   id: navigation.route.layers-route
-  relationships.navigates_to: ux.view.layers-page
-  version: 1.0.0
-  application: App
-  routes:
-  - identifier: navigation.route.home-route
-    name: navigation.route.home-route
-    type: experience
+  name: Layers-route
   type: route
-Domains-route:
-  name: Domains-route
-  description: Route to domains management page with layer filtering
-  path: /app/domains
-  criticality: high
+  documentation: Route to layers management page for knowledge graph structure
+domains-route:
   id: navigation.route.domains-route
-  relationships.navigates_to: ux.view.domains-page
-  version: 1.0.0
-  application: App
-  routes:
-  - identifier: navigation.route.home-route
-    name: navigation.route.home-route
-    type: experience
+  name: Domains-route
   type: route
-Terms-route:
-  name: Terms-route
-  description: Route to terms management page with domain filtering
-  path: /app/terms
-  criticality: high
+  documentation: Route to domains management page with layer filtering
+terms-route:
   id: navigation.route.terms-route
-  relationships.navigates_to: ux.view.terms-page
-  version: 1.0.0
-  application: App
-  routes:
-  - identifier: navigation.route.home-route
-    name: navigation.route.home-route
-    type: experience
+  name: Terms-route
   type: route
-Predicates-route:
-  name: Predicates-route
-  description: Route to predicates management page for semantic relationships
-  path: /app/predicates
-  criticality: medium
+  documentation: Route to terms management page with domain filtering
+predicates-route:
   id: navigation.route.predicates-route
-  relationships.navigates_to: ux.view.predicates-page
-  version: 1.0.0
-  application: App
-  routes:
-  - identifier: navigation.route.home-route
-    name: navigation.route.home-route
-    type: experience
+  name: Predicates-route
   type: route
-Datasets-route:
-  name: Datasets-route
-  description: Route to datasets management page for version control
-  path: /app/datasets
-  criticality: medium
+  documentation: Route to predicates management page for semantic relationships
+datasets-route:
   id: navigation.route.datasets-route
-  relationships.navigates_to: ux.view.datasets-page
-  version: 1.0.0
-  application: App
-  routes:
-  - identifier: navigation.route.home-route
-    name: navigation.route.home-route
-    type: experience
+  name: Datasets-route
   type: route
-Config-route:
-  name: Config-route
-  description: Route to configuration hub page with system settings access
-  path: /app/config
-  criticality: medium
+  documentation: Route to datasets management page for version control
+config-route:
   id: navigation.route.config-route
-  relationships.navigates_to: ux.view.config-hub-page
-  version: 1.0.0
-  application: App
-  routes:
-  - identifier: navigation.route.pipelines-route
-    name: navigation.route.pipelines-route
-    type: experience
-  - identifier: navigation.route.models-route
-    name: navigation.route.models-route
-    type: experience
-  - identifier: navigation.route.data-sources-route
-    name: navigation.route.data-sources-route
-    type: experience
-  - identifier: navigation.route.network-route
-    name: navigation.route.network-route
-    type: experience
-  - identifier: navigation.route.system-route
-    name: navigation.route.system-route
-    type: experience
+  name: Config-route
   type: route
-Pipelines-route:
-  name: Pipelines-route
-  description: Route to pipeline flavors management page
-  path: /app/config/pipelines
-  criticality: high
+  documentation: Route to configuration hub page with system settings access
+pipelines-route:
   id: navigation.route.pipelines-route
-  relationships.navigates_to: ux.view.pipelines-config-page
-  version: 1.0.0
-  application: App
-  routes:
-  - identifier: navigation.route.pipelines-create-route
-    name: navigation.route.pipelines-create-route
-    type: experience
-  - identifier: navigation.route.pipelines-test-route
-    name: navigation.route.pipelines-test-route
-    type: experience
+  name: Pipelines-route
   type: route
-Pipelines-create-route:
-  name: Pipelines-create-route
-  description: Route to create new pipeline flavor with type specification
-  path: /app/config/pipelines/:type/create
-  criticality: medium
+  documentation: Route to pipeline flavors management page
+pipelines-create-route:
   id: navigation.route.pipelines-create-route
-  version: 1.0.0
-  application: App
-  routes:
-  - identifier: navigation.route.home-route
-    name: navigation.route.home-route
-    type: experience
+  name: Pipelines-create-route
   type: route
-Pipelines-test-route:
-  name: Pipelines-test-route
-  description: Route to test pipeline flavor execution with sample inputs
-  path: /app/config/pipelines/:type/test/:id
-  criticality: medium
+  documentation: Route to create new pipeline flavor with type specification
+pipelines-test-route:
   id: navigation.route.pipelines-test-route
-  version: 1.0.0
-  application: App
-  routes:
-  - identifier: navigation.route.home-route
-    name: navigation.route.home-route
-    type: experience
+  name: Pipelines-test-route
   type: route
-Models-route:
-  name: Models-route
-  description: Route to LLM models configuration page
-  path: /app/config/models
-  criticality: medium
+  documentation: Route to test pipeline flavor execution with sample inputs
+models-route:
   id: navigation.route.models-route
-  relationships.navigates_to: ux.view.models-config-page
-  version: 1.0.0
-  application: App
-  routes:
-  - identifier: navigation.route.home-route
-    name: navigation.route.home-route
-    type: experience
+  name: Models-route
   type: route
-Data-sources-route:
-  name: Data-sources-route
-  description: Route to reference data sources configuration page
-  path: /app/config/data-sources
-  criticality: medium
+  documentation: Route to LLM models configuration page
+data-sources-route:
   id: navigation.route.data-sources-route
-  relationships.navigates_to: ux.view.data-sources-config-page
-  version: 1.0.0
-  application: App
-  routes:
-  - identifier: navigation.route.home-route
-    name: navigation.route.home-route
-    type: experience
+  name: Data-sources-route
   type: route
-Network-route:
-  name: Network-route
-  description: Route to network configuration page
-  path: /app/config/network
-  criticality: low
+  documentation: Route to reference data sources configuration page
+network-route:
   id: navigation.route.network-route
-  relationships.navigates_to: ux.view.network-config-page
-  version: 1.0.0
-  application: App
-  routes:
-  - identifier: navigation.route.home-route
-    name: navigation.route.home-route
-    type: experience
+  name: Network-route
   type: route
-System-route:
-  name: System-route
-  description: Route to system configuration page
-  path: /app/config/system
-  criticality: low
+  documentation: Route to network configuration page
+system-route:
   id: navigation.route.system-route
-  relationships.navigates_to: ux.view.system-config-page
-  version: 1.0.0
-  application: App
-  routes:
-  - identifier: navigation.route.home-route
-    name: navigation.route.home-route
-    type: experience
+  name: System-route
   type: route
-Reference-search-route:
-  name: Reference-search-route
-  description: Route to unified reference search page
-  path: /app/reference
-  criticality: medium
+  documentation: Route to system configuration page
+reference-search-route:
   id: navigation.route.reference-search-route
-  relationships.navigates_to: ux.view.reference-search-page
-  version: 1.0.0
-  application: App
-  routes:
-  - identifier: navigation.route.home-route
-    name: navigation.route.home-route
-    type: experience
+  name: Reference-search-route
   type: route
-Structure-node-details-route:
-  name: Structure-node-details-route
-  description: Route to structure node details page with dynamic node ID
-  path: /app/structure_nodes/:nodeId
-  criticality: high
+  documentation: Route to unified reference search page
+structure-node-details-route:
   id: navigation.route.structure-node-details-route
-  relationships.navigates_to: ux.view.structure-node-details-page
-  version: 1.0.0
-  application: App
-  routes:
-  - identifier: navigation.route.home-route
-    name: navigation.route.home-route
-    type: experience
+  name: Structure-node-details-route
   type: route
+  documentation: Route to structure node details page with dynamic node ID

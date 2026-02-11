@@ -1,6 +1,5 @@
-Context-studio:
-  name: Context Studio
+context-studio:
   id: application.application.context-studio
-  description: Local-first knowledge graph curation and RAG application
-  version: 1.0.0
+  name: Context Studio
   type: application
+  documentation: Local-first knowledge graph curation and RAG application

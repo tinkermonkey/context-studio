@@ -1,75 +1,30 @@
 KnowledgeGraphService:
-  name: Knowledge Graph Service
-  description: Business service for knowledge graph operations including CRUD operations
-    on layers, domains, terms, and relationships
   id: business.service.KnowledgeGraphService
-  realizes:
-  - business.function.knowledge-graph-management
-  realizedBy:
-  - application.service.ChangeEventTracking
-  - application.service.DatasetManagement
-  - application.service.PredicateManagement
-  - application.service.GraphAnalytics
-  - application.service.StructureNodeManagement
-  - application.service.PredicateSimilarity
-  - application.service.SyncManagement
-  - application.service.NodeLinkManagement
-  supports-goals:
-  - motivation.goal.enable-knowledge-graph-curation
-  fulfills-requirements:
-  - motivation.requirement.general-requirement
+  name: Knowledge Graph Service
+  type: service
+  documentation: Business service for knowledge graph operations including CRUD
+    operations on layers, domains, terms, and relationships
 SemanticSearchService:
-  name: Semantic Search Service
-  description: Business service for semantic search operations using vector embeddings
-    and similarity algorithms
   id: business.service.SemanticSearchService
-  realizes:
-  - business.function.semantic-search
-  realizedBy:
-  - application.service.EmbeddingGeneration
-  supports-goals:
-  - motivation.goal.enable-knowledge-graph-curation
-  fulfills-requirements:
-  - motivation.requirement.general-requirement
-RAG Service:
-  name: RAG Service
-  description: Business service for RAG workflows including context retrieval and
-    LLM integration
+  name: Semantic Search Service
+  type: service
+  documentation: Business service for semantic search operations using vector
+    embeddings and similarity algorithms
+RagService:
   id: business.service.RagService
-  realizes:
-  - business.function.rag-pipeline-execution
-  realizedBy:
-  - application.service.RagPipeline
-  - application.service.PipelineFlavorManagement
-  supports-goals:
-  - motivation.goal.enable-knowledge-graph-curation
-  fulfills-requirements:
-  - motivation.requirement.general-requirement
+  name: RAG Service
+  type: service
+  documentation: Business service for RAG workflows including context retrieval
+    and LLM integration
 ReferenceService:
-  name: Reference Service
-  description: Business service for external reference integration with ConceptNet,
-    DBpedia, Wikidata, and Schema.org
   id: business.service.ReferenceService
-  realizes:
-  - business.function.reference-integration
-  realizedBy:
-  - application.service.ReferenceIntegration
-  - application.service.ReferenceLinkManagement
-  supports-goals:
-  - motivation.goal.enable-knowledge-graph-curation
-  fulfills-requirements:
-  - motivation.requirement.general-requirement
-NLP Service:
-  name: NLP Service
-  description: Business service for text processing including entity recognition,
-    embedding generation, and linguistic analysis
+  name: Reference Service
+  type: service
+  documentation: Business service for external reference integration with
+    ConceptNet, DBpedia, Wikidata, and Schema.org
+NlpService:
   id: business.service.NlpService
-  realizes:
-  - business.function.nlp-processing
-  realizedBy:
-  - application.service.NlpAnalysis
-  - application.service.WordSenseManagement
-  supports-goals:
-  - motivation.goal.enable-knowledge-graph-curation
-  fulfills-requirements:
-  - motivation.requirement.general-requirement
+  name: NLP Service
+  type: service
+  documentation: Business service for text processing including entity
+    recognition, embedding generation, and linguistic analysis

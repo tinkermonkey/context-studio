@@ -1,0 +1,6 @@
+end-users:
+  id: end-users
+  name: End Users
+  type: external
+  documentation: End users consuming AI-enhanced applications that leverage
+    curated knowledge graphs for improved responses

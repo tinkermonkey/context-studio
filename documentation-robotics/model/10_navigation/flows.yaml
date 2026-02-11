@@ -1,25 +1,11 @@
-Main-menu-flow:
-  name: Main-menu-flow
-  description: Primary navigation menu flow for main application sections including
-    layers, domains, terms, datasets
-  criticality: high
+main-menu-flow:
   id: navigation.flow.main-menu-flow
-  version: 1.0.0
-  application: App
-  routes:
-  - identifier: navigation.route.home-route
-    name: navigation.route.home-route
-    type: experience
+  name: Main-menu-flow
   type: flow
-Config-menu-flow:
-  name: Config-menu-flow
-  description: Configuration submenu flow for system and pipeline settings
-  criticality: medium
+  documentation: Primary navigation menu flow for main application sections
+    including layers, domains, terms, datasets
+config-menu-flow:
   id: navigation.flow.config-menu-flow
-  version: 1.0.0
-  application: App
-  routes:
-  - identifier: navigation.route.home-route
-    name: navigation.route.home-route
-    type: experience
+  name: Config-menu-flow
   type: flow
+  documentation: Configuration submenu flow for system and pipeline settings
