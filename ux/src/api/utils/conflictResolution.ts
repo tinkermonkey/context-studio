@@ -97,10 +97,7 @@ export const handleVersionConflict = async (
       customMessage ||
       "The data has been modified by another user. Refreshing to get latest version.";
 
-    toast.warning(message, {
-      duration: 5000,
-      position: "top-center",
-    });
+    toast.warning(message);
   }
 
   // Automatically refetch if enabled
@@ -116,17 +113,13 @@ export const handleVersionConflict = async (
       }
 
       if (showToast) {
-        toast.success("Data refreshed successfully", {
-          duration: 3000,
-        });
+        toast.success("Data refreshed successfully");
       }
     } catch (refetchError) {
       apiLogger.error("Failed to refetch after conflict", { refetchError });
 
       if (showToast) {
-        toast.error("Failed to refresh data. Please try again manually.", {
-          duration: 5000,
-        });
+        toast.error("Failed to refresh data. Please try again manually.");
       }
     }
   }
