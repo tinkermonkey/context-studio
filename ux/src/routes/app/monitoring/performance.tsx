@@ -44,7 +44,7 @@ export const Route = createFileRoute("/app/monitoring/performance")({
 
 function RouteComponent() {
   const [trendWindow, setTrendWindow] = useState(24);
-  const { showToast } = useButterToast();
+  const toast = useButterToast();
 
   // Fetch data
   const {
@@ -92,10 +92,10 @@ function RouteComponent() {
   const handleAutoTune = () => {
     autoTune.mutate(undefined, {
       onSuccess: () => {
-        showToast.success("Auto-tuning triggered successfully");
+        toast.success("Auto-tuning triggered successfully");
       },
       onError: (error) => {
-        showToast.error(`Performance tuning failed: ${error.message}`);
+        toast.error(`Performance tuning failed: ${error.message}`);
       },
     });
   };
@@ -103,10 +103,10 @@ function RouteComponent() {
   const handleCompressStorage = () => {
     compressStorage.mutate(undefined, {
       onSuccess: () => {
-        showToast.success("Storage compression triggered successfully");
+        toast.success("Storage compression triggered successfully");
       },
       onError: (error) => {
-        showToast.error(`Storage compression failed: ${error.message}`);
+        toast.error(`Storage compression failed: ${error.message}`);
       },
     });
   };
@@ -239,20 +239,25 @@ function RouteComponent() {
               healthScore={systemHealth.performance_score}
               metrics={[
                 ...Object.entries(systemHealth.services_healthy).map(
-                  ([service, healthy]) => ({
-                    label: service
-                      .replace(/_/g, " ")
-                      .replace(/\b\w/g, (l) => l.toUpperCase()),
-                    value: healthy ? "Healthy" : "Unhealthy",
-                    status: (healthy ? "healthy" : "error") as const,
-                  }),
+                  ([service, healthy]) => {
+                    const status: "healthy" | "error" = healthy
+                      ? "healthy"
+                      : "error";
+                    return {
+                      label: service
+                        .replace(/_/g, " ")
+                        .replace(/\b\w/g, (l) => l.toUpperCase()),
+                      value: healthy ? "Healthy" : "Unhealthy",
+                      status,
+                    };
+                  },
                 ),
                 {
                   label: "Optimization Enabled",
                   value: systemHealth.optimization_enabled ? "Yes" : "No",
-                  status: (systemHealth.optimization_enabled
-                    ? "healthy"
-                    : "warning") as const,
+                  status: systemHealth.optimization_enabled
+                    ? ("healthy" as const)
+                    : ("warning" as const),
                 },
               ]}
               issues={systemHealth.issues}
