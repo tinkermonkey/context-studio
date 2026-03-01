@@ -89,7 +89,6 @@ class OpenRouterDiscoveryService:
             try:
                 # Parse provider from model ID (e.g., "anthropic/claude-3-opus" -> "anthropic")
                 provider = self._extract_provider(model.id)
-                model_family = self._extract_model_family(model.id)
                 clean_model_name = self._clean_model_name(model.id)
 
                 # Determine capabilities based on provider and model info
