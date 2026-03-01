@@ -140,9 +140,14 @@ class TaskManager:
         logger.info(f"TaskManager initialized with max_queue_size={max_queue_size}, max_dlq_size={max_dlq_size}, max_task_history={max_task_history}")
 
     async def start(self):
-        """Start the task manager worker."""
+        """
+        Start the task manager worker.
+
+        This method is idempotent and safe to call multiple times.
+        Subsequent calls after the first will be no-ops.
+        """
         if self._running:
-            logger.warning("TaskManager is already running")
+            logger.debug("TaskManager is already running; ignoring duplicate start request")
             return
 
         self._running = True
@@ -559,7 +564,10 @@ def initialize_task_manager(max_queue_size: int = 100, max_dlq_size: int = 1000,
     """
     global _task_manager
     if _task_manager is not None:
-        logger.warning("TaskManager already initialized")
+        if _task_manager._running:
+            logger.warning("TaskManager is already running; returning existing instance")
+        else:
+            logger.debug("Reusing existing TaskManager instance")
         return _task_manager
 
     _task_manager = TaskManager(max_queue_size=max_queue_size, max_dlq_size=max_dlq_size, max_task_history=max_task_history)
