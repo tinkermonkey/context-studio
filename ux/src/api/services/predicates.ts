@@ -204,7 +204,7 @@ export class PredicateService extends BaseService {
         this.postResource<PredicateDiscoveryResponse>(
           `${ENDPOINTS.PREDICATES}/discover`,
           null,
-          params,
+          { params },
         ),
       "discover predicates",
     );
@@ -290,7 +290,7 @@ export class PredicateService extends BaseService {
       return this.postResource<FindSimilarResponse>(
         `${ENDPOINTS.PREDICATES}/${id}/find-similar`,
         null,
-        params,
+        { params },
       );
     }, "find similar predicates");
   }
@@ -335,7 +335,7 @@ export class PredicateService extends BaseService {
         this.postResource<ClusterPredicatesResponse>(
           `${ENDPOINTS.PREDICATES}/cluster-predicates`,
           null,
-          params,
+          { params },
         ),
       "cluster predicates",
     );
