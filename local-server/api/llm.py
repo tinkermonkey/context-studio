@@ -63,7 +63,6 @@ def handle_llm_error(e: Exception) -> HTTPException:
     else:
         logger.error(f"Unexpected LLM error ({error_type}): {e}")
         return HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Internal server error")
-        raise
 
 
 @router.post(
