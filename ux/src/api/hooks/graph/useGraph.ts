@@ -18,7 +18,6 @@ import {
   type TermInfoResult,
   type DomainAnalysisResult,
   type LayerAnalyticsResult,
-  type CommunityResult,
 } from "../../services/graph";
 import { QUERY_KEYS } from "../../config";
 import { createQueryKey } from "../../utils/queryClient";
@@ -185,7 +184,7 @@ export const useLayerInfo = (
  */
 export const useCommunityDetection = (
   params?: CommunityDetectionParams,
-  options?: UseQueryOptions<CommunityResult[], Error>,
+  options?: UseQueryOptions<string[][], Error>,
 ) => {
   return useQuery({
     queryKey: createQueryKey(
