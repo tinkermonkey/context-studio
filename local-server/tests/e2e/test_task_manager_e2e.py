@@ -207,7 +207,6 @@ class TestCompleteTaskWorkflowE2E:
 
         # Verify sequential execution (no overlapping)
         for i in range(5):
-            start_idx = execution_log.index(f"start_{i}")
             end_idx = execution_log.index(f"end_{i}")
             # Task should complete before next task starts
             if i < 4:
