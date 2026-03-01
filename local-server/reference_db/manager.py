@@ -878,33 +878,31 @@ class ReferenceManager:
         if direction not in ["inbound", "outbound", "both"]:
             raise ValueError(f"Invalid direction: '{direction}'. Must be 'inbound', 'outbound', or 'both'")
 
-        # Use explicit connection management
-        with self.engine.connect() as conn:
-            query = self.session.query(ReferenceLink)
+        query = self.session.query(ReferenceLink)
 
-            # Apply direction filter
-            if direction == "inbound":
-                query = query.filter(ReferenceLink.object_node == node_id)
-            elif direction == "outbound":
-                query = query.filter(ReferenceLink.subject_node == node_id)
-            else:  # both
-                query = query.filter(
-                    (ReferenceLink.subject_node == node_id) |
-                    (ReferenceLink.object_node == node_id)
-                )
+        # Apply direction filter
+        if direction == "inbound":
+            query = query.filter(ReferenceLink.object_node == node_id)
+        elif direction == "outbound":
+            query = query.filter(ReferenceLink.subject_node == node_id)
+        else:  # both
+            query = query.filter(
+                (ReferenceLink.subject_node == node_id) |
+                (ReferenceLink.object_node == node_id)
+            )
 
-            # Apply predicate filter if provided
-            if predicate:
-                query = query.filter(ReferenceLink.predicate == predicate)
+        # Apply predicate filter if provided
+        if predicate:
+            query = query.filter(ReferenceLink.predicate == predicate)
 
-            # Order by created_at DESC
-            query = query.order_by(ReferenceLink.created_at.desc())
+        # Order by created_at DESC
+        query = query.order_by(ReferenceLink.created_at.desc())
 
-            # Apply limit if provided
-            if limit:
-                query = query.limit(limit)
+        # Apply limit if provided
+        if limit:
+            query = query.limit(limit)
 
-            return query.all()
+        return query.all()
 
     def add_external_predicate(
         self,
