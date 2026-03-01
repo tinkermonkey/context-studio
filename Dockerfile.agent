@@ -74,8 +74,13 @@ RUN python3 -m pip install --no-cache-dir sqlite-vec==0.1.6 && \
 RUN pip install --no-cache-dir -r /tmp/backend-requirements.txt && \
     rm /tmp/backend-requirements.txt
 
-# Install Python development tools
-RUN pip install --no-cache-dir pytest pytest-cov black flake8 mypy
+# Install Python development tools and type stubs for mypy
+RUN pip install --no-cache-dir pytest pytest-cov black flake8 mypy \
+    pandas-stubs types-requests types-psutil types-cachetools \
+    types-jsonschema
+
+# Copy mypy configuration (handles packages without type stubs)
+COPY local-server/mypy.ini /workspace/context-studio/local-server/mypy.ini
 
 # ============================================================================
 # Frontend Dependencies (Node.js) - ux/

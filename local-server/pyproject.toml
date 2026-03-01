@@ -1,0 +1,53 @@
+[tool.mypy]
+python_version = "3.11"
+warn_return_any = true
+warn_unused_configs = true
+ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+module = [
+    "aiohttp.*",
+    "backoff.*",
+    "boto3.*",
+    "botocore.*",
+    "catalogue.*",
+    "confection.*",
+    "cymem.*",
+    "deepdiff.*",
+    "fastapi.*",
+    "graphql.*",
+    "hypothesis.*",
+    "hypothesis_graphql.*",
+    "hypothesis_jsonschema.*",
+    "hf_xet.*",
+    "httpx.*",
+    "huggingface_hub.*",
+    "jedi.*",
+    "joblib.*",
+    "langchain.*",
+    "langcodes.*",
+    "marisa.*",
+    "matplotlib.*",
+    "murmurhash.*",
+    "nltk.*",
+    "pandas.*",
+    "pyarrow.*",
+    "pyrate_limiter.*",
+    "rdflib.*",
+    "rapidfuzz.*",
+    "reference_api_buddy.*",
+    "schemathesis.*",
+    "scikit_learn.*",
+    "sense2vec.*",
+    "sentence_transformers.*",
+    "spacy.*",
+    "spacy_dbpedia_spotlight.*",
+    "spacyfishing.*",
+    "spacysee.*",
+    "thinc.*",
+    "torch.*",
+    "transformers.*",
+    "wasabi.*",
+    "weasel.*",
+]
+ignore_missing_imports = true
