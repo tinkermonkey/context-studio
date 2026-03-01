@@ -39,7 +39,7 @@ class ChangeExtractor:
         """Extract changes that need to be synchronized to S3."""
 
         query = self.db_session.query(ChangeEvent).filter(
-            ChangeEvent.processed == False
+            ~ChangeEvent.processed
         )
 
         if since:

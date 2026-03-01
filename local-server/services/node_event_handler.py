@@ -169,7 +169,7 @@ class NodeEventHandler:
         """
         return (
             self.db.query(NodeEvent)
-            .filter(NodeEvent.processed == False)
+            .filter(~NodeEvent.processed)
             .order_by(NodeEvent.timestamp.asc())
             .limit(limit)
             .all()
@@ -228,7 +228,7 @@ class NodeEventHandler:
         """
         total_events = self.db.query(NodeEvent).count()
         processed_events = (
-            self.db.query(NodeEvent).filter(NodeEvent.processed == True).count()
+            self.db.query(NodeEvent).filter(NodeEvent.processed).count()
         )
         unprocessed_events = total_events - processed_events
 
