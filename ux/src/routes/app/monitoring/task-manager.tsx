@@ -2,7 +2,15 @@ import { useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { CsMain, CsMainTitle } from "@/components/layout/cs_main";
 import { CsSidebar } from "@/components/layout/cs_sidebar";
-import { Card, Button, Spinner, Select, Tabs, Badge, Alert } from "flowbite-react";
+import {
+  Card,
+  Button,
+  Spinner,
+  Select,
+  Tabs,
+  Badge,
+  Alert,
+} from "flowbite-react";
 import { ListTodo, AlertCircle, Activity, Settings } from "lucide-react";
 import {
   useTaskList,
@@ -23,12 +31,27 @@ export const Route = createFileRoute("/app/monitoring/task-manager")({
 });
 
 function RouteComponent() {
-  const [statusFilter, setStatusFilter] = useState<string | undefined>(undefined);
-  const { showToast } = useButterToast();
+  const [statusFilter, setStatusFilter] = useState<string | undefined>(
+    undefined,
+  );
+  const toast = useButterToast();
 
-  const { data: tasks, isLoading: tasksLoading, error: tasksError, refetch: refetchTasks } = useTaskList({ status_filter: statusFilter });
-  const { data: stats, isLoading: statsLoading, error: statsError } = useTaskStats();
-  const { data: deadLetterQueue, isLoading: dlqLoading, error: dlqError } = useDeadLetterQueue();
+  const {
+    data: tasks,
+    isLoading: tasksLoading,
+    error: tasksError,
+    refetch: refetchTasks,
+  } = useTaskList({ status_filter: statusFilter });
+  const {
+    data: stats,
+    isLoading: statsLoading,
+    error: statsError,
+  } = useTaskStats();
+  const {
+    data: deadLetterQueue,
+    isLoading: dlqLoading,
+    error: dlqError,
+  } = useDeadLetterQueue();
   const cancelTask = useCancelTask();
 
   const isLoading = tasksLoading || statsLoading || dlqLoading;
@@ -37,11 +60,11 @@ function RouteComponent() {
   const handleCancelTask = (taskId: string) => {
     cancelTask.mutate(taskId, {
       onSuccess: () => {
-        showToast("Task cancelled successfully", "success");
+        toast.success("Task cancelled successfully");
         refetchTasks();
       },
       onError: (error) => {
-        showToast(`Failed to cancel task: ${error.message}`, "error");
+        toast.error(`Failed to cancel task: ${error.message}`);
       },
     });
   };
@@ -96,7 +119,11 @@ function RouteComponent() {
           </div>
           <Select
             value={statusFilter || "all"}
-            onChange={(e) => setStatusFilter(e.target.value === "all" ? undefined : e.target.value)}
+            onChange={(e) =>
+              setStatusFilter(
+                e.target.value === "all" ? undefined : e.target.value,
+              )
+            }
           >
             <option value="all">All Tasks</option>
             <option value="pending">Pending</option>
@@ -110,7 +137,7 @@ function RouteComponent() {
         {hasError && (
           <Alert color="failure" icon={AlertCircle} className="mb-4">
             <span className="font-medium">Error loading task data</span>
-            <p className="text-sm mt-1">
+            <p className="mt-1 text-sm">
               {tasksError?.message || statsError?.message || dlqError?.message}
             </p>
           </Alert>
@@ -123,7 +150,8 @@ function RouteComponent() {
               status={stats.is_running ? "healthy" : "error"}
               healthScore={
                 stats.total_tasks > 0
-                  ? ((stats.status_counts.completed || 0) / stats.total_tasks) * 100
+                  ? ((stats.status_counts.completed || 0) / stats.total_tasks) *
+                    100
                   : 100
               }
               metrics={[
@@ -141,8 +169,10 @@ function RouteComponent() {
                 !stats.is_running
                   ? ["Task manager is not running"]
                   : stats.dead_letter_queue_size > 0
-                  ? [`${stats.dead_letter_queue_size} failed tasks in dead letter queue`]
-                  : []
+                    ? [
+                        `${stats.dead_letter_queue_size} failed tasks in dead letter queue`,
+                      ]
+                    : []
               }
             />
           </div>
