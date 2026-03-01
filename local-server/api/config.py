@@ -38,7 +38,7 @@ def create_error_response(status_code: int, message: str) -> JSONResponse:
     """Create a consistent error response in ConfigResponse format"""
     return JSONResponse(
         status_code=status_code,
-        content=ConfigResponse(success=False, errors=[message]).model_dump()
+        content=ConfigResponse(success=False, errors=[message]).model_dump(),
     )
 
 
@@ -61,8 +61,12 @@ async def validate_configuration():
         errors = config_manager.validate()
 
         return ConfigResponse(
-            success=len(errors) == 0, 
-            data={"errors": errors, "valid": len(errors) == 0, "error_count": len(errors)}
+            success=len(errors) == 0,
+            data={
+                "errors": errors,
+                "valid": len(errors) == 0,
+                "error_count": len(errors),
+            },
         )
     except Exception as e:
         logger.error(f"Error validating configuration: {e}")
@@ -114,7 +118,9 @@ async def get_reference_sources_config():
     """Get reference sources configuration"""
     try:
         config_manager = get_config_manager()
-        return ConfigResponse(success=True, data=config_manager.settings.reference_sources.model_dump())
+        return ConfigResponse(
+            success=True, data=config_manager.settings.reference_sources.model_dump()
+        )
     except Exception as e:
         logger.error(f"Error getting reference sources config: {e}")
         raise HTTPException(status_code=500, detail=str(e))
@@ -127,9 +133,19 @@ async def get_reference_source_config(source_name: str):
         config_manager = get_config_manager()
 
         # Validate source name and get configuration
-        valid_sources = ["conceptnet", "dbpedia_lookup", "dbpedia_sparql", "dbpedia_spotlight", "wikidata", "duckduckgo", "schema_org"]
+        valid_sources = [
+            "conceptnet",
+            "dbpedia_lookup",
+            "dbpedia_sparql",
+            "dbpedia_spotlight",
+            "wikidata",
+            "duckduckgo",
+            "schema_org",
+        ]
         if source_name not in valid_sources:
-            raise HTTPException(status_code=404, detail=f"Unknown reference source: {source_name}")
+            raise HTTPException(
+                status_code=404, detail=f"Unknown reference source: {source_name}"
+            )
 
         source_config = getattr(config_manager.settings.reference_sources, source_name)
         return ConfigResponse(success=True, data=source_config.model_dump())
@@ -142,15 +158,27 @@ async def get_reference_source_config(source_name: str):
 
 
 @router.patch("/reference-sources/{source_name}", response_model=ConfigResponse)
-async def update_reference_source_config(source_name: str, request: ConfigUpdateRequest):
+async def update_reference_source_config(
+    source_name: str, request: ConfigUpdateRequest
+):
     """Update configuration for a specific reference source"""
     try:
         config_manager = get_config_manager()
 
         # Validate source name
-        valid_sources = ["conceptnet", "dbpedia_lookup", "dbpedia_sparql", "dbpedia_spotlight", "wikidata", "duckduckgo", "schema_org"]
+        valid_sources = [
+            "conceptnet",
+            "dbpedia_lookup",
+            "dbpedia_sparql",
+            "dbpedia_spotlight",
+            "wikidata",
+            "duckduckgo",
+            "schema_org",
+        ]
         if source_name not in valid_sources:
-            raise HTTPException(status_code=404, detail=f"Unknown reference source: {source_name}")
+            raise HTTPException(
+                status_code=404, detail=f"Unknown reference source: {source_name}"
+            )
 
         # Update the configuration
         path = f"reference_sources.{source_name}.{request.path}"
@@ -206,7 +234,9 @@ async def update_configuration(request: ConfigUpdateRequest):
         try:
             current_value = config_manager.get(request.path)
         except KeyError:
-            return create_error_response(400, f"Configuration path not found: {request.path}")
+            return create_error_response(
+                400, f"Configuration path not found: {request.path}"
+            )
 
         # Type validation - ensure new value is compatible with existing type
         if current_value is not None:
@@ -215,22 +245,26 @@ async def update_configuration(request: ConfigUpdateRequest):
             if current_type in (int, float, str, bool, list, dict):
                 if not isinstance(request.value, current_type):
                     # Special case: allow int for float fields
-                    if current_type == float and isinstance(request.value, int):
+                    if current_type is float and isinstance(request.value, int):
                         pass  # Allow int -> float conversion
                     else:
                         return create_error_response(
-                            400, 
-                            f"Invalid value type for {request.path}. Expected {current_type.__name__}, got {type(request.value).__name__}"
+                            400,
+                            f"Invalid value type for {request.path}. Expected {current_type.__name__}, got {type(request.value).__name__}",
                         )
 
         # Try to update the value
         try:
             success = config_manager.set(request.path, request.value)
         except (ValueError, TypeError) as e:
-            return create_error_response(400, f"Invalid value for {request.path}: {str(e)}")
+            return create_error_response(
+                400, f"Invalid value for {request.path}: {str(e)}"
+            )
 
         if success:
-            return ConfigResponse(success=True, data={"path": request.path, "value": request.value})
+            return ConfigResponse(
+                success=True, data={"path": request.path, "value": request.value}
+            )
         else:
             return create_error_response(500, "Failed to save configuration")
 
@@ -249,7 +283,9 @@ async def reload_configuration():
         # Notify all services of the configuration reload
         await notify_global_configuration_reload()
 
-        return ConfigResponse(success=True, data={"message": "Configuration reloaded successfully"})
+        return ConfigResponse(
+            success=True, data={"message": "Configuration reloaded successfully"}
+        )
     except Exception as e:
         logger.error(f"Error reloading configuration: {e}")
         raise HTTPException(status_code=500, detail=str(e))
@@ -273,24 +309,32 @@ async def reset_configuration():
             # Notify all services of the configuration reset
             await notify_global_configuration_reload()
 
-            return ConfigResponse(success=True, data={"message": "Configuration reset to defaults"})
+            return ConfigResponse(
+                success=True, data={"message": "Configuration reset to defaults"}
+            )
         else:
-            raise HTTPException(status_code=500, detail="Failed to save default configuration")
+            raise HTTPException(
+                status_code=500, detail="Failed to save default configuration"
+            )
 
     except Exception as e:
         logger.error(f"Error resetting configuration: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
 
-
-
 # Service-specific notification handlers for reference sources
 async def handle_reference_source_config_change(source_name: str, field: str, value):
     """Handle reference source configuration changes"""
-    logger.info(f"Reference source configuration changed: {source_name}.{field} = {value}")
+    logger.info(
+        f"Reference source configuration changed: {source_name}.{field} = {value}"
+    )
 
     # Invalidate NLP pipeline if NLP-related sources change
-    if source_name in ["conceptnet", "dbpedia_spotlight"] and field in ["enabled", "use_proxy", "upstream_url"]:
+    if source_name in ["conceptnet", "dbpedia_spotlight"] and field in [
+        "enabled",
+        "use_proxy",
+        "upstream_url",
+    ]:
         try:
             from nlp.pipeline import invalidate_pipeline
 
