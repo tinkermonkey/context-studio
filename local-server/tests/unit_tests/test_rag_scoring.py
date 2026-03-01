@@ -11,10 +11,9 @@ import os
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
 import pytest
-from typing import List
 
 # Direct imports to avoid full app initialization
-from rag.test_scoring import RAGTestScoringService, AnnotationSpan, ExtractionSpan
+from rag.test_scoring import RAGTestScoringService, AnnotationSpan
 
 # Avoid importing rag.models which has dependencies
 # Instead, we'll create a simple mock for ExtractedEntity

@@ -1150,7 +1150,7 @@ class TestMoveWithTypeConversionAPI:
 
         # Test pagination with skip=5, limit=5
         response = client.get(
-            f"/api/structure_nodes/links",
+            "/api/structure_nodes/links",
             params={
                 "source_node_id": source_term["id"],
                 "skip": 5,
@@ -1174,7 +1174,7 @@ class TestMoveWithTypeConversionAPI:
 
         # Test last page (skip=10, limit=5 should return 5 links)
         response = client.get(
-            f"/api/structure_nodes/links",
+            "/api/structure_nodes/links",
             params={
                 "source_node_id": source_term["id"],
                 "skip": 10,
@@ -1190,7 +1190,7 @@ class TestMoveWithTypeConversionAPI:
 
         # Test beyond last page (skip=15, limit=5 should return 0 links)
         response = client.get(
-            f"/api/structure_nodes/links",
+            "/api/structure_nodes/links",
             params={
                 "source_node_id": source_term["id"],
                 "skip": 15,

@@ -14,15 +14,13 @@ from fastapi.testclient import TestClient
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from uuid import uuid4
-from unittest.mock import Mock, patch, AsyncMock
+from unittest.mock import Mock, patch
 import asyncio
 
 from app import create_app
 from database.models import Base, StructureNode
 from database.custom_types import NodeType
-from operations.models import OperationsBase, TestParagraph, TestAnnotation, RAGPipelineRun
-from rag.test_scoring import ScoringResult
-from rag.models import RAGExtractionResponse, ExtractedEntity
+from operations.models import OperationsBase
 
 
 @pytest.fixture

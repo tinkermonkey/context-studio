@@ -10,10 +10,9 @@ import json
 import logging
 from typing import List, Dict, Any, Optional, Set, Tuple
 from sqlalchemy.orm import Session
-from sqlalchemy import text
 
 from database.models import Predicate
-from reference_db.models import ReferenceLink, ReferenceNode
+from reference_db.models import ReferenceLink
 from reference_db.manager import ReferenceManager
 
 logger = logging.getLogger(__name__)

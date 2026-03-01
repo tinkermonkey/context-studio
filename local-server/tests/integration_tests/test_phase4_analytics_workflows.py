@@ -10,7 +10,6 @@ import os
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 import pytest
-import pandas as pd
 from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session
 from datetime import datetime, timezone, timedelta
@@ -32,7 +31,6 @@ class TestPhase4AnalyticsWorkflows:
     def mock_service_factory(self, mock_db):
         """Create mock service factory with analytics services."""
         from services.duckdb_service import DuckDBService, ChangeAnalyticsEngine
-        from services.incremental_sync_engine import IncrementalSyncEngine
 
         factory = Mock(spec=ServiceFactory)
 
@@ -81,7 +79,7 @@ class TestPhase4AnalyticsWorkflows:
         from sqlalchemy import create_engine
         from sqlalchemy.orm import sessionmaker
         from dataset.manager import DatasetManager
-        from database.utils import get_dataset_manager, init_db, set_current_engine_for_testing
+        from database.utils import init_db, set_current_engine_for_testing
 
         # Create dataset manager with temp directory
         temp_dir = tempfile.mkdtemp()

@@ -10,15 +10,13 @@ Test Cases:
 import pytest
 import tempfile
 import os
-import json
-import time
 import numpy as np
 from fastapi.testclient import TestClient
-from unittest.mock import patch, MagicMock
+from unittest.mock import patch
 
 from reference_db.config import ReferenceConfig
 from reference_db.manager import ReferenceManager
-from reference_db.models import ReferenceNode, ReferenceLink
+from reference_db.models import ReferenceLink
 from uuid import uuid4
 from datetime import date
 
@@ -217,7 +215,6 @@ def app_client(test_database_with_schema_org):
     db_path, nodes = test_database_with_schema_org
 
     # Patch the reference_manager_context to use our test database
-    from reference_db.dependencies import reference_manager_context
 
     # Create a custom context manager that uses our test database
     from contextlib import contextmanager

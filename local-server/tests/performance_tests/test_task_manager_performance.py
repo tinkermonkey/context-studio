@@ -17,7 +17,6 @@ from statistics import mean, stdev
 sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
 from services.task_manager import (
-    TaskManager,
     TaskStatus,
     initialize_task_manager,
     shutdown_task_manager
@@ -63,7 +62,7 @@ class TestTaskSubmissionPerformance:
         # Calculate throughput
         throughput = num_tasks / duration
 
-        print(f"\n=== Task Submission Performance ===")
+        print("\n=== Task Submission Performance ===")
         print(f"Tasks submitted: {num_tasks}")
         print(f"Duration: {duration:.3f} seconds")
         print(f"Throughput: {throughput:.1f} tasks/second")
@@ -111,7 +110,7 @@ class TestTaskSubmissionPerformance:
         p95_latency = sorted(latencies)[int(0.95 * len(latencies))]
         p99_latency = sorted(latencies)[int(0.99 * len(latencies))]
 
-        print(f"\n=== Task Submission Latency ===")
+        print("\n=== Task Submission Latency ===")
         print(f"Average: {avg_latency:.3f}ms")
         print(f"Std Dev: {std_latency:.3f}ms")
         print(f"P95: {p95_latency:.3f}ms")
@@ -170,7 +169,7 @@ class TestTaskExecutionPerformance:
         # Calculate processing throughput
         throughput = num_tasks / duration
 
-        print(f"\n=== Task Processing Throughput ===")
+        print("\n=== Task Processing Throughput ===")
         print(f"Tasks processed: {num_tasks}")
         print(f"Duration: {duration:.3f} seconds")
         print(f"Processing throughput: {throughput:.1f} tasks/second")
@@ -231,7 +230,7 @@ class TestTaskExecutionPerformance:
         overhead = actual_duration - expected_duration
         overhead_percentage = (overhead / expected_duration) * 100
 
-        print(f"\n=== Sequential Processing Overhead ===")
+        print("\n=== Sequential Processing Overhead ===")
         print(f"Expected duration: {expected_duration:.3f}s")
         print(f"Actual duration: {actual_duration:.3f}s")
         print(f"Overhead: {overhead:.3f}s ({overhead_percentage:.1f}%)")
@@ -298,7 +297,7 @@ class TestMemoryPerformance:
 
         memory_growth = peak_memory - initial_memory
 
-        print(f"\n=== Memory Usage Performance ===")
+        print("\n=== Memory Usage Performance ===")
         print(f"Initial memory: {initial_memory:.1f} MB")
         print(f"Peak memory: {peak_memory:.1f} MB")
         print(f"Final memory: {final_memory:.1f} MB")
@@ -359,7 +358,7 @@ class TestConcurrencyPerformance:
         end_time = time.time()
         duration = (end_time - start_time) * 1000  # Convert to ms
 
-        print(f"\n=== Concurrent Status Query Performance ===")
+        print("\n=== Concurrent Status Query Performance ===")
         print(f"Queries: {num_queries}")
         print(f"Duration: {duration:.1f}ms")
         print(f"Avg latency: {duration / num_queries:.2f}ms")
@@ -420,9 +419,9 @@ class TestConcurrencyPerformance:
         end_time = time.time()
         duration = end_time - start_time
 
-        print(f"\n=== Concurrent Operations Performance ===")
+        print("\n=== Concurrent Operations Performance ===")
         print(f"Duration: {duration:.3f}s")
-        print(f"Operations: 50 submissions + 25 cancellations")
+        print("Operations: 50 submissions + 25 cancellations")
 
         # Assert performance target
         assert duration < 1.0, f"Duration {duration:.3f}s exceeds target of 1.0s"
@@ -472,7 +471,7 @@ class TestScalabilityPerformance:
         # Check queue size
         queue_size = task_manager.get_queue_size()
 
-        print(f"\n=== Large Queue Performance ===")
+        print("\n=== Large Queue Performance ===")
         print(f"Tasks queued: {num_tasks}")
         print(f"Queue time: {queue_time:.3f}s")
         print(f"Current queue size: {queue_size}")
@@ -526,7 +525,7 @@ class TestScalabilityPerformance:
         # Verify DLQ
         dlq = task_manager.get_dead_letter_queue()
 
-        print(f"\n=== DLQ Performance at Scale ===")
+        print("\n=== DLQ Performance at Scale ===")
         print(f"Failed tasks: {num_tasks}")
         print(f"Processing time: {duration:.3f}s")
         print(f"DLQ size: {len(dlq)}")
@@ -602,7 +601,7 @@ class TestProgressTrackingPerformance:
         overhead = with_progress_time - without_progress_time
         overhead_percentage = (overhead / without_progress_time) * 100
 
-        print(f"\n=== Progress Update Performance ===")
+        print("\n=== Progress Update Performance ===")
         print(f"Without progress: {without_progress_time:.3f}s")
         print(f"With progress (100 updates): {with_progress_time:.3f}s")
         print(f"Overhead: {overhead:.3f}s ({overhead_percentage:.1f}%)")

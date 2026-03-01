@@ -13,13 +13,12 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import pytest
 from unittest.mock import Mock
 from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker, Session
+from sqlalchemy.orm import sessionmaker
 import json
 
 from database.models import Base, Predicate
 from reference_db.models import Base as ReferenceBase, ReferenceNode, ReferenceLink, ExternalPredicate
 from reference_db.manager import ReferenceManager
-from reference_db.config import ReferenceConfig
 from services.reference_filter_service import ReferenceFilterService
 
 

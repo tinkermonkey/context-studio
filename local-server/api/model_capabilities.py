@@ -9,8 +9,7 @@ from llm.models import ModelCapabilitiesResponse, SupportedModelsResponse
 from llm.model_capabilities import (
     get_model_capabilities,
     get_supported_models,
-    get_models_by_provider,
-    MODEL_CAPABILITIES
+    get_models_by_provider
 )
 from llm.openrouter_discovery import get_openrouter_discovery_service
 from utils.logger import get_logger

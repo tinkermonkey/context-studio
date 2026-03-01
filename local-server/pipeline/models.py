@@ -4,7 +4,7 @@ SQLAlchemy models for pipeline database.
 
 import json
 from uuid import uuid4
-from sqlalchemy import Column, String, Text, Integer, TypeDecorator
+from sqlalchemy import Column, String, Text, TypeDecorator
 from sqlalchemy.orm import declarative_base
 
 Base = declarative_base()

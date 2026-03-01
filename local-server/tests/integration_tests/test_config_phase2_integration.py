@@ -8,7 +8,6 @@ file system operations, and manager initialization workflows.
 import sys
 import os
 import tempfile
-import shutil
 import sqlite3
 from pathlib import Path
 from unittest.mock import patch, MagicMock
@@ -274,7 +273,6 @@ class TestDirectoryCreationWithFileSystemOperations:
     def test_concurrent_directory_creation(self):
         """Test that multiple managers can safely create the same directory concurrently."""
         import threading
-        import time
 
         with tempfile.TemporaryDirectory() as tmpdir:
             datafiles_dir = os.path.join(tmpdir, 'datafiles')

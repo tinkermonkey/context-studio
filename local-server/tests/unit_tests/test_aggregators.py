@@ -5,7 +5,6 @@ import os
 sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
 import pytest
-from typing import List
 
 from reference_api.aggregators import ResultAggregator
 from reference_api.models import (

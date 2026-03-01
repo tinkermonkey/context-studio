@@ -10,7 +10,7 @@ import os
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 import pytest
-from rag.test_scoring import RAGTestScoringService, AnnotationSpan, ExtractionSpan, ScoringResult
+from rag.test_scoring import RAGTestScoringService, AnnotationSpan
 from rag.models import ExtractedEntity
 
 

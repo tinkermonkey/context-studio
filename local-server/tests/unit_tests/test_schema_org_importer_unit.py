@@ -7,14 +7,13 @@ a full database setup.
 
 import json
 import pytest
-from unittest.mock import Mock, patch, MagicMock
-from datetime import datetime, timedelta
+from unittest.mock import Mock, patch
+from datetime import datetime
 
 from reference_db.config import ReferenceConfig
 from reference_db.schema_org_importer import (
     SchemaOrgImporter,
     DownloadError,
-    ParseError,
     EmbeddingError,
     LockError
 )

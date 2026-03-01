@@ -18,7 +18,7 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from reference_db.config import ReferenceConfig
 from reference_db.manager import ReferenceManager
 from database.models import Predicate
-from database.utils import get_engine, init_db
+from database.utils import get_engine
 from database.models import Base as LocalBase
 from sqlalchemy.orm import sessionmaker
 from services.reference_filter_service import ReferenceFilterService

@@ -11,7 +11,6 @@ import asyncio
 from typing import List, Dict, Any, Optional
 from datetime import datetime
 from sqlalchemy.orm import Session
-from sqlalchemy import text
 
 from operations.models import TestParagraph, TestAnnotation, RAGPipelineRun
 from database.models import StructureNode

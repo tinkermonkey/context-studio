@@ -10,7 +10,6 @@ import os
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from uuid import uuid4
-import pytest
 
 
 def create_layer(shared_client):

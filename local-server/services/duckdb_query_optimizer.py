@@ -325,7 +325,7 @@ class DuckDBQueryOptimizer:
                     self.duckdb_conn.execute("SELECT 1 FROM entity_versions LIMIT 1")
                 except Exception:
                     # Table doesn't exist - return mock metrics instead of failing
-                    logger.debug(f"Query references non-existent table - returning mock metrics")
+                    logger.debug("Query references non-existent table - returning mock metrics")
                     execution_time = (time.time() - start_time) * 1000
                     return QueryPerformanceMetrics(
                         query_id=query_id,

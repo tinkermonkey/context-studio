@@ -176,7 +176,7 @@ def test_event_processor_processes_events(shared_app, test_session_isolation, re
     for record_type in ["structure_node", "structure_node_link", "predicate"]:
         insert_event_via_sqlalchemy("create", record_type, test_session_id=test_session_id)
 
-    print(f"[TEST] Starting test_event_processor_processes_events")
+    print("[TEST] Starting test_event_processor_processes_events")
 
     # Get the database URL from the current engine
     from database.utils import get_current_engine

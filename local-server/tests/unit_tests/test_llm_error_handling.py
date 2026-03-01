@@ -136,7 +136,7 @@ class TestLLMErrorHandling:
         # Find execute_pipeline endpoint
         execute_pipeline_route = None
         for route in router.routes:
-            if hasattr(route, "path") and "/execute_pipeline" in route.path and not "/stream" in route.path:
+            if hasattr(route, "path") and "/execute_pipeline" in route.path and "/stream" not in route.path:
                 execute_pipeline_route = route
                 break
 

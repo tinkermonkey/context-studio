@@ -6,7 +6,6 @@ This module provides validation for predicate mapping structures according to AD
 
 import json
 from typing import Dict, Any, Optional
-import jsonschema
 from jsonschema import validate, ValidationError
 
 from utils.logger import get_logger

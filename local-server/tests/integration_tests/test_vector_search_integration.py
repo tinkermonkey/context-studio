@@ -9,7 +9,6 @@ import pytest
 import tempfile
 import os
 import time
-from datetime import date
 
 from reference_db.config import ReferenceConfig
 from reference_db.manager import ReferenceManager
@@ -210,7 +209,7 @@ class TestVectorSearchAccuracy:
         accuracy = (successful_queries / total_queries) * 100
 
         # Report results
-        print(f"\nVector Search Accuracy Test Results:")
+        print("\nVector Search Accuracy Test Results:")
         print(f"Total queries: {total_queries}")
         print(f"Successful: {successful_queries}")
         print(f"Accuracy: {accuracy:.1f}%")
@@ -330,7 +329,7 @@ class TestVectorSearchPerformance:
         avg_search_time = sum(search_times) / len(search_times)
         max_search_time = max(search_times)
 
-        print(f"\nVector Search Performance Results:")
+        print("\nVector Search Performance Results:")
         print(f"Average search time: {avg_search_time:.2f}ms")
         print(f"Max search time: {max_search_time:.2f}ms")
         print(f"Individual times: {[f'{t:.2f}ms' for t in search_times]}")

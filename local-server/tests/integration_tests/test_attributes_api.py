@@ -7,7 +7,6 @@ inheritance resolution and validation.
 
 import sys
 import os
-import uuid
 from uuid import uuid4
 
 sys.path.insert(

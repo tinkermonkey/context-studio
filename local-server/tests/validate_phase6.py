@@ -5,9 +5,7 @@ Tests the core functionality without requiring full test infrastructure.
 
 import sys
 import os
-import tempfile
 import json
-from datetime import datetime
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
@@ -123,7 +121,6 @@ def test_filter_statistics():
     try:
         from services.reference_filter_service import ReferenceFilterService
         from unittest.mock import Mock
-        from database.models import Predicate
 
         # Create mocks
         mock_session = Mock()

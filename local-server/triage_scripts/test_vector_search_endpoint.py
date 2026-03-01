@@ -4,7 +4,6 @@ Run this after starting the API server.
 """
 
 import requests
-import json
 
 # Configuration
 BASE_URL = "http://localhost:8000"
@@ -54,7 +53,7 @@ def test_search_endpoint():
                 print(f"   📏 Threshold: {data['threshold']}")
                 
                 if data['data']:
-                    print(f"\n   Top 3 Results:")
+                    print("\n   Top 3 Results:")
                     for j, pred in enumerate(data['data'][:3], 1):
                         print(f"      {j}. {pred['title']}")
                         print(f"         Similarity: {pred['similarity_score']:.2%}")
@@ -67,7 +66,7 @@ def test_search_endpoint():
                 print(f"   {response.text}")
                 
         except requests.exceptions.ConnectionError:
-            print(f"   ❌ Connection Error: Is the API server running?")
+            print("   ❌ Connection Error: Is the API server running?")
             return False
         except Exception as e:
             print(f"   ❌ Unexpected Error: {e}")

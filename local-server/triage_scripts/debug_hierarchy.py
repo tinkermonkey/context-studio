@@ -23,7 +23,7 @@ def main():
         print(f"Term {TERM_ID} not found!")
         return
 
-    print(f"\n=== Term Information ===")
+    print("\n=== Term Information ===")
     print(f"ID: {term.id}")
     print(f"Title: {term.title}")
     print(f"Type: {term.node_type.value}")
@@ -33,7 +33,7 @@ def main():
     if term.parent_node_id:
         domain = db.query(StructureNode).filter(StructureNode.id == term.parent_node_id).first()
         if domain:
-            print(f"\n=== Domain Information ===")
+            print("\n=== Domain Information ===")
             print(f"ID: {domain.id}")
             print(f"Title: {domain.title}")
             print(f"Type: {domain.node_type.value}")
@@ -43,14 +43,14 @@ def main():
             if domain.parent_node_id:
                 layer = db.query(StructureNode).filter(StructureNode.id == domain.parent_node_id).first()
                 if layer:
-                    print(f"\n=== Layer Information ===")
+                    print("\n=== Layer Information ===")
                     print(f"ID: {layer.id}")
                     print(f"Title: {layer.title}")
                     print(f"Type: {layer.node_type.value}")
                     print(f"Parent ID: {layer.parent_node_id}")
 
     # Create network service and check graph
-    print(f"\n=== Building NetworkX Graph ===")
+    print("\n=== Building NetworkX Graph ===")
     network_service = NetworkService(db)
     network_service._build_graph()
 
@@ -59,7 +59,7 @@ def main():
 
     # Check if our nodes exist in the graph
     term_graph_id = f"term:{TERM_ID}"
-    print(f"\n=== Checking Graph Nodes ===")
+    print("\n=== Checking Graph Nodes ===")
     print(f"Term node '{term_graph_id}' exists: {network_service.graph.has_node(term_graph_id)}")
 
     if term.parent_node_id and domain:
@@ -71,17 +71,17 @@ def main():
             print(f"Layer node '{layer_graph_id}' exists: {network_service.graph.has_node(layer_graph_id)}")
 
             # Check for edges
-            print(f"\n=== Checking Graph Edges ===")
+            print("\n=== Checking Graph Edges ===")
             print(f"Edge from layer to domain exists: {network_service.graph.has_edge(layer_graph_id, domain_graph_id)}")
             print(f"Edge from domain to term exists: {network_service.graph.has_edge(domain_graph_id, term_graph_id)}")
 
             # List all edges
-            print(f"\n=== All Edges in Graph ===")
+            print("\n=== All Edges in Graph ===")
             for edge in list(network_service.graph.edges(data=True))[:10]:
                 print(f"{edge[0]} -> {edge[1]}: {edge[2]}")
 
     # Test get_term_hierarchy
-    print(f"\n=== Testing get_term_hierarchy ===")
+    print("\n=== Testing get_term_hierarchy ===")
     hierarchy = network_service.get_term_hierarchy(TERM_ID)
     print(f"Ancestors: {len(hierarchy.get('ancestors', []))}")
     for ancestor in hierarchy.get('ancestors', []):

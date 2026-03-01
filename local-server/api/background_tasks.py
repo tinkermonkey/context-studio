@@ -9,7 +9,7 @@ from fastapi import APIRouter, HTTPException, status
 from pydantic import BaseModel, Field
 from typing import Any, Dict, List, Optional
 
-from services.task_manager import get_task_manager, TaskStatus
+from services.task_manager import get_task_manager
 from utils.logger import get_logger
 
 

@@ -10,11 +10,10 @@ Tests the FastAPI endpoints for:
 import pytest
 import tempfile
 import os
-from fastapi.testclient import TestClient
 from unittest.mock import patch, MagicMock
 import numpy as np
 
-from reference_db.models import ReferenceNode, ReferenceLink
+from reference_db.models import ReferenceLink
 from reference_db.config import ReferenceConfig
 from reference_db.manager import ReferenceManager
 
@@ -125,7 +124,6 @@ class TestVectorSearchAPI:
 
         # Create a custom context manager that uses our test database
         from contextlib import contextmanager
-        from reference_db.config import ReferenceConfig
         from reference_db.manager import ReferenceManager
 
         @contextmanager
@@ -164,7 +162,6 @@ class TestVectorSearchAPI:
 
         # Create a custom context manager that uses our test database
         from contextlib import contextmanager
-        from reference_db.config import ReferenceConfig
         from reference_db.manager import ReferenceManager
 
         @contextmanager
@@ -261,7 +258,6 @@ class TestVectorSearchAPI:
 
         # Create a custom context manager that uses our test database
         from contextlib import contextmanager
-        from reference_db.config import ReferenceConfig
         from reference_db.manager import ReferenceManager
 
         @contextmanager
@@ -327,7 +323,6 @@ class TestNodeRetrievalAPI:
 
         # Create a custom context manager that uses our test database
         from contextlib import contextmanager
-        from reference_db.config import ReferenceConfig
         from reference_db.manager import ReferenceManager
 
         @contextmanager
@@ -358,7 +353,6 @@ class TestNodeRetrievalAPI:
 
         # Create a custom context manager that uses our test database
         from contextlib import contextmanager
-        from reference_db.config import ReferenceConfig
         from reference_db.manager import ReferenceManager
 
         @contextmanager
@@ -385,7 +379,6 @@ class TestLinkRetrievalAPI:
 
         # Create a custom context manager that uses our test database
         from contextlib import contextmanager
-        from reference_db.config import ReferenceConfig
         from reference_db.manager import ReferenceManager
 
         @contextmanager
@@ -419,7 +412,6 @@ class TestLinkRetrievalAPI:
 
         # Create a custom context manager that uses our test database
         from contextlib import contextmanager
-        from reference_db.config import ReferenceConfig
         from reference_db.manager import ReferenceManager
 
         @contextmanager
@@ -451,7 +443,6 @@ class TestLinkRetrievalAPI:
 
         # Create a custom context manager that uses our test database
         from contextlib import contextmanager
-        from reference_db.config import ReferenceConfig
         from reference_db.manager import ReferenceManager
 
         @contextmanager
@@ -479,7 +470,6 @@ class TestLinkRetrievalAPI:
 
         # Create a custom context manager that uses our test database
         from contextlib import contextmanager
-        from reference_db.config import ReferenceConfig
         from reference_db.manager import ReferenceManager
 
         @contextmanager
@@ -514,7 +504,6 @@ class TestLinkRetrievalAPI:
 
         # Create a custom context manager that uses our test database
         from contextlib import contextmanager
-        from reference_db.config import ReferenceConfig
         from reference_db.manager import ReferenceManager
 
         @contextmanager
@@ -545,7 +534,6 @@ class TestLinkRetrievalAPI:
 
         # Create a custom context manager that uses our test database
         from contextlib import contextmanager
-        from reference_db.config import ReferenceConfig
         from reference_db.manager import ReferenceManager
 
         @contextmanager
@@ -571,7 +559,6 @@ class TestLinkRetrievalAPI:
 
         # Create a custom context manager that uses our test database
         from contextlib import contextmanager
-        from reference_db.config import ReferenceConfig
         from reference_db.manager import ReferenceManager
 
         @contextmanager
@@ -597,7 +584,6 @@ class TestLinkRetrievalAPI:
 
         # Create a custom context manager that uses our test database
         from contextlib import contextmanager
-        from reference_db.config import ReferenceConfig
         from reference_db.manager import ReferenceManager
 
         @contextmanager

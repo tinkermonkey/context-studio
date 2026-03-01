@@ -15,7 +15,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
 # Import only what we need for configuration testing
-from config import Settings, ConfigurationManager
+from config import ConfigurationManager
 
 
 def test_config_validation_enforcement():

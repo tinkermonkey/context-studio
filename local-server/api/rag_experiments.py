@@ -381,7 +381,7 @@ async def create_annotation(
                 )
             else:
                 logger.error(
-                    f"Failed to create annotation: invalid structure_node_id or character positions"
+                    "Failed to create annotation: invalid structure_node_id or character positions"
                 )
                 raise HTTPException(
                     status_code=status.HTTP_400_BAD_REQUEST,

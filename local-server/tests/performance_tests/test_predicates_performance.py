@@ -8,7 +8,6 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import pytest
 import time
 import json
-import uuid
 from statistics import mean, median
 from unittest.mock import Mock, patch
 from sqlalchemy import create_engine, text

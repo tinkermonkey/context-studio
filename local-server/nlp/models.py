@@ -1,7 +1,7 @@
 """
 Pydantic models for NLP analysis requests and responses.
 """
-from typing import List, Optional, Any, Dict
+from typing import List, Optional, Any
 from pydantic import BaseModel, Field
 
 class NLPAnalysisRequest(BaseModel):

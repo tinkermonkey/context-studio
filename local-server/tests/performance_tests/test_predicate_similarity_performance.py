@@ -13,7 +13,6 @@ import pytest
 import tempfile
 import os
 import time
-from datetime import date
 
 from reference_db.config import ReferenceConfig
 from reference_db.manager import ReferenceManager
@@ -105,7 +104,7 @@ class TestClusteringPerformance:
 
         elapsed = (time.perf_counter() - start_time) * 1000
 
-        print(f"\nClustering Performance (10 predicates):")
+        print("\nClustering Performance (10 predicates):")
         print(f"  Time: {elapsed:.2f}ms")
         print(f"  Clusters: {len(clusters)}")
 
@@ -143,7 +142,7 @@ class TestClusteringPerformance:
 
         elapsed = (time.perf_counter() - start_time) * 1000
 
-        print(f"\nClustering Performance (100 predicates):")
+        print("\nClustering Performance (100 predicates):")
         print(f"  Time: {elapsed:.2f}ms")
         print(f"  Clusters: {len(clusters)}")
 

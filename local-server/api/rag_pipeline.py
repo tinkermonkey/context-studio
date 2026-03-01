@@ -10,8 +10,7 @@ This module provides REST API endpoints for:
 """
 
 from fastapi import APIRouter, HTTPException, Depends, status
-from fastapi.responses import JSONResponse
-from typing import List, Dict, Any, Optional
+from typing import Dict, Any
 
 from rag.models import RAGExtractionRequest, RAGExtractionResponse
 from rag.rag_pipeline_service import RAGPipelineService

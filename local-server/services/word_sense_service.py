@@ -11,7 +11,7 @@ from sqlalchemy.orm import Session
 
 from database.models import StructureNode
 from api.models.structure_nodes import WordSense
-from nlp.models import NLPAnalysisResponse, TokenData
+from nlp.models import NLPAnalysisResponse
 from services.exceptions import ValidationError
 from utils.logger import get_logger
 

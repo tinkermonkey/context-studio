@@ -14,9 +14,8 @@ This module tests the complete import pipeline including:
 import os
 import json
 import time
-import tempfile
 import pytest
-from unittest.mock import Mock, patch, MagicMock
+from unittest.mock import Mock, patch
 from datetime import datetime, timedelta
 
 from reference_db.config import ReferenceConfig

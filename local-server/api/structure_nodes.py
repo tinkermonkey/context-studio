@@ -29,12 +29,12 @@ from services.node_service import NodeService
 from services.node_link_service import NodeLinkService
 from services.reference_link_service import ReferenceLinkService
 from services.word_sense_service import WordSenseService
-from services.exceptions import NotFoundError, ValidationError, ConflictError, CircularReferenceError, InvalidHierarchyError, ReferenceNotFoundError
+from services.exceptions import NotFoundError, ValidationError, ConflictError, ReferenceNotFoundError
 from api.models.structure_nodes import (
     NodeCreate, NodeUpdate, NodeOut, NodeLinkCreate, NodeLinkOut,
     NodeSearchRequest, NodeSearchResult, PaginatedNodesResponse, PaginatedNodeLinksResponse, NodeTypeEnum,
     MoveNodesRequest, MoveNodesResponse, ReferenceLink, WordSense, SelectedWordSensesUpdate,
-    StructureNodeAttribute, ResolvedAttribute, SetNodeAttributesRequest
+    ResolvedAttribute, SetNodeAttributesRequest
 )
 from api.utils.node_conversion import (
     to_node_out, to_node_link_out, nodes_to_paginated_response,

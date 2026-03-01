@@ -1,10 +1,5 @@
-import os
 import subprocess
 import sys
-import urllib.request
-import zipfile
-import tarfile
-from pathlib import Path
 from typing import Tuple, Optional
 from utils.logger import get_logger
 

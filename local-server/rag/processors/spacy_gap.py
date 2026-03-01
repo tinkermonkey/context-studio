@@ -4,7 +4,7 @@ Layer 2: spaCy Syntactic Gap Analysis Processor
 This processor identifies unrecognized concepts using spaCy grammatical analysis
 and TF-IDF filtering to reduce noise.
 """
-from typing import List, Dict, Any, Set
+from typing import List
 from collections import Counter
 import math
 

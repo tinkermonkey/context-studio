@@ -7,12 +7,8 @@ import sys
 import json
 import tempfile
 import os
-import subprocess
 import time
-import signal
 from pathlib import Path
-import pytest
-import requests
 
 # Add local-server to path for imports
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))

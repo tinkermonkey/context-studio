@@ -6,10 +6,9 @@ Tests the filtering of reference links based on predicate relevance.
 
 import os
 import sys
-import tempfile
 import pytest
 import json
-from unittest.mock import Mock, MagicMock, patch
+from unittest.mock import Mock, patch
 
 # Add parent directory to path for imports
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))

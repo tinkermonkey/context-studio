@@ -14,7 +14,7 @@ import uuid
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from enum import Enum
-from typing import Any, Callable, Dict, List, Optional, Awaitable, Protocol
+from typing import Any, Dict, List, Optional, Awaitable, Protocol
 from utils.logger import get_logger
 
 

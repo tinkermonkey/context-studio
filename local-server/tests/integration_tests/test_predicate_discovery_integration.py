@@ -15,14 +15,11 @@ import os
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 import pytest
-import asyncio
 import time
 from unittest.mock import patch, AsyncMock, Mock
-from typing import Dict, Any
 
 from reference_db.predicate_discovery import PredicateDiscoveryService, CONCEPTNET_RELATIONS
 from reference_db.config import ReferenceConfig
-from reference_db.manager import ReferenceManager
 from config import SourceConfig
 
 
@@ -264,7 +261,7 @@ class TestPredicateDiscoveryIntegration:
                 response.data = {
                     '@id': relation_path,
                     'label': relation_path.split('/')[-1],
-                    'comment': f"Original description"
+                    'comment': "Original description"
                 }
                 return response
 
@@ -282,7 +279,7 @@ class TestPredicateDiscoveryIntegration:
                 response.data = {
                     '@id': relation_path,
                     'label': relation_path.split('/')[-1],
-                    'comment': f"Updated description"
+                    'comment': "Updated description"
                 }
                 return response
 

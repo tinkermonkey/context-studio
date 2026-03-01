@@ -14,7 +14,7 @@ import pytest
 # Add local-server to path for imports
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
-from config import Settings, DatabaseConfig, ConfigurationManager
+from config import Settings, ConfigurationManager
 
 # Try to import db_utils, but make tests work without it
 try:

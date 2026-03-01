@@ -9,14 +9,10 @@ import os
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 import pytest
-import asyncio
 import time
-import tempfile
-from fastapi.testclient import TestClient
-from unittest.mock import patch, AsyncMock, Mock
+from unittest.mock import patch
 
 # Import the FastAPI app
-from app import app
 
 
 @pytest.fixture

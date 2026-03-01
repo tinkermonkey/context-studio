@@ -11,11 +11,11 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspa
 
 import json
 from unittest.mock import Mock
-from sqlalchemy import create_engine, text
+from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
 from database.models import Base, Predicate
-from reference_db.models import Base as ReferenceBase, ReferenceNode, ReferenceLink, ExternalPredicate as ReferencePredicate
+from reference_db.models import Base as ReferenceBase, ExternalPredicate as ReferencePredicate
 from services.reference_filter_service import ReferenceFilterService
 
 

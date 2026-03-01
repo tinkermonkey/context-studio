@@ -21,7 +21,7 @@ from database.models import StructureNode
 from database.enums import NodeType
 from graph.graph_service import GraphService
 from services.exceptions import InvalidHierarchyError, CircularReferenceError, NotFoundError
-from api.models.structure_nodes import StructureNodeAttribute, ResolvedAttribute
+from api.models.structure_nodes import StructureNodeAttribute
 
 
 @pytest.fixture

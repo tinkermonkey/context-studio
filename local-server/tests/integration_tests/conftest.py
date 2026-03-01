@@ -9,7 +9,6 @@ import sys
 import os
 import pytest
 from pathlib import Path
-from unittest.mock import MagicMock, patch, AsyncMock
 
 # Set up mock environment BEFORE any imports
 os.environ["OPENAI_API_KEY"] = "sk-test1234567890abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMN"

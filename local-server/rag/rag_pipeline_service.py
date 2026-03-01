@@ -4,7 +4,7 @@ RAG Pipeline Service
 This service orchestrates all four layers of the RAG pipeline with error handling,
 timeout enforcement, deduplication, and observability tracking.
 """
-from typing import List, Dict, Any, Optional, Tuple
+from typing import List, Dict
 from sqlalchemy.orm import Session
 import asyncio
 import time
@@ -13,7 +13,7 @@ from uuid import uuid4
 from difflib import SequenceMatcher
 from concurrent.futures import ThreadPoolExecutor
 
-from rag.models import RAGExtractionRequest, RAGExtractionResponse, ExtractedEntity, LayerMetrics, ProcessingMetrics
+from rag.models import RAGExtractionResponse, ExtractedEntity, LayerMetrics, ProcessingMetrics
 from rag.processors.models import ProcessorInput
 from rag.processors.kg_context import KGContextProcessor
 from rag.processors.llm_extraction import LLMExtractionProcessor

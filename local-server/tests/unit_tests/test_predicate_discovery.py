@@ -14,18 +14,13 @@ import os
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 import pytest
-import asyncio
-from unittest.mock import Mock, AsyncMock, patch, MagicMock
-from datetime import datetime, date
-from typing import Dict, Any
+from unittest.mock import Mock, AsyncMock, patch
+from datetime import date
 
 from reference_db.predicate_discovery import PredicateDiscoveryService, CONCEPTNET_RELATIONS
 from reference_db.models import ExternalPredicate
 from reference_db.config import ReferenceConfig
-from config import SourceConfig, SourceType
-from reference_api.sources.conceptnet import ConceptNetSource
-from reference_api.sources.dbpedia import DBpediaSource
-from reference_api.sources.wikidata import WikidataSource
+from config import SourceConfig
 
 
 @pytest.fixture

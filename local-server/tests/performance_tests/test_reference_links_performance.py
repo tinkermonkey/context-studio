@@ -97,7 +97,7 @@ def test_bulk_validation_performance(shared_client, test_nodes):
         f"Bulk validation took {elapsed_time:.2f}s (expected < {BULK_VALIDATION_TIMEOUT_SECONDS}s)"
 
     # Log performance metrics
-    print(f"\nBulk validation performance:")
+    print("\nBulk validation performance:")
     print(f"  - Nodes checked: {data['total_nodes_checked']}")
     print(f"  - Time elapsed: {elapsed_time:.2f}s")
     print(f"  - Nodes per second: {data['total_nodes_checked'] / elapsed_time:.2f}")
@@ -126,7 +126,7 @@ def test_individual_validation_performance(shared_client, test_nodes):
             f"Individual validation took {elapsed_time:.2f}s (expected < {INDIVIDUAL_VALIDATION_TIMEOUT_SECONDS}s)"
 
     avg_time = total_time / len(sample_nodes)
-    print(f"\nIndividual validation performance:")
+    print("\nIndividual validation performance:")
     print(f"  - Nodes tested: {len(sample_nodes)}")
     print(f"  - Average time per node: {avg_time:.3f}s")
     print(f"  - Total time: {total_time:.2f}s")
@@ -149,7 +149,7 @@ def test_get_reference_links_performance(shared_client, test_nodes):
     assert elapsed_time < BULK_FETCH_TIMEOUT_SECONDS, \
         f"Fetching {len(sample_nodes)} nodes took {elapsed_time:.2f}s (expected < {BULK_FETCH_TIMEOUT_SECONDS}s)"
 
-    print(f"\nGet reference links performance:")
+    print("\nGet reference links performance:")
     print(f"  - Nodes fetched: {len(sample_nodes)}")
     print(f"  - Time elapsed: {elapsed_time:.2f}s")
     print(f"  - Fetches per second: {len(sample_nodes) / elapsed_time:.2f}")
@@ -172,7 +172,7 @@ def test_get_word_senses_performance(shared_client, test_nodes):
     assert elapsed_time < BULK_FETCH_TIMEOUT_SECONDS, \
         f"Fetching {len(sample_nodes)} nodes took {elapsed_time:.2f}s (expected < {BULK_FETCH_TIMEOUT_SECONDS}s)"
 
-    print(f"\nGet word senses performance:")
+    print("\nGet word senses performance:")
     print(f"  - Nodes fetched: {len(sample_nodes)}")
     print(f"  - Time elapsed: {elapsed_time:.2f}s")
     print(f"  - Fetches per second: {len(sample_nodes) / elapsed_time:.2f}")
@@ -196,7 +196,7 @@ def test_bulk_validation_with_no_existence_check_faster(shared_client, test_node
     time_no_check = time.time() - start_no_check
     assert resp2.status_code == 200
 
-    print(f"\nExistence check performance comparison:")
+    print("\nExistence check performance comparison:")
     print(f"  - With existence check: {time_with_check:.2f}s")
     print(f"  - Without existence check: {time_no_check:.2f}s")
     print(f"  - Speedup factor: {time_with_check / time_no_check:.2f}x")
@@ -226,7 +226,7 @@ def test_scalability_100_plus_nodes(shared_client, test_nodes):
 
         assert resp.status_code == 200
 
-    print(f"\nScalability test results:")
+    print("\nScalability test results:")
     for batch_size, elapsed_time in zip(batch_sizes, times):
         print(f"  - {batch_size} nodes: {elapsed_time:.2f}s ({elapsed_time/batch_size:.4f}s per node)")
 

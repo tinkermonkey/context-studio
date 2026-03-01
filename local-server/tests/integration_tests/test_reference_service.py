@@ -11,12 +11,8 @@ from datetime import datetime, UTC
 
 from reference_api.service import ReferenceService
 from reference_api.models import (
-    SourceType, SearchNode, SearchLink, MultiSourceSearchResponse,
-    DBpediaSearchRequest, DBpediaResourceRequest, DBpediaSparqlRequest,
-    ConceptNetQueryRequest, WikidataSparqlRequest, WikidataEntityRequest, WikidataSearchRequest,
-    SchemaOrgSearchRequest, SchemaOrgEntityRequest, SchemaOrgPropertyRequest,
-    DBpediaSearchResponse, DBpediaSearchResult, ConceptNetQueryResponse, ConceptNetEdge,
-    WikidataSparqlResponse, SchemaOrgSearchResponse, SchemaOrgSearchResult
+    SourceType, MultiSourceSearchResponse,
+    DBpediaSearchRequest, ConceptNetQueryRequest, WikidataSparqlRequest, SchemaOrgSearchRequest, DBpediaSearchResponse, DBpediaSearchResult, ConceptNetQueryResponse, WikidataSparqlResponse, SchemaOrgSearchResponse, SchemaOrgSearchResult
 )
 from config import ConfigurationManager
 

@@ -6,15 +6,10 @@ import os
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 import pytest
-import asyncio
-from unittest.mock import Mock, AsyncMock, patch, MagicMock
-from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker
+from unittest.mock import Mock, patch
 
 from rag.rag_pipeline_service import RAGPipelineService
-from rag.models import RAGExtractionRequest
 from rag.processors.models import (
-    ProcessorInput,
     KGContextOutput,
     LLMExtractionOutput,
     SpaCyGapOutput,

@@ -15,7 +15,6 @@ import sys
 import os
 import pytest
 import asyncio
-from datetime import datetime, timezone
 
 # Add parent directory to path for imports
 sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))

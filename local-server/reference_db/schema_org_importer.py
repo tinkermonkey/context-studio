@@ -18,9 +18,8 @@ import json
 import time
 import logging
 import tempfile
-from pathlib import Path
 from typing import List, Dict, Any, Optional, Tuple
-from datetime import datetime, timedelta
+from datetime import datetime
 from uuid import uuid4
 
 import requests
@@ -542,7 +541,7 @@ class SchemaOrgImporter:
 
                 except Exception as e:
                     logger.error(
-                        f"Embedding generation failed",
+                        "Embedding generation failed",
                         extra={
                             "external_id": item.get("@id", "unknown"),
                             "error": str(e)
@@ -553,7 +552,7 @@ class SchemaOrgImporter:
         # Fail-fast behavior (TC-I001)
         if failed_items:
             logger.error(
-                f"Embedding generation failed",
+                "Embedding generation failed",
                 extra={
                     "failed_count": len(failed_items),
                     "failed_ids": failed_items

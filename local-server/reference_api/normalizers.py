@@ -4,9 +4,7 @@ This module provides normalization logic to convert source-specific responses
 into standardized SearchNode and SearchLink objects.
 """
 
-from typing import List, Tuple, Dict, Any, Optional, Set
-import time
-from datetime import datetime, UTC
+from typing import List, Tuple
 
 from .models import (
     SourceType, SearchNode, SearchLink,

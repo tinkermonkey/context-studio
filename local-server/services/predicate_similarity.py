@@ -19,7 +19,6 @@ Performance targets:
 - <5 seconds for index warm-up (PT-VS-007)
 """
 
-import logging
 import time
 import hashlib
 import json
@@ -28,7 +27,6 @@ from dataclasses import dataclass
 from collections import defaultdict
 
 import numpy as np
-from sqlalchemy.orm import Session
 from sklearn.cluster import DBSCAN
 from cachetools import TTLCache
 

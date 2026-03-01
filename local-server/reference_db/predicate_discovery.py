@@ -15,12 +15,10 @@ import psutil
 import numpy as np
 from typing import List, Dict, Any, Optional, Tuple
 from datetime import datetime, UTC, date
-from uuid import uuid4
 
 from reference_api.sources.conceptnet import ConceptNetSource
 from reference_api.sources.dbpedia import DBpediaSource
 from reference_api.sources.wikidata import WikidataSource
-from reference_api.sources.base import BaseReferenceSource
 from reference_db.manager import ReferenceManager
 from reference_db.models import ExternalPredicate
 from reference_db.config import ReferenceConfig

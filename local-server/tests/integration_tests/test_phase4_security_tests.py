@@ -13,14 +13,10 @@ import tempfile
 import os
 import numpy as np
 from fastapi.testclient import TestClient
-from unittest.mock import patch
 import logging
 
 from reference_db.config import ReferenceConfig
 from reference_db.manager import ReferenceManager
-from reference_db.models import ReferenceNode
-from uuid import uuid4
-from datetime import date
 
 
 @pytest.fixture(scope="module")

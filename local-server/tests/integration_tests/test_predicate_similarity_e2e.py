@@ -13,7 +13,6 @@ This test suite validates complete user workflows and integration scenarios:
 import pytest
 import tempfile
 import os
-import time
 from uuid import uuid4
 
 from fastapi.testclient import TestClient
@@ -719,7 +718,7 @@ class TestCompleteWorkflows:
         total_clustered = cluster_data["total_predicates"]
         total_clusters = cluster_data["total_clusters"]
 
-        print(f"\nWorkflow Results:")
+        print("\nWorkflow Results:")
         print(f"  Searches performed: {len(search_results)}")
         print(f"  Clusters found: {total_clusters}")
         print(f"  Predicates clustered: {total_clustered}")

@@ -1,11 +1,11 @@
 from fastapi import APIRouter, Depends, HTTPException, Path, Query
 from sqlalchemy.orm import Session
 from pydantic import BaseModel
-from typing import Optional, Dict, Any, List
+from typing import Optional, Dict, Any
 from datetime import datetime
 
 from database.utils import get_db
-from services.service_factory import get_service_factory, get_incremental_sync_engine_via_factory
+from services.service_factory import get_service_factory
 from utils.logger import get_logger
 
 logger = get_logger(__name__)

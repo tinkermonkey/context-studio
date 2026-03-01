@@ -5,9 +5,9 @@ This includes pipeline configurations, audit logs, and task management.
 """
 
 import os
-from sqlalchemy import create_engine, text
+from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
-from sqlalchemy.pool import StaticPool, NullPool
+from sqlalchemy.pool import NullPool
 
 from utils.logger import get_logger
 

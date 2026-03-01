@@ -10,10 +10,7 @@ sys.path.append(
 import pytest
 from sqlalchemy import text
 from services.change_event_handler import ChangeEventHandler
-from utils.event_processor import EventProcessor
-from database.models import ChangeEvent
 from database.enums import RecordType
-import time
 import json
 from uuid import uuid4
 

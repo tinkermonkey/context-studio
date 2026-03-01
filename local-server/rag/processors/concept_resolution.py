@@ -4,7 +4,7 @@ Layer 3: Concept Resolution Processor
 This processor resolves unrecognized concepts through knowledge graph matching
 and strategic web search with rate limiting.
 """
-from typing import List, Dict, Any, Optional
+from typing import Dict, Optional
 from sqlalchemy.orm import Session
 from sqlalchemy import text
 import numpy as np

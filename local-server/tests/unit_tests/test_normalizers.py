@@ -10,10 +10,8 @@ from unittest.mock import Mock
 
 from reference_api.normalizers import ResultNormalizer
 from reference_api.models import (
-    SourceType, SearchNode, SearchLink,
-    DBpediaSearchResponse, DBpediaSearchResult, DBpediaResourceResponse, DBpediaSparqlResponse,
-    ConceptNetQueryResponse, ConceptNetEdge, ConceptNetConceptResponse, ConceptNetRelatedResponse,
-    ConceptNetRelatedConcept, WikidataSparqlResponse, WikidataEntityResponse,
+    SourceType, DBpediaSearchResponse, DBpediaSearchResult, DBpediaResourceResponse, ConceptNetQueryResponse, ConceptNetConceptResponse, ConceptNetRelatedResponse,
+    WikidataSparqlResponse, WikidataEntityResponse,
     SchemaOrgSearchResponse, SchemaOrgSearchResult, SchemaOrgEntityResponse, SchemaOrgEntity,
     SchemaOrgPropertyResponse, SchemaOrgPropertyData
 )

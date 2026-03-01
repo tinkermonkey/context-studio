@@ -12,14 +12,12 @@ import os
 import sys
 import tempfile
 import pytest
-from uuid import uuid4
 
 # Add parent directory to path for imports
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from reference_db.config import ReferenceConfig
 from reference_db.manager import ReferenceManager
-from reference_db.models import ExternalPredicate
 
 
 class TestExternalPredicatesIntegration:

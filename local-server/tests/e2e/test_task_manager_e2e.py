@@ -10,20 +10,16 @@ import sys
 import os
 import pytest
 import asyncio
-import time
 from fastapi.testclient import TestClient
 
 # Add parent directory to path for imports
 sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
 from services.task_manager import (
-    TaskManager,
     TaskStatus,
     initialize_task_manager,
-    shutdown_task_manager,
-    get_task_manager
+    shutdown_task_manager
 )
-from app import create_app
 from api import background_tasks
 
 

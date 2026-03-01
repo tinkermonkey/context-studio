@@ -7,10 +7,8 @@ the /datafiles/ directory before attempting to create or access database files.
 
 import os
 import tempfile
-import shutil
 import pytest
 from unittest.mock import patch, MagicMock
-from pathlib import Path
 
 
 class TestPipelineDatabaseManager:

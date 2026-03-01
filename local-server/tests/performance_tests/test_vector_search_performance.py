@@ -9,7 +9,6 @@ import tempfile
 import os
 import time
 import statistics
-from datetime import date
 
 from reference_db.config import ReferenceConfig
 from reference_db.manager import ReferenceManager
@@ -164,17 +163,17 @@ class TestVectorSearchLatency:
         p95_time = statistics.quantiles(search_times, n=20)[18]  # 95th percentile
 
         print(f"\n{'='*60}")
-        print(f"Vector Search Performance Test Results (TC-P002, TC-S003)")
+        print("Vector Search Performance Test Results (TC-P002, TC-S003)")
         print(f"{'='*60}")
         print(f"Dataset size: {len(test_queries)} queries against {90}+ entities")
-        print(f"Search limit: 20 results")
-        print(f"\nLatency Statistics:")
+        print("Search limit: 20 results")
+        print("\nLatency Statistics:")
         print(f"  Average:    {avg_time:6.2f} ms")
         print(f"  Median:     {median_time:6.2f} ms")
         print(f"  Min:        {min_time:6.2f} ms")
         print(f"  Max:        {max_time:6.2f} ms")
         print(f"  P95:        {p95_time:6.2f} ms")
-        print(f"\nRequirement: <50ms for top-20 queries")
+        print("\nRequirement: <50ms for top-20 queries")
         print(f"Status: {'PASS' if avg_time < 50.0 else 'FAIL'}")
         print(f"{'='*60}\n")
 
@@ -222,7 +221,7 @@ class TestVectorSearchLatency:
 
             times[limit] = statistics.mean(measurements)
 
-        print(f"\nSearch Scaling Test:")
+        print("\nSearch Scaling Test:")
         for limit, avg_time in times.items():
             print(f"  Limit {limit:3d}: {avg_time:6.2f} ms")
 
@@ -280,7 +279,7 @@ class TestVectorSearchLatency:
         avg_no_threshold = statistics.mean(no_threshold_times)
         avg_with_threshold = statistics.mean(with_threshold_times)
 
-        print(f"\nThreshold Filtering Performance:")
+        print("\nThreshold Filtering Performance:")
         print(f"  No threshold (0.0):   {avg_no_threshold:6.2f} ms")
         print(f"  With threshold (0.8): {avg_with_threshold:6.2f} ms")
         print(f"  Overhead:             {avg_with_threshold - avg_no_threshold:6.2f} ms")

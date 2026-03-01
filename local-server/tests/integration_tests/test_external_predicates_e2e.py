@@ -13,7 +13,6 @@ import os
 import sys
 import tempfile
 import pytest
-import json
 
 # Add parent directory to path for imports
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))

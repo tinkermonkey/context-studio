@@ -12,7 +12,6 @@ Run this before running the Schema.org import with the refactored importer.
 """
 
 import sys
-import os
 from pathlib import Path
 
 # Add parent directory to path for imports

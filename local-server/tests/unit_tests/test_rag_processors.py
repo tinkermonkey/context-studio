@@ -8,9 +8,8 @@ import os
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
 import pytest
-from unittest.mock import Mock, MagicMock, patch, PropertyMock
+from unittest.mock import Mock, patch
 import numpy as np
-from datetime import datetime
 
 from rag.processors.models import (
     ProcessorInput,
@@ -18,12 +17,9 @@ from rag.processors.models import (
     LLMExtractionOutput,
     SpaCyGapOutput,
     ConceptResolutionOutput,
-    ExtractedPhrase,
-    ExtractedEntity,
     KGNode,
     GapConcept,
     GapPriority,
-    ResolvedConcept,
     ResolutionMethod
 )
 

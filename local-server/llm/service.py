@@ -7,7 +7,6 @@ import os
 import time
 import asyncio
 import string
-import json
 from langchain.chat_models import init_chat_model
 from langchain_core.messages import HumanMessage, SystemMessage
 from openai import RateLimitError, APITimeoutError, APIError, AuthenticationError
@@ -50,7 +49,7 @@ class LLMService:
         # Validate configuration on startup
         self._validate_configuration()
 
-        self.logger.info(f"LLM Service initialized with dynamic provider routing")
+        self.logger.info("LLM Service initialized with dynamic provider routing")
 
     def _validate_configuration(self):
         """Validate that at least one enabled model has a valid API key configured"""

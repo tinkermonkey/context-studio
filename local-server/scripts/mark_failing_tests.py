@@ -177,7 +177,7 @@ def ensure_pytest_import(file_path: Path) -> None:
                 break
     
     file_path.write_text('\n'.join(lines))
-    print(f"  ✓ Added pytest import")
+    print("  ✓ Added pytest import")
 
 
 def main():
@@ -205,10 +205,10 @@ def main():
                 total_marked += 1
     
     print(f"\n✅ Marked {total_marked} tests with @pytest.mark.skip_suite")
-    print(f"\nTo run tests without the failing ones:")
-    print(f"  pytest tests/integration_tests/ -m 'not skip_suite'")
-    print(f"\nTo run only the marked tests:")
-    print(f"  pytest tests/integration_tests/ -m 'skip_suite'")
+    print("\nTo run tests without the failing ones:")
+    print("  pytest tests/integration_tests/ -m 'not skip_suite'")
+    print("\nTo run only the marked tests:")
+    print("  pytest tests/integration_tests/ -m 'skip_suite'")
 
 
 if __name__ == "__main__":

@@ -11,7 +11,6 @@ import pytest
 import tempfile
 import os
 import uuid
-from datetime import date
 
 from fastapi.testclient import TestClient
 from sqlalchemy import create_engine

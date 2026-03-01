@@ -79,7 +79,7 @@ async def test_dbpedia_lookup():
         
         # Create source instance
         async with DBpediaSource(SourceType.DBPEDIA, lookup_config) as source:
-            print(f"📡 Testing search for 'Python'...")
+            print("📡 Testing search for 'Python'...")
             
             # Test search
             response = await source.search("Python", limit=3)
@@ -115,7 +115,7 @@ async def test_dbpedia_sparql():
         
         # Create source instance
         async with DBpediaSource(SourceType.DBPEDIA, sparql_config) as source:
-            print(f"📡 Testing SPARQL query for RDF properties...")
+            print("📡 Testing SPARQL query for RDF properties...")
             
             # Simple SPARQL query to get a few properties
             sparql_query = """
@@ -133,7 +133,7 @@ async def test_dbpedia_sparql():
             response = await source.sparql_query(sparql_query, format='json')
             
             if response.success:
-                print(f"✅ SPARQL query successful!")
+                print("✅ SPARQL query successful!")
                 if response.results:
                     # Handle different response formats
                     if isinstance(response.results, dict):
@@ -182,19 +182,19 @@ async def test_proxy_routing():
             
             if 'dbpedia_lookup' in mappings:
                 lookup_mapping = mappings['dbpedia_lookup']
-                print(f"✅ dbpedia_lookup mapping:")
+                print("✅ dbpedia_lookup mapping:")
                 print(f"   → Upstream: {lookup_mapping['upstream']}")
                 print(f"   → Keys: {lookup_mapping.get('enabled_keys', [])}")
             else:
-                print(f"⚠️  dbpedia_lookup not in proxy mappings (proxy may be disabled)")
+                print("⚠️  dbpedia_lookup not in proxy mappings (proxy may be disabled)")
             
             if 'dbpedia_sparql' in mappings:
                 sparql_mapping = mappings['dbpedia_sparql']
-                print(f"✅ dbpedia_sparql mapping:")
+                print("✅ dbpedia_sparql mapping:")
                 print(f"   → Upstream: {sparql_mapping['upstream']}")
                 print(f"   → Keys: {sparql_mapping.get('enabled_keys', [])}")
             else:
-                print(f"⚠️  dbpedia_sparql not in proxy mappings (proxy may be disabled)")
+                print("⚠️  dbpedia_sparql not in proxy mappings (proxy may be disabled)")
             
             return True
         else:

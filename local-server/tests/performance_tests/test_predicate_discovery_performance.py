@@ -18,7 +18,6 @@ import asyncio
 import time
 import psutil
 from unittest.mock import patch, AsyncMock, Mock
-from typing import Dict, Any
 
 from reference_db.predicate_discovery import PredicateDiscoveryService, CONCEPTNET_RELATIONS
 from reference_db.config import ReferenceConfig
@@ -456,7 +455,7 @@ class TestRateLimitingBehavior:
                 response.data = {
                     '@id': relation_path,
                     'label': relation_path.split('/')[-1],
-                    'comment': f"Description"
+                    'comment': "Description"
                 }
                 return response
 

@@ -11,8 +11,7 @@ import pytest
 import tempfile
 import os
 import numpy as np
-from fastapi.testclient import TestClient
-from unittest.mock import patch, MagicMock
+from unittest.mock import patch
 
 from reference_db.config import ReferenceConfig
 from reference_db.manager import ReferenceManager
@@ -22,7 +21,6 @@ from reference_db.manager import ReferenceManager
 def e2e_test_database():
     """Create a comprehensive test database for E2E testing."""
     # Create a unique temporary database path (don't create the file yet)
-    import tempfile
     temp_dir = tempfile.gettempdir()
     db_path = os.path.join(temp_dir, f"test_ref_db_{os.getpid()}_{id(os)}.db")
 
@@ -195,7 +193,6 @@ class TestSemanticDiscoveryWorkflow:
 
         # Create a custom context manager that uses our test database
         from contextlib import contextmanager
-        from reference_db.config import ReferenceConfig
         from reference_db.manager import ReferenceManager
 
         @contextmanager
@@ -270,7 +267,6 @@ class TestSemanticDiscoveryWorkflow:
 
         # Create a custom context manager that uses our test database
         from contextlib import contextmanager
-        from reference_db.config import ReferenceConfig
         from reference_db.manager import ReferenceManager
 
         @contextmanager
@@ -341,7 +337,6 @@ class TestSemanticDiscoveryWorkflow:
 
         # Create a custom context manager that uses our test database
         from contextlib import contextmanager
-        from reference_db.config import ReferenceConfig
         from reference_db.manager import ReferenceManager
 
         @contextmanager
@@ -399,7 +394,6 @@ class TestErrorRecoveryWorkflows:
 
         # Create a custom context manager that uses our test database
         from contextlib import contextmanager
-        from reference_db.config import ReferenceConfig
         from reference_db.manager import ReferenceManager
 
         @contextmanager
@@ -437,7 +431,6 @@ class TestErrorRecoveryWorkflows:
 
         # Create a custom context manager that uses our test database
         from contextlib import contextmanager
-        from reference_db.config import ReferenceConfig
         from reference_db.manager import ReferenceManager
 
         @contextmanager
@@ -532,7 +525,6 @@ class TestPerformanceWorkflows:
 
         # Create a custom context manager that uses our test database
         from contextlib import contextmanager
-        from reference_db.config import ReferenceConfig
         from reference_db.manager import ReferenceManager
 
         @contextmanager
@@ -575,7 +567,6 @@ class TestPerformanceWorkflows:
 
         # Create a custom context manager that uses our test database
         from contextlib import contextmanager
-        from reference_db.config import ReferenceConfig
         from reference_db.manager import ReferenceManager
 
         @contextmanager

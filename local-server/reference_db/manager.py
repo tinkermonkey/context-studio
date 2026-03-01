@@ -10,7 +10,6 @@ import shutil
 import logging
 import threading
 from datetime import date
-from pathlib import Path
 from typing import Optional, List, Dict, Any, Literal
 from uuid import uuid4
 import sqlite3
@@ -20,7 +19,7 @@ from sqlalchemy.orm import sessionmaker, Session
 from sqlalchemy.exc import OperationalError
 from sqlalchemy.pool import NullPool
 
-from database.utils import get_engine, init_db
+from database.utils import init_db
 from reference_db.models import Base, ReferenceNode, ReferenceLink, ExternalPredicate
 from reference_db.config import ReferenceConfig, REFERENCE_SCHEMA_VERSION
 from embeddings.generate_embeddings import generate_embedding
@@ -501,7 +500,7 @@ class ReferenceManager:
             self._validate_embedding_dimensions(title_embedding, embedding_dims)
             
         if definition_embedding is None:
-            logger.debug(f"Generating embedding for definition")
+            logger.debug("Generating embedding for definition")
             definition_embedding = generate_embedding(definition)
         else:
             self._validate_embedding_dimensions(definition_embedding, embedding_dims)
@@ -958,7 +957,7 @@ class ReferenceManager:
             self._validate_embedding_dimensions(title_embedding, embedding_dims)
 
         if definition_embedding is None:
-            logger.debug(f"Generating embedding for predicate definition")
+            logger.debug("Generating embedding for predicate definition")
             definition_embedding = generate_embedding(definition)
         else:
             self._validate_embedding_dimensions(definition_embedding, embedding_dims)

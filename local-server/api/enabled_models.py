@@ -8,7 +8,6 @@ from pydantic import BaseModel
 
 from llm.enabled_models import (
     EnabledModelConfig,
-    EnabledModelsManager,
     ProviderType,
     get_enabled_models_manager
 )

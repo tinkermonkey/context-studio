@@ -3,7 +3,6 @@
 import datetime
 import json
 import time
-import asyncio
 from fastapi import APIRouter, HTTPException, Query, Depends, BackgroundTasks
 from pydantic import BaseModel, Field, ConfigDict
 from typing import List, Optional, Dict, Any
@@ -14,9 +13,9 @@ from sqlalchemy.exc import IntegrityError
 from database import models
 from database.utils import get_db
 from database.predicate_utils import generate_identifier_from_title, import_conceptnet_predicates, get_conceptnet_relation_for_predicate, validate_predicate_identifier
-from database.mapping_validation import validate_mapping, validate_mapping_json
+from database.mapping_validation import validate_mapping
 from config import get_settings, get_config_manager
-from api.api_errors import validation_error_response, conflict_error_response, bad_request_error_response
+from api.api_errors import bad_request_error_response
 from utils.logger import get_logger
 
 logger = get_logger("predicates_api")
@@ -831,7 +830,6 @@ def find_similar_predicates(
     Returns:
         FindSimilarResponse with ranked similarity results
     """
-    import time
     from services.predicate_similarity import PredicateSimilarityService
     from reference_db.dependencies import reference_manager_context
     from reference_db.config import ReferenceConfig
@@ -970,7 +968,6 @@ def cluster_predicates(
     Returns:
         ClusterPredicatesResponse with clusters and statistics
     """
-    import time
     from services.predicate_similarity import PredicateSimilarityService
     from reference_db.dependencies import reference_manager_context
     from reference_db.config import ReferenceConfig

@@ -115,7 +115,7 @@ def test_title_change_triggers_word_sense_update(shared_client):
         assert isinstance(sense["sense_id"], str)
 
     # Log results for debugging
-    print(f"\nWord sense update test results:")
+    print("\nWord sense update test results:")
     print(f"  Initial word senses: {len(after_creation_word_senses)}")
     print(f"  After title change: {len(final_word_senses)}")
     print(f"  Original title: '{original_title}'")
@@ -198,7 +198,7 @@ def test_multiple_title_changes_handled_correctly(shared_client):
     word_senses = word_senses_resp.json()
     assert isinstance(word_senses, list)
 
-    print(f"\nMultiple title changes test:")
+    print("\nMultiple title changes test:")
     print(f"  Final title: '{final_node['title']}'")
     print(f"  Word senses count: {len(word_senses)}")
 
