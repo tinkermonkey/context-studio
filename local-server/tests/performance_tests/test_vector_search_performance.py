@@ -143,7 +143,7 @@ class TestVectorSearchLatency:
             start_time = time.perf_counter()
 
             # Use a lambda that returns the pre-generated embedding
-            manager.search_by_similarity(
+            _ = manager.search_by_similarity(
                 query_text=query,
                 limit=20,
                 threshold=0.0,
@@ -209,7 +209,7 @@ class TestVectorSearchLatency:
             for _ in range(5):  # Multiple measurements for stability
                 start_time = time.perf_counter()
 
-                manager.search_by_similarity(
+                _ = manager.search_by_similarity(
                     query_text="test",
                     limit=limit,
                     threshold=0.0,
@@ -256,7 +256,7 @@ class TestVectorSearchLatency:
         no_threshold_times = []
         for _ in range(10):
             start = time.perf_counter()
-            manager.search_by_similarity(
+            _ = manager.search_by_similarity(
                 query_text="test",
                 limit=20,
                 threshold=0.0,
@@ -268,7 +268,7 @@ class TestVectorSearchLatency:
         with_threshold_times = []
         for _ in range(10):
             start = time.perf_counter()
-            manager.search_by_similarity(
+            _ = manager.search_by_similarity(
                 query_text="test",
                 limit=20,
                 threshold=0.8,
