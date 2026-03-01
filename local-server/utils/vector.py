@@ -8,7 +8,7 @@ def decode_emb(emb):
     if isinstance(emb, bytes):
         return np.frombuffer(emb, dtype=np.float32).tolist()
     return emb
-import numpy as np
+import numpy as np  # noqa: E402
 
 def cosine_similarity(vec1, vec2):
     if vec1 is None or vec2 is None:

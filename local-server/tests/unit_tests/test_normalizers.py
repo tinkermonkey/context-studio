@@ -189,13 +189,13 @@ class TestResultNormalizer:
         assert animal_node.id == "conceptnet:/c/en/animal"
 
         # Check links
-        isa_link = next(l for l in links if l.predicate == "IsA")
+        isa_link = next(lnk for lnk in links if lnk.predicate == "IsA")
         assert isa_link.source == SourceType.CONCEPTNET
         assert isa_link.subject == "conceptnet:/c/en/dog"
         assert isa_link.object == "conceptnet:/c/en/animal"
         assert isa_link.weight == 0.8
 
-        external_link = next(l for l in links if l.predicate == "externalURL")
+        external_link = next(lnk for lnk in links if lnk.predicate == "externalURL")
         assert external_link.source == SourceType.CONCEPTNET
         assert external_link.subject == "conceptnet:/c/en/dog"
         assert external_link.object == "dbpedia:http://dbpedia.org/resource/Dog"

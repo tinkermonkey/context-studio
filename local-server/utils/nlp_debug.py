@@ -29,8 +29,8 @@ parent_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 print(f"Adding {parent_dir} to sys.path")
 sys.path.insert(0, parent_dir)
 
-from nlp.pipeline import get_pipeline
-from nlp.processors import process_nlp_result
+from nlp.pipeline import get_pipeline  # noqa: E402
+from nlp.processors import process_nlp_result  # noqa: E402
 
 def main():
     if len(sys.argv) < 2:
