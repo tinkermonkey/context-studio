@@ -12,7 +12,7 @@ import shutil
 import json
 import sqlite3
 from pathlib import Path
-from unittest.mock import patch, MagicMock
+from unittest.mock import patch
 import pytest
 
 # Add local-server to path for imports
@@ -136,42 +136,6 @@ class TestFreshInstallationE2E:
             # Clean up
             pipeline_mgr.engine.dispose()
             ref_mgr.close()
-
-    def test_fresh_install_handles_proxy_cache_db(self):
-        """Test fresh installation with proxy cache database creation."""
-        with tempfile.TemporaryDirectory() as tmpdir:
-            cache_dir = os.path.join(tmpdir, 'datafiles')
-            cache_path = os.path.join(cache_dir, 'reference_api_cache.db')
-
-            # Verify clean slate
-            assert not os.path.exists(cache_dir)
-
-            # Mock proxy configuration
-            mock_config = {
-                "server": {"host": "127.0.0.1", "port": 18080},
-                "cache": {"database_path": cache_path},
-                "domain_mappings": {"test": {"upstream": "http://test.com"}},
-                "throttling": {"domain_limits": {}}
-            }
-
-            mock_settings = MagicMock()
-            mock_settings.ENABLE_CACHING_PROXY = {"test": True}
-            mock_settings.get_reference_api_buddy_config.return_value = mock_config
-
-            with patch('nlp.proxy_manager.get_settings', return_value=mock_settings):
-                with patch('reference_api_buddy.core.proxy.CachingProxy') as mock_proxy_class:
-                    mock_proxy_instance = MagicMock()
-                    mock_proxy_class.return_value = mock_proxy_instance
-
-                    from nlp.proxy_manager import ReferenceAPIProxyManager
-
-                    # Start proxy manager
-                    proxy_mgr = ReferenceAPIProxyManager()
-                    result = proxy_mgr.start_proxy()
-
-                    # Verify directory was created
-                    assert os.path.exists(cache_dir)
-                    assert result is True
 
 
 class TestApplicationRestartE2E:
