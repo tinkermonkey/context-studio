@@ -44,6 +44,7 @@ module = [
     "spacy_dbpedia_spotlight.*",
     "spacyfishing.*",
     "spacysee.*",
+    "sqlalchemy.*",
     "thinc.*",
     "torch.*",
     "transformers.*",

@@ -1,13 +1,14 @@
 from sqlalchemy import Column, String, Text, Integer, DateTime, ForeignKey, UniqueConstraint
 from sqlalchemy.dialects.sqlite import BLOB
 from sqlalchemy.orm import declarative_base, relationship
+from typing import Any
 import uuid
 import datetime
 
 from sqlalchemy import JSON, Boolean
 from database.custom_types import NodeTypeColumn, RecordTypeColumn
 
-Base = declarative_base()
+Base: Any = declarative_base()
 
 # Enums for the new normalized schema (moved to database.enums to avoid circular imports)
 
