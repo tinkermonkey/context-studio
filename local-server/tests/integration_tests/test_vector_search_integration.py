@@ -13,9 +13,10 @@ import time
 from reference_db.config import ReferenceConfig
 from reference_db.manager import ReferenceManager
 
-
 # Skip if embeddings not available
-pytest.importorskip("embeddings.generate_embeddings", reason="embeddings module not available")
+pytest.importorskip(
+    "embeddings.generate_embeddings", reason="embeddings module not available"
+)
 
 
 @pytest.fixture(scope="module")
@@ -38,77 +39,69 @@ def manager_with_schema_org_data():
         {
             "title": "Person",
             "definition": "A person (alive, dead, undead, or fictional).",
-            "external_id": "Person"
+            "external_id": "Person",
         },
         {
             "title": "Organization",
             "definition": "An organization such as a school, NGO, corporation, club, etc.",
-            "external_id": "Organization"
+            "external_id": "Organization",
         },
         {
             "title": "CreativeWork",
             "definition": "The most generic kind of creative work, including books, movies, photographs, software programs, etc.",
-            "external_id": "CreativeWork"
+            "external_id": "CreativeWork",
         },
         {
             "title": "Event",
             "definition": "An event happening at a certain time and location, such as a concert, lecture, or festival.",
-            "external_id": "Event"
+            "external_id": "Event",
         },
         {
             "title": "Place",
             "definition": "Entities that have a somewhat fixed, physical extension.",
-            "external_id": "Place"
+            "external_id": "Place",
         },
         {
             "title": "Product",
             "definition": "Any offered product or service. For example: a pair of shoes; a concert ticket; the rental of a car.",
-            "external_id": "Product"
+            "external_id": "Product",
         },
-        {
-            "title": "Book",
-            "definition": "A book.",
-            "external_id": "Book"
-        },
-        {
-            "title": "Movie",
-            "definition": "A movie.",
-            "external_id": "Movie"
-        },
+        {"title": "Book", "definition": "A book.", "external_id": "Book"},
+        {"title": "Movie", "definition": "A movie.", "external_id": "Movie"},
         {
             "title": "MusicRecording",
             "definition": "A music recording (track), usually a single song.",
-            "external_id": "MusicRecording"
+            "external_id": "MusicRecording",
         },
         {
             "title": "Restaurant",
             "definition": "A restaurant.",
-            "external_id": "Restaurant"
+            "external_id": "Restaurant",
         },
         {
             "title": "Hotel",
             "definition": "A hotel is an establishment that provides paid lodging.",
-            "external_id": "Hotel"
+            "external_id": "Hotel",
         },
         {
             "title": "LocalBusiness",
             "definition": "A particular physical business or branch of an organization.",
-            "external_id": "LocalBusiness"
+            "external_id": "LocalBusiness",
         },
         {
             "title": "Article",
             "definition": "An article, such as a news article or piece of investigative report.",
-            "external_id": "Article"
+            "external_id": "Article",
         },
         {
             "title": "SoftwareApplication",
             "definition": "A software application.",
-            "external_id": "SoftwareApplication"
+            "external_id": "SoftwareApplication",
         },
         {
             "title": "WebPage",
             "definition": "A web page. Every web page is implicitly assumed to be declared to be of type WebPage.",
-            "external_id": "WebPage"
+            "external_id": "WebPage",
         },
     ]
 
@@ -123,7 +116,7 @@ def manager_with_schema_org_data():
             external_id=entity["external_id"],
             title_embedding=title_emb,
             definition_embedding=def_emb,
-            embedding_dims=384  # sentence-transformers default
+            embedding_dims=384,  # sentence-transformers default
         )
 
     yield manager, db_path
@@ -190,7 +183,7 @@ class TestVectorSearchAccuracy:
                 source="schema.org",
                 limit=3,  # Check top-3 results
                 threshold=0.0,  # No threshold filtering for accuracy test
-                embedding_generator=embedding_gen
+                embedding_generator=embedding_gen,
             )
 
             # Check if expected entity is in top-3
@@ -199,11 +192,13 @@ class TestVectorSearchAccuracy:
             if expected_entity in top_3_titles:
                 successful_queries += 1
             else:
-                failed_queries.append({
-                    "query": query,
-                    "expected": expected_entity,
-                    "got_top_3": top_3_titles
-                })
+                failed_queries.append(
+                    {
+                        "query": query,
+                        "expected": expected_entity,
+                        "got_top_3": top_3_titles,
+                    }
+                )
 
         # Calculate accuracy
         accuracy = (successful_queries / total_queries) * 100
@@ -222,8 +217,9 @@ class TestVectorSearchAccuracy:
                 print(f"    Got top-3: {failure['got_top_3']}")
 
         # Validate TC-I002: ≥90% accuracy (allows 2-3 failures out of 15-20 queries)
-        assert accuracy >= 90.0, \
-            f"Vector search accuracy {accuracy:.1f}% is below required 90% (TC-I002)"
+        assert (
+            accuracy >= 90.0
+        ), f"Vector search accuracy {accuracy:.1f}% is below required 90% (TC-I002)"
 
     def test_threshold_filtering_accuracy(self, manager_with_schema_org_data):
         """
@@ -244,7 +240,7 @@ class TestVectorSearchAccuracy:
             source="schema.org",
             limit=20,
             threshold=0.8,
-            embedding_generator=embedding_gen
+            embedding_generator=embedding_gen,
         )
 
         # Search with low threshold
@@ -253,22 +249,25 @@ class TestVectorSearchAccuracy:
             source="schema.org",
             limit=20,
             threshold=0.3,
-            embedding_generator=embedding_gen
+            embedding_generator=embedding_gen,
         )
 
         # High threshold should return fewer or equal results
-        assert len(results_high) <= len(results_low), \
-            "Higher threshold should return fewer or equal results"
+        assert len(results_high) <= len(
+            results_low
+        ), "Higher threshold should return fewer or equal results"
 
         # All results from high threshold search should have score >= 0.8
         for node, score in results_high:
-            assert score >= 0.8, \
-                f"Result {node.title} has score {score} < threshold 0.8"
+            assert (
+                score >= 0.8
+            ), f"Result {node.title} has score {score} < threshold 0.8"
 
         # All results from low threshold search should have score >= 0.3
         for node, score in results_low:
-            assert score >= 0.3, \
-                f"Result {node.title} has score {score} < threshold 0.3"
+            assert (
+                score >= 0.3
+            ), f"Result {node.title} has score {score} < threshold 0.3"
 
 
 class TestVectorSearchPerformance:
@@ -296,7 +295,7 @@ class TestVectorSearchPerformance:
             query_text="test warmup",
             limit=20,
             threshold=0.0,
-            embedding_generator=embedding_gen
+            embedding_generator=embedding_gen,
         )
 
         # Measure search performance
@@ -317,7 +316,7 @@ class TestVectorSearchPerformance:
                 query_text=query,
                 limit=20,
                 threshold=0.0,
-                embedding_generator=embedding_gen
+                embedding_generator=embedding_gen,
             )
 
             end_time = time.perf_counter()
@@ -337,8 +336,9 @@ class TestVectorSearchPerformance:
         # Validate TC-P002 and TC-S003: <50ms for top-20 queries
         # Note: This is for the search operation only, not including embedding generation
         # In production, embedding generation would be done once and cached
-        assert avg_search_time < 50.0, \
-            f"Average search time {avg_search_time:.2f}ms exceeds 50ms requirement (TC-P002, TC-S003)"
+        assert (
+            avg_search_time < 50.0
+        ), f"Average search time {avg_search_time:.2f}ms exceeds 50ms requirement (TC-P002, TC-S003)"
 
     def test_search_fails_fast_on_error(self, manager_with_schema_org_data):
         """
@@ -351,6 +351,7 @@ class TestVectorSearchPerformance:
         # Test with invalid embedding generator that returns wrong size
         def bad_embedding_gen(text: str) -> bytes:
             import numpy as np
+
             # Return wrong size embedding
             return np.array([0.1, 0.2], dtype=np.float32).tobytes()
 
@@ -360,5 +361,5 @@ class TestVectorSearchPerformance:
                 query_text="test",
                 limit=20,
                 threshold=0.0,
-                embedding_generator=bad_embedding_gen
+                embedding_generator=bad_embedding_gen,
             )
