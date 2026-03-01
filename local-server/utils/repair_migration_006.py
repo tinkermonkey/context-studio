@@ -23,16 +23,27 @@ from sqlalchemy import create_engine, text
 import importlib.util
 
 # Import the migration module dynamically since it starts with a number
-spec = importlib.util.spec_from_file_location("migration_006_nodes",
-    os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
-                 "database", "migrations", "versions", "006_nodes.py"))
+migration_file = os.path.join(
+    os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+    "database",
+    "migrations",
+    "versions",
+    "006_nodes.py",
+)
+spec = importlib.util.spec_from_file_location("migration_006_nodes", migration_file)
+if not spec or not spec.loader:
+    raise RuntimeError(f"Failed to load migration spec from {migration_file}")
+
 migration_module = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(migration_module)
 Migration006 = migration_module.Migration006
 
 # Set up logging
-logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+logging.basicConfig(
+    level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s"
+)
 logger = logging.getLogger(__name__)
+
 
 def check_migration_status(db_path: str) -> bool:
     """Check if migration 006 is marked as complete."""
@@ -46,12 +57,15 @@ def check_migration_status(db_path: str) -> bool:
                 return result is not None
             except sqlite3.OperationalError:
                 # Fallback to older table name
-                cursor.execute("SELECT version FROM migration_versions WHERE version = 6")
+                cursor.execute(
+                    "SELECT version FROM migration_versions WHERE version = 6"
+                )
                 result = cursor.fetchone()
                 return result is not None
     except Exception as e:
         logger.error(f"Error checking migration status: {e}")
         return False
+
 
 def analyze_database(db_path: str) -> dict:
     """Analyze the database to understand the migration state."""
@@ -60,11 +74,15 @@ def analyze_database(db_path: str) -> dict:
             cursor = conn.cursor()
 
             # Check if legacy tables exist
-            cursor.execute("SELECT name FROM sqlite_master WHERE type='table' AND name IN ('layers', 'domains', 'terms')")
+            cursor.execute(
+                "SELECT name FROM sqlite_master WHERE type='table' AND name IN ('layers', 'domains', 'terms')"
+            )
             legacy_tables = [row[0] for row in cursor.fetchall()]
 
             # Check if new tables exist
-            cursor.execute("SELECT name FROM sqlite_master WHERE type='table' AND name IN ('structure_nodes', 'structure_node_links')")
+            cursor.execute(
+                "SELECT name FROM sqlite_master WHERE type='table' AND name IN ('structure_nodes', 'structure_node_links')"
+            )
             new_tables = [row[0] for row in cursor.fetchall()]
 
             # Count records in legacy tables
@@ -80,22 +98,24 @@ def analyze_database(db_path: str) -> dict:
                 new_counts[table] = cursor.fetchone()[0]
 
             return {
-                'legacy_tables': legacy_tables,
-                'new_tables': new_tables,
-                'legacy_counts': legacy_counts,
-                'new_counts': new_counts
+                "legacy_tables": legacy_tables,
+                "new_tables": new_tables,
+                "legacy_counts": legacy_counts,
+                "new_counts": new_counts,
             }
     except Exception as e:
         logger.error(f"Error analyzing database: {e}")
         return {}
 
+
 def needs_repair(analysis: dict) -> bool:
     """Determine if the database needs repair."""
     # Check if we have legacy data but missing structure_nodes data
-    total_legacy = sum(analysis.get('legacy_counts', {}).values())
-    structure_nodes_count = analysis.get('new_counts', {}).get('structure_nodes', 0)
+    total_legacy = sum(analysis.get("legacy_counts", {}).values())
+    structure_nodes_count = analysis.get("new_counts", {}).get("structure_nodes", 0)
 
     return total_legacy > 0 and structure_nodes_count == 0
+
 
 def repair_database(db_path: str) -> bool:
     """Repair the database by re-running the data migration."""
@@ -124,10 +144,16 @@ def repair_database(db_path: str) -> bool:
                 logger.warning(f"Vector embeddings population failed: {e}")
 
             # Validate the repair
-            structure_nodes_count = connection.execute(text("SELECT COUNT(*) FROM structure_nodes")).scalar()
-            structure_node_links_count = connection.execute(text("SELECT COUNT(*) FROM structure_node_links")).scalar()
+            structure_nodes_count = connection.execute(
+                text("SELECT COUNT(*) FROM structure_nodes")
+            ).scalar()
+            structure_node_links_count = connection.execute(
+                text("SELECT COUNT(*) FROM structure_node_links")
+            ).scalar()
 
-            logger.info(f"Repair completed: {structure_nodes_count} structure_nodes, {structure_node_links_count} structure_node_links")
+            logger.info(
+                f"Repair completed: {structure_nodes_count} structure_nodes, {structure_node_links_count} structure_node_links"
+            )
 
             # Commit the changes
             connection.commit()
@@ -138,11 +164,20 @@ def repair_database(db_path: str) -> bool:
         logger.error(f"Error repairing database: {e}")
         return False
 
+
 def main():
-    parser = argparse.ArgumentParser(description="Repair Migration 006 data migration issues")
+    parser = argparse.ArgumentParser(
+        description="Repair Migration 006 data migration issues"
+    )
     parser.add_argument("db_path", help="Path to the SQLite database file")
-    parser.add_argument("--dry-run", action="store_true", help="Analyze only, don't make changes")
-    parser.add_argument("--force", action="store_true", help="Force repair even if migration 006 wasn't completed")
+    parser.add_argument(
+        "--dry-run", action="store_true", help="Analyze only, don't make changes"
+    )
+    parser.add_argument(
+        "--force",
+        action="store_true",
+        help="Force repair even if migration 006 wasn't completed",
+    )
 
     args = parser.parse_args()
 
@@ -155,10 +190,14 @@ def main():
 
     # Check migration status
     migration_complete = check_migration_status(db_path)
-    logger.info(f"Migration 006 status: {'Complete' if migration_complete else 'Not complete'}")
+    logger.info(
+        f"Migration 006 status: {'Complete' if migration_complete else 'Not complete'}"
+    )
 
     if not migration_complete and not args.force:
-        logger.error("Migration 006 is not marked as complete. Use --force to repair anyway.")
+        logger.error(
+            "Migration 006 is not marked as complete. Use --force to repair anyway."
+        )
         sys.exit(1)
 
     # Analyze the database
@@ -192,6 +231,7 @@ def main():
     else:
         logger.error("Repair failed")
         sys.exit(1)
+
 
 if __name__ == "__main__":
     main()
