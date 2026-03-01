@@ -491,21 +491,20 @@ class S3StorageOptimizer:
     
     def _estimate_cost_savings(self, storage_analysis: Dict[str, Any]) -> float:
         """Estimate monthly cost savings from optimization."""
-        
+
         # Simplified cost model (AWS S3 pricing estimates)
         standard_cost_per_gb = 0.023  # USD per GB per month
-        ia_cost_per_gb = 0.0125
         glacier_cost_per_gb = 0.004
-        
+
         total_gb = storage_analysis['total_size_bytes'] / (1024**3)
         archival_candidates = len(storage_analysis['optimization_opportunities'])
-        
+
         # Estimate potential savings if 70% of old data is moved to Glacier
         if archival_candidates > 0:
             archival_gb = total_gb * 0.3  # Assume 30% can be archived
             savings = archival_gb * (standard_cost_per_gb - glacier_cost_per_gb)
             return max(0, savings)
-        
+
         return 0
     
     def _estimate_current_cost(self, total_bytes: int) -> float:
@@ -583,7 +582,6 @@ class S3StorageOptimizer:
             # 4. Create storage checkpoint
             checkpoint_result = self.create_storage_checkpoints()
             if 'error' not in checkpoint_result:
-                checkpoint_size = checkpoint_result.get('size_bytes', 0)
                 optimization_actions.append({
                     "action": "storage_checkpoint_created",
                     "status": "success",
