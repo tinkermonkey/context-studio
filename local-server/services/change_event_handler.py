@@ -206,7 +206,7 @@ class ChangeEventHandler:
         Returns:
             List of unprocessed ChangeEvent objects
         """
-        query = self.db.query(ChangeEvent).filter(ChangeEvent.processed == False)
+        query = self.db.query(ChangeEvent).filter(not ChangeEvent.processed)
 
         if record_type is not None:
             query = query.filter(ChangeEvent.record_type == record_type)
@@ -270,7 +270,7 @@ class ChangeEventHandler:
         """
         total_events = self.db.query(ChangeEvent).count()
         processed_events = (
-            self.db.query(ChangeEvent).filter(ChangeEvent.processed == True).count()
+            self.db.query(ChangeEvent).filter(ChangeEvent.processed).count()
         )
         unprocessed_events = total_events - processed_events
 

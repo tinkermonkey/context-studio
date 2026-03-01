@@ -12,7 +12,6 @@ import shutil
 import json
 import sqlite3
 from pathlib import Path
-from unittest.mock import patch
 import pytest
 
 # Add local-server to path for imports
