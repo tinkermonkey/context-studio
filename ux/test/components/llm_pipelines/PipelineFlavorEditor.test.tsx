@@ -30,8 +30,8 @@ const mockExistingFlavor = {
   },
   enabled: true,
   version: 1,
-  last_updated: "2025-09-02T10:00:00Z",
-  date_created: "2025-09-01T10:00:00Z",
+  created_at: "2025-09-01T10:00:00Z",
+  updated_at: "2025-09-02T10:00:00Z",
 };
 
 describe("PipelineFlavorEditor - Default Population", () => {
