@@ -12,6 +12,8 @@ from fastapi.responses import JSONResponse
 from contextlib import asynccontextmanager
 from sqlalchemy import create_engine
 
+# Import root-level config module first to avoid shadowing
+import config as config_module
 from api import graph, datasets, nlp_analysis, schema, predicates, llm, pipeline_flavors
 from api import reference, config, structure_nodes, version_management, sync, llm_traceability
 from api import changeset_management, proposal_management, identity_management
@@ -87,7 +89,7 @@ def create_app(dataset_id=None, engine=None, session_local=None, service_factory
                     init_db(engine=engine)
                 else:
                     # Create engine from config settings
-                    settings = config.get_settings()
+                    settings = config_module.get_settings()
                     fresh_engine = create_engine(settings.database.default_url, poolclass=None)
                     init_db(engine=fresh_engine)
                 logger.info("Database initialized.")
@@ -141,7 +143,7 @@ def create_app(dataset_id=None, engine=None, session_local=None, service_factory
             # Run migrations to ensure schema is up to date
             if dataset_manager is None:
                 # Direct database mode: run migrations on config database
-                settings = config.get_settings()
+                settings = config_module.get_settings()
                 # Extract file path from SQLite URL (sqlite:///./path/to/file.db)
                 db_url = settings.database.default_url
                 if db_url.startswith("sqlite:///"):
@@ -414,7 +416,7 @@ app = create_app()
 app.add_middleware(AccessLogMiddleware)
 
 # Get configuration for CORS
-cors_settings = config.get_settings()
+cors_settings = config_module.get_settings()
 
 app.add_middleware(
     CORSMiddleware,
