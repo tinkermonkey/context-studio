@@ -8,6 +8,6 @@ Responsible for system-level configuration and operational concerns:
 - Metrics collection and reporting
 - Administrative operations and logging
 
-See rearchitecture/architecture_design.md §5.6 for detailed design.
+See rearchitecture/architecture_design.md §4.6 for detailed design.
 See rearchitecture/domain_model_design.md §9 for entity specifications.
 """

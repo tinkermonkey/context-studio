@@ -9,5 +9,5 @@ This package contains the six bounded contexts that form the core domain:
 - versioning: Change tracking and distributed sync
 - admin: System configuration and health monitoring
 
-See rearchitecture/architecture_design.md §5 for the complete architecture.
+See rearchitecture/architecture_design.md §4 for the complete architecture.
 """

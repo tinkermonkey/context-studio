@@ -8,6 +8,6 @@ Responsible for extracting structured data from unstructured text:
 - Predicate-based fact extraction
 - Multi-layer extraction results
 
-See rearchitecture/architecture_design.md §5.3 for detailed design.
-See rearchitecture/domain_model_design.md §5 for entity specifications.
+See rearchitecture/architecture_design.md §4.3 for detailed design.
+See rearchitecture/domain_model_design.md §3 for entity specifications.
 """

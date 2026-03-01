@@ -9,6 +9,6 @@ Responsible for representing the core domain entities of a knowledge graph:
 - Relationships: connections between entities with semantic meaning
 - Property Definitions: metadata and data property schemas
 
-See rearchitecture/architecture_design.md §5.1 for detailed design.
-See rearchitecture/domain_model_design.md for entity specifications.
+See rearchitecture/architecture_design.md §4.1 for detailed design.
+See rearchitecture/domain_model_design.md §1 for entity specifications.
 """

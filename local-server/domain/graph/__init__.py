@@ -8,6 +8,6 @@ Responsible for analyzing and querying the knowledge graph structure:
 - Cycle detection and validation
 - Semantic query processing
 
-See rearchitecture/architecture_design.md §5.2 for detailed design.
-See rearchitecture/domain_model_design.md §3 for entity specifications.
+See rearchitecture/architecture_design.md §4.2 for detailed design.
+See rearchitecture/domain_model_design.md §2 for entity specifications.
 """

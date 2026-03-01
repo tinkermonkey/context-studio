@@ -9,6 +9,6 @@ distributed synchronization across instances:
 - Distributed sync coordination
 - Merge strategy and conflict reporting
 
-See rearchitecture/architecture_design.md §5.5 for detailed design.
-See rearchitecture/domain_model_design.md §8 for entity specifications.
+See rearchitecture/architecture_design.md §4.5 for detailed design.
+See rearchitecture/domain_model_design.md §5 for entity specifications.
 """
