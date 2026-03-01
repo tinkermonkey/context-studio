@@ -330,7 +330,6 @@ class NodeService:
 
         # Store structure_node data for event before deletion
         node_data = self._node_to_dict(structure_node)
-        node_type = structure_node.node_type.value
 
         # Get all descendant structure_nodes recursively
         all_descendants = self._get_all_descendants(node_id)
