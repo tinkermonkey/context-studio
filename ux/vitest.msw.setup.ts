@@ -32,7 +32,7 @@ if (typeof document !== "undefined") {
 // DOM compatibility fixes for appendChild issues
 if (typeof Node !== "undefined") {
   const originalAppendChild = Node.prototype.appendChild;
-  Node.prototype.appendChild = function (child) {
+  (Node.prototype as any).appendChild = function (child: any) {
     if (!child || typeof child !== "object") {
       // Create a text node for primitive values
       child = document.createTextNode(String(child));
@@ -44,7 +44,7 @@ if (typeof Node !== "undefined") {
   };
 
   const originalInsertBefore = Node.prototype.insertBefore;
-  Node.prototype.insertBefore = function (newNode, referenceNode) {
+  (Node.prototype as any).insertBefore = function (newNode: any, referenceNode: any) {
     if (!newNode || typeof newNode !== "object") {
       newNode = document.createTextNode(String(newNode));
     }
@@ -71,18 +71,29 @@ Object.defineProperty(window, "matchMedia", {
 });
 
 // Mock IntersectionObserver
-global.IntersectionObserver = class IntersectionObserver {
+(global as any).IntersectionObserver = class IntersectionObserver {
+  root = null;
+  rootMargin = "";
+  thresholds: number[] = [];
+
   constructor(callback: IntersectionObserverCallback) {
     // No-op
   }
+
   observe(target: Element) {
     // No-op
   }
+
   unobserve(target: Element) {
     // No-op
   }
+
   disconnect() {
     // No-op
+  }
+
+  takeRecords() {
+    return [];
   }
 };
 
