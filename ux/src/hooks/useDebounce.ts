@@ -16,11 +16,13 @@ export const useDebounce = <T extends (...args: any[]) => any>(
   callback: T,
   delay: number,
 ): T & { cancel: () => void } => {
-  const timeoutRef = useRef<NodeJS.Timeout | undefined>();
+  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   const debouncedCallback = useCallback(
     (...args: Parameters<T>) => {
-      clearTimeout(timeoutRef.current);
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+      }
       timeoutRef.current = setTimeout(() => callback(...args), delay);
     },
     [callback, delay],
@@ -28,7 +30,9 @@ export const useDebounce = <T extends (...args: any[]) => any>(
 
   // Add cancel method to clear pending timeout
   debouncedCallback.cancel = useCallback(() => {
-    clearTimeout(timeoutRef.current);
+    if (timeoutRef.current) {
+      clearTimeout(timeoutRef.current);
+    }
   }, []);
 
   return debouncedCallback;
