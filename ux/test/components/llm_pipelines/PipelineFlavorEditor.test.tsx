@@ -64,10 +64,9 @@ describe("PipelineFlavorEditor - Default Population", () => {
       useUpdatePipelineFlavor,
     } = await import("@/api/hooks/pipelineFlavors");
 
-    const {
-      useTypedModelCapabilities,
-      useValidateLLMConfig,
-    } = await import("@/api/hooks/modelCapabilities");
+    const { useTypedModelCapabilities, useValidateLLMConfig } = await import(
+      "@/api/hooks/modelCapabilities"
+    );
 
     vi.mocked(usePipelineFlavors).mockReturnValue({
       data: {
@@ -128,10 +127,9 @@ describe("PipelineFlavorEditor - Default Population", () => {
       useUpdatePipelineFlavor,
     } = await import("@/api/hooks/pipelineFlavors");
 
-    const {
-      useTypedModelCapabilities,
-      useValidateLLMConfig,
-    } = await import("@/api/hooks/modelCapabilities");
+    const { useTypedModelCapabilities, useValidateLLMConfig } = await import(
+      "@/api/hooks/modelCapabilities"
+    );
 
     vi.mocked(usePipelineFlavors).mockReturnValue({
       data: {
@@ -187,10 +185,9 @@ describe("PipelineFlavorEditor - Default Population", () => {
       useUpdatePipelineFlavor,
     } = await import("@/api/hooks/pipelineFlavors");
 
-    const {
-      useTypedModelCapabilities,
-      useValidateLLMConfig,
-    } = await import("@/api/hooks/modelCapabilities");
+    const { useTypedModelCapabilities, useValidateLLMConfig } = await import(
+      "@/api/hooks/modelCapabilities"
+    );
 
     vi.mocked(usePipelineFlavors).mockReturnValue({
       data: null,
@@ -243,10 +240,9 @@ describe("PipelineFlavorEditor - Default Population", () => {
       useUpdatePipelineFlavor,
     } = await import("@/api/hooks/pipelineFlavors");
 
-    const {
-      useTypedModelCapabilities,
-      useValidateLLMConfig,
-    } = await import("@/api/hooks/modelCapabilities");
+    const { useTypedModelCapabilities, useValidateLLMConfig } = await import(
+      "@/api/hooks/modelCapabilities"
+    );
 
     vi.mocked(usePipelineFlavors).mockReturnValue({
       data: {

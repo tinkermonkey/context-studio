@@ -88,7 +88,9 @@ export class PipelineExecutionService extends BaseService {
   ): Promise<PipelineExecutionResponse> {
     // For now, fall back to non-streaming execution
     // TODO: Implement proper streaming with server-sent events
-    console.warn('Streaming not yet implemented, falling back to regular execution');
+    console.warn(
+      "Streaming not yet implemented, falling back to regular execution",
+    );
     return this.executePipeline(request);
   }
 
@@ -99,8 +101,8 @@ export class PipelineExecutionService extends BaseService {
     request: LegacyTermDefinitionRequest,
   ): Promise<PipelineExecutionResponse> {
     const pipelineRequest: PipelineExecutionRequest = {
-      pipeline_type: 'suggest_term_definition',
-      flavor_id: request.flavor || 'default',
+      pipeline_type: "suggest_term_definition",
+      flavor_id: request.flavor || "default",
       context_data: {
         term: request.term,
         domain_title: request.domain_title,
@@ -124,8 +126,8 @@ export class PipelineExecutionService extends BaseService {
     request: LegacyDomainDefinitionRequest,
   ): Promise<PipelineExecutionResponse> {
     const pipelineRequest: PipelineExecutionRequest = {
-      pipeline_type: 'suggest_domain_definition',
-      flavor_id: request.flavor || 'default',
+      pipeline_type: "suggest_domain_definition",
+      flavor_id: request.flavor || "default",
       context_data: {
         domain_title: request.domain_title,
         context: request.context,
@@ -142,8 +144,8 @@ export class PipelineExecutionService extends BaseService {
     request: LegacyLayerDefinitionRequest,
   ): Promise<PipelineExecutionResponse> {
     const pipelineRequest: PipelineExecutionRequest = {
-      pipeline_type: 'suggest_layer_definition',
-      flavor_id: request.flavor || 'default',
+      pipeline_type: "suggest_layer_definition",
+      flavor_id: request.flavor || "default",
       context_data: {
         layer_title: request.layer_title,
         context: request.context,
@@ -159,7 +161,7 @@ export class PipelineExecutionService extends BaseService {
   convertToLegacyTermResponse(response: PipelineExecutionResponse): any {
     // Parse the response_content as JSON if it's a string
     let parsedResult: any = response.response_content;
-    if (typeof response.response_content === 'string') {
+    if (typeof response.response_content === "string") {
       try {
         parsedResult = JSON.parse(response.response_content);
       } catch {
@@ -182,7 +184,7 @@ export class PipelineExecutionService extends BaseService {
    */
   convertToLegacyDomainResponse(response: PipelineExecutionResponse): any {
     let parsedResult: any = response.response_content;
-    if (typeof response.response_content === 'string') {
+    if (typeof response.response_content === "string") {
       try {
         parsedResult = JSON.parse(response.response_content);
       } catch {
@@ -203,7 +205,7 @@ export class PipelineExecutionService extends BaseService {
    */
   convertToLegacyLayerResponse(response: PipelineExecutionResponse): any {
     let parsedResult: any = response.response_content;
-    if (typeof response.response_content === 'string') {
+    if (typeof response.response_content === "string") {
       try {
         parsedResult = JSON.parse(response.response_content);
       } catch {

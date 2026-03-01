@@ -145,13 +145,16 @@ export function getEnabledSources(): SourceType[] {
  * Create initial streaming state
  */
 export function createInitialStreamingState(
-  request: UnifiedSearchRequest
+  request: UnifiedSearchRequest,
 ): StreamingSearchState {
   const enabledSources = getEnabledSources();
-  const sources: Record<SourceType, SourceSearchUpdate> = {} as Record<SourceType, SourceSearchUpdate>;
+  const sources: Record<SourceType, SourceSearchUpdate> = {} as Record<
+    SourceType,
+    SourceSearchUpdate
+  >;
 
   // Initialize all enabled sources with pending status
-  enabledSources.forEach(source => {
+  enabledSources.forEach((source) => {
     sources[source] = {
       source,
       status: "pending",
@@ -180,7 +183,7 @@ export function createInitialStreamingState(
  */
 function deduplicateNodes(nodes: UnifiedNode[]): UnifiedNode[] {
   const seenIds = new Set<string>();
-  return nodes.filter(node => {
+  return nodes.filter((node) => {
     if (seenIds.has(node.id)) {
       return false;
     }
@@ -192,9 +195,12 @@ function deduplicateNodes(nodes: UnifiedNode[]): UnifiedNode[] {
 /**
  * Deduplicate links by ID and filter to only include links between existing nodes
  */
-function deduplicateLinks(links: SearchLink[], nodeIds: Set<string>): SearchLink[] {
+function deduplicateLinks(
+  links: SearchLink[],
+  nodeIds: Set<string>,
+): SearchLink[] {
   const seenIds = new Set<string>();
-  return links.filter(link => {
+  return links.filter((link) => {
     // Skip if we've already seen this link ID
     if (seenIds.has(link.id)) {
       return false;
@@ -219,7 +225,7 @@ function discoverCrossReferences(nodes: UnifiedNode[]): SearchLink[] {
   const nodesByTitle = new Map<string, UnifiedNode[]>();
 
   // Group nodes by normalized title for cross-reference detection
-  nodes.forEach(node => {
+  nodes.forEach((node) => {
     const normalizedTitle = node.title.toLowerCase().trim();
     if (!nodesByTitle.has(normalizedTitle)) {
       nodesByTitle.set(normalizedTitle, []);
@@ -249,8 +255,8 @@ function discoverCrossReferences(nodes: UnifiedNode[]): SearchLink[] {
               attributes: {
                 type: "cross-reference",
                 reason: "title_match",
-                confidence: 0.8
-              }
+                confidence: 0.8,
+              },
             });
           }
         }
@@ -267,7 +273,7 @@ function discoverCrossReferences(nodes: UnifiedNode[]): SearchLink[] {
  */
 export function updateStreamingState(
   state: StreamingSearchState,
-  update: SourceSearchUpdate
+  update: SourceSearchUpdate,
 ): StreamingSearchState {
   const newSources = {
     ...state.sources,
@@ -280,7 +286,7 @@ export function updateStreamingState(
   const completedSources: SourceType[] = [];
   const errorSources: SourceType[] = [];
 
-  Object.values(newSources).forEach(sourceUpdate => {
+  Object.values(newSources).forEach((sourceUpdate) => {
     if (sourceUpdate.status === "completed" && sourceUpdate.results) {
       allResults.push(...sourceUpdate.results);
       completedSources.push(sourceUpdate.source);
@@ -294,13 +300,13 @@ export function updateStreamingState(
 
   // Apply deduplication and normalization (matching server-side logic)
   const deduplicatedNodes = deduplicateNodes(allResults);
-  const nodeIds = new Set(deduplicatedNodes.map(node => node.id));
+  const nodeIds = new Set(deduplicatedNodes.map((node) => node.id));
   const deduplicatedLinks = deduplicateLinks(allLinks, nodeIds);
 
   // Discover cross-references between sources (only if we have multiple sources)
   let crossReferences: SearchLink[] = [];
   const sourcesWithResults = new Set(
-    deduplicatedNodes.map(node => node.source)
+    deduplicatedNodes.map((node) => node.source),
   );
 
   if (sourcesWithResults.size > 1) {
@@ -324,7 +330,7 @@ export function updateStreamingState(
 
   // Log deduplication stats if there were duplicates (matching server behavior)
   if (deduplicationStats.duplicatesRemoved > 0 || crossReferences.length > 0) {
-    console.log('Streaming search deduplication:', {
+    console.log("Streaming search deduplication:", {
       query: state.query,
       originalNodes: deduplicationStats.originalNodes,
       deduplicatedNodes: deduplicationStats.deduplicatedNodes,
@@ -363,7 +369,7 @@ export class StreamingSearchError extends Error {
   constructor(
     message: string,
     public source?: SourceType,
-    public originalError?: Error
+    public originalError?: Error,
   ) {
     super(message);
     this.name = "StreamingSearchError";

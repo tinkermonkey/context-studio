@@ -112,7 +112,7 @@ export interface ReferenceSourceStatus {
   upstream_url: string;
   use_proxy: boolean;
   timeout: number;
-  status: 'healthy' | 'error' | 'disabled';
+  status: "healthy" | "error" | "disabled";
   last_check?: string;
 }
 
@@ -151,7 +151,7 @@ export class ConfigurationService extends BaseService {
       await this.request<void>({
         url: "/api/config/",
         method: "PATCH",
-        data: { path, value }
+        data: { path, value },
       });
     }, `updating configuration value for ${path}`);
   }
@@ -170,7 +170,9 @@ export class ConfigurationService extends BaseService {
    */
   async validateConfiguration(): Promise<{ valid: boolean; errors: string[] }> {
     return this.withErrorContext(async () => {
-      return this.getResource<{ valid: boolean; errors: string[] }>("/api/config/validate");
+      return this.getResource<{ valid: boolean; errors: string[] }>(
+        "/api/config/validate",
+      );
     }, "validating configuration");
   }
 
@@ -181,7 +183,7 @@ export class ConfigurationService extends BaseService {
     return this.withErrorContext(async () => {
       await this.request<void>({
         url: "/api/config/reload",
-        method: "POST"
+        method: "POST",
       });
     }, "reloading configuration");
   }
@@ -193,7 +195,7 @@ export class ConfigurationService extends BaseService {
     return this.withErrorContext(async () => {
       await this.request<void>({
         url: "/api/config/reset",
-        method: "POST"
+        method: "POST",
       });
     }, "resetting configuration");
   }
@@ -203,7 +205,9 @@ export class ConfigurationService extends BaseService {
    */
   async getReferenceSourcesConfig(): Promise<ReferenceSourcesResponse> {
     return this.withErrorContext(async () => {
-      return this.getResource<ReferenceSourcesResponse>("/api/config/reference-sources");
+      return this.getResource<ReferenceSourcesResponse>(
+        "/api/config/reference-sources",
+      );
     }, "getting reference sources configuration");
   }
 
@@ -212,7 +216,9 @@ export class ConfigurationService extends BaseService {
    */
   async getReferenceSourcesStatus(): Promise<ReferenceSourcesStatusResponse> {
     return this.withErrorContext(async () => {
-      return this.getResource<ReferenceSourcesStatusResponse>("/api/config/reference-sources/status");
+      return this.getResource<ReferenceSourcesStatusResponse>(
+        "/api/config/reference-sources/status",
+      );
     }, "getting reference sources status");
   }
 
@@ -223,14 +229,20 @@ export class ConfigurationService extends BaseService {
     this.validateRequired(sourceName, "sourceName");
 
     return this.withErrorContext(async () => {
-      return this.getResource<ReferenceSource>(`/api/config/reference-sources/${encodeURIComponent(sourceName)}`);
+      return this.getResource<ReferenceSource>(
+        `/api/config/reference-sources/${encodeURIComponent(sourceName)}`,
+      );
     }, `getting reference source configuration for ${sourceName}`);
   }
 
   /**
    * Update reference source configuration
    */
-  async updateReferenceSourceConfig(sourceName: string, path: string, value: any): Promise<void> {
+  async updateReferenceSourceConfig(
+    sourceName: string,
+    path: string,
+    value: any,
+  ): Promise<void> {
     this.validateRequired(sourceName, "sourceName");
     this.validateRequired(path, "path");
 
@@ -238,7 +250,7 @@ export class ConfigurationService extends BaseService {
       await this.request<void>({
         url: `/api/config/reference-sources/${encodeURIComponent(sourceName)}`,
         method: "PATCH",
-        data: { path, value }
+        data: { path, value },
       });
     }, `updating reference source configuration for ${sourceName}`);
   }

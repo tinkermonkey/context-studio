@@ -17,6 +17,7 @@ Implemented a client-side streaming solution for unified reference search that e
 ### 2. Streaming Service (`src/api/services/streamingReference.ts`)
 
 **Key Features:**
+
 - Parallel execution of individual source endpoint calls
 - Real-time callback-based updates as sources respond
 - Configurable timeouts and retry logic per source
@@ -24,6 +25,7 @@ Implemented a client-side streaming solution for unified reference search that e
 - AbortController support for cancellation
 
 **Main Methods:**
+
 - `searchStreaming()` - Core streaming search with callbacks
 - `searchAllSources()` - Promise-based API that resolves when complete
 - `getSourceStatus()` - Check available sources
@@ -31,18 +33,21 @@ Implemented a client-side streaming solution for unified reference search that e
 ### 3. Streaming Hooks (`src/api/hooks/unifiedReference/useStreamingReference.ts`)
 
 **Primary Hooks:**
+
 - `useStreamingUnifiedSearch` - Main hook for streaming search with real-time state
 - `useSourceLoadingStates` - Track per-source loading/completion states
 - `useStreamingSearchMutation` - React Query mutation pattern for streaming
 - `useSearchComparison` - Performance metrics and comparison utilities
 
 **Additional Utilities:**
+
 - `usePrefetchStreamingSearch` - Background prefetching
 - `useCachedStreamingResults` - Access cached streaming results
 
 ### 4. Enhanced Unified Service (`src/api/services/unifiedReference.ts`)
 
 **New Methods Added:**
+
 - `searchSource(source, request)` - Search individual sources directly
 - `searchSpecificSources(sources, request)` - Search subset of sources
 - `getAvailableSources()` - Get source configuration and status
@@ -51,6 +56,7 @@ Implemented a client-side streaming solution for unified reference search that e
 ### 5. Enhanced Unified Hooks (`src/api/hooks/unifiedReference/useUnifiedReference.ts`)
 
 **New Hooks Added:**
+
 - `useSourceSearch` - Query hook for individual source search
 - `useSourceSearchMutation` - Mutation for individual source search
 - `useAvailableSources` - Get available sources and their status
@@ -149,16 +155,19 @@ function DBpediaSearch() {
 ## Architecture Benefits
 
 ### Performance Improvements
+
 - **First Result Speed**: Users see results as soon as the fastest source responds
 - **No Blocking**: Slow sources don't prevent fast sources from displaying results
 - **Parallel Execution**: All sources searched simultaneously on client-side
 
 ### User Experience
+
 - **Progressive Loading**: Results appear incrementally
 - **Source-Specific Feedback**: Users see which sources are loading/complete/errored
 - **Cancellation Support**: Users can cancel searches in progress
 
 ### Fault Tolerance
+
 - **Partial Results**: Failed sources don't prevent successful ones from showing results
 - **Retry Logic**: Configurable retry attempts for failed sources
 - **Graceful Degradation**: System works even when some sources are unavailable
@@ -173,7 +182,7 @@ Update `SOURCE_ENDPOINTS` in `src/api/types/streamingReference.ts`:
 export const SOURCE_ENDPOINTS: Record<SourceType, SourceEndpointConfig> = {
   dbpedia: {
     endpoint: "/api/reference/dbpedia/search",
-    enabled: true,  // Toggle availability
+    enabled: true, // Toggle availability
     timeout: 5000,
     priority: 1,
   },
@@ -201,6 +210,7 @@ const { search } = useStreamingUnifiedSearch({
 ## Available Endpoints
 
 Currently configured endpoints:
+
 - `/api/reference/dbpedia/search` (enabled)
 - `/api/reference/schema-org/search` (enabled)
 - `/api/reference/conceptnet/search` (disabled - enable when available)
@@ -211,7 +221,8 @@ Currently configured endpoints:
 Use `useSearchComparison` hook to track performance improvements:
 
 ```typescript
-const { trackStreamingSearch, metrics, getPerformanceImprovement } = useSearchComparison();
+const { trackStreamingSearch, metrics, getPerformanceImprovement } =
+  useSearchComparison();
 
 // Track streaming search performance
 trackStreamingSearch(searchState);

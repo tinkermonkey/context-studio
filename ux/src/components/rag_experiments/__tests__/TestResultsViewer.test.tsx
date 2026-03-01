@@ -149,9 +149,7 @@ describe("TestResultsViewer", () => {
       wrapper: createWrapper(),
     });
 
-    expect(
-      screen.getByText(/No test results available/i)
-    ).toBeInTheDocument();
+    expect(screen.getByText(/No test results available/i)).toBeInTheDocument();
   });
 
   it("shows error state", () => {
@@ -181,9 +179,7 @@ describe("TestResultsViewer", () => {
     });
 
     // Export buttons should not be visible when no results
-    expect(
-      screen.queryByText(/Export CSV/i)
-    ).not.toBeInTheDocument();
+    expect(screen.queryByText(/Export CSV/i)).not.toBeInTheDocument();
   });
 
   it("displays pagination controls for large result sets", () => {

@@ -17,7 +17,10 @@ vi.mock("@/api/hooks/llm", () => ({
   useSuggestLayerDefinitionMutation: vi.fn(),
 }));
 
-import { usePipelineFlavors, usePipelineFlavor } from "@/api/hooks/pipelineFlavors";
+import {
+  usePipelineFlavors,
+  usePipelineFlavor,
+} from "@/api/hooks/pipelineFlavors";
 import {
   useSuggestTermDefinitionMutation,
   useSuggestDomainDefinitionMutation,

@@ -184,8 +184,11 @@ export interface DashboardMetrics {
 export const analyticsKeys = {
   all: ["analytics"] as const,
   summary: (days: number) => [...analyticsKeys.all, "summary", days] as const,
-  userActivity: (params?: { user_id?: string; days?: number; limit?: number }) =>
-    [...analyticsKeys.all, "user-activity", params] as const,
+  userActivity: (params?: {
+    user_id?: string;
+    days?: number;
+    limit?: number;
+  }) => [...analyticsKeys.all, "user-activity", params] as const,
   entityHotspots: (limit: number) =>
     [...analyticsKeys.all, "entity-hotspots", limit] as const,
   collaborationMetrics: (days: number) =>
@@ -208,7 +211,7 @@ export const analyticsKeys = {
 
 export function useChangeSummary(
   days: number = 30,
-  options?: UseQueryOptions<ChangeSummary>
+  options?: UseQueryOptions<ChangeSummary>,
 ) {
   return useQuery<ChangeSummary>({
     queryKey: analyticsKeys.summary(days),
@@ -224,7 +227,7 @@ export function useChangeSummary(
 
 export function useUserActivity(
   params?: { user_id?: string; days?: number; limit?: number },
-  options?: UseQueryOptions<UserActivity[]>
+  options?: UseQueryOptions<UserActivity[]>,
 ) {
   return useQuery<UserActivity[]>({
     queryKey: analyticsKeys.userActivity(params),
@@ -240,7 +243,7 @@ export function useUserActivity(
 
 export function useEntityHotspots(
   limit: number = 50,
-  options?: UseQueryOptions<EntityHotspot[]>
+  options?: UseQueryOptions<EntityHotspot[]>,
 ) {
   return useQuery<EntityHotspot[]>({
     queryKey: analyticsKeys.entityHotspots(limit),
@@ -256,7 +259,7 @@ export function useEntityHotspots(
 
 export function useCollaborationMetrics(
   days: number = 60,
-  options?: UseQueryOptions<CollaborationMetrics>
+  options?: UseQueryOptions<CollaborationMetrics>,
 ) {
   return useQuery<CollaborationMetrics>({
     queryKey: analyticsKeys.collaborationMetrics(days),
@@ -265,7 +268,7 @@ export function useCollaborationMetrics(
         `/api/analytics/collaboration-metrics`,
         {
           params: { days },
-        }
+        },
       );
       return response.data;
     },
@@ -275,13 +278,13 @@ export function useCollaborationMetrics(
 
 export function useChangeImpact(
   changesetId: string,
-  options?: UseQueryOptions<ChangeImpact>
+  options?: UseQueryOptions<ChangeImpact>,
 ) {
   return useQuery<ChangeImpact>({
     queryKey: analyticsKeys.changeImpact(changesetId),
     queryFn: async () => {
       const response = await apiClient.get(
-        `/api/analytics/change-impact/${changesetId}`
+        `/api/analytics/change-impact/${changesetId}`,
       );
       return response.data;
     },
@@ -292,7 +295,7 @@ export function useChangeImpact(
 
 export function useTrends(
   days: number = 90,
-  options?: UseQueryOptions<TrendAnalysis>
+  options?: UseQueryOptions<TrendAnalysis>,
 ) {
   return useQuery<TrendAnalysis>({
     queryKey: analyticsKeys.trends(days),
@@ -307,7 +310,7 @@ export function useTrends(
 }
 
 export function usePerformanceMetrics(
-  options?: UseQueryOptions<PerformanceMetrics>
+  options?: UseQueryOptions<PerformanceMetrics>,
 ) {
   return useQuery<PerformanceMetrics>({
     queryKey: analyticsKeys.performance(),
@@ -321,7 +324,7 @@ export function usePerformanceMetrics(
 
 export function useCollaborationInsights(
   days: number = 60,
-  options?: UseQueryOptions<CollaborationInsights>
+  options?: UseQueryOptions<CollaborationInsights>,
 ) {
   return useQuery<CollaborationInsights>({
     queryKey: analyticsKeys.collaborationInsights(days),
@@ -330,7 +333,7 @@ export function useCollaborationInsights(
         `/api/analytics/collaboration-insights`,
         {
           params: { days },
-        }
+        },
       );
       return response.data;
     },
@@ -340,7 +343,7 @@ export function useCollaborationInsights(
 
 export function useExecutiveSummary(
   days: number = 30,
-  options?: UseQueryOptions<ExecutiveSummary>
+  options?: UseQueryOptions<ExecutiveSummary>,
 ) {
   return useQuery<ExecutiveSummary>({
     queryKey: analyticsKeys.executiveSummary(days),
@@ -354,9 +357,7 @@ export function useExecutiveSummary(
   });
 }
 
-export function useConflictMetrics(
-  options?: UseQueryOptions<ConflictMetrics>
-) {
+export function useConflictMetrics(options?: UseQueryOptions<ConflictMetrics>) {
   return useQuery<ConflictMetrics>({
     queryKey: analyticsKeys.conflictMetrics(),
     queryFn: async () => {
@@ -367,9 +368,7 @@ export function useConflictMetrics(
   });
 }
 
-export function useAnalyticsHealth(
-  options?: UseQueryOptions<AnalyticsHealth>
-) {
+export function useAnalyticsHealth(options?: UseQueryOptions<AnalyticsHealth>) {
   return useQuery<AnalyticsHealth>({
     queryKey: analyticsKeys.health(),
     queryFn: async () => {
@@ -382,7 +381,7 @@ export function useAnalyticsHealth(
 
 export function useDashboardMetrics(
   refreshInterval: number = 300,
-  options?: UseQueryOptions<DashboardMetrics>
+  options?: UseQueryOptions<DashboardMetrics>,
 ) {
   return useQuery<DashboardMetrics>({
     queryKey: analyticsKeys.dashboardMetrics(refreshInterval),
@@ -400,14 +399,14 @@ export function useDashboardMetrics(
 // CSV Export Helper
 export async function exportAnalyticsCSV(
   reportType: "user-activity" | "hotspots" | "trends",
-  days: number = 30
+  days: number = 30,
 ): Promise<Blob> {
   const response = await apiClient.get(
     `/api/analytics/export/csv/${reportType}`,
     {
       params: { days },
       responseType: "blob",
-    }
+    },
   );
   return response.data;
 }

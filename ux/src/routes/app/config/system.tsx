@@ -1,5 +1,16 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { Card, Alert, Badge, Button, TextInput, Label, Checkbox, Tabs, Select, Progress } from "flowbite-react";
+import {
+  Card,
+  Alert,
+  Badge,
+  Button,
+  TextInput,
+  Label,
+  Checkbox,
+  Tabs,
+  Select,
+  Progress,
+} from "flowbite-react";
 import { CsMainTitle } from "@/components/layout/cs_main";
 import { ConfigBreadcrumbs } from "@/components/configuration/ConfigBreadcrumbs";
 import {
@@ -15,12 +26,9 @@ import {
   Globe,
   Monitor,
   Lock,
-  RotateCcw
+  RotateCcw,
 } from "lucide-react";
-import {
-  useConfiguration,
-  useUpdateConfigurationValue
-} from "@/api/hooks";
+import { useConfiguration, useUpdateConfigurationValue } from "@/api/hooks";
 import { useButterToast } from "@/hooks/useButterToast";
 
 export const Route = createFileRoute("/app/config/system")({
@@ -28,38 +36,59 @@ export const Route = createFileRoute("/app/config/system")({
 });
 
 const LOG_LEVELS = [
-  { value: "DEBUG", label: "Debug", description: "Detailed information for diagnosing problems" },
-  { value: "INFO", label: "Info", description: "General information about system operation" },
-  { value: "WARNING", label: "Warning", description: "Warning messages about potential issues" },
-  { value: "ERROR", label: "Error", description: "Error events that might still allow operation" },
-  { value: "CRITICAL", label: "Critical", description: "Critical errors that may abort operation" }
+  {
+    value: "DEBUG",
+    label: "Debug",
+    description: "Detailed information for diagnosing problems",
+  },
+  {
+    value: "INFO",
+    label: "Info",
+    description: "General information about system operation",
+  },
+  {
+    value: "WARNING",
+    label: "Warning",
+    description: "Warning messages about potential issues",
+  },
+  {
+    value: "ERROR",
+    label: "Error",
+    description: "Error events that might still allow operation",
+  },
+  {
+    value: "CRITICAL",
+    label: "Critical",
+    description: "Critical errors that may abort operation",
+  },
 ];
 
 function RouteComponent() {
-  const { data: configuration, isLoading: isLoadingConfig } = useConfiguration();
+  const { data: configuration, isLoading: isLoadingConfig } =
+    useConfiguration();
   const updateConfigMutation = useUpdateConfigurationValue();
   const toast = useButterToast();
 
   const getConfigLabel = (path: string): string => {
     const labels: Record<string, string> = {
-      'host': 'Host address',
-      'port': 'Port',
-      'cors_origins': 'CORS origins',
-      'reload': 'Auto-reload',
-      'access_log': 'Access logs',
-      'log_level': 'Server log level',
-      'level': 'Log level',
-      'enable_console': 'Console logging',
-      'enable_file': 'File logging',
-      'file_path': 'Log file path',
-      'format': 'Log format',
-      'date_format': 'Date format',
-      'max_file_size': 'Max file size',
-      'backup_count': 'Backup count',
-      'require_secure_key': 'Secure key requirement',
-      'secure_key': 'Secure key',
-      'api_key_header': 'API key header',
-      'log_security_events': 'Security event logging'
+      host: "Host address",
+      port: "Port",
+      cors_origins: "CORS origins",
+      reload: "Auto-reload",
+      access_log: "Access logs",
+      log_level: "Server log level",
+      level: "Log level",
+      enable_console: "Console logging",
+      enable_file: "File logging",
+      file_path: "Log file path",
+      format: "Log format",
+      date_format: "Date format",
+      max_file_size: "Max file size",
+      backup_count: "Backup count",
+      require_secure_key: "Secure key requirement",
+      secure_key: "Secure key",
+      api_key_header: "API key header",
+      log_security_events: "Security event logging",
     };
     return labels[path] || path;
   };
@@ -69,16 +98,18 @@ function RouteComponent() {
     await updateConfigMutation.mutateAsync(
       {
         path: `server.${path}`,
-        value
+        value,
       },
       {
         onSuccess: () => {
           toast.success(`Server ${label} updated successfully`);
         },
         onError: (error) => {
-          toast.error(`Failed to update server ${label}: ${error instanceof Error ? error.message : 'Unknown error'}`);
-        }
-      }
+          toast.error(
+            `Failed to update server ${label}: ${error instanceof Error ? error.message : "Unknown error"}`,
+          );
+        },
+      },
     );
   };
 
@@ -87,16 +118,18 @@ function RouteComponent() {
     await updateConfigMutation.mutateAsync(
       {
         path: `logging.${path}`,
-        value
+        value,
       },
       {
         onSuccess: () => {
           toast.success(`Logging ${label} updated successfully`);
         },
         onError: (error) => {
-          toast.error(`Failed to update logging ${label}: ${error instanceof Error ? error.message : 'Unknown error'}`);
-        }
-      }
+          toast.error(
+            `Failed to update logging ${label}: ${error instanceof Error ? error.message : "Unknown error"}`,
+          );
+        },
+      },
     );
   };
 
@@ -105,16 +138,18 @@ function RouteComponent() {
     await updateConfigMutation.mutateAsync(
       {
         path: `security.${path}`,
-        value
+        value,
       },
       {
         onSuccess: () => {
           toast.success(`Security ${label} updated successfully`);
         },
         onError: (error) => {
-          toast.error(`Failed to update security ${label}: ${error instanceof Error ? error.message : 'Unknown error'}`);
-        }
-      }
+          toast.error(
+            `Failed to update security ${label}: ${error instanceof Error ? error.message : "Unknown error"}`,
+          );
+        },
+      },
     );
   };
 
@@ -123,7 +158,7 @@ function RouteComponent() {
       <div className="p-6">
         <ConfigBreadcrumbs items={[{ label: "System" }]} />
         <CsMainTitle>System Configuration</CsMainTitle>
-        <div className="text-center py-8">Loading configuration...</div>
+        <div className="py-8 text-center">Loading configuration...</div>
       </div>
     );
   }
@@ -135,7 +170,8 @@ function RouteComponent() {
 
       <div className="mb-6">
         <p className="text-gray-600">
-          Server settings, logging, security, and system monitoring configuration.
+          Server settings, logging, security, and system monitoring
+          configuration.
         </p>
       </div>
 
@@ -180,7 +216,7 @@ function RouteComponent() {
 function ServerSettingsSection({
   config,
   onUpdate,
-  isUpdating
+  isUpdating,
 }: {
   config: any;
   onUpdate: (path: string, value: any) => void;
@@ -201,21 +237,21 @@ function ServerSettingsSection({
 
       {/* Network Configuration */}
       <Card>
-        <div className="flex items-center gap-3 mb-4">
+        <div className="mb-4 flex items-center gap-3">
           <Globe className="h-5 w-5 text-blue-600" />
           <h3 className="text-lg font-semibold">Network Configuration</h3>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
           <div>
             <Label htmlFor="server_host">Host Address</Label>
             <TextInput
               id="server_host"
-              value={config.host || '127.0.0.1'}
-              onChange={(e) => onUpdate('host', e.target.value)}
+              value={config.host || "127.0.0.1"}
+              onChange={(e) => onUpdate("host", e.target.value)}
               disabled={isUpdating}
             />
-            <p className="text-sm text-gray-600 mt-1">
+            <p className="mt-1 text-sm text-gray-600">
               Server bind address (use 0.0.0.0 for external access)
             </p>
           </div>
@@ -228,7 +264,7 @@ function ServerSettingsSection({
               min="1024"
               max="65535"
               value={config.port || 8000}
-              onChange={(e) => onUpdate('port', parseInt(e.target.value))}
+              onChange={(e) => onUpdate("port", parseInt(e.target.value))}
               disabled={isUpdating}
             />
           </div>
@@ -237,7 +273,7 @@ function ServerSettingsSection({
 
       {/* CORS Configuration */}
       <Card>
-        <div className="flex items-center gap-3 mb-4">
+        <div className="mb-4 flex items-center gap-3">
           <Shield className="h-5 w-5 text-green-600" />
           <h3 className="text-lg font-semibold">CORS Configuration</h3>
         </div>
@@ -246,11 +282,16 @@ function ServerSettingsSection({
           <Label htmlFor="cors_origins">Allowed Origins</Label>
           <TextInput
             id="cors_origins"
-            value={config.cors_origins?.join(', ') || '*'}
-            onChange={(e) => onUpdate('cors_origins', e.target.value.split(',').map(s => s.trim()))}
+            value={config.cors_origins?.join(", ") || "*"}
+            onChange={(e) =>
+              onUpdate(
+                "cors_origins",
+                e.target.value.split(",").map((s) => s.trim()),
+              )
+            }
             disabled={isUpdating}
           />
-          <p className="text-sm text-gray-600 mt-1">
+          <p className="mt-1 text-sm text-gray-600">
             Comma-separated list of allowed CORS origins (* for all)
           </p>
         </div>
@@ -258,7 +299,7 @@ function ServerSettingsSection({
 
       {/* Development Settings */}
       <Card>
-        <div className="flex items-center gap-3 mb-4">
+        <div className="mb-4 flex items-center gap-3">
           <Settings className="h-5 w-5 text-orange-600" />
           <h3 className="text-lg font-semibold">Development Settings</h3>
         </div>
@@ -267,12 +308,14 @@ function ServerSettingsSection({
           <div className="flex items-center justify-between">
             <div>
               <Label htmlFor="auto_reload">Auto-reload</Label>
-              <p className="text-sm text-gray-600">Automatically reload server on code changes</p>
+              <p className="text-sm text-gray-600">
+                Automatically reload server on code changes
+              </p>
             </div>
             <Checkbox
               id="auto_reload"
               checked={config.reload ?? true}
-              onChange={(e) => onUpdate('reload', e.target.checked)}
+              onChange={(e) => onUpdate("reload", e.target.checked)}
               disabled={isUpdating}
             />
           </div>
@@ -280,12 +323,14 @@ function ServerSettingsSection({
           <div className="flex items-center justify-between">
             <div>
               <Label htmlFor="access_log">Access Logs</Label>
-              <p className="text-sm text-gray-600">Enable detailed HTTP access logging</p>
+              <p className="text-sm text-gray-600">
+                Enable detailed HTTP access logging
+              </p>
             </div>
             <Checkbox
               id="access_log"
               checked={config.access_log ?? false}
-              onChange={(e) => onUpdate('access_log', e.target.checked)}
+              onChange={(e) => onUpdate("access_log", e.target.checked)}
               disabled={isUpdating}
             />
           </div>
@@ -294,8 +339,8 @@ function ServerSettingsSection({
             <Label htmlFor="server_log_level">Server Log Level</Label>
             <Select
               id="server_log_level"
-              value={config.log_level || 'INFO'}
-              onChange={(e) => onUpdate('log_level', e.target.value)}
+              value={config.log_level || "INFO"}
+              onChange={(e) => onUpdate("log_level", e.target.value)}
               disabled={isUpdating}
             >
               {LOG_LEVELS.map((level) => (
@@ -315,7 +360,7 @@ function ServerSettingsSection({
 function LoggingConfigurationSection({
   config,
   onUpdate,
-  isUpdating
+  isUpdating,
 }: {
   config: any;
   onUpdate: (path: string, value: any) => void;
@@ -325,13 +370,14 @@ function LoggingConfigurationSection({
     return <div>No logging configuration available</div>;
   }
 
-  const currentLogLevel = LOG_LEVELS.find(l => l.value === config.level) || LOG_LEVELS[1];
+  const currentLogLevel =
+    LOG_LEVELS.find((l) => l.value === config.level) || LOG_LEVELS[1];
 
   return (
     <div className="space-y-6">
       {/* Log Level Configuration */}
       <Card>
-        <div className="flex items-center gap-3 mb-4">
+        <div className="mb-4 flex items-center gap-3">
           <FileText className="h-5 w-5 text-blue-600" />
           <h3 className="text-lg font-semibold">Log Level Configuration</h3>
         </div>
@@ -341,8 +387,8 @@ function LoggingConfigurationSection({
             <Label htmlFor="log_level">Log Level</Label>
             <Select
               id="log_level"
-              value={config.level || 'INFO'}
-              onChange={(e) => onUpdate('level', e.target.value)}
+              value={config.level || "INFO"}
+              onChange={(e) => onUpdate("level", e.target.value)}
               disabled={isUpdating}
             >
               {LOG_LEVELS.map((level) => (
@@ -351,8 +397,9 @@ function LoggingConfigurationSection({
                 </option>
               ))}
             </Select>
-            <p className="text-sm text-gray-600 mt-1">
-              Currently using: <span className="font-medium">{currentLogLevel.label}</span>
+            <p className="mt-1 text-sm text-gray-600">
+              Currently using:{" "}
+              <span className="font-medium">{currentLogLevel.label}</span>
             </p>
           </div>
         </div>
@@ -360,7 +407,7 @@ function LoggingConfigurationSection({
 
       {/* Output Configuration */}
       <Card>
-        <div className="flex items-center gap-3 mb-4">
+        <div className="mb-4 flex items-center gap-3">
           <Monitor className="h-5 w-5 text-green-600" />
           <h3 className="text-lg font-semibold">Output Configuration</h3>
         </div>
@@ -369,12 +416,14 @@ function LoggingConfigurationSection({
           <div className="flex items-center justify-between">
             <div>
               <Label htmlFor="enable_console">Console Logging</Label>
-              <p className="text-sm text-gray-600">Output logs to console/terminal</p>
+              <p className="text-sm text-gray-600">
+                Output logs to console/terminal
+              </p>
             </div>
             <Checkbox
               id="enable_console"
               checked={config.enable_console ?? false}
-              onChange={(e) => onUpdate('enable_console', e.target.checked)}
+              onChange={(e) => onUpdate("enable_console", e.target.checked)}
               disabled={isUpdating}
             />
           </div>
@@ -382,12 +431,14 @@ function LoggingConfigurationSection({
           <div className="flex items-center justify-between">
             <div>
               <Label htmlFor="enable_file">File Logging</Label>
-              <p className="text-sm text-gray-600">Output logs to file system</p>
+              <p className="text-sm text-gray-600">
+                Output logs to file system
+              </p>
             </div>
             <Checkbox
               id="enable_file"
               checked={config.enable_file ?? true}
-              onChange={(e) => onUpdate('enable_file', e.target.checked)}
+              onChange={(e) => onUpdate("enable_file", e.target.checked)}
               disabled={isUpdating}
             />
           </div>
@@ -397,8 +448,8 @@ function LoggingConfigurationSection({
               <Label htmlFor="file_path">Log File Path</Label>
               <TextInput
                 id="file_path"
-                value={config.file_path || './logs/context_studio.log'}
-                onChange={(e) => onUpdate('file_path', e.target.value)}
+                value={config.file_path || "./logs/context_studio.log"}
+                onChange={(e) => onUpdate("file_path", e.target.value)}
                 disabled={isUpdating}
               />
             </div>
@@ -408,7 +459,7 @@ function LoggingConfigurationSection({
 
       {/* Format Configuration */}
       <Card>
-        <div className="flex items-center gap-3 mb-4">
+        <div className="mb-4 flex items-center gap-3">
           <Settings className="h-5 w-5 text-purple-600" />
           <h3 className="text-lg font-semibold">Format Configuration</h3>
         </div>
@@ -418,11 +469,14 @@ function LoggingConfigurationSection({
             <Label htmlFor="log_format">Log Format</Label>
             <TextInput
               id="log_format"
-              value={config.format || '%(asctime)s - %(name)s - %(levelname)s - %(message)s'}
-              onChange={(e) => onUpdate('format', e.target.value)}
+              value={
+                config.format ||
+                "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+              }
+              onChange={(e) => onUpdate("format", e.target.value)}
               disabled={isUpdating}
             />
-            <p className="text-sm text-gray-600 mt-1">
+            <p className="mt-1 text-sm text-gray-600">
               Python logging format string
             </p>
           </div>
@@ -431,11 +485,11 @@ function LoggingConfigurationSection({
             <Label htmlFor="date_format">Date Format</Label>
             <TextInput
               id="date_format"
-              value={config.date_format || '%Y-%m-%d %H:%M:%S'}
-              onChange={(e) => onUpdate('date_format', e.target.value)}
+              value={config.date_format || "%Y-%m-%d %H:%M:%S"}
+              onChange={(e) => onUpdate("date_format", e.target.value)}
               disabled={isUpdating}
             />
-            <p className="text-sm text-gray-600 mt-1">
+            <p className="mt-1 text-sm text-gray-600">
               strftime format for timestamps
             </p>
           </div>
@@ -445,12 +499,12 @@ function LoggingConfigurationSection({
       {/* File Rotation */}
       {config.enable_file && (
         <Card>
-          <div className="flex items-center gap-3 mb-4">
+          <div className="mb-4 flex items-center gap-3">
             <RotateCcw className="h-5 w-5 text-orange-600" />
             <h3 className="text-lg font-semibold">File Rotation</h3>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
             <div>
               <Label htmlFor="max_file_size">Max File Size (bytes)</Label>
               <TextInput
@@ -458,11 +512,15 @@ function LoggingConfigurationSection({
                 type="number"
                 min="1024"
                 value={config.max_file_size || 10485760}
-                onChange={(e) => onUpdate('max_file_size', parseInt(e.target.value))}
+                onChange={(e) =>
+                  onUpdate("max_file_size", parseInt(e.target.value))
+                }
                 disabled={isUpdating}
               />
-              <p className="text-sm text-gray-600 mt-1">
-                Current: {((config.max_file_size || 10485760) / 1024 / 1024).toFixed(1)} MB
+              <p className="mt-1 text-sm text-gray-600">
+                Current:{" "}
+                {((config.max_file_size || 10485760) / 1024 / 1024).toFixed(1)}{" "}
+                MB
               </p>
             </div>
 
@@ -474,10 +532,12 @@ function LoggingConfigurationSection({
                 min="0"
                 max="50"
                 value={config.backup_count || 5}
-                onChange={(e) => onUpdate('backup_count', parseInt(e.target.value))}
+                onChange={(e) =>
+                  onUpdate("backup_count", parseInt(e.target.value))
+                }
                 disabled={isUpdating}
               />
-              <p className="text-sm text-gray-600 mt-1">
+              <p className="mt-1 text-sm text-gray-600">
                 Number of rotated log files to keep
               </p>
             </div>
@@ -492,7 +552,7 @@ function LoggingConfigurationSection({
 function SecuritySettingsSection({
   config,
   onUpdate,
-  isUpdating
+  isUpdating,
 }: {
   config: any;
   onUpdate: (path: string, value: any) => void;
@@ -507,13 +567,14 @@ function SecuritySettingsSection({
       <Alert color="info">
         <Lock className="h-4 w-4" />
         <span className="ml-2">
-          Security settings help protect your Context Studio instance from unauthorized access.
+          Security settings help protect your Context Studio instance from
+          unauthorized access.
         </span>
       </Alert>
 
       {/* API Security */}
       <Card>
-        <div className="flex items-center gap-3 mb-4">
+        <div className="mb-4 flex items-center gap-3">
           <Lock className="h-5 w-5 text-red-600" />
           <h3 className="text-lg font-semibold">API Security</h3>
         </div>
@@ -522,12 +583,14 @@ function SecuritySettingsSection({
           <div className="flex items-center justify-between">
             <div>
               <Label htmlFor="require_secure_key">Require Secure Key</Label>
-              <p className="text-sm text-gray-600">Require API key for proxy access</p>
+              <p className="text-sm text-gray-600">
+                Require API key for proxy access
+              </p>
             </div>
             <Checkbox
               id="require_secure_key"
               checked={config.require_secure_key ?? false}
-              onChange={(e) => onUpdate('require_secure_key', e.target.checked)}
+              onChange={(e) => onUpdate("require_secure_key", e.target.checked)}
               disabled={isUpdating}
             />
           </div>
@@ -539,12 +602,12 @@ function SecuritySettingsSection({
                 <TextInput
                   id="secure_key"
                   type="password"
-                  value={config.secure_key || ''}
-                  onChange={(e) => onUpdate('secure_key', e.target.value)}
+                  value={config.secure_key || ""}
+                  onChange={(e) => onUpdate("secure_key", e.target.value)}
                   disabled={isUpdating}
                   placeholder="Enter secure API key"
                 />
-                <p className="text-sm text-gray-600 mt-1">
+                <p className="mt-1 text-sm text-gray-600">
                   API key required for accessing the proxy service
                 </p>
               </div>
@@ -553,11 +616,11 @@ function SecuritySettingsSection({
                 <Label htmlFor="api_key_header">API Key Header</Label>
                 <TextInput
                   id="api_key_header"
-                  value={config.api_key_header || 'X-API-Key'}
-                  onChange={(e) => onUpdate('api_key_header', e.target.value)}
+                  value={config.api_key_header || "X-API-Key"}
+                  onChange={(e) => onUpdate("api_key_header", e.target.value)}
                   disabled={isUpdating}
                 />
-                <p className="text-sm text-gray-600 mt-1">
+                <p className="mt-1 text-sm text-gray-600">
                   HTTP header name for API key authentication
                 </p>
               </div>
@@ -568,7 +631,7 @@ function SecuritySettingsSection({
 
       {/* Security Logging */}
       <Card>
-        <div className="flex items-center gap-3 mb-4">
+        <div className="mb-4 flex items-center gap-3">
           <FileText className="h-5 w-5 text-orange-600" />
           <h3 className="text-lg font-semibold">Security Logging</h3>
         </div>
@@ -577,12 +640,16 @@ function SecuritySettingsSection({
           <div className="flex items-center justify-between">
             <div>
               <Label htmlFor="log_security_events">Log Security Events</Label>
-              <p className="text-sm text-gray-600">Log authentication attempts and security events</p>
+              <p className="text-sm text-gray-600">
+                Log authentication attempts and security events
+              </p>
             </div>
             <Checkbox
               id="log_security_events"
               checked={config.log_security_events ?? false}
-              onChange={(e) => onUpdate('log_security_events', e.target.checked)}
+              onChange={(e) =>
+                onUpdate("log_security_events", e.target.checked)
+              }
               disabled={isUpdating}
             />
           </div>
@@ -591,7 +658,7 @@ function SecuritySettingsSection({
 
       {/* Security Status */}
       <Card>
-        <div className="flex items-center gap-3 mb-4">
+        <div className="mb-4 flex items-center gap-3">
           <Shield className="h-5 w-5 text-green-600" />
           <h3 className="text-lg font-semibold">Security Status</h3>
         </div>
@@ -599,14 +666,20 @@ function SecuritySettingsSection({
         <div className="space-y-3">
           <div className="flex items-center justify-between">
             <span>API Key Protection</span>
-            <Badge color={config.require_secure_key ? "success" : "warning"} size="sm">
+            <Badge
+              color={config.require_secure_key ? "success" : "warning"}
+              size="sm"
+            >
               {config.require_secure_key ? "Enabled" : "Disabled"}
             </Badge>
           </div>
 
           <div className="flex items-center justify-between">
             <span>Security Event Logging</span>
-            <Badge color={config.log_security_events ? "success" : "gray"} size="sm">
+            <Badge
+              color={config.log_security_events ? "success" : "gray"}
+              size="sm"
+            >
               {config.log_security_events ? "Enabled" : "Disabled"}
             </Badge>
           </div>
@@ -636,19 +709,19 @@ function PerformanceMonitoringSection() {
 
       {/* System Metrics */}
       <Card>
-        <div className="flex items-center gap-3 mb-4">
+        <div className="mb-4 flex items-center gap-3">
           <Monitor className="h-5 w-5 text-blue-600" />
           <h3 className="text-lg font-semibold">System Metrics</h3>
           <Button size="xs" color="gray">
-            <RotateCcw className="h-3 w-3 mr-1" />
+            <RotateCcw className="mr-1 h-3 w-3" />
             Refresh
           </Button>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
           <div>
             <Label>CPU Usage</Label>
-            <div className="flex items-center gap-3 mt-2">
+            <div className="mt-2 flex items-center gap-3">
               <Progress progress={45} color="blue" className="flex-1" />
               <span className="text-sm font-medium">45%</span>
             </div>
@@ -656,7 +729,7 @@ function PerformanceMonitoringSection() {
 
           <div>
             <Label>Memory Usage</Label>
-            <div className="flex items-center gap-3 mt-2">
+            <div className="mt-2 flex items-center gap-3">
               <Progress progress={67} color="yellow" className="flex-1" />
               <span className="text-sm font-medium">67%</span>
             </div>
@@ -666,12 +739,12 @@ function PerformanceMonitoringSection() {
 
       {/* Database Performance */}
       <Card>
-        <div className="flex items-center gap-3 mb-4">
+        <div className="mb-4 flex items-center gap-3">
           <Database className="h-5 w-5 text-green-600" />
           <h3 className="text-lg font-semibold">Database Performance</h3>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
           <div className="text-center">
             <div className="text-2xl font-bold text-green-600">142</div>
             <div className="text-sm text-gray-600">Completed Operations</div>
@@ -691,7 +764,7 @@ function PerformanceMonitoringSection() {
 
       {/* Health Status */}
       <Card>
-        <div className="flex items-center gap-3 mb-4">
+        <div className="mb-4 flex items-center gap-3">
           <CheckCircle className="h-5 w-5 text-green-600" />
           <h3 className="text-lg font-semibold">System Health</h3>
         </div>
@@ -700,7 +773,7 @@ function PerformanceMonitoringSection() {
           <div className="flex items-center justify-between">
             <span>API Service</span>
             <Badge color="success" size="sm">
-              <CheckCircle className="h-3 w-3 mr-1" />
+              <CheckCircle className="mr-1 h-3 w-3" />
               Healthy
             </Badge>
           </div>
@@ -708,7 +781,7 @@ function PerformanceMonitoringSection() {
           <div className="flex items-center justify-between">
             <span>Database Connection</span>
             <Badge color="success" size="sm">
-              <CheckCircle className="h-3 w-3 mr-1" />
+              <CheckCircle className="mr-1 h-3 w-3" />
               Connected
             </Badge>
           </div>
@@ -716,7 +789,7 @@ function PerformanceMonitoringSection() {
           <div className="flex items-center justify-between">
             <span>Proxy Service</span>
             <Badge color="success" size="sm">
-              <CheckCircle className="h-3 w-3 mr-1" />
+              <CheckCircle className="mr-1 h-3 w-3" />
               Running
             </Badge>
           </div>
@@ -724,7 +797,7 @@ function PerformanceMonitoringSection() {
           <div className="flex items-center justify-between">
             <span>NLP Pipeline</span>
             <Badge color="warning" size="sm">
-              <AlertTriangle className="h-3 w-3 mr-1" />
+              <AlertTriangle className="mr-1 h-3 w-3" />
               Limited
             </Badge>
           </div>

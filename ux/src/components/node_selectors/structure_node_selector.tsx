@@ -7,7 +7,10 @@
 import React, { useMemo } from "react";
 
 import { StructureNode, NodeType } from "@/api/types/structureNodes";
-import { PortalRecordSelector, FieldMap } from "@/components/node_selectors/portal_record_selector";
+import {
+  PortalRecordSelector,
+  FieldMap,
+} from "@/components/node_selectors/portal_record_selector";
 import { useStructureNodes } from "@/api/hooks/structure_nodes/useStructureNodes";
 
 export interface StructureNodeSelectorProps {
@@ -30,9 +33,11 @@ export const StructureNodeSelector: React.FC<StructureNodeSelectorProps> = ({
   "data-testid": dataTestId,
 }) => {
   // Fetch all nodes or filter by type
-  const { data: nodes, isLoading, error } = useStructureNodes(
-    nodeType ? { node_type: nodeType } : undefined
-  );
+  const {
+    data: nodes,
+    isLoading,
+    error,
+  } = useStructureNodes(nodeType ? { node_type: nodeType } : undefined);
 
   // Filter out excluded nodes
   const filteredNodes = useMemo(() => {

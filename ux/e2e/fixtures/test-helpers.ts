@@ -1,4 +1,4 @@
-import { Page, expect } from '@playwright/test';
+import { Page, expect } from "@playwright/test";
 
 /**
  * Test helper utilities for E2E tests.
@@ -8,7 +8,7 @@ import { Page, expect } from '@playwright/test';
  * Wait for the application to be fully loaded and ready.
  */
 export async function waitForAppReady(page: Page): Promise<void> {
-  await page.waitForLoadState('networkidle');
+  await page.waitForLoadState("networkidle");
 
   // Add additional app-specific ready checks here
   // For example, wait for a specific element that indicates the app is ready
@@ -22,28 +22,33 @@ export async function apiRequest<T = any>(
   page: Page,
   endpoint: string,
   options?: {
-    method?: 'GET' | 'POST' | 'PUT' | 'DELETE' | 'PATCH';
+    method?: "GET" | "POST" | "PUT" | "DELETE" | "PATCH";
     body?: any;
     headers?: Record<string, string>;
-  }
+  },
 ): Promise<T> {
-  const { method = 'GET', body, headers = {} } = options || {};
+  const { method = "GET", body, headers = {} } = options || {};
 
-  const response = await page.request.fetch(`http://localhost:8888${endpoint}`, {
-    method,
-    headers: {
-      'Content-Type': 'application/json',
-      ...headers,
+  const response = await page.request.fetch(
+    `http://localhost:8888${endpoint}`,
+    {
+      method,
+      headers: {
+        "Content-Type": "application/json",
+        ...headers,
+      },
+      data: body ? JSON.stringify(body) : undefined,
     },
-    data: body ? JSON.stringify(body) : undefined,
-  });
+  );
 
   if (!response.ok()) {
     const responseText = await response.text();
     console.error(`API request failed: ${method} ${endpoint}`);
     console.error(`Status: ${response.status()} ${response.statusText()}`);
     console.error(`Response: ${responseText}`);
-    throw new Error(`API request failed with status ${response.status()}: ${responseText}`);
+    throw new Error(
+      `API request failed with status ${response.status()}: ${responseText}`,
+    );
   }
 
   return await response.json();
@@ -69,7 +74,7 @@ export async function seedTestData(
     domains?: any[];
     terms?: any[];
     predicates?: any[];
-  }
+  },
 ): Promise<void> {
   // Implement based on your API's structure
   // For example:
@@ -89,16 +94,16 @@ export async function seedTestData(
 export async function waitForElement(
   page: Page,
   selector: string,
-  options?: { timeout?: number; state?: 'visible' | 'hidden' | 'attached' }
+  options?: { timeout?: number; state?: "visible" | "hidden" | "attached" },
 ): Promise<void> {
   try {
     await page.waitForSelector(selector, {
-      state: options?.state || 'visible',
+      state: options?.state || "visible",
       timeout: options?.timeout || 10000,
     });
   } catch (error) {
     throw new Error(
-      `Element "${selector}" not found after ${options?.timeout || 10000}ms. Current URL: ${page.url()}`
+      `Element "${selector}" not found after ${options?.timeout || 10000}ms. Current URL: ${page.url()}`,
     );
   }
 }
@@ -109,7 +114,7 @@ export async function waitForElement(
 export async function waitForAnyCondition(
   page: Page,
   conditions: Array<() => Promise<boolean>>,
-  timeout: number = 10000
+  timeout: number = 10000,
 ): Promise<number> {
   const startTime = Date.now();
 
@@ -127,7 +132,9 @@ export async function waitForAnyCondition(
     await page.waitForTimeout(100);
   }
 
-  throw new Error(`None of the ${conditions.length} conditions were met within ${timeout}ms`);
+  throw new Error(
+    `None of the ${conditions.length} conditions were met within ${timeout}ms`,
+  );
 }
 
 /**
@@ -136,14 +143,17 @@ export async function waitForAnyCondition(
 export async function endpointExists(
   page: Page,
   endpoint: string,
-  method: 'GET' | 'POST' | 'PUT' | 'DELETE' = 'GET'
+  method: "GET" | "POST" | "PUT" | "DELETE" = "GET",
 ): Promise<boolean> {
   try {
-    const response = await page.request.fetch(`http://localhost:8888${endpoint}`, {
-      method: method === 'GET' ? 'HEAD' : method,
-      headers: { 'Content-Type': 'application/json' },
-      failOnStatusCode: false,
-    });
+    const response = await page.request.fetch(
+      `http://localhost:8888${endpoint}`,
+      {
+        method: method === "GET" ? "HEAD" : method,
+        headers: { "Content-Type": "application/json" },
+        failOnStatusCode: false,
+      },
+    );
 
     // 404 means endpoint doesn't exist, anything else means it exists
     return response.status() !== 404;
@@ -162,133 +172,137 @@ export async function mockReferenceAPIs(page: Page): Promise<void> {
   const getQueryFromUrl = (url: string): string => {
     try {
       const urlObj = new URL(url);
-      return urlObj.searchParams.get('query') || 'computer';
+      return urlObj.searchParams.get("query") || "computer";
     } catch {
-      return 'computer';
+      return "computer";
     }
   };
 
   // Mock backend's DBpedia search endpoint
-  await page.route('**/api/reference/dbpedia/search*', (route) => {
+  await page.route("**/api/reference/dbpedia/search*", (route) => {
     const query = getQueryFromUrl(route.request().url());
     route.fulfill({
       status: 200,
-      contentType: 'application/json',
+      contentType: "application/json",
       body: JSON.stringify({
         query: query,
         results: [
           {
-            id: 'http://dbpedia.org/resource/Computer',
-            source: 'dbpedia',
-            title: 'Computer',
-            definition: 'A computer is an electronic device for storing and processing data, typically in binary form.',
-            source_url: 'http://dbpedia.org/resource/Computer',
+            id: "http://dbpedia.org/resource/Computer",
+            source: "dbpedia",
+            title: "Computer",
+            definition:
+              "A computer is an electronic device for storing and processing data, typically in binary form.",
+            source_url: "http://dbpedia.org/resource/Computer",
             relevance_score: 0.95,
-            attributes: {}
-          }
+            attributes: {},
+          },
         ],
         links: [],
         total_results: 1,
         total_links: 0,
-        sources_queried: ['dbpedia'],
+        sources_queried: ["dbpedia"],
         source_errors: {},
         offset: 0,
         limit: 20,
-        search_time_ms: 150.5
-      })
+        search_time_ms: 150.5,
+      }),
     });
   });
 
   // Mock backend's Wikidata search endpoint
-  await page.route('**/api/reference/wikidata/search*', (route) => {
+  await page.route("**/api/reference/wikidata/search*", (route) => {
     const query = getQueryFromUrl(route.request().url());
     route.fulfill({
       status: 200,
-      contentType: 'application/json',
+      contentType: "application/json",
       body: JSON.stringify({
         query: query,
         results: [
           {
-            id: 'Q68',
-            source: 'wikidata',
-            title: 'computer',
-            definition: 'general-purpose device for performing arithmetic or logical operations',
-            source_url: 'https://www.wikidata.org/wiki/Q68',
+            id: "Q68",
+            source: "wikidata",
+            title: "computer",
+            definition:
+              "general-purpose device for performing arithmetic or logical operations",
+            source_url: "https://www.wikidata.org/wiki/Q68",
             relevance_score: 0.92,
-            attributes: {}
-          }
+            attributes: {},
+          },
         ],
         links: [],
         total_results: 1,
         total_links: 0,
-        sources_queried: ['wikidata'],
+        sources_queried: ["wikidata"],
         source_errors: {},
         offset: 0,
         limit: 20,
-        search_time_ms: 200.3
-      })
+        search_time_ms: 200.3,
+      }),
     });
   });
 
   // Mock backend's ConceptNet search endpoint
-  await page.route('**/api/reference/conceptnet/search*', (route) => {
+  await page.route("**/api/reference/conceptnet/search*", (route) => {
     const query = getQueryFromUrl(route.request().url());
     route.fulfill({
       status: 200,
-      contentType: 'application/json',
+      contentType: "application/json",
       body: JSON.stringify({
         query: query,
         results: [
           {
-            id: '/c/en/computer',
-            source: 'conceptnet',
-            title: 'computer',
-            definition: 'An electronic device that can perform calculations and process information',
-            source_url: 'http://conceptnet.io/c/en/computer',
+            id: "/c/en/computer",
+            source: "conceptnet",
+            title: "computer",
+            definition:
+              "An electronic device that can perform calculations and process information",
+            source_url: "http://conceptnet.io/c/en/computer",
             relevance_score: 0.88,
-            attributes: {}
-          }
+            attributes: {},
+          },
         ],
         links: [],
         total_results: 1,
         total_links: 0,
-        sources_queried: ['conceptnet'],
+        sources_queried: ["conceptnet"],
         source_errors: {},
         offset: 0,
         limit: 20,
-        search_time_ms: 180.7
-      })
+        search_time_ms: 180.7,
+      }),
     });
   });
 
   // Mock backend's Schema.org search endpoint
-  await page.route('**/api/reference/schema-org/search*', (route) => {
+  await page.route("**/api/reference/schema-org/search*", (route) => {
     const query = getQueryFromUrl(route.request().url());
     route.fulfill({
       status: 200,
-      contentType: 'application/json',
+      contentType: "application/json",
       body: JSON.stringify({
         query: query,
         results: [
           {
-            id: 'schema:ComputerLanguage',
-            source: 'schema_org',
-            title: 'ComputerLanguage',
-            definition: 'A computer language is an artificial language designed for humans to communicate with computers',
-            source_url: 'https://schema.org/ComputerLanguage',
+            id: "schema:ComputerLanguage",
+            source: "schema_org",
+            title: "ComputerLanguage",
+            definition:
+              "A computer language is an artificial language designed for humans to communicate with computers",
+            source_url: "https://schema.org/ComputerLanguage",
             relevance_score: 0.85,
-            attributes: {}
-          }
+            attributes: {},
+          },
         ],
         links: [],
         total_results: 1,
         total_links: 0,
-        sources_queried: ['schema_org'],
+        sources_queried: ["schema_org"],
         source_errors: {},
         offset: 0,
         limit: 20,
-        search_time_ms: 120.2
-      })
+        search_time_ms: 120.2,
+      }),
     });
   });
 }

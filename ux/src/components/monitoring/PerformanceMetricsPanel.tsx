@@ -94,7 +94,7 @@ export function PerformanceMetricsPanel({
                   {metric.trend && (
                     <div
                       className={`flex items-center gap-1 text-sm ${getTrendColor(
-                        metric.trend
+                        metric.trend,
                       )}`}
                     >
                       {getTrendIcon(metric.trend)}
@@ -151,14 +151,18 @@ export function ComparisonMetric({
         </div>
         <div className="flex items-center justify-between">
           <div className="text-center">
-            <div className="text-xs text-gray-500 dark:text-gray-400">Before</div>
+            <div className="text-xs text-gray-500 dark:text-gray-400">
+              Before
+            </div>
             <div className="text-lg font-semibold text-gray-700 dark:text-gray-300">
               {before} {unit}
             </div>
           </div>
           <ArrowRight className={`h-5 w-5 ${getImprovementColor()}`} />
           <div className="text-center">
-            <div className="text-xs text-gray-500 dark:text-gray-400">After</div>
+            <div className="text-xs text-gray-500 dark:text-gray-400">
+              After
+            </div>
             <div className={`text-lg font-semibold ${getImprovementColor()}`}>
               {after} {unit}
             </div>

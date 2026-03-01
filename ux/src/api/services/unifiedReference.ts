@@ -76,7 +76,7 @@ export class UnifiedReferenceService extends BaseService {
           throw new UnifiedReferenceError(
             "Search endpoint not found. Please ensure the backend service is properly configured and running.",
             undefined,
-            error
+            error,
           );
         }
         throw error;
@@ -93,7 +93,7 @@ export class UnifiedReferenceService extends BaseService {
       this.sanitizeString(nodeId, "Node ID", 255);
 
       throw new UnifiedReferenceError(
-        "Node details endpoint is not yet implemented. Please ensure the backend service supports this functionality."
+        "Node details endpoint is not yet implemented. Please ensure the backend service supports this functionality.",
       );
     }, "get unified node");
   }
@@ -110,12 +110,10 @@ export class UnifiedReferenceService extends BaseService {
       this.sanitizeString(nodeId, "Node ID", 255);
 
       throw new UnifiedReferenceError(
-        "Node links endpoint is not yet implemented. Please ensure the backend service supports this functionality."
+        "Node links endpoint is not yet implemented. Please ensure the backend service supports this functionality.",
       );
     }, "get node links");
   }
-
-
 
   /**
    * Paginated search with load more functionality
@@ -137,7 +135,7 @@ export class UnifiedReferenceService extends BaseService {
    */
   async searchSource(
     source: SourceType,
-    request: UnifiedSearchRequest
+    request: UnifiedSearchRequest,
   ): Promise<UnifiedSearchResponse> {
     return this.withErrorContext(async () => {
       this.validateRequired(request, "Search request");
@@ -146,14 +144,14 @@ export class UnifiedReferenceService extends BaseService {
 
       if (request.query.trim().length < 2) {
         throw new UnifiedReferenceError(
-          "Search query must be at least 2 characters"
+          "Search query must be at least 2 characters",
         );
       }
 
       const config = SOURCE_ENDPOINTS[source];
       if (!config || !config.enabled) {
         throw new UnifiedReferenceError(
-          `Source ${source} is not available or not enabled`
+          `Source ${source} is not available or not enabled`,
         );
       }
 
@@ -166,7 +164,7 @@ export class UnifiedReferenceService extends BaseService {
 
         const response = await this.getResource<MultiSourceSearchResponse>(
           config.endpoint,
-          params
+          params,
         );
 
         // Backend now returns normalized data directly
@@ -187,7 +185,7 @@ export class UnifiedReferenceService extends BaseService {
           throw new UnifiedReferenceError(
             `${source} search endpoint not found. Please ensure the backend service supports this source.`,
             undefined,
-            error
+            error,
           );
         }
         throw error;
@@ -195,13 +193,17 @@ export class UnifiedReferenceService extends BaseService {
     }, `${source} search`);
   }
 
-
   /**
    * Get available sources and their status
    */
-  async getAvailableSources(): Promise<Record<SourceType, { enabled: boolean; endpoint: string }>> {
+  async getAvailableSources(): Promise<
+    Record<SourceType, { enabled: boolean; endpoint: string }>
+  > {
     return this.withErrorContext(async () => {
-      const sources: Record<SourceType, { enabled: boolean; endpoint: string }> = {} as Record<SourceType, { enabled: boolean; endpoint: string }>;
+      const sources: Record<
+        SourceType,
+        { enabled: boolean; endpoint: string }
+      > = {} as Record<SourceType, { enabled: boolean; endpoint: string }>;
 
       Object.entries(SOURCE_ENDPOINTS).forEach(([source, config]) => {
         sources[source as SourceType] = {
@@ -260,10 +262,6 @@ export class UnifiedReferenceService extends BaseService {
       }
     }, `test ${source} connectivity`);
   }
-
-
-
-
 }
 
 // Export singleton instance

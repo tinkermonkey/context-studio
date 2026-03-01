@@ -14,7 +14,10 @@ export function useNavbarHeight(): number {
       const height = parseInt(cachedHeight, 10);
       setNavbarHeight(height);
       // Set CSS custom property
-      document.documentElement.style.setProperty("--navbar-height", `${height}px`);
+      document.documentElement.style.setProperty(
+        "--navbar-height",
+        `${height}px`,
+      );
       return;
     }
 
@@ -27,7 +30,10 @@ export function useNavbarHeight(): number {
         // Cache the height in sessionStorage
         sessionStorage.setItem("navbarHeight", height.toString());
         // Set CSS custom property
-        document.documentElement.style.setProperty("--navbar-height", `${height}px`);
+        document.documentElement.style.setProperty(
+          "--navbar-height",
+          `${height}px`,
+        );
       }
     };
 

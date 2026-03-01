@@ -59,8 +59,8 @@ export const useBatchPipelineExecutionMutation = (
 ) => {
   return useMutation({
     mutationFn: async (requests: PipelineExecutionRequest[]) => {
-      const promises = requests.map(request =>
-        pipelineExecutionService.executePipeline(request)
+      const promises = requests.map((request) =>
+        pipelineExecutionService.executePipeline(request),
       );
       return Promise.all(promises);
     },
@@ -81,10 +81,10 @@ export const useBatchPipelineExecutionStreamMutation = (
 ) => {
   return useMutation({
     mutationFn: async (requests: PipelineExecutionRequest[]) => {
-      const promises = requests.map(request =>
+      const promises = requests.map((request) =>
         pipelineExecutionService.executePipelineStream(request, (chunk) => {
           onChunk?.({ ...chunk, flavorId: request.flavor_id });
-        })
+        }),
       );
       return Promise.all(promises);
     },

@@ -51,7 +51,10 @@ export function buildHierarchicalTree(input: TreeBuilderInput): HierarchyNode {
     // Combine all nodes into a single array for generic processing
     const allNodes = [
       ...layers.map((n: any) => ({ ...n, node_type: n.node_type || "layer" })),
-      ...domains.map((n: any) => ({ ...n, node_type: n.node_type || "domain" })),
+      ...domains.map((n: any) => ({
+        ...n,
+        node_type: n.node_type || "domain",
+      })),
       ...terms.map((n: any) => ({ ...n, node_type: n.node_type || "term" })),
     ];
 

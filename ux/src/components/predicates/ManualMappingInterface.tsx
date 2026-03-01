@@ -27,7 +27,11 @@ import { useButterToast } from "@/hooks/useButterToast";
 
 export interface ManualMappingInterfaceProps {
   globalPredicateId?: string;
-  onMappingCreate?: (globalPredicateId: string, externalPredicateId: string, confidence: number) => void;
+  onMappingCreate?: (
+    globalPredicateId: string,
+    externalPredicateId: string,
+    confidence: number,
+  ) => void;
 }
 
 export const ManualMappingInterface: React.FC<ManualMappingInterfaceProps> = ({
@@ -56,7 +60,7 @@ export const ManualMappingInterface: React.FC<ManualMappingInterfaceProps> = ({
       source: sourceFilter || undefined,
     });
 
-    // Filter external predicates by search query
+  // Filter external predicates by search query
   const filteredExternalPredicates = React.useMemo(() => {
     if (!externalPredicates?.data) return [];
     if (!searchQuery.trim()) return externalPredicates.data;
@@ -77,7 +81,9 @@ export const ManualMappingInterface: React.FC<ManualMappingInterfaceProps> = ({
 
     // Check if already mapped
     if (
-      selectedMappings.some((m) => m.externalPredicateId === externalPredicateId)
+      selectedMappings.some(
+        (m) => m.externalPredicateId === externalPredicateId,
+      )
     ) {
       toast.warning("This predicate is already mapped");
       return;
@@ -92,7 +98,9 @@ export const ManualMappingInterface: React.FC<ManualMappingInterfaceProps> = ({
 
   const handleRemoveMapping = (externalPredicateId: string) => {
     setSelectedMappings(
-      selectedMappings.filter((m) => m.externalPredicateId !== externalPredicateId),
+      selectedMappings.filter(
+        (m) => m.externalPredicateId !== externalPredicateId,
+      ),
     );
   };
 
@@ -201,7 +209,9 @@ export const ManualMappingInterface: React.FC<ManualMappingInterfaceProps> = ({
 
       {/* Search External Predicates */}
       <Card>
-        <h4 className="mb-4 text-base font-medium">Search External Predicates</h4>
+        <h4 className="mb-4 text-base font-medium">
+          Search External Predicates
+        </h4>
 
         <div className="mb-4 grid grid-cols-1 gap-4 md:grid-cols-2">
           <div>
@@ -264,7 +274,8 @@ export const ManualMappingInterface: React.FC<ManualMappingInterfaceProps> = ({
                   </TableHeadCell>
                 </TableRow>
               </TableHead>
-              <TableBody className="divide-y">{filteredExternalPredicates.map((predicate) => (
+              <TableBody className="divide-y">
+                {filteredExternalPredicates.map((predicate) => (
                   <TableRow
                     key={predicate.id}
                     className="bg-white dark:border-gray-700 dark:bg-gray-800"

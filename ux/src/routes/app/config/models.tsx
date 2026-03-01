@@ -6,10 +6,13 @@ import {
   useEnabledModels,
   useProvidersStatus,
   useToggleModel,
-  useModelsByProvider
+  useModelsByProvider,
 } from "@/api/hooks";
 import { Server, AlertTriangle, CheckCircle } from "lucide-react";
-import type { EnabledModelConfig, ProviderType } from "@/api/services/enabledModels";
+import type {
+  EnabledModelConfig,
+  ProviderType,
+} from "@/api/services/enabledModels";
 import { useButterToast } from "@/hooks/useButterToast";
 
 export const Route = createFileRoute("/app/config/models")({
@@ -38,18 +41,26 @@ const COST_TIER_COLORS = {
 
 function RouteComponent() {
   const toast = useButterToast();
-  const { data: enabledModels, isLoading: isLoadingEnabledModels } = useEnabledModels();
-  const { data: providersStatus, isLoading: isLoadingProviders } = useProvidersStatus();
+  const { data: enabledModels, isLoading: isLoadingEnabledModels } =
+    useEnabledModels();
+  const { data: providersStatus, isLoading: isLoadingProviders } =
+    useProvidersStatus();
 
   const toggleModelMutation = useToggleModel();
 
   const handleToggleModel = async (modelName: string, enabled: boolean) => {
-    const modelDisplayName = enabledModels?.models.find(m => m.model_name === modelName)?.display_name || modelName;
+    const modelDisplayName =
+      enabledModels?.models.find((m) => m.model_name === modelName)
+        ?.display_name || modelName;
     try {
       await toggleModelMutation.mutateAsync({ modelName, enabled });
-      toast.success(`${modelDisplayName} ${enabled ? 'enabled' : 'disabled'} successfully`);
+      toast.success(
+        `${modelDisplayName} ${enabled ? "enabled" : "disabled"} successfully`,
+      );
     } catch (error) {
-      toast.error(`Failed to ${enabled ? 'enable' : 'disable'} ${modelDisplayName}: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      toast.error(
+        `Failed to ${enabled ? "enable" : "disable"} ${modelDisplayName}: ${error instanceof Error ? error.message : "Unknown error"}`,
+      );
     }
   };
 
@@ -60,7 +71,8 @@ function RouteComponent() {
 
       <div className="mb-6">
         <p className="text-gray-600">
-          Manage your LLM models, configure providers, and view model capabilities.
+          Manage your LLM models, configure providers, and view model
+          capabilities.
         </p>
       </div>
 
@@ -74,7 +86,7 @@ function RouteComponent() {
 
       {/* Provider Configuration Section */}
       <div className="mt-8">
-        <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
+        <h2 className="mb-4 flex items-center gap-2 text-xl font-semibold">
           <Server className="h-5 w-5" />
           Provider Configuration
         </h2>
@@ -92,7 +104,7 @@ function AvailableModelsTab({
   enabledModels,
   isLoading,
   onToggleModel,
-  isToggling
+  isToggling,
 }: {
   enabledModels: EnabledModelConfig[];
   isLoading: boolean;
@@ -100,23 +112,26 @@ function AvailableModelsTab({
   isToggling: boolean;
 }) {
   if (isLoading) {
-    return <div className="text-center py-8">Loading models...</div>;
+    return <div className="py-8 text-center">Loading models...</div>;
   }
 
   // Group models by provider
-  const modelsByProvider = enabledModels.reduce((acc, model) => {
-    const provider = model.provider_type;
-    if (!acc[provider]) {
-      acc[provider] = [];
-    }
-    acc[provider].push(model);
-    return acc;
-  }, {} as Record<ProviderType, EnabledModelConfig[]>);
+  const modelsByProvider = enabledModels.reduce(
+    (acc, model) => {
+      const provider = model.provider_type;
+      if (!acc[provider]) {
+        acc[provider] = [];
+      }
+      acc[provider].push(model);
+      return acc;
+    },
+    {} as Record<ProviderType, EnabledModelConfig[]>,
+  );
 
   return (
     <div className="space-y-6">
       {/* Summary Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-4">
         <Card>
           <div className="text-center">
             <div className="text-2xl font-bold text-blue-600">
@@ -128,7 +143,7 @@ function AvailableModelsTab({
         <Card>
           <div className="text-center">
             <div className="text-2xl font-bold text-green-600">
-              {enabledModels.filter(m => m.enabled).length}
+              {enabledModels.filter((m) => m.enabled).length}
             </div>
             <div className="text-sm text-gray-600">Enabled</div>
           </div>
@@ -144,7 +159,7 @@ function AvailableModelsTab({
         <Card>
           <div className="text-center">
             <div className="text-2xl font-bold text-purple-600">
-              {enabledModels.filter(m => m.cost_tier === 'low').length}
+              {enabledModels.filter((m) => m.cost_tier === "low").length}
             </div>
             <div className="text-sm text-gray-600">Low Cost</div>
           </div>
@@ -155,17 +170,21 @@ function AvailableModelsTab({
       {Object.entries(modelsByProvider).map(([provider, models]) => (
         <Card key={provider}>
           <div className="mb-4">
-            <div className="flex items-center gap-3 mb-2">
-              <Badge color={PROVIDER_COLORS[provider as ProviderType]} size="lg">
+            <div className="mb-2 flex items-center gap-3">
+              <Badge
+                color={PROVIDER_COLORS[provider as ProviderType]}
+                size="lg"
+              >
                 {PROVIDER_LABELS[provider as ProviderType]}
               </Badge>
               <span className="text-sm text-gray-600">
-                {models.filter(m => m.enabled).length} of {models.length} enabled
+                {models.filter((m) => m.enabled).length} of {models.length}{" "}
+                enabled
               </span>
             </div>
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
             {models.map((model) => (
               <ModelCard
                 key={model.model_name}
@@ -194,24 +213,28 @@ function AvailableModelsTab({
 function ModelCard({
   model,
   onToggle,
-  isToggling
+  isToggling,
 }: {
   model: EnabledModelConfig;
   onToggle: (modelName: string, enabled: boolean) => void;
   isToggling: boolean;
 }) {
   return (
-    <Card className={`transition-all ${model.enabled ? 'border-green-200 bg-green-50' : 'border-gray-200'}`}>
+    <Card
+      className={`transition-all ${model.enabled ? "border-green-200 bg-green-50" : "border-gray-200"}`}
+    >
       <div className="flex items-start justify-between">
         <div className="flex-1">
-          <div className="flex items-center gap-2 mb-2">
+          <div className="mb-2 flex items-center gap-2">
             <h4 className="font-semibold">{model.display_name}</h4>
-            {model.enabled && <CheckCircle className="h-4 w-4 text-green-600" />}
+            {model.enabled && (
+              <CheckCircle className="h-4 w-4 text-green-600" />
+            )}
           </div>
 
-          <p className="text-sm text-gray-600 mb-3">{model.description}</p>
+          <p className="mb-3 text-sm text-gray-600">{model.description}</p>
 
-          <div className="flex items-center gap-2 mb-3">
+          <div className="mb-3 flex items-center gap-2">
             <Badge color={COST_TIER_COLORS[model.cost_tier]} size="sm">
               {model.cost_tier} cost
             </Badge>
@@ -245,29 +268,31 @@ function ModelCard({
 // Provider Configuration Tab Component
 function ProviderConfigurationTab({
   providersStatus,
-  isLoading
+  isLoading,
 }: {
   providersStatus: any;
   isLoading: boolean;
 }) {
   if (isLoading) {
-    return <div className="text-center py-8">Loading provider status...</div>;
+    return <div className="py-8 text-center">Loading provider status...</div>;
   }
 
   if (!providersStatus) {
-    return <div className="text-center py-8">No provider status available</div>;
+    return <div className="py-8 text-center">No provider status available</div>;
   }
 
   return (
     <div className="space-y-6">
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {Object.entries(providersStatus.providers).map(([provider, status]: [string, any]) => (
-          <ProviderStatusCard
-            key={provider}
-            provider={provider as ProviderType}
-            status={status}
-          />
-        ))}
+      <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+        {Object.entries(providersStatus.providers).map(
+          ([provider, status]: [string, any]) => (
+            <ProviderStatusCard
+              key={provider}
+              provider={provider as ProviderType}
+              status={status}
+            />
+          ),
+        )}
       </div>
     </div>
   );
@@ -276,7 +301,7 @@ function ProviderConfigurationTab({
 // Provider Status Card Component
 function ProviderStatusCard({
   provider,
-  status
+  status,
 }: {
   provider: ProviderType;
   status: any;
@@ -286,19 +311,25 @@ function ProviderStatusCard({
   return (
     <Card className={hasEnabledModels ? "border-green-200" : "border-gray-200"}>
       <div className="flex items-start gap-4">
-        <div className={`p-3 rounded-lg ${hasEnabledModels ? 'bg-green-100' : 'bg-gray-100'}`}>
-          <Server className={`h-6 w-6 ${hasEnabledModels ? 'text-green-600' : 'text-gray-600'}`} />
+        <div
+          className={`rounded-lg p-3 ${hasEnabledModels ? "bg-green-100" : "bg-gray-100"}`}
+        >
+          <Server
+            className={`h-6 w-6 ${hasEnabledModels ? "text-green-600" : "text-gray-600"}`}
+          />
         </div>
 
         <div className="flex-1">
-          <div className="flex items-center gap-2 mb-2">
-            <h3 className="text-lg font-semibold">{PROVIDER_LABELS[provider]}</h3>
+          <div className="mb-2 flex items-center gap-2">
+            <h3 className="text-lg font-semibold">
+              {PROVIDER_LABELS[provider]}
+            </h3>
             <Badge color={hasEnabledModels ? "success" : "gray"} size="sm">
               {hasEnabledModels ? "Active" : "Inactive"}
             </Badge>
           </div>
 
-          <div className="text-sm text-gray-600 mb-3">
+          <div className="mb-3 text-sm text-gray-600">
             {status.enabled_models} of {status.total_models} models enabled
           </div>
 
@@ -307,7 +338,6 @@ function ProviderStatusCard({
               Models: {status.models.join(", ")}
             </div>
           )}
-
         </div>
       </div>
     </Card>

@@ -88,7 +88,7 @@ describe("Move Forms - UI Rendering and Structure", () => {
         onSuccess={vi.fn()}
         onCancel={vi.fn()}
       />,
-      { queryClient: qc }
+      { queryClient: qc },
     );
 
     // Check for informational alert
@@ -96,10 +96,18 @@ describe("Move Forms - UI Rendering and Structure", () => {
     expect(alert).toBeInTheDocument();
 
     // Check conversion rules are listed
-    expect(screen.getByText(/Moving to root.*becomes a layer/i)).toBeInTheDocument();
-    expect(screen.getByText(/Moving under a layer.*becomes a domain/i)).toBeInTheDocument();
-    expect(screen.getByText(/Moving under a domain or term.*becomes a term/i)).toBeInTheDocument();
-    expect(screen.getByText(/All child nodes will be converted recursively/i)).toBeInTheDocument();
+    expect(
+      screen.getByText(/Moving to root.*becomes a layer/i),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(/Moving under a layer.*becomes a domain/i),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(/Moving under a domain or term.*becomes a term/i),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(/All child nodes will be converted recursively/i),
+    ).toBeInTheDocument();
   });
 
   it("DomainMoveForm: renders all form elements correctly", async () => {
@@ -112,14 +120,18 @@ describe("Move Forms - UI Rendering and Structure", () => {
         onSuccess={vi.fn()}
         onCancel={vi.fn()}
       />,
-      { queryClient: qc }
+      { queryClient: qc },
     );
 
     // Check all form elements are present
     expect(await screen.findByText(/Target Parent Node/i)).toBeInTheDocument();
-    expect(screen.getByRole("checkbox", { name: /move all child nodes/i })).toBeInTheDocument();
+    expect(
+      screen.getByRole("checkbox", { name: /move all child nodes/i }),
+    ).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /Cancel/i })).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: /Move Nodes/i })).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: /Move Nodes/i }),
+    ).toBeInTheDocument();
     expect(screen.getByText(/Moving 1 node/i)).toBeInTheDocument();
   });
 
@@ -133,7 +145,7 @@ describe("Move Forms - UI Rendering and Structure", () => {
         onSuccess={vi.fn()}
         onCancel={vi.fn()}
       />,
-      { queryClient: qc }
+      { queryClient: qc },
     );
 
     const moveChildrenCheckbox = await screen.findByRole("checkbox", {
@@ -152,10 +164,12 @@ describe("Move Forms - UI Rendering and Structure", () => {
         onSuccess={vi.fn()}
         onCancel={vi.fn()}
       />,
-      { queryClient: qc }
+      { queryClient: qc },
     );
 
-    const moveButton = await screen.findByRole("button", { name: /Move Nodes/i });
+    const moveButton = await screen.findByRole("button", {
+      name: /Move Nodes/i,
+    });
     expect(moveButton).toBeDisabled();
   });
 
@@ -170,7 +184,7 @@ describe("Move Forms - UI Rendering and Structure", () => {
         onSuccess={vi.fn()}
         onCancel={onCancel}
       />,
-      { queryClient: qc }
+      { queryClient: qc },
     );
 
     const cancelButton = await screen.findByRole("button", { name: /Cancel/i });
@@ -189,7 +203,7 @@ describe("Move Forms - UI Rendering and Structure", () => {
         onSuccess={vi.fn()}
         onCancel={vi.fn()}
       />,
-      { queryClient: qc }
+      { queryClient: qc },
     );
 
     const moveChildrenCheckbox = await screen.findByRole("checkbox", {
@@ -219,7 +233,7 @@ describe("Move Forms - UI Rendering and Structure", () => {
         onSuccess={vi.fn()}
         onCancel={vi.fn()}
       />,
-      { queryClient: qc }
+      { queryClient: qc },
     );
 
     expect(await screen.findByText(/Moving 2 nodes/i)).toBeInTheDocument();
@@ -235,7 +249,7 @@ describe("Move Forms - UI Rendering and Structure", () => {
         onSuccess={vi.fn()}
         onCancel={vi.fn()}
       />,
-      { queryClient: qc }
+      { queryClient: qc },
     );
 
     // Check for informational alert
@@ -243,7 +257,9 @@ describe("Move Forms - UI Rendering and Structure", () => {
     expect(alert).toBeInTheDocument();
 
     // Check conversion rules are listed
-    expect(screen.getByText(/All child nodes will be converted recursively/i)).toBeInTheDocument();
+    expect(
+      screen.getByText(/All child nodes will be converted recursively/i),
+    ).toBeInTheDocument();
   });
 
   it("TermMoveForm: renders all form elements correctly", async () => {
@@ -256,14 +272,18 @@ describe("Move Forms - UI Rendering and Structure", () => {
         onSuccess={vi.fn()}
         onCancel={vi.fn()}
       />,
-      { queryClient: qc }
+      { queryClient: qc },
     );
 
     // Check all form elements are present
     expect(await screen.findByText(/Target Parent Node/i)).toBeInTheDocument();
-    expect(screen.getByRole("checkbox", { name: /move all child nodes/i })).toBeInTheDocument();
+    expect(
+      screen.getByRole("checkbox", { name: /move all child nodes/i }),
+    ).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /Cancel/i })).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: /Move Nodes/i })).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: /Move Nodes/i }),
+    ).toBeInTheDocument();
     expect(screen.getByText(/Moving 1 node/i)).toBeInTheDocument();
   });
 
@@ -277,10 +297,12 @@ describe("Move Forms - UI Rendering and Structure", () => {
         onSuccess={vi.fn()}
         onCancel={vi.fn()}
       />,
-      { queryClient: qc }
+      { queryClient: qc },
     );
 
-    const moveButton = await screen.findByRole("button", { name: /Move Nodes/i });
+    const moveButton = await screen.findByRole("button", {
+      name: /Move Nodes/i,
+    });
     expect(moveButton).toBeDisabled();
   });
 
@@ -295,7 +317,7 @@ describe("Move Forms - UI Rendering and Structure", () => {
         onSuccess={vi.fn()}
         onCancel={vi.fn()}
       />,
-      { queryClient: qc }
+      { queryClient: qc },
     );
 
     expect(await screen.findByText(/Moving 2 nodes/i)).toBeInTheDocument();
@@ -317,7 +339,7 @@ describe("Move Forms - Form Validation and Behavior", () => {
         onSuccess={vi.fn()}
         onCancel={vi.fn()}
       />,
-      { queryClient: qc }
+      { queryClient: qc },
     );
 
     // The form should render the StructureNodeSelector
@@ -339,19 +361,27 @@ describe("Move Forms - Form Validation and Behavior", () => {
         onSuccess={vi.fn()}
         onCancel={vi.fn()}
       />,
-      { queryClient: qc }
+      { queryClient: qc },
     );
 
     // Initially should show "will be moved" text
-    expect(await screen.findByText(/All child nodes will also be moved recursively/i)).toBeInTheDocument();
+    expect(
+      await screen.findByText(
+        /All child nodes will also be moved recursively/i,
+      ),
+    ).toBeInTheDocument();
 
     // Uncheck the checkbox
-    const checkbox = screen.getByRole("checkbox", { name: /move all child nodes/i });
+    const checkbox = screen.getByRole("checkbox", {
+      name: /move all child nodes/i,
+    });
     await userEvent.click(checkbox);
 
     // Text should disappear when unchecked
     await waitFor(() => {
-      const text = screen.queryByText(/All child nodes will also be moved recursively/i);
+      const text = screen.queryByText(
+        /All child nodes will also be moved recursively/i,
+      );
       // Text is conditional on checkbox state in the form description
       expect(checkbox).not.toBeChecked();
     });
@@ -367,11 +397,15 @@ describe("Move Forms - Form Validation and Behavior", () => {
         onSuccess={vi.fn()}
         onCancel={vi.fn()}
       />,
-      { queryClient: qc }
+      { queryClient: qc },
     );
 
     // Check placeholder is shown
-    expect(await screen.findByText(/Select target parent \(or leave empty for root\)/i)).toBeInTheDocument();
+    expect(
+      await screen.findByText(
+        /Select target parent \(or leave empty for root\)/i,
+      ),
+    ).toBeInTheDocument();
   });
 });
 
@@ -390,7 +424,7 @@ describe("Move Forms - Accessibility", () => {
         onSuccess={vi.fn()}
         onCancel={vi.fn()}
       />,
-      { queryClient: qc }
+      { queryClient: qc },
     );
 
     const form = container.querySelector("form");
@@ -408,10 +442,12 @@ describe("Move Forms - Accessibility", () => {
         onSuccess={vi.fn()}
         onCancel={vi.fn()}
       />,
-      { queryClient: qc }
+      { queryClient: qc },
     );
 
-    const checkbox = await screen.findByRole("checkbox", { name: /move all child nodes/i });
+    const checkbox = await screen.findByRole("checkbox", {
+      name: /move all child nodes/i,
+    });
     expect(checkbox).toHaveAccessibleName();
     expect(checkbox.getAttribute("id")).toBe("move-children");
   });
@@ -426,7 +462,7 @@ describe("Move Forms - Accessibility", () => {
         onSuccess={vi.fn()}
         onCancel={vi.fn()}
       />,
-      { queryClient: qc }
+      { queryClient: qc },
     );
 
     const cancelButton = await screen.findByRole("button", { name: /Cancel/i });
@@ -446,7 +482,7 @@ describe("Move Forms - Accessibility", () => {
         onSuccess={vi.fn()}
         onCancel={vi.fn()}
       />,
-      { queryClient: qc }
+      { queryClient: qc },
     );
 
     const form = container.querySelector("form");
@@ -466,7 +502,7 @@ describe("Move Forms - User Intent and Messaging", () => {
         onSuccess={vi.fn()}
         onCancel={vi.fn()}
       />,
-      { queryClient: qc }
+      { queryClient: qc },
     );
 
     // The alert should be prominent and informative
@@ -495,7 +531,7 @@ describe("Move Forms - User Intent and Messaging", () => {
         onSuccess={vi.fn()}
         onCancel={vi.fn()}
       />,
-      { queryClient: qc }
+      { queryClient: qc },
     );
 
     // The alert should be prominent and informative
@@ -503,7 +539,9 @@ describe("Move Forms - User Intent and Messaging", () => {
     expect(alert).toBeInTheDocument();
 
     // Should explain recursive conversion
-    expect(screen.getByText(/All child nodes will be converted recursively/i)).toBeInTheDocument();
+    expect(
+      screen.getByText(/All child nodes will be converted recursively/i),
+    ).toBeInTheDocument();
   });
 
   it("forms use consistent language and terminology", async () => {
@@ -516,7 +554,7 @@ describe("Move Forms - User Intent and Messaging", () => {
         onSuccess={vi.fn()}
         onCancel={vi.fn()}
       />,
-      { queryClient: qc }
+      { queryClient: qc },
     );
 
     // Check consistent terminology in domain form
@@ -533,7 +571,7 @@ describe("Move Forms - User Intent and Messaging", () => {
         onSuccess={vi.fn()}
         onCancel={vi.fn()}
       />,
-      { queryClient: qc }
+      { queryClient: qc },
     );
 
     // Check same terminology in term form

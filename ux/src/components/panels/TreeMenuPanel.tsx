@@ -6,9 +6,7 @@ import {
   useDomainNodes,
   useTermNodes,
 } from "@/api/hooks/structure_nodes/useStructureNodes";
-import {
-  buildHierarchicalTree,
-} from "@/utils/treeBuilder";
+import { buildHierarchicalTree } from "@/utils/treeBuilder";
 import { ChartData } from "@/components/graphs/tree_chart/tree_data";
 import { apiLogger } from "@/api/utils/logger";
 
@@ -144,7 +142,11 @@ export function TreeMenuPanel({
     }
 
     // Helper function to find path to a node
-    const findPath = (node: any, targetId: string, path: string[] = []): string[] | null => {
+    const findPath = (
+      node: any,
+      targetId: string,
+      path: string[] = [],
+    ): string[] | null => {
       if (node.id === targetId) {
         return path;
       }
@@ -168,7 +170,10 @@ export function TreeMenuPanel({
   // Handle loading state
   if (isLoading) {
     return (
-      <div ref={containerRef} className={`flex items-center justify-center p-4 ${className}`}>
+      <div
+        ref={containerRef}
+        className={`flex items-center justify-center p-4 ${className}`}
+      >
         {loadingComponent || <Spinner size="sm" />}
       </div>
     );
@@ -179,7 +184,11 @@ export function TreeMenuPanel({
     apiLogger.error("TreeMenuPanel error", { error });
 
     if (errorComponent) {
-      return <div ref={containerRef} className={className}>{errorComponent}</div>;
+      return (
+        <div ref={containerRef} className={className}>
+          {errorComponent}
+        </div>
+      );
     }
 
     return (

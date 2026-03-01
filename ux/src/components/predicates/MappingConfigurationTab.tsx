@@ -7,13 +7,7 @@
  */
 
 import React from "react";
-import {
-  Card,
-  Badge,
-  Spinner,
-  ToggleSwitch,
-  Button,
-} from "flowbite-react";
+import { Card, Badge, Spinner, ToggleSwitch, Button } from "flowbite-react";
 import { RefreshCw, Filter, CheckCircle, XCircle } from "lucide-react";
 import { useFilterStatistics } from "@/api/hooks/reference/useReference";
 import { useButterToast } from "@/hooks/useButterToast";
@@ -24,9 +18,9 @@ export interface MappingConfigurationTabProps {
   onFilterToggle?: (enabled: boolean) => void;
 }
 
-export const MappingConfigurationTab: React.FC<MappingConfigurationTabProps> = ({
-  onFilterToggle,
-}) => {
+export const MappingConfigurationTab: React.FC<
+  MappingConfigurationTabProps
+> = ({ onFilterToggle }) => {
   // Session storage for filter toggle state
   const [filterEnabled, setFilterEnabled] = React.useState<boolean>(() => {
     const stored = sessionStorage.getItem(STORAGE_KEY);
@@ -135,8 +129,8 @@ export const MappingConfigurationTab: React.FC<MappingConfigurationTabProps> = (
             </div>
             {!data.filtering_ready && (
               <p className="text-sm text-gray-600 dark:text-gray-400">
-                No predicates have been marked as relevant yet. Visit the "Relevance
-                Selection" tab to mark predicates.
+                No predicates have been marked as relevant yet. Visit the
+                "Relevance Selection" tab to mark predicates.
               </p>
             )}
           </Card>

@@ -16,7 +16,13 @@ import {
   SortingState,
 } from "@tanstack/react-table";
 import { Button, Badge, Spinner } from "flowbite-react";
-import { Download, ChevronDown, ChevronUp, ChevronLeft, ChevronRight } from "lucide-react";
+import {
+  Download,
+  ChevronDown,
+  ChevronUp,
+  ChevronLeft,
+  ChevronRight,
+} from "lucide-react";
 import { usePipelineComparison } from "@/api/hooks/ragExperiments";
 import { useButterToast } from "@/hooks/useButterToast";
 import type { PipelineComparisonResponse } from "@/api/services/ragExperiments";
@@ -76,7 +82,11 @@ export const TestResultsViewer: React.FC<TestResultsViewerProps> = ({
         cell: (info) => {
           const value = info.getValue();
           return value !== null && value !== undefined ? (
-            <Badge color={value >= 0.8 ? "success" : value >= 0.6 ? "warning" : "failure"}>
+            <Badge
+              color={
+                value >= 0.8 ? "success" : value >= 0.6 ? "warning" : "failure"
+              }
+            >
               {(value * 100).toFixed(1)}%
             </Badge>
           ) : (
@@ -89,7 +99,11 @@ export const TestResultsViewer: React.FC<TestResultsViewerProps> = ({
         cell: (info) => {
           const value = info.getValue();
           return value !== null && value !== undefined ? (
-            <Badge color={value >= 0.8 ? "success" : value >= 0.6 ? "warning" : "failure"}>
+            <Badge
+              color={
+                value >= 0.8 ? "success" : value >= 0.6 ? "warning" : "failure"
+              }
+            >
               {(value * 100).toFixed(1)}%
             </Badge>
           ) : (
@@ -102,7 +116,11 @@ export const TestResultsViewer: React.FC<TestResultsViewerProps> = ({
         cell: (info) => {
           const value = info.getValue();
           return value !== null && value !== undefined ? (
-            <Badge color={value >= 0.8 ? "success" : value >= 0.6 ? "warning" : "failure"}>
+            <Badge
+              color={
+                value >= 0.8 ? "success" : value >= 0.6 ? "warning" : "failure"
+              }
+            >
               {(value * 100).toFixed(1)}%
             </Badge>
           ) : (
@@ -119,7 +137,7 @@ export const TestResultsViewer: React.FC<TestResultsViewerProps> = ({
         ),
       }),
     ],
-    []
+    [],
   );
 
   const table = useReactTable({
@@ -160,9 +178,15 @@ export const TestResultsViewer: React.FC<TestResultsViewerProps> = ({
         result.pipeline_name,
         result.execution_time_ms?.toFixed(2) || "N/A",
         result.entities_extracted,
-        result.precision_score !== null && result.precision_score !== undefined ? (result.precision_score * 100).toFixed(1) + "%" : "N/A",
-        result.recall_score !== null && result.recall_score !== undefined ? (result.recall_score * 100).toFixed(1) + "%" : "N/A",
-        result.f1_score !== null && result.f1_score !== undefined ? (result.f1_score * 100).toFixed(1) + "%" : "N/A",
+        result.precision_score !== null && result.precision_score !== undefined
+          ? (result.precision_score * 100).toFixed(1) + "%"
+          : "N/A",
+        result.recall_score !== null && result.recall_score !== undefined
+          ? (result.recall_score * 100).toFixed(1) + "%"
+          : "N/A",
+        result.f1_score !== null && result.f1_score !== undefined
+          ? (result.f1_score * 100).toFixed(1) + "%"
+          : "N/A",
         new Date(result.executed_at).toISOString(),
       ]);
 
@@ -178,7 +202,7 @@ export const TestResultsViewer: React.FC<TestResultsViewerProps> = ({
       link.setAttribute("href", url);
       link.setAttribute(
         "download",
-        `rag_test_results_${paragraphId}_${new Date().toISOString()}.csv`
+        `rag_test_results_${paragraphId}_${new Date().toISOString()}.csv`,
       );
       link.style.visibility = "hidden";
       document.body.appendChild(link);
@@ -208,7 +232,7 @@ export const TestResultsViewer: React.FC<TestResultsViewerProps> = ({
       link.setAttribute("href", url);
       link.setAttribute(
         "download",
-        `rag_test_results_${paragraphId}_${new Date().toISOString()}.json`
+        `rag_test_results_${paragraphId}_${new Date().toISOString()}.json`,
       );
       link.style.visibility = "hidden";
       document.body.appendChild(link);
@@ -277,7 +301,8 @@ export const TestResultsViewer: React.FC<TestResultsViewerProps> = ({
             <div>
               <p className="text-blue-700">Best F1 Score</p>
               <p className="text-2xl font-bold text-blue-900">
-                {summary.best_f1_score !== null && summary.best_f1_score !== undefined
+                {summary.best_f1_score !== null &&
+                summary.best_f1_score !== undefined
                   ? (summary.best_f1_score * 100).toFixed(1) + "%"
                   : "N/A"}
               </p>
@@ -311,12 +336,12 @@ export const TestResultsViewer: React.FC<TestResultsViewerProps> = ({
                   <th
                     key={header.id}
                     onClick={header.column.getToggleSortingHandler()}
-                    className="cursor-pointer select-none px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-700 hover:bg-gray-100"
+                    className="cursor-pointer px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-700 uppercase select-none hover:bg-gray-100"
                   >
                     <div className="flex items-center gap-2">
                       {flexRender(
                         header.column.columnDef.header,
-                        header.getContext()
+                        header.getContext(),
                       )}
                       {header.column.getIsSorted() ? (
                         header.column.getIsSorted() === "asc" ? (
@@ -333,12 +358,9 @@ export const TestResultsViewer: React.FC<TestResultsViewerProps> = ({
           </thead>
           <tbody className="divide-y divide-gray-200 bg-white">
             {table.getRowModel().rows.map((row) => (
-              <tr
-                key={row.id}
-                className="hover:bg-gray-50"
-              >
+              <tr key={row.id} className="hover:bg-gray-50">
                 {row.getVisibleCells().map((cell) => (
-                  <td key={cell.id} className="whitespace-nowrap px-6 py-4">
+                  <td key={cell.id} className="px-6 py-4 whitespace-nowrap">
                     {flexRender(cell.column.columnDef.cell, cell.getContext())}
                   </td>
                 ))}

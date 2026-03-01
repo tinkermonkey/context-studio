@@ -1,7 +1,10 @@
 import React, { useState, useCallback, ReactNode } from "react";
 import { Button, Card, Alert, Spinner, Badge } from "flowbite-react";
 import { Play, Zap, CheckCircle, XCircle, Clock } from "lucide-react";
-import { usePipelineFlavors, usePipelineFlavor } from "@/api/hooks/pipelineFlavors";
+import {
+  usePipelineFlavors,
+  usePipelineFlavor,
+} from "@/api/hooks/pipelineFlavors";
 import {
   useSuggestTermDefinitionMutation,
   useSuggestDomainDefinitionMutation,
@@ -84,7 +87,8 @@ export const LlmPipelineRun: React.FC<LlmPipelineRunProps> = ({
   } = usePipelineFlavors({ pipeline: pipelineType });
 
   // Conditionally fetch specific flavor when we have exactly one in the list
-  const specificFlavorId = flavorList && flavorList.length === 1 ? flavorList[0] : "";
+  const specificFlavorId =
+    flavorList && flavorList.length === 1 ? flavorList[0] : "";
   const {
     data: specificFlavor,
     isLoading: specificFlavorLoading,
@@ -105,12 +109,15 @@ export const LlmPipelineRun: React.FC<LlmPipelineRunProps> = ({
       } else {
         // Use provided flavorList - filter from all available flavors
         const allFlavors = flavorsResponse?.flavors || [];
-        const filtered = allFlavors.filter((flavor) => flavorList.includes(flavor.id));
+        const filtered = allFlavors.filter((flavor) =>
+          flavorList.includes(flavor.id),
+        );
         return filtered;
       }
     }
     // Fall back to enabled flavors when no flavorList is provided
-    const enabledOnly = flavorsResponse?.flavors?.filter((flavor) => flavor.enabled) || [];
+    const enabledOnly =
+      flavorsResponse?.flavors?.filter((flavor) => flavor.enabled) || [];
     return enabledOnly;
   }, [flavorList, flavorsResponse?.flavors, specificFlavor]);
 
@@ -170,9 +177,10 @@ export const LlmPipelineRun: React.FC<LlmPipelineRunProps> = ({
   // Function to execute all enabled flavors in parallel
   const executePipelines = useCallback(async () => {
     if (enabledFlavors.length === 0) {
-      const errorMessage = flavorList && flavorList.length > 0
-        ? "No flavors found matching the provided flavor list for this pipeline type"
-        : "No enabled flavors found for this pipeline type";
+      const errorMessage =
+        flavorList && flavorList.length > 0
+          ? "No flavors found matching the provided flavor list for this pipeline type"
+          : "No enabled flavors found for this pipeline type";
       setExecutionError(errorMessage);
       return;
     }
@@ -343,8 +351,10 @@ export const LlmPipelineRun: React.FC<LlmPipelineRunProps> = ({
     );
   };
 
-  const isLoading = flavorsLoading || (specificFlavorId && specificFlavorLoading);
-  const loadingError = flavorsError || (specificFlavorId && specificFlavorError);
+  const isLoading =
+    flavorsLoading || (specificFlavorId && specificFlavorLoading);
+  const loadingError =
+    flavorsError || (specificFlavorId && specificFlavorError);
 
   if (isLoading) {
     return (
@@ -379,16 +389,19 @@ export const LlmPipelineRun: React.FC<LlmPipelineRunProps> = ({
   }
 
   if (enabledFlavors.length === 0) {
-    const warningMessage = flavorList && flavorList.length > 0
-      ? `No flavors found matching the provided flavor list for pipeline type: ${pipelineType}`
-      : `No enabled flavors found for pipeline type: ${pipelineType}`;
+    const warningMessage =
+      flavorList && flavorList.length > 0
+        ? `No flavors found matching the provided flavor list for pipeline type: ${pipelineType}`
+        : `No enabled flavors found for pipeline type: ${pipelineType}`;
 
     return (
       <div className={"w-full" + className}>
         <Alert color="warning">
           <div>
             <h4 className="mb-2 font-medium">
-              {flavorList && flavorList.length > 0 ? "No Matching Flavors" : "No Enabled Flavors"}
+              {flavorList && flavorList.length > 0
+                ? "No Matching Flavors"
+                : "No Enabled Flavors"}
             </h4>
             <p>{warningMessage}</p>
           </div>
@@ -409,7 +422,9 @@ export const LlmPipelineRun: React.FC<LlmPipelineRunProps> = ({
                 .replace(/\b\w/g, (l) => l.toUpperCase())}
             </h3>
             <p className="text-sm text-gray-500 dark:text-gray-400">
-              {enabledFlavors.length} {flavorList && flavorList.length > 0 ? "selected" : "enabled"} flavor
+              {enabledFlavors.length}{" "}
+              {flavorList && flavorList.length > 0 ? "selected" : "enabled"}{" "}
+              flavor
               {enabledFlavors.length !== 1 ? "s" : ""}
             </p>
           </div>

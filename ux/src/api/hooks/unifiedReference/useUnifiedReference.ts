@@ -138,8 +138,6 @@ export const useNodeLinks = (
   });
 };
 
-
-
 /**
  * Hook for paginated search with load more functionality
  */
@@ -181,7 +179,6 @@ export const usePaginatedSearch = () => {
   });
 };
 
-
 /**
  * Hook to invalidate unified reference cache
  */
@@ -221,7 +218,6 @@ export const useInvalidateUnifiedReference = () => {
     },
   };
 };
-
 
 /**
  * Hook for searching a specific reference source
@@ -266,11 +262,10 @@ export const useSourceSearchMutation = (
     onSuccess: (data, variables) => {
       // Cache the search results
       queryClient.setQueryData(
-        createQueryKey(
-          UNIFIED_QUERY_KEYS.UNIFIED_REFERENCE,
-          "source-search",
-          { source, ...variables } as unknown as Record<string, unknown>,
-        ),
+        createQueryKey(UNIFIED_QUERY_KEYS.UNIFIED_REFERENCE, "source-search", {
+          source,
+          ...variables,
+        } as unknown as Record<string, unknown>),
         data,
       );
 
@@ -295,7 +290,10 @@ export const useSourceSearchMutation = (
  * Hook to get available sources and their status
  */
 export const useAvailableSources = (
-  options?: UseQueryOptions<Record<SourceType, { enabled: boolean; endpoint: string }>, Error>,
+  options?: UseQueryOptions<
+    Record<SourceType, { enabled: boolean; endpoint: string }>,
+    Error
+  >,
 ) => {
   return useQuery({
     queryKey: createQueryKey(UNIFIED_QUERY_KEYS.UNIFIED_REFERENCE, "sources"),
@@ -310,18 +308,24 @@ export const useAvailableSources = (
  */
 export const useSourceConnectivity = (
   source: SourceType,
-  options?: UseQueryOptions<{
-    available: boolean;
-    responseTime?: number;
-    error?: string;
-  }, Error>,
+  options?: UseQueryOptions<
+    {
+      available: boolean;
+      responseTime?: number;
+      error?: string;
+    },
+    Error
+  >,
 ) => {
   return useQuery({
-    queryKey: createQueryKey(UNIFIED_QUERY_KEYS.UNIFIED_REFERENCE, "connectivity", { source }),
+    queryKey: createQueryKey(
+      UNIFIED_QUERY_KEYS.UNIFIED_REFERENCE,
+      "connectivity",
+      { source },
+    ),
     queryFn: () => unifiedReferenceService.testSourceConnectivity(source),
     staleTime: 2 * 60 * 1000, // 2 minutes - connectivity can change
     retry: 2, // Retry failed connectivity tests
     ...options,
   });
 };
-

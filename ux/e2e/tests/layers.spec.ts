@@ -1,5 +1,5 @@
-import { test, expect, Page } from '@playwright/test';
-import { apiRequest } from '../fixtures/test-helpers';
+import { test, expect, Page } from "@playwright/test";
+import { apiRequest } from "../fixtures/test-helpers";
 
 /**
  * Layer Management E2E Tests
@@ -12,31 +12,37 @@ import { apiRequest } from '../fixtures/test-helpers';
  * - Navigation between table and detail views
  */
 
-test.describe('Layer Management', () => {
+test.describe("Layer Management", () => {
   test.beforeEach(async ({ page }) => {
     // Navigate to layers page
-    await page.goto('/app/layers');
-    await page.waitForLoadState('networkidle');
+    await page.goto("/app/layers");
+    await page.waitForLoadState("networkidle");
   });
 
-  test('should display the layers table', async ({ page }) => {
+  test("should display the layers table", async ({ page }) => {
     // Verify table is visible
     await expect(page.locator('[data-testid="layer-table"]')).toBeVisible();
 
     // Verify toolbar is visible with add button
-    await expect(page.locator('[data-testid="layer-table-toolbar"]')).toBeVisible();
-    await expect(page.locator('[data-testid="layer-add-button"]')).toBeVisible();
+    await expect(
+      page.locator('[data-testid="layer-table-toolbar"]'),
+    ).toBeVisible();
+    await expect(
+      page.locator('[data-testid="layer-add-button"]'),
+    ).toBeVisible();
   });
 
-  test('should create a new layer', async ({ page }) => {
+  test("should create a new layer", async ({ page }) => {
     const layerTitle = `E2E Test Layer ${Date.now()}`;
-    const layerDefinition = 'A test layer created by E2E tests';
+    const layerDefinition = "A test layer created by E2E tests";
 
     // Click "Add Layer" button
     await page.click('[data-testid="layer-add-button"]');
 
     // Wait for create modal to appear (use role=dialog to get the actual modal, not the backdrop)
-    await expect(page.getByRole('dialog', { name: 'Create New Layer' })).toBeVisible();
+    await expect(
+      page.getByRole("dialog", { name: "Create New Layer" }),
+    ).toBeVisible();
 
     // Fill in the form
     await page.fill('[data-testid="layer-title-input"]', layerTitle);
@@ -46,82 +52,101 @@ test.describe('Layer Management', () => {
     await page.click('[data-testid="layer-submit-button"]');
 
     // Wait for modal to close
-    await expect(page.getByRole('dialog', { name: 'Create New Layer' })).not.toBeVisible();
+    await expect(
+      page.getByRole("dialog", { name: "Create New Layer" }),
+    ).not.toBeVisible();
 
     // Verify layer appears in the table
-    await expect(page.locator('[data-testid="layer-table"]')).toContainText(layerTitle);
+    await expect(page.locator('[data-testid="layer-table"]')).toContainText(
+      layerTitle,
+    );
 
     // Verify layer exists in backend
-    const response = await apiRequest<{ data: any[] }>(page, '/api/structure_nodes?node_type=layer');
+    const response = await apiRequest<{ data: any[] }>(
+      page,
+      "/api/structure_nodes?node_type=layer",
+    );
     const createdLayer = response.data.find((n: any) => n.title === layerTitle);
 
     expect(createdLayer).toBeDefined();
     expect(createdLayer?.definition).toBe(layerDefinition);
-    expect(createdLayer?.node_type).toBe('layer');
+    expect(createdLayer?.node_type).toBe("layer");
   });
 
-  test('should edit a layer through the table', async ({ page }) => {
+  test("should edit a layer through the table", async ({ page }) => {
     // First, create a layer to edit
     const originalTitle = `E2E Edit Test ${Date.now()}`;
     const updatedTitle = `${originalTitle} (Updated)`;
-    const updatedDefinition = 'Updated definition via E2E test';
+    const updatedDefinition = "Updated definition via E2E test";
 
     // Create layer via API for speed
-    const createResponse = await apiRequest<any>(page, '/api/structure_nodes', {
-      method: 'POST',
+    const createResponse = await apiRequest<any>(page, "/api/structure_nodes", {
+      method: "POST",
       body: {
         title: originalTitle,
-        definition: 'Original definition',
-        node_type: 'layer',
+        definition: "Original definition",
+        node_type: "layer",
       },
     });
     const layerId = createResponse.id;
 
     // Refresh the page to see the new layer
     await page.reload();
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState("networkidle");
 
     // Double-click the layer row to edit
     await page.locator(`[data-testid="layer-row-${layerId}"]`).dblclick();
 
     // Wait for edit modal
-    await expect(page.getByRole('dialog', { name: 'Edit Layer' })).toBeVisible();
+    await expect(
+      page.getByRole("dialog", { name: "Edit Layer" }),
+    ).toBeVisible();
 
     // Clear and update the title
     await page.fill('[data-testid="layer-title-input"]', updatedTitle);
-    await page.fill('[data-testid="layer-definition-input"]', updatedDefinition);
+    await page.fill(
+      '[data-testid="layer-definition-input"]',
+      updatedDefinition,
+    );
 
     // Submit
     await page.click('[data-testid="layer-submit-button"]');
 
     // Wait for modal to close
-    await expect(page.getByRole('dialog', { name: 'Edit Layer' })).not.toBeVisible();
+    await expect(
+      page.getByRole("dialog", { name: "Edit Layer" }),
+    ).not.toBeVisible();
 
     // Verify updated values appear in table
-    await expect(page.locator('[data-testid="layer-table"]')).toContainText(updatedTitle);
+    await expect(page.locator('[data-testid="layer-table"]')).toContainText(
+      updatedTitle,
+    );
 
     // Verify backend was updated
-    const response = await apiRequest<any>(page, `/api/structure_nodes/${layerId}`);
+    const response = await apiRequest<any>(
+      page,
+      `/api/structure_nodes/${layerId}`,
+    );
     expect(response.title).toBe(updatedTitle);
     expect(response.definition).toBe(updatedDefinition);
   });
 
-  test('should delete a layer', async ({ page }) => {
+  test("should delete a layer", async ({ page }) => {
     // Create a layer to delete
     const layerTitle = `E2E Delete Test ${Date.now()}`;
-    const createResponse = await apiRequest<any>(page, '/api/structure_nodes', {
-      method: 'POST',
+    const createResponse = await apiRequest<any>(page, "/api/structure_nodes", {
+      method: "POST",
       body: {
         title: layerTitle,
-        definition: 'Layer to be deleted',
-        node_type: 'layer',
+        definition: "Layer to be deleted",
+        node_type: "layer",
       },
     });
     const layerId = createResponse.id;
 
     // Refresh to see the layer
     await page.reload();
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState("networkidle");
 
     // Select the layer row by clicking its checkbox
     const row = page.locator(`[data-testid="layer-row-${layerId}"]`);
@@ -132,16 +157,22 @@ test.describe('Layer Management', () => {
     await page.click('[data-testid="layer-delete-selected-action"]');
 
     // Wait for delete confirmation modal
-    await expect(page.getByRole('dialog', { name: /Confirm Delete/i })).toBeVisible();
+    await expect(
+      page.getByRole("dialog", { name: /Confirm Delete/i }),
+    ).toBeVisible();
 
     // Confirm deletion
     await page.click('[data-testid="layer-delete-confirm-button"]');
 
     // Wait for modal to close
-    await expect(page.getByRole('dialog', { name: /Confirm Delete/i })).not.toBeVisible();
+    await expect(
+      page.getByRole("dialog", { name: /Confirm Delete/i }),
+    ).not.toBeVisible();
 
     // Verify layer is removed from table
-    await expect(page.locator('[data-testid="layer-table"]')).not.toContainText(layerTitle);
+    await expect(page.locator('[data-testid="layer-table"]')).not.toContainText(
+      layerTitle,
+    );
 
     // Verify layer is deleted from backend
     try {
@@ -154,7 +185,7 @@ test.describe('Layer Management', () => {
     }
   });
 
-  test('should search for layers', async ({ page }) => {
+  test("should search for layers", async ({ page }) => {
     // Create multiple layers with distinct names
     const timestamp = Date.now();
     const layer1Title = `Alpha Layer ${timestamp}`;
@@ -163,67 +194,85 @@ test.describe('Layer Management', () => {
 
     // Create layers via API
     await Promise.all([
-      apiRequest(page, '/api/structure_nodes', {
-        method: 'POST',
-        body: { title: layer1Title, node_type: 'layer' },
+      apiRequest(page, "/api/structure_nodes", {
+        method: "POST",
+        body: { title: layer1Title, node_type: "layer" },
       }),
-      apiRequest(page, '/api/structure_nodes', {
-        method: 'POST',
-        body: { title: layer2Title, node_type: 'layer' },
+      apiRequest(page, "/api/structure_nodes", {
+        method: "POST",
+        body: { title: layer2Title, node_type: "layer" },
       }),
-      apiRequest(page, '/api/structure_nodes', {
-        method: 'POST',
-        body: { title: layer3Title, node_type: 'layer' },
+      apiRequest(page, "/api/structure_nodes", {
+        method: "POST",
+        body: { title: layer3Title, node_type: "layer" },
       }),
     ]);
 
     // Refresh page
     await page.reload();
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState("networkidle");
 
     // Verify all layers are visible initially
-    await expect(page.locator('[data-testid="layer-table"]')).toContainText(layer1Title);
-    await expect(page.locator('[data-testid="layer-table"]')).toContainText(layer2Title);
-    await expect(page.locator('[data-testid="layer-table"]')).toContainText(layer3Title);
+    await expect(page.locator('[data-testid="layer-table"]')).toContainText(
+      layer1Title,
+    );
+    await expect(page.locator('[data-testid="layer-table"]')).toContainText(
+      layer2Title,
+    );
+    await expect(page.locator('[data-testid="layer-table"]')).toContainText(
+      layer3Title,
+    );
 
     // Search for "Beta"
-    await page.fill('[data-testid="layer-search-input"]', 'Beta');
+    await page.fill('[data-testid="layer-search-input"]', "Beta");
 
     // Wait a bit for search to filter (debounced)
     await page.waitForTimeout(500);
 
     // Verify only Beta layer is visible
-    await expect(page.locator('[data-testid="layer-table"]')).toContainText(layer2Title);
-    await expect(page.locator('[data-testid="layer-table"]')).not.toContainText(layer1Title);
-    await expect(page.locator('[data-testid="layer-table"]')).not.toContainText(layer3Title);
+    await expect(page.locator('[data-testid="layer-table"]')).toContainText(
+      layer2Title,
+    );
+    await expect(page.locator('[data-testid="layer-table"]')).not.toContainText(
+      layer1Title,
+    );
+    await expect(page.locator('[data-testid="layer-table"]')).not.toContainText(
+      layer3Title,
+    );
 
     // Clear search
-    await page.fill('[data-testid="layer-search-input"]', '');
+    await page.fill('[data-testid="layer-search-input"]', "");
     await page.waitForTimeout(500);
 
     // Verify all layers are visible again
-    await expect(page.locator('[data-testid="layer-table"]')).toContainText(layer1Title);
-    await expect(page.locator('[data-testid="layer-table"]')).toContainText(layer2Title);
-    await expect(page.locator('[data-testid="layer-table"]')).toContainText(layer3Title);
+    await expect(page.locator('[data-testid="layer-table"]')).toContainText(
+      layer1Title,
+    );
+    await expect(page.locator('[data-testid="layer-table"]')).toContainText(
+      layer2Title,
+    );
+    await expect(page.locator('[data-testid="layer-table"]')).toContainText(
+      layer3Title,
+    );
   });
 
-  test('should navigate to layer detail view', async ({ page }) => {
+  test("should navigate to layer detail view", async ({ page }) => {
     // Create a layer
     const layerTitle = `E2E Detail Test ${Date.now()}`;
-    const layerDefinition = 'Test layer for detail view';
-    const createResponse = await apiRequest<any>(page, '/api/structure_nodes', {
-      method: 'POST',
+    const layerDefinition = "Test layer for detail view";
+    const createResponse = await apiRequest<any>(page, "/api/structure_nodes", {
+      method: "POST",
       body: {
         title: layerTitle,
         definition: layerDefinition,
-        node_type: 'layer',
+        node_type: "layer",
       },
     });
     const layerId = createResponse.id;
 
     // Refresh page
     await page.reload();
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState("networkidle");
 
     // Find and click the link icon to navigate to detail view
     const row = page.locator(`[data-testid="layer-row-${layerId}"]`);
@@ -239,102 +288,133 @@ test.describe('Layer Management', () => {
     await link.click();
 
     // Wait for navigation with a longer timeout
-    await page.waitForURL(`**/app/structure_nodes/${layerId}`, { timeout: 15000 });
-    await page.waitForLoadState('networkidle');
+    await page.waitForURL(`**/app/structure_nodes/${layerId}`, {
+      timeout: 15000,
+    });
+    await page.waitForLoadState("networkidle");
 
     // Verify we're on the detail page
     expect(page.url()).toContain(`/app/structure_nodes/${layerId}`);
 
     // Verify layer details are displayed
-    await expect(page.locator('body')).toContainText(layerTitle, { timeout: 10000 });
+    await expect(page.locator("body")).toContainText(layerTitle, {
+      timeout: 10000,
+    });
   });
 
-  test('should cancel layer creation', async ({ page }) => {
+  test("should cancel layer creation", async ({ page }) => {
     // This test verifies that not submitting a form doesn't create a layer
     // We simply verify that if we don't click submit, the layer is not created
 
     // Get current layer count
-    const beforeResponse = await apiRequest<{ data: any[], total: number }>(page, '/api/structure_nodes?node_type=layer');
+    const beforeResponse = await apiRequest<{ data: any[]; total: number }>(
+      page,
+      "/api/structure_nodes?node_type=layer",
+    );
     const beforeCount = beforeResponse.total;
 
     // Click "Add Layer" button
     await page.click('[data-testid="layer-add-button"]');
 
     // Wait for create modal
-    const createModal = page.getByRole('dialog', { name: 'Create New Layer' });
+    const createModal = page.getByRole("dialog", { name: "Create New Layer" });
     await expect(createModal).toBeVisible();
 
     // Fill in some data but don't submit
-    await page.fill('[data-testid="layer-title-input"]', 'Test Layer Not Submitted');
+    await page.fill(
+      '[data-testid="layer-title-input"]',
+      "Test Layer Not Submitted",
+    );
 
     // Navigate away to close the modal (simpler and more reliable than clicking backdrop)
-    await page.goto('/app/layers');
-    await page.waitForLoadState('networkidle');
+    await page.goto("/app/layers");
+    await page.waitForLoadState("networkidle");
 
     // Verify no new layer was created
-    const afterResponse = await apiRequest<{ data: any[], total: number }>(page, '/api/structure_nodes?node_type=layer');
+    const afterResponse = await apiRequest<{ data: any[]; total: number }>(
+      page,
+      "/api/structure_nodes?node_type=layer",
+    );
     const afterCount = afterResponse.total;
 
     expect(afterCount).toBe(beforeCount);
 
     // Verify the specific test layer was not created
-    const testLayer = afterResponse.data.find((n: any) => n.title === 'Test Layer Not Submitted');
+    const testLayer = afterResponse.data.find(
+      (n: any) => n.title === "Test Layer Not Submitted",
+    );
     expect(testLayer).toBeUndefined();
   });
 
-  test('should validate required fields', async ({ page }) => {
+  test("should validate required fields", async ({ page }) => {
     // Click "Add Layer" button
     await page.click('[data-testid="layer-add-button"]');
 
     // Wait for create modal
-    await expect(page.getByRole('dialog', { name: 'Create New Layer' })).toBeVisible();
+    await expect(
+      page.getByRole("dialog", { name: "Create New Layer" }),
+    ).toBeVisible();
 
     // Try to submit without filling in title (required field) - HTML5 validation will prevent submission
     await page.click('[data-testid="layer-submit-button"]');
 
     // Modal should still be visible (HTML5 validation prevented submission)
-    await expect(page.getByRole('dialog', { name: 'Create New Layer' })).toBeVisible();
+    await expect(
+      page.getByRole("dialog", { name: "Create New Layer" }),
+    ).toBeVisible();
 
     // Verify the title input field is marked as invalid (HTML5 validation)
     const titleInput = page.locator('[data-testid="layer-title-input"]');
-    await expect(titleInput).toHaveAttribute('required');
+    await expect(titleInput).toHaveAttribute("required");
   });
 
-  test('should handle multiple layer selections and bulk delete', async ({ page }) => {
+  test("should handle multiple layer selections and bulk delete", async ({
+    page,
+  }) => {
     // Create multiple layers
     const timestamp = Date.now();
-    const layer1 = await apiRequest<any>(page, '/api/structure_nodes', {
-      method: 'POST',
-      body: { title: `Bulk Delete 1 ${timestamp}`, node_type: 'layer' },
+    const layer1 = await apiRequest<any>(page, "/api/structure_nodes", {
+      method: "POST",
+      body: { title: `Bulk Delete 1 ${timestamp}`, node_type: "layer" },
     });
-    const layer2 = await apiRequest<any>(page, '/api/structure_nodes', {
-      method: 'POST',
-      body: { title: `Bulk Delete 2 ${timestamp}`, node_type: 'layer' },
+    const layer2 = await apiRequest<any>(page, "/api/structure_nodes", {
+      method: "POST",
+      body: { title: `Bulk Delete 2 ${timestamp}`, node_type: "layer" },
     });
 
     // Refresh
     await page.reload();
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState("networkidle");
 
     // Select both layers
-    await page.locator(`[data-testid="layer-row-${layer1.id}"]`).locator('input[type="checkbox"]').check();
-    await page.locator(`[data-testid="layer-row-${layer2.id}"]`).locator('input[type="checkbox"]').check();
+    await page
+      .locator(`[data-testid="layer-row-${layer1.id}"]`)
+      .locator('input[type="checkbox"]')
+      .check();
+    await page
+      .locator(`[data-testid="layer-row-${layer2.id}"]`)
+      .locator('input[type="checkbox"]')
+      .check();
 
     // Delete selected
     await page.click('[data-testid="layer-actions-dropdown"]');
     await page.click('[data-testid="layer-delete-selected-action"]');
 
     // Confirm
-    const deleteModal = page.getByRole('dialog', { name: /Confirm Delete/i });
+    const deleteModal = page.getByRole("dialog", { name: /Confirm Delete/i });
     await expect(deleteModal).toBeVisible();
-    await expect(deleteModal).toContainText('2 selected');
+    await expect(deleteModal).toContainText("2 selected");
     await page.click('[data-testid="layer-delete-confirm-button"]');
 
     // Wait for modal to close
     await expect(deleteModal).not.toBeVisible();
 
     // Verify both layers are gone
-    await expect(page.locator('[data-testid="layer-table"]')).not.toContainText(`Bulk Delete 1 ${timestamp}`);
-    await expect(page.locator('[data-testid="layer-table"]')).not.toContainText(`Bulk Delete 2 ${timestamp}`);
+    await expect(page.locator('[data-testid="layer-table"]')).not.toContainText(
+      `Bulk Delete 1 ${timestamp}`,
+    );
+    await expect(page.locator('[data-testid="layer-table"]')).not.toContainText(
+      `Bulk Delete 2 ${timestamp}`,
+    );
   });
 });

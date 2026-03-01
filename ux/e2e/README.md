@@ -82,18 +82,20 @@ The E2E test infrastructure uses Playwright's global setup/teardown to manage se
 ### Basic Test Structure
 
 ```typescript
-import { test, expect } from '@playwright/test';
+import { test, expect } from "@playwright/test";
 
-test.describe('Feature Name', () => {
-  test('should do something', async ({ page }) => {
+test.describe("Feature Name", () => {
+  test("should do something", async ({ page }) => {
     // Navigate to the app
-    await page.goto('/');
+    await page.goto("/");
 
     // Interact with the UI
     await page.click('[data-testid="button"]');
 
     // Assert expected behavior
-    await expect(page.locator('[data-testid="result"]')).toContainText('Success');
+    await expect(page.locator('[data-testid="result"]')).toContainText(
+      "Success",
+    );
   });
 });
 ```
@@ -101,21 +103,21 @@ test.describe('Feature Name', () => {
 ### Using Test Helpers
 
 ```typescript
-import { test, expect } from '@playwright/test';
-import { waitForAppReady, apiRequest } from '../fixtures/test-helpers';
+import { test, expect } from "@playwright/test";
+import { waitForAppReady, apiRequest } from "../fixtures/test-helpers";
 
-test('should create a structure node', async ({ page }) => {
-  await page.goto('/');
+test("should create a structure node", async ({ page }) => {
+  await page.goto("/");
   await waitForAppReady(page);
 
   // Create via UI
   await page.click('[data-testid="new-node-button"]');
-  await page.fill('[data-testid="node-name"]', 'Test Node');
+  await page.fill('[data-testid="node-name"]', "Test Node");
   await page.click('[data-testid="submit"]');
 
   // Verify via API
-  const nodes = await apiRequest(page, '/api/structure-nodes');
-  expect(nodes.nodes.some(n => n.name === 'Test Node')).toBeTruthy();
+  const nodes = await apiRequest(page, "/api/structure-nodes");
+  expect(nodes.nodes.some((n) => n.name === "Test Node")).toBeTruthy();
 });
 ```
 
@@ -133,6 +135,7 @@ test('should create a structure node', async ({ page }) => {
 ### Backend Configuration
 
 **`/local-server/config.e2e.json`**
+
 - Configures backend for testing
 - Uses test database paths
 - Disables expensive features (LLM, web search)
@@ -141,12 +144,14 @@ test('should create a structure node', async ({ page }) => {
 ### Frontend Environment
 
 **`/ux/.env.e2e`**
+
 - Points frontend to test backend (port 8001)
 - Sets environment identifier
 
 ### Playwright Configuration
 
 **`/ux/playwright.config.ts`**
+
 - Defines test directory and execution settings
 - Configures browsers to test
 - Sets timeouts and retry behavior
@@ -221,6 +226,7 @@ For continuous integration:
 ```
 
 Set `CI=true` environment variable to enable:
+
 - 2 retries for flaky tests
 - GitHub Actions reporter
 - Verbose output

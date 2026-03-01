@@ -8,7 +8,7 @@ import {
   Globe,
   Cog,
   Settings,
-  Shield
+  Shield,
 } from "lucide-react";
 
 interface ConfigSection {
@@ -76,16 +76,16 @@ export function ConfigSidebar() {
     <div className="space-y-4">
       {/* Overview Section */}
       <div className="p-4">
-        <div className="flex items-center gap-3 mb-3">
+        <div className="mb-3 flex items-center gap-3">
           <Settings className="h-5 w-5 text-gray-600" />
           <h3 className="font-semibold text-gray-900">Configuration</h3>
         </div>
 
         <Link
           to="/app/config"
-          className={`block px-3 py-2 rounded-md text-sm transition-colors ${
+          className={`block rounded-md px-3 py-2 text-sm transition-colors ${
             currentPath === "/app/config"
-              ? "bg-blue-100 text-blue-800 font-medium"
+              ? "bg-blue-100 font-medium text-blue-800"
               : "text-gray-600 hover:bg-gray-100 hover:text-gray-900"
           }`}
         >
@@ -95,22 +95,22 @@ export function ConfigSidebar() {
 
       {/* Pipeline Configuration */}
       <div className="p-4">
-        <h4 className="font-medium text-gray-900 mb-3 text-sm uppercase tracking-wide">
+        <h4 className="mb-3 text-sm font-medium tracking-wide text-gray-900 uppercase">
           Pipeline Management
         </h4>
 
         <Link
           to="/app/config/pipelines"
-          className={`flex items-center gap-3 px-3 py-2 rounded-md text-sm transition-colors ${
+          className={`flex items-center gap-3 rounded-md px-3 py-2 text-sm transition-colors ${
             currentPath.startsWith("/app/config/pipelines")
-              ? "bg-blue-100 text-blue-800 font-medium"
+              ? "bg-blue-100 font-medium text-blue-800"
               : "text-gray-600 hover:bg-gray-100 hover:text-gray-900"
           }`}
         >
           <Shield className="h-4 w-4 flex-shrink-0" />
-          <div className="flex-1 min-w-0">
+          <div className="min-w-0 flex-1">
             <span className="truncate">Pipeline Flavors</span>
-            <p className="text-xs text-gray-500 mt-0.5 truncate">
+            <p className="mt-0.5 truncate text-xs text-gray-500">
               Manage LLM pipeline configurations
             </p>
           </div>
@@ -119,7 +119,7 @@ export function ConfigSidebar() {
 
       {/* Configuration Sections */}
       <div className="p-4">
-        <h4 className="font-medium text-gray-900 mb-3 text-sm uppercase tracking-wide">
+        <h4 className="mb-3 text-sm font-medium tracking-wide text-gray-900 uppercase">
           Settings
         </h4>
 
@@ -132,28 +132,28 @@ export function ConfigSidebar() {
               <Link
                 key={section.id}
                 to={section.path}
-                className={`flex items-center gap-3 px-3 py-2 rounded-md text-sm transition-colors ${
+                className={`flex items-center gap-3 rounded-md px-3 py-2 text-sm transition-colors ${
                   isActive
-                    ? "bg-blue-100 text-blue-800 font-medium"
+                    ? "bg-blue-100 font-medium text-blue-800"
                     : "text-gray-600 hover:bg-gray-100 hover:text-gray-900"
                 }`}
               >
                 <Icon className="h-4 w-4 flex-shrink-0" />
-                <div className="flex-1 min-w-0">
+                <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-2">
                     <span className="truncate">{section.title}</span>
                     {section.priority && (
-                      <span className="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800">
+                      <span className="inline-flex items-center rounded bg-blue-100 px-1.5 py-0.5 text-xs font-medium text-blue-800">
                         Priority
                       </span>
                     )}
                     {section.expert && (
-                      <span className="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-orange-100 text-orange-800">
+                      <span className="inline-flex items-center rounded bg-orange-100 px-1.5 py-0.5 text-xs font-medium text-orange-800">
                         Expert
                       </span>
                     )}
                   </div>
-                  <p className="text-xs text-gray-500 mt-0.5 truncate">
+                  <p className="mt-0.5 truncate text-xs text-gray-500">
                     {section.description}
                   </p>
                 </div>

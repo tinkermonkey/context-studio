@@ -4,7 +4,13 @@
  * React Query hooks for background task management endpoints
  */
 
-import { useQuery, useMutation, UseQueryOptions, UseMutationOptions, useQueryClient } from "@tanstack/react-query";
+import {
+  useQuery,
+  useMutation,
+  UseQueryOptions,
+  UseMutationOptions,
+  useQueryClient,
+} from "@tanstack/react-query";
 import { apiClient } from "@/api/client/axios";
 
 // API Response Types
@@ -46,16 +52,18 @@ export const backgroundTasksKeys = {
   all: ["backgroundTasks"] as const,
   list: (params?: { status_filter?: string; task_type?: string }) =>
     [...backgroundTasksKeys.all, "list", params] as const,
-  detail: (taskId: string) => [...backgroundTasksKeys.all, "detail", taskId] as const,
+  detail: (taskId: string) =>
+    [...backgroundTasksKeys.all, "detail", taskId] as const,
   stats: () => [...backgroundTasksKeys.all, "stats"] as const,
-  deadLetterQueue: () => [...backgroundTasksKeys.all, "dead-letter-queue"] as const,
+  deadLetterQueue: () =>
+    [...backgroundTasksKeys.all, "dead-letter-queue"] as const,
 };
 
 // Query Hooks
 
 export function useTaskList(
   params?: { status_filter?: string; task_type?: string },
-  options?: UseQueryOptions<TaskList>
+  options?: UseQueryOptions<TaskList>,
 ) {
   return useQuery<TaskList>({
     queryKey: backgroundTasksKeys.list(params),
@@ -69,7 +77,7 @@ export function useTaskList(
 
 export function useTaskDetail(
   taskId: string,
-  options?: UseQueryOptions<TaskStatus>
+  options?: UseQueryOptions<TaskStatus>,
 ) {
   return useQuery<TaskStatus>({
     queryKey: backgroundTasksKeys.detail(taskId),
@@ -107,7 +115,7 @@ export function useDeadLetterQueue(options?: UseQueryOptions<TaskList>) {
 // Mutation Hooks
 
 export function useCancelTask(
-  options?: UseMutationOptions<CancelTaskResponse, Error, string>
+  options?: UseMutationOptions<CancelTaskResponse, Error, string>,
 ) {
   const queryClient = useQueryClient();
 
@@ -119,7 +127,9 @@ export function useCancelTask(
     onSuccess: (_, taskId) => {
       // Invalidate relevant queries
       queryClient.invalidateQueries({ queryKey: backgroundTasksKeys.list() });
-      queryClient.invalidateQueries({ queryKey: backgroundTasksKeys.detail(taskId) });
+      queryClient.invalidateQueries({
+        queryKey: backgroundTasksKeys.detail(taskId),
+      });
       queryClient.invalidateQueries({ queryKey: backgroundTasksKeys.stats() });
     },
     ...options,

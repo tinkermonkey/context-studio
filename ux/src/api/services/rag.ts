@@ -9,19 +9,27 @@ import { ENDPOINTS } from "../config";
 import { components, operations } from "../client/types";
 
 // Type definitions from OpenAPI schema
-export type RAGExtractionRequest = components["schemas"]["RAGExtractionRequest"];
-export type RAGExtractionResponse = components["schemas"]["RAGExtractionResponse"];
+export type RAGExtractionRequest =
+  components["schemas"]["RAGExtractionRequest"];
+export type RAGExtractionResponse =
+  components["schemas"]["RAGExtractionResponse"];
 export type ExtractedEntity = components["schemas"]["ExtractedEntity"];
 export type ProcessingMetrics = components["schemas"]["ProcessingMetrics"];
 export type LayerMetrics = components["schemas"]["LayerMetrics"];
 
 // Infer response types from operations
-type ExtractEntitiesResponse = operations["extract_entities_api_rag_extract_post"]["responses"]["200"]["content"]["application/json"];
-type GetMetricsResponse = operations["get_metrics_api_rag_metrics__request_id__get"]["responses"]["200"]["content"]["application/json"];
-type GetTraceResponse = operations["get_trace_api_rag_trace__request_id__get"]["responses"]["200"]["content"]["application/json"];
-type GetTraceByLayerResponse = operations["get_trace_by_layer_api_rag_trace__request_id__layer__layer_name__get"]["responses"]["200"]["content"]["application/json"];
-type DeleteTraceResponse = operations["delete_trace_api_rag_trace__request_id__delete"]["responses"]["200"]["content"]["application/json"];
-type UpdateConfigResponse = operations["update_config_api_rag_config_update_post"]["responses"]["200"]["content"]["application/json"];
+type ExtractEntitiesResponse =
+  operations["extract_entities_api_rag_extract_post"]["responses"]["200"]["content"]["application/json"];
+type GetMetricsResponse =
+  operations["get_metrics_api_rag_metrics__request_id__get"]["responses"]["200"]["content"]["application/json"];
+type GetTraceResponse =
+  operations["get_trace_api_rag_trace__request_id__get"]["responses"]["200"]["content"]["application/json"];
+type GetTraceByLayerResponse =
+  operations["get_trace_by_layer_api_rag_trace__request_id__layer__layer_name__get"]["responses"]["200"]["content"]["application/json"];
+type DeleteTraceResponse =
+  operations["delete_trace_api_rag_trace__request_id__delete"]["responses"]["200"]["content"]["application/json"];
+type UpdateConfigResponse =
+  operations["update_config_api_rag_config_update_post"]["responses"]["200"]["content"]["application/json"];
 
 export interface RAGConfigUpdate {
   timeout_layer_0?: number;

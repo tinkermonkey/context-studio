@@ -70,7 +70,12 @@ export const TestParagraphList: React.FC<TestParagraphListProps> = ({
         <p className="text-sm text-red-800">
           Error loading paragraphs: {error.message}
         </p>
-        <Button size="sm" color="gray" onClick={() => refetch()} className="mt-2">
+        <Button
+          size="sm"
+          color="gray"
+          onClick={() => refetch()}
+          className="mt-2"
+        >
           Retry
         </Button>
       </div>
@@ -79,10 +84,17 @@ export const TestParagraphList: React.FC<TestParagraphListProps> = ({
 
   if (paragraphs.length === 0) {
     return (
-      <div className="rounded-lg border border-gray-200 bg-gray-50 p-8 text-center" data-testid="test-paragraph-list">
+      <div
+        className="rounded-lg border border-gray-200 bg-gray-50 p-8 text-center"
+        data-testid="test-paragraph-list"
+      >
         <p className="mb-4 text-gray-600">No test paragraphs yet.</p>
         {onCreateNew && (
-          <Button size="sm" onClick={onCreateNew} data-testid="test-paragraph-create-button">
+          <Button
+            size="sm"
+            onClick={onCreateNew}
+            data-testid="test-paragraph-create-button"
+          >
             <Plus className="mr-2 h-4 w-4" />
             Create First Paragraph
           </Button>
@@ -96,11 +108,16 @@ export const TestParagraphList: React.FC<TestParagraphListProps> = ({
       <div className="flex items-center justify-between">
         <div>
           <p className="text-sm text-gray-600">
-            {paragraphs.length} test paragraph{paragraphs.length !== 1 ? "s" : ""}
+            {paragraphs.length} test paragraph
+            {paragraphs.length !== 1 ? "s" : ""}
           </p>
         </div>
         {onCreateNew && (
-          <Button size="sm" onClick={onCreateNew} data-testid="test-paragraph-create-button">
+          <Button
+            size="sm"
+            onClick={onCreateNew}
+            data-testid="test-paragraph-create-button"
+          >
             <Plus className="mr-2 h-4 w-4" />
             Create New
           </Button>
@@ -139,11 +156,15 @@ export const TestParagraphList: React.FC<TestParagraphListProps> = ({
                       {paragraph.notes}
                     </span>
                   ) : (
-                    <span className="text-sm italic text-gray-400">No notes</span>
+                    <span className="text-sm text-gray-400 italic">
+                      No notes
+                    </span>
                   )}
                 </TableCell>
                 <TableCell>
-                  <Badge color={paragraph.annotations?.length ? "success" : "gray"}>
+                  <Badge
+                    color={paragraph.annotations?.length ? "success" : "gray"}
+                  >
                     {paragraph.annotations?.length || 0} annotation
                     {paragraph.annotations?.length !== 1 ? "s" : ""}
                   </Badge>

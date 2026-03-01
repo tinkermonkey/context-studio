@@ -37,7 +37,9 @@ export const PredicateMappingManager: React.FC<
 > = ({ className }) => {
   const [activeTab, setActiveTab] = useState<number>(0);
   const [showWorkflowModal, setShowWorkflowModal] = useState<boolean>(false);
-  const [selectedPredicateIds, setSelectedPredicateIds] = useState<string[]>([]);
+  const [selectedPredicateIds, setSelectedPredicateIds] = useState<string[]>(
+    [],
+  );
 
   const handleClusterSelect = (predicateIds: string[]) => {
     setSelectedPredicateIds(predicateIds);
@@ -77,7 +79,9 @@ export const PredicateMappingManager: React.FC<
             <SimilaritySearchTab onClusterSelect={handleClusterSelect} />
           </Tabs.Item>
           <Tabs.Item title="Cluster Analysis" icon={Layers}>
-            <ClusterVisualizationTab onCreateGlobalPredicate={handleClusterSelect} />
+            <ClusterVisualizationTab
+              onCreateGlobalPredicate={handleClusterSelect}
+            />
           </Tabs.Item>
           <Tabs.Item title="Manual Mapping" icon={PlusCircle}>
             <ManualMappingInterface />
@@ -92,11 +96,7 @@ export const PredicateMappingManager: React.FC<
       </Card>
 
       {/* Mapping Creation Workflow Modal */}
-      <Modal
-        show={showWorkflowModal}
-        onClose={handleWorkflowCancel}
-        size="3xl"
-      >
+      <Modal show={showWorkflowModal} onClose={handleWorkflowCancel} size="3xl">
         <Modal.Header>Create Global Predicate from Cluster</Modal.Header>
         <Modal.Body>
           <MappingCreationWorkflow

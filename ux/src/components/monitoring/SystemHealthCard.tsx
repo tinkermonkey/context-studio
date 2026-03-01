@@ -32,7 +32,7 @@ export function SystemHealthCard({
   className = "",
 }: SystemHealthCardProps) {
   const getStatusColor = (
-    status: string
+    status: string,
   ): "success" | "warning" | "failure" | "info" => {
     switch (status) {
       case "healthy":

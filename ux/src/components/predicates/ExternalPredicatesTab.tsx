@@ -6,14 +6,41 @@
  */
 
 import React, { useState, lazy, Suspense } from "react";
-import { Table, TableHead, TableHeadCell, TableBody, TableRow, TableCell, Button, Select, Spinner, Badge, TextInput, Pagination, Dropdown, DropdownItem, DropdownDivider, Modal, ModalHeader, ModalBody } from "flowbite-react";
+import {
+  Table,
+  TableHead,
+  TableHeadCell,
+  TableBody,
+  TableRow,
+  TableCell,
+  Button,
+  Select,
+  Spinner,
+  Badge,
+  TextInput,
+  Pagination,
+  Dropdown,
+  DropdownItem,
+  DropdownDivider,
+  Modal,
+  ModalHeader,
+  ModalBody,
+} from "flowbite-react";
 import { Search, RefreshCw, X, ChevronDown, Info } from "lucide-react";
-import { useExternalPredicates, useDiscoverPredicates, useSearchExternalPredicates } from "@/api/hooks/predicates";
+import {
+  useExternalPredicates,
+  useDiscoverPredicates,
+  useSearchExternalPredicates,
+} from "@/api/hooks/predicates";
 import { useButterToast } from "@/hooks/useButterToast";
 import { getSourceBadgeColor } from "@/utils/sourceUtils";
 
 // Lazy load the ExamplePredicateUses component to avoid circular dependency issues
-const ExamplePredicateUses = lazy(() => import("./ExamplePredicateUses").then(module => ({ default: module.ExamplePredicateUses })));
+const ExamplePredicateUses = lazy(() =>
+  import("./ExamplePredicateUses").then((module) => ({
+    default: module.ExamplePredicateUses,
+  })),
+);
 
 export interface ExternalPredicatesTabProps {
   onPredicateSelect?: (predicateId: string) => void;
@@ -28,7 +55,10 @@ export const ExternalPredicatesTab: React.FC<ExternalPredicatesTabProps> = ({
   const [search, setSearch] = useState<string>("");
   const [debouncedSearch, setDebouncedSearch] = useState<string>("");
   const [searchThreshold, setSearchThreshold] = useState<number>(0.3);
-  const [selectedPredicate, setSelectedPredicate] = useState<{ source: string; externalId: string } | null>(null);
+  const [selectedPredicate, setSelectedPredicate] = useState<{
+    source: string;
+    externalId: string;
+  } | null>(null);
   const toast = useButterToast();
 
   // Debounce search input (500ms delay)
@@ -52,7 +82,7 @@ export const ExternalPredicatesTab: React.FC<ExternalPredicatesTabProps> = ({
     },
     {
       enabled: !useSearch,
-    } as any
+    } as any,
   );
 
   const {
@@ -68,12 +98,14 @@ export const ExternalPredicatesTab: React.FC<ExternalPredicatesTabProps> = ({
     isLoading: isSearchLoading,
     error: searchError,
   } = useSearchExternalPredicates(
-    useSearch ? {
-      query: debouncedSearch,
-      source: source || undefined,
-      limit: 100, // Get more results for search
-      threshold: searchThreshold,
-    } : undefined
+    useSearch
+      ? {
+          query: debouncedSearch,
+          source: source || undefined,
+          limit: 100, // Get more results for search
+          threshold: searchThreshold,
+        }
+      : undefined,
   );
 
   // Use search data if searching, otherwise use list data
@@ -125,10 +157,22 @@ export const ExternalPredicatesTab: React.FC<ExternalPredicatesTabProps> = ({
   // Available sources for predicate discovery and filtering
   // These are the sources supported by the backend discovery endpoint
   const availableSources = [
-    { id: 'conceptnet', label: 'ConceptNet', color: getSourceBadgeColor('conceptnet') },
-    { id: 'dbpedia', label: 'DBpedia', color: getSourceBadgeColor('dbpedia') },
-    { id: 'wikidata', label: 'Wikidata', color: getSourceBadgeColor('wikidata') },
-    { id: 'schema_org', label: 'Schema.org', color: getSourceBadgeColor('schema_org') },
+    {
+      id: "conceptnet",
+      label: "ConceptNet",
+      color: getSourceBadgeColor("conceptnet"),
+    },
+    { id: "dbpedia", label: "DBpedia", color: getSourceBadgeColor("dbpedia") },
+    {
+      id: "wikidata",
+      label: "Wikidata",
+      color: getSourceBadgeColor("wikidata"),
+    },
+    {
+      id: "schema_org",
+      label: "Schema.org",
+      color: getSourceBadgeColor("schema_org"),
+    },
   ];
 
   return (
@@ -140,10 +184,7 @@ export const ExternalPredicatesTab: React.FC<ExternalPredicatesTabProps> = ({
           label=""
           dismissOnClick={true}
           renderTrigger={() => (
-            <Button
-              size="sm"
-              disabled={discoverMutation.isPending}
-            >
+            <Button size="sm" disabled={discoverMutation.isPending}>
               {discoverMutation.isPending ? (
                 <>
                   <Spinner size="sm" className="mr-2" />
@@ -164,8 +205,13 @@ export const ExternalPredicatesTab: React.FC<ExternalPredicatesTabProps> = ({
           </DropdownItem>
           <DropdownDivider />
           {availableSources.map((s) => (
-            <DropdownItem key={s.id} onClick={() => handleDiscoverClick([s.id])}>
-              <Badge color={s.color} className="mr-2 w-fit">{s.id}</Badge>
+            <DropdownItem
+              key={s.id}
+              onClick={() => handleDiscoverClick([s.id])}
+            >
+              <Badge color={s.color} className="mr-2 w-fit">
+                {s.id}
+              </Badge>
               {s.label}
             </DropdownItem>
           ))}
@@ -188,7 +234,7 @@ export const ExternalPredicatesTab: React.FC<ExternalPredicatesTabProps> = ({
             <button
               type="button"
               onClick={handleClearSearch}
-              className="absolute right-2 top-1/2 -translate-y-1/2 rounded-full p-1 text-gray-400 hover:bg-gray-100 hover:text-gray-600 dark:hover:bg-gray-700 dark:hover:text-gray-300"
+              className="absolute top-1/2 right-2 -translate-y-1/2 rounded-full p-1 text-gray-400 hover:bg-gray-100 hover:text-gray-600 dark:hover:bg-gray-700 dark:hover:text-gray-300"
               aria-label="Clear search"
             >
               <X className="h-4 w-4" />
@@ -199,14 +245,13 @@ export const ExternalPredicatesTab: React.FC<ExternalPredicatesTabProps> = ({
           label=""
           dismissOnClick={true}
           renderTrigger={() => (
-            <Button
-              color="light"
-              size="sm"
-              className="whitespace-nowrap"
-            >
+            <Button color="light" size="sm" className="whitespace-nowrap">
               {source ? (
                 <>
-                  <Badge color={getSourceBadgeColor(source)} className="mr-2 w-fit">
+                  <Badge
+                    color={getSourceBadgeColor(source)}
+                    className="mr-2 w-fit"
+                  >
                     {source}
                   </Badge>
                   Filter: {source}
@@ -218,7 +263,7 @@ export const ExternalPredicatesTab: React.FC<ExternalPredicatesTabProps> = ({
             </Button>
           )}
         >
-          <DropdownItem 
+          <DropdownItem
             onClick={() => {
               setSource("");
               setPage(1);
@@ -228,14 +273,16 @@ export const ExternalPredicatesTab: React.FC<ExternalPredicatesTabProps> = ({
           </DropdownItem>
           <DropdownDivider />
           {availableSources.map((s) => (
-            <DropdownItem 
-              key={s.id} 
+            <DropdownItem
+              key={s.id}
               onClick={() => {
                 setSource(s.id);
                 setPage(1);
               }}
             >
-              <Badge color={s.color} className="mr-2 w-fit">{s.id}</Badge>
+              <Badge color={s.color} className="mr-2 w-fit">
+                {s.id}
+              </Badge>
               {s.label}
             </DropdownItem>
           ))}
@@ -263,13 +310,14 @@ export const ExternalPredicatesTab: React.FC<ExternalPredicatesTabProps> = ({
         <div className="text-sm text-gray-600 dark:text-gray-400">
           {useSearch ? (
             <>
-              Found {displayData.length} matching predicate{displayData.length !== 1 ? 's' : ''} using vector search
-              {source && ` (filtered by ${source})`}
-              {' '}with similarity ≥ {(searchThreshold * 100).toFixed(0)}%
+              Found {displayData.length} matching predicate
+              {displayData.length !== 1 ? "s" : ""} using vector search
+              {source && ` (filtered by ${source})`} with similarity ≥{" "}
+              {(searchThreshold * 100).toFixed(0)}%
             </>
           ) : (
             <>
-              {totalCount} total predicate{totalCount !== 1 ? 's' : ''}
+              {totalCount} total predicate{totalCount !== 1 ? "s" : ""}
               {source && ` from ${source}`}
             </>
           )}
@@ -296,37 +344,49 @@ export const ExternalPredicatesTab: React.FC<ExternalPredicatesTabProps> = ({
                 <TableHeadCell>External ID</TableHeadCell>
                 <TableHeadCell>Title</TableHeadCell>
                 <TableHeadCell>Definition</TableHeadCell>
-                {useSearch && (
-                  <TableHeadCell>Similarity</TableHeadCell>
-                )}
+                {useSearch && <TableHeadCell>Similarity</TableHeadCell>}
                 <TableHeadCell></TableHeadCell>
                 <TableHeadCell>
                   <span className="sr-only">Actions</span>
                 </TableHeadCell>
               </TableRow>
             </TableHead>
-            <TableBody className="divide-y">{displayData.map((predicate: any) => (
+            <TableBody className="divide-y">
+              {displayData.map((predicate: any) => (
                 <TableRow
                   key={predicate.id}
                   className="bg-white dark:border-gray-700 dark:bg-gray-800"
                 >
                   <TableCell className="w-fit whitespace-nowrap">
-                    <Badge color={getSourceBadgeColor(predicate.source)} className="w-fit">
+                    <Badge
+                      color={getSourceBadgeColor(predicate.source)}
+                      className="w-fit"
+                    >
                       {predicate.source}
                     </Badge>
                   </TableCell>
-                  <TableCell className="break-all font-mono text-xs">
+                  <TableCell className="font-mono text-xs break-all">
                     {predicate.external_id}
                   </TableCell>
                   <TableCell className="font-medium text-gray-900 dark:text-white">
                     {predicate.title}
                   </TableCell>
                   <TableCell className="break-words">
-                    {predicate.definition || <span className="text-gray-400">—</span>}
+                    {predicate.definition || (
+                      <span className="text-gray-400">—</span>
+                    )}
                   </TableCell>
                   {useSearch && (
                     <TableCell className="">
-                      <Badge color={predicate.similarity_score >= 0.8 ? "success" : predicate.similarity_score >= 0.7 ? "warning" : "gray"}>
+                      <Badge
+                        color={
+                          predicate.similarity_score >= 0.8
+                            ? "success"
+                            : predicate.similarity_score >= 0.7
+                              ? "warning"
+                              : "gray"
+                        }
+                      >
                         {(predicate.similarity_score * 100).toFixed(0)}%
                       </Badge>
                     </TableCell>
@@ -335,7 +395,12 @@ export const ExternalPredicatesTab: React.FC<ExternalPredicatesTabProps> = ({
                     <Button
                       size="xs"
                       color="light"
-                      onClick={() => setSelectedPredicate({ source: predicate.source, externalId: predicate.external_id })}
+                      onClick={() =>
+                        setSelectedPredicate({
+                          source: predicate.source,
+                          externalId: predicate.external_id,
+                        })
+                      }
                       title="View example uses"
                     >
                       <Info className="h-4 w-4" />
@@ -385,7 +450,8 @@ export const ExternalPredicatesTab: React.FC<ExternalPredicatesTabProps> = ({
                   <Badge className="inline" color="gray">
                     predicates
                   </Badge>{" "}
-                  <span className="font-bold">{(page - 1) * pageSize + 1}</span>-
+                  <span className="font-bold">{(page - 1) * pageSize + 1}</span>
+                  -
                   <span className="font-bold">
                     {Math.min(page * pageSize, totalCount)}
                   </span>
@@ -419,19 +485,23 @@ export const ExternalPredicatesTab: React.FC<ExternalPredicatesTabProps> = ({
           )}
         </div>
       )}
-      
+
       {/* Example Uses Modal */}
       <Modal
         show={!!selectedPredicate}
         onClose={() => setSelectedPredicate(null)}
         size="4xl"
       >
-        <ModalHeader>
-          Example Uses of Predicate
-        </ModalHeader>
+        <ModalHeader>Example Uses of Predicate</ModalHeader>
         <ModalBody>
           {selectedPredicate && (
-            <Suspense fallback={<div className="flex items-center justify-center py-8"><Spinner size="lg" /></div>}>
+            <Suspense
+              fallback={
+                <div className="flex items-center justify-center py-8">
+                  <Spinner size="lg" />
+                </div>
+              }
+            >
               <ExamplePredicateUses
                 source={selectedPredicate.source}
                 externalId={selectedPredicate.externalId}

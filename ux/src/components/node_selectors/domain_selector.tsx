@@ -6,14 +6,14 @@ export interface DomainSelectorProps {
   onSelect?: (domain: StructureNode | undefined) => void;
   value?: string;
   className?: string;
-  'data-testid'?: string;
+  "data-testid"?: string;
 }
 
 export const DomainSelector: React.FC<DomainSelectorProps> = ({
   onSelect,
   value,
   className,
-  'data-testid': dataTestId,
+  "data-testid": dataTestId,
 }) => {
   const { data: domains, isLoading, error } = useDomainNodes();
   return (

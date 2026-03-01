@@ -224,11 +224,15 @@ describe("SimilaritySearchTab", () => {
     );
 
     const tabs = screen.getAllByRole("tab");
-    const similarityTab = tabs.find(tab => tab.textContent?.includes("Similarity Search"));
+    const similarityTab = tabs.find((tab) =>
+      tab.textContent?.includes("Similarity Search"),
+    );
     fireEvent.click(similarityTab!);
 
     await waitFor(() => {
-      expect(screen.getByText(/Select a predicate above to find similar/i)).toBeInTheDocument();
+      expect(
+        screen.getByText(/Select a predicate above to find similar/i),
+      ).toBeInTheDocument();
     });
   });
 
@@ -241,7 +245,9 @@ describe("SimilaritySearchTab", () => {
     );
 
     const tabs = screen.getAllByRole("tab");
-    const similarityTab = tabs.find(tab => tab.textContent?.includes("Similarity Search"));
+    const similarityTab = tabs.find((tab) =>
+      tab.textContent?.includes("Similarity Search"),
+    );
     fireEvent.click(similarityTab!);
 
     await waitFor(() => {
@@ -260,7 +266,9 @@ describe("ClusterVisualizationTab", () => {
     );
 
     const tabs = screen.getAllByRole("tab");
-    const clusterTab = tabs.find(tab => tab.textContent?.includes("Cluster Analysis"));
+    const clusterTab = tabs.find((tab) =>
+      tab.textContent?.includes("Cluster Analysis"),
+    );
     fireEvent.click(clusterTab!);
 
     await waitFor(() => {
@@ -277,7 +285,9 @@ describe("ClusterVisualizationTab", () => {
     );
 
     const tabs = screen.getAllByRole("tab");
-    const clusterTab = tabs.find(tab => tab.textContent?.includes("Cluster Analysis"));
+    const clusterTab = tabs.find((tab) =>
+      tab.textContent?.includes("Cluster Analysis"),
+    );
     fireEvent.click(clusterTab!);
 
     await waitFor(() => {
@@ -296,7 +306,9 @@ describe("MappingConfigurationTab", () => {
     );
 
     const tabs = screen.getAllByRole("tab");
-    const configTab = tabs.find(tab => tab.textContent?.includes("Configuration"));
+    const configTab = tabs.find((tab) =>
+      tab.textContent?.includes("Configuration"),
+    );
     fireEvent.click(configTab!);
 
     await waitFor(() => {
@@ -313,7 +325,9 @@ describe("MappingConfigurationTab", () => {
     );
 
     const tabs = screen.getAllByRole("tab");
-    const configTab = tabs.find(tab => tab.textContent?.includes("Configuration"));
+    const configTab = tabs.find((tab) =>
+      tab.textContent?.includes("Configuration"),
+    );
     fireEvent.click(configTab!);
 
     await waitFor(() => {
@@ -334,7 +348,9 @@ describe("ManualMappingInterface", () => {
     );
 
     const tabs = screen.getAllByRole("tab");
-    const manualTab = tabs.find(tab => tab.textContent?.includes("Manual Mapping"));
+    const manualTab = tabs.find((tab) =>
+      tab.textContent?.includes("Manual Mapping"),
+    );
     fireEvent.click(manualTab!);
 
     await waitFor(() => {
@@ -351,7 +367,9 @@ describe("ManualMappingInterface", () => {
     );
 
     const tabs = screen.getAllByRole("tab");
-    const manualTab = tabs.find(tab => tab.textContent?.includes("Manual Mapping"));
+    const manualTab = tabs.find((tab) =>
+      tab.textContent?.includes("Manual Mapping"),
+    );
     fireEvent.click(manualTab!);
 
     await waitFor(() => {
@@ -370,7 +388,9 @@ describe("RelevanceSelectionUI", () => {
     );
 
     const tabs = screen.getAllByRole("tab");
-    const relevanceTab = tabs.find(tab => tab.textContent?.includes("Relevance Selection"));
+    const relevanceTab = tabs.find((tab) =>
+      tab.textContent?.includes("Relevance Selection"),
+    );
     fireEvent.click(relevanceTab!);
 
     await waitFor(() => {
@@ -387,7 +407,9 @@ describe("RelevanceSelectionUI", () => {
     );
 
     const tabs = screen.getAllByRole("tab");
-    const relevanceTab = tabs.find(tab => tab.textContent?.includes("Relevance Selection"));
+    const relevanceTab = tabs.find((tab) =>
+      tab.textContent?.includes("Relevance Selection"),
+    );
     fireEvent.click(relevanceTab!);
 
     await waitFor(() => {
@@ -413,14 +435,20 @@ describe("Component Integration", () => {
     const tabs = screen.getAllByRole("tab");
 
     // Switch to Similarity Search
-    const similarityTab = tabs.find(tab => tab.textContent?.includes("Similarity Search"));
+    const similarityTab = tabs.find((tab) =>
+      tab.textContent?.includes("Similarity Search"),
+    );
     fireEvent.click(similarityTab!);
     await waitFor(() => {
-      expect(screen.getByText(/Select a predicate above to find similar/i)).toBeInTheDocument();
+      expect(
+        screen.getByText(/Select a predicate above to find similar/i),
+      ).toBeInTheDocument();
     });
 
     // Switch to Configuration
-    const configTab = tabs.find(tab => tab.textContent?.includes("Configuration"));
+    const configTab = tabs.find((tab) =>
+      tab.textContent?.includes("Configuration"),
+    );
     fireEvent.click(configTab!);
     await waitFor(() => {
       expect(screen.getByText("Relevance Filtering")).toBeInTheDocument();
@@ -438,11 +466,15 @@ describe("Component Integration", () => {
     const tabs = screen.getAllByRole("tab");
 
     // Go to configuration and toggle filter
-    const configTab = tabs.find(tab => tab.textContent?.includes("Configuration"));
+    const configTab = tabs.find((tab) =>
+      tab.textContent?.includes("Configuration"),
+    );
     fireEvent.click(configTab!);
 
     // Switch to another tab
-    const similarityTab = tabs.find(tab => tab.textContent?.includes("Similarity Search"));
+    const similarityTab = tabs.find((tab) =>
+      tab.textContent?.includes("Similarity Search"),
+    );
     fireEvent.click(similarityTab!);
 
     // Switch back to configuration

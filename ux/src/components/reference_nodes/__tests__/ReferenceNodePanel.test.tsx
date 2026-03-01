@@ -3,7 +3,13 @@
  */
 
 import React from "react";
-import { render, screen, waitFor, fireEvent, cleanup } from "@testing-library/react";
+import {
+  render,
+  screen,
+  waitFor,
+  fireEvent,
+  cleanup,
+} from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { vi, describe, it, expect, beforeEach, afterEach } from "vitest";
 
@@ -82,7 +88,7 @@ describe("ReferenceNodePanel", () => {
     render(
       <TestWrapper>
         <ReferenceNodePanel nodeId={mockNodeId} />
-      </TestWrapper>
+      </TestWrapper>,
     );
 
     expect(screen.getByText(/loading reference links/i)).toBeInTheDocument();
@@ -99,10 +105,12 @@ describe("ReferenceNodePanel", () => {
     render(
       <TestWrapper>
         <ReferenceNodePanel nodeId={mockNodeId} />
-      </TestWrapper>
+      </TestWrapper>,
     );
 
-    expect(screen.getByText(/failed to load reference links/i)).toBeInTheDocument();
+    expect(
+      screen.getByText(/failed to load reference links/i),
+    ).toBeInTheDocument();
   });
 
   it("displays empty state when no reference links exist", () => {
@@ -115,11 +123,15 @@ describe("ReferenceNodePanel", () => {
     render(
       <TestWrapper>
         <ReferenceNodePanel nodeId={mockNodeId} />
-      </TestWrapper>
+      </TestWrapper>,
     );
 
-    expect(screen.getByText(/no reference nodes associated/i)).toBeInTheDocument();
-    expect(screen.getByPlaceholderText(/search reference sources/i)).toBeInTheDocument();
+    expect(
+      screen.getByText(/no reference nodes associated/i),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByPlaceholderText(/search reference sources/i),
+    ).toBeInTheDocument();
   });
 
   it("displays persisted reference links when available", () => {
@@ -137,7 +149,7 @@ describe("ReferenceNodePanel", () => {
     render(
       <TestWrapper>
         <ReferenceNodePanel nodeId={mockNodeId} />
-      </TestWrapper>
+      </TestWrapper>,
     );
 
     expect(screen.getByText("Reference Nodes")).toBeInTheDocument();
@@ -145,9 +157,7 @@ describe("ReferenceNodePanel", () => {
   });
 
   it("shows search interface when 'Add References' button is clicked", async () => {
-    const mockLinks = [
-      { source: "dbpedia", external_id: "Test_Concept" },
-    ];
+    const mockLinks = [{ source: "dbpedia", external_id: "Test_Concept" }];
 
     mockUseReferenceLinks.mockReturnValue({
       data: mockLinks,
@@ -158,21 +168,21 @@ describe("ReferenceNodePanel", () => {
     render(
       <TestWrapper>
         <ReferenceNodePanel nodeId={mockNodeId} />
-      </TestWrapper>
+      </TestWrapper>,
     );
 
     const addButton = screen.getByText("Add References");
     fireEvent.click(addButton);
 
     await waitFor(() => {
-      expect(screen.getByPlaceholderText(/search reference sources/i)).toBeInTheDocument();
+      expect(
+        screen.getByPlaceholderText(/search reference sources/i),
+      ).toBeInTheDocument();
     });
   });
 
   it("shows cancel button when search is active and links exist", async () => {
-    const mockLinks = [
-      { source: "dbpedia", external_id: "Test_Concept" },
-    ];
+    const mockLinks = [{ source: "dbpedia", external_id: "Test_Concept" }];
 
     mockUseReferenceLinks.mockReturnValue({
       data: mockLinks,
@@ -183,7 +193,7 @@ describe("ReferenceNodePanel", () => {
     render(
       <TestWrapper>
         <ReferenceNodePanel nodeId={mockNodeId} />
-      </TestWrapper>
+      </TestWrapper>,
     );
 
     const addButton = screen.getByText("Add References");
@@ -204,7 +214,7 @@ describe("ReferenceNodePanel", () => {
     render(
       <TestWrapper>
         <ReferenceNodePanel nodeId="invalid-uuid" />
-      </TestWrapper>
+      </TestWrapper>,
     );
 
     expect(screen.getByText(/invalid node id format/i)).toBeInTheDocument();

@@ -6,8 +6,12 @@
 
 import { BaseService } from "./base";
 
-export type ProviderType = 'native_openai' | 'native_anthropic' | 'native_google' | 'openrouter';
-export type CostTier = 'low' | 'medium' | 'high';
+export type ProviderType =
+  | "native_openai"
+  | "native_anthropic"
+  | "native_google"
+  | "openrouter";
+export type CostTier = "low" | "medium" | "high";
 
 export interface EnabledModelConfig {
   model_name: string;
@@ -72,12 +76,15 @@ export class EnabledModelsService extends BaseService {
   }): Promise<EnabledModelsResponse> {
     return this.withErrorContext(async () => {
       const searchParams = new URLSearchParams();
-      if (params?.enabled_only) searchParams.set('enabled_only', 'true');
-      if (params?.provider_type) searchParams.set('provider_type', params.provider_type);
-      if (params?.tag) searchParams.set('tag', params.tag);
+      if (params?.enabled_only) searchParams.set("enabled_only", "true");
+      if (params?.provider_type)
+        searchParams.set("provider_type", params.provider_type);
+      if (params?.tag) searchParams.set("tag", params.tag);
 
       const query = searchParams.toString();
-      const url = query ? `/api/enabled-models?${query}` : '/api/enabled-models';
+      const url = query
+        ? `/api/enabled-models?${query}`
+        : "/api/enabled-models";
 
       return this.getResource<EnabledModelsResponse>(url);
     }, "listing enabled models");
@@ -90,14 +97,18 @@ export class EnabledModelsService extends BaseService {
     this.validateRequired(modelName, "modelName");
 
     return this.withErrorContext(async () => {
-      return this.getResource<EnabledModelConfig>(`/api/enabled-models/${encodeURIComponent(modelName)}`);
+      return this.getResource<EnabledModelConfig>(
+        `/api/enabled-models/${encodeURIComponent(modelName)}`,
+      );
     }, `getting enabled model ${modelName}`);
   }
 
   /**
    * Create new enabled model
    */
-  async createEnabledModel(config: ModelCreateRequest): Promise<EnabledModelConfig> {
+  async createEnabledModel(
+    config: ModelCreateRequest,
+  ): Promise<EnabledModelConfig> {
     this.validateRequired(config.model_name, "model_name");
     this.validateRequired(config.provider_type, "provider_type");
     this.validateRequired(config.display_name, "display_name");
@@ -106,7 +117,7 @@ export class EnabledModelsService extends BaseService {
       return this.request<EnabledModelConfig>({
         url: "/api/enabled-models",
         method: "POST",
-        data: config
+        data: config,
       });
     }, `creating enabled model ${config.model_name}`);
   }
@@ -114,14 +125,17 @@ export class EnabledModelsService extends BaseService {
   /**
    * Update enabled model configuration
    */
-  async updateEnabledModel(modelName: string, updates: ModelUpdateRequest): Promise<EnabledModelConfig> {
+  async updateEnabledModel(
+    modelName: string,
+    updates: ModelUpdateRequest,
+  ): Promise<EnabledModelConfig> {
     this.validateRequired(modelName, "modelName");
 
     return this.withErrorContext(async () => {
       return this.request<EnabledModelConfig>({
         url: `/api/enabled-models/${encodeURIComponent(modelName)}`,
         method: "PUT",
-        data: updates
+        data: updates,
       });
     }, `updating enabled model ${modelName}`);
   }
@@ -135,7 +149,7 @@ export class EnabledModelsService extends BaseService {
     return this.withErrorContext(async () => {
       await this.request<void>({
         url: `/api/enabled-models/${encodeURIComponent(modelName)}`,
-        method: "DELETE"
+        method: "DELETE",
       });
     }, `deleting enabled model ${modelName}`);
   }
@@ -149,7 +163,7 @@ export class EnabledModelsService extends BaseService {
     return this.withErrorContext(async () => {
       await this.request<void>({
         url: `/api/enabled-models/${encodeURIComponent(modelName)}/enable`,
-        method: "POST"
+        method: "POST",
       });
     }, `enabling model ${modelName}`);
   }
@@ -163,7 +177,7 @@ export class EnabledModelsService extends BaseService {
     return this.withErrorContext(async () => {
       await this.request<void>({
         url: `/api/enabled-models/${encodeURIComponent(modelName)}/disable`,
-        method: "POST"
+        method: "POST",
       });
     }, `disabling model ${modelName}`);
   }
@@ -180,24 +194,31 @@ export class EnabledModelsService extends BaseService {
    */
   async getProvidersStatus(): Promise<ProvidersStatusResponse> {
     return this.withErrorContext(async () => {
-      return this.getResource<ProvidersStatusResponse>("/api/enabled-models/providers/summary");
+      return this.getResource<ProvidersStatusResponse>(
+        "/api/enabled-models/providers/summary",
+      );
     }, "getting providers status");
   }
 
   /**
    * Get models grouped by provider
    */
-  async getModelsByProvider(): Promise<Record<ProviderType, EnabledModelConfig[]>> {
+  async getModelsByProvider(): Promise<
+    Record<ProviderType, EnabledModelConfig[]>
+  > {
     const response = await this.listEnabledModels();
 
-    return response.models.reduce((acc, model) => {
-      const provider = model.provider_type;
-      if (!acc[provider]) {
-        acc[provider] = [];
-      }
-      acc[provider].push(model);
-      return acc;
-    }, {} as Record<ProviderType, EnabledModelConfig[]>);
+    return response.models.reduce(
+      (acc, model) => {
+        const provider = model.provider_type;
+        if (!acc[provider]) {
+          acc[provider] = [];
+        }
+        acc[provider].push(model);
+        return acc;
+      },
+      {} as Record<ProviderType, EnabledModelConfig[]>,
+    );
   }
 
   /**
@@ -221,7 +242,7 @@ export class EnabledModelsService extends BaseService {
    */
   async getModelsByCostTier(costTier: CostTier): Promise<EnabledModelConfig[]> {
     const response = await this.listEnabledModels();
-    return response.models.filter(model => model.cost_tier === costTier);
+    return response.models.filter((model) => model.cost_tier === costTier);
   }
 
   /**
@@ -235,7 +256,7 @@ export class EnabledModelsService extends BaseService {
     // For now, return a placeholder
     return {
       valid: true,
-      issues: []
+      issues: [],
     };
   }
 }

@@ -5,7 +5,16 @@
  */
 
 import { useState, useEffect, useMemo } from "react";
-import { Button, Card, Label, Textarea, Spinner, Alert, Checkbox, Badge } from "flowbite-react";
+import {
+  Button,
+  Card,
+  Label,
+  Textarea,
+  Spinner,
+  Alert,
+  Checkbox,
+  Badge,
+} from "flowbite-react";
 import { useExtractEntities, useRAGTrace } from "@/api/hooks/rag";
 import { useStructureNode } from "@/api/hooks/structure_nodes/useStructureNodes";
 import { Info, ExternalLink } from "lucide-react";
@@ -20,7 +29,10 @@ function EntityItem({ entity }: { entity: any }) {
   const linkProps = useMemo(() => {
     if (!node?.id || !node?.node_type) return null;
 
-    return { to: '/app/structure_nodes/$nodeId' as const, params: { nodeId: node.id } };
+    return {
+      to: "/app/structure_nodes/$nodeId" as const,
+      params: { nodeId: node.id },
+    };
   }, [node]);
 
   return (
@@ -77,7 +89,11 @@ export default function RAGTestPage() {
   const [result, setResult] = useState<any>(null);
   const [requestId, setRequestId] = useState<string | null>(null);
 
-  const { mutate: extractEntities, isPending, error } = useExtractEntities({
+  const {
+    mutate: extractEntities,
+    isPending,
+    error,
+  } = useExtractEntities({
     onSuccess: (data) => {
       setResult(data);
       // Set request ID to trigger trace fetch if trace is available
@@ -91,9 +107,11 @@ export default function RAGTestPage() {
   });
 
   // Fetch trace data when request ID is set and trace is available
-  const { data: traceData, isLoading: isLoadingTrace, error: traceError } = useRAGTrace(
-    requestId,
-  );
+  const {
+    data: traceData,
+    isLoading: isLoadingTrace,
+    error: traceError,
+  } = useRAGTrace(requestId);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -271,7 +289,8 @@ export default function RAGTestPage() {
                             Time:
                           </span>
                           <span className="font-mono text-gray-900 dark:text-white">
-                            {(layerMetrics.execution_time_ms / 1000).toFixed(1)}s
+                            {(layerMetrics.execution_time_ms / 1000).toFixed(1)}
+                            s
                           </span>
                         </div>
                         <div className="flex justify-between">
@@ -352,7 +371,8 @@ export default function RAGTestPage() {
 
           {traceError && (
             <Alert color="failure">
-              <span className="font-medium">Error loading trace:</span> {traceError.message}
+              <span className="font-medium">Error loading trace:</span>{" "}
+              {traceError.message}
             </Alert>
           )}
 

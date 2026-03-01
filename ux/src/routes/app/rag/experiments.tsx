@@ -32,17 +32,16 @@ function RAGExperimentsPage() {
   const [showEditor, setShowEditor] = useState(false);
 
   // Fetch full paragraph data with annotations when editing
-  const { data: fullParagraphData, refetch: refetchParagraph } = useTestParagraph(
-    editingParagraph?.id
-  );
+  const { data: fullParagraphData, refetch: refetchParagraph } =
+    useTestParagraph(editingParagraph?.id);
 
   const handleTestComplete = (results: RunPipelineTestResponse) => {
     // Extract unique paragraph IDs and pipeline names from results
     const paragraphIds = Array.from(
-      new Set(results.results.map((r) => r.paragraph_id))
+      new Set(results.results.map((r) => r.paragraph_id)),
     );
     const pipelineNames = Array.from(
-      new Set(results.results.map((r) => r.pipeline_name))
+      new Set(results.results.map((r) => r.pipeline_name)),
     );
 
     // For now, show results for the first paragraph
@@ -143,7 +142,9 @@ function RAGExperimentsPage() {
                 <>
                   <div className="rounded-lg border border-gray-200 bg-white p-6 dark:border-gray-700 dark:bg-gray-800">
                     <h3 className="mb-4 text-lg font-semibold text-gray-900 dark:text-white">
-                      {editingParagraph ? "Edit Paragraph" : "Create New Paragraph"}
+                      {editingParagraph
+                        ? "Edit Paragraph"
+                        : "Create New Paragraph"}
                     </h3>
                     <TestParagraphEditor
                       paragraph={editingParagraph || undefined}
@@ -161,13 +162,14 @@ function RAGExperimentsPage() {
                             Annotate Expected Entities
                           </h3>
                           <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
-                            Select text spans and link them to structure nodes to define
-                            the ground truth for testing pipeline accuracy.
+                            Select text spans and link them to structure nodes
+                            to define the ground truth for testing pipeline
+                            accuracy.
                           </p>
                         </div>
                         <button
                           onClick={handleCloseEditor}
-                          className="rounded-lg bg-blue-700 px-4 py-2 text-sm font-medium text-white hover:bg-blue-800 focus:outline-none focus:ring-4 focus:ring-blue-300 dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800"
+                          className="rounded-lg bg-blue-700 px-4 py-2 text-sm font-medium text-white hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 focus:outline-none dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800"
                         >
                           Done
                         </button>

@@ -7,20 +7,20 @@ import { SOURCE_METADATA, SourceType } from "@/api/types/unified";
 /**
  * Valid Flowbite Badge color types
  */
-export type BadgeColor = 
-  | "info" 
-  | "gray" 
-  | "failure" 
-  | "success" 
-  | "warning" 
-  | "indigo" 
-  | "purple" 
-  | "pink" 
-  | "blue" 
+export type BadgeColor =
+  | "info"
+  | "gray"
+  | "failure"
+  | "success"
+  | "warning"
+  | "indigo"
+  | "purple"
+  | "pink"
+  | "blue"
   | "cyan"
   | "teal"
   | "lime"
-  | "green" 
+  | "green"
   | "yellow"
   | "red"
   | "orange";
@@ -30,10 +30,10 @@ export type BadgeColor =
  * Note: Flowbite uses "warning" for orange/yellow and "failure" for red
  */
 const COLOR_MAP: Record<string, BadgeColor> = {
-  blue: "info",      // Using "info" instead of "blue" for better visibility
+  blue: "info", // Using "info" instead of "blue" for better visibility
   orange: "warning", // Flowbite's warning color is orange/yellow
   purple: "purple",
-  red: "failure",    // Flowbite's failure color is red
+  red: "failure", // Flowbite's failure color is red
   gray: "gray",
 };
 
@@ -43,7 +43,7 @@ const COLOR_MAP: Record<string, BadgeColor> = {
  */
 function normalizeSourceName(source: string): string {
   // Convert to lowercase and replace dots/spaces with underscores
-  return source.toLowerCase().replace(/[.\s]/g, '_');
+  return source.toLowerCase().replace(/[.\s]/g, "_");
 }
 
 /**
@@ -87,30 +87,33 @@ export function getSourceMetadata(source: string) {
  * @param externalId - The external ID of the resource
  * @returns The URL to view the resource in its original source, or null if not supported
  */
-export function getSourceUrl(source: string, externalId: string): string | null {
+export function getSourceUrl(
+  source: string,
+  externalId: string,
+): string | null {
   const normalizedSource = normalizeSourceName(source);
-  
+
   switch (normalizedSource) {
-    case 'dbpedia':
+    case "dbpedia":
       // DBpedia resources are at http://dbpedia.org/resource/
       return `http://dbpedia.org/resource/${encodeURIComponent(externalId)}`;
-    
-    case 'conceptnet':
+
+    case "conceptnet":
       // ConceptNet concepts are at http://conceptnet.io/c/
       // External IDs are typically in format "/c/en/word" so we can use them directly
-      if (externalId.startsWith('/')) {
+      if (externalId.startsWith("/")) {
         return `http://conceptnet.io${externalId}`;
       }
       return `http://conceptnet.io/c/en/${encodeURIComponent(externalId)}`;
-    
-    case 'wikidata':
+
+    case "wikidata":
       // Wikidata entities are at https://www.wikidata.org/wiki/
       return `https://www.wikidata.org/wiki/${encodeURIComponent(externalId)}`;
-    
-    case 'schema_org':
+
+    case "schema_org":
       // Schema.org types/properties are at https://schema.org/
       return `https://schema.org/${encodeURIComponent(externalId)}`;
-    
+
     default:
       return null;
   }

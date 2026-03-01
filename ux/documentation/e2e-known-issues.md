@@ -5,7 +5,9 @@
 ### Reference Search Tests
 
 #### Issue: Instant Mock Responses
+
 **Affected Tests:**
+
 - should disable search while searching
 - should maintain search term in input after search
 
@@ -13,16 +15,20 @@
 Mocked API responses complete instantly, which breaks tests that verify intermediate loading states (e.g., disabled inputs while searching).
 
 **Workarounds:**
+
 1. Add artificial delays to mock responses
 2. Test loading states separately with `page.route()` delays
 3. Skip timing-dependent tests when running with mocks
 
 **Example Fix:**
+
 ```typescript
-await page.route('**/api/reference/dbpedia/search*', async (route) => {
+await page.route("**/api/reference/dbpedia/search*", async (route) => {
   // Add 500ms delay to simulate real API
   await page.waitForTimeout(500);
-  route.fulfill({ /* ... */ });
+  route.fulfill({
+    /* ... */
+  });
 });
 ```
 
@@ -31,7 +37,9 @@ await page.route('**/api/reference/dbpedia/search*', async (route) => {
 ### RAG Experiments Tests
 
 #### Issue: Table Rendering Conditionals
+
 **Affected Tests:**
+
 - should create a new test paragraph
 - should edit an existing test paragraph
 - should delete a test paragraph
@@ -44,10 +52,12 @@ await page.route('**/api/reference/dbpedia/search*', async (route) => {
 The TestParagraphList component renders different HTML based on whether paragraphs exist, causing selectors to fail.
 
 **Status:**
+
 - ✅ Fixed: Added `data-testid` to empty state
 - ❌ Remaining: Table interactions need investigation
 
 **Action Items:**
+
 1. Verify table is actually rendering with paragraphs
 2. Check if tests are creating data properly via API
 3. Ensure proper waiting for table to update after operations
@@ -63,13 +73,19 @@ The TestParagraphList component renders different HTML based on whether paragrap
    - Integration tests should use mocks (fast but timing-sensitive)
 
 2. **Add Test Helpers for Common Patterns**
+
    ```typescript
    // Wait for search to complete (handles both fast and slow responses)
    async function waitForSearchComplete(page) {
-     await page.waitForFunction(() => {
-       const input = document.querySelector('[data-testid="reference-search-input"]');
-       return !input?.disabled;
-     }, { timeout: 15000 });
+     await page.waitForFunction(
+       () => {
+         const input = document.querySelector(
+           '[data-testid="reference-search-input"]',
+         );
+         return !input?.disabled;
+       },
+       { timeout: 15000 },
+     );
    }
    ```
 
@@ -88,12 +104,14 @@ The TestParagraphList component renders different HTML based on whether paragrap
 ## Test Statistics
 
 ### Overall E2E Suite
+
 - **Total Tests:** 88
 - **Passing:** 75 (85%)
 - **Failing:** 10 (11%)
 - **Skipped:** 3 (4%)
 
 ### Phase 3 Tests Only
+
 - **Total Tests:** 27
 - **Passing:** 15 (56%)
 - **Failing:** 11 (41%)

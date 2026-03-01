@@ -201,7 +201,12 @@ export interface MoveNodesResponse {
 }
 
 // Attribute types for structure nodes
-export type AttributeValueType = "string" | "number" | "boolean" | "date" | "url";
+export type AttributeValueType =
+  | "string"
+  | "number"
+  | "boolean"
+  | "date"
+  | "url";
 
 export interface StructureNodeAttribute {
   key: string;

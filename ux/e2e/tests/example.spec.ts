@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { test, expect } from "@playwright/test";
 
 /**
  * Example E2E test to verify the test infrastructure is working.
@@ -9,31 +9,31 @@ import { test, expect } from '@playwright/test';
  * 3. Basic navigation works
  */
 
-test.describe('Smoke Tests', () => {
-  test('should load the application', async ({ page }) => {
+test.describe("Smoke Tests", () => {
+  test("should load the application", async ({ page }) => {
     // Navigate to the app
-    await page.goto('/');
+    await page.goto("/");
 
     // Wait for the page to load
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState("networkidle");
 
     // Verify the page loaded successfully
     await expect(page).toHaveTitle(/Context Studio/i);
   });
 
-  test('should communicate with backend API', async ({ page, request }) => {
+  test("should communicate with backend API", async ({ page, request }) => {
     // Make a direct API request to verify backend is running
-    const response = await request.get('http://localhost:8888/health');
+    const response = await request.get("http://localhost:8888/health");
 
     expect(response.ok()).toBeTruthy();
     expect(response.status()).toBe(200);
   });
 
-  test('should navigate between routes', async ({ page }) => {
-    await page.goto('/');
+  test("should navigate between routes", async ({ page }) => {
+    await page.goto("/");
 
     // Wait for initial load
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState("networkidle");
 
     // This is a placeholder - update with actual navigation tests
     // based on your application's structure
@@ -42,19 +42,19 @@ test.describe('Smoke Tests', () => {
     // await expect(page).toHaveURL(/.*structure/);
   });
 
-  test('should load the layers page', async ({ page }) => {
+  test("should load the layers page", async ({ page }) => {
     // Navigate to layers page
-    await page.goto('/app/layers');
+    await page.goto("/app/layers");
 
     // Wait for page to load
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState("networkidle");
 
     // Verify we're on the layers page
-    expect(page.url()).toContain('/app/layers');
+    expect(page.url()).toContain("/app/layers");
 
     // Verify the page loaded without errors
     // Just check that the page rendered something
-    const bodyText = await page.locator('body').textContent();
+    const bodyText = await page.locator("body").textContent();
     expect(bodyText).toBeTruthy();
     expect(bodyText!.length).toBeGreaterThan(0);
   });

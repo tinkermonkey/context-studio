@@ -26,11 +26,7 @@ export const NodeLinkPanel: React.FC<NodeLinkPanelProps> = ({
   const [isFormActive, setIsFormActive] = useState(false);
 
   // Fetch links for this node
-  const {
-    data: links = [],
-    isLoading,
-    error,
-  } = useNodeLinksByNode(nodeId);
+  const { data: links = [], isLoading, error } = useNodeLinksByNode(nodeId);
 
   const hasLinks = links.length > 0;
   const shouldShowForm = isFormActive;
@@ -53,11 +49,7 @@ export const NodeLinkPanel: React.FC<NodeLinkPanelProps> = ({
       <div className="flex items-center justify-between">
         <h2 className="text-xl font-semibold">Node Links</h2>
         {!isFormActive && hasLinks && (
-          <Button
-            size="sm"
-            color="gray"
-            onClick={() => setIsFormActive(true)}
-          >
+          <Button size="sm" color="gray" onClick={() => setIsFormActive(true)}>
             <Plus className="mr-2 h-4 w-4" />
             Add Link
           </Button>
@@ -73,9 +65,7 @@ export const NodeLinkPanel: React.FC<NodeLinkPanelProps> = ({
 
       {/* Error State */}
       {error && (
-        <Alert color="failure">
-          Failed to load links: {error.message}
-        </Alert>
+        <Alert color="failure">Failed to load links: {error.message}</Alert>
       )}
 
       {/* Form - shown when active */}
@@ -105,11 +95,7 @@ export const NodeLinkPanel: React.FC<NodeLinkPanelProps> = ({
       {/* Cancel Button - shown when form active and links exist */}
       {isFormActive && hasLinks && (
         <div className="flex justify-end border-t pt-4">
-          <Button
-            size="sm"
-            color="gray"
-            onClick={handleCancel}
-          >
+          <Button size="sm" color="gray" onClick={handleCancel}>
             Cancel
           </Button>
         </div>

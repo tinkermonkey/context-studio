@@ -18,7 +18,7 @@ const SearchHighlight: React.FC<SearchHighlightProps> = ({
     <>
       {parts.map((part, idx) =>
         part.toLowerCase() === searchText.toLowerCase() ? (
-          <span key={idx} className="bg-yellow-200 rounded px-0.5">
+          <span key={idx} className="rounded bg-yellow-200 px-0.5">
             {part}
           </span>
         ) : (

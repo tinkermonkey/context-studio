@@ -24,9 +24,9 @@ export interface ClusterVisualizationTabProps {
   onCreateGlobalPredicate?: (clusterPredicates: string[]) => void;
 }
 
-export const ClusterVisualizationTab: React.FC<ClusterVisualizationTabProps> = ({
-  onCreateGlobalPredicate,
-}) => {
+export const ClusterVisualizationTab: React.FC<
+  ClusterVisualizationTabProps
+> = ({ onCreateGlobalPredicate }) => {
   const [minSamples, setMinSamples] = useState<number>(2);
   const [eps, setEps] = useState<number>(0.3);
   const [sourceFilter, setSourceFilter] = useState<string>("");
@@ -37,7 +37,10 @@ export const ClusterVisualizationTab: React.FC<ClusterVisualizationTabProps> = (
   const clusterMutation = useClusterPredicates({
     onSuccess: (result) => {
       setClusters(result);
-      const clusteredCount = result.clusters.reduce((sum, c) => sum + c.size, 0);
+      const clusteredCount = result.clusters.reduce(
+        (sum, c) => sum + c.size,
+        0,
+      );
       toast.success(
         `Found ${result.total_clusters} clusters with ${clusteredCount} clustered predicates`,
       );
@@ -64,7 +67,9 @@ export const ClusterVisualizationTab: React.FC<ClusterVisualizationTabProps> = (
   };
 
   // Calculate cluster quality based on size and cohesion
-  const getClusterQuality = (cluster: any): { color: string; label: string } => {
+  const getClusterQuality = (
+    cluster: any,
+  ): { color: string; label: string } => {
     const size = cluster.predicate_ids.length;
     const avgSimilarity = cluster.avg_similarity || 0;
 
@@ -186,7 +191,10 @@ export const ClusterVisualizationTab: React.FC<ClusterVisualizationTabProps> = (
               </div>
               <div>
                 <div className="text-3xl font-bold text-green-600 dark:text-green-400">
-                  {clusters.clusters.reduce((sum: number, c: any) => sum + c.size, 0)}
+                  {clusters.clusters.reduce(
+                    (sum: number, c: any) => sum + c.size,
+                    0,
+                  )}
                 </div>
                 <div className="text-sm text-gray-600 dark:text-gray-400">
                   Clustered Predicates
@@ -194,9 +202,15 @@ export const ClusterVisualizationTab: React.FC<ClusterVisualizationTabProps> = (
               </div>
               <div>
                 <div className="text-3xl font-bold text-gray-600 dark:text-gray-400">
-                  {clusters.total_predicates - clusters.clusters.reduce((sum: number, c: any) => sum + c.size, 0)}
+                  {clusters.total_predicates -
+                    clusters.clusters.reduce(
+                      (sum: number, c: any) => sum + c.size,
+                      0,
+                    )}
                 </div>
-                <div className="text-sm text-gray-600 dark:text-gray-400">Outliers</div>
+                <div className="text-sm text-gray-600 dark:text-gray-400">
+                  Outliers
+                </div>
               </div>
             </div>
           </Card>
@@ -246,7 +260,8 @@ export const ClusterVisualizationTab: React.FC<ClusterVisualizationTabProps> = (
 
                   {cluster.avg_similarity && (
                     <div className="mt-2 text-xs text-gray-600 dark:text-gray-400">
-                      Avg. Similarity: {(cluster.avg_similarity * 100).toFixed(1)}%
+                      Avg. Similarity:{" "}
+                      {(cluster.avg_similarity * 100).toFixed(1)}%
                     </div>
                   )}
 
@@ -278,8 +293,8 @@ export const ClusterVisualizationTab: React.FC<ClusterVisualizationTabProps> = (
       {!clusters && !clusterMutation.isPending && (
         <Card>
           <div className="py-8 text-center text-gray-500">
-            Configure clustering parameters and click "Run Clustering" to analyze
-            predicates
+            Configure clustering parameters and click "Run Clustering" to
+            analyze predicates
           </div>
         </Card>
       )}

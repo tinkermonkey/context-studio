@@ -6,11 +6,21 @@
  */
 
 import React, { useState, useEffect, useRef } from "react";
-import { TextInput, Button, Alert, Spinner, Badge, Checkbox } from "flowbite-react";
+import {
+  TextInput,
+  Button,
+  Alert,
+  Spinner,
+  Badge,
+  Checkbox,
+} from "flowbite-react";
 import { Search, Info, Clock, CheckCircle, XCircle } from "lucide-react";
 
 import { UnifiedNode, SourceType, SOURCE_METADATA } from "@/api/types/unified";
-import { useStreamingUnifiedSearch, useSourceLoadingStates } from "@/api/hooks/unifiedReference/useStreamingReference";
+import {
+  useStreamingUnifiedSearch,
+  useSourceLoadingStates,
+} from "@/api/hooks/unifiedReference/useStreamingReference";
 import { SourceSelector } from "@/components/reference/UnifiedSearch/SourceSelector";
 import { getSourceBadgeColor, getSourceLabel } from "@/utils/sourceUtils";
 
@@ -36,7 +46,9 @@ export const ReferenceNodeSearch: React.FC<ReferenceNodeSearchProps> = ({
     "conceptnet",
     "wikidata",
   ]);
-  const [selectedResultIds, setSelectedResultIds] = useState<Set<string>>(new Set());
+  const [selectedResultIds, setSelectedResultIds] = useState<Set<string>>(
+    new Set(),
+  );
   const [searchError, setSearchError] = useState<Error | null>(null);
   const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
 
@@ -62,7 +74,9 @@ export const ReferenceNodeSearch: React.FC<ReferenceNodeSearchProps> = ({
 
   // Filter results based on currently selected sources
   const filteredResults = React.useMemo(() => {
-    return searchResults.filter((node) => selectedSources.includes(node.source));
+    return searchResults.filter((node) =>
+      selectedSources.includes(node.source),
+    );
   }, [searchResults, selectedSources]);
 
   // Clear selections when filtered results change
@@ -70,9 +84,9 @@ export const ReferenceNodeSearch: React.FC<ReferenceNodeSearchProps> = ({
     const validSelections = new Set(
       Array.from(selectedResultIds).filter((nodeKey) => {
         return filteredResults.some(
-          (node) => `${node.source}-${node.id}` === nodeKey
+          (node) => `${node.source}-${node.id}` === nodeKey,
         );
-      })
+      }),
     );
     if (validSelections.size !== selectedResultIds.size) {
       setSelectedResultIds(validSelections);
@@ -154,7 +168,7 @@ export const ReferenceNodeSearch: React.FC<ReferenceNodeSearchProps> = ({
 
   const isNodeAlreadySelected = (node: UnifiedNode): boolean => {
     return selectedNodes.some(
-      (n) => n.id === node.id && n.source === node.source
+      (n) => n.id === node.id && n.source === node.source,
     );
   };
 
@@ -170,9 +184,15 @@ export const ReferenceNodeSearch: React.FC<ReferenceNodeSearchProps> = ({
       <div className="flex flex-wrap gap-2">
         {Object.entries(searchState.sources).map(([source, sourceUpdate]) => {
           const metadata = SOURCE_METADATA[source as SourceType];
-          const isLoading = sourceLoadingStates.isSourceLoading(source as SourceType);
-          const isComplete = sourceLoadingStates.isSourceComplete(source as SourceType);
-          const isError = sourceLoadingStates.isSourceError(source as SourceType);
+          const isLoading = sourceLoadingStates.isSourceLoading(
+            source as SourceType,
+          );
+          const isComplete = sourceLoadingStates.isSourceComplete(
+            source as SourceType,
+          );
+          const isError = sourceLoadingStates.isSourceError(
+            source as SourceType,
+          );
           const resultCount = sourceUpdate.results?.length || 0;
 
           let icon;
@@ -190,7 +210,11 @@ export const ReferenceNodeSearch: React.FC<ReferenceNodeSearchProps> = ({
           }
 
           return (
-            <Badge key={source} color={color} className="flex items-center gap-1">
+            <Badge
+              key={source}
+              color={color}
+              className="flex items-center gap-1"
+            >
               {icon}
               {metadata?.label || source}
               {isComplete && ` (${resultCount})`}
@@ -205,7 +229,7 @@ export const ReferenceNodeSearch: React.FC<ReferenceNodeSearchProps> = ({
   return (
     <div className="space-y-4">
       {/* Search Input Row */}
-      <div className="flex gap-2 items-center">
+      <div className="flex items-center gap-2">
         <TextInput
           icon={Search}
           placeholder="Search reference sources..."
@@ -244,9 +268,7 @@ export const ReferenceNodeSearch: React.FC<ReferenceNodeSearchProps> = ({
 
         {/* Search Error */}
         {searchError && (
-          <Alert color="failure">
-            Search failed: {searchError.message}
-          </Alert>
+          <Alert color="failure">Search failed: {searchError.message}</Alert>
         )}
 
         {/* Source Errors */}
@@ -266,7 +288,8 @@ export const ReferenceNodeSearch: React.FC<ReferenceNodeSearchProps> = ({
               <Spinner size="sm" />
               <span>
                 Searching... ({completedSources.length} of{" "}
-                {Object.keys(searchState?.sources || {}).length} sources complete)
+                {Object.keys(searchState?.sources || {}).length} sources
+                complete)
                 {hasResults && ` - ${totalResults} results found`}
               </span>
             </div>
@@ -277,7 +300,8 @@ export const ReferenceNodeSearch: React.FC<ReferenceNodeSearchProps> = ({
         {searchState?.isComplete && searchState?.deduplicationStats && (
           <Alert color="success">
             <div className="text-sm">
-              <strong>Search Complete:</strong> Found {totalResults} unique results
+              <strong>Search Complete:</strong> Found {totalResults} unique
+              results
               {searchState.deduplicationStats.duplicatesRemoved > 0 && (
                 <span>
                   {" "}
@@ -296,7 +320,8 @@ export const ReferenceNodeSearch: React.FC<ReferenceNodeSearchProps> = ({
           {hasSelections && (
             <div className="flex items-center justify-between border-b pb-3">
               <span className="text-sm text-gray-600">
-                {selectedResultIds.size} result{selectedResultIds.size !== 1 ? "s" : ""} selected
+                {selectedResultIds.size} result
+                {selectedResultIds.size !== 1 ? "s" : ""} selected
               </span>
               <Button size="sm" onClick={handleAddSelected}>
                 Add Selected
@@ -306,8 +331,8 @@ export const ReferenceNodeSearch: React.FC<ReferenceNodeSearchProps> = ({
 
           {filteredResults.length === 0 && !isSearching && (
             <Alert color="info" icon={Info}>
-              No results found. Try adjusting your search query or selecting different
-              sources.
+              No results found. Try adjusting your search query or selecting
+              different sources.
             </Alert>
           )}
 
@@ -315,12 +340,14 @@ export const ReferenceNodeSearch: React.FC<ReferenceNodeSearchProps> = ({
             const nodeKey = `${node.source}-${node.id}`;
             const isSelected = selectedResultIds.has(nodeKey);
             const alreadyAdded = isNodeAlreadySelected(node);
-            const relevancePercent = Math.round((node.relevance_score || 0) * 100);
+            const relevancePercent = Math.round(
+              (node.relevance_score || 0) * 100,
+            );
 
             return (
               <div
                 key={nodeKey}
-                className={`border rounded-lg p-3 ${
+                className={`rounded-lg border p-3 ${
                   isSelected ? "border-blue-500 bg-blue-50" : "border-gray-200"
                 } ${alreadyAdded ? "opacity-50" : ""}`}
                 role="listitem"
@@ -335,12 +362,15 @@ export const ReferenceNodeSearch: React.FC<ReferenceNodeSearchProps> = ({
                     aria-describedby={`node-desc-${nodeKey}`}
                   />
                   <div className="flex-1">
-                    <h4 className="font-medium text-gray-900" id={`node-title-${nodeKey}`}>
+                    <h4
+                      className="font-medium text-gray-900"
+                      id={`node-title-${nodeKey}`}
+                    >
                       {node.title}
                     </h4>
                     {node.definition && (
                       <p
-                        className="mt-1 text-sm text-gray-600 line-clamp-2"
+                        className="mt-1 line-clamp-2 text-sm text-gray-600"
                         id={`node-desc-${nodeKey}`}
                       >
                         {node.definition}

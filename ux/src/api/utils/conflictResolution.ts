@@ -73,7 +73,7 @@ export const isVersionConflict = (error: unknown): boolean => {
 export const handleVersionConflict = async (
   error: unknown,
   refetch: () => Promise<any>,
-  options: ConflictResolutionOptions = {}
+  options: ConflictResolutionOptions = {},
 ): Promise<void> => {
   const {
     autoRefetch = API_CONFIG.refetchOnConflict,
@@ -104,7 +104,9 @@ export const handleVersionConflict = async (
   if (autoRefetch) {
     try {
       // Add a small delay before refetching to avoid race conditions
-      await new Promise((resolve) => setTimeout(resolve, API_CONFIG.conflictRetryDelay));
+      await new Promise((resolve) =>
+        setTimeout(resolve, API_CONFIG.conflictRetryDelay),
+      );
 
       const freshData = await refetch();
 
@@ -130,7 +132,7 @@ export const handleVersionConflict = async (
  */
 export const validateVersion = (
   localResource: VersionedResource,
-  serverResource: VersionedResource
+  serverResource: VersionedResource,
 ): boolean => {
   if (localResource.id !== serverResource.id) {
     throw new Error("Resource ID mismatch");
@@ -145,7 +147,7 @@ export const validateVersion = (
 export const withConflictDetection = <T extends VersionedResource, R>(
   mutationFn: (resource: T) => Promise<R>,
   refetchFn: () => Promise<T>,
-  options: ConflictResolutionOptions = {}
+  options: ConflictResolutionOptions = {},
 ) => {
   return async (resource: T): Promise<R> => {
     try {
@@ -169,7 +171,7 @@ export const withConflictDetection = <T extends VersionedResource, R>(
  */
 export const detectChanges = <T extends VersionedResource>(
   local: T,
-  remote: T
+  remote: T,
 ): {
   hasChanges: boolean;
   versionMismatch: boolean;

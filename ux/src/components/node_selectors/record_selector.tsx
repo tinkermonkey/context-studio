@@ -133,7 +133,7 @@ export const RecordSelector: React.FC<RecordSelectorProps> = ({
               onClick={(e) => e.stopPropagation()}
             />
             {loading && (
-              <div className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2">
+              <div className="pointer-events-none absolute top-1/2 right-3 -translate-y-1/2">
                 <Spinner size="sm" />
               </div>
             )}

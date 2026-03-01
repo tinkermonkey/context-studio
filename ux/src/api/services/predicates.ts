@@ -8,7 +8,8 @@ export type PredicateCreate = components["schemas"]["PredicateCreate"];
 export type PredicateUpdate = components["schemas"]["PredicateUpdate"];
 export type PaginatedPredicatesResponse =
   components["schemas"]["PaginatedPredicatesResponse"];
-export type ExternalPredicateOut = components["schemas"]["ExternalPredicateOut"];
+export type ExternalPredicateOut =
+  components["schemas"]["ExternalPredicateOut"];
 export type PaginatedExternalPredicatesResponse =
   components["schemas"]["PaginatedExternalPredicatesResponse"];
 export type PredicateDiscoveryResponse =
@@ -33,7 +34,8 @@ export interface ListExternalPredicatesParams extends Record<string, unknown> {
   limit?: number;
 }
 
-export interface SearchExternalPredicatesParams extends Record<string, unknown> {
+export interface SearchExternalPredicatesParams
+  extends Record<string, unknown> {
   query: string;
   source?: string;
   limit?: number;

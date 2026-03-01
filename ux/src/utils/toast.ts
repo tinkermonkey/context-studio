@@ -16,7 +16,11 @@ export interface ToastOptions {
  * Show a toast notification
  * Can be called from anywhere, including non-React code
  */
-export const showToast = ({ type, message, duration = 5000 }: ToastOptions): void => {
+export const showToast = ({
+  type,
+  message,
+  duration = 5000,
+}: ToastOptions): void => {
   // Create toast container if it doesn't exist
   let toastContainer = document.getElementById("toast-container");
   if (!toastContainer) {
@@ -71,11 +75,11 @@ export const showToast = ({ type, message, duration = 5000 }: ToastOptions): voi
  */
 const escapeHtml = (text: string): string => {
   const map: Record<string, string> = {
-    '&': '&amp;',
-    '<': '&lt;',
-    '>': '&gt;',
-    '"': '&quot;',
-    "'": '&#039;'
+    "&": "&amp;",
+    "<": "&lt;",
+    ">": "&gt;",
+    '"': "&quot;",
+    "'": "&#039;",
   };
   return text.replace(/[&<>"']/g, (m) => map[m]);
 };

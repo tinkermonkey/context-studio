@@ -2,7 +2,7 @@ import { useQuery, UseQueryOptions } from "@tanstack/react-query";
 import {
   modelCapabilitiesService,
   type SupportedModelsResponse,
-  type ModelCapabilitiesResponse
+  type ModelCapabilitiesResponse,
 } from "@/api/services/modelCapabilities";
 
 /**
@@ -10,7 +10,10 @@ import {
  */
 export function useSupportedModels(
   provider?: string,
-  options?: Omit<UseQueryOptions<SupportedModelsResponse, Error>, 'queryKey' | 'queryFn'>
+  options?: Omit<
+    UseQueryOptions<SupportedModelsResponse, Error>,
+    "queryKey" | "queryFn"
+  >,
 ) {
   return useQuery({
     queryKey: ["supportedModels", provider],
@@ -25,7 +28,10 @@ export function useSupportedModels(
  * Hook to get supported models grouped by provider
  */
 export function useSupportedModelsByProvider(
-  options?: Omit<UseQueryOptions<Record<string, ModelCapabilitiesResponse[]>, Error>, 'queryKey' | 'queryFn'>
+  options?: Omit<
+    UseQueryOptions<Record<string, ModelCapabilitiesResponse[]>, Error>,
+    "queryKey" | "queryFn"
+  >,
 ) {
   return useQuery({
     queryKey: ["supportedModelsByProvider"],

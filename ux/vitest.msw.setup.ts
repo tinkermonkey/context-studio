@@ -44,7 +44,10 @@ if (typeof Node !== "undefined") {
   };
 
   const originalInsertBefore = Node.prototype.insertBefore;
-  (Node.prototype as any).insertBefore = function (newNode: any, referenceNode: any) {
+  (Node.prototype as any).insertBefore = function (
+    newNode: any,
+    referenceNode: any,
+  ) {
     if (!newNode || typeof newNode !== "object") {
       newNode = document.createTextNode(String(newNode));
     }

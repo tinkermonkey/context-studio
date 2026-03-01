@@ -161,13 +161,20 @@ const TreeChart: React.FC<TreeChartProps> = ({
   }, []);
 
   // Node click handler to navigate to the node's details
-  const handleNodeClick = useCallback((node: any) => {
-    if (node.type === "term" || node.type === "domain" || node.type === "layer") {
-      navigate({ to: `/app/structure_nodes/${node.id}` });
-    } else {
-      console.warn("Clicked on unknown node:", node);
-    }
-  }, [navigate]);
+  const handleNodeClick = useCallback(
+    (node: any) => {
+      if (
+        node.type === "term" ||
+        node.type === "domain" ||
+        node.type === "layer"
+      ) {
+        navigate({ to: `/app/structure_nodes/${node.id}` });
+      } else {
+        console.warn("Clicked on unknown node:", node);
+      }
+    },
+    [navigate],
+  );
 
   return (
     <div

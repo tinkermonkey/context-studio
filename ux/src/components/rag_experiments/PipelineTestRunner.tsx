@@ -52,7 +52,7 @@ export const PipelineTestRunner: React.FC<PipelineTestRunnerProps> = ({
     setSelectedPipelines((prev) =>
       prev.includes(pipelineName)
         ? prev.filter((p) => p !== pipelineName)
-        : [...prev, pipelineName]
+        : [...prev, pipelineName],
     );
   };
 
@@ -60,7 +60,7 @@ export const PipelineTestRunner: React.FC<PipelineTestRunnerProps> = ({
     setSelectedParagraphs((prev) =>
       prev.includes(paragraphId)
         ? prev.filter((p) => p !== paragraphId)
-        : [...prev, paragraphId]
+        : [...prev, paragraphId],
     );
   };
 
@@ -243,7 +243,8 @@ export const PipelineTestRunner: React.FC<PipelineTestRunnerProps> = ({
                 Total Tests: {totalTests}
               </p>
               <p className="text-xs text-gray-600">
-                {selectedPipelines.length} pipeline(s) × {selectedParagraphs.length} paragraph(s)
+                {selectedPipelines.length} pipeline(s) ×{" "}
+                {selectedParagraphs.length} paragraph(s)
               </p>
             </div>
             <Button
@@ -289,15 +290,9 @@ export const PipelineTestRunner: React.FC<PipelineTestRunnerProps> = ({
                 <span className="font-medium">Tests Completed!</span>
               </div>
               <div className="mt-2 space-y-1 text-sm text-green-700">
-                <p>
-                  Total Runs: {runTestMutation.data.total_runs}
-                </p>
-                <p>
-                  Successful: {runTestMutation.data.successful_runs}
-                </p>
-                <p>
-                  Failed: {runTestMutation.data.failed_runs}
-                </p>
+                <p>Total Runs: {runTestMutation.data.total_runs}</p>
+                <p>Successful: {runTestMutation.data.successful_runs}</p>
+                <p>Failed: {runTestMutation.data.failed_runs}</p>
               </div>
             </div>
           )}

@@ -1,5 +1,5 @@
-import { useState, useEffect, useRef } from 'react';
-import { API_CONFIG } from '@/api/config';
+import { useState, useEffect, useRef } from "react";
+import { API_CONFIG } from "@/api/config";
 
 export interface EmbeddingProgress {
   total_nodes: number;
@@ -15,10 +15,16 @@ export interface EmbeddingProgress {
   errors: string[];
 }
 
-export type EmbeddingRegenerationStatus = 'disconnected' | 'connected' | 'running' | 'completed' | 'error';
+export type EmbeddingRegenerationStatus =
+  | "disconnected"
+  | "connected"
+  | "running"
+  | "completed"
+  | "error";
 
 export function useEmbeddingRegeneration() {
-  const [status, setStatus] = useState<EmbeddingRegenerationStatus>('disconnected');
+  const [status, setStatus] =
+    useState<EmbeddingRegenerationStatus>("disconnected");
   const [progress, setProgress] = useState<EmbeddingProgress | null>(null);
   const [error, setError] = useState<string | null>(null);
   const wsRef = useRef<WebSocket | null>(null);
@@ -28,63 +34,65 @@ export function useEmbeddingRegeneration() {
       return; // Already connected
     }
 
-    const wsUrl = API_CONFIG.baseURL.replace('http', 'ws');
-    const ws = new WebSocket(`${wsUrl}/api/embeddings/regenerate?force=${force}`);
+    const wsUrl = API_CONFIG.baseURL.replace("http", "ws");
+    const ws = new WebSocket(
+      `${wsUrl}/api/embeddings/regenerate?force=${force}`,
+    );
     wsRef.current = ws;
 
-    ws.onopen = () => setStatus('connected');
+    ws.onopen = () => setStatus("connected");
 
     ws.onmessage = (event) => {
       const data = JSON.parse(event.data);
 
       switch (data.type) {
-        case 'connected':
-          setStatus('connected');
+        case "connected":
+          setStatus("connected");
           break;
 
-        case 'started':
-          setStatus('running');
+        case "started":
+          setStatus("running");
           setProgress(null);
           setError(null);
           break;
 
-        case 'progress':
+        case "progress":
           setProgress(data.progress);
           break;
 
-        case 'completed':
-          setStatus('completed');
+        case "completed":
+          setStatus("completed");
           break;
 
-        case 'error':
-          setStatus('error');
+        case "error":
+          setStatus("error");
           setError(data.message);
           break;
       }
     };
 
     ws.onerror = () => {
-      setStatus('error');
-      setError('WebSocket connection error');
+      setStatus("error");
+      setError("WebSocket connection error");
     };
 
-    ws.onclose = () => setStatus('disconnected');
+    ws.onclose = () => setStatus("disconnected");
   };
 
   const disconnect = () => {
     wsRef.current?.close();
-    setStatus('disconnected');
+    setStatus("disconnected");
     setProgress(null);
     setError(null);
   };
 
   const stopRegeneration = async () => {
     try {
-      const response = await fetch('/api/embeddings/stop', { method: 'POST' });
+      const response = await fetch("/api/embeddings/stop", { method: "POST" });
       const result = await response.json();
       return result.stopped;
     } catch (err) {
-      setError('Failed to stop regeneration');
+      setError("Failed to stop regeneration");
       return false;
     }
   };
@@ -99,6 +107,6 @@ export function useEmbeddingRegeneration() {
     error,
     connect,
     disconnect,
-    stopRegeneration
+    stopRegeneration,
   };
 }

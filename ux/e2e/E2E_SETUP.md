@@ -72,6 +72,7 @@ npm run test:e2e:ui
 ```
 
 This opens Playwright's UI where you can:
+
 - See all tests
 - Run individual tests
 - Watch tests execute in real-time
@@ -126,11 +127,11 @@ context-studio/
 
 ```typescript
 // e2e/tests/my-feature.spec.ts
-import { test, expect } from '@playwright/test';
+import { test, expect } from "@playwright/test";
 
-test('should do something', async ({ page }) => {
-  await page.goto('/');
-  await page.waitForLoadState('networkidle');
+test("should do something", async ({ page }) => {
+  await page.goto("/");
+  await page.waitForLoadState("networkidle");
 
   // Your test here
   await expect(page).toHaveTitle(/Context Studio/);
@@ -164,13 +165,15 @@ taskkill /PID <PID> /F
 ### Tests Timeout During Setup
 
 1. Check backend logs:
+
    ```bash
    tail -f local-server/logs/context_studio_e2e.log
    ```
 
 2. Increase timeout in `global-setup.ts`:
+
    ```typescript
-   await waitForUrl('http://localhost:8001/health', 60000); // 60 seconds
+   await waitForUrl("http://localhost:8001/health", 60000); // 60 seconds
    ```
 
 3. Verify virtual environment:
@@ -222,12 +225,12 @@ jobs:
       - name: Setup Python
         uses: actions/setup-python@v4
         with:
-          python-version: '3.11'
+          python-version: "3.11"
 
       - name: Setup Node
         uses: actions/setup-node@v3
         with:
-          node-version: '18'
+          node-version: "18"
 
       - name: Install backend dependencies
         run: |
@@ -286,18 +289,21 @@ jobs:
 ## Best Practices
 
 1. **Use data-testid**: Add to your React components
+
    ```tsx
    <button data-testid="submit-button">Submit</button>
    ```
 
 2. **Wait for app ready**: Use helper function
+
    ```typescript
    await waitForAppReady(page);
    ```
 
 3. **Validate backend**: Don't just test UI
+
    ```typescript
-   const data = await apiRequest(page, '/api/endpoint');
+   const data = await apiRequest(page, "/api/endpoint");
    expect(data).toBeDefined();
    ```
 

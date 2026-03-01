@@ -228,9 +228,12 @@ export const useComprehensiveDefinition = (
       }
       return llmService.generateComprehensiveDefinition(request);
     },
-    enabled: !!request && (!!((request as any).term) || !!(request.context_data?.term)) &&
-             (((request as any).term && (request as any).term.trim().length > 0) ||
-              (request.context_data?.term && (request.context_data.term as string).trim().length > 0)),
+    enabled:
+      !!request &&
+      (!!(request as any).term || !!request.context_data?.term) &&
+      (((request as any).term && (request as any).term.trim().length > 0) ||
+        (request.context_data?.term &&
+          (request.context_data.term as string).trim().length > 0)),
     staleTime: 10 * 60 * 1000,
     gcTime: 30 * 60 * 1000,
     ...options,

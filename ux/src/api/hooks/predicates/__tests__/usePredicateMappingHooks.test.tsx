@@ -231,10 +231,9 @@ describe("Hook Integration", () => {
     expect(discoveryResult.current.mutate).toBeDefined();
 
     // 3. Set up clustering mutation
-    const { result: clusterResult } = renderHook(
-      () => useClusterPredicates(),
-      { wrapper },
-    );
+    const { result: clusterResult } = renderHook(() => useClusterPredicates(), {
+      wrapper,
+    });
 
     expect(clusterResult.current.mutate).toBeDefined();
   });

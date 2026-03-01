@@ -91,14 +91,18 @@ export const PipelineFlavorEditor: React.FC<PipelineFlavorEditorProps> = ({
   });
 
   const [errors, setErrors] = useState<Record<string, string>>({});
-  const systemPromptRef = useRef<HTMLTextAreaElement>(null) as React.RefObject<HTMLTextAreaElement>;
-  const userPromptRef = useRef<HTMLTextAreaElement>(null) as React.RefObject<HTMLTextAreaElement>;
+  const systemPromptRef = useRef<HTMLTextAreaElement>(
+    null,
+  ) as React.RefObject<HTMLTextAreaElement>;
+  const userPromptRef = useRef<HTMLTextAreaElement>(
+    null,
+  ) as React.RefObject<HTMLTextAreaElement>;
 
   // Fetch enabled models and capabilities
   const { data: enabledModelsData } = useEnabledModels();
   const enabledModels = enabledModelsData?.models || [];
   const { data: modelCapabilities } = useTypedModelCapabilities(
-    formData.llm_model
+    formData.llm_model,
   );
   const { data: configValidationWarnings } = useValidateLLMConfig(
     formData.llm_model,
@@ -109,12 +113,14 @@ export const PipelineFlavorEditor: React.FC<PipelineFlavorEditorProps> = ({
       frequency_penalty: formData.frequency_penalty,
       presence_penalty: formData.presence_penalty,
       max_tokens: formData.max_tokens,
-    }
+    },
   );
 
-  const adjustTextAreaHeight = (textAreaRef: React.RefObject<HTMLTextAreaElement>) => {
+  const adjustTextAreaHeight = (
+    textAreaRef: React.RefObject<HTMLTextAreaElement>,
+  ) => {
     if (textAreaRef.current) {
-      textAreaRef.current.style.height = 'auto';
+      textAreaRef.current.style.height = "auto";
       textAreaRef.current.style.height = `${textAreaRef.current.scrollHeight}px`;
     }
   };
@@ -209,9 +215,10 @@ export const PipelineFlavorEditor: React.FC<PipelineFlavorEditorProps> = ({
       if (providers.length > 0) {
         const firstProvider = providers[0].value;
         const modelsForProvider = enabledModels.filter(
-          (model) => model.provider_type === firstProvider
+          (model) => model.provider_type === firstProvider,
         );
-        const firstModel = modelsForProvider.length > 0 ? modelsForProvider[0].model_name : "";
+        const firstModel =
+          modelsForProvider.length > 0 ? modelsForProvider[0].model_name : "";
 
         setFormData((prev) => ({
           ...prev,
@@ -234,10 +241,10 @@ export const PipelineFlavorEditor: React.FC<PipelineFlavorEditorProps> = ({
 
       // Map provider types to friendly labels
       const providerLabels: Record<string, string> = {
-        'native_openai': 'OpenAI',
-        'native_anthropic': 'Anthropic',
-        'native_google': 'Google',
-        'openrouter': 'OpenRouter'
+        native_openai: "OpenAI",
+        native_anthropic: "Anthropic",
+        native_google: "Google",
+        openrouter: "OpenRouter",
       };
 
       return Array.from(providersSet).map((provider) => ({
@@ -254,7 +261,7 @@ export const PipelineFlavorEditor: React.FC<PipelineFlavorEditorProps> = ({
 
     if (enabledModels.length > 0) {
       const modelsForProvider = enabledModels.filter(
-        (model) => model.provider_type === providerToUse
+        (model) => model.provider_type === providerToUse,
       );
       return modelsForProvider.map((model) => model.model_name);
     }
@@ -346,7 +353,6 @@ export const PipelineFlavorEditor: React.FC<PipelineFlavorEditorProps> = ({
 
   return (
     <div>
-
       {errors.submit && (
         <Alert color="failure" className="mb-4">
           {errors.submit}
@@ -356,10 +362,10 @@ export const PipelineFlavorEditor: React.FC<PipelineFlavorEditorProps> = ({
       {configValidationWarnings && configValidationWarnings.length > 0 && (
         <Alert color="warning" className="mb-4">
           <div className="flex items-start gap-2">
-            <AlertTriangle className="h-4 w-4 mt-0.5 flex-shrink-0" />
+            <AlertTriangle className="mt-0.5 h-4 w-4 flex-shrink-0" />
             <div>
               <div className="font-medium">Model Configuration Warnings</div>
-              <ul className="mt-1 list-disc list-inside text-sm">
+              <ul className="mt-1 list-inside list-disc text-sm">
                 {configValidationWarnings.map((warning, index) => (
                   <li key={index}>{warning}</li>
                 ))}
@@ -372,24 +378,34 @@ export const PipelineFlavorEditor: React.FC<PipelineFlavorEditorProps> = ({
       {modelCapabilities && (
         <Alert color="info" className="mb-4">
           <div className="flex items-start gap-2">
-            <Info className="h-4 w-4 mt-0.5 flex-shrink-0" />
+            <Info className="mt-0.5 h-4 w-4 flex-shrink-0" />
             <div>
               <div className="font-medium">Model Capabilities</div>
               <div className="mt-1 flex flex-wrap gap-1">
                 {modelCapabilities.supports_structured_output && (
-                  <Badge color="green" size="sm">Structured Output</Badge>
+                  <Badge color="green" size="sm">
+                    Structured Output
+                  </Badge>
                 )}
                 {modelCapabilities.supports_function_calling && (
-                  <Badge color="green" size="sm">Function Calling</Badge>
+                  <Badge color="green" size="sm">
+                    Function Calling
+                  </Badge>
                 )}
                 {modelCapabilities.supports_streaming && (
-                  <Badge color="green" size="sm">Streaming</Badge>
+                  <Badge color="green" size="sm">
+                    Streaming
+                  </Badge>
                 )}
                 {modelCapabilities.max_tokens_limit && (
-                  <Badge color="blue" size="sm">Max Tokens: {modelCapabilities.max_tokens_limit}</Badge>
+                  <Badge color="blue" size="sm">
+                    Max Tokens: {modelCapabilities.max_tokens_limit}
+                  </Badge>
                 )}
                 {modelCapabilities.context_window && (
-                  <Badge color="blue" size="sm">Context: {modelCapabilities.context_window}</Badge>
+                  <Badge color="blue" size="sm">
+                    Context: {modelCapabilities.context_window}
+                  </Badge>
                 )}
               </div>
             </div>
@@ -554,7 +570,7 @@ export const PipelineFlavorEditor: React.FC<PipelineFlavorEditorProps> = ({
             <Label htmlFor="max_tokens">
               Max Tokens
               {modelCapabilities?.max_tokens_limit && (
-                <span className="text-sm text-gray-500 ml-1">
+                <span className="ml-1 text-sm text-gray-500">
                   (limit: {modelCapabilities.max_tokens_limit})
                 </span>
               )}
@@ -614,7 +630,8 @@ export const PipelineFlavorEditor: React.FC<PipelineFlavorEditorProps> = ({
             </div>
           )}
 
-          {(!modelCapabilities || modelCapabilities.supports_frequency_penalty) && (
+          {(!modelCapabilities ||
+            modelCapabilities.supports_frequency_penalty) && (
             <div>
               <Label htmlFor="frequency_penalty">Frequency Penalty</Label>
               <TextInput
@@ -635,7 +652,8 @@ export const PipelineFlavorEditor: React.FC<PipelineFlavorEditorProps> = ({
             </div>
           )}
 
-          {(!modelCapabilities || modelCapabilities.supports_presence_penalty) && (
+          {(!modelCapabilities ||
+            modelCapabilities.supports_presence_penalty) && (
             <div>
               <Label htmlFor="presence_penalty">Presence Penalty</Label>
               <TextInput
@@ -672,7 +690,7 @@ export const PipelineFlavorEditor: React.FC<PipelineFlavorEditorProps> = ({
               color={errors.system_prompt ? "failure" : undefined}
               placeholder="Define the role and context for the AI assistant..."
               disabled={isDefaultFlavor}
-              style={{ minHeight: '100px', resize: 'none' }}
+              style={{ minHeight: "100px", resize: "none" }}
             />
             {errors.system_prompt && (
               <p className="mt-1 text-sm text-red-600 dark:text-red-400">
@@ -694,7 +712,7 @@ export const PipelineFlavorEditor: React.FC<PipelineFlavorEditorProps> = ({
               color={errors.user_prompt ? "failure" : undefined}
               placeholder="Template for user requests (use variables like {title}, {context}, etc.)..."
               disabled={isDefaultFlavor}
-              style={{ minHeight: '100px', resize: 'none' }}
+              style={{ minHeight: "100px", resize: "none" }}
             />
             {errors.user_prompt && (
               <p className="mt-1 text-sm text-red-600 dark:text-red-400">
@@ -705,7 +723,7 @@ export const PipelineFlavorEditor: React.FC<PipelineFlavorEditorProps> = ({
         </div>
 
         {/* Actions */}
-        <div className="flex gap-3 border-t border-gray-200 pt-4 dark:border-gray-700 justify-end">
+        <div className="flex justify-end gap-3 border-t border-gray-200 pt-4 dark:border-gray-700">
           {!isDefaultFlavor ? (
             <>
               <Button type="submit" color="blue" disabled={isLoading}>

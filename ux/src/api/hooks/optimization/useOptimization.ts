@@ -4,7 +4,12 @@
  * React Query hooks for optimization endpoints
  */
 
-import { useQuery, useMutation, UseQueryOptions, UseMutationOptions } from "@tanstack/react-query";
+import {
+  useQuery,
+  useMutation,
+  UseQueryOptions,
+  UseMutationOptions,
+} from "@tanstack/react-query";
 import { apiClient } from "@/api/client/axios";
 
 // API Response Types
@@ -114,8 +119,10 @@ export interface BatchOperationRequest {
 export const optimizationKeys = {
   all: ["optimization"] as const,
   health: () => [...optimizationKeys.all, "health"] as const,
-  performanceDashboard: () => [...optimizationKeys.all, "performance", "dashboard"] as const,
-  performanceMetrics: () => [...optimizationKeys.all, "performance", "metrics"] as const,
+  performanceDashboard: () =>
+    [...optimizationKeys.all, "performance", "dashboard"] as const,
+  performanceMetrics: () =>
+    [...optimizationKeys.all, "performance", "metrics"] as const,
   performanceTrends: (windowHours: number) =>
     [...optimizationKeys.all, "performance", "trends", windowHours] as const,
   queryStats: () => [...optimizationKeys.all, "query", "stats"] as const,
@@ -138,22 +145,30 @@ export function useSystemHealth(options?: UseQueryOptions<SystemHealth>) {
   });
 }
 
-export function usePerformanceDashboard(options?: UseQueryOptions<Record<string, any>>) {
+export function usePerformanceDashboard(
+  options?: UseQueryOptions<Record<string, any>>,
+) {
   return useQuery<Record<string, any>>({
     queryKey: optimizationKeys.performanceDashboard(),
     queryFn: async () => {
-      const response = await apiClient.get(`/api/optimization/performance/dashboard`);
+      const response = await apiClient.get(
+        `/api/optimization/performance/dashboard`,
+      );
       return response.data;
     },
     ...options,
   });
 }
 
-export function usePerformanceMetrics(options?: UseQueryOptions<PerformanceMetrics>) {
+export function usePerformanceMetrics(
+  options?: UseQueryOptions<PerformanceMetrics>,
+) {
   return useQuery<PerformanceMetrics>({
     queryKey: optimizationKeys.performanceMetrics(),
     queryFn: async () => {
-      const response = await apiClient.get(`/api/optimization/performance/metrics`);
+      const response = await apiClient.get(
+        `/api/optimization/performance/metrics`,
+      );
       return response.data;
     },
     ...options,
@@ -162,14 +177,17 @@ export function usePerformanceMetrics(options?: UseQueryOptions<PerformanceMetri
 
 export function usePerformanceTrends(
   windowHours: number = 24,
-  options?: UseQueryOptions<PerformanceTrends>
+  options?: UseQueryOptions<PerformanceTrends>,
 ) {
   return useQuery<PerformanceTrends>({
     queryKey: optimizationKeys.performanceTrends(windowHours),
     queryFn: async () => {
-      const response = await apiClient.get(`/api/optimization/performance/trends`, {
-        params: { window_hours: windowHours },
-      });
+      const response = await apiClient.get(
+        `/api/optimization/performance/trends`,
+        {
+          params: { window_hours: windowHours },
+        },
+      );
       return response.data;
     },
     ...options,
@@ -220,7 +238,9 @@ export function useBatchStats(options?: UseQueryOptions<Record<string, any>>) {
   });
 }
 
-export function useOptimizationConfig(options?: UseQueryOptions<Record<string, any>>) {
+export function useOptimizationConfig(
+  options?: UseQueryOptions<Record<string, any>>,
+) {
   return useQuery<Record<string, any>>({
     queryKey: optimizationKeys.config(),
     queryFn: async () => {
@@ -233,10 +253,14 @@ export function useOptimizationConfig(options?: UseQueryOptions<Record<string, a
 
 // Mutation Hooks
 
-export function useAutoOptimize(options?: UseMutationOptions<any, Error, void>) {
+export function useAutoOptimize(
+  options?: UseMutationOptions<any, Error, void>,
+) {
   return useMutation<any, Error, void>({
     mutationFn: async () => {
-      const response = await apiClient.post(`/api/optimization/performance/auto-optimize`);
+      const response = await apiClient.post(
+        `/api/optimization/performance/auto-optimize`,
+      );
       return response.data;
     },
     ...options,
@@ -244,11 +268,18 @@ export function useAutoOptimize(options?: UseMutationOptions<any, Error, void>) 
 }
 
 export function useOptimizeQuery(
-  options?: UseMutationOptions<QueryOptimization, Error, QueryOptimizationRequest>
+  options?: UseMutationOptions<
+    QueryOptimization,
+    Error,
+    QueryOptimizationRequest
+  >,
 ) {
   return useMutation<QueryOptimization, Error, QueryOptimizationRequest>({
     mutationFn: async (request) => {
-      const response = await apiClient.post(`/api/optimization/query/optimize`, request);
+      const response = await apiClient.post(
+        `/api/optimization/query/optimize`,
+        request,
+      );
       return response.data;
     },
     ...options,
@@ -256,31 +287,42 @@ export function useOptimizeQuery(
 }
 
 export function useCreateMaterializedView(
-  options?: UseMutationOptions<any, Error, MaterializedViewRequest>
+  options?: UseMutationOptions<any, Error, MaterializedViewRequest>,
 ) {
   return useMutation<any, Error, MaterializedViewRequest>({
     mutationFn: async (request) => {
-      const response = await apiClient.post(`/api/optimization/query/materialized-view`, request);
+      const response = await apiClient.post(
+        `/api/optimization/query/materialized-view`,
+        request,
+      );
       return response.data;
     },
     ...options,
   });
 }
 
-export function useOptimizeStorage(options?: UseMutationOptions<StorageOptimization, Error, void>) {
+export function useOptimizeStorage(
+  options?: UseMutationOptions<StorageOptimization, Error, void>,
+) {
   return useMutation<StorageOptimization, Error, void>({
     mutationFn: async () => {
-      const response = await apiClient.post(`/api/optimization/storage/optimize`);
+      const response = await apiClient.post(
+        `/api/optimization/storage/optimize`,
+      );
       return response.data;
     },
     ...options,
   });
 }
 
-export function useSetupLifecyclePolicies(options?: UseMutationOptions<any, Error, void>) {
+export function useSetupLifecyclePolicies(
+  options?: UseMutationOptions<any, Error, void>,
+) {
   return useMutation<any, Error, void>({
     mutationFn: async () => {
-      const response = await apiClient.post(`/api/optimization/storage/lifecycle-policies`);
+      const response = await apiClient.post(
+        `/api/optimization/storage/lifecycle-policies`,
+      );
       return response.data;
     },
     ...options,
@@ -288,11 +330,14 @@ export function useSetupLifecyclePolicies(options?: UseMutationOptions<any, Erro
 }
 
 export function useThreeWayDiff(
-  options?: UseMutationOptions<ThreeWayDiff, Error, ThreeWayDiffRequest>
+  options?: UseMutationOptions<ThreeWayDiff, Error, ThreeWayDiffRequest>,
 ) {
   return useMutation<ThreeWayDiff, Error, ThreeWayDiffRequest>({
     mutationFn: async (request) => {
-      const response = await apiClient.post(`/api/optimization/diff/three-way`, request);
+      const response = await apiClient.post(
+        `/api/optimization/diff/three-way`,
+        request,
+      );
       return response.data;
     },
     ...options,
@@ -300,11 +345,18 @@ export function useThreeWayDiff(
 }
 
 export function useBatchOperation(
-  options?: UseMutationOptions<BatchOperationResult, Error, BatchOperationRequest>
+  options?: UseMutationOptions<
+    BatchOperationResult,
+    Error,
+    BatchOperationRequest
+  >,
 ) {
   return useMutation<BatchOperationResult, Error, BatchOperationRequest>({
     mutationFn: async (request) => {
-      const response = await apiClient.post(`/api/optimization/batch/process`, request);
+      const response = await apiClient.post(
+        `/api/optimization/batch/process`,
+        request,
+      );
       return response.data;
     },
     ...options,
@@ -312,7 +364,7 @@ export function useBatchOperation(
 }
 
 export function useUpdateOptimizationConfig(
-  options?: UseMutationOptions<any, Error, Record<string, any>>
+  options?: UseMutationOptions<any, Error, Record<string, any>>,
 ) {
   return useMutation<any, Error, Record<string, any>>({
     mutationFn: async (config) => {

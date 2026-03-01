@@ -84,15 +84,16 @@ export class LLMService extends BaseService {
         // Legacy request format - validate and convert to new format
         const legacyRequest = request as any;
         const newRequest: DefinitionSuggestionRequest = {
-          pipeline_type: 'suggest_term_definition',
-          flavor_id: legacyRequest.flavor || 'default',
+          pipeline_type: "suggest_term_definition",
+          flavor_id: legacyRequest.flavor || "default",
           context_data: {
             term: this.sanitizeString(legacyRequest.term, "term"),
             domain_title: legacyRequest.domain_title,
             domain_definition: legacyRequest.domain_definition,
             parent_term_title: legacyRequest.parent_term_title,
             parent_term_definition: legacyRequest.parent_term_definition,
-            parent_relationship_predicate: legacyRequest.parent_relationship_predicate,
+            parent_relationship_predicate:
+              legacyRequest.parent_relationship_predicate,
             component_terms: legacyRequest.component_terms,
             dbpedia_context: legacyRequest.dbpedia_context,
             wikidata_context: legacyRequest.wikidata_context,
@@ -124,10 +125,13 @@ export class LLMService extends BaseService {
         // Legacy request format - convert to new format
         const legacyRequest = request as any;
         const newRequest: DomainDefinitionRequest = {
-          pipeline_type: 'suggest_domain_definition',
-          flavor_id: legacyRequest.flavor || 'default',
+          pipeline_type: "suggest_domain_definition",
+          flavor_id: legacyRequest.flavor || "default",
           context_data: {
-            domain_title: this.sanitizeString(legacyRequest.domain_title, "domain_title"),
+            domain_title: this.sanitizeString(
+              legacyRequest.domain_title,
+              "domain_title",
+            ),
             context: legacyRequest.context,
           },
         };
@@ -156,10 +160,13 @@ export class LLMService extends BaseService {
         // Legacy request format - convert to new format
         const legacyRequest = request as any;
         const newRequest: LayerDefinitionRequest = {
-          pipeline_type: 'suggest_layer_definition',
-          flavor_id: legacyRequest.flavor || 'default',
+          pipeline_type: "suggest_layer_definition",
+          flavor_id: legacyRequest.flavor || "default",
           context_data: {
-            layer_title: this.sanitizeString(legacyRequest.layer_title, "layer_title"),
+            layer_title: this.sanitizeString(
+              legacyRequest.layer_title,
+              "layer_title",
+            ),
             context: legacyRequest.context,
           },
         };

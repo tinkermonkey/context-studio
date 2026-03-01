@@ -63,7 +63,10 @@ export const NlpAnalysisPanel: React.FC<NlpAnalysisPanelProps> = ({
 
   // Determine if title is multi-word (more than one word after splitting on whitespace)
   const isMultiWord = useMemo(() => {
-    const words = text.trim().split(/\s+/).filter((w) => w.length > 0);
+    const words = text
+      .trim()
+      .split(/\s+/)
+      .filter((w) => w.length > 0);
     return words.length > 1;
   }, [text]);
 

@@ -1,4 +1,4 @@
-import { LayoutConfig } from "@/components/graphs/tree_chart/tree_data"
+import { LayoutConfig } from "@/components/graphs/tree_chart/tree_data";
 import { ChartStyles } from "./tree_chart_styles";
 
 const treeTrunkCurveRadius = 14;
@@ -54,7 +54,7 @@ export const createMenuNodeBackgroundPath = (
   const bgWidth = labelWidth + styles.branchLine.strokeWidth;
   const halfStroke = styles.branchLine.strokeWidth / 2;
   if (childIndex === 0) {
-    return `M ${x - (treeTrunkCurveRadius + halfStroke) - 3} ${y - labelHeight -4}
+    return `M ${x - (treeTrunkCurveRadius + halfStroke) - 3} ${y - labelHeight - 4}
           h ${labelWidth + 5 + (treeTrunkCurveRadius - 2)}
           v ${labelHeight + 3}
           h ${-(labelWidth + 3.5)}
@@ -271,7 +271,9 @@ export function measureSvgTextWidth(
 
   // Validate measurement - warn if we got zero for non-empty text
   if (width === 0 && text.length > 0) {
-    console.warn(`[NlpConceptChart] Measurement returned zero width for text: "${text.substring(0, 50)}..."`);
+    console.warn(
+      `[NlpConceptChart] Measurement returned zero width for text: "${text.substring(0, 50)}..."`,
+    );
     // Return a fallback based on character count
     return text.length * 8; // Approximate 8px per character
   }
@@ -287,7 +289,9 @@ export function measureHtmlTextHeight(
 ): number {
   if (!text) return 0;
   if (width <= 0) {
-    console.warn(`[NlpConceptChart] Invalid width (${width}) for text height measurement`);
+    console.warn(
+      `[NlpConceptChart] Invalid width (${width}) for text height measurement`,
+    );
     return 0;
   }
 
@@ -337,7 +341,9 @@ export function measureHtmlTextHeight(
 
   // Validate measurement - warn if we got zero for non-empty text
   if (height === 0 && text.length > 0) {
-    console.warn(`[NlpConceptChart] Measurement returned zero height for text: "${text.substring(0, 50)}..." (width: ${width}px)`);
+    console.warn(
+      `[NlpConceptChart] Measurement returned zero height for text: "${text.substring(0, 50)}..." (width: ${width}px)`,
+    );
     // Return a fallback minimum height
     return 20; // Approximate minimum single-line height
   }

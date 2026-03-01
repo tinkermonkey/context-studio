@@ -29,13 +29,13 @@ export function ConfigBreadcrumbs({ items }: ConfigBreadcrumbsProps) {
             {item.path ? (
               <Link
                 to={item.path}
-                className="flex items-center gap-1 hover:text-blue-600 transition-colors"
+                className="flex items-center gap-1 transition-colors hover:text-blue-600"
               >
                 {index === 0 && <Home className="h-4 w-4" />}
                 {item.label}
               </Link>
             ) : (
-              <span className="text-gray-900 dark:text-white font-medium">
+              <span className="font-medium text-gray-900 dark:text-white">
                 {item.label}
               </span>
             )}

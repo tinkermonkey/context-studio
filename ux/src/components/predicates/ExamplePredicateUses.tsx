@@ -1,6 +1,6 @@
 /**
  * Example Predicate Uses Component
- * 
+ *
  * Displays example uses of a predicate from the reference database.
  * Shows how the predicate is used to connect subjects and objects
  * in the knowledge graph.
@@ -24,7 +24,11 @@ export const ExamplePredicateUses: React.FC<ExamplePredicateUsesProps> = ({
   externalId,
   limit = 10,
 }) => {
-  const { data, isLoading, error } = usePredicateExamples(source, externalId, limit);
+  const { data, isLoading, error } = usePredicateExamples(
+    source,
+    externalId,
+    limit,
+  );
 
   if (isLoading) {
     return (
@@ -38,7 +42,8 @@ export const ExamplePredicateUses: React.FC<ExamplePredicateUsesProps> = ({
   if (error) {
     return (
       <Alert color="failure" icon={AlertCircle}>
-        <span className="font-medium">Error loading examples:</span> {error.message}
+        <span className="font-medium">Error loading examples:</span>{" "}
+        {error.message}
       </Alert>
     );
   }
@@ -48,7 +53,8 @@ export const ExamplePredicateUses: React.FC<ExamplePredicateUsesProps> = ({
       <Alert color="info" icon={BookOpen}>
         <span className="font-medium">No examples found</span>
         <p className="mt-2 text-sm">
-          This predicate doesn't have any recorded uses in the reference database yet.
+          This predicate doesn't have any recorded uses in the reference
+          database yet.
         </p>
       </Alert>
     );
@@ -58,8 +64,11 @@ export const ExamplePredicateUses: React.FC<ExamplePredicateUsesProps> = ({
     <div className="space-y-4">
       {/* Predicate Info Header */}
       <div className="border-b pb-4 dark:border-gray-700">
-        <div className="flex items-center gap-2 mb-2">
-          <Badge color={getSourceBadgeColor(data.predicate.source)} className="w-fit">
+        <div className="mb-2 flex items-center gap-2">
+          <Badge
+            color={getSourceBadgeColor(data.predicate.source)}
+            className="w-fit"
+          >
             {data.predicate.source}
           </Badge>
           <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
@@ -71,14 +80,15 @@ export const ExamplePredicateUses: React.FC<ExamplePredicateUsesProps> = ({
             {data.predicate.definition}
           </p>
         )}
-        <p className="text-xs text-gray-500 dark:text-gray-500 mt-2 font-mono">
+        <p className="mt-2 font-mono text-xs text-gray-500 dark:text-gray-500">
           {data.predicate.external_id}
         </p>
       </div>
 
       {/* Examples Count */}
       <div className="text-sm text-gray-600 dark:text-gray-400">
-        Showing {data.examples.length} example{data.examples.length !== 1 ? 's' : ''} of how this predicate is used:
+        Showing {data.examples.length} example
+        {data.examples.length !== 1 ? "s" : ""} of how this predicate is used:
       </div>
 
       {/* Examples List */}
@@ -90,8 +100,9 @@ export const ExamplePredicateUses: React.FC<ExamplePredicateUsesProps> = ({
 
       {/* Footer note if there might be more */}
       {data.examples.length >= limit && (
-        <p className="text-xs text-gray-500 dark:text-gray-500 text-center pt-2">
-          Showing first {limit} examples. There may be more uses in the database.
+        <p className="pt-2 text-center text-xs text-gray-500 dark:text-gray-500">
+          Showing first {limit} examples. There may be more uses in the
+          database.
         </p>
       )}
     </div>

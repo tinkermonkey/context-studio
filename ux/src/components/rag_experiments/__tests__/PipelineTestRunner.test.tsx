@@ -256,7 +256,7 @@ describe("PipelineTestRunner", () => {
     render(<PipelineTestRunner />, { wrapper: createWrapper() });
 
     expect(
-      screen.getByText(/No test paragraphs available/i)
+      screen.getByText(/No test paragraphs available/i),
     ).toBeInTheDocument();
   });
 });

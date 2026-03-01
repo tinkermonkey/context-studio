@@ -93,7 +93,11 @@ export const TestParagraphEditor: React.FC<TestParagraphEditorProps> = ({
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4" data-testid="test-paragraph-editor">
+    <form
+      onSubmit={handleSubmit}
+      className="space-y-4"
+      data-testid="test-paragraph-editor"
+    >
       <div>
         <Label htmlFor="paragraph-text">Paragraph Text</Label>
         <Textarea
@@ -107,9 +111,7 @@ export const TestParagraphEditor: React.FC<TestParagraphEditorProps> = ({
           required
           className="mt-1"
         />
-        <p className="mt-1 text-sm text-gray-500">
-          {text.length} characters
-        </p>
+        <p className="mt-1 text-sm text-gray-500">{text.length} characters</p>
       </div>
 
       <div>
@@ -133,7 +135,11 @@ export const TestParagraphEditor: React.FC<TestParagraphEditorProps> = ({
       )}
 
       <div className="flex items-center gap-2">
-        <Button type="submit" disabled={isLoading || !text.trim()} data-testid="test-paragraph-submit-button">
+        <Button
+          type="submit"
+          disabled={isLoading || !text.trim()}
+          data-testid="test-paragraph-submit-button"
+        >
           {isLoading ? (
             <>
               <Spinner size="sm" className="mr-2" />
@@ -146,7 +152,13 @@ export const TestParagraphEditor: React.FC<TestParagraphEditorProps> = ({
             </>
           )}
         </Button>
-        <Button type="button" color="gray" onClick={handleCancel} disabled={isLoading} data-testid="test-paragraph-cancel-button">
+        <Button
+          type="button"
+          color="gray"
+          onClick={handleCancel}
+          disabled={isLoading}
+          data-testid="test-paragraph-cancel-button"
+        >
           <X className="mr-2 h-4 w-4" />
           Cancel
         </Button>

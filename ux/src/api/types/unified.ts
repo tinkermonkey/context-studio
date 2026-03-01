@@ -87,7 +87,8 @@ export interface SourceMetadata {
 }
 
 // Predefined source metadata
-export const SOURCE_METADATA: Record<SourceType, SourceMetadata> & Record<string, SourceMetadata> = {
+export const SOURCE_METADATA: Record<SourceType, SourceMetadata> &
+  Record<string, SourceMetadata> = {
   conceptnet: {
     label: "ConceptNet",
     color: "blue",

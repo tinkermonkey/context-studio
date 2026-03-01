@@ -66,8 +66,8 @@ const PipelineResultView: React.FC<PipelineResultViewProps> = ({
   // Check if there's any saveable content
   const hasSaveableContent = Boolean(
     result.data?.structured_output?.definition ||
-    result.data?.definition ||
-    result.data?.response_content
+      result.data?.definition ||
+      result.data?.response_content,
   );
 
   const currentContextSnapshotLocal = React.useMemo(() => {
@@ -103,9 +103,10 @@ const PipelineResultView: React.FC<PipelineResultViewProps> = ({
 
   const handleSaveLocal = async (res: any) => {
     // Extract definition from structured_output, legacy format, or raw response
-    const definition = res?.data?.structured_output?.definition ||
-                      res?.data?.definition ||
-                      res?.data?.response_content;
+    const definition =
+      res?.data?.structured_output?.definition ||
+      res?.data?.definition ||
+      res?.data?.response_content;
     if (!definition) return;
     setSaveMessageLocal(null);
     setIsSavingLocal(true);
@@ -201,7 +202,12 @@ const PipelineResultView: React.FC<PipelineResultViewProps> = ({
             <Button
               size="xs"
               onClick={() => handleSaveLocal(result)}
-              disabled={isSavingLocal || !canSaveLocal || !hasSaveableContent || savedVisibleLocal}
+              disabled={
+                isSavingLocal ||
+                !canSaveLocal ||
+                !hasSaveableContent ||
+                savedVisibleLocal
+              }
               title={
                 isSavingLocal
                   ? "Saving..."

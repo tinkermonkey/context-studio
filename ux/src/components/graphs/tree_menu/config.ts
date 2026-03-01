@@ -24,7 +24,7 @@ export const layoutConfig: LayoutConfig = {
 // Spacing between title column and definition column
 export const definitionSpacing = {
   controlsWidth: 16, // Width reserved for controls between title and definition
-  leftMargin: 5,     // Left margin for definition text
+  leftMargin: 5, // Left margin for definition text
 };
 
 // Chart styles for SVG elements

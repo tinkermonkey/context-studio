@@ -1,6 +1,6 @@
-import { defineConfig, devices } from '@playwright/test';
-import path from 'path';
-import { fileURLToPath } from 'url';
+import { defineConfig, devices } from "@playwright/test";
+import path from "path";
+import { fileURLToPath } from "url";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -13,7 +13,7 @@ const __dirname = path.dirname(__filename);
  * once in global setup and torn down after all tests complete.
  */
 export default defineConfig({
-  testDir: './e2e/tests',
+  testDir: "./e2e/tests",
 
   // Test execution settings
   fullyParallel: false, // Run tests sequentially (shared backend server)
@@ -23,33 +23,33 @@ export default defineConfig({
 
   // Reporting
   reporter: [
-    ['html', { outputFolder: 'playwright-report', open: 'never' }],
-    ['list'],
-    ...(process.env.CI ? [['github'] as const] : []),
+    ["html", { outputFolder: "playwright-report", open: "never" }],
+    ["list"],
+    ...(process.env.CI ? [["github"] as const] : []),
   ],
 
   // Test behavior defaults
   use: {
-    baseURL: 'http://localhost:3888',
-    trace: 'on-first-retry',
-    screenshot: 'only-on-failure',
-    video: 'retain-on-failure',
+    baseURL: "http://localhost:3888",
+    trace: "on-first-retry",
+    screenshot: "only-on-failure",
+    video: "retain-on-failure",
 
     // API request context for backend validation
     extraHTTPHeaders: {
-      'Accept': 'application/json',
+      Accept: "application/json",
     },
   },
 
   // Global setup/teardown for server lifecycle
-  globalSetup: path.resolve(__dirname, './e2e/global-setup.ts'),
-  globalTeardown: path.resolve(__dirname, './e2e/global-teardown.ts'),
+  globalSetup: path.resolve(__dirname, "./e2e/global-setup.ts"),
+  globalTeardown: path.resolve(__dirname, "./e2e/global-teardown.ts"),
 
   // Browser projects
   projects: [
     {
-      name: 'chromium',
-      use: { ...devices['Desktop Chrome'] },
+      name: "chromium",
+      use: { ...devices["Desktop Chrome"] },
     },
     // Uncomment to test on additional browsers:
     // {

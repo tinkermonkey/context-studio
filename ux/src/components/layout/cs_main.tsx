@@ -8,7 +8,7 @@ interface CsMainTitleProps {
   children?: ReactNode;
   icon?: React.ComponentType<any>;
   className?: string;
-  'data-testid'?: string;
+  "data-testid"?: string;
 }
 
 interface CsMainHeaderProps {
@@ -24,7 +24,7 @@ const CsMainTitle: React.FC<CsMainTitleProps> = ({
   children,
   icon: Icon,
   className,
-  'data-testid': dataTestId,
+  "data-testid": dataTestId,
 }) => {
   return (
     <div
@@ -40,7 +40,7 @@ const CsMainTitle: React.FC<CsMainTitleProps> = ({
 const CsMainHeader: React.FC<CsMainHeaderProps> = ({ children, className }) => {
   return (
     <div
-      className={`sticky z-10 bg-white dark:bg-gray-900 pb-4 ${className || ""}`}
+      className={`sticky z-10 bg-white pb-4 dark:bg-gray-900 ${className || ""}`}
       style={{ top: "var(--navbar-height, 0px)" }}
     >
       {children}

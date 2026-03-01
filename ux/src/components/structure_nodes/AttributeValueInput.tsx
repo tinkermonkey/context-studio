@@ -55,7 +55,8 @@ export const AttributeValueInput: React.FC<AttributeValueInputProps> = ({
             type="number"
             value={stringValue}
             onChange={(e) => {
-              const numValue = e.target.value === "" ? null : Number(e.target.value);
+              const numValue =
+                e.target.value === "" ? null : Number(e.target.value);
               onChange(numValue);
             }}
             placeholder={placeholder || "Enter numeric value"}

@@ -1,4 +1,4 @@
-import { LayoutConfig } from "@/components/graphs/tree_chart/tree_data"
+import { LayoutConfig } from "@/components/graphs/tree_chart/tree_data";
 import { chartStyles, layoutConfig, curveRadius, leadInRadius } from "./config";
 
 /**
@@ -126,7 +126,7 @@ export const createMenuNodeBackgroundPath = (
   const halfStroke = chartStyles.branchLine.strokeWidth / 2;
   const topLeft = {
     x: nodeX - curveRadius - halfStroke,
-    y: nodeY - 0+ halfStroke,
+    y: nodeY - 0 + halfStroke,
   };
   const bottomRight = {
     x: nodeX + nodeWidth,

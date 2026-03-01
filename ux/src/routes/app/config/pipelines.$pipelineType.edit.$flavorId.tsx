@@ -81,7 +81,7 @@ function EditFlavorPage() {
         </div>
       </Breadcrumb>
 
-      <CsMainTitle >Edit Flavor</CsMainTitle>
+      <CsMainTitle>Edit Flavor</CsMainTitle>
 
       <div className="mt-6">
         <PipelineFlavorEditor

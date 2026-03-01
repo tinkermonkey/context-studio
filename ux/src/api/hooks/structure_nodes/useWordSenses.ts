@@ -14,8 +14,14 @@ import {
 import { structureNodeService } from "@/api/services/structureNodes";
 import { QUERY_KEYS } from "@/api/config";
 import { createQueryKey } from "@/api/utils/queryClient";
-import { WordSense, SelectedWordSensesUpdate } from "@/api/types/structureNodes";
-import { handleVersionConflict, isVersionConflict } from "@/api/utils/conflictResolution";
+import {
+  WordSense,
+  SelectedWordSensesUpdate,
+} from "@/api/types/structureNodes";
+import {
+  handleVersionConflict,
+  isVersionConflict,
+} from "@/api/utils/conflictResolution";
 import { toast } from "@/utils/toast";
 
 /**
@@ -26,7 +32,9 @@ export const useWordSenses = (
   options?: UseQueryOptions<WordSense[], Error>,
 ) => {
   return useQuery({
-    queryKey: createQueryKey(QUERY_KEYS.STRUCTURE_NODES, nodeId, { type: "word_senses" }),
+    queryKey: createQueryKey(QUERY_KEYS.STRUCTURE_NODES, nodeId, {
+      type: "word_senses",
+    }),
     queryFn: () => structureNodeService.getWordSenses(nodeId),
     enabled: !!nodeId,
     ...options,
@@ -53,20 +61,28 @@ export const useUpdateWordSenses = (
 ) => {
   const queryClient = useQueryClient();
 
-  return useMutation<WordSense[], Error, SelectedWordSensesUpdate, WordSenseContext>({
+  return useMutation<
+    WordSense[],
+    Error,
+    SelectedWordSensesUpdate,
+    WordSenseContext
+  >({
     mutationFn: (data: SelectedWordSensesUpdate) =>
       structureNodeService.updateWordSenses(nodeId, data),
     onMutate: async (
       variables: SelectedWordSensesUpdate,
     ): Promise<WordSenseContext> => {
       // Cancel any outgoing refetches to avoid optimistic update being overwritten
-      const queryKey = createQueryKey(QUERY_KEYS.STRUCTURE_NODES, nodeId, { type: "word_senses" });
+      const queryKey = createQueryKey(QUERY_KEYS.STRUCTURE_NODES, nodeId, {
+        type: "word_senses",
+      });
       await queryClient.cancelQueries({
         queryKey,
       });
 
       // Snapshot the previous value for rollback
-      const previousWordSenses = queryClient.getQueryData<WordSense[]>(queryKey);
+      const previousWordSenses =
+        queryClient.getQueryData<WordSense[]>(queryKey);
 
       // Optimistically update to the new value
       queryClient.setQueryData(queryKey, variables.selected_senses);
@@ -76,7 +92,9 @@ export const useUpdateWordSenses = (
     onError: async (err, variables, context) => {
       // Check if this is a version conflict
       if (isVersionConflict(err)) {
-        const queryKey = createQueryKey(QUERY_KEYS.STRUCTURE_NODES, nodeId, { type: "word_senses" });
+        const queryKey = createQueryKey(QUERY_KEYS.STRUCTURE_NODES, nodeId, {
+          type: "word_senses",
+        });
 
         // Handle conflict with automatic refetch
         await handleVersionConflict(
@@ -87,15 +105,18 @@ export const useUpdateWordSenses = (
             return freshData;
           },
           {
-            customMessage: "Word senses were modified elsewhere. Your changes were not saved. Please review the current values and try again.",
+            customMessage:
+              "Word senses were modified elsewhere. Your changes were not saved. Please review the current values and try again.",
             showToast: true,
-          }
+          },
         );
       } else {
         // Rollback to the previous value on other errors
         if (context?.previousWordSenses) {
           queryClient.setQueryData(
-            createQueryKey(QUERY_KEYS.STRUCTURE_NODES, nodeId, { type: "word_senses" }),
+            createQueryKey(QUERY_KEYS.STRUCTURE_NODES, nodeId, {
+              type: "word_senses",
+            }),
             context.previousWordSenses,
           );
         }
@@ -107,7 +128,9 @@ export const useUpdateWordSenses = (
     onSuccess: (data) => {
       // Update the cache with the server response
       queryClient.setQueryData(
-        createQueryKey(QUERY_KEYS.STRUCTURE_NODES, nodeId, { type: "word_senses" }),
+        createQueryKey(QUERY_KEYS.STRUCTURE_NODES, nodeId, {
+          type: "word_senses",
+        }),
         data,
       );
 
