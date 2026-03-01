@@ -98,7 +98,7 @@ def extract_token_data(doc, filter: bool = False) -> List[TokenData]:
                                     synset_data = {
                                         "name": str(s.name()) if hasattr(s, 'name') else "",
                                         "definition": str(s.definition()) if hasattr(s, 'definition') else "",
-                                        "lemmas": [str(l.name()) for l in s.lemmas()] if hasattr(s, 'lemmas') else [],
+                                        "lemmas": [str(lemma.name()) for lemma in s.lemmas()] if hasattr(s, 'lemmas') else [],
                                         "pos": str(s.pos()) if hasattr(s, 'pos') else "",
                                         "offset": int(s.offset()) if hasattr(s, 'offset') else 0,
                                         "domain": str(s.lexname()) if hasattr(s, 'lexname') else ""
@@ -112,12 +112,12 @@ def extract_token_data(doc, filter: bool = False) -> List[TokenData]:
                     try:
                         lemma_iter = wn.lemmas()
                         if hasattr(lemma_iter, '__iter__'):
-                            for l in lemma_iter:
+                            for lemma in lemma_iter:
                                 try:
                                     lemma_data = {
-                                        "name": str(l.name()) if hasattr(l, 'name') else "",
-                                        "synset": str(l.synset().name()) if hasattr(l, 'synset') and hasattr(l.synset(), 'name') else "",
-                                        "count": int(l.count()) if hasattr(l, 'count') and l.count() is not None else 0
+                                        "name": str(lemma.name()) if hasattr(lemma, 'name') else "",
+                                        "synset": str(lemma.synset().name()) if hasattr(lemma, 'synset') and hasattr(lemma.synset(), 'name') else "",
+                                        "count": int(lemma.count()) if hasattr(lemma, 'count') and lemma.count() is not None else 0
                                     }
                                     lemmas.append(lemma_data)
                                 except Exception as lemma_e:
