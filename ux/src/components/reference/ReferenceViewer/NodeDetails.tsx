@@ -18,9 +18,7 @@ import {
 } from "lucide-react";
 import { UnifiedNode, UnifiedSearchLink } from "@/api/types/unified";
 import { SOURCE_METADATA } from "@/api/types/unified";
-import {
-  useNodeDetails,
-} from "@/api/hooks/unifiedReference/useUnifiedReference";
+import { useNodeDetails } from "@/api/hooks/unifiedReference/useUnifiedReference";
 import { LinkExplorer } from "./LinkExplorer";
 import { getSourceBadgeColor, getSourceLabel } from "@/utils/sourceUtils";
 
@@ -58,12 +56,14 @@ export const NodeDetails: React.FC<NodeDetailsProps> = ({
   } = useNodeDetails(targetNodeId && !targetNode ? targetNodeId : null);
 
   // Filter search links for the current node (either as subject or object)
-  const nodeLinks = targetNodeId || targetNode?.id
-    ? searchLinks.filter(link =>
-        link.subject === (targetNodeId || targetNode?.id) ||
-        link.object === (targetNodeId || targetNode?.id)
-      )
-    : [];
+  const nodeLinks =
+    targetNodeId || targetNode?.id
+      ? searchLinks.filter(
+          (link) =>
+            link.subject === (targetNodeId || targetNode?.id) ||
+            link.object === (targetNodeId || targetNode?.id),
+        )
+      : [];
   const linksLoading = false; // No async loading needed for search links
   const linksError = null;
 
@@ -153,22 +153,26 @@ export const NodeDetails: React.FC<NodeDetailsProps> = ({
 
                   <div className="mb-3 flex items-center gap-2">
                     <span className="text-sm text-gray-600">ID:</span>
-                    <code className="rounded bg-gray-100 px-2 py-1 text-sm font-mono text-gray-800">
+                    <code className="rounded bg-gray-100 px-2 py-1 font-mono text-sm text-gray-800">
                       {displayNode.id}
                     </code>
                     <CopyButton text={displayNode.id} field="header-id" />
                   </div>
 
                   <div className="flex flex-wrap gap-2">
-                    <Badge color={getSourceBadgeColor(displayNode.source)} size="lg">
+                    <Badge
+                      color={getSourceBadgeColor(displayNode.source)}
+                      size="lg"
+                    >
                       {getSourceLabel(displayNode.source)}
                     </Badge>
 
-                    {displayNode.relevance_score !== undefined && displayNode.relevance_score < 1 && (
-                      <Badge color="gray">
-                        {Math.round(displayNode.relevance_score * 100)}% match
-                      </Badge>
-                    )}
+                    {displayNode.relevance_score !== undefined &&
+                      displayNode.relevance_score < 1 && (
+                        <Badge color="gray">
+                          {Math.round(displayNode.relevance_score * 100)}% match
+                        </Badge>
+                      )}
 
                     {/* Merged sources badge removed in normalized API */}
                   </div>
@@ -179,9 +183,11 @@ export const NodeDetails: React.FC<NodeDetailsProps> = ({
                     <Button
                       color="blue"
                       size="sm"
-                      onClick={() =>
-                        window.open(displayNode.source_url, "_blank")
-                      }
+                      onClick={() => {
+                        if (displayNode.source_url) {
+                          window.open(displayNode.source_url, "_blank");
+                        }
+                      }}
                     >
                       <ExternalLink className="mr-2 h-4 w-4" />
                       View Source
@@ -203,7 +209,7 @@ export const NodeDetails: React.FC<NodeDetailsProps> = ({
                   </div>
                   <p className="leading-relaxed text-gray-700">
                     {displayNode.definition || (
-                      <span className="italic text-gray-500">
+                      <span className="text-gray-500 italic">
                         No definition available for this node.
                       </span>
                     )}
@@ -281,30 +287,6 @@ export const NodeDetails: React.FC<NodeDetailsProps> = ({
                           <dt className="text-gray-600">Confidence:</dt>
                           <dd>
                             {Math.round(displayNode.relevance_score * 100)}%
-                          </dd>
-                        </div>
-                      )}
-
-                      {null && (
-                        <div className="flex justify-between">
-                          <dt className="text-gray-600">Created:</dt>
-                          <dd className="flex items-center gap-1">
-                            <Calendar className="h-4 w-4" />
-                            {new Date(
-                              null,
-                            ).toLocaleDateString()}
-                          </dd>
-                        </div>
-                      )}
-
-                      {null && (
-                        <div className="flex justify-between">
-                          <dt className="text-gray-600">Updated:</dt>
-                          <dd className="flex items-center gap-1">
-                            <Calendar className="h-4 w-4" />
-                            {new Date(
-                              null,
-                            ).toLocaleDateString()}
                           </dd>
                         </div>
                       )}
