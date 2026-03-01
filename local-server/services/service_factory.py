@@ -779,7 +779,6 @@ class ServiceFactory:
         Returns:
             Service instance
         """
-        start_time = time()
         service_key = service_type.value
         metrics = self._metrics[service_type.value]
 
@@ -839,7 +838,6 @@ class ServiceFactory:
         Returns:
             Service instance
         """
-        start_time = time()
         now = time()
 
         with self._lock:
