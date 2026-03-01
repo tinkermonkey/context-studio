@@ -315,7 +315,7 @@ function NLPConfigurationSection({
                       onChange={(e) => {
                         const newRelations = e.target.checked
                           ? [...enabledRelations, relation]
-                          : enabledRelations.filter(r => r !== relation);
+                          : enabledRelations.filter((r: string) => r !== relation);
                         onUpdate('concepcy_relations', newRelations);
                       }}
                       disabled={isUpdating}
