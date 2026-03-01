@@ -502,9 +502,9 @@ class PerformanceMonitor:
     
     def _analyze_metric_trend(self, metrics_list: List[Dict[str, Any]], metric_path: str) -> Dict[str, Any]:
         """Analyze trend for a specific metric."""
-        
-        values = []
-        timestamps = []
+
+        values: list[float] = []
+        timestamps: list[datetime] = []
         
         for metric in metrics_list:
             try:
@@ -652,7 +652,7 @@ class PerformanceMonitor:
     def _calculate_health_score(self, trends: Dict[str, Any]) -> float:
         """Calculate overall system health score (0-1)."""
 
-        scores = []
+        scores: list[float] = []
 
         # Query performance score
         query_trend = trends.get('query_time_trend', {})

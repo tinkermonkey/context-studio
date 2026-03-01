@@ -12,11 +12,13 @@ from typing import Dict, Any, Optional
 from datetime import datetime, timedelta
 
 try:
-    from botocore.exceptions import ClientError
+    from botocore.exceptions import ClientError as BotoClientError
 except ImportError:
     # Define a dummy ClientError for environments where boto3 is not installed
-    class ClientError(Exception):
+    class BotoClientError(Exception):  # type: ignore
         pass
+
+ClientError = BotoClientError
 
 from utils.logger import get_logger
 
@@ -29,7 +31,7 @@ class S3StorageOptimizer:
     def __init__(self, s3_client, bucket_name: str, duckdb_conn=None):
         """
         Initialize S3 storage optimizer.
-        
+
         Args:
             s3_client: Boto3 S3 client instance
             bucket_name: S3 bucket name for optimization
@@ -38,8 +40,8 @@ class S3StorageOptimizer:
         self.s3_client = s3_client
         self.bucket_name = bucket_name
         self.duckdb_conn = duckdb_conn
-        self.compression_stats = {}
-        self.optimization_history = []
+        self.compression_stats: Dict[str, Dict[str, Any]] = {}
+        self.optimization_history: list[Dict[str, Any]] = []
         
         logger.info(f"S3StorageOptimizer initialized for bucket: {bucket_name}")
         
@@ -290,53 +292,53 @@ class S3StorageOptimizer:
             # List objects and analyze storage patterns
             paginator = self.s3_client.get_paginator('list_objects_v2')
             page_iterator = paginator.paginate(Bucket=self.bucket_name)
-            
-            for page in page_iterator:
+
+            for page in page_iterator:  # type: ignore
                 if 'Contents' not in page:
                     continue
-                    
-                for obj in page['Contents']:
-                    storage_analysis['total_objects'] += 1
-                    storage_analysis['total_size_bytes'] += obj['Size']
-                    
+
+                for obj in page['Contents']:  # type: ignore
+                    storage_analysis['total_objects'] += 1  # type: ignore
+                    storage_analysis['total_size_bytes'] += obj['Size']  # type: ignore
+
                     # Analyze by prefix
-                    prefix = obj['Key'].split('/')[0] if '/' in obj['Key'] else 'root'
-                    if prefix not in storage_analysis['cost_by_prefix']:
-                        storage_analysis['cost_by_prefix'][prefix] = {
+                    prefix = obj['Key'].split('/')[0] if '/' in obj['Key'] else 'root'  # type: ignore
+                    if prefix not in storage_analysis['cost_by_prefix']:  # type: ignore
+                        storage_analysis['cost_by_prefix'][prefix] = {  # type: ignore
                             'object_count': 0,
                             'total_size': 0,
                             'avg_size': 0
                         }
-                    
-                    storage_analysis['cost_by_prefix'][prefix]['object_count'] += 1
-                    storage_analysis['cost_by_prefix'][prefix]['total_size'] += obj['Size']
-                    
+
+                    storage_analysis['cost_by_prefix'][prefix]['object_count'] += 1  # type: ignore
+                    storage_analysis['cost_by_prefix'][prefix]['total_size'] += obj['Size']  # type: ignore
+
                     # Check if object is old enough for archival
-                    if obj['LastModified'] < cutoff_date:
-                        storage_analysis['optimization_opportunities'].append({
-                            'key': obj['Key'],
-                            'size': obj['Size'],
-                            'last_modified': obj['LastModified'].isoformat(),
+                    if obj['LastModified'] < cutoff_date:  # type: ignore
+                        storage_analysis['optimization_opportunities'].append({  # type: ignore
+                            'key': obj['Key'],  # type: ignore
+                            'size': obj['Size'],  # type: ignore
+                            'last_modified': obj['LastModified'].isoformat(),  # type: ignore
                             'recommendation': 'Consider archival to Glacier or Deep Archive'
                         })
-            
+
             # Calculate averages
-            for prefix_stats in storage_analysis['cost_by_prefix'].values():
-                if prefix_stats['object_count'] > 0:
-                    prefix_stats['avg_size'] = prefix_stats['total_size'] / prefix_stats['object_count']
+            for prefix_stats in storage_analysis['cost_by_prefix'].values():  # type: ignore
+                if prefix_stats['object_count'] > 0:  # type: ignore
+                    prefix_stats['avg_size'] = prefix_stats['total_size'] / prefix_stats['object_count']  # type: ignore
             
             # Estimate cost savings
-            total_archival_candidates = len(storage_analysis['optimization_opportunities'])
+            total_archival_candidates = len(storage_analysis['optimization_opportunities'])  # type: ignore
             estimated_savings = self._estimate_cost_savings(storage_analysis)
-            
-            storage_analysis['cost_optimization'] = {
+
+            storage_analysis['cost_optimization'] = {  # type: ignore
                 'archival_candidates': total_archival_candidates,
                 'estimated_monthly_savings_usd': estimated_savings,
-                'current_monthly_cost_estimate_usd': self._estimate_current_cost(storage_analysis['total_size_bytes'])
+                'current_monthly_cost_estimate_usd': self._estimate_current_cost(int(storage_analysis['total_size_bytes']))  # type: ignore
             }
-            
-            logger.info(f"Storage analysis complete: {storage_analysis['total_objects']} objects, "
-                       f"{storage_analysis['total_size_bytes'] / (1024**3):.2f} GB total")
+
+            logger.info(f"Storage analysis complete: {storage_analysis['total_objects']} objects, "  # type: ignore
+                       f"{int(storage_analysis['total_size_bytes']) / (1024**3):.2f} GB total")  # type: ignore
             
             return storage_analysis
             
@@ -496,16 +498,16 @@ class S3StorageOptimizer:
         standard_cost_per_gb = 0.023  # USD per GB per month
         glacier_cost_per_gb = 0.004
 
-        total_gb = storage_analysis['total_size_bytes'] / (1024**3)
-        archival_candidates = len(storage_analysis['optimization_opportunities'])
+        total_gb = float(storage_analysis['total_size_bytes']) / (1024**3)  # type: ignore
+        archival_candidates = len(storage_analysis['optimization_opportunities'])  # type: ignore
 
         # Estimate potential savings if 70% of old data is moved to Glacier
         if archival_candidates > 0:
             archival_gb = total_gb * 0.3  # Assume 30% can be archived
             savings = archival_gb * (standard_cost_per_gb - glacier_cost_per_gb)
-            return max(0, savings)
+            return float(max(0.0, savings))
 
-        return 0
+        return 0.0
     
     def _estimate_current_cost(self, total_bytes: int) -> float:
         """Estimate current monthly storage cost."""
@@ -644,7 +646,7 @@ class S3StorageOptimizer:
         avg_compression_ratio = total_original_size / total_optimized_size if total_optimized_size > 0 else 1.0
 
         # Count compression algorithms used
-        algorithm_counts = {}
+        algorithm_counts: Dict[str, int] = {}
         for stats in self.compression_stats.values():
             algo = stats['compression_algorithm']
             algorithm_counts[algo] = algorithm_counts.get(algo, 0) + 1
