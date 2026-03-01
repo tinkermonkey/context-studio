@@ -82,7 +82,7 @@ class RAGPipelineService:
 
     # Default timeout budgets per layer (in seconds)
     DEFAULT_TIMEOUT_LAYER_0 = 1.0  # 1s for KG context preparation
-    DEFAULT_TIMEOUT_LAYER_1 = 30.0  # 30s for LLM extraction
+    DEFAULT_TIMEOUT_LAYER_1 = 90.0  # 90s for LLM extraction (LLM service uses 60s internally)
     DEFAULT_TIMEOUT_LAYER_2 = 0.5  # 500ms for spaCy gap detection
     DEFAULT_TIMEOUT_LAYER_3 = 30.0  # 30s for concept resolution
     DEFAULT_TIMEOUT_TOTAL = 120.0  # 120s total pipeline timeout
