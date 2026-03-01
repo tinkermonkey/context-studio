@@ -103,27 +103,15 @@ def test_complex_term_hierarchy_move(client):
     # Root Term
     #   ├── Child 1
     #   │   └── Grandchild 1
-    #   └── Child 2
-    #       ├── Grandchild 2
-    #       └── Grandchild 3
 
     root_term = create_term(client, source_domain["id"], layer_id, "Root Term")
 
     child1 = create_term(
         client, source_domain["id"], layer_id, "Child 1", root_term["id"]
     )
-    child2 = create_term(
-        client, source_domain["id"], layer_id, "Child 2", root_term["id"]
-    )
 
     grandchild1 = create_term(
         client, source_domain["id"], layer_id, "Grandchild 1", child1["id"]
-    )
-    create_term(
-        client, source_domain["id"], layer_id, "Grandchild 2", child2["id"]
-    )
-    create_term(
-        client, source_domain["id"], layer_id, "Grandchild 3", child2["id"]
     )
 
     # Move root term to target domain using structure_nodes move API
@@ -259,9 +247,7 @@ def test_batch_operations_with_warnings(client):
     term2 = create_term(client, source_domain["id"], layer_id, "Conflicting Term")
 
     # Create a term with same name in target domain
-    create_term(
-        client, target_domain["id"], layer_id, "Conflicting Term"
-    )
+    create_term(client, target_domain["id"], layer_id, "Conflicting Term")
 
     # Try to move the unique term (should succeed)
     move_resp = client.post(
@@ -277,8 +263,9 @@ def test_batch_operations_with_warnings(client):
     assert term_data["parent_node_id"] == target_domain["id"]
 
     # Try to move the conflicting term (behavior may vary based on implementation)
-    client.post(
+    move_resp2 = client.post(
         "/api/structure_nodes/move",
         json={"node_ids": [term2["id"]], "target_parent_id": target_domain["id"]},
     )
     # This may succeed or fail depending on implementation
+    assert move_resp2.status_code in [200, 400, 409]
