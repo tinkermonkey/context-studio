@@ -6,3 +6,4 @@ PRPs/
 .serena/
 .venv/
 .dr/
+.repair_cycle.log
