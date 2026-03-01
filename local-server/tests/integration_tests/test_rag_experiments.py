@@ -476,7 +476,7 @@ class TestAnnotationCRUD:
                 "end_char": 5,
                 "structure_node_id": test_client.node_ids[0]
             }
-        ).json()
+        )
 
         test_client.post(
             f"/api/rag-experiments/paragraphs/{paragraph_id}/annotations",
@@ -485,7 +485,7 @@ class TestAnnotationCRUD:
                 "end_char": 16,
                 "structure_node_id": test_client.node_ids[2]
             }
-        ).json()
+        )
 
         # List paragraphs
         response = test_client.get("/api/rag-experiments/paragraphs")
