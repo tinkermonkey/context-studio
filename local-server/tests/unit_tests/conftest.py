@@ -20,8 +20,6 @@ def clean_nlp_pipeline():
     """
     from nlp import pipeline
 
-    # Store original instance
-
     yield
 
     # Clean up after test
