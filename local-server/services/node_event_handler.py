@@ -173,7 +173,7 @@ class NodeEventHandler:
             .order_by(NodeEvent.timestamp.asc())
             .limit(limit)
             .all()
-        )
+        )  # type: ignore[no-any-return]
 
     def get_events_for_node(self, node_id: str, limit: int = 100) -> list[NodeEvent]:
         """
@@ -192,7 +192,7 @@ class NodeEventHandler:
             .order_by(NodeEvent.timestamp.desc())
             .limit(limit)
             .all()
-        )
+        )  # type: ignore[no-any-return]
 
     def mark_event_processed(self, event_id: int) -> bool:
         """
