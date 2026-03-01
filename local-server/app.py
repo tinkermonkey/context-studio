@@ -4,9 +4,13 @@ os.environ["TOKENIZERS_PARALLELISM"] = "false"
 
 import uvicorn
 import argparse
-from fastapi import FastAPI
+import re
+import time
+from fastapi import FastAPI, Request, status
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 from contextlib import asynccontextmanager
+from sqlalchemy import create_engine
 
 from api import graph, datasets, nlp_analysis, schema, predicates, llm, pipeline_flavors
 from api import reference, config, structure_nodes, version_management, sync, llm_traceability
@@ -21,7 +25,7 @@ from api import (
     enabled_models,
 )
 from api import background_tasks, rag_pipeline, rag_experiments, change_events, health
-from api.admin import service_monitoring
+from api.admin import service_monitoring, database_monitoring, event_processor_monitoring
 from api.graph import get_cached_graph_service, invalidate_graph_cache
 from database.migrations.migration_manager import MigrationManager
 from database.utils import (
@@ -35,11 +39,17 @@ from database.utils import (
 )
 from services.service_factory import ServiceFactory, set_service_factory
 from services.task_manager import initialize_task_manager, shutdown_task_manager
+from services.version_manager import VersionManager
+from services.working_tree_manager import WorkingTreeManager
 from pipeline.manager import get_pipeline_database_manager
 from nlp.pipeline import get_pipeline
 from utils.access_log_middleware import AccessLogMiddleware
 from utils.event_processor import create_event_processor
 from utils.logger import get_logger
+from langchain_community.cache import SQLiteCache
+from langchain.globals import set_llm_cache
+from reference_db.manager import get_reference_manager, cleanup_reference_manager
+from reference_db.config import ReferenceConfig
 
 logger = get_logger(__name__)
 
@@ -77,10 +87,7 @@ def create_app(dataset_id=None, engine=None, session_local=None, service_factory
                     init_db(engine=engine)
                 else:
                     # Create engine from config settings
-                    from sqlalchemy import create_engine
-                    from config import get_settings
-
-                    settings = get_settings()
+                    settings = config.get_settings()
                     fresh_engine = create_engine(settings.database.default_url, poolclass=None)
                     init_db(engine=fresh_engine)
                 logger.info("Database initialized.")
@@ -125,9 +132,6 @@ def create_app(dataset_id=None, engine=None, session_local=None, service_factory
             # Note: This is separate from the reference-api-buddy proxy which handles
             # reference data sources (ConceptNet, DBpedia, etc.) but not LLM APIs
             try:
-                from langchain_community.cache import SQLiteCache
-                from langchain.globals import set_llm_cache
-
                 cache_path = operations_db_manager.operations_db_path.replace(".db", "_llm_cache.db")
                 set_llm_cache(SQLiteCache(database_path=cache_path))
                 logger.info(f"LLM response caching enabled: {cache_path}")
@@ -137,9 +141,7 @@ def create_app(dataset_id=None, engine=None, session_local=None, service_factory
             # Run migrations to ensure schema is up to date
             if dataset_manager is None:
                 # Direct database mode: run migrations on config database
-                from config import get_settings
-
-                settings = get_settings()
+                settings = config.get_settings()
                 # Extract file path from SQLite URL (sqlite:///./path/to/file.db)
                 db_url = settings.database.default_url
                 if db_url.startswith("sqlite:///"):
@@ -170,9 +172,6 @@ def create_app(dataset_id=None, engine=None, session_local=None, service_factory
 
                     # Create version manager and working tree manager for event processor
                     try:
-                        from services.version_manager import VersionManager
-                        from services.working_tree_manager import WorkingTreeManager
-
                         # Use the session_local that was provided to create_app, not the global one
                         session_maker = session_local or get_current_session_local()
                         if session_maker is None:
@@ -237,9 +236,6 @@ def create_app(dataset_id=None, engine=None, session_local=None, service_factory
             # Preload Reference Database Manager and Embedding Model
             logger.info("Warming up Reference Database and Embedding Model...")
             try:
-                from reference_db.manager import get_reference_manager
-                from reference_db.config import ReferenceConfig
-
                 # Initialize singleton reference manager (creates engine/session)
                 ref_config = ReferenceConfig()
                 ref_manager = get_reference_manager(ref_config)
@@ -247,8 +243,6 @@ def create_app(dataset_id=None, engine=None, session_local=None, service_factory
                 # Warm up embedding model with a test query
                 # This loads the SentenceTransformer model into memory (~1.5s first call)
                 logger.info("Loading embedding model (this may take a moment)...")
-                import time
-
                 warmup_start = time.perf_counter()
 
                 # Test search to warm up both embedding model and vector search
@@ -299,8 +293,6 @@ def create_app(dataset_id=None, engine=None, session_local=None, service_factory
 
             # Clean up reference database manager
             try:
-                from reference_db.manager import cleanup_reference_manager
-
                 cleanup_reference_manager()
                 logger.info("Reference database manager cleaned up")
             except Exception as e:
@@ -360,13 +352,9 @@ def create_app(dataset_id=None, engine=None, session_local=None, service_factory
     app.include_router(identity_management.router, tags=["identity-management"])
 
     # Phase 3: Enhanced database management monitoring endpoints
-    from api.admin import database_monitoring
-
     app.include_router(database_monitoring.router, tags=["database-monitoring"])
 
     # Enhanced Event Processor monitoring endpoints
-    from api.admin import event_processor_monitoring
-
     app.include_router(event_processor_monitoring.router, tags=["event-processor-monitoring"])
 
     # Phase 4: Advanced collaborative features
@@ -390,10 +378,6 @@ def create_app(dataset_id=None, engine=None, session_local=None, service_factory
     app.include_router(rag_experiments.router, tags=["rag-experiments"])
 
     # Add global exception handler to sanitize error messages
-    from fastapi import Request, status
-    from fastapi.responses import JSONResponse
-    import re
-
     @app.exception_handler(Exception)
     async def global_exception_handler(request: Request, exc: Exception):
         """
@@ -430,9 +414,7 @@ app = create_app()
 app.add_middleware(AccessLogMiddleware)
 
 # Get configuration for CORS
-from config import get_settings
-
-cors_settings = get_settings()
+cors_settings = config.get_settings()
 
 app.add_middleware(
     CORSMiddleware,
@@ -443,11 +425,8 @@ app.add_middleware(
 )
 
 if __name__ == "__main__":
-    # Import configuration
-    from config import get_settings
-
     # Get settings
-    settings = get_settings()
+    settings = config.get_settings()
 
     parser = argparse.ArgumentParser(description="Run the Context Studio FastAPI server.")
     parser.add_argument(

@@ -910,7 +910,7 @@ class Migration006(Migration):
                 # Try to drop anyway in case it's a regular table
                 try:
                     connection.execute(text("DROP TABLE IF EXISTS structure_nodes_vec;"))
-                except:
+                except Exception:
                     logger.info("structure_nodes_vec table cleanup skipped")
                     
         except Exception as e:

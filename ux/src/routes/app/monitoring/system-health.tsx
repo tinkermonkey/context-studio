@@ -177,17 +177,17 @@ function RouteComponent() {
                         {
                           label: "Healthy",
                           value: dbDashboard.engines_summary.healthy_engines,
-                          status: "healthy",
+                          status: "healthy" as const,
                         },
                         {
                           label: "Warning",
                           value: dbDashboard.engines_summary.warning_engines,
-                          status: dbDashboard.engines_summary.warning_engines > 0 ? "warning" : undefined,
+                          status: dbDashboard.engines_summary.warning_engines > 0 ? ("warning" as const) : undefined,
                         },
                         {
                           label: "Error",
                           value: dbDashboard.engines_summary.error_engines,
-                          status: dbDashboard.engines_summary.error_engines > 0 ? "error" : undefined,
+                          status: dbDashboard.engines_summary.error_engines > 0 ? ("error" as const) : undefined,
                         },
                       ]}
                     />

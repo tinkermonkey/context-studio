@@ -191,13 +191,13 @@ function RouteComponent() {
                   ([service, healthy]) => ({
                     label: service.replace(/_/g, " ").replace(/\b\w/g, (l) => l.toUpperCase()),
                     value: healthy ? "Healthy" : "Unhealthy",
-                    status: (healthy ? "healthy" : "error") as "healthy" | "warning" | "error",
+                    status: healthy ? "healthy" : "error",
                   })
                 ),
                 {
                   label: "Optimization Enabled",
                   value: systemHealth.optimization_enabled ? "Yes" : "No",
-                  status: (systemHealth.optimization_enabled ? "healthy" : "warning") as "healthy" | "warning" | "error",
+                  status: systemHealth.optimization_enabled ? "healthy" : "warning",
                 },
               ]}
               issues={systemHealth.issues}
@@ -252,7 +252,7 @@ function RouteComponent() {
                   <div className="grid grid-cols-1 gap-6">
                     <SystemHealthCard
                       title="Performance Grade"
-                      status={trends.performance_grade.toLowerCase()}
+                      status={trends.performance_grade.toLowerCase() as "error" | "warning" | "healthy" | "degraded" | "critical" | "excellent" | "good"}
                       healthScore={trends.overall_health_score}
                       metrics={[
                         {
