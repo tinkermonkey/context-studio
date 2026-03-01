@@ -497,7 +497,7 @@ test.describe('Structure Node Detail View', () => {
 
     // Wait for add operation to complete
     await page.waitForResponse(
-      (resp) => resp.url().includes('/reference_links') && resp.method() === 'POST' && resp.status() === 200,
+      (resp) => resp.url().includes('/reference_links') && resp.request().method() === 'POST' && resp.status() === 200,
       { timeout: 10000 }
     );
 
@@ -520,7 +520,7 @@ test.describe('Structure Node Detail View', () => {
 
     // Wait for remove operation to complete
     await page.waitForResponse(
-      (resp) => resp.url().includes('/reference_links') && resp.method() === 'DELETE' && resp.status() === 200,
+      (resp) => resp.url().includes('/reference_links') && resp.request().method() === 'DELETE' && resp.status() === 200,
       { timeout: 10000 }
     );
 
