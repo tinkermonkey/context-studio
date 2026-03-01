@@ -73,9 +73,10 @@ class ReferenceFilterService:
 
             # Parse mapping JSON if present
             mapping_str = None
-            if pred.mapping:
+            if pred.mapping is not None and pred.mapping:
                 # Ensure mapping is a string and strip whitespace
-                mapping_str = pred.mapping.strip() if isinstance(pred.mapping, str) else ""
+                if isinstance(pred.mapping, str):
+                    mapping_str = pred.mapping.strip()
                 # Skip if mapping is empty after stripping
                 if not mapping_str:
                     mapping_str = None
@@ -109,10 +110,17 @@ class ReferenceFilterService:
                             f"or a list, got {mapping_type}. Mapping will be ignored."
                         )
                 except json.JSONDecodeError as e:
-                    logger.warning(
-                        f"Failed to parse mapping JSON for predicate {pred.id}: {e}. "
-                        f"Mapping must be valid JSON (list or dict format). Mapping will be ignored."
-                    )
+                    # Check if mapping is just whitespace (which would indicate empty or invalid data)
+                    if pred.mapping and not pred.mapping.strip():
+                        logger.warning(
+                            f"Predicate {pred.id} has empty or whitespace-only mapping. "
+                            f"Mapping should be NULL or valid JSON. Mapping will be ignored."
+                        )
+                    else:
+                        logger.warning(
+                            f"Failed to parse mapping JSON for predicate {pred.id}: {e}. "
+                            f"Mapping must be valid JSON (list or dict format). Mapping will be ignored."
+                        )
                 except (KeyError, TypeError) as e:
                     logger.warning(
                         f"Error processing mapping for predicate {pred.id}: {e}. "

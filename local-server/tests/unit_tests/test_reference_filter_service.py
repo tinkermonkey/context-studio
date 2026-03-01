@@ -95,6 +95,34 @@ class TestReferenceFilterService:
         # Should handle gracefully with empty external_predicates list
         assert mappings["pred1"]["external_predicates"] == []
 
+    def test_get_predicate_mappings_with_whitespace_only_mapping(self, filter_service, mock_local_session):
+        """Test handling of whitespace-only mapping"""
+        mock_pred = Mock(spec=Predicate)
+        mock_pred.id = "pred1"
+        mock_pred.is_relevant = True
+        mock_pred.mapping = "   "  # Only whitespace
+
+        mock_local_session.query.return_value.all.return_value = [mock_pred]
+
+        mappings = filter_service._get_all_predicate_mappings_with_relevance()
+
+        # Should handle gracefully - whitespace-only mappings are treated as empty
+        assert mappings["pred1"]["external_predicates"] == []
+
+    def test_get_predicate_mappings_with_empty_string_mapping(self, filter_service, mock_local_session):
+        """Test handling of empty string mapping"""
+        mock_pred = Mock(spec=Predicate)
+        mock_pred.id = "pred1"
+        mock_pred.is_relevant = True
+        mock_pred.mapping = ""  # Empty string
+
+        mock_local_session.query.return_value.all.return_value = [mock_pred]
+
+        mappings = filter_service._get_all_predicate_mappings_with_relevance()
+
+        # Should handle gracefully - empty string mappings are treated as no mapping
+        assert mappings["pred1"]["external_predicates"] == []
+
     def test_build_relevance_sets(self, filter_service):
         """Test building relevance sets from mappings"""
         mock_mappings = {
