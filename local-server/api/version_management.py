@@ -233,11 +233,11 @@ def unstage_entity(
     Removes the entity from the staged list, but keeps working changes.
     """
     try:
-        success = working_tree_manager.unstage_entity(
+        working_tree_manager.unstage_entity(
             stage_request.entity_type.value,
             str(stage_request.entity_id)
         )
-        
+
         return {"success": True, "message": "Entity unstaged successfully"}
         
     except ValueError as e:
