@@ -1056,7 +1056,6 @@ class TestOptimisticLocking:
 
         layer_response = client.post("/api/structure_nodes/", json=layer_data)
         layer = layer_response.json()
-        layer["version"]
 
         # First update without version check
         attributes_v1 = [
