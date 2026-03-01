@@ -82,20 +82,20 @@ export class DatasetService extends BaseService {
   /**
    * Activate a dataset
    */
-  async activate(id: string): Promise<unknown> {
+  async activate(id: string): Promise<void> {
     return this.withErrorContext(() => {
       this.validateRequired(id, "Dataset ID");
-      return this.postResource<unknown>(`${ENDPOINTS.DATASETS}/${id}/activate`);
+      return this.postResource<void>(`${ENDPOINTS.DATASETS}/${id}/activate`);
     }, "activate dataset");
   }
 
   /**
    * Forget a dataset (remove from inventory but keep file)
    */
-  async forget(id: string): Promise<unknown> {
+  async forget(id: string): Promise<void> {
     return this.withErrorContext(() => {
       this.validateRequired(id, "Dataset ID");
-      return this.postResource<unknown>(`${ENDPOINTS.DATASETS}/${id}/forget`);
+      return this.postResource<void>(`${ENDPOINTS.DATASETS}/${id}/forget`);
     }, "forget dataset");
   }
 
@@ -130,13 +130,15 @@ export class DatasetService extends BaseService {
   /**
    * Update the datasets directory path
    */
-  async updateDirectory(data: UpdateDatasetDirectoryRequest): Promise<unknown> {
+  async updateDirectory(
+    data: UpdateDatasetDirectoryRequest,
+  ): Promise<{ success: boolean; message: string }> {
     return this.withErrorContext(() => {
       this.validateRequired(data, "Directory data");
       this.validateRequired(data.datasets_directory, "Datasets directory");
       this.sanitizeString(data.datasets_directory, "Datasets directory", 1000);
 
-      return this.postResource<unknown>(
+      return this.postResource<{ success: boolean; message: string }>(
         `${ENDPOINTS.DATASETS}/directory`,
         data,
       );
