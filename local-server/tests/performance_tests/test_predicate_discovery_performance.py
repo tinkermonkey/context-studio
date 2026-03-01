@@ -348,8 +348,13 @@ class TestPredicateDiscoveryPerformance:
             with PredicateDiscoveryService(config, source_configs, db_path=temp_db) as service:
                 # Test parallel execution
                 start_time = time.time()
-                await service.discover_all_predicates()
+                results = await service.discover_all_predicates()
                 parallel_elapsed = time.time() - start_time
+
+                # Verify results from all sources
+                assert results is not None
+                assert isinstance(results, dict)
+                assert len(results) > 0
 
                 # Should complete in roughly max(delays) time, not sum(delays)
                 # With database init and embedding overhead, should be <20s
@@ -391,25 +396,6 @@ class TestPredicateDiscoveryPerformance:
                 # Should still be fast even with transaction wrapping
                 assert elapsed < 10.0, \
                     f"Discovery with transactions took {elapsed:.2f}s, overhead too high"
-
-    def test_sparql_injection_validation_performance(self, source_configs):
-        """Test that input validation doesn't significantly impact performance."""
-        config = ReferenceConfig()
-
-        with PredicateDiscoveryService(config, source_configs):
-            # Test validation speed with valid limits (1-100000)
-            start_time = time.time()
-            for i in range(1, 1001):
-                # Mock validation (the actual validation is in discover methods)
-                limit = i
-                valid = isinstance(limit, int) and 1 <= limit <= 100000
-                assert valid
-
-            elapsed = time.time() - start_time
-
-            # Validation should be very fast (<10ms for 1000 checks)
-            assert elapsed < 0.01, \
-                f"Input validation too slow: {elapsed:.3f}s for 1000 checks"
 
 
 class TestRateLimitingBehavior:
