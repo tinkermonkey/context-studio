@@ -6,6 +6,7 @@ import {
   fireEvent,
 } from "@/test/utils/renderWithProviders";
 import { CreateChildButton } from "../create_child_button";
+import { NodeType } from "@/api/types/structureNodes";
 
 // Mock the form components
 vi.mock("@/components/forms/domain_form", () => ({
@@ -35,7 +36,7 @@ describe("CreateChildButton", () => {
     id: "layer-1",
     title: "Test Layer",
     definition: "Test definition",
-    node_type: "layer",
+    node_type: NodeType.LAYER,
     created_at: "2023-01-01T00:00:00Z",
     version: 1,
     last_modified: "2023-01-01T00:00:00Z",
@@ -46,7 +47,7 @@ describe("CreateChildButton", () => {
     title: "Test Domain",
     definition: "Test definition",
     parent_node_id: "layer-1",
-    node_type: "domain",
+    node_type: NodeType.DOMAIN,
     created_at: "2023-01-01T00:00:00Z",
     version: 1,
     last_modified: "2023-01-01T00:00:00Z",
