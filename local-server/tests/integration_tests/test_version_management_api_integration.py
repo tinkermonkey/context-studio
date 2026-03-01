@@ -504,10 +504,7 @@ class TestVersionManagementAPI:
             node = create_response.json()
             entities.append({"entity_type": "structure_node", "entity_id": node["id"]})
 
-        # Batch stage all entities
-
-        # Note: This endpoint may not exist yet, but testing the pattern
-        # If it doesn't exist, we can stage them individually
+        # Stage all entities individually
         for entity in entities:
             stage_response = client.post(
                 "/api/versions/working-tree/stage", json=entity
