@@ -72,9 +72,6 @@ async def create_test_paragraph(
             notes=request.notes
         )
 
-        # Get annotations (will be empty for new paragraph)
-        annotations = test_service.get_annotations_for_paragraph(paragraph.id)
-
         logger.info(f"Successfully created test paragraph: {paragraph.id}")
         return TestParagraphResponse(
             id=paragraph.id,
