@@ -559,26 +559,6 @@ class TestAttributeIntegration:
         parent_id = uuid4()
         child_id = uuid4()
 
-        # Parent has attributes
-        [
-            ResolvedAttribute(
-                key="category",
-                title="Category",
-                value_type=AttributeValueType.STRING,
-                value="parent_category",
-                inherited=False,
-                source_node_id=parent_id,
-            ),
-            ResolvedAttribute(
-                key="priority",
-                title="Priority",
-                value_type=AttributeValueType.NUMBER,
-                value=1,
-                inherited=False,
-                source_node_id=parent_id,
-            ),
-        ]
-
         # Child overrides one, inherits another
         child_attrs = [
             ResolvedAttribute(
