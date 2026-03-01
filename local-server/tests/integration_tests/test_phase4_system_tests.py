@@ -30,11 +30,6 @@ def test_database_with_schema_org():
     config = ReferenceConfig()
     manager = ReferenceManager(config, db_path=db_path)
 
-    # Load schema.org sample data
-    os.path.join(
-        os.path.dirname(__file__), '..', 'fixtures', 'schema_org_sample.jsonld'
-    )
-
     # Create embeddings helper
     def create_embedding(text: str, base_value: float = 0.5) -> bytes:
         """Create deterministic embedding based on text."""
@@ -52,8 +47,10 @@ def test_database_with_schema_org():
         external_id="Person",
         attributes='{"@type": "entity"}',
         title_embedding=create_embedding("Person", 0.8),
-        definition_embedding=create_embedding("A person (alive, dead, undead, or fictional).", 0.8),
-        embedding_dims=384
+        definition_embedding=create_embedding(
+            "A person (alive, dead, undead, or fictional).", 0.8
+        ),
+        embedding_dims=384,
     )
 
     # Add Thing entity (parent)
@@ -65,7 +62,7 @@ def test_database_with_schema_org():
         attributes='{"@type": "entity"}',
         title_embedding=create_embedding("Thing", 0.3),
         definition_embedding=create_embedding("The most generic type of item.", 0.3),
-        embedding_dims=384
+        embedding_dims=384,
     )
 
     # Add Book entity
@@ -77,7 +74,7 @@ def test_database_with_schema_org():
         attributes='{"@type": "entity"}',
         title_embedding=create_embedding("Book", 0.75),
         definition_embedding=create_embedding("A book.", 0.75),
-        embedding_dims=384
+        embedding_dims=384,
     )
 
     # Add author property
@@ -88,8 +85,10 @@ def test_database_with_schema_org():
         external_id="author",
         attributes='{"@type": "property"}',
         title_embedding=create_embedding("author", 0.7),
-        definition_embedding=create_embedding("The author of this content or rating.", 0.7),
-        embedding_dims=384
+        definition_embedding=create_embedding(
+            "The author of this content or rating.", 0.7
+        ),
+        embedding_dims=384,
     )
 
     # Add name property
@@ -101,7 +100,7 @@ def test_database_with_schema_org():
         attributes='{"@type": "property"}',
         title_embedding=create_embedding("name", 0.6),
         definition_embedding=create_embedding("The name of the item.", 0.6),
-        embedding_dims=384
+        embedding_dims=384,
     )
 
     # Add givenName property
@@ -112,8 +111,10 @@ def test_database_with_schema_org():
         external_id="givenName",
         attributes='{"@type": "property"}',
         title_embedding=create_embedding("givenName", 0.65),
-        definition_embedding=create_embedding("Given name. In the U.S., the first name of a Person.", 0.65),
-        embedding_dims=384
+        definition_embedding=create_embedding(
+            "Given name. In the U.S., the first name of a Person.", 0.65
+        ),
+        embedding_dims=384,
     )
 
     # Rollback any pending transactions before adding links
@@ -127,7 +128,7 @@ def test_database_with_schema_org():
         predicate="subClassOf",
         object_node=thing_node.id,
         created_at=date.today().isoformat(),
-        updated_at=date.today().isoformat()
+        updated_at=date.today().isoformat(),
     )
 
     # Add subClassOf link: Book -> Thing (indirectly)
@@ -137,7 +138,7 @@ def test_database_with_schema_org():
         predicate="subClassOf",
         object_node=thing_node.id,
         created_at=date.today().isoformat(),
-        updated_at=date.today().isoformat()
+        updated_at=date.today().isoformat(),
     )
 
     # Add domainIncludes link: author -> Book
@@ -147,7 +148,7 @@ def test_database_with_schema_org():
         predicate="domainIncludes",
         object_node=book_node.id,
         created_at=date.today().isoformat(),
-        updated_at=date.today().isoformat()
+        updated_at=date.today().isoformat(),
     )
 
     # Add rangeIncludes link: author -> Person
@@ -157,7 +158,7 @@ def test_database_with_schema_org():
         predicate="rangeIncludes",
         object_node=person_node.id,
         created_at=date.today().isoformat(),
-        updated_at=date.today().isoformat()
+        updated_at=date.today().isoformat(),
     )
 
     # Add domainIncludes link: name -> Person
@@ -167,7 +168,7 @@ def test_database_with_schema_org():
         predicate="domainIncludes",
         object_node=person_node.id,
         created_at=date.today().isoformat(),
-        updated_at=date.today().isoformat()
+        updated_at=date.today().isoformat(),
     )
 
     # Add domainIncludes link: givenName -> Person
@@ -177,17 +178,19 @@ def test_database_with_schema_org():
         predicate="domainIncludes",
         object_node=person_node.id,
         created_at=date.today().isoformat(),
-        updated_at=date.today().isoformat()
+        updated_at=date.today().isoformat(),
     )
 
-    manager.session.add_all([
-        person_subclass_link,
-        book_subclass_link,
-        author_domain_book_link,
-        author_range_person_link,
-        name_domain_person_link,
-        given_name_domain_person_link
-    ])
+    manager.session.add_all(
+        [
+            person_subclass_link,
+            book_subclass_link,
+            author_domain_book_link,
+            author_range_person_link,
+            name_domain_person_link,
+            given_name_domain_person_link,
+        ]
+    )
     manager.session.commit()
 
     # Extract node data BEFORE closing the session
@@ -197,7 +200,7 @@ def test_database_with_schema_org():
         "book": {"id": book_node.id, "title": book_node.title},
         "author": {"id": author_prop.id, "title": author_prop.title},
         "name": {"id": name_prop.id, "title": name_prop.title},
-        "givenName": {"id": given_name_prop.id, "title": given_name_prop.title}
+        "givenName": {"id": given_name_prop.id, "title": given_name_prop.title},
     }
 
     manager.close()
@@ -227,9 +230,13 @@ def app_client(test_database_with_schema_org):
         finally:
             manager.close()
 
-    with patch('reference_db.dependencies.reference_manager_context', side_effect=test_reference_manager_context):
+    with patch(
+        "reference_db.dependencies.reference_manager_context",
+        side_effect=test_reference_manager_context,
+    ):
         # Import after patching
         from app import app
+
         client = TestClient(app)
         yield client
 
@@ -243,7 +250,9 @@ class TestTC_S001_EndToEndWorkflow:
     Expected: Retrieved links include name, givenName via domainIncludes
     """
 
-    def test_e2e_workflow_person_who_writes_books(self, app_client, test_database_with_schema_org):
+    def test_e2e_workflow_person_who_writes_books(
+        self, app_client, test_database_with_schema_org
+    ):
         """
         Test complete workflow from search to link retrieval.
 
@@ -263,14 +272,17 @@ class TestTC_S001_EndToEndWorkflow:
             return vec.tobytes()
 
         # Step 1: Search for "person who writes books"
-        with patch('embeddings.generate_embeddings.generate_embedding', side_effect=mock_embedding):
+        with patch(
+            "embeddings.generate_embeddings.generate_embedding",
+            side_effect=mock_embedding,
+        ):
             response = app_client.get(
                 "/api/reference/ref-db/search",
                 params={
                     "query": "person who writes books",
                     "limit": 10,
-                    "threshold": 0.7
-                }
+                    "threshold": 0.7,
+                },
             )
 
         assert response.status_code == 200, f"Search failed: {response.text}"
@@ -282,21 +294,26 @@ class TestTC_S001_EndToEndWorkflow:
         assert len(person_results) > 0, "Person entity not found in results"
 
         person_result = person_results[0]
-        assert person_result["similarity_score"] >= 0.7, f"Similarity too low: {person_result['similarity_score']}"
+        assert (
+            person_result["similarity_score"] >= 0.7
+        ), f"Similarity too low: {person_result['similarity_score']}"
         person_id = person_result["id"]
 
         # Step 3: Retrieve links for Person
         links_response = app_client.get(
             f"/api/reference/ref-db/nodes/{person_id}/links",
-            params={"direction": "inbound"}
+            params={"direction": "inbound"},
         )
 
-        assert links_response.status_code == 200, f"Link retrieval failed: {links_response.text}"
+        assert (
+            links_response.status_code == 200
+        ), f"Link retrieval failed: {links_response.text}"
         links_data = links_response.json()
 
         # Step 4: Verify expected properties via domainIncludes
         domain_includes_links = [
-            link for link in links_data["links"]
+            link
+            for link in links_data["links"]
             if link["predicate"] == "domainIncludes"
         ]
 
@@ -313,7 +330,9 @@ class TestTC_S001_EndToEndWorkflow:
                 property_titles.append(prop_response.json()["title"])
 
         assert "name" in property_titles, "name property not found via domainIncludes"
-        assert "givenName" in property_titles, "givenName property not found via domainIncludes"
+        assert (
+            "givenName" in property_titles
+        ), "givenName property not found via domainIncludes"
 
 
 class TestTC_S002_HealthCheck:
@@ -347,10 +366,15 @@ class TestTC_S002_HealthCheck:
         assert "execution_time_ms" in data, "Missing 'execution_time_ms' field"
 
         # Validate status values
-        assert data["status"] in ["healthy", "degraded", "missing"], \
-            f"Invalid status: {data['status']}"
+        assert data["status"] in [
+            "healthy",
+            "degraded",
+            "missing",
+        ], f"Invalid status: {data['status']}"
 
-    def test_health_check_healthy_status(self, app_client, test_database_with_schema_org):
+    def test_health_check_healthy_status(
+        self, app_client, test_database_with_schema_org
+    ):
         """Verify health check reports 'healthy' when conditions are met."""
         response = app_client.get("/api/reference/ref-db/health")
 
@@ -359,8 +383,9 @@ class TestTC_S002_HealthCheck:
 
         # All test nodes have embeddings, so should be healthy
         if data["node_count"] == data["vec_count"] and data["node_count"] > 0:
-            assert data["status"] == "healthy", \
-                f"Expected 'healthy' status, got '{data['status']}'"
+            assert (
+                data["status"] == "healthy"
+            ), f"Expected 'healthy' status, got '{data['status']}'"
 
     def test_health_check_performance(self, app_client):
         """Verify health check executes in <200ms."""
@@ -369,9 +394,10 @@ class TestTC_S002_HealthCheck:
         assert response.status_code == 200
         data = response.json()
 
-        execution_time = data.get("execution_time_ms", float('inf'))
-        assert execution_time < 200, \
-            f"Health check took {execution_time}ms, expected <200ms"
+        execution_time = data.get("execution_time_ms", float("inf"))
+        assert (
+            execution_time < 200
+        ), f"Health check took {execution_time}ms, expected <200ms"
 
     def test_health_check_missing_database(self):
         """Verify health check reports 'missing' when database doesn't exist."""
@@ -385,8 +411,9 @@ class TestTC_S002_HealthCheck:
             # This is more direct than trying to patch the API
             status = ReferenceManager(config, db_path=non_existent_db).get_status()
 
-            assert status["status"] == "missing", \
-                f"Expected 'missing' status, got '{status['status']}'"
+            assert (
+                status["status"] == "missing"
+            ), f"Expected 'missing' status, got '{status['status']}'"
 
 
 class TestTC_S003_APIContractValidation:
@@ -398,15 +425,18 @@ class TestTC_S003_APIContractValidation:
 
     def test_search_api_response_schema(self, app_client):
         """Verify search API returns expected response schema."""
+
         def mock_embedding(text: str) -> bytes:
             vec = np.full(384, 0.5, dtype=np.float32)
             vec = vec / np.linalg.norm(vec)
             return vec.tobytes()
 
-        with patch('embeddings.generate_embeddings.generate_embedding', side_effect=mock_embedding):
+        with patch(
+            "embeddings.generate_embeddings.generate_embedding",
+            side_effect=mock_embedding,
+        ):
             response = app_client.get(
-                "/api/reference/ref-db/search",
-                params={"query": "test", "limit": 10}
+                "/api/reference/ref-db/search", params={"query": "test", "limit": 10}
             )
 
         assert response.status_code == 200
@@ -456,7 +486,7 @@ class TestTC_S003_APIContractValidation:
 
         response = app_client.get(
             f"/api/reference/ref-db/nodes/{person_id}/links",
-            params={"direction": "both"}
+            params={"direction": "both"},
         )
 
         assert response.status_code == 200
