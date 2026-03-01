@@ -49,13 +49,7 @@ const TestWrapper: React.FC<{ children: React.ReactNode }> = ({ children }) => {
       },
       mutations: {
         retry: false,
-        retryOnMount: false,
       },
-    },
-    logger: {
-      log: () => {},
-      warn: () => {},
-      error: () => {},
     },
   });
 
@@ -278,10 +272,7 @@ describe("LLM Traceability Integration", () => {
         };
 
         return (
-          <button
-            onClick={handleClick}
-            data-testid="suggestion-button"
-          >
+          <button onClick={handleClick} data-testid="suggestion-button">
             Accept Suggestion
           </button>
         );
@@ -497,9 +488,8 @@ describe("LLM Traceability Integration", () => {
 
       const TestComponent = () => {
         const { data, isLoading, error } = useExecutionAnalytics(null, {
-          retry: false,
-          retryDelay: 0,
-        });
+          retry: 0,
+        } as never);
 
         if (isLoading) return <div>Loading...</div>;
         if (error) return <div data-testid="error">Analytics unavailable</div>;
@@ -532,9 +522,8 @@ describe("LLM Traceability Integration", () => {
 
       const TestComponent = () => {
         const { data, isLoading, error } = useLLMTraceabilityHealth({
-          retry: false,
-          retryDelay: 0,
-        });
+          retry: 0,
+        } as never);
 
         if (isLoading) return <div>Checking health...</div>;
         if (error)
