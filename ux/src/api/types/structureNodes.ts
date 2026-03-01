@@ -78,7 +78,7 @@ export interface ChangeEvent {
   record_id?: string; // Replaces node_id
   old_data?: any;
   new_data?: any;
-  timestamp: string;
+  event_timestamp: string;
   processed: boolean;
 }
 
