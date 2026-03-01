@@ -1,5 +1,0 @@
-test-stakeholder:
-  id: motivation.stakeholder.test-stakeholder
-  name: Test Stakeholder
-  type: stakeholder
-  documentation: Test
