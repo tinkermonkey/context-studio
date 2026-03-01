@@ -41,7 +41,6 @@ global.fetch = vi.fn() as any;
 describe("WordSenseSelector", () => {
   let queryClient: QueryClient;
   let mockMutate: ReturnType<typeof vi.fn>;
-  let mockUpdateWordSenses: ReturnType<typeof vi.fn>;
 
   beforeEach(() => {
     queryClient = new QueryClient({
@@ -52,12 +51,11 @@ describe("WordSenseSelector", () => {
     });
 
     mockMutate = vi.fn();
-    mockUpdateWordSenses = vi.fn(() => ({
+
+    vi.spyOn(useWordSensesModule, "useUpdateWordSenses").mockReturnValue({
       mutate: mockMutate,
       isPending: false,
-    }));
-
-    vi.spyOn(useWordSensesModule, "useUpdateWordSenses").mockImplementation(mockUpdateWordSenses as any);
+    } as any);
 
     (global.fetch as any).mockClear();
   });
@@ -80,7 +78,7 @@ describe("WordSenseSelector", () => {
           nodeId={props.nodeId || "test-node-123"}
           onSaveComplete={props.onSaveComplete}
         />
-      </QueryClientProvider>
+      </QueryClientProvider>,
     );
   };
 
@@ -107,7 +105,9 @@ describe("WordSenseSelector", () => {
     });
 
     it("renders words in responsive grid layout", () => {
-      const { container } = renderComponent({ title: "machine learning algorithm" });
+      const { container } = renderComponent({
+        title: "machine learning algorithm",
+      });
 
       const gridContainer = container.querySelector(".grid");
       expect(gridContainer).toHaveClass("grid-cols-1");
@@ -211,12 +211,16 @@ describe("WordSenseSelector", () => {
       // Click again to collapse
       fireEvent.click(wordButton);
       await waitFor(() => {
-        expect(screen.queryByTestId("nlp-concept-chart")).not.toBeInTheDocument();
+        expect(
+          screen.queryByTestId("nlp-concept-chart"),
+        ).not.toBeInTheDocument();
       });
     });
 
     it("handles analysis errors gracefully", async () => {
-      (global.fetch as jest.Mock).mockRejectedValueOnce(new Error("Network error"));
+      (global.fetch as jest.Mock).mockRejectedValueOnce(
+        new Error("Network error"),
+      );
 
       renderComponent({ title: "machine" });
 
@@ -467,7 +471,9 @@ describe("WordSenseSelector", () => {
     it("does not call mutation when mutation is undefined", async () => {
       // Create a new mock that returns undefined
       const undefinedMock = vi.fn(() => undefined);
-      vi.spyOn(useWordSensesModule, "useUpdateWordSenses").mockImplementation(undefinedMock as any);
+      vi.spyOn(useWordSensesModule, "useUpdateWordSenses").mockImplementation(
+        undefinedMock as any,
+      );
 
       (global.fetch as any).mockResolvedValueOnce({
         ok: true,
