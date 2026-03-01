@@ -63,7 +63,10 @@ const columns = [
     header: () => "Definition",
   }),
   columnHelper.accessor("parent_node_id", {
-    cell: (info) => (info.getValue() ? renderShortUuid(info.getValue()) : ""),
+    cell: (info) => {
+      const value = info.getValue() ?? "";
+      return value ? renderShortUuid(value) : "";
+    },
     header: () => "Layer",
   }),
   columnHelper.accessor("structural_predicate_id", {
