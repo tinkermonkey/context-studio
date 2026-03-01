@@ -15,9 +15,6 @@ import { Link } from "@tanstack/react-router";
 function EntityItem({ entity }: { entity: any }) {
   const { data: node, isLoading } = useStructureNode(
     entity.metadata?.matched_kg_node,
-    {
-      enabled: !!entity.metadata?.matched_kg_node,
-    }
   );
 
   const linkProps = useMemo(() => {
@@ -96,9 +93,6 @@ export default function RAGTestPage() {
   // Fetch trace data when request ID is set and trace is available
   const { data: traceData, isLoading: isLoadingTrace, error: traceError } = useRAGTrace(
     requestId,
-    {
-      enabled: !!requestId && result?.trace_available === true,
-    }
   );
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -132,7 +126,7 @@ export default function RAGTestPage() {
         <form onSubmit={handleSubmit}>
           <div className="mb-4">
             <div className="mb-2 flex items-center justify-between">
-              <Label htmlFor="input-text" value="Input Text" />
+              <Label htmlFor="input-text">Input Text</Label>
               <div className="flex items-center gap-4">
                 <div className="flex items-center gap-2">
                   <Checkbox
@@ -362,15 +356,15 @@ export default function RAGTestPage() {
             </Alert>
           )}
 
-          {traceData && (
+          {traceData ? (
             <div>
               <pre className="overflow-auto rounded-lg bg-gray-50 p-4 text-xs dark:bg-gray-900">
                 <code className="text-gray-900 dark:text-white">
-                  {JSON.stringify(traceData, null, 2)}
+                  {JSON.stringify(traceData as any, null, 2)}
                 </code>
               </pre>
             </div>
-          )}
+          ) : null}
         </Card>
       )}
     </div>
