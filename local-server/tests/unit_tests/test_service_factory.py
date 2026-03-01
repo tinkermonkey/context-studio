@@ -95,7 +95,7 @@ class TestServiceFactory:
         factory = ServiceFactory(cache_ttl_seconds=0.1, cleanup_interval=1)
 
         # Create service - NodeService creates dependencies (version_manager, working_tree_manager)
-        service1 = factory.create_node_service(mock_db_session)
+        factory.create_node_service(mock_db_session)
         stats = factory.get_cache_stats()
         # NodeService creation triggers: version_manager, working_tree_manager, node_service
         assert len(stats["cache_entries"]) == 3
@@ -104,7 +104,7 @@ class TestServiceFactory:
         time.sleep(0.2)
 
         # Next creation should miss cache due to expiration
-        service2 = factory.create_node_service(mock_db_session)
+        factory.create_node_service(mock_db_session)
         stats = factory.get_cache_stats()
         node_metrics = stats["service_metrics"]["node_service"]
         assert node_metrics["cache_misses"] == 2  # Both were misses due to expiration
@@ -242,7 +242,7 @@ class TestServiceFactory:
     ):
         """Test error handling when service creation fails."""
         # Mock the NodeService constructor to raise an exception during instantiation
-        original_node_service = service_factory._create_service.__globals__['NodeService']
+        service_factory._create_service.__globals__['NodeService']
 
         class FailingNodeService:
             def __init__(self, *args, **kwargs):
@@ -304,10 +304,10 @@ class TestServiceFactory:
         start_time = time.time()
 
         # First call (cache miss)
-        service1 = service_factory.create_node_service(mock_db_session)
+        service_factory.create_node_service(mock_db_session)
 
         # Second call (cache hit)
-        service2 = service_factory.create_node_service(mock_db_session)
+        service_factory.create_node_service(mock_db_session)
 
         end_time = time.time()
         total_time_ms = (end_time - start_time) * 1000

@@ -238,10 +238,9 @@ class TestRAGCleanupScheduler:
     @pytest.mark.asyncio
     async def test_stop_timeout_handling(self, mock_db_session):
         """Test stop handles timeout when task doesn't complete."""
-        with patch('rag.cleanup_scheduler.RAGObservabilityStore') as MockStore, \
-             patch('rag.cleanup_scheduler.logger') as mock_logger:
+        with patch('rag.cleanup_scheduler.RAGObservabilityStore'), \
+             patch('rag.cleanup_scheduler.logger'):
 
-            mock_store = MockStore.return_value
 
             # Make cleanup_old_data take a long time
             async def slow_cleanup():

@@ -313,7 +313,7 @@ class TestVectorSearchPerformance:
         for query in test_queries:
             start_time = time.perf_counter()
 
-            results = manager.search_by_similarity(
+            manager.search_by_similarity(
                 query_text=query,
                 limit=20,
                 threshold=0.0,

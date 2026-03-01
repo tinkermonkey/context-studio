@@ -560,7 +560,7 @@ class TestAttributeIntegration:
         child_id = uuid4()
 
         # Parent has attributes
-        parent_attrs = [
+        [
             ResolvedAttribute(
                 key="category",
                 title="Category",

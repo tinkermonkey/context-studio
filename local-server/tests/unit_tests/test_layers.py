@@ -131,7 +131,7 @@ def test_update_layer_to_duplicate_title(shared_client):
     resp2 = shared_client.post(
         "/api/structure_nodes/", json={"node_type": "layer", "title": "Layer B"}
     )
-    id_a = resp1.json()["id"]
+    resp1.json()["id"]
     id_b = resp2.json()["id"]
     resp = shared_client.put(f"/api/structure_nodes/{id_b}", json={"title": "Layer A"})
     assert resp.status_code == 409

@@ -111,8 +111,8 @@ def test_validate_all_reference_links_success(shared_client):
     """Test bulk validation across all nodes."""
     # Create some test nodes
     layer_id = create_layer(shared_client)
-    domain_id_1 = create_domain(shared_client, layer_id)
-    domain_id_2 = create_domain(shared_client, layer_id)
+    create_domain(shared_client, layer_id)
+    create_domain(shared_client, layer_id)
 
     # Run bulk validation
     resp = shared_client.post("/api/structure_nodes/reference_links/validate")

@@ -448,7 +448,7 @@ class TestReferenceManagerCore:
             # For this test, we'll just verify the backup logic by checking
             # that a backup was created
             backup_pattern = f"{db_path}.backup."
-            backup_files = [f for f in os.listdir(os.path.dirname(db_path))
+            [f for f in os.listdir(os.path.dirname(db_path))
                           if f.startswith(os.path.basename(backup_pattern))]
 
             # Note: In actual usage, backup is only created during rebuild

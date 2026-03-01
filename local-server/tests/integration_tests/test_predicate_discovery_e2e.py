@@ -173,7 +173,7 @@ class TestPredicateDiscoveryE2E:
             mock_task.side_effect = mock_discovery
 
             # Start discovery for all sources
-            start_time = time.time()
+            time.time()
             response = client.post("/api/predicates/discover")
             assert response.status_code == 200
             task_id = response.json()["task_id"]

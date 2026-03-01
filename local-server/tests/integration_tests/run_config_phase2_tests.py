@@ -222,7 +222,7 @@ def test_invalid_path_handling():
     """Test handling of invalid paths during directory creation."""
     print("Test: test_invalid_path_handling")
     try:
-        manager = PipelineDatabaseManager(pipeline_db_path="")
+        PipelineDatabaseManager(pipeline_db_path="")
         print("  ✗ FAILED: Should have raised exception")
         return False
     except ValueError:

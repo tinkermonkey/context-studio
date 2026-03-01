@@ -188,7 +188,7 @@ class TestSemanticDiscoveryWorkflow:
         This simulates a user discovering and navigating the knowledge graph.
         """
         db_path, data = e2e_test_database
-        person_id = data["node_ids"]["person"]
+        data["node_ids"]["person"]
         create_embedding = data["create_embedding"]
 
         # Create a custom context manager that uses our test database
@@ -263,7 +263,7 @@ class TestSemanticDiscoveryWorkflow:
         person_id = data["node_ids"]["person"]
         org_id = data["node_ids"]["organization"]
         place_id = data["node_ids"]["place"]
-        create_embedding = data["create_embedding"]
+        data["create_embedding"]
 
         # Create a custom context manager that uses our test database
         from contextlib import contextmanager

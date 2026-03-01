@@ -314,7 +314,7 @@ class TestConfigDatabaseIntegration:
         # Test server defaults
         assert settings.server.host == "127.0.0.1"
         assert settings.server.port == 8000
-        assert settings.server.reload == True
+        assert settings.server.reload
 
         # Test LLM defaults
         assert settings.llm.model_name == "gpt-4o-mini"
@@ -326,7 +326,7 @@ class TestConfigDatabaseIntegration:
         assert settings.nlp.max_text_length == 512
 
         # Test proxy defaults
-        assert settings.proxy_server.enabled == True
+        assert settings.proxy_server.enabled
         assert settings.proxy_server.port == 18080
 
     def test_update_llm_provider_settings(self):
@@ -374,7 +374,7 @@ class TestConfigDatabaseIntegration:
             settings = Settings(**valid_config)
             assert settings.nlp.model_name == 'en_core_web_sm'
             assert settings.nlp.max_text_length == 1000
-            assert settings.nlp.auto_download_models == True
+            assert settings.nlp.auto_download_models
 
             # Test configuration manager validation
             config_manager = ConfigurationManager(config_file)
@@ -395,25 +395,24 @@ class TestConfigDatabaseIntegration:
             config_manager = ConfigurationManager(config_file)
 
             # Test proxy server toggle
-            original_proxy_state = config_manager.settings.proxy_server.enabled
             assert config_manager.set('proxy_server.enabled', False)
-            assert config_manager.settings.proxy_server.enabled == False
+            assert not config_manager.settings.proxy_server.enabled
 
             # Toggle back
             assert config_manager.set('proxy_server.enabled', True)
-            assert config_manager.settings.proxy_server.enabled == True
+            assert config_manager.settings.proxy_server.enabled
 
             # Test reference source toggles
             assert config_manager.set('reference_sources.dbpedia_sparql.enabled', False)
-            assert config_manager.settings.reference_sources.dbpedia_sparql.enabled == False
+            assert not config_manager.settings.reference_sources.dbpedia_sparql.enabled
 
             assert config_manager.set('reference_sources.conceptnet.enabled', False)
-            assert config_manager.settings.reference_sources.conceptnet.enabled == False
+            assert not config_manager.settings.reference_sources.conceptnet.enabled
 
             # Verify changes persist
             config_manager2 = ConfigurationManager(config_file)
-            assert config_manager2.settings.reference_sources.dbpedia_sparql.enabled == False
-            assert config_manager2.settings.reference_sources.conceptnet.enabled == False
+            assert not config_manager2.settings.reference_sources.dbpedia_sparql.enabled
+            assert not config_manager2.settings.reference_sources.conceptnet.enabled
 
             # Verify get_enabled_sources reflects changes
             enabled_sources = config_manager2.settings.get_enabled_sources()

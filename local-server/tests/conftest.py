@@ -18,8 +18,6 @@ from sqlalchemy import text
 from app import create_app
 from config import (
     notify_configuration_change,
-    get_config_manager,
-    ConfigurationManager,
     Settings,
 )
 from database.migrations.migration_manager import MigrationManager
@@ -30,7 +28,6 @@ from database.utils import (
     get_database_manager,
     cleanup_database_resources,
     set_current_engine_for_testing,
-    get_dataset_manager,
 )
 from dataset.manager import DatasetManager
 from pydantic import ValidationError

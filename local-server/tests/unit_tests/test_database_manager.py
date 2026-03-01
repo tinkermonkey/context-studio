@@ -546,7 +546,7 @@ class TestGlobalDatabaseManager:
 
         # Should have our test engine
         assert "cleanup_global_test" in manager._engines
-        original_engine_count = len(manager._engines)
+        len(manager._engines)
 
         # Perform cleanup
         cleanup_database_resources()

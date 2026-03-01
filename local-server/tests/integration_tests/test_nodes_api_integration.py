@@ -898,7 +898,7 @@ class TestMoveWithTypeConversionAPI:
             "parent_node_id": domain["id"],
         }).json()
 
-        term2 = client.post("/api/structure_nodes/", json={
+        client.post("/api/structure_nodes/", json={
             "node_type": "term",
             "title": f"Term2 {uuid4()}",
             "parent_node_id": term1["id"],
@@ -965,7 +965,7 @@ class TestMoveWithTypeConversionAPI:
         }).json()
 
         # Create domain under layer2 with SAME title
-        domain2 = client.post("/api/structure_nodes/", json={
+        client.post("/api/structure_nodes/", json={
             "node_type": "domain",
             "title": conflicting_title,
             "parent_node_id": layer2["id"],
@@ -1008,7 +1008,7 @@ class TestMoveWithTypeConversionAPI:
             "title": f"Layer2 {uuid4()}",
         }).json()
 
-        domain2 = client.post("/api/structure_nodes/", json={
+        client.post("/api/structure_nodes/", json={
             "node_type": "domain",
             "title": f"OtherDomain {uuid4()}",
             "parent_node_id": layer2["id"],
@@ -1016,7 +1016,7 @@ class TestMoveWithTypeConversionAPI:
 
         # Move domain1 to layer2 (no conflict initially)
         # Then create a conflict and try rename mode
-        domain3 = client.post("/api/structure_nodes/", json={
+        client.post("/api/structure_nodes/", json={
             "node_type": "domain",
             "title": conflicting_title,
             "parent_node_id": layer2["id"],

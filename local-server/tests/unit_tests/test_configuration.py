@@ -189,7 +189,6 @@ def test_integration_with_existing_config(test_settings):
 
     # Test that new config doesn't break existing functionality
     try:
-        reference_sources = settings.reference_sources
         # Verify the new dbpedia split configuration
         assert hasattr(settings.reference_sources, 'dbpedia_lookup')
         assert hasattr(settings.reference_sources, 'dbpedia_sparql')

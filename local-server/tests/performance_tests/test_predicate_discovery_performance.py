@@ -348,7 +348,7 @@ class TestPredicateDiscoveryPerformance:
             with PredicateDiscoveryService(config, source_configs, db_path=temp_db) as service:
                 # Test parallel execution
                 start_time = time.time()
-                results = await service.discover_all_predicates()
+                await service.discover_all_predicates()
                 parallel_elapsed = time.time() - start_time
 
                 # Should complete in roughly max(delays) time, not sum(delays)
@@ -396,7 +396,7 @@ class TestPredicateDiscoveryPerformance:
         """Test that input validation doesn't significantly impact performance."""
         config = ReferenceConfig()
 
-        with PredicateDiscoveryService(config, source_configs) as service:
+        with PredicateDiscoveryService(config, source_configs):
             # Test validation speed with valid limits (1-100000)
             start_time = time.time()
             for i in range(1, 1001):

@@ -505,7 +505,6 @@ class TestVersionManagementAPI:
             entities.append({"entity_type": "structure_node", "entity_id": node["id"]})
 
         # Batch stage all entities
-        batch_data = {"entities": entities, "operation": "stage"}
 
         # Note: This endpoint may not exist yet, but testing the pattern
         # If it doesn't exist, we can stage them individually

@@ -131,7 +131,6 @@ class TestPredicateCRUDOperations:
         db_session.add(predicate)
         db_session.commit()
 
-        original_modified = predicate.date_modified
 
         # Update predicate
         predicate.title = "Updated Title"

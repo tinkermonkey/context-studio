@@ -79,14 +79,14 @@ class TestPredicateMappingE2E:
 
         with ReferenceManager(config, db_path=temp_ref_db) as ref_manager:
             # Create external predicates
-            pred1 = ref_manager.add_external_predicate(
+            ref_manager.add_external_predicate(
                 title="subClassOf",
                 definition="Class hierarchy relationship",
                 source="schema.org",
                 external_id="subClassOf"
             )
 
-            pred2 = ref_manager.add_external_predicate(
+            ref_manager.add_external_predicate(
                 title="property",
                 definition="Property relationship",
                 source="schema.org",
@@ -109,13 +109,13 @@ class TestPredicateMappingE2E:
             )
 
             # Create reference links
-            link1 = ref_manager.add_reference_link(
+            ref_manager.add_reference_link(
                 subject_node=node1.id,
                 predicate="subClassOf",
                 object_node=node2.id
             )
 
-            link2 = ref_manager.add_reference_link(
+            ref_manager.add_reference_link(
                 subject_node=node1.id,
                 predicate="property",
                 object_node=node2.id
@@ -183,9 +183,9 @@ class TestPredicateMappingE2E:
                 title="Thing", definition="Generic type", source="schema.org", external_id="Thing"
             )
 
-            link1 = ref_manager.add_reference_link(node1.id, "subClassOf", node2.id)
-            link2 = ref_manager.add_reference_link(node1.id, "property", node2.id)
-            link3 = ref_manager.add_reference_link(node1.id, "relatedTo", node2.id)
+            ref_manager.add_reference_link(node1.id, "subClassOf", node2.id)
+            ref_manager.add_reference_link(node1.id, "property", node2.id)
+            ref_manager.add_reference_link(node1.id, "relatedTo", node2.id)
 
             # Create local predicate and mark as relevant
             local_session = SessionLocal()
@@ -256,8 +256,8 @@ class TestPredicateMappingE2E:
                 title="Thing", definition="Generic", source="schema.org", external_id="Thing"
             )
 
-            link1 = ref_manager.add_reference_link(node1.id, "subClassOf", node2.id)
-            link2 = ref_manager.add_reference_link(node1.id, "deprecated", node2.id)
+            ref_manager.add_reference_link(node1.id, "subClassOf", node2.id)
+            ref_manager.add_reference_link(node1.id, "deprecated", node2.id)
 
             # Mark deprecated as irrelevant
             local_session = SessionLocal()
@@ -315,7 +315,7 @@ class TestPredicateMappingE2E:
                 title="Node2", definition="Test node", source="test", external_id="n2"
             )
 
-            link = ref_manager.add_reference_link(node1.id, "test1", node2.id)
+            ref_manager.add_reference_link(node1.id, "test1", node2.id)
 
             # Create predicate with null relevance
             local_session = SessionLocal()
@@ -378,9 +378,9 @@ class TestPredicateMappingE2E:
                 title="Thing", definition="Generic", source="schema.org", external_id="Thing"
             )
 
-            link1 = ref_manager.add_reference_link(node1.id, "subClassOf", node2.id)
-            link2 = ref_manager.add_reference_link(node1.id, "P279", node2.id)
-            link3 = ref_manager.add_reference_link(node1.id, "property", node2.id)
+            ref_manager.add_reference_link(node1.id, "subClassOf", node2.id)
+            ref_manager.add_reference_link(node1.id, "P279", node2.id)
+            ref_manager.add_reference_link(node1.id, "property", node2.id)
 
             # Mark both hierarchy predicates as relevant
             local_session = SessionLocal()

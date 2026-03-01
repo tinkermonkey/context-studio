@@ -111,14 +111,14 @@ class TestDiffGenerator:
         version_manager, working_tree_manager, diff_generator = managers
 
         # Create two versions
-        version1 = version_manager.create_version(
+        version_manager.create_version(
             entity_type="structure_node",
             entity_id="test-123",
             content=sample_content_v1,
             author_id="test-user",
         )
 
-        version2 = version_manager.create_version(
+        version_manager.create_version(
             entity_type="structure_node",
             entity_id="test-123",
             content=sample_content_v2,
@@ -142,7 +142,7 @@ class TestDiffGenerator:
         version_manager, working_tree_manager, diff_generator = managers
 
         # Create one version
-        version1 = version_manager.create_version(
+        version_manager.create_version(
             entity_type="structure_node",
             entity_id="test-123",
             content=sample_content_v1,
@@ -166,7 +166,7 @@ class TestDiffGenerator:
         version_manager, working_tree_manager, diff_generator = managers
 
         # Create one version
-        version1 = version_manager.create_version(
+        version_manager.create_version(
             entity_type="structure_node",
             entity_id="test-123",
             content=sample_content_v1,
@@ -366,14 +366,14 @@ class TestDiffGenerator:
         version_manager, working_tree_manager, diff_generator = managers
 
         # Create versions and diff
-        version1 = version_manager.create_version(
+        version_manager.create_version(
             entity_type="structure_node",
             entity_id="test-123",
             content=sample_content_v1,
             author_id="test-user",
         )
 
-        version2 = version_manager.create_version(
+        version_manager.create_version(
             entity_type="structure_node",
             entity_id="test-123",
             content=sample_content_v2,
@@ -400,14 +400,14 @@ class TestDiffGenerator:
         version_manager, working_tree_manager, diff_generator = managers
 
         # Create versions and diff
-        version1 = version_manager.create_version(
+        version_manager.create_version(
             entity_type="structure_node",
             entity_id="test-123",
             content=sample_content_v1,
             author_id="test-user",
         )
 
-        version2 = version_manager.create_version(
+        version_manager.create_version(
             entity_type="structure_node",
             entity_id="test-123",
             content=sample_content_v2,
@@ -433,14 +433,14 @@ class TestDiffGenerator:
         version_manager, working_tree_manager, diff_generator = managers
 
         # Create versions and diff
-        version1 = version_manager.create_version(
+        version_manager.create_version(
             entity_type="structure_node",
             entity_id="test-123",
             content=sample_content_v1,
             author_id="test-user",
         )
 
-        version2 = version_manager.create_version(
+        version_manager.create_version(
             entity_type="structure_node",
             entity_id="test-123",
             content=sample_content_v2,
@@ -466,7 +466,7 @@ class TestDiffGenerator:
         version_manager, working_tree_manager, diff_generator = managers
 
         # Create version and diff
-        version1 = version_manager.create_version(
+        version_manager.create_version(
             entity_type="structure_node",
             entity_id="test-123",
             content=sample_content_v1,

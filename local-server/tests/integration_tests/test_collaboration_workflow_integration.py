@@ -145,14 +145,14 @@ def test_complete_collaboration_workflow(
 
     # Step 6: Vote on proposals
     # User 2 and 3 vote to approve proposal 1
-    vote1 = proposal_manager.vote_on_proposal(
+    proposal_manager.vote_on_proposal(
         proposal_id=proposal1.id,
         user_id=user2_id,
         vote="approve",
         comment="Looks good to me!"
     )
     
-    vote2 = proposal_manager.vote_on_proposal(
+    proposal_manager.vote_on_proposal(
         proposal_id=proposal1.id,
         user_id=user3_id,
         vote="approve",
@@ -160,13 +160,13 @@ def test_complete_collaboration_workflow(
     )
 
     # User 1 and 3 vote to approve proposal 2  
-    vote3 = proposal_manager.vote_on_proposal(
+    proposal_manager.vote_on_proposal(
         proposal_id=proposal2.id,
         user_id=user1_id,
         vote="approve"
     )
     
-    vote4 = proposal_manager.vote_on_proposal(
+    proposal_manager.vote_on_proposal(
         proposal_id=proposal2.id,
         user_id=user3_id,
         vote="approve"
@@ -186,7 +186,7 @@ def test_complete_collaboration_workflow(
 
     # Step 8: Test CRDT merge with mocked dependencies
     with patch.object(crdt_merge_engine, '_get_changeset_versions') as mock_get_versions:
-        with patch.object(crdt_merge_engine, '_update_canonical_version') as mock_update_canonical:
+        with patch.object(crdt_merge_engine, '_update_canonical_version'):
             # Mock empty changesets (no versions to merge)
             mock_get_versions.return_value = []
 

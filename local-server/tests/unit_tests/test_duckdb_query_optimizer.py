@@ -156,7 +156,7 @@ class TestDuckDBQueryOptimizer:
     
     def test_optimization_settings_setup(self, mock_duckdb_conn, s3_config):
         """Test DuckDB optimization settings setup."""
-        optimizer = DuckDBQueryOptimizer(mock_duckdb_conn, s3_config)
+        DuckDBQueryOptimizer(mock_duckdb_conn, s3_config)
         
         # Check that optimization settings were applied
         expected_calls = [

@@ -114,8 +114,8 @@ def test_find_domain(client):
     layer_id = create_layer(client)
     unique_alpha = f"AlphaDomain_{uuid4()}"
     unique_beta = f"BetaDomain_{uuid4()}"
-    l1 = create_domain(client, layer_id, title=unique_alpha, definition="Physics")
-    l2 = create_domain(client, layer_id, title=unique_beta, definition="Chemistry")
+    create_domain(client, layer_id, title=unique_alpha, definition="Physics")
+    create_domain(client, layer_id, title=unique_beta, definition="Chemistry")
 
     # Note: The find endpoint is not yet implemented in structure_nodes API
     # This test is commented out until vector search is implemented

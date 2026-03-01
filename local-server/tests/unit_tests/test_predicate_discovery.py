@@ -60,7 +60,7 @@ def mock_source_configs():
 @pytest.fixture
 def mock_ref_config(tmp_path):
     """Create mock reference configuration."""
-    db_path = tmp_path / "test_reference.db"
+    tmp_path / "test_reference.db"
     config = ReferenceConfig()
     return config
 
@@ -191,7 +191,7 @@ class TestPredicateDiscoveryService:
             existing_predicate.definition = "Old definition"
             mock_manager.get_external_predicate_by_source.return_value = existing_predicate
 
-            result = service._upsert_predicate(
+            service._upsert_predicate(
                 title="Updated Title",
                 definition="Updated definition",
                 source="test_source",

@@ -147,7 +147,7 @@ class TestDatasetManager:
             from dataset.manager import DatasetManager
 
             config_path = os.path.join(temp_dir, "datasets.json")
-            manager = DatasetManager(
+            DatasetManager(
                 datasets_config_path=config_path,
                 datasets_directory=datasets_dir
             )
@@ -166,7 +166,7 @@ class TestDatasetManager:
             from dataset.manager import DatasetManager
 
             config_path = os.path.join(temp_dir, "datasets.json")
-            manager = DatasetManager(
+            DatasetManager(
                 datasets_config_path=config_path,
                 datasets_directory=datasets_dir
             )
@@ -351,7 +351,7 @@ class TestFreshInstallation:
             manager = PipelineDatabaseManager(operations_db_path=db_path)
 
             # Check directory permissions
-            dir_stat = os.stat(datafiles_dir)
+            os.stat(datafiles_dir)
 
             # Directory should be readable, writable, and executable by owner
             # On Unix-like systems, this is typically 0o755 or 0o700
@@ -382,7 +382,7 @@ class TestErrorHandling:
 
                 # This should raise an error due to permissions
                 with pytest.raises((OSError, PermissionError)):
-                    manager = PipelineDatabaseManager(operations_db_path=db_path)
+                    PipelineDatabaseManager(operations_db_path=db_path)
             finally:
                 # Restore permissions for cleanup
                 os.chmod(readonly_dir, 0o755)

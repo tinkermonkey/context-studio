@@ -45,7 +45,7 @@ def test_processor_input_validation():
     # Valid input
     input_data = ProcessorInput(text="Test text", enable_trace=False)
     assert input_data.text == "Test text"
-    assert input_data.enable_trace == False
+    assert not input_data.enable_trace
 
     # Test validation of whitespace-only text (if custom validator is implemented)
     # Note: Pydantic validates min_length but not whitespace-only by default
@@ -204,7 +204,7 @@ def test_token_bucket():
     assert bucket.tokens == 5
 
     # Consume tokens
-    assert bucket.consume(1) == True
+    assert bucket.consume(1)
     assert bucket.tokens == 4
 
     # Consume all tokens
@@ -212,7 +212,7 @@ def test_token_bucket():
         bucket.consume(1)
 
     # No tokens left
-    assert bucket.consume(1) == False
+    assert not bucket.consume(1)
 
 
 def test_web_search_client_initialization():
@@ -236,19 +236,19 @@ def test_web_search_client_session_management():
     client = RateLimitedWebSearchClient(max_attempts_per_session=3)
 
     # Can search initially
-    assert client.can_search() == True
+    assert client.can_search()
 
     # Simulate attempts
     client.session_attempt_count = 2
-    assert client.can_search() == True
+    assert client.can_search()
 
     client.session_attempt_count = 3
-    assert client.can_search() == False
+    assert not client.can_search()
 
     # Reset session
     client.reset_session()
     assert client.session_attempt_count == 0
-    assert client.can_search() == True
+    assert client.can_search()
 
 
 def test_cosine_similarity():

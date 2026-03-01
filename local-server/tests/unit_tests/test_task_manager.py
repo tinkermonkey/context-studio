@@ -456,7 +456,7 @@ class TestTaskCancellation:
                 raise
 
         # Submit multiple tasks
-        task_id1 = await task_manager.submit_task("test", slow_task())
+        await task_manager.submit_task("test", slow_task())
         task_id2 = await task_manager.submit_task("test", slow_task())
 
         # Cancel the second task (likely pending)

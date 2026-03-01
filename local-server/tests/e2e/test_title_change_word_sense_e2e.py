@@ -63,20 +63,8 @@ def test_title_change_triggers_word_sense_update(shared_client):
     original_title = "Computer"
     domain_id = create_domain(shared_client, layer_id, original_title)
 
-    # Step 2: Get initial word senses
-    # Note: Word senses may or may not be populated immediately after creation
-    # depending on whether the event processor has run
-    initial_resp = shared_client.get(f"/api/structure_nodes/{domain_id}/word_senses")
-    assert initial_resp.status_code == 200
-    initial_word_senses = initial_resp.json()
-
-    # Give event processor time to process creation event (if async)
+    # Step 2: Give event processor time to process creation event (if async)
     time.sleep(1)
-
-    # Get word senses after initial processing
-    after_creation_resp = shared_client.get(f"/api/structure_nodes/{domain_id}/word_senses")
-    assert after_creation_resp.status_code == 200
-    after_creation_word_senses = after_creation_resp.json()
 
     # Step 3: Update the node's title to something different
     new_title = "Database"
@@ -116,7 +104,6 @@ def test_title_change_triggers_word_sense_update(shared_client):
 
     # Log results for debugging
     print("\nWord sense update test results:")
-    print(f"  Initial word senses: {len(after_creation_word_senses)}")
     print(f"  After title change: {len(final_word_senses)}")
     print(f"  Original title: '{original_title}'")
     print(f"  New title: '{new_title}'")

@@ -254,7 +254,7 @@ class TestDirectoryCreationWithFileSystemOperations:
             manager = OperationsDatabaseManager(operations_db_path=db_path)
 
             # Check directory permissions
-            dir_stat = os.stat(datafiles_dir)
+            os.stat(datafiles_dir)
 
             # Verify directory is readable, writable, and executable by owner
             assert os.access(datafiles_dir, os.R_OK)
@@ -525,7 +525,7 @@ class TestDatasetManagerDirectoryIntegration:
 
             from dataset.manager import DatasetManager
 
-            manager = DatasetManager(
+            DatasetManager(
                 datasets_config_path=config_path,
                 datasets_directory=datasets_dir
             )
@@ -545,7 +545,7 @@ class TestDatasetManagerDirectoryIntegration:
 
             from dataset.manager import DatasetManager
 
-            manager = DatasetManager(
+            DatasetManager(
                 datasets_config_path=config_path,
                 datasets_directory=datasets_dir
             )
@@ -567,7 +567,7 @@ class TestDatasetManagerDirectoryIntegration:
             config_path = os.path.join(tmpdir, 'datasets.json')
 
             operations_mgr = OperationsDatabaseManager(operations_db_path=operations_path)
-            dataset_mgr = DatasetManager(
+            DatasetManager(
                 datasets_config_path=config_path,
                 datasets_directory=datasets_dir
             )

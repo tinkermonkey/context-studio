@@ -40,7 +40,6 @@ def test_reload_configuration_at_runtime():
 
         # Create initial config
         config_manager = ConfigurationManager(config_file)
-        initial_port = config_manager.settings.server.port
 
         # Modify the config file directly
         config_data = config_manager.settings.model_dump()

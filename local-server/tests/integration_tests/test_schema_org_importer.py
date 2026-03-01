@@ -138,7 +138,7 @@ class TestSchemaOrgImporterDownload:
 
         # Test that Pydantic validation rejects non-HTTPS URLs for remote hosts
         with pytest.raises(ValidationError) as exc_info:
-            config = ReferenceConfig(
+            ReferenceConfig(
                 schema_org_api_url="http://malicious.com/schema.jsonld"
             )
 

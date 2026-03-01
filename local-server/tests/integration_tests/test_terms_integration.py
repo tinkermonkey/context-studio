@@ -65,7 +65,7 @@ def test_create_get_term(client):
 @pytest.mark.skip_suite
 def test_create_term_invalid_domain_or_layer(client):
     # Invalid domain (parent_node_id)
-    layer_id = create_layer(client)
+    create_layer(client)
     resp = client.post(
         "/api/structure_nodes/",
         json={
@@ -96,7 +96,7 @@ def test_create_term_duplicate_title_within_domain(client):
     domain_id = create_domain(client, layer_id)
     unique_suffix = str(uuid.uuid4())[:8]
     dup_title = f"DupTerm {unique_suffix}"
-    t1 = create_term(client, domain_id, layer_id, title=dup_title)
+    create_term(client, domain_id, layer_id, title=dup_title)
     resp = client.post(
         "/api/structure_nodes/",
         json={
@@ -124,7 +124,7 @@ def test_create_term_with_parent_and_circular_reference(client):
     child = create_term(client, domain_id, layer_id, parent_term_id=parent["id"])
 
     # Parent must exist and be in same domain
-    resp = client.post(
+    client.post(
         "/api/structure_nodes/",
         json={
             "node_type": "term",
@@ -138,7 +138,7 @@ def test_create_term_with_parent_and_circular_reference(client):
     # This test may need adjustment based on actual API behavior
 
     # Circular reference test - may not be applicable in current API
-    resp = client.put(
+    client.put(
         f"/api/structure_nodes/{parent['id']}", json={"parent_term_id": child["id"]}
     )
     # Note: This may succeed if parent_term_id is not validated
@@ -169,7 +169,7 @@ def test_update_term_duplicate_title(client):
     unique_suffix = str(uuid.uuid4())[:8]
     original_title = f"Original {unique_suffix}"
     duplicate_title = f"Duplicate {unique_suffix}"
-    t1 = create_term(client, domain_id, layer_id, title=original_title)
+    create_term(client, domain_id, layer_id, title=original_title)
     t2 = create_term(client, domain_id, layer_id, title=duplicate_title)
 
     # Try to update t2 to have the same title as t1
@@ -189,7 +189,7 @@ def test_update_term_duplicate_title(client):
 @pytest.mark.skip_suite
 def test_update_term_not_found(client):
     layer_id = create_layer(client)
-    domain_id = create_domain(client, layer_id)
+    create_domain(client, layer_id)
     resp = client.put("/api/structure_nodes/nonexistent-id", json={"title": "Updated"})
     assert resp.status_code == 422  # FastAPI returns 422 for invalid UUID format
 
@@ -220,8 +220,8 @@ def test_list_terms(client):
     domain_id = create_domain(client, layer_id)
     # Use unique titles to avoid conflicts across test runs
     unique_suffix = str(uuid.uuid4())[:8]
-    term1 = create_term(client, domain_id, layer_id, title=f"Term A {unique_suffix}")
-    term2 = create_term(client, domain_id, layer_id, title=f"Term B {unique_suffix}")
+    create_term(client, domain_id, layer_id, title=f"Term A {unique_suffix}")
+    create_term(client, domain_id, layer_id, title=f"Term B {unique_suffix}")
 
     resp = client.get(
         f"/api/structure_nodes/?parent_node_id={domain_id}&node_type=term"

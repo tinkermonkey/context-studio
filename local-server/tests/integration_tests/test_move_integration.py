@@ -119,10 +119,10 @@ def test_complex_term_hierarchy_move(client):
     grandchild1 = create_term(
         client, source_domain["id"], layer_id, "Grandchild 1", child1["id"]
     )
-    grandchild2 = create_term(
+    create_term(
         client, source_domain["id"], layer_id, "Grandchild 2", child2["id"]
     )
-    grandchild3 = create_term(
+    create_term(
         client, source_domain["id"], layer_id, "Grandchild 3", child2["id"]
     )
 
@@ -259,7 +259,7 @@ def test_batch_operations_with_warnings(client):
     term2 = create_term(client, source_domain["id"], layer_id, "Conflicting Term")
 
     # Create a term with same name in target domain
-    conflicting_term = create_term(
+    create_term(
         client, target_domain["id"], layer_id, "Conflicting Term"
     )
 
@@ -277,7 +277,7 @@ def test_batch_operations_with_warnings(client):
     assert term_data["parent_node_id"] == target_domain["id"]
 
     # Try to move the conflicting term (behavior may vary based on implementation)
-    move_resp2 = client.post(
+    client.post(
         "/api/structure_nodes/move",
         json={"node_ids": [term2["id"]], "target_parent_id": target_domain["id"]},
     )

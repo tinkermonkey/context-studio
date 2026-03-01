@@ -127,7 +127,7 @@ class TestURLValidation:
         from pydantic import ValidationError
 
         with pytest.raises(ValidationError) as exc_info:
-            config = ReferenceConfig(
+            ReferenceConfig(
                 schema_org_api_url="http://evil.com/schema.jsonld"
             )
 
@@ -178,7 +178,7 @@ class TestBatchProcessing:
     def test_batch_size_configurable(self):
         """Test batch size is configurable."""
         config = ReferenceConfig(batch_size=50)
-        importer = SchemaOrgImporter(config, Mock())
+        SchemaOrgImporter(config, Mock())
 
         assert config.batch_size == 50
 

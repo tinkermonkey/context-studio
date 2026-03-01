@@ -34,7 +34,6 @@ def db_session():
 @pytest.fixture
 def sample_domain(db_session):
     """Create a sample domain structure node with predicate set."""
-    predicate_set = {"predicates": ["synonym", "hypernym", "hyponym"]}
 
     domain = StructureNode(
         id=str(uuid4()),
@@ -161,7 +160,7 @@ class TestValidateTermRelationshipPredicate:
     ):
         """Test that same domain allows predicates in predicate set."""
         term1 = sample_terms[0]
-        term2 = sample_terms[1]
+        sample_terms[1]
         allowed_predicate = sample_predicates[0]  # synonym
 
         # Both terms are in the same domain (same parent_node_id)
@@ -178,7 +177,7 @@ class TestValidateTermRelationshipPredicate:
     ):
         """Test that same domain allows all predicates (predicate sets removed)."""
         term1 = sample_terms[0]
-        term2 = sample_terms[1]
+        sample_terms[1]
         disallowed_predicate = sample_predicates[3]  # antonym
 
         # Both terms are in the same domain (same parent_node_id)

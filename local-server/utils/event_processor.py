@@ -188,7 +188,6 @@ class EventProcessor:
         self.stop()
         
         # Update database URL
-        old_engine_id = self.engine_id
         self.database_url = new_database_url
         self.engine_id = f"event_processor_{id(self)}_{int(time.time())}"  # New unique ID
         

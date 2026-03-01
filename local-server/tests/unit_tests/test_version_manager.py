@@ -292,7 +292,7 @@ class TestVersionManager:
             state=ChangeState.WORKING,
         )
 
-        version2 = version_manager.create_version(
+        version_manager.create_version(
             entity_type="structure_node",
             entity_id="test-456",
             content=sample_content,

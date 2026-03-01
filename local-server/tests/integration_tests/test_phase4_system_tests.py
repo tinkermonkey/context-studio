@@ -31,7 +31,7 @@ def test_database_with_schema_org():
     manager = ReferenceManager(config, db_path=db_path)
 
     # Load schema.org sample data
-    fixture_path = os.path.join(
+    os.path.join(
         os.path.dirname(__file__), '..', 'fixtures', 'schema_org_sample.jsonld'
     )
 

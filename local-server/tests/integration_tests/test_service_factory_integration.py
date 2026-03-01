@@ -197,7 +197,7 @@ class TestServiceFactoryIntegration:
         total_time = end_time - start_time
 
         # Check service factory performance metrics
-        stats = test_service_factory.get_cache_stats()
+        test_service_factory.get_cache_stats()
         performance_summary = test_service_factory.get_performance_summary()
 
         # Should have reasonable cache hit rate after first operation
@@ -296,13 +296,12 @@ class TestNewIntegrationTestTemplate:
         4. Always clean up resources
         5. Include service factory performance monitoring
         """
-        client = shared_client
 
         # 1. Reset service factory state for test isolation
         test_service_factory.clear_cache()
 
         # 2. Record baseline metrics
-        baseline_stats = test_service_factory.get_cache_stats()
+        test_service_factory.get_cache_stats()
 
         # 3. Perform the test operations
         # ... your test logic here ...

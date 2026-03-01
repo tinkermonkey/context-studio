@@ -15,7 +15,7 @@ async def test_app_with_datasets():
     """Test FastAPI application with dataset management."""
     try:
         print("Creating FastAPI application...")
-        app = create_app()
+        create_app()
         
         print("Application created successfully!")
         

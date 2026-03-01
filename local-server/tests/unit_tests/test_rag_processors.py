@@ -398,7 +398,7 @@ class TestConceptResolutionProcessor:
             end_char=4,
             tf_idf_score=0.5
         )
-        assert processor._should_perform_web_search(gap_critical) == True
+        assert processor._should_perform_web_search(gap_critical)
 
         # Contextual priority should not be searched
         gap_contextual = GapConcept(
@@ -412,7 +412,7 @@ class TestConceptResolutionProcessor:
             end_char=4,
             tf_idf_score=0.5
         )
-        assert processor._should_perform_web_search(gap_contextual) == False
+        assert not processor._should_perform_web_search(gap_contextual)
 
 
 class TestWebSearchClient:
@@ -433,15 +433,15 @@ class TestWebSearchClient:
         bucket = TokenBucket(rate_per_minute=5)
 
         # Should be able to consume tokens
-        assert bucket.consume(1) == True
+        assert bucket.consume(1)
         assert bucket.tokens == 4
 
         # Consume all remaining tokens
         for _ in range(4):
-            assert bucket.consume(1) == True
+            assert bucket.consume(1)
 
         # No tokens left
-        assert bucket.consume(1) == False
+        assert not bucket.consume(1)
 
     def test_web_search_client_initialization(self):
         """Test web search client initializes correctly"""
@@ -465,10 +465,10 @@ class TestWebSearchClient:
         from rag.processors.web_search import RateLimitedWebSearchClient
 
         client = RateLimitedWebSearchClient(max_attempts_per_session=2)
-        assert client.can_search() == True
+        assert client.can_search()
 
         client.session_attempt_count = 2
-        assert client.can_search() == False
+        assert not client.can_search()
 
     @patch('rag.processors.web_search.requests.get')
     def test_search_with_rate_limit(self, mock_get):

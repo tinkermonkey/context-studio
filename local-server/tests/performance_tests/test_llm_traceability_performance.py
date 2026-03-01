@@ -247,7 +247,7 @@ class TestLLMTraceabilityPerformance:
         filtered_times = []
         for _ in range(10):
             start_time = time.time()
-            filtered_analytics = tracker.get_execution_analytics(
+            tracker.get_execution_analytics(
                 pipeline_type=None,  # Test with pipeline type filter
                 days_back=7
             )

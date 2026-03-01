@@ -21,7 +21,6 @@ def clean_nlp_pipeline():
     from nlp import pipeline
 
     # Store original instance
-    original_instance = pipeline._pipeline_instance
 
     yield
 

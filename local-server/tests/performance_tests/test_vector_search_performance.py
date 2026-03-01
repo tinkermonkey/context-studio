@@ -143,7 +143,7 @@ class TestVectorSearchLatency:
             start_time = time.perf_counter()
 
             # Use a lambda that returns the pre-generated embedding
-            results = manager.search_by_similarity(
+            manager.search_by_similarity(
                 query_text=query,
                 limit=20,
                 threshold=0.0,

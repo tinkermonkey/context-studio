@@ -328,9 +328,6 @@ class TestPerformanceMonitor:
     
     def test_cache_optimization(self, performance_monitor):
         """Test cache optimization action."""
-        poor_metrics = {
-            'cache_metrics': {'hit_rate': 0.5}  # Below threshold
-        }
         
         with patch.object(performance_monitor, '_is_metric_below_threshold', return_value=True):
             action = performance_monitor._optimize_cache_settings()

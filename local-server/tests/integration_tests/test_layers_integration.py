@@ -26,7 +26,7 @@ def test_create_layer(client, test_service_factory):
     # Service factory cache is automatically reset by reset_service_factory_cache fixture
 
     # Record baseline
-    baseline_stats = test_service_factory.get_cache_stats()
+    test_service_factory.get_cache_stats()
 
     data = create_layer(client)
     assert "id" in data
@@ -48,7 +48,7 @@ def test_create_layer(client, test_service_factory):
 
 def test_create_layer_duplicate_title(client):
     unique_title = f"UniqueLayer_{uuid4()}"
-    layer = create_layer(client, title=unique_title)
+    create_layer(client, title=unique_title)
     resp = client.post(
         "/api/structure_nodes/",
         json={"node_type": "layer", "title": unique_title, "definition": "Dup test."},
@@ -88,8 +88,8 @@ def test_list_layers(client):
     # Create two layers with unique titles
     unique_a = f"LayerA_{uuid4()}"
     unique_b = f"LayerB_{uuid4()}"
-    l1 = create_layer(client, title=unique_a)
-    l2 = create_layer(client, title=unique_b)
+    create_layer(client, title=unique_a)
+    create_layer(client, title=unique_b)
 
     resp = client.get("/api/structure_nodes/?node_type=layer&sort_by=title")
     assert resp.status_code == 200
@@ -132,7 +132,7 @@ def test_update_layer(client):
 def test_update_layer_duplicate_title(client):
     unique_title1 = f"LayerDup1_{uuid4()}"
     unique_title2 = f"LayerDup2_{uuid4()}"
-    l1 = create_layer(client, title=unique_title1)
+    create_layer(client, title=unique_title1)
     l2 = create_layer(client, title=unique_title2)
     update = {"title": unique_title1}
     resp = client.put(f"/api/structure_nodes/{l2['id']}", json=update)
@@ -183,8 +183,8 @@ def test_delete_layer_not_found(client):
 def test_find_layer(client):
     unique_alpha = f"AlphaLayer_{uuid4()}"
     unique_beta = f"BetaLayer_{uuid4()}"
-    l1 = create_layer(client, title=unique_alpha, definition="Physics")
-    l2 = create_layer(client, title=unique_beta, definition="Chemistry")
+    create_layer(client, title=unique_alpha, definition="Physics")
+    create_layer(client, title=unique_beta, definition="Chemistry")
 
     # Note: The find endpoint is not yet implemented in structure_nodes API
     # This test is commented out until vector search is implemented

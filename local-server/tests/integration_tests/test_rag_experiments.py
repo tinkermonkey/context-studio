@@ -469,7 +469,7 @@ class TestAnnotationCRUD:
         paragraph_id = paragraph_response.json()["id"]
 
         # Create annotations
-        annotation_1 = test_client.post(
+        test_client.post(
             f"/api/rag-experiments/paragraphs/{paragraph_id}/annotations",
             json={
                 "start_char": 0,
@@ -478,7 +478,7 @@ class TestAnnotationCRUD:
             }
         ).json()
 
-        annotation_2 = test_client.post(
+        test_client.post(
             f"/api/rag-experiments/paragraphs/{paragraph_id}/annotations",
             json={
                 "start_char": 10,

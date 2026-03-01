@@ -68,7 +68,7 @@ class TestSchemaOrgPathRemoval:
             }
         }
 
-        settings = Settings(**valid_config)
+        Settings(**valid_config)
 
         # Create temporary config file
         with tempfile.NamedTemporaryFile(mode='w', suffix='.json', delete=False) as f:
@@ -173,7 +173,7 @@ class TestSchemaOrgPathRemoval:
         assert db_config.reference_path == "./datafiles/reference.db"
         assert db_config.reference_cache_path == "./datafiles/reference_api_cache.db"
         assert db_config.operations_path == "./datafiles/operations.db"
-        assert db_config.check_same_thread == False
+        assert not db_config.check_same_thread
         assert db_config.pool_timeout == 30
 
     def test_config_with_multiple_deprecated_fields(self):

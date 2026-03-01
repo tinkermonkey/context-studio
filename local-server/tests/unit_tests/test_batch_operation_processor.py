@@ -227,7 +227,7 @@ class TestBatchOperationProcessor:
         # Clear existing metrics
         batch_processor.performance_metrics.clear()
         
-        result = batch_processor.batch_create_versions(entity_data, 'metrics_test')
+        batch_processor.batch_create_versions(entity_data, 'metrics_test')
         
         # Should have recorded performance metrics
         assert len(batch_processor.performance_metrics) >= 1
@@ -349,7 +349,7 @@ class TestBatchOperationProcessor:
         entity_data = [{'id': f'entity_{i}'} for i in range(5)]
         
         # Test successful transaction
-        result = batch_processor.batch_create_versions(entity_data, 'transaction_test')
+        batch_processor.batch_create_versions(entity_data, 'transaction_test')
         
         # Should commit on success
         mock_db.commit.assert_called()
@@ -359,7 +359,7 @@ class TestBatchOperationProcessor:
         
         # Test failed transaction
         with patch.object(batch_processor.version_manager, 'create_version', side_effect=Exception("DB Error")):
-            result_failed = batch_processor.batch_create_versions(entity_data, 'transaction_fail')
+            batch_processor.batch_create_versions(entity_data, 'transaction_fail')
         
         # Should rollback on failure
         mock_db.rollback.assert_called()
@@ -407,7 +407,7 @@ class TestBatchOperationProcessor:
         entity_data = [{'id': f'entity_{i}'} for i in range(50)]
         
         # Track resource usage
-        initial_checkpoint_count = len(batch_processor.checkpoints)
+        len(batch_processor.checkpoints)
         initial_metrics_count = len(batch_processor.performance_metrics)
         
         result = batch_processor.batch_create_versions(entity_data, 'cleanup_test')

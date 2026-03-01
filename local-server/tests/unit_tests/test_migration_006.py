@@ -290,7 +290,7 @@ class MigrationTestHarness:
                 WHERE title_embedding IS NOT NULL OR definition_embedding IS NOT NULL
             """
             )
-            nodes_with_embeddings = cursor.fetchone()[0]
+            cursor.fetchone()[0]
 
             # For this test, we'll assume embeddings migration is successful if no error occurs
             # In real scenarios, you'd have actual embedding data to validate

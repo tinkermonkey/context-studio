@@ -291,7 +291,7 @@ class TestTC_SEC004_ErrorMessageSanitization:
 
         with ReferenceManager(config, db_path=db_path) as manager:
             try:
-                results = manager.search_by_similarity(
+                manager.search_by_similarity(
                     query_text="test",
                     limit=10,
                     threshold=0.5,
@@ -299,7 +299,7 @@ class TestTC_SEC004_ErrorMessageSanitization:
                 )
                 assert False, "Should have raised an exception"
             except Exception as e:
-                error_msg = str(e)
+                str(e)
 
                 # Error message shouldn't contain SQL
                 # (it will contain the SELECT in this test, but in production
@@ -340,7 +340,7 @@ class TestTC_SEC004_ErrorMessageSanitization:
         # If there was an error, it should be logged at ERROR level
         if response.status_code >= 400:
             # Check that error-level logs exist
-            error_logs = [record for record in caplog.records if record.levelno >= logging.ERROR]
+            [record for record in caplog.records if record.levelno >= logging.ERROR]
             # Note: May not always log depending on validation layer
             # This documents the expectation
 
@@ -372,7 +372,7 @@ class TestTC_SEC005_InputValidation:
 
             with ReferenceManager(config, db_path=db_path) as manager:
                 try:
-                    results = manager.search_by_similarity(
+                    manager.search_by_similarity(
                         query_text="test",
                         limit=limit,
                         threshold=0.5,
@@ -406,7 +406,7 @@ class TestTC_SEC005_InputValidation:
 
             with ReferenceManager(config, db_path=db_path) as manager:
                 try:
-                    results = manager.search_by_similarity(
+                    manager.search_by_similarity(
                         query_text="test",
                         limit=10,
                         threshold=threshold,

@@ -120,7 +120,7 @@ class TestFreshInstallationE2E:
             pipeline_mgr = PipelineDatabaseManager(operations_db_path=operations_path)
             ref_config = ReferenceConfig()
             ref_mgr = ReferenceManager(ref_config, db_path=reference_path)
-            dataset_mgr = DatasetManager(
+            DatasetManager(
                 datasets_config_path=config_path,
                 datasets_directory=datasets_dir
             )

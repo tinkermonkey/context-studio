@@ -74,7 +74,7 @@ class TestDatasetManager:
 
         # Switch to dataset2
         success = self.manager.switch_dataset(dataset2.id)
-        assert success == True
+        assert success
         assert self.manager.active_dataset_id == dataset2.id
 
         # Verify active dataset
@@ -92,7 +92,7 @@ class TestDatasetManager:
 
         # Delete dataset
         success = self.manager.delete_dataset(dataset.id)
-        assert success == True
+        assert success
 
         # Verify file is deleted
         assert not os.path.exists(dataset_path)
@@ -135,7 +135,7 @@ class TestDatasetManager:
         new_dir = os.path.join(self.temp_dir, "new_datasets")
 
         success = self.manager.update_datasets_directory(new_dir)
-        assert success == True
+        assert success
         assert self.manager.datasets_directory == new_dir
         assert os.path.exists(new_dir)
 
@@ -145,7 +145,7 @@ class TestDatasetManager:
         external_file = os.path.join(self.temp_dir, "external.db")
 
         # Create a real dataset first to get a valid file
-        original_dataset = self.manager.create_dataset("Original", "original.db")
+        self.manager.create_dataset("Original", "original.db")
         original_path = self.manager.get_dataset_file_path("original.db")
 
         # Copy it to external location
@@ -212,7 +212,7 @@ class TestDatasetManager:
 
         # Forget it
         success = self.manager.forget_dataset(dataset.id)
-        assert success == True
+        assert success
 
         # Verify it's no longer in inventory
         datasets = self.manager.list_datasets()
@@ -224,7 +224,7 @@ class TestDatasetManager:
     def test_forget_dataset_not_found(self):
         """Test forgetting non-existent dataset returns False."""
         success = self.manager.forget_dataset("nonexistent-id")
-        assert success == False
+        assert not success
 
     def test_forget_active_dataset(self):
         """Test forgetting the active dataset clears active state."""
@@ -235,7 +235,7 @@ class TestDatasetManager:
 
         # Forget it
         success = self.manager.forget_dataset(dataset.id)
-        assert success == True
+        assert success
 
         # Active state should be cleared
         assert self.manager.active_dataset_id is None
@@ -260,22 +260,22 @@ class TestMigrationManager:
 
         assert status.current_version == 0
         assert status.target_version >= 3  # Should have at least 3 migrations
-        assert status.needs_migration == True
+        assert status.needs_migration
         assert len(status.pending_migrations) > 0
 
     def test_migrate_to_latest(self):
         """Test applying migrations."""
         # Check initial status
         initial_status = self.manager.get_migration_status()
-        assert initial_status.needs_migration == True
+        assert initial_status.needs_migration
 
         # Apply migrations
         success = self.manager.migrate_to_latest()
-        assert success == True
+        assert success
 
         # Check status after migration
         final_status = self.manager.get_migration_status()
-        assert final_status.needs_migration == False
+        assert not final_status.needs_migration
         assert final_status.current_version > 0
 
     def test_generate_migration(self):
