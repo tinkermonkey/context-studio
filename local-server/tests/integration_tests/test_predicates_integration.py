@@ -436,10 +436,11 @@ class TestPredicateAPIIntegration:
         # Get predicate and verify mapping
         get_response = client.get(f"/api/predicates/{predicate_id}")
         assert get_response.status_code == 200
-        get_response.json()
+        data = get_response.json()
 
-        # Compare mappings (note: response might not include mapping in this format)
-        # This test verifies that complex nested JSON is handled correctly
+        # Verify mapping is preserved
+        assert "mapping" in data
+        assert data["mapping"] == complex_mapping
 
     def test_concurrent_predicate_creation(self, client, db_session):
         """Test handling of concurrent predicate creation attempts."""
