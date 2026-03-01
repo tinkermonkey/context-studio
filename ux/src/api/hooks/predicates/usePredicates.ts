@@ -160,8 +160,9 @@ export const useDiscoveryStatus = (
     queryKey: createQueryKey(QUERY_KEYS.PREDICATES, "discover", { taskId }),
     queryFn: () => predicateService.getDiscoveryStatus(taskId!),
     enabled: !!taskId,
-    refetchInterval: (data) => {
+    refetchInterval: (query) => {
       // Poll every 2 seconds if task is pending or running
+      const data = query.state.data;
       if (data && (data.status === "pending" || data.status === "running")) {
         return 2000;
       }
