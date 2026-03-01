@@ -247,12 +247,16 @@ class TestLLMTraceabilityPerformance:
         filtered_times = []
         for _ in range(10):
             start_time = time.time()
-            tracker.get_execution_analytics(
+            filtered_analytics = tracker.get_execution_analytics(
                 pipeline_type=None,  # Test with pipeline type filter
                 days_back=7
             )
             execution_time = (time.time() - start_time) * 1000
             filtered_times.append(execution_time)
+
+            # Verify filtered analytics are reasonable
+            assert filtered_analytics["total_executions"] >= 0
+            assert 0 <= filtered_analytics["success_rate"] <= 1
         
         # Analyze analytics performance
         avg_analytics_time = statistics.mean(analytics_times)
