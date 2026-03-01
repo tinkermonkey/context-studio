@@ -15,15 +15,7 @@ import {
   type SchemaOrgEntityParams,
   type SchemaOrgPropertyParams,
   type SchemaOrgReferenceSearchParams,
-  type DBpediaResourceResponse,
-  type DBpediaSearchResponse,
-  type ConceptNetQueryResponse,
-  type ConceptNetConceptResponse,
-  type ConceptNetRelatedResponse,
-  type WikidataEntityResponse,
-  type SchemaOrgEntityResponse,
-  type SchemaOrgPropertyResponse,
-  type SchemaOrgSearchResponse,
+  type MultiSourceSearchResponse,
 } from "../../services/nlpReference";
 import { QUERY_KEYS } from "../../config";
 import { createQueryKey } from "../../utils/queryClient";
@@ -34,7 +26,7 @@ import { createQueryKey } from "../../utils/queryClient";
  */
 export const useDBpediaResource = (
   params: DBpediaResourceParams,
-  options?: UseQueryOptions<DBpediaResourceResponse, Error>,
+  options?: UseQueryOptions<MultiSourceSearchResponse, Error>,
 ) => {
   return useQuery({
     queryKey: createQueryKey(
@@ -53,7 +45,7 @@ export const useDBpediaResource = (
  */
 export const useDBpediaSearch = (
   params: DBpediaSearchParams,
-  options?: UseQueryOptions<DBpediaSearchResponse, Error>,
+  options?: UseQueryOptions<MultiSourceSearchResponse, Error>,
 ) => {
   return useQuery({
     queryKey: createQueryKey(
@@ -73,7 +65,7 @@ export const useDBpediaSearch = (
  */
 export const useConceptNetQuery = (
   params?: ConceptNetQueryParams,
-  options?: UseQueryOptions<ConceptNetQueryResponse, Error>,
+  options?: UseQueryOptions<MultiSourceSearchResponse, Error>,
 ) => {
   return useQuery({
     queryKey: createQueryKey(
@@ -91,7 +83,7 @@ export const useConceptNetQuery = (
  */
 export const useConceptNetConcept = (
   conceptPath: string,
-  options?: UseQueryOptions<ConceptNetConceptResponse, Error>,
+  options?: UseQueryOptions<MultiSourceSearchResponse, Error>,
 ) => {
   return useQuery({
     queryKey: createQueryKey(QUERY_KEYS.NLP_REFERENCE, "conceptnet-concept", {
@@ -109,7 +101,7 @@ export const useConceptNetConcept = (
 export const useConceptNetRelated = (
   conceptPath: string,
   params?: ConceptNetRelatedParams,
-  options?: UseQueryOptions<ConceptNetRelatedResponse, Error>,
+  options?: UseQueryOptions<MultiSourceSearchResponse, Error>,
 ) => {
   return useQuery({
     queryKey: createQueryKey(QUERY_KEYS.NLP_REFERENCE, "conceptnet-related", {
@@ -129,7 +121,7 @@ export const useConceptNetRelated = (
  */
 export const useWikidataEntity = (
   params: WikidataEntityParams,
-  options?: UseQueryOptions<WikidataEntityResponse, Error>,
+  options?: UseQueryOptions<MultiSourceSearchResponse, Error>,
 ) => {
   return useQuery({
     queryKey: createQueryKey(
@@ -150,7 +142,7 @@ export const useWikidataEntity = (
 export const useSchemaOrgReferenceEntity = (
   identifier: string,
   params?: SchemaOrgEntityParams,
-  options?: UseQueryOptions<SchemaOrgEntityResponse, Error>,
+  options?: UseQueryOptions<MultiSourceSearchResponse, Error>,
 ) => {
   return useQuery({
     queryKey: createQueryKey(QUERY_KEYS.NLP_REFERENCE, "schemaorg-entity", {
@@ -169,7 +161,7 @@ export const useSchemaOrgReferenceEntity = (
 export const useSchemaOrgReferenceProperty = (
   identifier: string,
   params?: SchemaOrgPropertyParams,
-  options?: UseQueryOptions<SchemaOrgPropertyResponse, Error>,
+  options?: UseQueryOptions<MultiSourceSearchResponse, Error>,
 ) => {
   return useQuery({
     queryKey: createQueryKey(QUERY_KEYS.NLP_REFERENCE, "schemaorg-property", {
@@ -187,7 +179,7 @@ export const useSchemaOrgReferenceProperty = (
  */
 export const useSchemaOrgReferenceSearch = (
   params: SchemaOrgReferenceSearchParams,
-  options?: UseQueryOptions<SchemaOrgSearchResponse, Error>,
+  options?: UseQueryOptions<MultiSourceSearchResponse, Error>,
 ) => {
   return useQuery({
     queryKey: createQueryKey(
