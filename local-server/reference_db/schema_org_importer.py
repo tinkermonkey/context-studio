@@ -708,7 +708,7 @@ class SchemaOrgImporter:
         try:
             # Check if sqlite-vec extension is available
             try:
-                test_result = self.manager.session.execute(
+                self.manager.session.execute(
                     text("SELECT vec_version()")
                 ).fetchone()
             except Exception:
@@ -847,18 +847,6 @@ class SchemaOrgImporter:
         """
         links_to_insert = []
 
-        # Combine all items for relationship extraction
-        # We need to create "virtual nodes" for properties in order to create links
-        # since ReferenceLinks connect nodes, not predicates
-        all_items = entities + properties
-        
-        # Create a combined map that includes both entities and properties
-        # Properties need to be represented as nodes for the relationship graph
-        combined_map = {**node_map}
-        
-        # For properties, we'll store links but note they reference ExternalPredicates
-        # This is a limitation of the current schema where ReferenceLinks only connect nodes
-        
         # Note: Currently we can only create ReferenceLinks between ReferenceNodes,
         # so property metadata relationships (domainIncludes, rangeIncludes, inverseOf)
         # will be stored in the ExternalPredicate.attributes field rather than as links.
