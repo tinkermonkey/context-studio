@@ -25,9 +25,6 @@ def test_create_layer(client, test_service_factory):
     """Test layer creation with service factory monitoring."""
     # Service factory cache is automatically reset by reset_service_factory_cache fixture
 
-    # Record baseline
-    test_service_factory.get_cache_stats()
-
     data = create_layer(client)
     assert "id" in data
     assert data["title"].startswith("TestLayer_")
