@@ -75,7 +75,8 @@ export class UnifiedReferenceService extends BaseService {
         if (error instanceof Error && error.message.includes("404")) {
           throw new UnifiedReferenceError(
             "Search endpoint not found. Please ensure the backend service is properly configured and running.",
-            { cause: error }
+            undefined,
+            error
           );
         }
         throw error;
@@ -185,7 +186,8 @@ export class UnifiedReferenceService extends BaseService {
         if (error instanceof Error && error.message.includes("404")) {
           throw new UnifiedReferenceError(
             `${source} search endpoint not found. Please ensure the backend service supports this source.`,
-            { cause: error }
+            undefined,
+            error
           );
         }
         throw error;
