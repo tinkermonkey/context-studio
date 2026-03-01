@@ -34,7 +34,7 @@ class TestGenericPipelineAPIIntegration:
         """Clean up test fixtures."""
         try:
             os.unlink(self.temp_db.name)
-        except:
+        except Exception:
             pass
     
     @patch('llm.execution_tracker.get_pipeline_session')

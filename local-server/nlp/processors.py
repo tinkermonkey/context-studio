@@ -214,7 +214,7 @@ def extract_token_data(doc, filter: bool = False) -> List[TokenData]:
             logger.warning(f"General token extraction failed for token: {e}")
             try:
                 tokens.append(TokenData(text=str(token.text) if hasattr(token, 'text') else ""))
-            except:
+            except Exception:
                 tokens.append(TokenData(text=""))
     return tokens
 

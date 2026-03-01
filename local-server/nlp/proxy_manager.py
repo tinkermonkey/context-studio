@@ -170,7 +170,7 @@ class ReferenceAPIProxyManager:
                 response = requests.get(health_url, timeout=1)
                 if response.status_code == 200:
                     return
-            except:
+            except Exception:
                 pass
             time.sleep(1)
 

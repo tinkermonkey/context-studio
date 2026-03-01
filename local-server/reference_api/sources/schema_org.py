@@ -129,7 +129,7 @@ class SchemaOrgSource(BaseReferenceSource):
                                         node_type = "property"
                                     else:
                                         node_type = "entity"
-                                except:
+                                except Exception:
                                     pass
 
                             # Filter by search_type

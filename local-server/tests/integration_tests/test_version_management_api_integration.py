@@ -57,7 +57,7 @@ def start_event_processor_for_version_tests(db_session, shared_app):
     if processor:
         try:
             processor.stop()
-        except:
+        except Exception:
             pass
 
     try:

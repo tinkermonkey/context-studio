@@ -857,7 +857,7 @@ class Migration006(Migration):
                         data = json.loads(event[4])
                         if 'node_type' in data:
                             entity_type = data['node_type']
-                    except:
+                    except Exception:
                         pass
                 elif event[3]:  # old_data
                     try:
@@ -865,7 +865,7 @@ class Migration006(Migration):
                         data = json.loads(event[3])
                         if 'node_type' in data:
                             entity_type = data['node_type']
-                    except:
+                    except Exception:
                         pass
             else:
                 entity_type = record_type

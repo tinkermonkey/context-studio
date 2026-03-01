@@ -106,7 +106,7 @@ def main():
                 try:
                     datetime.fromisoformat(first_entry['timestamp'])
                     print("   Timestamp format: ✓")
-                except:
+                except Exception:
                     print("   Timestamp format: ✗")
         
         print("\n=== Test Complete ===")

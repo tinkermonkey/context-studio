@@ -524,7 +524,7 @@ class DatasetManager:
             if os.path.abspath(file_path) == os.path.abspath(expected_path) and file_path != file_path:
                 try:
                     os.remove(expected_path)
-                except:
+                except Exception:
                     pass
             raise ValueError(f"Failed to validate dataset file: {e}")
         

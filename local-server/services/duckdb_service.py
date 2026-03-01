@@ -842,7 +842,7 @@ class ChangeAnalyticsEngine:
             result = self.duckdb.execute_query(f"SELECT 1 FROM {view_name} LIMIT 1")
             # If execute_query returns an empty DataFrame, the query failed
             return not result.empty
-        except:
+        except Exception:
             return False
     
     def _get_fallback_change_summary(self, days: int) -> Dict[str, Any]:

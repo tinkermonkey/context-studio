@@ -178,7 +178,7 @@ function RouteComponent() {
                 {
                   label: "DuckDB Available",
                   value: health.duckdb_available ? "Yes" : "No",
-                  status: health.duckdb_available ? "healthy" : "error",
+                  status: (health.duckdb_available ? "healthy" : "error") as "healthy" | "warning" | "error",
                 },
                 {
                   label: "Active Views",

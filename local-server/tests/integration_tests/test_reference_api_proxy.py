@@ -28,7 +28,7 @@ class TestReferenceAPIProxyIntegration:
         try:
             proxy_manager = get_proxy_manager()
             proxy_manager.stop_proxy()
-        except:
+        except Exception:
             pass
 
     @pytest.mark.integration

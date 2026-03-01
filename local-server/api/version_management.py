@@ -25,6 +25,7 @@ import logging
 from fastapi import APIRouter, HTTPException, Query, Depends, Path
 from typing import List
 from uuid import UUID
+from sqlalchemy import text
 
 from services.version_manager import VersionManager, EntityVersion
 from services.working_tree_manager import WorkingTreeManager
@@ -351,7 +352,6 @@ def get_version_management_health(
     """
     try:
         # Get basic statistics using the version manager's database session
-        from sqlalchemy import text
         db = version_manager.db
         
         total_versions = db.execute(text("SELECT COUNT(*) FROM entity_versions")).scalar() or 0
@@ -420,7 +420,6 @@ def get_version_management_stats(
     """
     try:
         # Get basic version statistics
-        from sqlalchemy import text
         db = version_manager.db
         
         # Count versions by entity type
