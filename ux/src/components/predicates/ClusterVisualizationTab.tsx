@@ -37,8 +37,9 @@ export const ClusterVisualizationTab: React.FC<ClusterVisualizationTabProps> = (
   const clusterMutation = useClusterPredicates({
     onSuccess: (result) => {
       setClusters(result);
+      const clusteredCount = result.clusters.reduce((sum, c) => sum + c.size, 0);
       toast.success(
-        `Found ${result.num_clusters} clusters with ${result.num_noise_points} noise points`,
+        `Found ${result.total_clusters} clusters with ${clusteredCount} clustered predicates`,
       );
     },
     onError: (error: Error) => {
@@ -177,7 +178,7 @@ export const ClusterVisualizationTab: React.FC<ClusterVisualizationTabProps> = (
             <div className="grid grid-cols-3 gap-4 text-center">
               <div>
                 <div className="text-3xl font-bold text-blue-600 dark:text-blue-400">
-                  {clusters.num_clusters}
+                  {clusters.total_clusters}
                 </div>
                 <div className="text-sm text-gray-600 dark:text-gray-400">
                   Clusters Found
@@ -185,7 +186,7 @@ export const ClusterVisualizationTab: React.FC<ClusterVisualizationTabProps> = (
               </div>
               <div>
                 <div className="text-3xl font-bold text-green-600 dark:text-green-400">
-                  {clusters.total_predicates - clusters.num_noise_points}
+                  {clusters.clusters.reduce((sum: number, c: any) => sum + c.size, 0)}
                 </div>
                 <div className="text-sm text-gray-600 dark:text-gray-400">
                   Clustered Predicates
@@ -193,7 +194,7 @@ export const ClusterVisualizationTab: React.FC<ClusterVisualizationTabProps> = (
               </div>
               <div>
                 <div className="text-3xl font-bold text-gray-600 dark:text-gray-400">
-                  {clusters.num_noise_points}
+                  {clusters.total_predicates - clusters.clusters.reduce((sum: number, c: any) => sum + c.size, 0)}
                 </div>
                 <div className="text-sm text-gray-600 dark:text-gray-400">Outliers</div>
               </div>
@@ -263,7 +264,7 @@ export const ClusterVisualizationTab: React.FC<ClusterVisualizationTabProps> = (
             })}
           </div>
 
-          {clusters.num_clusters === 0 && (
+          {clusters.total_clusters === 0 && (
             <Card>
               <div className="py-8 text-center text-gray-500">
                 No clusters found with the current parameters. Try adjusting the
