@@ -206,7 +206,7 @@ class ChangeEventHandler:
         Returns:
             List of unprocessed ChangeEvent objects
         """
-        query = self.db.query(ChangeEvent).filter(not ChangeEvent.processed)
+        query = self.db.query(ChangeEvent).filter(ChangeEvent.processed == False)
 
         if record_type is not None:
             query = query.filter(ChangeEvent.record_type == record_type)
