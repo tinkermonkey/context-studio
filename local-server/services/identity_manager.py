@@ -127,7 +127,7 @@ class IdentityManager:
             # Get stored verification code
             stored_code = self._get_verification_code(user_id)
             if not stored_code:
-                logger.warning(f"No verification code found for user {user_id}")
+                logger.debug(f"No verification code found for user {user_id}")
                 return False
                 
             if stored_code != verification_code:
