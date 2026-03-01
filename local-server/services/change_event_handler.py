@@ -270,7 +270,7 @@ class ChangeEventHandler:
         """
         total_events = self.db.query(ChangeEvent).count()
         processed_events = (
-            self.db.query(ChangeEvent).filter(ChangeEvent.processed).count()
+            self.db.query(ChangeEvent).filter(ChangeEvent.processed == True).count()
         )
         unprocessed_events = total_events - processed_events
 
