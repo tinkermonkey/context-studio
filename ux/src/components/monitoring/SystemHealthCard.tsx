@@ -16,7 +16,7 @@ export interface HealthMetric {
 
 export interface SystemHealthCardProps {
   title: string;
-  status: "healthy" | "warning" | "error" | "degraded" | "excellent" | "good" | "critical";
+  status: string;
   healthScore?: number;
   metrics?: HealthMetric[];
   issues?: string[];

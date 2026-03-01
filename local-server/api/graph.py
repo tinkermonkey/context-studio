@@ -56,7 +56,7 @@ def get_cached_graph_service() -> GraphService:
                 if _cached_session:
                     try:
                         _cached_session.close()
-                    except:
+                    except Exception:
                         pass
 
                 # Create new session for the current dataset
@@ -91,7 +91,7 @@ def invalidate_graph_cache():
             if _cached_session:
                 try:
                     _cached_session.close()
-                except:
+                except Exception:
                     pass
                 _cached_session = None
 

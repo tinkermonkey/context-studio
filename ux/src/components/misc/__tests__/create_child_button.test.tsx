@@ -36,6 +36,9 @@ describe("CreateChildButton", () => {
     title: "Test Layer",
     definition: "Test definition",
     created_at: "2023-01-01T00:00:00Z",
+    node_type: "layer",
+    version: 1,
+    last_modified: "2023-01-01T00:00:00Z",
   };
 
   const mockDomain = {
@@ -44,6 +47,9 @@ describe("CreateChildButton", () => {
     definition: "Test definition",
     layer_id: "layer-1",
     created_at: "2023-01-01T00:00:00Z",
+    node_type: "domain",
+    version: 1,
+    last_modified: "2023-01-01T00:00:00Z",
   };
 
   it("renders create domain button for layer parent", () => {

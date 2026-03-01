@@ -292,7 +292,7 @@ def get_analytics_health(
                     "SELECT COUNT(*) as view_count FROM information_schema.views WHERE table_schema = 'main'"
                 )
                 active_views = view_check_result.iloc[0]['view_count'] if not view_check_result.empty else 0
-            except:
+            except Exception:
                 active_views = 0
         
         # Basic performance check
@@ -301,7 +301,7 @@ def get_analytics_health(
         try:
             analytics_engine.get_change_summary(days=1)
             query_performance_ms = (time.time() - start_time) * 1000
-        except:
+        except Exception:
             query_performance_ms = None
         
         health_status = "healthy" if duckdb_available else "degraded"

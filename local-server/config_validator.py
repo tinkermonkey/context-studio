@@ -181,7 +181,7 @@ class ConfigurationValidator:
                 # Clean up test file
                 try:
                     os.remove(test_config_file)
-                except:
+                except Exception:
                     pass
             else:
                 self._add_result(False, category, "file_creation", "Configuration file not created")

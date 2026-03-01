@@ -73,7 +73,7 @@ async def websocket_regenerate_embeddings(
                 "type": "error",
                 "message": f"Unexpected error: {str(e)}"
             }))
-        except:
+        except Exception:
             # WebSocket might be closed already
             pass
 

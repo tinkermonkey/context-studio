@@ -21,12 +21,11 @@ Endpoints:
 - GET /api/versions/stats - Get version management statistics
 """
 
+import logging
 from fastapi import APIRouter, HTTPException, Query, Depends, Path
 from typing import List
 from uuid import UUID
-import logging
 
-logger = logging.getLogger(__name__)
 from services.version_manager import VersionManager, EntityVersion
 from services.working_tree_manager import WorkingTreeManager
 from services.diff_generator import DiffGenerator
@@ -41,6 +40,8 @@ from api.models.version_management import (
     StageRequest, DiffRequest, DiffFormatEnum, VersionManagementHealthOut, VersionManagementStatsOut,
     EntityTypeEnum, ChangeStateEnum
 )
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/api/versions", tags=["version_management"])
 

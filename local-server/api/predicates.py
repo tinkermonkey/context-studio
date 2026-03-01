@@ -299,7 +299,7 @@ def list_external_predicates(
                     try:
                         import ast
                         attrs = ast.literal_eval(predicate.attributes)
-                    except:
+                    except Exception:
                         attrs = {"raw": predicate.attributes}
 
                 data.append(ExternalPredicateOut(
@@ -393,7 +393,7 @@ def search_external_predicates(
                     try:
                         import ast
                         attrs = ast.literal_eval(predicate.attributes)
-                    except:
+                    except Exception:
                         attrs = {"raw": predicate.attributes}
 
                 data.append(ExternalPredicateSearchResult(
