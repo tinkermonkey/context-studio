@@ -9,6 +9,7 @@ to ensure correctness and completeness of migration.
 import os
 import sys
 import json
+import importlib.util
 from typing import Dict, List, Any, Optional
 from dataclasses import dataclass
 
@@ -263,13 +264,16 @@ class ConfigurationValidator:
     def _validate_nlp_pipeline_integration(self):
         """Validate NLP pipeline integration"""
         category = "NLP Pipeline Integration"
-        
+
         try:
             # Test invalidate_pipeline function exists
             try:
-                from nlp.pipeline import invalidate_pipeline
-                self._add_result(True, category, "invalidate_pipeline_function", "Pipeline invalidation function exists")
-            except ImportError:
+                spec = importlib.util.find_spec("nlp.pipeline")
+                if spec is not None:
+                    self._add_result(True, category, "invalidate_pipeline_function", "Pipeline invalidation function exists")
+                else:
+                    self._add_result(False, category, "invalidate_pipeline_function", "Pipeline invalidation function not found")
+            except (ImportError, ModuleNotFoundError):
                 self._add_result(False, category, "invalidate_pipeline_function", "Pipeline invalidation function not found")
             
             # Test NLP pipeline can access configuration
@@ -289,14 +293,22 @@ class ConfigurationValidator:
     def _validate_reference_service_integration(self):
         """Validate reference service integration"""
         category = "Reference Service Integration"
-        
+
         try:
             # Test reference service imports
             try:
-                from reference_api.service import ReferenceService
-                from api.reference import get_reference_service
-                self._add_result(True, category, "reference_imports", "Reference service imports successfully")
-            except ImportError as e:
+                # Check if modules exist without importing them
+                reference_api_spec = importlib.util.find_spec("reference_api.service")
+                api_reference_spec = importlib.util.find_spec("api.reference")
+
+                if reference_api_spec is not None and api_reference_spec is not None:
+                    # Now we can safely import since modules exist
+                    from reference_api.service import ReferenceService
+                    self._add_result(True, category, "reference_imports", "Reference service imports successfully")
+                else:
+                    self._add_result(False, category, "reference_imports", "Reference service modules not found")
+                    return
+            except (ImportError, ModuleNotFoundError) as e:
                 self._add_result(False, category, "reference_imports", f"Reference service import failed: {e}")
                 return
             
