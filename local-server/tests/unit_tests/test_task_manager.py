@@ -15,6 +15,7 @@ import sys
 import os
 import pytest
 import asyncio
+import logging
 
 # Add parent directory to path for imports
 sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
@@ -607,12 +608,22 @@ class TestDeadLetterQueue:
         async def failing_task(n):
             raise RuntimeError(f"Error {n}")
 
+        # Suppress expected DLQ eviction warnings (they are tested for correctness,
+        # not for logging output). The warnings confirm eviction is happening,
+        # but we'll verify behavior through the DLQ state instead.
+        logger = logging.getLogger("services.task_manager")
+        original_level = logger.level
+        logger.setLevel(logging.ERROR)
+
         # Submit 10 failing tasks (exceeds DLQ max of 5)
         for i in range(10):
             await task_manager.submit_task("test", failing_task(i))
 
         # Wait for all tasks to fail
         await asyncio.sleep(1.0)
+
+        # Restore log level after tasks complete
+        logger.setLevel(original_level)
 
         dlq = task_manager.get_dead_letter_queue()
         # DLQ should contain only the last 5 tasks (FIFO eviction)
