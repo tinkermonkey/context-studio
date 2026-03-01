@@ -45,5 +45,4 @@ export * from "./predicates";
 export * from "./rag";
 export * from "./reference";
 export * from "./schema";
-export * from "./schemaOrg";
 export * from "./structure_nodes";
