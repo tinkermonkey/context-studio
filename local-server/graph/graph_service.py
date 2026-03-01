@@ -381,7 +381,6 @@ class GraphService:
         
         if layer_id:
             # Analyze specific layer
-            layer_node = f"layer:{layer_id}"
             layer_info = self.network_service.get_node_info(layer_id, "layer")
             
             # Find all domains and terms in this layer
