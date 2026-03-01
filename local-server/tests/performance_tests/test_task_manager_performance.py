@@ -21,6 +21,9 @@ from services.task_manager import (
     initialize_task_manager,
     shutdown_task_manager
 )
+from utils.logger import get_logger
+
+logger = get_logger(__name__)
 
 
 class TestTaskSubmissionPerformance:
