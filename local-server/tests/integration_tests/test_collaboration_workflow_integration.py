@@ -26,7 +26,7 @@ def service_factory(db_session):
     return ServiceFactory(cache_ttl_seconds=60)
 
 
-@pytest.fixture  
+@pytest.fixture
 def identity_manager(db_session, service_factory):
     """Create an IdentityManager for testing."""
     return service_factory.create_identity_manager(db_session)
@@ -54,25 +54,22 @@ def test_complete_collaboration_workflow(
     db_session, identity_manager, changeset_manager, proposal_manager, crdt_merge_engine
 ):
     """Test complete end-to-end collaboration workflow."""
-    
+
     # Step 1: Register users
     user1_result = identity_manager.register_user(
-        email="user1@example.com",
-        display_name="User One"
+        email="user1@example.com", display_name="User One"
     )
     user1_id = user1_result["user_identity"].user_id
     user1_code = user1_result["verification_code"]
-    
+
     user2_result = identity_manager.register_user(
-        email="user2@example.com", 
-        display_name="User Two"
+        email="user2@example.com", display_name="User Two"
     )
     user2_id = user2_result["user_identity"].user_id
     user2_code = user2_result["verification_code"]
-    
+
     user3_result = identity_manager.register_user(
-        email="user3@example.com",
-        display_name="User Three"
+        email="user3@example.com", display_name="User Three"
     )
     user3_id = user3_result["user_identity"].user_id
     user3_code = user3_result["verification_code"]
@@ -95,8 +92,12 @@ def test_complete_collaboration_workflow(
     assert user3.trust_level == 2  # Team-verified
 
     # Step 4: Create changesets with mocked working tree
-    with patch.object(changeset_manager.working_tree, 'get_staged_changes') as mock_staged:
-        with patch.object(changeset_manager.working_tree, 'capture_version_snapshot') as mock_snapshot:
+    with patch.object(
+        changeset_manager.working_tree, "get_staged_changes"
+    ) as mock_staged:
+        with patch.object(
+            changeset_manager.working_tree, "capture_version_snapshot"
+        ) as mock_snapshot:
             mock_staged.return_value = [
                 {"version_id": "v1", "change_type": "create", "entity_type": "node"}
             ]
@@ -105,13 +106,13 @@ def test_complete_collaboration_workflow(
             changeset1 = changeset_manager.create_changeset(
                 title="Feature A Implementation",
                 description="Implementing feature A with new nodes",
-                author_id=user1_id
+                author_id=user1_id,
             )
 
             changeset2 = changeset_manager.create_changeset(
-                title="Feature B Implementation", 
+                title="Feature B Implementation",
                 description="Implementing feature B with updates",
-                author_id=user2_id
+                author_id=user2_id,
             )
 
     assert changeset1.state == ChangesetState.DRAFT
@@ -123,15 +124,15 @@ def test_complete_collaboration_workflow(
         title="Proposal for Feature A",
         description="Please review feature A implementation",
         created_by=user1_id,
-        required_approvals=2
+        required_approvals=2,
     )
 
     proposal2 = proposal_manager.create_proposal(
         changeset_id=changeset2.id,
         title="Proposal for Feature B",
-        description="Please review feature B implementation", 
+        description="Please review feature B implementation",
         created_by=user2_id,
-        required_approvals=2
+        required_approvals=2,
     )
 
     assert proposal1.status == ProposalStatus.OPEN
@@ -145,32 +146,36 @@ def test_complete_collaboration_workflow(
 
     # Step 6: Vote on proposals
     # User 2 and 3 vote to approve proposal 1
-    proposal_manager.vote_on_proposal(
+    vote1 = proposal_manager.vote_on_proposal(
         proposal_id=proposal1.id,
         user_id=user2_id,
         vote="approve",
-        comment="Looks good to me!"
+        comment="Looks good to me!",
     )
-    
-    proposal_manager.vote_on_proposal(
+    assert vote1 is not None
+    assert vote1.vote == "approve"
+
+    vote2 = proposal_manager.vote_on_proposal(
         proposal_id=proposal1.id,
         user_id=user3_id,
         vote="approve",
-        comment="LGTM, great work!"
+        comment="LGTM, great work!",
     )
+    assert vote2 is not None
+    assert vote2.vote == "approve"
 
-    # User 1 and 3 vote to approve proposal 2  
-    proposal_manager.vote_on_proposal(
-        proposal_id=proposal2.id,
-        user_id=user1_id,
-        vote="approve"
+    # User 1 and 3 vote to approve proposal 2
+    vote3 = proposal_manager.vote_on_proposal(
+        proposal_id=proposal2.id, user_id=user1_id, vote="approve"
     )
-    
-    proposal_manager.vote_on_proposal(
-        proposal_id=proposal2.id,
-        user_id=user3_id,
-        vote="approve"
+    assert vote3 is not None
+    assert vote3.vote == "approve"
+
+    vote4 = proposal_manager.vote_on_proposal(
+        proposal_id=proposal2.id, user_id=user3_id, vote="approve"
     )
+    assert vote4 is not None
+    assert vote4.vote == "approve"
 
     # Step 7: Verify auto-approval occurred
     proposal1_updated = proposal_manager.get_proposal(proposal1.id)
@@ -185,20 +190,20 @@ def test_complete_collaboration_workflow(
     assert changeset2_final.state == ChangesetState.APPROVED
 
     # Step 8: Test CRDT merge with mocked dependencies
-    with patch.object(crdt_merge_engine, '_get_changeset_versions') as mock_get_versions:
-        with patch.object(crdt_merge_engine, '_update_canonical_version'):
+    with patch.object(
+        crdt_merge_engine, "_get_changeset_versions"
+    ) as mock_get_versions:
+        with patch.object(crdt_merge_engine, "_update_canonical_version"):
             # Mock empty changesets (no versions to merge)
             mock_get_versions.return_value = []
 
             # Test merging individual changesets
             merge_result1 = crdt_merge_engine.merge_changeset(
-                changeset_id=changeset1.id,
-                merge_author=user1_id
+                changeset_id=changeset1.id, merge_author=user1_id
             )
 
             merge_result2 = crdt_merge_engine.merge_changeset(
-                changeset_id=changeset2.id,
-                merge_author=user2_id
+                changeset_id=changeset2.id, merge_author=user2_id
             )
 
     # Verify merge results for empty changesets
@@ -218,7 +223,7 @@ def test_complete_collaboration_workflow(
     assert summary1["approve_votes"] == 2
     assert summary1["reject_votes"] == 0
 
-    assert summary2["total_votes"] == 2  
+    assert summary2["total_votes"] == 2
     assert summary2["approve_votes"] == 2
     assert summary2["reject_votes"] == 0
 
@@ -239,33 +244,37 @@ def test_collaboration_workflow_with_conflicts(
     db_session, identity_manager, changeset_manager, proposal_manager, crdt_merge_engine
 ):
     """Test collaboration workflow with CRDT conflict resolution."""
-    
+
     # Setup users
     user1_result = identity_manager.register_user("user1@test.com", "User One")
     user2_result = identity_manager.register_user("user2@test.com", "User Two")
-    
+
     user1_id = user1_result["user_identity"].user_id
     user2_id = user2_result["user_identity"].user_id
-    
+
     identity_manager.verify_email(user1_id, user1_result["verification_code"])
     identity_manager.verify_email(user2_id, user2_result["verification_code"])
 
     # Create conflicting changesets
-    with patch.object(changeset_manager.working_tree, 'get_staged_changes') as mock_staged:
-        with patch.object(changeset_manager.working_tree, 'capture_version_snapshot') as mock_snapshot:
+    with patch.object(
+        changeset_manager.working_tree, "get_staged_changes"
+    ) as mock_staged:
+        with patch.object(
+            changeset_manager.working_tree, "capture_version_snapshot"
+        ) as mock_snapshot:
             mock_staged.return_value = [{"version_id": "v1", "change_type": "update"}]
             mock_snapshot.return_value = "snapshot123"
 
             changeset1 = changeset_manager.create_changeset(
-                title="Update Title to A", 
+                title="Update Title to A",
                 description="First update",
-                author_id=user1_id
+                author_id=user1_id,
             )
 
             changeset2 = changeset_manager.create_changeset(
                 title="Update Title to B",
-                description="Second update", 
-                author_id=user2_id
+                description="Second update",
+                author_id=user2_id,
             )
 
     # Create and approve proposals
@@ -274,15 +283,15 @@ def test_collaboration_workflow_with_conflicts(
         title="Proposal A",
         description="First proposal",
         created_by=user1_id,
-        required_approvals=1
+        required_approvals=1,
     )
 
     proposal2 = proposal_manager.create_proposal(
         changeset_id=changeset2.id,
-        title="Proposal B", 
+        title="Proposal B",
         description="Second proposal",
         created_by=user2_id,
-        required_approvals=1
+        required_approvals=1,
     )
 
     # Vote to approve both
@@ -290,19 +299,19 @@ def test_collaboration_workflow_with_conflicts(
     proposal_manager.vote_on_proposal(proposal2.id, user1_id, "approve")
 
     # Test merge with conflicts (simplified for empty changesets)
-    with patch.object(crdt_merge_engine, '_get_changeset_versions') as mock_get_versions:
+    with patch.object(
+        crdt_merge_engine, "_get_changeset_versions"
+    ) as mock_get_versions:
         # Mock empty changesets (no versions to merge, so no conflicts)
         mock_get_versions.return_value = []
 
         # Test merging individual changesets
         merge_result1 = crdt_merge_engine.merge_changeset(
-            changeset_id=changeset1.id,
-            merge_author=user1_id
+            changeset_id=changeset1.id, merge_author=user1_id
         )
 
         merge_result2 = crdt_merge_engine.merge_changeset(
-            changeset_id=changeset2.id,
-            merge_author=user2_id
+            changeset_id=changeset2.id, merge_author=user2_id
         )
 
     # Verify merge results for empty changesets (no conflicts)
@@ -319,31 +328,35 @@ def test_collaboration_workflow_rejection(
     db_session, identity_manager, changeset_manager, proposal_manager
 ):
     """Test collaboration workflow with proposal rejection."""
-    
+
     # Setup users
     user1_result = identity_manager.register_user("author@test.com", "Author")
-    user2_result = identity_manager.register_user("reviewer1@test.com", "Reviewer 1") 
+    user2_result = identity_manager.register_user("reviewer1@test.com", "Reviewer 1")
     user3_result = identity_manager.register_user("reviewer2@test.com", "Reviewer 2")
-    
+
     user1_id = user1_result["user_identity"].user_id
     user2_id = user2_result["user_identity"].user_id
     user3_id = user3_result["user_identity"].user_id
-    
+
     # Verify all users
     identity_manager.verify_email(user1_id, user1_result["verification_code"])
     identity_manager.verify_email(user2_id, user2_result["verification_code"])
     identity_manager.verify_email(user3_id, user3_result["verification_code"])
 
     # Create changeset
-    with patch.object(changeset_manager.working_tree, 'get_staged_changes') as mock_staged:
-        with patch.object(changeset_manager.working_tree, 'capture_version_snapshot') as mock_snapshot:
+    with patch.object(
+        changeset_manager.working_tree, "get_staged_changes"
+    ) as mock_staged:
+        with patch.object(
+            changeset_manager.working_tree, "capture_version_snapshot"
+        ) as mock_snapshot:
             mock_staged.return_value = [{"version_id": "v1", "change_type": "create"}]
             mock_snapshot.return_value = "snapshot123"
 
             changeset = changeset_manager.create_changeset(
                 title="Questionable Feature",
                 description="This might not be good",
-                author_id=user1_id
+                author_id=user1_id,
             )
 
     # Create proposal requiring 2 approvals
@@ -352,7 +365,7 @@ def test_collaboration_workflow_rejection(
         title="Review Questionable Feature",
         description="Please review this implementation",
         created_by=user1_id,
-        required_approvals=2
+        required_approvals=2,
     )
 
     # Both reviewers reject
@@ -360,14 +373,14 @@ def test_collaboration_workflow_rejection(
         proposal_id=proposal.id,
         user_id=user2_id,
         vote="reject",
-        comment="I don't think this is a good approach"
+        comment="I don't think this is a good approach",
     )
-    
+
     proposal_manager.vote_on_proposal(
         proposal_id=proposal.id,
         user_id=user3_id,
-        vote="reject", 
-        comment="Needs significant changes"
+        vote="reject",
+        comment="Needs significant changes",
     )
 
     # Verify proposal was auto-rejected
@@ -383,27 +396,31 @@ def test_collaboration_workflow_vote_updates(
     db_session, identity_manager, changeset_manager, proposal_manager
 ):
     """Test collaboration workflow with vote updates."""
-    
+
     # Setup
     user1_result = identity_manager.register_user("user1@update.com", "User One")
     user2_result = identity_manager.register_user("user2@update.com", "User Two")
-    
+
     user1_id = user1_result["user_identity"].user_id
     user2_id = user2_result["user_identity"].user_id
-    
+
     identity_manager.verify_email(user1_id, user1_result["verification_code"])
     identity_manager.verify_email(user2_id, user2_result["verification_code"])
 
     # Create changeset and proposal
-    with patch.object(changeset_manager.working_tree, 'get_staged_changes') as mock_staged:
-        with patch.object(changeset_manager.working_tree, 'capture_version_snapshot') as mock_snapshot:
+    with patch.object(
+        changeset_manager.working_tree, "get_staged_changes"
+    ) as mock_staged:
+        with patch.object(
+            changeset_manager.working_tree, "capture_version_snapshot"
+        ) as mock_snapshot:
             mock_staged.return_value = [{"version_id": "v1", "change_type": "create"}]
             mock_snapshot.return_value = "snapshot123"
 
             changeset = changeset_manager.create_changeset(
                 title="Feature X",
                 description="Implementation of feature X",
-                author_id=user1_id
+                author_id=user1_id,
             )
 
     proposal = proposal_manager.create_proposal(
@@ -411,7 +428,7 @@ def test_collaboration_workflow_vote_updates(
         title="Review Feature X",
         description="Please review feature X",
         created_by=user1_id,
-        required_approvals=1
+        required_approvals=1,
     )
 
     # Initial vote: abstain
@@ -419,7 +436,7 @@ def test_collaboration_workflow_vote_updates(
         proposal_id=proposal.id,
         user_id=user2_id,
         vote="abstain",
-        comment="Need more time to review"
+        comment="Need more time to review",
     )
 
     # Verify vote recorded
@@ -432,7 +449,7 @@ def test_collaboration_workflow_vote_updates(
         proposal_id=proposal.id,
         user_id=user2_id,
         vote="approve",
-        comment="Looks good after review"
+        comment="Looks good after review",
     )
 
     # Verify vote updated and proposal approved
@@ -447,35 +464,53 @@ def test_collaboration_workflow_vote_updates(
 
 def test_migration_008_creates_collaboration_tables(db_session):
     """Test that migration 008 creates all required collaboration tables."""
-    
+
     # Verify all collaboration tables exist
     tables_to_check = [
         "changesets",
-        "proposals", 
+        "proposals",
         "proposal_votes",
         "user_identities",
         "user_trust_relationships",
-        "verification_codes"
+        "verification_codes",
     ]
-    
+
     for table_name in tables_to_check:
         result = db_session.execute(
-            text(f"SELECT name FROM sqlite_master WHERE type='table' AND name='{table_name}'")
+            text(
+                f"SELECT name FROM sqlite_master WHERE type='table' AND name='{table_name}'"
+            )
         ).fetchone()
-        assert result is not None, f"Table {table_name} should exist after migration 008"
+        assert (
+            result is not None
+        ), f"Table {table_name} should exist after migration 008"
 
     # Verify table schemas have expected columns
-    changeset_columns = db_session.execute(text("PRAGMA table_info(changesets)")).fetchall()
+    changeset_columns = db_session.execute(
+        text("PRAGMA table_info(changesets)")
+    ).fetchall()
     changeset_column_names = [col[1] for col in changeset_columns]
-    
+
     expected_changeset_columns = [
-        "id", "title", "description", "state", "branch_name", 
-        "parent_changeset_id", "author_id", "created_at", "merged_at", "metadata"
+        "id",
+        "title",
+        "description",
+        "state",
+        "branch_name",
+        "parent_changeset_id",
+        "author_id",
+        "created_at",
+        "merged_at",
+        "metadata",
     ]
-    
+
     for col in expected_changeset_columns:
-        assert col in changeset_column_names, f"Column {col} should exist in changesets table"
+        assert (
+            col in changeset_column_names
+        ), f"Column {col} should exist in changesets table"
 
     # Check foreign key constraints exist
-    foreign_keys = db_session.execute(text("PRAGMA foreign_key_list(proposals)")).fetchall()
+    foreign_keys = db_session.execute(
+        text("PRAGMA foreign_key_list(proposals)")
+    ).fetchall()
     assert len(foreign_keys) > 0, "Proposals table should have foreign key constraints"
