@@ -2,7 +2,15 @@ import { useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { CsMain, CsMainTitle } from "@/components/layout/cs_main";
 import { CsSidebar } from "@/components/layout/cs_sidebar";
-import { Card, Button, Spinner, Alert, Tabs, Select, Badge } from "flowbite-react";
+import {
+  Card,
+  Button,
+  Spinner,
+  Alert,
+  Tabs,
+  Select,
+  Badge,
+} from "flowbite-react";
 import {
   Gauge,
   Database,
@@ -39,25 +47,55 @@ function RouteComponent() {
   const { showToast } = useButterToast();
 
   // Fetch data
-  const { data: systemHealth, isLoading: healthLoading, error: healthError } = useSystemHealth();
-  const { data: performanceMetrics, isLoading: metricsLoading, error: metricsError } = usePerformanceMetrics();
-  const { data: trends, isLoading: trendsLoading, error: trendsError } = usePerformanceTrends(trendWindow);
-  const { data: queryStats, isLoading: queryStatsLoading, error: queryStatsError } = useQueryStats();
-  const { data: storageStats, isLoading: storageStatsLoading, error: storageStatsError } = useStorageStats();
+  const {
+    data: systemHealth,
+    isLoading: healthLoading,
+    error: healthError,
+  } = useSystemHealth();
+  const {
+    data: performanceMetrics,
+    isLoading: metricsLoading,
+    error: metricsError,
+  } = usePerformanceMetrics();
+  const {
+    data: trends,
+    isLoading: trendsLoading,
+    error: trendsError,
+  } = usePerformanceTrends(trendWindow);
+  const {
+    data: queryStats,
+    isLoading: queryStatsLoading,
+    error: queryStatsError,
+  } = useQueryStats();
+  const {
+    data: storageStats,
+    isLoading: storageStatsLoading,
+    error: storageStatsError,
+  } = useStorageStats();
 
   const autoTune = useAutoTunePerformance();
   const compressStorage = useCompressStorage();
 
-  const isLoading = healthLoading || metricsLoading || trendsLoading || queryStatsLoading || storageStatsLoading;
-  const hasError = healthError || metricsError || trendsError || queryStatsError || storageStatsError;
+  const isLoading =
+    healthLoading ||
+    metricsLoading ||
+    trendsLoading ||
+    queryStatsLoading ||
+    storageStatsLoading;
+  const hasError =
+    healthError ||
+    metricsError ||
+    trendsError ||
+    queryStatsError ||
+    storageStatsError;
 
   const handleAutoTune = () => {
     autoTune.mutate(undefined, {
       onSuccess: () => {
-        showToast("Auto-tuning triggered successfully", "success");
+        showToast.success("Auto-tuning triggered successfully");
       },
       onError: (error) => {
-        showToast(`Performance tuning failed: ${error.message}`, "error");
+        showToast.error(`Performance tuning failed: ${error.message}`);
       },
     });
   };
@@ -65,10 +103,10 @@ function RouteComponent() {
   const handleCompressStorage = () => {
     compressStorage.mutate(undefined, {
       onSuccess: () => {
-        showToast("Storage compression triggered successfully", "success");
+        showToast.success("Storage compression triggered successfully");
       },
       onError: (error) => {
-        showToast(`Storage compression failed: ${error.message}`, "error");
+        showToast.error(`Storage compression failed: ${error.message}`);
       },
     });
   };
@@ -80,9 +118,11 @@ function RouteComponent() {
           title: "Database Performance",
           metrics: Object.entries(performanceMetrics.database_metrics).map(
             ([key, value]: [string, any]) => ({
-              label: key.replace(/_/g, " ").replace(/\b\w/g, (l) => l.toUpperCase()),
+              label: key
+                .replace(/_/g, " ")
+                .replace(/\b\w/g, (l) => l.toUpperCase()),
               value: typeof value === "number" ? value.toFixed(2) : value,
-            })
+            }),
           ),
         },
       ]
@@ -96,18 +136,15 @@ function RouteComponent() {
             {
               label: "Total Queries",
               value: queryStats.total_queries,
-              icon: <BarChart3 className="h-5 w-5" />,
             },
             {
               label: "Avg Execution Time",
               value: queryStats.avg_execution_time_ms.toFixed(2),
               unit: "ms",
-              icon: <Zap className="h-5 w-5" />,
             },
             {
               label: "Materialized Views",
               value: queryStats.materialized_views_count,
-              icon: <Database className="h-5 w-5" />,
             },
           ],
         },
@@ -122,16 +159,22 @@ function RouteComponent() {
             {
               label: "Files Optimized",
               value: storageStats.optimization_summary.files_optimized,
-              icon: <HardDrive className="h-5 w-5" />,
             },
             {
               label: "Total Savings",
-              value: (storageStats.optimization_summary.total_savings_bytes / 1024 / 1024).toFixed(2),
+              value: (
+                storageStats.optimization_summary.total_savings_bytes /
+                1024 /
+                1024
+              ).toFixed(2),
               unit: "MB",
             },
             {
               label: "Compression Ratio",
-              value: (storageStats.optimization_summary.average_compression_ratio * 100).toFixed(1),
+              value: (
+                storageStats.optimization_summary.average_compression_ratio *
+                100
+              ).toFixed(1),
               unit: "%",
             },
           ],
@@ -174,8 +217,16 @@ function RouteComponent() {
         {hasError && (
           <Alert color="failure" icon={AlertCircle} className="mb-4">
             <span className="font-medium">Error loading performance data</span>
-            <p className="text-sm mt-1">
-              {(healthError || metricsError || trendsError || queryStatsError || storageStatsError)?.message}
+            <p className="mt-1 text-sm">
+              {
+                (
+                  healthError ||
+                  metricsError ||
+                  trendsError ||
+                  queryStatsError ||
+                  storageStatsError
+                )?.message
+              }
             </p>
           </Alert>
         )}
@@ -189,15 +240,19 @@ function RouteComponent() {
               metrics={[
                 ...Object.entries(systemHealth.services_healthy).map(
                   ([service, healthy]) => ({
-                    label: service.replace(/_/g, " ").replace(/\b\w/g, (l) => l.toUpperCase()),
+                    label: service
+                      .replace(/_/g, " ")
+                      .replace(/\b\w/g, (l) => l.toUpperCase()),
                     value: healthy ? "Healthy" : "Unhealthy",
-                    status: healthy ? "healthy" : "error",
-                  })
+                    status: (healthy ? "healthy" : "error") as const,
+                  }),
                 ),
                 {
                   label: "Optimization Enabled",
                   value: systemHealth.optimization_enabled ? "Yes" : "No",
-                  status: systemHealth.optimization_enabled ? "healthy" : "warning",
+                  status: (systemHealth.optimization_enabled
+                    ? "healthy"
+                    : "warning") as const,
                 },
               ]}
               issues={systemHealth.issues}
@@ -225,11 +280,15 @@ function RouteComponent() {
                   <PerformanceMetricsPanel groups={databaseMetrics} />
                 )}
 
-                {!queryMetrics.length && !storageMetrics.length && !databaseMetrics.length && (
-                  <Card>
-                    <p className="text-center text-gray-500">No performance metrics available</p>
-                  </Card>
-                )}
+                {!queryMetrics.length &&
+                  !storageMetrics.length &&
+                  !databaseMetrics.length && (
+                    <Card>
+                      <p className="text-center text-gray-500">
+                        No performance metrics available
+                      </p>
+                    </Card>
+                  )}
               </div>
             </Tabs.Item>
 
@@ -252,7 +311,7 @@ function RouteComponent() {
                   <div className="grid grid-cols-1 gap-6">
                     <SystemHealthCard
                       title="Performance Grade"
-                      status={trends.performance_grade.toLowerCase() as "error" | "warning" | "healthy" | "degraded" | "critical" | "excellent" | "good"}
+                      status={trends.performance_grade.toLowerCase()}
                       healthScore={trends.overall_health_score}
                       metrics={[
                         {
@@ -261,31 +320,38 @@ function RouteComponent() {
                           unit: "hours",
                         },
                       ]}
-                      issues={trends.issues.map((issue: any) => issue.description || issue)}
+                      issues={trends.issues.map(
+                        (issue: any) => issue.description || issue,
+                      )}
                     />
 
-                    {trends.recommendations && trends.recommendations.length > 0 && (
-                      <Card>
-                        <h5 className="mb-4 text-lg font-semibold text-gray-900 dark:text-white">
-                          Recommendations
-                        </h5>
-                        <ul className="space-y-2">
-                          {trends.recommendations.map((rec: any, index: number) => (
-                            <li
-                              key={index}
-                              className="flex items-start gap-2 text-sm text-gray-700 dark:text-gray-300"
-                            >
-                              <AlertCircle className="mt-0.5 h-4 w-4 flex-shrink-0 text-blue-600" />
-                              <span>{rec.recommendation || rec}</span>
-                            </li>
-                          ))}
-                        </ul>
-                      </Card>
-                    )}
+                    {trends.recommendations &&
+                      trends.recommendations.length > 0 && (
+                        <Card>
+                          <h5 className="mb-4 text-lg font-semibold text-gray-900 dark:text-white">
+                            Recommendations
+                          </h5>
+                          <ul className="space-y-2">
+                            {trends.recommendations.map(
+                              (rec: any, index: number) => (
+                                <li
+                                  key={index}
+                                  className="flex items-start gap-2 text-sm text-gray-700 dark:text-gray-300"
+                                >
+                                  <AlertCircle className="mt-0.5 h-4 w-4 flex-shrink-0 text-blue-600" />
+                                  <span>{rec.recommendation || rec}</span>
+                                </li>
+                              ),
+                            )}
+                          </ul>
+                        </Card>
+                      )}
                   </div>
                 ) : (
                   <Card>
-                    <p className="text-center text-gray-500">No trend data available</p>
+                    <p className="text-center text-gray-500">
+                      No trend data available
+                    </p>
                   </Card>
                 )}
               </div>
@@ -312,13 +378,17 @@ function RouteComponent() {
                                 className="rounded-lg bg-gray-50 p-4 dark:bg-gray-700"
                               >
                                 <div className="text-sm font-medium text-gray-600 dark:text-gray-400">
-                                  {key.replace(/_/g, " ").replace(/\b\w/g, (l) => l.toUpperCase())}
+                                  {key
+                                    .replace(/_/g, " ")
+                                    .replace(/\b\w/g, (l) => l.toUpperCase())}
                                 </div>
                                 <div className="mt-1 text-lg font-semibold text-gray-900 dark:text-white">
-                                  {typeof value === "number" ? value.toLocaleString() : value}
+                                  {typeof value === "number"
+                                    ? value.toLocaleString()
+                                    : value}
                                 </div>
                               </div>
-                            )
+                            ),
                           )}
                         </div>
                       </Card>
@@ -326,7 +396,9 @@ function RouteComponent() {
                   </>
                 ) : (
                   <Card>
-                    <p className="text-center text-gray-500">No query statistics available</p>
+                    <p className="text-center text-gray-500">
+                      No query statistics available
+                    </p>
                   </Card>
                 )}
               </div>
@@ -347,12 +419,12 @@ function RouteComponent() {
                         </h5>
                         <AnalyticsChart
                           title=""
-                          data={Object.entries(storageStats.compression_algorithms_used).map(
-                            ([algorithm, count]: [string, any]) => ({
-                              label: algorithm,
-                              value: count,
-                            })
-                          )}
+                          data={Object.entries(
+                            storageStats.compression_algorithms_used,
+                          ).map(([algorithm, count]: [string, any]) => ({
+                            label: algorithm,
+                            value: count,
+                          }))}
                           type="bar"
                         />
                       </Card>
@@ -360,7 +432,9 @@ function RouteComponent() {
                   </>
                 ) : (
                   <Card>
-                    <p className="text-center text-gray-500">No storage statistics available</p>
+                    <p className="text-center text-gray-500">
+                      No storage statistics available
+                    </p>
                   </Card>
                 )}
               </div>
