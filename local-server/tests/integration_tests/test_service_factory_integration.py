@@ -197,7 +197,6 @@ class TestServiceFactoryIntegration:
         total_time = end_time - start_time
 
         # Check service factory performance metrics
-        test_service_factory.get_cache_stats()
         performance_summary = test_service_factory.get_performance_summary()
 
         # Should have reasonable cache hit rate after first operation
@@ -284,13 +283,13 @@ class TestNewIntegrationTestTemplate:
     """
 
     def test_new_feature_with_service_factory(
-        self, shared_client, test_service_factory, optimized_db_session
+        self, test_service_factory, optimized_db_session
     ):
         """
         Template for new integration tests.
 
         This template shows the recommended pattern for new integration tests:
-        1. Use shared_client for API testing
+        1. Use shared_client for API testing (if needed)
         2. Use test_service_factory for service monitoring
         3. Use optimized_db_session when direct DB access is needed
         4. Always clean up resources
@@ -301,7 +300,6 @@ class TestNewIntegrationTestTemplate:
         test_service_factory.clear_cache()
 
         # 2. Record baseline metrics
-        test_service_factory.get_cache_stats()
 
         # 3. Perform the test operations
         # ... your test logic here ...
