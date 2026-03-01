@@ -163,7 +163,6 @@ def test_remove_reference_links_success(shared_client):
     # First, get initial state (should be empty)
     get_resp = shared_client.get(f"/api/structure_nodes/{domain_id}/reference_links")
     assert get_resp.status_code == 200
-    get_resp.json()
 
     # Try to remove from empty list (should succeed with no changes)
     import json
