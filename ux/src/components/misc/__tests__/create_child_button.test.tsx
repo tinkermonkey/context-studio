@@ -35,8 +35,8 @@ describe("CreateChildButton", () => {
     id: "layer-1",
     title: "Test Layer",
     definition: "Test definition",
-    created_at: "2023-01-01T00:00:00Z",
     node_type: "layer",
+    created_at: "2023-01-01T00:00:00Z",
     version: 1,
     last_modified: "2023-01-01T00:00:00Z",
   };
@@ -45,9 +45,9 @@ describe("CreateChildButton", () => {
     id: "domain-1",
     title: "Test Domain",
     definition: "Test definition",
-    layer_id: "layer-1",
-    created_at: "2023-01-01T00:00:00Z",
+    parent_node_id: "layer-1",
     node_type: "domain",
+    created_at: "2023-01-01T00:00:00Z",
     version: 1,
     last_modified: "2023-01-01T00:00:00Z",
   };
