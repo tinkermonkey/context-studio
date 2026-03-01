@@ -503,8 +503,8 @@ class PredicateSimilarityService:
                 logger.warning(f"Failed to generate embedding for '{title}': {e}")
 
         if len(embeddings) < min_cluster_size:
-            logger.warning(
-                f"Not enough embeddings ({len(embeddings)}) for clustering. "
+            logger.debug(
+                f"Insufficient embeddings ({len(embeddings)}) for clustering. "
                 f"Minimum required: {min_cluster_size}. "
                 f"Started with {len(predicates)} predicates, "
                 f"{len(predicates) - len(embeddings)} failed to generate embeddings."
