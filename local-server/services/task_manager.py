@@ -271,7 +271,7 @@ class TaskManager:
             return False
 
         if task.status not in [TaskStatus.PENDING, TaskStatus.RUNNING]:
-            logger.warning(f"Cannot cancel task {task_id}: already in state {task.status.value}")
+            logger.debug(f"Cannot cancel task {task_id}: already in state {task.status.value}")
             return False
 
         await self._cancel_task_internal(task)
