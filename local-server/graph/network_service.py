@@ -150,14 +150,14 @@ class NetworkService:
         }
         
         # StructureNode type counts
-        node_types = {}
+        node_types: Dict[str, int] = {}
         for structure_node, data in self.graph.structure_nodes(data=True):
             node_type = data.get('type', 'unknown')
             node_types[node_type] = node_types.get(node_type, 0) + 1
         stats["node_types"] = node_types
-        
+
         # Edge type counts
-        edge_types = {}
+        edge_types: Dict[str, int] = {}
         for source, target, data in self.graph.edges(data=True):
             edge_type = data.get('type', 'unknown')
             edge_types[edge_type] = edge_types.get(edge_type, 0) + 1
@@ -315,7 +315,7 @@ class NetworkService:
         
         return terms
     
-    def get_node_hierarchy(self, node_id: str, node_type: str = None) -> Dict[str, Any]:
+    def get_node_hierarchy(self, node_id: str, node_type: Optional[str] = None) -> Dict[str, Any]:
         """
         Get the full hierarchy for any structure node (ancestors and descendants).
         This is node-type agnostic.

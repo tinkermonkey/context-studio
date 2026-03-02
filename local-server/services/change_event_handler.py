@@ -7,7 +7,7 @@ and provides utilities for managing change events across all record types.
 """
 
 from datetime import datetime, timezone
-from typing import Dict, List, Optional, Any
+from typing import Dict, List, Optional, Any, cast
 from sqlalchemy.orm import Session
 from sqlalchemy import func
 
@@ -211,7 +211,7 @@ class ChangeEventHandler:
         if record_type is not None:
             query = query.filter(ChangeEvent.record_type == record_type)
 
-        return query.order_by(ChangeEvent.timestamp.asc()).limit(limit).all()
+        return cast(List[ChangeEvent], query.order_by(ChangeEvent.timestamp.asc()).limit(limit).all())
 
     def get_events_for_record(
         self, record_id: str, limit: int = 100
@@ -226,13 +226,13 @@ class ChangeEventHandler:
         Returns:
             List of ChangeEvent objects for the specified record
         """
-        return (
+        return cast(List[ChangeEvent], (
             self.db.query(ChangeEvent)
             .filter(ChangeEvent.record_id == record_id)
             .order_by(ChangeEvent.timestamp.desc())
             .limit(limit)
             .all()
-        )
+        ))
 
     def mark_event_processed(self, event_id: int) -> bool:
         """

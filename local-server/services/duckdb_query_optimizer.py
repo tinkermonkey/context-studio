@@ -150,8 +150,8 @@ class DuckDBQueryOptimizer:
         self.duckdb_conn = duckdb_conn
         self.s3_config = s3_config
         self.query_cache = IntelligentQueryCache()
-        self.materialized_views = {}
-        self.performance_metrics = []
+        self.materialized_views: Dict[str, Dict[str, Any]] = {}
+        self.performance_metrics: list[QueryPerformanceMetrics] = []
 
         self._setup_optimization_settings()
         logger.info(
@@ -186,7 +186,7 @@ class DuckDBQueryOptimizer:
             logger.warning(f"Failed to set some DuckDB optimization settings: {e}")
 
     def optimize_query(
-        self, query: str, query_context: Dict[str, Any] = None
+        self, query: str, query_context: Optional[Dict[str, Any]] = None
     ) -> Tuple[str, QueryPerformanceMetrics]:
         """Apply optimization techniques to improve query performance."""
 
