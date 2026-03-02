@@ -14,7 +14,7 @@ from datetime import datetime, timedelta
 from utils.logger import get_logger
 
 try:
-    from botocore.exceptions import ClientError as BotoClientError
+    from botocore.exceptions import ClientError as BotoClientError  # type: ignore[import-untyped]
 except ImportError:
     # Define a dummy ClientError for environments where boto3 is not installed
     class BotoClientError(Exception):  # type: ignore
@@ -147,13 +147,13 @@ class S3StorageOptimizer:
             'write_statistics': True,
             'compression_level': self._get_compression_level(compression)
         }
-        
+
         # Calculate original size (estimate)
         original_size = data_df.memory_usage(deep=True).sum()
-        
+
         try:
             # Write optimized Parquet
-            optimized_parquet_buffer = optimized_df.to_parquet(**write_options)
+            optimized_parquet_buffer = optimized_df.to_parquet(**write_options)  # type: ignore[call-overload]
             optimized_size = len(optimized_parquet_buffer) if isinstance(optimized_parquet_buffer, bytes) else original_size
             
             compression_ratio = original_size / optimized_size if optimized_size > 0 else 1.0

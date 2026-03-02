@@ -8,9 +8,10 @@ import pytest
 import json
 import os
 from pathlib import Path
+from typing import Any
 
 
-def load_baseline(baseline_name: str) -> dict:
+def load_baseline(baseline_name: str) -> dict[str, Any]:
     """Load performance baseline from JSON file."""
     baseline_path = Path(__file__).parent.parent / "performance" / "baselines" / f"{baseline_name}.json"
 
@@ -18,7 +19,8 @@ def load_baseline(baseline_name: str) -> dict:
         pytest.skip(f"Baseline file not found: {baseline_path}")
 
     with open(baseline_path, 'r') as f:
-        return json.load(f)
+        baseline: dict[str, Any] = json.load(f)
+        return baseline
 
 
 def validate_metric(actual: float, baseline_data: dict, metric_name: str) -> None:
@@ -119,7 +121,7 @@ class TestPerformanceBaselineIntegration:
 
 
 def update_baseline(baseline_name: str, metric_name: str, new_value: float,
-                    description: str = None) -> None:
+                    description: str | None = None) -> None:
     """
     Update a baseline metric with a new measured value.
 
