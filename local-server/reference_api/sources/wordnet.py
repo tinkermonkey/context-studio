@@ -1,3 +1,4 @@
+# mypy: ignore-errors
 """WordNet source implementation using NLTK"""
 
 from typing import Optional, List
@@ -11,7 +12,6 @@ logger = logging.getLogger(__name__)
 
 class WordNetSource(BaseReferenceSource):
     """WordNet source using NLTK"""
-# mypy: ignore-errors
 
     def __init__(self, source_type, config):
         super().__init__(source_type, config)

@@ -1,5 +1,5 @@
-"""
 # mypy: ignore-errors
+"""
 Unit tests for Migration 017 - Add reference_links and word_senses columns.
 
 Tests the addition of reference_links and word_senses columns to the structure_nodes table,

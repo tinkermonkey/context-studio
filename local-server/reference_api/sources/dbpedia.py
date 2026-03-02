@@ -1,3 +1,4 @@
+# mypy: ignore-errors
 """DBpedia source implementation"""
 
 
@@ -7,7 +8,6 @@ from ..models import DBpediaResourceResponse, DBpediaSearchResponse, DBpediaSpar
 
 class DBpediaSource(BaseReferenceSource):
     """
-# mypy: ignore-errors
     DBpedia source implementation with support for multiple service endpoints.
     
     Uses different proxy domain keys for different services:

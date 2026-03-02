@@ -83,9 +83,9 @@ def to_node_out(structure_node: StructureNode, include_embeddings: bool = True) 
         structural_predicate_id=UUID(str(structure_node.structural_predicate_id)) if structure_node.structural_predicate_id else None,
         title_embedding=title_embedding,
         definition_embedding=definition_embedding,
-        created_at=str(structure_node.created_at.isoformat()) if structure_node.created_at else "",  # type: ignore
+        created_at=str(structure_node.created_at.isoformat()) if structure_node.created_at else None,  # type: ignore
         version=int(structure_node.version),
-        last_modified=str(structure_node.last_modified.isoformat()) if structure_node.last_modified else ""  # type: ignore
+        last_modified=str(structure_node.last_modified.isoformat()) if structure_node.last_modified else None  # type: ignore
     )
 
 
@@ -105,7 +105,7 @@ def to_node_link_out(link: StructureNodeLink) -> NodeLinkOut:
         target_node_id=UUID(str(link.target_node_id)),
         predicate=str(link.predicate),
         predicate_id=UUID(str(link.predicate_id)) if link.predicate_id else None,
-        created_at=str(link.created_at.isoformat()) if link.created_at else ""  # type: ignore
+        created_at=str(link.created_at.isoformat()) if link.created_at else None  # type: ignore
     )
 
 

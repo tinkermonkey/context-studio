@@ -1,3 +1,4 @@
+# mypy: ignore-errors
 """Migration 003: Add vector search tables"""
 
 from sqlalchemy.engine import Connection
@@ -7,7 +8,6 @@ from database.migrations.migration_manager import Migration
 
 class Migration003(Migration):
     """Add vector search virtual tables."""
-# mypy: ignore-errors
     
     version = 3
     description = "Add vector search tables"

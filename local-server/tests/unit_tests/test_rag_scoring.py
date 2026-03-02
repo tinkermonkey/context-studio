@@ -1,10 +1,10 @@
-from typing import Optional
 """
 Unit tests for RAG Test Scoring Service
 
 Tests span-based matching, overlap calculation, and metric computation.
 """
 
+from typing import Optional
 import sys
 import os
 

@@ -1,5 +1,5 @@
-"""
 # mypy: ignore-errors
+"""
 Import ontology CSV into the unified structure_nodes schema.
 
 This script imports hierarchical taxonomy data from CSV files into the current

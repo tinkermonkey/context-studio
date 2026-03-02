@@ -1,3 +1,4 @@
+# mypy: ignore-errors
 """Migration 006: The Structure Nodes - Normalize layers, domains, terms into structure_nodes table."""
 
 from sqlalchemy.engine import Connection
@@ -9,7 +10,6 @@ logger = logging.getLogger(__name__)
 
 class Migration006(Migration):
     """Normalize layers, domains, and terms into a single structure_nodes table."""
-# mypy: ignore-errors
     version = 6
     description = "The Structure Nodes - Normalize layers, domains, terms into structure_nodes table."
 
