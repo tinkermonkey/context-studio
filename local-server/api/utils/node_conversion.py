@@ -10,6 +10,7 @@ from database.models import StructureNode, StructureNodeLink
 from database.enums import NodeType
 from api.models.structure_nodes import NodeOut, NodeLinkOut, NodeTypeEnum
 from uuid import UUID
+import numpy as np
 
 
 def to_node_out(structure_node: StructureNode, include_embeddings: bool = True) -> NodeOut:
@@ -32,24 +33,18 @@ def to_node_out(structure_node: StructureNode, include_embeddings: bool = True) 
         # Check if the attribute is loaded (not deferred) before accessing
         if hasattr(structure_node, 'title_embedding') and structure_node.title_embedding:
             try:
-                import pickle
-                title_embedding = pickle.loads(structure_node.title_embedding)
-                # Ensure it's a list of floats
-                if isinstance(title_embedding, (list, tuple)):
-                    title_embedding = [float(x) for x in title_embedding]
+                # Embeddings are stored as raw numpy float32 bytes via np.float32.tobytes()
+                title_embedding = np.frombuffer(structure_node.title_embedding, dtype=np.float32).tolist()
             except Exception:
-                # If unpickling fails, leave as None
+                # If deserialization fails, leave as None
                 title_embedding = None
 
         if hasattr(structure_node, 'definition_embedding') and structure_node.definition_embedding:
             try:
-                import pickle
-                definition_embedding = pickle.loads(structure_node.definition_embedding)
-                # Ensure it's a list of floats
-                if isinstance(definition_embedding, (list, tuple)):
-                    definition_embedding = [float(x) for x in definition_embedding]
+                # Embeddings are stored as raw numpy float32 bytes via np.float32.tobytes()
+                definition_embedding = np.frombuffer(structure_node.definition_embedding, dtype=np.float32).tolist()
             except Exception:
-                # If unpickling fails, leave as None
+                # If deserialization fails, leave as None
                 definition_embedding = None
     
     # Handle the ID field - ensure it's properly converted to UUID
