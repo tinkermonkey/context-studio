@@ -9,7 +9,7 @@ from typing import List, Optional, Dict, Any
 from datetime import datetime, timezone
 from dataclasses import dataclass
 from sqlalchemy.orm import Session
-from sqlalchemy import text
+from sqlalchemy import text, Row
 
 from services.version_manager import VersionManager, EntityVersion, ChangeState
 from utils.logger import get_logger
@@ -645,7 +645,7 @@ class WorkingTreeManager:
 
     def _get_version_number_by_id(self, version_id: str) -> int:
         """Get version number by version ID."""
-        result = self.db.execute(
+        result: Optional[int] = self.db.execute(
             text(
                 """
             SELECT version_number FROM entity_versions WHERE id = :version_id
@@ -656,7 +656,7 @@ class WorkingTreeManager:
 
         return result or 0
 
-    def _row_to_working_tree_entry(self, row) -> WorkingTreeEntry:
+    def _row_to_working_tree_entry(self, row: Row[Any]) -> WorkingTreeEntry:
         """Convert database row to WorkingTreeEntry instance."""
         return WorkingTreeEntry(
             entity_type=row[0],

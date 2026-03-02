@@ -88,7 +88,7 @@ class SPARQLService:
 
             # Hierarchical relationships using parent_node_id
             if structure_node.parent_node_id:
-                parent_node = (
+                parent_node: Optional[StructureNode] = (
                     self.db_session.query(StructureNode)
                     .filter(StructureNode.id == structure_node.parent_node_id)
                     .first()
@@ -134,8 +134,8 @@ class SPARQLService:
 
         for link in links:
             # Get source and target structure_nodes to determine their types
-            source_node = self.db_session.query(StructureNode).filter(StructureNode.id == link.source_node_id).first()
-            target_node = self.db_session.query(StructureNode).filter(StructureNode.id == link.target_node_id).first()
+            source_node: Optional[StructureNode] = self.db_session.query(StructureNode).filter(StructureNode.id == link.source_node_id).first()
+            target_node: Optional[StructureNode] = self.db_session.query(StructureNode).filter(StructureNode.id == link.target_node_id).first()
 
             if source_node and target_node:
                 source_uri = self.ENTITY[f"{source_node.node_type.value}/{source_node.id}"]
@@ -180,7 +180,7 @@ class SPARQLService:
         Returns:
             The layer ancestor structure_node, or None if not found
         """
-        current = structure_node
+        current: Optional[StructureNode] = structure_node
         while current:
             if current.node_type == NodeType.LAYER:
                 return current

@@ -7,7 +7,7 @@ and provides utilities for managing structure_node events.
 """
 
 from datetime import datetime, timezone
-from typing import Dict, Optional, Any
+from typing import Dict, Optional, Any, Tuple
 from sqlalchemy.orm import Session
 from sqlalchemy import func
 
@@ -167,13 +167,14 @@ class NodeEventHandler:
         Returns:
             List of unprocessed NodeEvent objects
         """
-        return (
+        events: list[NodeEvent] = (
             self.db.query(NodeEvent)
             .filter(~NodeEvent.processed)
             .order_by(NodeEvent.timestamp.asc())
             .limit(limit)
             .all()
-        )  # type: ignore[no-any-return]
+        )
+        return events
 
     def get_events_for_node(self, node_id: str, limit: int = 100) -> list[NodeEvent]:
         """
@@ -186,13 +187,14 @@ class NodeEventHandler:
         Returns:
             List of NodeEvent objects for the specified structure_node
         """
-        return (
+        events: list[NodeEvent] = (
             self.db.query(NodeEvent)
             .filter(NodeEvent.node_id == node_id)
             .order_by(NodeEvent.timestamp.desc())
             .limit(limit)
             .all()
-        )  # type: ignore[no-any-return]
+        )
+        return events
 
     def mark_event_processed(self, event_id: int) -> bool:
         """
@@ -205,7 +207,7 @@ class NodeEventHandler:
             True if successful, False otherwise
         """
         try:
-            event = self.db.query(NodeEvent).filter(NodeEvent.id == event_id).first()
+            event: Optional[NodeEvent] = self.db.query(NodeEvent).filter(NodeEvent.id == event_id).first()
             if event:
                 event.processed = True
                 self.db.commit()
@@ -233,7 +235,7 @@ class NodeEventHandler:
         unprocessed_events = total_events - processed_events
 
         # Events by type
-        event_types = {}
+        event_types: Dict[str, int] = {}
         for event_type, count in (
             self.db.query(NodeEvent.event_type, func.count(NodeEvent.id))
             .group_by(NodeEvent.event_type)
@@ -242,7 +244,7 @@ class NodeEventHandler:
             event_types[event_type] = count
 
         # Events by structure_node type
-        node_types = {}
+        node_types: Dict[str, int] = {}
         for node_type, count in (
             self.db.query(NodeEvent.node_type, func.count(NodeEvent.id))
             .group_by(NodeEvent.node_type)

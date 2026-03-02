@@ -11,6 +11,8 @@ import pandas as pd
 from typing import Dict, Any, Optional
 from datetime import datetime, timedelta
 
+from utils.logger import get_logger
+
 try:
     from botocore.exceptions import ClientError as BotoClientError
 except ImportError:
@@ -19,8 +21,6 @@ except ImportError:
         pass
 
 ClientError = BotoClientError
-
-from utils.logger import get_logger
 
 logger = get_logger(__name__)
 

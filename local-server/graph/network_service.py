@@ -122,7 +122,7 @@ class NetworkService:
     
     def _get_node_graph_id(self, node_db_id: str) -> Optional[str]:
         """Get the graph structure_node ID from database structure_node ID."""
-        structure_node = self.db_session.query(StructureNode).filter(StructureNode.id == node_db_id).first()
+        structure_node: Optional[StructureNode] = self.db_session.query(StructureNode).filter(StructureNode.id == node_db_id).first()
         if structure_node:
             return f"{structure_node.node_type.value}:{structure_node.id}"
         return None
