@@ -8,6 +8,7 @@ and depend only on Python stdlib.
 
 from __future__ import annotations
 
+import types
 from dataclasses import dataclass, field
 from enum import Enum
 from typing import Optional
@@ -44,14 +45,20 @@ class NodeType(str, Enum):
             The corresponding NodeType enum value
 
         Raises:
-            KeyError: If the legacy value is not recognized
+            ValueError: If the legacy value is not recognized
         """
         mapping = {
             "layer": cls.TAXONOMY,
             "domain": cls.CONCEPT_SCHEME,
             "term": cls.CLASS,
         }
-        return mapping[legacy_value]
+        mapped_type = mapping.get(legacy_value)
+        if mapped_type is None:
+            raise ValueError(
+                f"Unknown legacy node type: {legacy_value!r}. "
+                f"Expected one of: {', '.join(mapping.keys())}"
+            )
+        return mapped_type
 
 
 @dataclass(frozen=True)
@@ -64,7 +71,7 @@ class ExternalReference:
         uri: The unique identifier (URI/URL) in the external source
         label: A human-readable label or name from the external source
         confidence: A confidence score between 0.0 and 1.0 for the reference accuracy
-        metadata: Additional structured data about the reference
+        metadata: Additional structured data about the reference (wrapped as read-only)
     """
 
     source: str
@@ -72,6 +79,10 @@ class ExternalReference:
     label: str
     confidence: float
     metadata: dict = field(default_factory=dict)
+
+    def __post_init__(self) -> None:
+        """Wrap mutable dict in a read-only proxy to preserve immutability."""
+        object.__setattr__(self, 'metadata', types.MappingProxyType(self.metadata))
 
 
 @dataclass(frozen=True)
