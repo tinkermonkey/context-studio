@@ -7,12 +7,12 @@ handling version creation, tracking, and retrieval with SQLite storage.
 
 import json
 import uuid
-from typing import Optional, List, Dict, Any
+from typing import Optional, List, Dict, Any, Sequence
 from datetime import datetime, timezone
 from dataclasses import dataclass
 from enum import Enum
 from sqlalchemy.orm import Session
-from sqlalchemy import text, Row
+from sqlalchemy import text
 
 from utils.logger import get_logger
 
@@ -195,7 +195,7 @@ class VersionManager:
         logger.debug(f"Retrieving versions for {entity_type}:{entity_id}")
 
         try:
-            results: List[Row[Any]] = self.db.execute(
+            results: Sequence[Any] = self.db.execute(
                 text(
                     """
                 SELECT id, entity_type, entity_id, version_number, content, state,
@@ -242,7 +242,7 @@ class VersionManager:
         )
 
         try:
-            result: Optional[Row[Any]] = self.db.execute(
+            result: Optional[Any] = self.db.execute(
                 text(
                     """
                 SELECT id, entity_type, entity_id, version_number, content, state,
@@ -289,7 +289,7 @@ class VersionManager:
         logger.debug(f"Retrieving current version for {entity_type}:{entity_id}")
 
         try:
-            result: Optional[Row[Any]] = self.db.execute(
+            result: Optional[Any] = self.db.execute(
                 text(
                     """
                 SELECT id, entity_type, entity_id, version_number, content, state,
@@ -423,7 +423,7 @@ class VersionManager:
         logger.debug(f"Retrieving versions with state {state.value}")
 
         try:
-            results: List[Row[Any]] = self.db.execute(
+            results: Sequence[Any] = self.db.execute(
                 text(
                     """
                 SELECT id, entity_type, entity_id, version_number, content, state,
@@ -461,7 +461,7 @@ class VersionManager:
 
         return (result or 0) + 1
 
-    def _row_to_entity_version(self, row: Row[Any]) -> EntityVersion:
+    def _row_to_entity_version(self, row: Any) -> EntityVersion:
         """Convert database row to EntityVersion instance."""
         content: Dict[str, Any] = json.loads(row[4]) if row[4] else {}
         metadata: Optional[Dict[str, Any]] = json.loads(row[10]) if row[10] else None

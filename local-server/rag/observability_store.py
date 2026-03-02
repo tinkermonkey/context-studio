@@ -4,10 +4,10 @@ RAG Observability Store
 This module provides persistence for RAG pipeline observability data,
 including metrics and detailed trace information.
 """
-from typing import Dict, Any, Optional, List
+from typing import Dict, Any, Optional, List, Sequence
 from datetime import datetime, timedelta, timezone
 from sqlalchemy.orm import Session
-from sqlalchemy import text, Row, CursorResult
+from sqlalchemy import text, CursorResult
 import json
 import uuid
 
@@ -184,7 +184,7 @@ class RAGObservabilityStore:
             Dictionary containing metrics, or None if not found
         """
         try:
-            result: Optional[Row[Any]] = self.db_session.execute(text("""
+            result: Optional[Any] = self.db_session.execute(text("""
                 SELECT
                     id, request_id, sentence_text,
                     layer_0_time_ms, layer_0_count,
@@ -238,7 +238,7 @@ class RAGObservabilityStore:
             List of trace dictionaries
         """
         try:
-            results: List[Row[Any]] = self.db_session.execute(text("""
+            results: Sequence[Any] = self.db_session.execute(text("""
                 SELECT
                     id, request_id, sentence_index, layer_name, operation_type,
                     trace_data, timestamp
