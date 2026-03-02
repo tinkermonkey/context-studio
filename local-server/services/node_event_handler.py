@@ -7,7 +7,7 @@ and provides utilities for managing structure_node events.
 """
 
 from datetime import datetime, timezone
-from typing import Dict, Optional, Any, Tuple
+from typing import Dict, Optional, Any
 from sqlalchemy.orm import Session
 from sqlalchemy import func
 
