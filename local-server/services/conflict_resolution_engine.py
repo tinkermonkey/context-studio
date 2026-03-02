@@ -358,9 +358,9 @@ class IntelligentConflictDetector:
             "dependencies",
         ]
 
-        for field in dependency_fields:
-            if field in content:
-                dependencies[field] = content[field]
+        for dep_field in dependency_fields:
+            if dep_field in content:
+                dependencies[dep_field] = content[dep_field]
 
         return dependencies
 
@@ -407,9 +407,9 @@ class IntelligentConflictDetector:
         text_fields = ["title", "description", "content", "text", "body"]
 
         text_parts = []
-        for field in text_fields:
-            if field in content and isinstance(content[field], str):
-                text_parts.append(content[field])
+        for text_field in text_fields:
+            if text_field in content and isinstance(content[text_field], str):
+                text_parts.append(content[text_field])
 
         return " ".join(text_parts) if text_parts else ""
 
@@ -719,30 +719,30 @@ class ConflictResolutionEngine:
 
         all_fields = set(local_content.keys()) | set(remote_content.keys())
 
-        for field in all_fields:
-            local_value = local_content.get(field)
-            remote_value = remote_content.get(field)
+        for field_key in all_fields:
+            local_value = local_content.get(field_key)
+            remote_value = remote_content.get(field_key)
 
             if local_value == remote_value:
                 # No conflict, use either value
-                merged[field] = local_value
+                merged[field_key] = local_value
             elif local_value is None:
                 # Local is missing, use remote
-                merged[field] = remote_value
+                merged[field_key] = remote_value
             elif remote_value is None:
                 # Remote is missing, use local
-                merged[field] = local_value
+                merged[field_key] = local_value
             else:
                 # Conflict - use more recent or longer value as heuristic
                 if isinstance(local_value, str) and isinstance(remote_value, str):
-                    merged[field] = (
+                    merged[field_key] = (
                         local_value
                         if len(local_value) > len(remote_value)
                         else remote_value
                     )
                 else:
                     # Default to local value
-                    merged[field] = local_value
+                    merged[field_key] = local_value
 
         return merged
 

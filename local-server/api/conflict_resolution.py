@@ -129,7 +129,7 @@ def list_conflicts(
     resolved_by: Optional[str] = Query(None, description="Filter by resolver"),
     limit: int = Query(100, ge=1, le=1000, description="Maximum number of conflicts to return"),
     offset: int = Query(0, ge=0, description="Number of conflicts to skip"),
-    conflict_engine = Depends(get_conflict_resolution_engine)
+    conflict_engine=Depends(get_conflict_resolution_engine)
 ):
     """List conflicts with comprehensive filtering options."""
     try:
@@ -151,7 +151,7 @@ def list_conflicts(
 @router.get("/{conflict_id}", response_model=ConflictDescriptorOut)
 def get_conflict(
     conflict_id: str = Path(..., description="Conflict ID"),
-    conflict_engine = Depends(get_conflict_resolution_engine)
+    conflict_engine=Depends(get_conflict_resolution_engine)
 ):
     """Get detailed information about a specific conflict."""
     try:
@@ -169,7 +169,7 @@ def get_conflict(
 def resolve_conflict_manually(
     request: ResolveConflictRequest,
     conflict_id: str = Path(..., description="Conflict ID"),
-    conflict_engine = Depends(get_conflict_resolution_engine)
+    conflict_engine=Depends(get_conflict_resolution_engine)
 ):
     """Manually resolve a specific conflict with custom resolution choice."""
     try:
@@ -192,7 +192,7 @@ def auto_resolve_conflict(
     request: AutoResolveRequest,
     conflict_id: str = Path(..., description="Conflict ID"),
     resolved_by: str = Query(..., description="User requesting auto-resolution"),
-    conflict_engine = Depends(get_conflict_resolution_engine)
+    conflict_engine=Depends(get_conflict_resolution_engine)
 ):
     """Attempt automatic resolution of a conflict using intelligent algorithms."""
     try:
@@ -225,7 +225,7 @@ def get_entity_conflicts(
     entity_type: str = Path(..., description="Entity type"),
     entity_id: str = Path(..., description="Entity ID"),
     resolved: Optional[bool] = Query(None, description="Filter by resolution status"),
-    conflict_engine = Depends(get_conflict_resolution_engine)
+    conflict_engine=Depends(get_conflict_resolution_engine)
 ):
     """Get all conflicts associated with a specific entity."""
     try:
@@ -244,7 +244,7 @@ def get_entity_conflicts(
 @router.post("/detect", response_model=List[ConflictDescriptorOut])
 def detect_conflicts(
     request: DetectConflictsRequest,
-    conflict_engine = Depends(get_conflict_resolution_engine)
+    conflict_engine=Depends(get_conflict_resolution_engine)
 ):
     """Detect conflicts between local and remote entity versions."""
     try:
@@ -261,7 +261,7 @@ def detect_conflicts(
 @router.post("/batch-resolve")
 def batch_resolve_conflicts(
     request: BatchResolveRequest,
-    conflict_engine = Depends(get_conflict_resolution_engine)
+    conflict_engine=Depends(get_conflict_resolution_engine)
 ):
     """Resolve multiple conflicts using a specified strategy."""
     try:
@@ -290,7 +290,7 @@ def batch_resolve_conflicts(
 def get_resolution_suggestions(
     conflict_id: str = Path(..., description="Conflict ID"),
     max_suggestions: int = Query(5, ge=1, le=10, description="Maximum number of suggestions"),
-    conflict_engine = Depends(get_conflict_resolution_engine)
+    conflict_engine=Depends(get_conflict_resolution_engine)
 ):
     """Get intelligent resolution suggestions for a specific conflict."""
     try:
@@ -309,7 +309,7 @@ def get_resolution_suggestions(
 def get_conflict_analytics(
     days: int = Query(30, ge=1, le=365, description="Number of days to analyze"),
     entity_type: Optional[str] = Query(None, description="Filter analytics by entity type"),
-    conflict_engine = Depends(get_conflict_resolution_engine)
+    conflict_engine=Depends(get_conflict_resolution_engine)
 ):
     """Get comprehensive conflict resolution analytics."""
     try:
@@ -324,7 +324,7 @@ def get_conflict_analytics(
 
 @router.get("/health", response_model=ConflictHealthOut)
 def get_conflict_resolution_health(
-    conflict_engine = Depends(get_conflict_resolution_engine)
+    conflict_engine=Depends(get_conflict_resolution_engine)
 ):
     """Get conflict resolution system health and performance metrics."""
     try:
@@ -340,7 +340,7 @@ def get_conflict_resolution_health(
 def resolve_conflicts_prefer_local(
     conflict_ids: List[str] = Query(..., description="Conflict IDs to resolve"),
     resolved_by: str = Query(..., description="User resolving conflicts"),
-    conflict_engine = Depends(get_conflict_resolution_engine)
+    conflict_engine=Depends(get_conflict_resolution_engine)
 ):
     """Resolve conflicts by preferring local versions."""
     try:
@@ -357,7 +357,7 @@ def resolve_conflicts_prefer_local(
 def resolve_conflicts_prefer_remote(
     conflict_ids: List[str] = Query(..., description="Conflict IDs to resolve"),
     resolved_by: str = Query(..., description="User resolving conflicts"),
-    conflict_engine = Depends(get_conflict_resolution_engine)
+    conflict_engine=Depends(get_conflict_resolution_engine)
 ):
     """Resolve conflicts by preferring remote versions."""
     try:
@@ -375,7 +375,7 @@ def resolve_conflicts_intelligent_merge(
     conflict_ids: List[str] = Query(..., description="Conflict IDs to resolve"),
     resolved_by: str = Query(..., description="User resolving conflicts"),
     confidence_threshold: float = Query(0.8, ge=0.0, le=1.0, description="Minimum confidence for auto-merge"),
-    conflict_engine = Depends(get_conflict_resolution_engine)
+    conflict_engine=Depends(get_conflict_resolution_engine)
 ):
     """Resolve conflicts using intelligent CRDT-based merging."""
     try:
@@ -395,7 +395,7 @@ def resolve_conflicts_intelligent_merge(
 def get_conflict_risk_analysis(
     entity_type: str = Path(..., description="Entity type"),
     entity_id: str = Path(..., description="Entity ID"),
-    conflict_engine = Depends(get_conflict_resolution_engine)
+    conflict_engine=Depends(get_conflict_resolution_engine)
 ):
     """Get conflict risk analysis for an entity before modification."""
     try:
@@ -412,7 +412,7 @@ def get_conflict_risk_analysis(
 def get_conflict_hotspots(
     days: int = Query(30, ge=1, le=365, description="Number of days to analyze"),
     limit: int = Query(20, ge=1, le=100, description="Maximum number of hotspots to return"),
-    conflict_engine = Depends(get_conflict_resolution_engine)
+    conflict_engine=Depends(get_conflict_resolution_engine)
 ):
     """Get entities with highest conflict rates (hotspots)."""
     try:

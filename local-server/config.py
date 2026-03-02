@@ -248,9 +248,9 @@ class ReferenceSourcesConfig(BaseModel):
         timeout=60,
         max_retries=2,
         rate_limit=ReferenceSourceRateLimitConfig(
-            requests_per_hour=3000,     # Tier 1: 50 RPM, being conservative at hourly level
-            requests_per_minute=50,     # Tier 1: 50 RPM official limit
-            requests_per_second=1,      # Smoothed: 1 request per second (60 RPM spread evenly)
+            requests_per_hour=3000,  # Tier 1: 50 RPM, conservative
+            requests_per_minute=50,  # Tier 1: 50 RPM official limit
+            requests_per_second=1,   # 60 RPM spread evenly
             progressive_delay=True,
             max_delay=60
         )

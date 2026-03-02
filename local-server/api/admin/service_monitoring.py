@@ -54,11 +54,13 @@ async def get_service_factory_performance(
     """
     try:
         performance = factory.get_performance_summary()
-        logger.debug(f"Service factory performance summary: {performance['overall_cache_hit_rate_percent']:.1f}% hit rate")
+        hit_rate = performance['overall_cache_hit_rate_percent']
+        logger.debug(f"Service factory performance summary: {hit_rate:.1f}% hit rate")
         return performance
     except Exception as e:
         logger.error(f"Error getting service factory performance: {e}")
-        raise HTTPException(status_code=500, detail=f"Failed to get service factory performance: {str(e)}")
+        msg = f"Failed to get service factory performance: {str(e)}"
+        raise HTTPException(status_code=500, detail=msg)
 
 
 @router.get("/health", summary="Get service factory health status")
@@ -149,9 +151,10 @@ async def get_service_type_metrics(
         stats = factory.get_cache_stats()
         
         if service_type not in stats['service_metrics']:
+            available = list(stats['service_metrics'].keys())
             raise HTTPException(
-                status_code=404, 
-                detail=f"Service type '{service_type}' not found. Available types: {list(stats['service_metrics'].keys())}"
+                status_code=404,
+                detail=f"Service type '{service_type}' not found. Available types: {available}"
             )
         
         service_metrics = stats['service_metrics'][service_type]

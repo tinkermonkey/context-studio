@@ -129,7 +129,7 @@ def get_analytics_engine():
 @router.get("/summary", response_model=ChangeSummaryOut)
 def get_change_summary(
     days: int = Query(30, ge=1, le=365, description="Number of days to analyze"),
-    analytics_engine = Depends(get_analytics_engine)
+    analytics_engine=Depends(get_analytics_engine)
 ):
     """Get comprehensive change summary for specified period."""
     try:
@@ -144,7 +144,7 @@ def get_user_activity_report(
     user_id: Optional[str] = Query(None, description="Specific user ID to analyze"),
     days: int = Query(30, ge=1, le=365, description="Number of days to analyze"),
     limit: int = Query(100, ge=1, le=1000, description="Maximum number of users to return"),
-    analytics_engine = Depends(get_analytics_engine)
+    analytics_engine=Depends(get_analytics_engine)
 ):
     """Get comprehensive user activity reports."""
     try:
@@ -166,7 +166,7 @@ def get_user_activity_report(
 @router.get("/entity-hotspots", response_model=List[EntityHotspotOut])
 def get_entity_hotspots(
     limit: int = Query(50, ge=1, le=500, description="Maximum number of hotspots to return"),
-    analytics_engine = Depends(get_analytics_engine)
+    analytics_engine=Depends(get_analytics_engine)
 ):
     """Get entities with highest modification frequency (hotspots)."""
     try:
@@ -183,7 +183,7 @@ def get_entity_hotspots(
 @router.get("/collaboration-metrics", response_model=CollaborationMetricsOut)
 def get_collaboration_metrics(
     days: int = Query(60, ge=1, le=365, description="Number of days to analyze"),
-    analytics_engine = Depends(get_analytics_engine)
+    analytics_engine=Depends(get_analytics_engine)
 ):
     """Get collaboration effectiveness metrics."""
     try:
@@ -196,7 +196,7 @@ def get_collaboration_metrics(
 @router.get("/change-impact/{changeset_id}", response_model=ChangeImpactOut)
 def get_change_impact_analysis(
     changeset_id: str = Path(..., description="Changeset ID to analyze"),
-    analytics_engine = Depends(get_analytics_engine)
+    analytics_engine=Depends(get_analytics_engine)
 ):
     """Get comprehensive impact analysis for a specific changeset."""
     try:
@@ -209,7 +209,7 @@ def get_change_impact_analysis(
 @router.get("/trends", response_model=TrendAnalysisOut)
 def get_change_trends(
     days: int = Query(90, ge=1, le=365, description="Number of days to analyze"),
-    analytics_engine = Depends(get_analytics_engine)
+    analytics_engine=Depends(get_analytics_engine)
 ):
     """Get comprehensive change trends and patterns over time."""
     try:
@@ -221,7 +221,7 @@ def get_change_trends(
 
 @router.get("/performance", response_model=PerformanceMetricsOut)
 def get_system_performance_metrics(
-    analytics_engine = Depends(get_analytics_engine)
+    analytics_engine=Depends(get_analytics_engine)
 ):
     """Get system performance and health metrics."""
     try:
@@ -234,7 +234,7 @@ def get_system_performance_metrics(
 @router.get("/collaboration-insights", response_model=CollaborationInsightsOut)
 def get_collaboration_insights(
     days: int = Query(60, ge=1, le=365, description="Number of days to analyze"),
-    analytics_engine = Depends(get_analytics_engine)
+    analytics_engine=Depends(get_analytics_engine)
 ):
     """Get advanced insights into collaboration patterns and team productivity."""
     try:
@@ -247,7 +247,7 @@ def get_collaboration_insights(
 @router.get("/executive-summary", response_model=ExecutiveSummaryOut)
 def get_executive_summary(
     days: int = Query(30, ge=1, le=365, description="Number of days to analyze"),
-    analytics_engine = Depends(get_analytics_engine)
+    analytics_engine=Depends(get_analytics_engine)
 ):
     """Generate executive summary of system activity and health."""
     try:
@@ -261,7 +261,7 @@ def get_executive_summary(
 
 @router.get("/conflict-metrics")
 def get_conflict_resolution_metrics(
-    analytics_engine = Depends(get_analytics_engine)
+    analytics_engine=Depends(get_analytics_engine)
 ):
     """Get comprehensive conflict resolution analytics."""
     try:
@@ -275,7 +275,7 @@ def get_conflict_resolution_metrics(
 
 @router.get("/health", response_model=AnalyticsHealthOut)
 def get_analytics_health(
-    analytics_engine = Depends(get_analytics_engine)
+    analytics_engine=Depends(get_analytics_engine)
 ):
     """Get analytics system health and performance status."""
     try:
@@ -325,7 +325,7 @@ def get_analytics_health(
 def export_analytics_csv(
     report_type: str = Path(..., description="Type of report to export (summary, user-activity, hotspots, trends)"),
     days: int = Query(30, ge=1, le=365, description="Number of days to analyze"),
-    analytics_engine = Depends(get_analytics_engine)
+    analytics_engine=Depends(get_analytics_engine)
 ):
     """Export analytics data as CSV format."""
     from fastapi.responses import StreamingResponse
@@ -367,7 +367,7 @@ def export_analytics_csv(
 @router.get("/dashboard/metrics")
 def get_dashboard_metrics(
     refresh_interval: int = Query(300, ge=60, le=3600, description="Refresh interval in seconds"),
-    analytics_engine = Depends(get_analytics_engine)
+    analytics_engine=Depends(get_analytics_engine)
 ):
     """Get real-time metrics suitable for dashboard display."""
     try:

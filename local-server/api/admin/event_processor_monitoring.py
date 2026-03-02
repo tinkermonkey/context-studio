@@ -201,7 +201,9 @@ async def get_event_processor_recommendations(request: Request) -> Dict[str, Any
         
         if not processor:
             return {
-                "recommendations": ["No event processor instance found - start the application to initialize event processing"],
+                "recommendations": [
+                    "No event processor instance found - start the application to initialize event processing"
+                ],
                 "timestamp": datetime.now().isoformat()
             }
         
@@ -219,9 +221,13 @@ async def get_event_processor_recommendations(request: Request) -> Dict[str, Any
         # Check unprocessed events
         unprocessed = stats.get("unprocessed_count", 0)
         if unprocessed > 100:
-            recommendations.append(f"⚠️ High unprocessed event count ({unprocessed}) - consider reducing poll_interval or increasing max_events")
+            msg = f"⚠️ High unprocessed event count ({unprocessed}) - "
+            msg += "consider reducing poll_interval or increasing max_events"
+            recommendations.append(msg)
         elif unprocessed > 1000:
-            recommendations.append(f"🔥 Very high unprocessed event count ({unprocessed}) - immediate attention required")
+            msg = f"🔥 Very high unprocessed event count ({unprocessed}) - "
+            msg += "immediate attention required"
+            recommendations.append(msg)
         
         # Check if processor is running
         if not stats.get("is_running", False):

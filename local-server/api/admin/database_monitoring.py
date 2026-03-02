@@ -250,12 +250,18 @@ async def get_database_dashboard() -> Dict[str, Any]:
             "recommendations": recommendations,
             "engines_summary": {
                 "total_engines": len(manager._engines),
-                "healthy_engines": sum(1 for engine_health in health["engines"].values() 
-                                     if engine_health["status"] == "healthy"),
-                "warning_engines": sum(1 for engine_health in health["engines"].values() 
-                                     if engine_health["status"] == "warning"),
-                "error_engines": sum(1 for engine_health in health["engines"].values() 
-                                   if engine_health["status"] == "error"),
+                "healthy_engines": sum(
+                    1 for engine_health in health["engines"].values()
+                    if engine_health["status"] == "healthy"
+                ),
+                "warning_engines": sum(
+                    1 for engine_health in health["engines"].values()
+                    if engine_health["status"] == "warning"
+                ),
+                "error_engines": sum(
+                    1 for engine_health in health["engines"].values()
+                    if engine_health["status"] == "error"
+                ),
             }
         }
     except Exception as e:

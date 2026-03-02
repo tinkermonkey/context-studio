@@ -485,8 +485,8 @@ class ServiceFactory:
             ConflictResolutionEngine instance
         """
         def create_service() -> ConflictResolutionEngine:
-            conflict_detector = IntelligentConflictDetector()
             version_manager = self.create_version_manager(db)
+            conflict_detector = IntelligentConflictDetector(version_manager)
             return ConflictResolutionEngine(db, conflict_detector, version_manager)
 
         return self._create_service_with_factory(ServiceType.CONFLICT_RESOLUTION_ENGINE, create_service)
@@ -504,7 +504,18 @@ class ServiceFactory:
         def create_service() -> DuckDBService:
             if s3_config is None:
                 settings = get_settings()
-                s3_conf = settings.get_s3_config()
+                s3_config_obj = settings.get_s3_config()
+                # Convert S3Config to dict if needed
+                if s3_config_obj is not None:
+                    s3_conf = {
+                        'bucket': s3_config_obj.bucket,
+                        'region': s3_config_obj.region,
+                        'access_key': s3_config_obj.access_key or '',
+                        'secret_key': s3_config_obj.secret_key or '',
+                        'endpoint': s3_config_obj.endpoint or '',
+                    }
+                else:
+                    s3_conf = None
             else:
                 s3_conf = s3_config
             return DuckDBService(db_path=None, s3_config=s3_conf)
@@ -550,19 +561,26 @@ class ServiceFactory:
             # Get S3 config from settings or use defaults
             try:
                 settings = get_settings()
-                s3_config = settings.get_s3_config()
+                s3_config_obj = settings.get_s3_config()
             except Exception:
-                s3_config = None
+                s3_config_obj = None
 
-            if s3_config is None:
-                s3_config = {
+            if s3_config_obj is None:
+                s3_config_dict: Dict[str, str] = {
                     'aws_access_key_id': 'test',
                     'aws_secret_access_key': 'test',
                     'region': 'us-east-1',
                     'bucket': 'test-bucket'
                 }
+            else:
+                s3_config_dict = {
+                    'aws_access_key_id': s3_config_obj.access_key or 'test',
+                    'aws_secret_access_key': s3_config_obj.secret_key or 'test',
+                    'region': s3_config_obj.region,
+                    'bucket': s3_config_obj.bucket
+                }
 
-            return IncrementalSyncEngine(db, duckdb_service, version_manager, s3_config)
+            return IncrementalSyncEngine(db, duckdb_service, version_manager, s3_config_dict)
 
         return self._create_service_with_factory(ServiceType.INCREMENTAL_SYNC_ENGINE, create_service)
 
@@ -585,32 +603,38 @@ class ServiceFactory:
             if s3_config is None:
                 try:
                     settings = get_settings()
-                    s3_conf = settings.get_s3_config()
+                    s3_config_obj = settings.get_s3_config()
                 except Exception:
-                    s3_conf = None
+                    s3_config_obj = None
 
+                if s3_config_obj is not None:
+                    s3_conf: Dict[str, str] = {
+                        "enable_optimizer": "True",
+                        "cache_size": "1000",
+                        "query_timeout": "30",
+                        "bucket_name": s3_config_obj.bucket
+                    }
+                else:
+                    s3_conf = {
+                        "enable_optimizer": "True",
+                        "cache_size": "1000",
+                        "query_timeout": "30",
+                        "bucket_name": "test-bucket"
+                    }
             else:
                 s3_conf = s3_config
-
-            if s3_conf is None:
-                s3_conf = {
-                    "enable_optimizer": True,
-                    "cache_size": 1000,
-                    "query_timeout": 30,
-                    "bucket_name": "test-bucket"
-                }
 
             if duckdb_conn is None:
                 try:
                     duckdb_service = self.create_duckdb_service(s3_conf)
                     duckdb_connection = duckdb_service.connection
                 except Exception:
-                    # For tests, use None connection
-                    duckdb_connection = None
+                    # For tests, use None connection - cast to required type
+                    duckdb_connection = cast(Any, None)
             else:
                 duckdb_connection = duckdb_conn
 
-            return DuckDBQueryOptimizer(duckdb_connection, s3_conf)
+            return DuckDBQueryOptimizer(cast(Any, duckdb_connection), s3_conf)
 
         return self._create_service_with_factory(ServiceType.DUCKDB_QUERY_OPTIMIZER, create_service)
 
@@ -629,32 +653,44 @@ class ServiceFactory:
         def create_service() -> S3StorageOptimizer:
             if s3_config is None:
                 settings = get_settings()
-                s3_conf = settings.get_s3_config()
+                s3_config_obj = settings.get_s3_config()
             else:
-                s3_conf = s3_config
+                s3_config_obj = None
 
             # If no S3 config available, use default/mock configuration
-            if s3_conf is None:
-                s3_conf = {
+            if s3_config_obj is None:
+                s3_conf_dict: Dict[str, str] = {
                     'aws_access_key_id': 'test',
                     'aws_secret_access_key': 'test',
                     'region': 'us-east-1',
                     'bucket_name': 'context-studio-default'
                 }
+            else:
+                s3_conf_dict = {
+                    'aws_access_key_id': s3_config_obj.access_key or 'test',
+                    'aws_secret_access_key': s3_config_obj.secret_key or 'test',
+                    'region': s3_config_obj.region,
+                    'bucket_name': s3_config_obj.bucket
+                }
+
+            # If s3_config param is provided, use it
+            if s3_config is not None:
+                s3_conf_dict = s3_config
 
             # Create S3 client and extract bucket name from config
             try:
                 import boto3
-                s3_client = boto3.client('s3',
-                    aws_access_key_id=s3_conf.get('aws_access_key_id'),
-                    aws_secret_access_key=s3_conf.get('aws_secret_access_key'),
-                    region_name=s3_conf.get('region', 'us-east-1')
+                s3_client = boto3.client(
+                    's3',
+                    aws_access_key_id=s3_conf_dict.get('aws_access_key_id'),
+                    aws_secret_access_key=s3_conf_dict.get('aws_secret_access_key'),
+                    region_name=s3_conf_dict.get('region', 'us-east-1')
                 )
             except ImportError:
                 # boto3 not installed, create a mock S3 client
                 s3_client = None
 
-            bucket_name = s3_conf.get('bucket_name', 'context-studio-default')
+            bucket_name = s3_conf_dict.get('bucket_name', 'context-studio-default')
 
             return S3StorageOptimizer(s3_client, bucket_name)
 
