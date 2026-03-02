@@ -1,12 +1,13 @@
 from sqlalchemy import Column, String, Text, Integer, DateTime, ForeignKey, UniqueConstraint
 from sqlalchemy.dialects.sqlite import BLOB
-from sqlalchemy.orm import declarative_base, relationship
-from typing import Any
+from sqlalchemy.orm import declarative_base, relationship, Mapped
+from typing import Any, cast
 import uuid
 import datetime
 
 from sqlalchemy import JSON, Boolean
 from database.custom_types import NodeTypeColumn, RecordTypeColumn
+from database.enums import NodeType, RecordType
 
 Base: Any = declarative_base()
 
@@ -66,7 +67,7 @@ class StructureNode(Base):
     __tablename__ = "structure_nodes"
 
     id = Column(String, primary_key=True, default=lambda: str(uuid.uuid4()))
-    node_type = Column(NodeTypeColumn(), nullable=False)
+    node_type: Mapped[NodeType] = cast(Mapped[NodeType], Column(NodeTypeColumn(), nullable=False))
     parent_node_id = Column(String, ForeignKey("structure_nodes.id", ondelete="CASCADE"), nullable=True)
     title = Column(String, nullable=False)
     definition = Column(Text, nullable=True)
@@ -117,14 +118,14 @@ class ChangeEvent(Base):
 
     __tablename__ = "change_events"
 
-    id = Column(Integer, primary_key=True, autoincrement=True)
-    event_type = Column(String, nullable=False)  # create, update, delete
-    record_type = Column(RecordTypeColumn(), nullable=False)  # structure_node, structure_node_link, predicate
-    record_id = Column(String, nullable=True)  # ID of the affected record
-    old_data = Column(JSON, nullable=True)
-    new_data = Column(JSON, nullable=True)
-    timestamp = Column(DateTime, default=lambda: datetime.datetime.now(datetime.UTC), nullable=False)
-    processed = Column(Boolean, default=False, nullable=False)
+    id: Mapped[int] = cast(Mapped[int], Column(Integer, primary_key=True, autoincrement=True))
+    event_type: Mapped[str] = cast(Mapped[str], Column(String, nullable=False))  # create, update, delete
+    record_type: Mapped[RecordType] = cast(Mapped[RecordType], Column(RecordTypeColumn(), nullable=False))  # structure_node, structure_node_link, predicate
+    record_id: Mapped[str | None] = cast(Mapped[str | None], Column(String, nullable=True))  # ID of the affected record
+    old_data: Mapped[dict | None] = cast(Mapped[dict | None], Column(JSON, nullable=True))
+    new_data: Mapped[dict | None] = cast(Mapped[dict | None], Column(JSON, nullable=True))
+    timestamp: Mapped[datetime.datetime] = cast(Mapped[datetime.datetime], Column(DateTime, default=lambda: datetime.datetime.now(datetime.UTC), nullable=False))
+    processed: Mapped[bool] = cast(Mapped[bool], Column(Boolean, default=False, nullable=False))
 
 
 # Legacy alias for backwards compatibility during transition
