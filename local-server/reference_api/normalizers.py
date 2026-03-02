@@ -92,8 +92,8 @@ class ResultNormalizer:
         if not response.success or not response.results:
             return [], []
 
-        nodes = []
-        links = []
+        nodes: List[SearchNode] = []
+        links: List[SearchLink] = []
         seen_entities = set()
 
         # Parse SPARQL results

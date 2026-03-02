@@ -165,24 +165,6 @@ class ConceptNetRelatedResponse(BaseSourceResponse):
     related: List[ConceptNetRelatedConcept] = Field(default_factory=list)
 
 
-class ConceptNetEdge(BaseModel):
-    """ConceptNet edge representation"""
-    id: str = Field(..., alias='@id')
-    start: Dict[str, str]
-    rel: Dict[str, str]
-    end: Dict[str, str]
-    weight: float
-    sources: Optional[List[Dict[str, str]]] = None
-
-
-
-class ConceptNetRelatedConcept(BaseModel):
-    """Related concept from ConceptNet"""
-    id: str = Field(..., alias='@id')
-    label: str
-    weight: float
-
-
 
 # ------------------ Wikidata Models ------------------
 class WikidataSparqlRequest(BaseModel):

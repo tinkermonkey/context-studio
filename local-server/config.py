@@ -410,7 +410,7 @@ class Settings(BaseModel):
     
     def get_proxy_enabled_sources(self) -> List[str]:
         """Get list of sources that should use the proxy"""
-        proxy_enabled = []
+        proxy_enabled: List[str] = []
         if not self.proxy_server.enabled:
             return proxy_enabled
             
@@ -609,10 +609,10 @@ class Settings(BaseModel):
 
 class ConfigurationManager:
     """Manages configuration persistence and updates"""
-    
+
     def __init__(self, config_file: str = "./config.json"):
         self.config_file = config_file
-        self.settings = None
+        self.settings: Optional[Settings] = None
         self._lock = threading.Lock()
         print(f"[ConfigurationManager] Loading config from: {self.config_file}")
         self.load()
@@ -646,7 +646,7 @@ class ConfigurationManager:
         """Apply environment variable overrides to configuration data"""
         # Environment variables use double underscore for nesting: SECTION__KEY
         # e.g., SERVER__PORT overrides server.port
-        env_overrides = {}
+        env_overrides: Dict[str, Dict[str, Any]] = {}
 
         # Collect all environment variables that match configuration pattern
         for env_key, env_value in os.environ.items():

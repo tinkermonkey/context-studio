@@ -6,7 +6,7 @@ comparing extracted entities against ground truth annotations using
 span-based matching with configurable overlap thresholds.
 """
 
-from typing import List, Dict, Any, Tuple
+from typing import List, Dict, Any, Tuple, Optional
 from dataclasses import dataclass
 
 from rag.models import ExtractedEntity
@@ -32,7 +32,7 @@ class ExtractionSpan:
     """Represents an extracted entity span."""
     start_char: int
     end_char: int
-    matched_kg_node: str = None
+    matched_kg_node: Optional[str] = None
     text: str = ""
 
     def __repr__(self):

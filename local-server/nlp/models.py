@@ -23,8 +23,8 @@ class ConcepcyRelation(BaseModel):
     """
     Represents a single relation in Concepcy.
     """
-    subject: ConcepcyNode = Field(None, description="The 'start' of the concepcy relation.")
-    object: ConcepcyNode = Field(None, description="The 'end' of the concepcy relation.")
+    subject: Optional[ConcepcyNode] = Field(None, description="The 'start' of the concepcy relation.")
+    object: Optional[ConcepcyNode] = Field(None, description="The 'end' of the concepcy relation.")
     relation: str = Field(..., description="The type of the concepcy relation.")
     text: Optional[str] = Field(None, description="Text representation of the relation.")
     weight: Optional[float] = Field(None, description="Weight of the relation.")
