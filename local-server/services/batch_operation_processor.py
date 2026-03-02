@@ -384,7 +384,7 @@ class BatchOperationProcessor:
 
         return result
 
-    def create_system_checkpoint(self, checkpoint_name: str) -> SystemCheckpoint:
+    def create_system_checkpoint(self, checkpoint_name: str) -> str:
         """Create comprehensive system checkpoint for backup/restore."""
 
         checkpoint_id = str(uuid.uuid4())
@@ -484,7 +484,7 @@ class BatchOperationProcessor:
                 f"({total_size} bytes, {processing_time:.2f}s)"
             )
 
-            return checkpoint
+            return checkpoint_id
 
         except Exception as e:
             logger.error(f"Failed to create system checkpoint {checkpoint_name}: {e}")

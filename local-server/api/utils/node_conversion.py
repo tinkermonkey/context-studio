@@ -76,7 +76,7 @@ def to_node_out(structure_node: StructureNode, include_embeddings: bool = True) 
     
     return NodeOut(
         id=node_id,
-        node_type=NodeTypeEnum(str(structure_node.node_type)),  # Convert to NodeTypeEnum
+        node_type=NodeTypeEnum(structure_node.node_type.value),  # Convert to NodeTypeEnum
         parent_node_id=UUID(str(structure_node.parent_node_id)) if structure_node.parent_node_id else None,
         title=str(structure_node.title),
         definition=str(structure_node.definition) if structure_node.definition else None,
