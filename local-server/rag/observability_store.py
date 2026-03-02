@@ -4,11 +4,10 @@ RAG Observability Store
 This module provides persistence for RAG pipeline observability data,
 including metrics and detailed trace information.
 """
-from typing import Dict, Any, Optional, List, Sequence
+from typing import Dict, Any, Optional, List
 from datetime import datetime, timedelta, timezone
 from sqlalchemy.orm import Session
 from sqlalchemy import text
-from sqlalchemy.engine import CursorResult
 import json
 import uuid
 
@@ -185,7 +184,7 @@ class RAGObservabilityStore:
             Dictionary containing metrics, or None if not found
         """
         try:
-            result: Optional[Any] = self.db_session.execute(text("""
+            result = self.db_session.execute(text("""
                 SELECT
                     id, request_id, sentence_text,
                     layer_0_time_ms, layer_0_count,
@@ -239,7 +238,7 @@ class RAGObservabilityStore:
             List of trace dictionaries
         """
         try:
-            results: Sequence[Any] = self.db_session.execute(text("""
+            results = self.db_session.execute(text("""
                 SELECT
                     id, request_id, sentence_index, layer_name, operation_type,
                     trace_data, timestamp
@@ -275,24 +274,24 @@ class RAGObservabilityStore:
         """
         try:
             # Calculate cutoff timestamps
-            metrics_cutoff: datetime = datetime.now(timezone.utc) - timedelta(days=self.METRICS_RETENTION_DAYS)
-            traces_cutoff: datetime = datetime.now(timezone.utc) - timedelta(days=self.TRACES_RETENTION_DAYS)
+            metrics_cutoff = datetime.now(timezone.utc) - timedelta(days=self.METRICS_RETENTION_DAYS)
+            traces_cutoff = datetime.now(timezone.utc) - timedelta(days=self.TRACES_RETENTION_DAYS)
 
             # Delete old metrics
-            metrics_result: CursorResult[Any] = self.db_session.execute(text("""
+            metrics_result = self.db_session.execute(text("""
                 DELETE FROM rag_processing_metrics
                 WHERE timestamp < :cutoff
             """), {"cutoff": metrics_cutoff})
 
-            metrics_deleted: int = metrics_result.rowcount
+            metrics_deleted = metrics_result.rowcount
 
             # Delete old traces
-            traces_result: CursorResult[Any] = self.db_session.execute(text("""
+            traces_result = self.db_session.execute(text("""
                 DELETE FROM rag_observability_trace
                 WHERE timestamp < :cutoff
             """), {"cutoff": traces_cutoff})
 
-            traces_deleted: int = traces_result.rowcount
+            traces_deleted = traces_result.rowcount
 
             self.db_session.commit()
 

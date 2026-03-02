@@ -7,7 +7,7 @@ handling version creation, tracking, and retrieval with SQLite storage.
 
 import json
 import uuid
-from typing import Optional, List, Dict, Any, Sequence
+from typing import Optional, List, Dict, Any
 from datetime import datetime, timezone
 from dataclasses import dataclass
 from enum import Enum
@@ -106,7 +106,7 @@ class VersionManager:
 
         # Validate parent version exists if specified
         if parent_version_id:
-            parent_exists: Optional[int] = self.db.execute(
+            parent_exists = self.db.execute(
                 text(
                     """
                 SELECT 1 FROM entity_versions WHERE id = :parent_id
@@ -195,7 +195,7 @@ class VersionManager:
         logger.debug(f"Retrieving versions for {entity_type}:{entity_id}")
 
         try:
-            results: Sequence[Any] = self.db.execute(
+            results = self.db.execute(
                 text(
                     """
                 SELECT id, entity_type, entity_id, version_number, content, state,
@@ -242,7 +242,7 @@ class VersionManager:
         )
 
         try:
-            result: Optional[Any] = self.db.execute(
+            result = self.db.execute(
                 text(
                     """
                 SELECT id, entity_type, entity_id, version_number, content, state,
@@ -289,7 +289,7 @@ class VersionManager:
         logger.debug(f"Retrieving current version for {entity_type}:{entity_id}")
 
         try:
-            result: Optional[Any] = self.db.execute(
+            result = self.db.execute(
                 text(
                     """
                 SELECT id, entity_type, entity_id, version_number, content, state,
@@ -386,7 +386,7 @@ class VersionManager:
         logger.info(f"Updating version {version_id} state to {new_state.value}")
 
         try:
-            result: Any = self.db.execute(
+            result = self.db.execute(
                 text(
                     """
                 UPDATE entity_versions
@@ -423,7 +423,7 @@ class VersionManager:
         logger.debug(f"Retrieving versions with state {state.value}")
 
         try:
-            results: Sequence[Any] = self.db.execute(
+            results = self.db.execute(
                 text(
                     """
                 SELECT id, entity_type, entity_id, version_number, content, state,
@@ -449,7 +449,7 @@ class VersionManager:
 
     def _get_next_version_number(self, entity_type: str, entity_id: str) -> int:
         """Get the next version number for an entity."""
-        result: Optional[int] = self.db.execute(
+        result = self.db.execute(
             text(
                 """
             SELECT MAX(version_number) FROM entity_versions

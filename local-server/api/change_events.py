@@ -10,7 +10,7 @@ Endpoints:
 """
 
 from fastapi import APIRouter, HTTPException, Query, Depends
-from typing import List, Optional, Sequence
+from typing import List, Optional
 from sqlalchemy.orm import Session
 
 from database.utils import get_db
