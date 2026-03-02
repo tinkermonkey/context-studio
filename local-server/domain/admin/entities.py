@@ -50,7 +50,7 @@ class BackgroundTask:
     progress: float
     created_at: str
     completed_at: Optional[str]
-    error: Optional[str] = None
+    error: Optional[str]
 
 
 @dataclass
