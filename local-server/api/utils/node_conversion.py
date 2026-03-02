@@ -34,7 +34,7 @@ def to_node_out(structure_node: StructureNode, include_embeddings: bool = True) 
         if hasattr(structure_node, 'title_embedding') and structure_node.title_embedding:
             try:
                 # Embeddings are stored as raw numpy float32 bytes via np.float32.tobytes()
-                title_embedding = np.frombuffer(structure_node.title_embedding, dtype=np.float32).tolist()
+                title_embedding = np.frombuffer(bytes(structure_node.title_embedding), dtype=np.float32).tolist()
             except Exception:
                 # If deserialization fails, leave as None
                 title_embedding = None
@@ -42,7 +42,7 @@ def to_node_out(structure_node: StructureNode, include_embeddings: bool = True) 
         if hasattr(structure_node, 'definition_embedding') and structure_node.definition_embedding:
             try:
                 # Embeddings are stored as raw numpy float32 bytes via np.float32.tobytes()
-                definition_embedding = np.frombuffer(structure_node.definition_embedding, dtype=np.float32).tolist()
+                definition_embedding = np.frombuffer(bytes(structure_node.definition_embedding), dtype=np.float32).tolist()
             except Exception:
                 # If deserialization fails, leave as None
                 definition_embedding = None
