@@ -8,3 +8,6 @@ PRPs/
 test_env/
 .dr/
 .repair_cycle.log
+**/.venv/
+**/test_env/
+**/.dr/
