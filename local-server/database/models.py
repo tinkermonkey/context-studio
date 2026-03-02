@@ -118,14 +118,14 @@ class ChangeEvent(Base):
 
     __tablename__ = "change_events"
 
-    id: Mapped[int] = cast(Mapped[int], Column(Integer, primary_key=True, autoincrement=True))
-    event_type: Mapped[str] = cast(Mapped[str], Column(String, nullable=False))  # create, update, delete
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    event_type = Column(String, nullable=False)  # create, update, delete
     record_type: Mapped[RecordType] = cast(Mapped[RecordType], Column(RecordTypeColumn(), nullable=False))  # structure_node, structure_node_link, predicate
-    record_id: Mapped[str | None] = cast(Mapped[str | None], Column(String, nullable=True))  # ID of the affected record
-    old_data: Mapped[dict | None] = cast(Mapped[dict | None], Column(JSON, nullable=True))
-    new_data: Mapped[dict | None] = cast(Mapped[dict | None], Column(JSON, nullable=True))
-    timestamp: Mapped[datetime.datetime] = cast(Mapped[datetime.datetime], Column(DateTime, default=lambda: datetime.datetime.now(datetime.UTC), nullable=False))
-    processed: Mapped[bool] = cast(Mapped[bool], Column(Boolean, default=False, nullable=False))
+    record_id = Column(String, nullable=True)  # ID of the affected record
+    old_data = Column(JSON, nullable=True)
+    new_data = Column(JSON, nullable=True)
+    timestamp = Column(DateTime, default=lambda: datetime.datetime.now(datetime.UTC), nullable=False)
+    processed = Column(Boolean, default=False, nullable=False)
 
 
 # Legacy alias for backwards compatibility during transition

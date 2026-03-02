@@ -56,11 +56,11 @@ class ChangeExtractor:
         for event in change_events:
             change = ChangeRecord(
                 change_id=str(event.id),
-                event_type=str(event.event_type),
-                record_type=str(event.record_type),
-                record_id=str(event.record_id) if event.record_id else "",
-                old_data=dict(event.old_data) if event.old_data else None,
-                new_data=dict(event.new_data) if event.new_data else None,
+                event_type=event.event_type,
+                record_type=str(event.record_type),  # RecordType enum requires explicit conversion to string
+                record_id=event.record_id or "",
+                old_data=event.old_data,
+                new_data=event.new_data,
                 timestamp=event.timestamp.isoformat(),
                 batch_id=batch_id,
             )
