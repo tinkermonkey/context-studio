@@ -90,7 +90,7 @@ class MigrationManager:
     
     def _discover_migrations(self) -> List[Migration]:
         """Discover all migration files in the versions directory."""
-        migrations = []
+        migrations: List[Migration] = []
         
         if not os.path.exists(self.migrations_dir):
             logger.warning(f"Migrations directory not found: {self.migrations_dir}")

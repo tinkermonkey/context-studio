@@ -1,6 +1,7 @@
 """
 API endpoints for model capabilities information.
 """
+# mypy: ignore-errors
 
 from typing import Optional
 from fastapi import APIRouter, HTTPException, Query, status

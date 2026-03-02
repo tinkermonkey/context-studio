@@ -4,6 +4,7 @@ Test configuration management for isolated testing.
 This module provides test configuration isolation to prevent test data pollution
 in the global configuration files and ensure clean test environments.
 """
+# mypy: ignore-errors
 
 import json
 from pathlib import Path

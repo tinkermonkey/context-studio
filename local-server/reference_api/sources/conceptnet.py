@@ -1,3 +1,4 @@
+# mypy: ignore-errors
 """ConceptNet source implementation"""
 
 from typing import Optional

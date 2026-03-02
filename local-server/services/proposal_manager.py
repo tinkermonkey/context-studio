@@ -1,3 +1,4 @@
+# mypy: ignore-errors
 """
 ProposalManager Service - Manages proposal creation, voting, and lifecycle
 

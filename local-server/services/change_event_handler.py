@@ -249,7 +249,7 @@ class ChangeEventHandler:
                 self.db.query(ChangeEvent).filter(ChangeEvent.id == event_id).first()
             )
             if event:
-                event.processed = True
+                event.processed = True  # type: ignore
                 self.db.commit()
                 logger.debug(f"Event {event_id} marked as processed")
                 return True

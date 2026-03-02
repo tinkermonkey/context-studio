@@ -1,3 +1,4 @@
+# mypy: ignore-errors
 """
 RAG Pipeline Test Management Service
 

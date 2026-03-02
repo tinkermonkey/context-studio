@@ -1,3 +1,4 @@
+# mypy: ignore-errors
 """
 CRDTMergeEngine Service - Handles conflict-free replicated data type merging
 

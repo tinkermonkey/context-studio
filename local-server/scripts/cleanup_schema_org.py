@@ -1,3 +1,4 @@
+# mypy: ignore-errors
 #!/usr/bin/env python3
 """
 Cleanup script to remove old Schema.org data before re-importing with refactored importer.

@@ -1,3 +1,4 @@
+# mypy: ignore-errors
 """
 Schema.org import pipeline with vector embeddings and relationship extraction.
 

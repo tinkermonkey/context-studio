@@ -7,7 +7,7 @@ the standard interface for entity extraction.
 """
 
 from abc import ABC, abstractmethod
-from typing import Dict, Any
+from typing import Dict, Any, Optional
 from sqlalchemy.orm import Session
 
 from rag.models import RAGExtractionResponse
@@ -29,7 +29,7 @@ class BaseRAGPipeline(ABC):
         self,
         kg_db_session: Session,
         ops_db_session: Session,
-        config: Dict[str, Any] = None
+        config: Optional[Dict[str, Any]] = None
     ):
         """
         Initialize the RAG pipeline.

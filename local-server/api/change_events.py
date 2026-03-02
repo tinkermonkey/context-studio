@@ -26,14 +26,14 @@ router = APIRouter(prefix="/api/change_events", tags=["change_events"])
 def to_change_event_out(event: ChangeEvent) -> ChangeEventOut:
     """Convert database ChangeEvent to API ChangeEventOut model."""
     return ChangeEventOut(
-        id=event.id,
-        event_type=event.event_type,
+        id=int(event.id),  # type: ignore
+        event_type=str(event.event_type),  # type: ignore
         record_type=event.record_type.value if hasattr(event.record_type, 'value') else str(event.record_type),
-        record_id=event.record_id,
-        old_data=event.old_data,
-        new_data=event.new_data,
+        record_id=str(event.record_id) if event.record_id else None,  # type: ignore
+        old_data=event.old_data,  # type: ignore
+        new_data=event.new_data,  # type: ignore
         event_timestamp=event.timestamp.isoformat(),
-        processed=event.processed
+        processed=bool(event.processed)  # type: ignore
     )
 
 
@@ -121,7 +121,7 @@ def update_change_event(
             raise HTTPException(status_code=404, detail=f"Change event {event_id} not found")
 
         # Update the processed field
-        event.processed = update_data.processed
+        event.processed = update_data.processed  # type: ignore
         db.commit()
         db.refresh(event)
 

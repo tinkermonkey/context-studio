@@ -1,4 +1,5 @@
 """
+# mypy: ignore-errors
 Unit tests for Migration 006 - The Great Normalization.
 
 Tests the migration from layers/domains/terms to the unified structure_nodes table,

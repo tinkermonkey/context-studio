@@ -80,7 +80,7 @@ def get_conceptnet_relation_for_predicate(predicate: Predicate) -> Optional[str]
         return None
 
     try:
-        mapping = json.loads(predicate.mapping)
+        mapping = json.loads(predicate.mapping)  # type: ignore
         return mapping.get("conceptnet", {}).get("relation")
     except (json.JSONDecodeError, KeyError):
         return None

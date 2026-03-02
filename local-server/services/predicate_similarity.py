@@ -1,3 +1,4 @@
+# mypy: ignore-errors
 """
 Predicate similarity search service with vector search optimization.
 

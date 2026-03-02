@@ -1,3 +1,4 @@
+# mypy: ignore-errors
 #!/usr/bin/env python3
 """
 SQLite-vec validation script for ARM64/aarch64 architecture

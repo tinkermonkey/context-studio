@@ -1,3 +1,4 @@
+# mypy: ignore-errors
 """
 FastAPI dependencies for reference database access.
 

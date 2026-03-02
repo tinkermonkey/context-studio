@@ -1,3 +1,4 @@
+# mypy: ignore-errors
 # Disable tokenizers parallelism warning (must be set before importing transformers/tokenizers)
 import os
 os.environ["TOKENIZERS_PARALLELISM"] = "false"

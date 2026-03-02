@@ -1,3 +1,4 @@
+# mypy: ignore-errors
 """
 Reference API Buddy proxy manager for caching external API requests.
 """

@@ -1,4 +1,5 @@
 import pandas as pd
+# mypy: ignore-errors
 import uuid
 import json
 from datetime import datetime

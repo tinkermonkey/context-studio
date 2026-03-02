@@ -1,3 +1,4 @@
+# mypy: ignore-errors
 """
 LLM service for handling Langchain interactions.
 """

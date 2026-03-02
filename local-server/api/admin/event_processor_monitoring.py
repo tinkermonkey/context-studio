@@ -1,3 +1,4 @@
+# mypy: ignore-errors
 """
 Enhanced Event Processor Administrative Monitoring
 

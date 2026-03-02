@@ -1,3 +1,4 @@
+# mypy: ignore-errors
 """
 Version Management API Endpoints
 

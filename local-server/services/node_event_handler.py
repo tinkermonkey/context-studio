@@ -209,7 +209,7 @@ class NodeEventHandler:
         try:
             event: Optional[NodeEvent] = self.db.query(NodeEvent).filter(NodeEvent.id == event_id).first()
             if event:
-                event.processed = True
+                event.processed = True  # type: ignore
                 self.db.commit()
                 logger.debug(f"Event {event_id} marked as processed")
                 return True

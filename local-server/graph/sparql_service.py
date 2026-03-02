@@ -211,11 +211,11 @@ class SPARQLService:
                 initNs = {
                     "cs": self.CS,
                     "entity": self.ENTITY,
-                    "rdf": RDF,
-                    "rdfs": RDFS,
-                    "skos": SKOS,
-                    "dcterms": DCTERMS,
-                    "foaf": FOAF,
+                    "rdf": Namespace(str(RDF)),
+                    "rdfs": Namespace(str(RDFS)),
+                    "skos": Namespace(str(SKOS)),
+                    "dcterms": Namespace(str(DCTERMS)),
+                    "foaf": Namespace(str(FOAF)),
                 }
 
             # Execute the query
@@ -225,14 +225,15 @@ class SPARQLService:
             result_list = []
             for row in results:
                 result_dict = {}
-                for var_name in results.vars:
-                    value = row[var_name]
-                    if value is not None:
-                        # Convert RDFLib terms to appropriate Python types
-                        if hasattr(value, "toPython"):
-                            result_dict[str(var_name)] = value.toPython()
-                        else:
-                            result_dict[str(var_name)] = str(value)
+                if results.vars is not None:
+                    for var_name in results.vars:
+                        value = row[var_name]  # type: ignore
+                        if value is not None:
+                            # Convert RDFLib terms to appropriate Python types
+                            if hasattr(value, "toPython"):
+                                result_dict[str(var_name)] = value.toPython()
+                            else:
+                                result_dict[str(var_name)] = str(value)
                 result_list.append(result_dict)
 
             return result_list

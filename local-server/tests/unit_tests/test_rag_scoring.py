@@ -1,3 +1,4 @@
+from typing import Optional
 """
 Unit tests for RAG Test Scoring Service
 
@@ -150,7 +151,7 @@ class TestScoringScenarios:
         text: str,
         start_char: int,
         end_char: int,
-        matched_kg_node: str = None
+        matched_kg_node: Optional[str] = None
     ) -> ExtractedEntity:
         """Helper to create ExtractedEntity for testing."""
         return ExtractedEntity(

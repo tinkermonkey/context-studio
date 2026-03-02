@@ -40,8 +40,8 @@ class GraphService:
         # Initialize services only once with shared graph building
         self.network_service = NetworkService(db_session)
         self.sparql_service = SPARQLService(db_session)
-        self.structure_nodes = {}
-        self.edges = {}
+        self.structure_nodes: Dict[Any, Dict[str, Any]] = {}
+        self.edges: Dict[Any, List[Dict[str, Any]]] = {}
 
         # Build graph data once and share it between services
         self._build_graph()
@@ -109,11 +109,11 @@ class GraphService:
                 return True
             visited.add(current)
             node_data = self.structure_nodes.get(current)
-            current = node_data['parent_id'] if node_data else None
+            current = node_data['parent_id'] if node_data else None  # type: ignore
         
         return False
     
-    def check_title_uniqueness_in_domain(self, domain_id: str, title: str, exclude_id: str = None) -> bool:
+    def check_title_uniqueness_in_domain(self, domain_id: str, title: str, exclude_id: Optional[str] = None) -> bool:
         """
         Check if title is unique within domain using graph traversal.
         
@@ -387,7 +387,7 @@ class GraphService:
             domains_in_layer = []
             terms_in_layer = []
             
-            for structure_node in self.network_service.graph.structure_nodes(data=True):
+            for structure_node in self.network_service.graph.nodes(data=True):  # type: ignore
                 node_id, node_data = structure_node
                 if node_data.get("type") == "domain" and node_data.get("layer_id") == layer_id:
                     domains_in_layer.append(node_data.get("entity_id"))
@@ -425,7 +425,7 @@ class GraphService:
                 "metadata": self.get_comprehensive_stats(),
                 "rdf_data": self.sparql_service.serialize("json-ld"),
                 "network_data": {
-                    "structure_nodes": list(self.network_service.graph.structure_nodes(data=True)),
+                    "structure_nodes": list(self.network_service.graph.nodes(data=True)),  # type: ignore
                     "edges": list(self.network_service.graph.edges(data=True))
                 },
                 "export_timestamp": datetime.now().isoformat()

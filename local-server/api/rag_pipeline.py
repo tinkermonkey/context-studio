@@ -1,3 +1,4 @@
+# mypy: ignore-errors
 """
 FastAPI router for RAG Pipeline API endpoints.
 

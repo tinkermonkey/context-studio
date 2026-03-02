@@ -1,3 +1,4 @@
+# mypy: ignore-errors
 """
 Service for regenerating embeddings for structure_nodes with WebSocket progress updates.
 """

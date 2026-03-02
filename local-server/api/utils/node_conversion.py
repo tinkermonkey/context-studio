@@ -8,7 +8,7 @@ and API models for the structure_nodes endpoints.
 from typing import List, Optional
 from database.models import StructureNode, StructureNodeLink
 from database.enums import NodeType
-from api.models.structure_nodes import NodeOut, NodeLinkOut
+from api.models.structure_nodes import NodeOut, NodeLinkOut, NodeTypeEnum
 from uuid import UUID
 
 
@@ -76,16 +76,16 @@ def to_node_out(structure_node: StructureNode, include_embeddings: bool = True) 
     
     return NodeOut(
         id=node_id,
-        node_type=structure_node.node_type.value,  # Convert enum to string
-        parent_node_id=UUID(structure_node.parent_node_id) if structure_node.parent_node_id else None,
-        title=structure_node.title,
-        definition=structure_node.definition,
-        structural_predicate_id=UUID(structure_node.structural_predicate_id) if structure_node.structural_predicate_id else None,
+        node_type=NodeTypeEnum(str(structure_node.node_type)),  # Convert to NodeTypeEnum
+        parent_node_id=UUID(str(structure_node.parent_node_id)) if structure_node.parent_node_id else None,
+        title=str(structure_node.title),
+        definition=str(structure_node.definition) if structure_node.definition else None,
+        structural_predicate_id=UUID(str(structure_node.structural_predicate_id)) if structure_node.structural_predicate_id else None,
         title_embedding=title_embedding,
         definition_embedding=definition_embedding,
-        created_at=structure_node.created_at.isoformat() if structure_node.created_at else None,
-        version=structure_node.version,
-        last_modified=structure_node.last_modified.isoformat() if structure_node.last_modified else None
+        created_at=str(structure_node.created_at.isoformat()) if structure_node.created_at else "",  # type: ignore
+        version=int(structure_node.version),
+        last_modified=str(structure_node.last_modified.isoformat()) if structure_node.last_modified else ""  # type: ignore
     )
 
 
@@ -100,12 +100,12 @@ def to_node_link_out(link: StructureNodeLink) -> NodeLinkOut:
         NodeLinkOut model for API response
     """
     return NodeLinkOut(
-        id=UUID(link.id),
-        source_node_id=UUID(link.source_node_id),
-        target_node_id=UUID(link.target_node_id),
-        predicate=link.predicate,
-        predicate_id=UUID(link.predicate_id) if link.predicate_id else None,
-        created_at=link.created_at.isoformat() if link.created_at else None
+        id=UUID(str(link.id)),
+        source_node_id=UUID(str(link.source_node_id)),
+        target_node_id=UUID(str(link.target_node_id)),
+        predicate=str(link.predicate),
+        predicate_id=UUID(str(link.predicate_id)) if link.predicate_id else None,
+        created_at=str(link.created_at.isoformat()) if link.created_at else ""  # type: ignore
     )
 
 

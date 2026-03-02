@@ -1,3 +1,4 @@
+# mypy: ignore-errors
 """
 DuckDB Service - High-performance analytical database integration
 

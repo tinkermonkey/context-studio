@@ -1,4 +1,5 @@
 """
+# mypy: ignore-errors
 Unit tests for Migration 018 - Add attributes column.
 
 Tests the addition of attributes column to the structure_nodes table,

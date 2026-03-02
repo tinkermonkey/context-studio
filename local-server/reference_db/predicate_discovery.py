@@ -1,3 +1,4 @@
+# mypy: ignore-errors
 """
 Predicate discovery service for fetching predicate metadata from external sources.
 

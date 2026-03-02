@@ -268,18 +268,18 @@ class IntelligentConflictDetector:
         # Check for field-level conflicts
         all_fields = set(local_content.keys()) | set(remote_content.keys())
 
-        for field in all_fields:
-            local_value = local_content.get(field)
-            remote_value = remote_content.get(field)
+        for field_name in all_fields:
+            local_value = local_content.get(field_name)
+            remote_value = remote_content.get(field_name)
 
             if local_value != remote_value:
                 conflict_severity = self._assess_field_conflict_severity(
-                    field, local_value, remote_value
+                    field_name, local_value, remote_value
                 )
 
                 conflicts.append(
                     {
-                        "field": field,
+                        "field": field_name,
                         "local_value": local_value,
                         "remote_value": remote_value,
                         "conflict_type": "field_value_mismatch",

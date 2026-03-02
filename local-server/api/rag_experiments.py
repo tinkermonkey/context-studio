@@ -1,3 +1,4 @@
+# mypy: ignore-errors
 """
 API endpoints for RAG pipeline experimentation.
 

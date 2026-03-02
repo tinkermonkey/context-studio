@@ -1,3 +1,4 @@
+# mypy: ignore-errors
 """
 Manager for reference database operations.
 

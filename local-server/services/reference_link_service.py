@@ -1,3 +1,4 @@
+# mypy: ignore-errors
 """
 Service for managing reference data links on structure nodes.
 

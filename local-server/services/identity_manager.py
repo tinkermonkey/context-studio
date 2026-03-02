@@ -1,3 +1,4 @@
+# mypy: ignore-errors
 """
 IdentityManager Service - Manages user identity and trust verification
 

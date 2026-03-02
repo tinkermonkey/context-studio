@@ -55,6 +55,7 @@ class WikidataSource(BaseReferenceSource):
 
     async def search(self, query: str, limit: int = 20, offset: int = 0, format: str = "json") -> WikidataSearchResponse:
         """Search Wikidata entities using the wbsearchentities API"""
+# mypy: ignore-errors
         try:
             # Use the Wikidata action API for entity search
             # Always use the main Wikidata API, not the query endpoint

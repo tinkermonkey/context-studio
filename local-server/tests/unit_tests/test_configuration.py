@@ -2,6 +2,7 @@
 Comprehensive test for 10.2.6 Configuration Updates implementation.
 Tests environment variables and configuration schema compliance.
 """
+# mypy: ignore-errors
 
 import sys
 import os

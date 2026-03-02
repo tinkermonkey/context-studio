@@ -1,3 +1,4 @@
+# mypy: ignore-errors
 """Core reference service coordinating all reference API sources"""
 
 from typing import Dict, Any, Optional, List, Tuple

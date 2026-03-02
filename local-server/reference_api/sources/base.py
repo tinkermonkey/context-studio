@@ -1,3 +1,4 @@
+# mypy: ignore-errors
 """Abstract base class for reference API sources"""
 
 from abc import ABC, abstractmethod

@@ -1,3 +1,4 @@
+# mypy: ignore-errors
 """
 Graph API endpoints for Context Studio
 

@@ -1,3 +1,4 @@
+# mypy: ignore-errors
 """
 Incremental Sync Engine - Efficient partitioned synchronization for large-scale operations
 

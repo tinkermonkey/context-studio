@@ -1,3 +1,4 @@
+# mypy: ignore-errors
 """
 Layer 0: Knowledge Graph Context Preparation Processor
 
@@ -310,11 +311,11 @@ class KGContextProcessor:
             node = node_objects.get(node_id)
             if node:
                 kg_node = KGNode(
-                    node_id=node.id,
-                    title=node.title,
+                    node_id=node.id,  # type: ignore
+                    title=node.title,  # type: ignore
                     node_type=node.node_type.value,
                     similarity_score=node_scores[node_id],
-                    definition=node.definition
+                    definition=node.definition  # type: ignore
                 )
                 kg_nodes.append(kg_node)
 

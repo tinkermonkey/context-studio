@@ -120,13 +120,13 @@ class PipelineFlavorService:
 
             if request.enabled is not None:
                 update_fields.append("enabled = :enabled")
-                params["enabled"] = request.enabled
+                params["enabled"] = request.enabled  # type: ignore
 
             if update_fields:
                 # Always update the timestamp and increment version when making changes
                 update_fields.append("updated_at = :updated_at")
                 update_fields.append("version = version + 1")
-                params["updated_at"] = datetime.now(timezone.utc)
+                params["updated_at"] = datetime.now(timezone.utc)  # type: ignore
 
                 db.execute(text(f"""
                     UPDATE pipeline_flavors

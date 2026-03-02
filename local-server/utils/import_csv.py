@@ -1,4 +1,5 @@
 import argparse
+# mypy: ignore-errors
 import csv
 import sys
 

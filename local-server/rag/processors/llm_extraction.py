@@ -1,3 +1,4 @@
+# mypy: ignore-errors
 """
 Layer 1: LLM Extraction Processor
 

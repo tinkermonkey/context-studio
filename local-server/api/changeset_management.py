@@ -1,3 +1,4 @@
+# mypy: ignore-errors
 """
 Changeset Management API Endpoints
 

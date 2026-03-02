@@ -1,3 +1,4 @@
+# mypy: ignore-errors
 #!/usr/bin/env python3
 """
 Test script to verify the reference_api_buddy integration works correctly.

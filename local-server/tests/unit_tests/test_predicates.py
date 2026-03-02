@@ -306,7 +306,7 @@ class TestConceptNetMapping:
             if not predicate.mapping:
                 return None
             try:
-                mapping = json.loads(predicate.mapping)
+                mapping = json.loads(predicate.mapping)  # type: ignore
                 return mapping.get("conceptnet", {}).get("relation")
             except (json.JSONDecodeError, KeyError):
                 return None

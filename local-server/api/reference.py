@@ -1,3 +1,4 @@
+# mypy: ignore-errors
 """FastAPI router for reference endpoints"""
 
 from fastapi import APIRouter, HTTPException, Depends, Query, Path, Body

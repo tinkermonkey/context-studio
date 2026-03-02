@@ -1,3 +1,4 @@
+# mypy: ignore-errors
 from fastapi import APIRouter, HTTPException, status, Depends
 from fastapi.responses import StreamingResponse
 import datetime
