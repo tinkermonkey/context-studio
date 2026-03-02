@@ -7,7 +7,8 @@ including metrics and detailed trace information.
 from typing import Dict, Any, Optional, List, Sequence
 from datetime import datetime, timedelta, timezone
 from sqlalchemy.orm import Session
-from sqlalchemy import text, CursorResult
+from sqlalchemy import text
+from sqlalchemy.engine import CursorResult
 import json
 import uuid
 
