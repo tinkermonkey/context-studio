@@ -283,7 +283,7 @@ class RAGObservabilityStore:
                 WHERE timestamp < :cutoff
             """), {"cutoff": metrics_cutoff})
 
-            metrics_deleted = metrics_result.rowcount
+            metrics_deleted = metrics_result.rowcount  # type: ignore[attr-defined]
 
             # Delete old traces
             traces_result = self.db_session.execute(text("""
@@ -291,7 +291,7 @@ class RAGObservabilityStore:
                 WHERE timestamp < :cutoff
             """), {"cutoff": traces_cutoff})
 
-            traces_deleted = traces_result.rowcount
+            traces_deleted = traces_result.rowcount  # type: ignore[attr-defined]
 
             self.db_session.commit()
 
