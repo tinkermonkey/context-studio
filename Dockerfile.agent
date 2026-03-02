@@ -1,7 +1,7 @@
 # ============================================================================
 # Stage 1: Base Environment Setup
 # ============================================================================
-# Last dependency refresh: 2026-03-01
+# Last dependency refresh: 2026-03-02
 FROM clauditoreum-orchestrator:latest
 
 # The base image already includes:

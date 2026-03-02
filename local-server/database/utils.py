@@ -755,9 +755,9 @@ def init_db(engine=None, database_url=None, connect_args=None):
             connection.enable_load_extension(True)
             sqlite_vec.load(connection)
             _loaded_connections.add(connection_id)
-        except sqlite3.OperationalError as e:
+        except Exception as e:
             logger.error(f"Failed to load SQLite vec extension: {e}")
-            raise e
+            raise
         finally:
             # Disable extension loading after use
             connection.enable_load_extension(False)

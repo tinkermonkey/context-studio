@@ -143,15 +143,17 @@ def create_app(dataset_id=None, engine=None, session_local=None, service_factory
             # Run migrations to ensure schema is up to date
             if dataset_manager is None:
                 # Direct database mode: run migrations on config database
-                settings = config_module.get_settings()
-                # Extract file path from SQLite URL (sqlite:///./path/to/file.db)
-                db_url = settings.database.default_url
-                if db_url.startswith("sqlite:///"):
-                    db_path = db_url.replace("sqlite:///", "")
-                    # Ensure the directory exists (os is imported at module level)
-                    os.makedirs(os.path.dirname(db_path), exist_ok=True)
-                    MigrationManager(db_path).migrate_to_latest()
-                    logger.info(f"Database migrations applied to: {db_path}")
+                # Skip if a test engine was explicitly provided (test mode)
+                if engine is None:
+                    settings = config_module.get_settings()
+                    # Extract file path from SQLite URL (sqlite:///./path/to/file.db)
+                    db_url = settings.database.default_url
+                    if db_url.startswith("sqlite:///"):
+                        db_path = db_url.replace("sqlite:///", "")
+                        # Ensure the directory exists (os is imported at module level)
+                        os.makedirs(os.path.dirname(db_path), exist_ok=True)
+                        MigrationManager(db_path).migrate_to_latest()
+                        logger.info(f"Database migrations applied to: {db_path}")
             else:
                 # Dataset manager mode: run migrations on active dataset
                 active_dataset = dataset_manager.get_active_dataset()
