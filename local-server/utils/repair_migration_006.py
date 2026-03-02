@@ -15,6 +15,7 @@ import os
 import sqlite3
 import argparse
 import logging
+from typing import Any, Dict
 
 # Add the parent directory to the path so we can import from the project
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -67,7 +68,7 @@ def check_migration_status(db_path: str) -> bool:
         return False
 
 
-def analyze_database(db_path: str) -> dict:
+def analyze_database(db_path: str) -> Dict[str, Any]:
     """Analyze the database to understand the migration state."""
     try:
         with sqlite3.connect(db_path) as conn:
@@ -108,13 +109,13 @@ def analyze_database(db_path: str) -> dict:
         return {}
 
 
-def needs_repair(analysis: dict) -> bool:
+def needs_repair(analysis: Dict[str, Any]) -> bool:
     """Determine if the database needs repair."""
     # Check if we have legacy data but missing structure_nodes data
-    total_legacy = sum(analysis.get("legacy_counts", {}).values())
-    structure_nodes_count = analysis.get("new_counts", {}).get("structure_nodes", 0)
+    total_legacy: int = sum(analysis.get("legacy_counts", {}).values(), 0)
+    structure_nodes_count: int = analysis.get("new_counts", {}).get("structure_nodes", 0)
 
-    return total_legacy > 0 and structure_nodes_count == 0
+    return bool(total_legacy > 0 and structure_nodes_count == 0)
 
 
 def repair_database(db_path: str) -> bool:

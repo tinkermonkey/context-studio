@@ -7,12 +7,13 @@ handling version creation, tracking, and retrieval with SQLite storage.
 
 import json
 import uuid
-from typing import Optional, List, Dict, Any
+from typing import Optional, List, Dict, Any, cast
 from datetime import datetime, timezone
 from dataclasses import dataclass
 from enum import Enum
 from sqlalchemy.orm import Session
 from sqlalchemy import text
+from sqlalchemy.engine.cursor import CursorResult
 
 from utils.logger import get_logger
 
@@ -386,15 +387,18 @@ class VersionManager:
         logger.info(f"Updating version {version_id} state to {new_state.value}")
 
         try:
-            result = self.db.execute(
-                text(
-                    """
+            result = cast(
+                CursorResult,
+                self.db.execute(
+                    text(
+                        """
                 UPDATE entity_versions
                 SET state = :new_state
                 WHERE id = :version_id
             """
+                    ),
+                    {"new_state": new_state.value, "version_id": version_id},
                 ),
-                {"new_state": new_state.value, "version_id": version_id},
             )
 
             if result.rowcount > 0:
