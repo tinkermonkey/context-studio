@@ -81,7 +81,7 @@ RUN pip install --no-cache-dir pytest pytest-cov black flake8 mypy \
     types-jsonschema types-networkx "sqlalchemy[mypy]" \
     types-PyYAML types-python-dateutil types-setuptools types-toml \
     types-Pillow types-urllib3 types-Werkzeug types-cryptography \
-    types-pyyaml
+    boto3-stubs
 
 # Copy mypy configuration (handles packages without type stubs)
 COPY local-server/mypy.ini /workspace/context-studio/local-server/mypy.ini

@@ -7,9 +7,9 @@ and conflict resolution. They import only from Python stdlib.
 
 from __future__ import annotations
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from enum import Enum
-from typing import Optional, List
+from typing import List
 
 
 class ChangeState(str, Enum):
