@@ -1,7 +1,6 @@
 from fastapi import APIRouter, HTTPException, status, Depends
 from fastapi.responses import StreamingResponse
 import datetime
-from typing import List
 
 from api.dependencies.llm_services import get_default_llm_service
 from llm.service import LLMService
