@@ -46,7 +46,7 @@ class IntelligentQueryCache:
         """
         self.max_cache_size = max_cache_size
         self.ttl_seconds = ttl_seconds
-        self.cache = {}
+        self.cache: Dict[str, Dict[str, Any]] = {}
         self.cache_stats = {"hits": 0, "misses": 0, "evictions": 0}
         logger.info(
             f"IntelligentQueryCache initialized with max_size={max_cache_size}, ttl={ttl_seconds}s"

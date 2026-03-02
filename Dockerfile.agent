@@ -78,7 +78,7 @@ RUN pip install --no-cache-dir -r /tmp/backend-requirements.txt && \
 # sqlalchemy[mypy] provides the SQLAlchemy mypy plugin for proper ORM type resolution
 RUN pip install --no-cache-dir pytest pytest-cov black flake8 mypy \
     pandas-stubs types-requests types-psutil types-cachetools \
-    types-jsonschema "sqlalchemy[mypy]"
+    types-jsonschema types-networkx "sqlalchemy[mypy]"
 
 # Copy mypy configuration (handles packages without type stubs)
 COPY local-server/mypy.ini /workspace/context-studio/local-server/mypy.ini
