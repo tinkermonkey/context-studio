@@ -9,6 +9,7 @@ import tempfile
 import os
 import time
 import statistics
+from typing import cast
 
 from reference_db.config import ReferenceConfig
 from reference_db.manager import ReferenceManager
@@ -103,7 +104,7 @@ class TestVectorSearchLatency:
         manager, db_path = large_dataset_manager
 
         def embedding_gen(text: str) -> bytes:
-            return generate_embedding(text)
+            return cast(bytes, generate_embedding(text))
 
         # Warm up queries
         for _ in range(3):
@@ -194,7 +195,7 @@ class TestVectorSearchLatency:
 
         manager, db_path = large_dataset_manager
 
-        query_embedding = generate_embedding("test query")
+        query_embedding: bytes = cast(bytes, generate_embedding("test query"))
 
         def embedding_gen(_: str) -> bytes:
             return query_embedding
@@ -247,7 +248,7 @@ class TestVectorSearchLatency:
 
         manager, db_path = large_dataset_manager
 
-        query_embedding = generate_embedding("test query")
+        query_embedding: bytes = cast(bytes, generate_embedding("test query"))
 
         def embedding_gen(_: str) -> bytes:
             return query_embedding

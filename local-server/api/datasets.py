@@ -1,7 +1,7 @@
 """API endpoints for dataset management."""
 
 import os
-from typing import List
+from typing import List, cast
 from datetime import datetime
 from fastapi import APIRouter, HTTPException, Depends
 
@@ -23,7 +23,7 @@ router = APIRouter()
 
 def get_dataset_manager_dependency() -> DatasetManager:
     """Dependency to get dataset manager."""
-    return get_dataset_manager()
+    return cast(DatasetManager, get_dataset_manager())
 
 
 @router.get("/datasets", response_model=List[DatasetResponse])

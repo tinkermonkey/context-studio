@@ -9,7 +9,7 @@ views for enterprise-scale analytical performance.
 import time
 import hashlib
 import duckdb
-from typing import Dict, Optional, Any, Tuple
+from typing import Dict, Optional, Any, Tuple, cast
 from dataclasses import dataclass
 from datetime import datetime, timezone
 
@@ -79,7 +79,7 @@ class IntelligentQueryCache:
 
         self.cache_stats["hits"] += 1
         logger.debug(f"Cache hit for query hash: {query_hash[:8]}...")
-        return cached_entry["result"]
+        return cast(Dict[str, Any], cached_entry["result"])
 
     def cache_result(self, query_hash: str, result: Any, metadata: Dict[str, Any]):
         """Cache query result with metadata."""

@@ -9,7 +9,7 @@ between tests and from the development environment.
 import tempfile
 import shutil
 from pathlib import Path
-from typing import Optional, Dict, Any, Tuple
+from typing import Optional, Dict, Any, Tuple, cast
 from contextlib import contextmanager
 
 from sqlalchemy.engine import Engine
@@ -80,14 +80,14 @@ class TestEnvironment:
     def create_session(self) -> Session:
         """
         Create a new database session.
-        
+
         Returns:
             SQLAlchemy Session: New database session
         """
         if not self.primary_session_local:
             raise RuntimeError("Test environment not set up. Call setup() first.")
-        
-        return self.primary_session_local()
+
+        return cast(Session, self.primary_session_local())
     
     def create_additional_database(self, db_name: str) -> Tuple[Engine, sessionmaker, Path]:
         """

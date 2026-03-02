@@ -9,7 +9,7 @@ test database configurations.
 import tempfile
 import shutil
 from pathlib import Path
-from typing import Tuple, Optional, List, Union
+from typing import Tuple, Optional, List, Union, cast
 from contextlib import contextmanager
 
 from sqlalchemy import text
@@ -310,10 +310,10 @@ def verify_database_isolation(test_func):
 def create_test_database_in_memory() -> Tuple[Engine, sessionmaker]:
     """Create an in-memory test database with schema."""
     with TestDatabaseManager() as manager:
-        return manager.create_in_memory_database()
+        return cast(Tuple[Engine, sessionmaker], manager.create_in_memory_database())
 
 
 def create_test_database_with_migrations(temp_dir: Optional[str] = None) -> Tuple[Engine, sessionmaker, Path]:
     """Create a file-based test database with all migrations applied."""
     with TestDatabaseManager(temp_dir) as manager:
-        return manager.create_migrated_database()
+        return cast(Tuple[Engine, sessionmaker, Path], manager.create_migrated_database())

@@ -9,6 +9,7 @@ import pytest
 import tempfile
 import os
 import time
+from typing import cast
 
 from reference_db.config import ReferenceConfig
 from reference_db.manager import ReferenceManager
@@ -147,7 +148,7 @@ class TestVectorSearchAccuracy:
         manager, db_path = manager_with_schema_org_data
 
         def embedding_gen(text: str) -> bytes:
-            return generate_embedding(text)
+            return cast(bytes, generate_embedding(text))
 
         # Define known queries and expected results (entity should be in top-3)
         test_queries = [
@@ -232,7 +233,7 @@ class TestVectorSearchAccuracy:
         manager, db_path = manager_with_schema_org_data
 
         def embedding_gen(text: str) -> bytes:
-            return generate_embedding(text)
+            return cast(bytes, generate_embedding(text))
 
         # Search with high threshold
         results_high = manager.search_by_similarity(
@@ -288,7 +289,7 @@ class TestVectorSearchPerformance:
         manager, db_path = manager_with_schema_org_data
 
         def embedding_gen(text: str) -> bytes:
-            return generate_embedding(text)
+            return cast(bytes, generate_embedding(text))
 
         # Warm up the search (first query may be slower due to caching)
         manager.search_by_similarity(

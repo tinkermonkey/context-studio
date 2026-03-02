@@ -7,7 +7,7 @@ This module handles routing LLM requests to the appropriate provider
 
 import os
 import warnings
-from typing import Optional, Dict, Any
+from typing import Optional, Dict, Any, cast
 from langchain.chat_models import init_chat_model
 
 from .enabled_models import ProviderType, EnabledModelConfig, get_enabled_models_manager
@@ -329,11 +329,11 @@ class ProviderRouter:
 
     def is_model_available(self, model_name: str) -> bool:
         """Check if a model is available (enabled and configured)"""
-        return self.models_manager.is_model_enabled(model_name)
+        return cast(bool, self.models_manager.is_model_enabled(model_name))
 
     def get_provider_for_model(self, model_name: str) -> Optional[ProviderType]:
         """Get the provider type for a model"""
-        return self.models_manager.get_provider_for_model(model_name)
+        return cast(Optional[ProviderType], self.models_manager.get_provider_for_model(model_name))
 
 
 # Global instance

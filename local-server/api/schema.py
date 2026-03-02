@@ -1,5 +1,6 @@
 """API endpoints for schema management."""
 
+from typing import cast
 from fastapi import APIRouter, HTTPException, Depends
 
 from database.migrations.migration_manager import MigrationManager
@@ -14,7 +15,7 @@ router = APIRouter()
 
 def get_dataset_manager_dependency() -> DatasetManager:
     """Dependency to get dataset manager."""
-    return get_dataset_manager()
+    return cast(DatasetManager, get_dataset_manager())
 
 
 def get_migration_manager(

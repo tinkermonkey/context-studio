@@ -8,7 +8,7 @@ using RDFLib to create an in-memory RDF representation of the SQLite database.
 from rdflib import Graph, Namespace, URIRef, Literal, RDF, RDFS
 from rdflib.namespace import FOAF, DCTERMS, SKOS
 from sqlalchemy.orm import Session
-from typing import Dict, List, Any, Optional
+from typing import Dict, List, Any, Optional, cast
 from datetime import datetime
 
 from database.models import StructureNode, StructureNodeLink
@@ -166,9 +166,9 @@ class SPARQLService:
         if structure_node.structural_predicate_id:
             # Get the actual predicate title if available
             # For now, use a structured predicate URI
-            return self.CS[f"predicate_{structure_node.structural_predicate_id}"]
+            return cast(URIRef, self.CS[f"predicate_{structure_node.structural_predicate_id}"])
 
-        return self.CS["is_a"]  # Default predicate
+        return cast(URIRef, self.CS["is_a"])  # Default predicate
 
     def _get_layer_ancestor(self, structure_node: StructureNode) -> Optional[StructureNode]:
         """

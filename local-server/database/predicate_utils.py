@@ -3,7 +3,7 @@
 import re
 import json
 import datetime
-from typing import List, Optional
+from typing import List, Optional, cast
 from uuid import uuid4
 from sqlalchemy.orm import Session
 from database.models import Predicate
@@ -81,7 +81,7 @@ def get_conceptnet_relation_for_predicate(predicate: Predicate) -> Optional[str]
 
     try:
         mapping = json.loads(predicate.mapping)  # type: ignore
-        return mapping.get("conceptnet", {}).get("relation")
+        return cast(Optional[str], mapping.get("conceptnet", {}).get("relation"))
     except (json.JSONDecodeError, KeyError):
         return None
 

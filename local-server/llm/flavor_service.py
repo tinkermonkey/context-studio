@@ -2,7 +2,7 @@
 Service for managing pipeline flavors.
 """
 
-from typing import List, Optional
+from typing import List, Optional, cast
 from datetime import datetime, timezone
 from sqlalchemy import text
 import uuid
@@ -157,7 +157,7 @@ class PipelineFlavorService:
             """), {"id": flavor_id})
 
             db.commit()
-            return result.rowcount > 0
+            return cast(bool, result.rowcount > 0)
 
     def get_flavor_by_id(self, flavor_id: str) -> PipelineFlavor:
         """Get a flavor by ID"""

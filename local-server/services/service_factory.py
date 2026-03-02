@@ -6,7 +6,7 @@ performance monitoring, and lifecycle management for better resource utilization
 """
 
 import uuid
-from typing import Dict, Any, Optional, TypeVar, Type, Callable, List
+from typing import Dict, Any, Optional, TypeVar, Type, Callable, List, cast
 from threading import RLock
 from time import time
 from datetime import datetime, timezone
@@ -374,30 +374,30 @@ class ServiceFactory:
         return self._create_service(ServiceType.REFERENCE_SERVICE, ReferenceService)
 
     def create_changeset_manager(
-        self, 
-        db: Session, 
+        self,
+        db: Session,
         s3_sync_manager: Optional[S3SyncManager] = None,
         working_tree_manager: Optional[WorkingTreeManager] = None,
         version_manager: Optional[VersionManager] = None
     ) -> ChangesetManager:
         """
         Create ChangesetManager with optimized instantiation.
-        
+
         Args:
             db: Database session for this request
             s3_sync_manager: Optional S3SyncManager dependency
             working_tree_manager: Optional WorkingTreeManager dependency
             version_manager: Optional VersionManager dependency
-            
+
         Returns:
             ChangesetManager instance
         """
-        def create_service():
+        def create_service() -> ChangesetManager:
             s3_sync = s3_sync_manager or self.get_s3_sync_manager(db)
             working_tree = working_tree_manager or self.create_working_tree_manager(db)
             version_mgr = version_manager or self.create_version_manager(db)
             return ChangesetManager(db, s3_sync, working_tree, version_mgr)
-        
+
         return self._create_service_with_factory(ServiceType.CHANGESET_MANAGER, create_service)
     
     def create_proposal_manager(
@@ -408,20 +408,20 @@ class ServiceFactory:
     ) -> ProposalManager:
         """
         Create ProposalManager with optimized instantiation.
-        
+
         Args:
             db: Database session for this request
             s3_sync_manager: Optional S3SyncManager dependency
             changeset_manager: Optional ChangesetManager dependency
-            
+
         Returns:
             ProposalManager instance
         """
-        def create_service():
+        def create_service() -> ProposalManager:
             s3_sync = s3_sync_manager or self.get_s3_sync_manager(db)
             changeset_mgr = changeset_manager or self.create_changeset_manager(db)
             return ProposalManager(db, s3_sync, changeset_mgr)
-        
+
         return self._create_service_with_factory(ServiceType.PROPOSAL_MANAGER, create_service)
     
     def create_crdt_merge_engine(
@@ -432,20 +432,20 @@ class ServiceFactory:
     ) -> CRDTMergeEngine:
         """
         Create CRDTMergeEngine with optimized instantiation.
-        
+
         Args:
             db: Database session for this request
             version_manager: Optional VersionManager dependency
             changeset_manager: Optional ChangesetManager dependency
-            
+
         Returns:
             CRDTMergeEngine instance
         """
-        def create_service():
+        def create_service() -> CRDTMergeEngine:
             version_mgr = version_manager or self.create_version_manager(db)
             changeset_mgr = changeset_manager or self.create_changeset_manager(db)
             return CRDTMergeEngine(db, version_mgr, changeset_mgr)
-        
+
         return self._create_service_with_factory(ServiceType.CRDT_MERGE_ENGINE, create_service)
     
     def create_identity_manager(
@@ -455,18 +455,18 @@ class ServiceFactory:
     ) -> IdentityManager:
         """
         Create IdentityManager with optimized instantiation.
-        
+
         Args:
             db: Database session for this request
             s3_sync_manager: Optional S3SyncManager dependency
-            
+
         Returns:
             IdentityManager instance
         """
-        def create_service():
+        def create_service() -> IdentityManager:
             s3_sync = s3_sync_manager or self.get_s3_sync_manager(db)
             return IdentityManager(db, s3_sync)
-        
+
         return self._create_service_with_factory(ServiceType.IDENTITY_MANAGER, create_service)
 
     # Phase 4 Advanced Features Services
@@ -477,38 +477,38 @@ class ServiceFactory:
     ) -> ConflictResolutionEngine:
         """
         Create ConflictResolutionEngine with optimized instantiation and dependency injection.
-        
+
         Args:
             db: Database session for this request
-            
+
         Returns:
             ConflictResolutionEngine instance
         """
-        def create_service():
+        def create_service() -> ConflictResolutionEngine:
             conflict_detector = IntelligentConflictDetector()
             version_manager = self.create_version_manager(db)
             return ConflictResolutionEngine(db, conflict_detector, version_manager)
-        
+
         return self._create_service_with_factory(ServiceType.CONFLICT_RESOLUTION_ENGINE, create_service)
 
     def create_duckdb_service(self, s3_config: Optional[Dict[str, str]] = None) -> DuckDBService:
         """
         Create DuckDBService with optimized instantiation.
-        
+
         Args:
             s3_config: Optional S3 configuration dictionary
-            
+
         Returns:
             DuckDBService instance
         """
-        def create_service():
+        def create_service() -> DuckDBService:
             if s3_config is None:
                 settings = get_settings()
                 s3_conf = settings.get_s3_config()
             else:
                 s3_conf = s3_config
             return DuckDBService(db_path=None, s3_config=s3_conf)
-        
+
         return self._create_service_with_factory(ServiceType.DUCKDB_SERVICE, create_service)
 
     def create_change_analytics_engine(
@@ -516,17 +516,17 @@ class ServiceFactory:
     ) -> ChangeAnalyticsEngine:
         """
         Create ChangeAnalyticsEngine with optimized instantiation and dependency injection.
-        
+
         Args:
             duckdb_service: Optional DuckDBService dependency
-            
+
         Returns:
             ChangeAnalyticsEngine instance
         """
-        def create_service():
+        def create_service() -> ChangeAnalyticsEngine:
             duckdb = duckdb_service or self.create_duckdb_service()
             return ChangeAnalyticsEngine(duckdb)
-        
+
         return self._create_service_with_factory(ServiceType.CHANGE_ANALYTICS_ENGINE, create_service)
 
     def create_incremental_sync_engine(
@@ -542,7 +542,7 @@ class ServiceFactory:
         Returns:
             IncrementalSyncEngine instance
         """
-        def create_service():
+        def create_service() -> IncrementalSyncEngine:
             # Create required dependencies with proper defaults
             duckdb_service = self.create_duckdb_service()
             version_manager = self.create_version_manager(db)
@@ -581,7 +581,7 @@ class ServiceFactory:
         Returns:
             DuckDBQueryOptimizer instance
         """
-        def create_service():
+        def create_service() -> DuckDBQueryOptimizer:
             if s3_config is None:
                 try:
                     settings = get_settings()
@@ -619,14 +619,14 @@ class ServiceFactory:
     ) -> S3StorageOptimizer:
         """
         Create S3StorageOptimizer with optimized instantiation and dependency injection.
-        
+
         Args:
             s3_config: Optional S3 configuration dictionary
-            
+
         Returns:
             S3StorageOptimizer instance
         """
-        def create_service():
+        def create_service() -> S3StorageOptimizer:
             if s3_config is None:
                 settings = get_settings()
                 s3_conf = settings.get_s3_config()
@@ -657,7 +657,7 @@ class ServiceFactory:
             bucket_name = s3_conf.get('bucket_name', 'context-studio-default')
 
             return S3StorageOptimizer(s3_client, bucket_name)
-        
+
         return self._create_service_with_factory(ServiceType.S3_STORAGE_OPTIMIZER, create_service)
 
     def create_hierarchical_diff_engine(
@@ -665,18 +665,18 @@ class ServiceFactory:
     ) -> HierarchicalDiffEngine:
         """
         Create HierarchicalDiffEngine with optimized instantiation and dependency injection.
-        
+
         Args:
             db: Database session for this request
             nlp_service: Optional NLP service for semantic analysis
-            
+
         Returns:
             HierarchicalDiffEngine instance
         """
-        def create_service():
+        def create_service() -> HierarchicalDiffEngine:
             # nlp_service would come from actual NLP service dependency
             return HierarchicalDiffEngine(db, nlp_service)
-        
+
         return self._create_service_with_factory(ServiceType.HIERARCHICAL_DIFF_ENGINE, create_service)
 
     def create_batch_operation_processor(
@@ -684,20 +684,20 @@ class ServiceFactory:
     ) -> BatchOperationProcessor:
         """
         Create BatchOperationProcessor with optimized instantiation and dependency injection.
-        
+
         Args:
             db: Database session for this request
             s3_sync_manager: Optional S3SyncManager dependency
-            
+
         Returns:
             BatchOperationProcessor instance
         """
-        def create_service():
+        def create_service() -> BatchOperationProcessor:
             s3_sync = s3_sync_manager or self.get_s3_sync_manager(db)
             version_manager = self.create_version_manager(db)
             working_tree_manager = self.create_working_tree_manager(db)
             return BatchOperationProcessor(db, s3_sync, version_manager, working_tree_manager)
-        
+
         return self._create_service_with_factory(ServiceType.BATCH_OPERATION_PROCESSOR, create_service)
 
     def create_performance_monitor(
@@ -756,7 +756,7 @@ class ServiceFactory:
         """
 
         # Create service with dependency injection for S3 config
-        def create_service():
+        def create_service() -> S3SyncManager:
             settings = get_settings()
             s3_config = settings.get_s3_config()
             return S3SyncManager(db_session, s3_config)
@@ -865,7 +865,7 @@ class ServiceFactory:
                     logger.debug(
                         f"Cache HIT for {service_key} (access #{entry.access_count}, age: {entry.age_seconds:.1f}s)"
                     )
-                    return instance
+                    return cast(T, instance)
                 else:
                     # Cache expired
                     logger.debug(
@@ -897,7 +897,7 @@ class ServiceFactory:
                 f"Cache MISS for {service_key} - created new entry (creation: {creation_time_ms:.2f}ms)"
             )
 
-            return instance
+            return cast(T, instance)
 
     def _maybe_cleanup(self):
         """Perform periodic cleanup of expired cache entries."""

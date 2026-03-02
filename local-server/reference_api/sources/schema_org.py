@@ -1,5 +1,6 @@
 """Schema.org source implementation using reference_db"""
 
+from typing import cast
 from .base import BaseReferenceSource
 from ..models import SchemaOrgEntityResponse, SchemaOrgPropertyResponse, SchemaOrgSearchResponse
 from reference_db.manager import ReferenceManager
@@ -104,7 +105,7 @@ class SchemaOrgSource(BaseReferenceSource):
 
                         # Create embedding generator function
                         def embedding_gen(text: str) -> bytes:
-                            return generate_embedding(text)
+                            return cast(bytes, generate_embedding(text))
 
                         # Search using vector similarity
                         results_with_scores = ref_manager.search_by_similarity(
