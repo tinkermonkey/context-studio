@@ -744,24 +744,24 @@ def init_db(engine=None, database_url=None, connect_args=None):
         logger.debug(f"Engine {engine_id} already has event listeners, skipping")
         return engine
 
-    def receive_connect(connection, connection_record):
+    def receive_connect(dbapi_connection, connection_record):
         # Use connection ID to track if extension is already loaded
-        connection_id = id(connection)
+        connection_id = id(dbapi_connection)
         if connection_id in _loaded_connections:
             logger.debug(f"Extension already loaded for connection {connection_id}")
             return
 
         try:
             logger.debug("Enabling SQLite extensions...")
-            connection.enable_load_extension(True)
-            sqlite_vec.load(connection)
+            dbapi_connection.enable_load_extension(True)
+            sqlite_vec.load(dbapi_connection)
             _loaded_connections.add(connection_id)
         except Exception as e:
             logger.error(f"Failed to load SQLite vec extension: {e}")
             raise
         finally:
             # Disable extension loading after use
-            connection.enable_load_extension(False)
+            dbapi_connection.enable_load_extension(False)
 
     def receive_close(connection, connection_record):
         # Clean up tracking when connection is closed

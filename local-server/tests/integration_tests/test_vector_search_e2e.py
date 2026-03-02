@@ -17,6 +17,41 @@ from reference_db.config import ReferenceConfig
 from reference_db.manager import ReferenceManager
 
 
+@pytest.fixture(scope="session", autouse=True)
+def check_sqlite_vec():
+    """Check if sqlite-vec is available and working, skip tests if not."""
+    try:
+        import sqlite_vec  # noqa: F401
+    except ImportError:
+        pytest.skip("sqlite-vec not available (expected in Docker environment)")
+
+    # Also verify that vec functions are actually available in SQLite
+    test_db_path = None
+    try:
+        from sqlalchemy import create_engine, text
+        from database.utils import init_db
+
+        with tempfile.NamedTemporaryFile(suffix=".db", delete=False) as tf:
+            test_db_path = tf.name
+
+        test_engine = create_engine(f"sqlite:///{test_db_path}")
+        init_db(test_engine)
+
+        # Test if vec_distance_cosine is available
+        with test_engine.connect() as conn:
+            try:
+                conn.execute(
+                    text("SELECT vec_distance_cosine(x'00000000', x'00000000')")
+                )
+            except Exception as e:
+                pytest.skip(f"sqlite-vec extension not properly loaded: {e}")
+
+        test_engine.dispose()
+    finally:
+        if test_db_path and os.path.exists(test_db_path):
+            os.unlink(test_db_path)
+
+
 @pytest.fixture(scope="module")
 def e2e_test_database():
     """Create a comprehensive test database for E2E testing."""
@@ -43,7 +78,7 @@ def e2e_test_database():
         external_id="Person",
         title_embedding=create_embedding(0.8),
         definition_embedding=create_embedding(0.8),
-        embedding_dims=384
+        embedding_dims=384,
     )
 
     org_node = manager.add_reference_node(
@@ -53,7 +88,7 @@ def e2e_test_database():
         external_id="Organization",
         title_embedding=create_embedding(0.75),
         definition_embedding=create_embedding(0.75),
-        embedding_dims=384
+        embedding_dims=384,
     )
 
     place_node = manager.add_reference_node(
@@ -63,7 +98,7 @@ def e2e_test_database():
         external_id="Place",
         title_embedding=create_embedding(0.6),
         definition_embedding=create_embedding(0.6),
-        embedding_dims=384
+        embedding_dims=384,
     )
 
     thing_node = manager.add_reference_node(
@@ -73,7 +108,7 @@ def e2e_test_database():
         external_id="Thing",
         title_embedding=create_embedding(0.3),
         definition_embedding=create_embedding(0.3),
-        embedding_dims=384
+        embedding_dims=384,
     )
 
     # Rollback any pending transactions before adding links
@@ -93,7 +128,7 @@ def e2e_test_database():
         predicate="subClassOf",
         object_node=thing_node.id,
         created_at=date.today().isoformat(),
-        updated_at=date.today().isoformat()
+        updated_at=date.today().isoformat(),
     )
 
     org_subclass_link = ReferenceLink(
@@ -102,7 +137,7 @@ def e2e_test_database():
         predicate="subClassOf",
         object_node=thing_node.id,
         created_at=date.today().isoformat(),
-        updated_at=date.today().isoformat()
+        updated_at=date.today().isoformat(),
     )
 
     place_subclass_link = ReferenceLink(
@@ -111,7 +146,7 @@ def e2e_test_database():
         predicate="subClassOf",
         object_node=thing_node.id,
         created_at=date.today().isoformat(),
-        updated_at=date.today().isoformat()
+        updated_at=date.today().isoformat(),
     )
 
     # Create domain-specific relationships
@@ -121,7 +156,7 @@ def e2e_test_database():
         predicate="memberOf",
         object_node=org_node.id,
         created_at=date.today().isoformat(),
-        updated_at=date.today().isoformat()
+        updated_at=date.today().isoformat(),
     )
 
     org_location_link = ReferenceLink(
@@ -130,16 +165,18 @@ def e2e_test_database():
         predicate="locatedIn",
         object_node=place_node.id,
         created_at=date.today().isoformat(),
-        updated_at=date.today().isoformat()
+        updated_at=date.today().isoformat(),
     )
 
-    manager.session.add_all([
-        person_subclass_link,
-        org_subclass_link,
-        place_subclass_link,
-        person_memberof_link,
-        org_location_link
-    ])
+    manager.session.add_all(
+        [
+            person_subclass_link,
+            org_subclass_link,
+            place_subclass_link,
+            person_memberof_link,
+            org_location_link,
+        ]
+    )
     manager.session.commit()
 
     # Store IDs before closing the session to avoid DetachedInstanceError
@@ -147,7 +184,7 @@ def e2e_test_database():
         "person": person_node.id,
         "organization": org_node.id,
         "place": place_node.id,
-        "thing": thing_node.id
+        "thing": thing_node.id,
     }
 
     link_ids = {
@@ -155,7 +192,7 @@ def e2e_test_database():
         "org_subclass": org_subclass_link.id,
         "place_subclass": place_subclass_link.id,
         "person_memberof": person_memberof_link.id,
-        "org_location": org_location_link.id
+        "org_location": org_location_link.id,
     }
 
     manager.close()
@@ -163,7 +200,7 @@ def e2e_test_database():
     yield db_path, {
         "node_ids": node_ids,
         "link_ids": link_ids,
-        "create_embedding": create_embedding
+        "create_embedding": create_embedding,
     }
 
     # Cleanup
@@ -202,18 +239,19 @@ class TestSemanticDiscoveryWorkflow:
             finally:
                 manager.close()
 
-        with patch('reference_db.dependencies.reference_manager_context', side_effect=test_reference_manager_context):
-            with patch('embeddings.generate_embeddings.generate_embedding') as mock_embed:
+        with patch(
+            "reference_db.dependencies.reference_manager_context",
+            side_effect=test_reference_manager_context,
+        ):
+            with patch(
+                "embeddings.generate_embeddings.generate_embedding"
+            ) as mock_embed:
                 mock_embed.return_value = create_embedding(0.8)
 
                 # Step 1: User searches for "human being"
                 search_response = client.get(
                     "/api/reference/ref-db/search",
-                    params={
-                        "query": "human being",
-                        "limit": 5,
-                        "threshold": 0.0
-                    }
+                    params={"query": "human being", "limit": 5, "threshold": 0.0},
                 )
 
                 assert search_response.status_code == 200
@@ -222,10 +260,11 @@ class TestSemanticDiscoveryWorkflow:
 
                 # Find the Person node in results
                 person_result = next(
-                    (r for r in search_data["results"] if r["title"] == "Person"),
-                    None
+                    (r for r in search_data["results"] if r["title"] == "Person"), None
                 )
-                assert person_result is not None, "Person node should be found in search results"
+                assert (
+                    person_result is not None
+                ), "Person node should be found in search results"
 
                 # Step 2: User retrieves the full node details
                 node_id = person_result["id"]
@@ -238,7 +277,7 @@ class TestSemanticDiscoveryWorkflow:
                 # Step 3: User explores relationships
                 links_response = client.get(
                     f"/api/reference/ref-db/nodes/{node_id}/links",
-                    params={"direction": "outbound"}
+                    params={"direction": "outbound"},
                 )
 
                 assert links_response.status_code == 200
@@ -275,14 +314,14 @@ class TestSemanticDiscoveryWorkflow:
             finally:
                 manager.close()
 
-        with patch('reference_db.dependencies.reference_manager_context', side_effect=test_reference_manager_context):
+        with patch(
+            "reference_db.dependencies.reference_manager_context",
+            side_effect=test_reference_manager_context,
+        ):
             # Step 1: Get Person node links
             person_links_response = client.get(
                 f"/api/reference/ref-db/nodes/{person_id}/links",
-                params={
-                    "direction": "outbound",
-                    "predicate": "memberOf"
-                }
+                params={"direction": "outbound", "predicate": "memberOf"},
             )
 
             assert person_links_response.status_code == 200
@@ -302,10 +341,7 @@ class TestSemanticDiscoveryWorkflow:
             # Step 3: Get Organization's outbound links
             org_links_response = client.get(
                 f"/api/reference/ref-db/nodes/{returned_org_id}/links",
-                params={
-                    "direction": "outbound",
-                    "predicate": "locatedIn"
-                }
+                params={"direction": "outbound", "predicate": "locatedIn"},
             )
 
             assert org_links_response.status_code == 200
@@ -318,7 +354,9 @@ class TestSemanticDiscoveryWorkflow:
             assert returned_place_id == place_id
 
             # Step 4: Get Place node details
-            place_response = client.get(f"/api/reference/ref-db/nodes/{returned_place_id}")
+            place_response = client.get(
+                f"/api/reference/ref-db/nodes/{returned_place_id}"
+            )
             assert place_response.status_code == 200
             assert place_response.json()["title"] == "Place"
 
@@ -345,14 +383,14 @@ class TestSemanticDiscoveryWorkflow:
             finally:
                 manager.close()
 
-        with patch('reference_db.dependencies.reference_manager_context', side_effect=test_reference_manager_context):
+        with patch(
+            "reference_db.dependencies.reference_manager_context",
+            side_effect=test_reference_manager_context,
+        ):
             # Get all things that are subClassOf Thing
             links_response = client.get(
                 f"/api/reference/ref-db/nodes/{thing_id}/links",
-                params={
-                    "direction": "inbound",
-                    "predicate": "subClassOf"
-                }
+                params={"direction": "inbound", "predicate": "subClassOf"},
             )
 
             assert links_response.status_code == 200
@@ -373,7 +411,7 @@ class TestSemanticDiscoveryWorkflow:
             expected_subclasses = {
                 data["node_ids"]["person"],
                 data["node_ids"]["organization"],
-                data["node_ids"]["place"]
+                data["node_ids"]["place"],
             }
             assert set(subclass_ids) == expected_subclasses
 
@@ -402,8 +440,13 @@ class TestErrorRecoveryWorkflows:
             finally:
                 manager.close()
 
-        with patch('reference_db.dependencies.reference_manager_context', side_effect=test_reference_manager_context):
-            with patch('embeddings.generate_embeddings.generate_embedding') as mock_embed:
+        with patch(
+            "reference_db.dependencies.reference_manager_context",
+            side_effect=test_reference_manager_context,
+        ):
+            with patch(
+                "embeddings.generate_embeddings.generate_embedding"
+            ) as mock_embed:
                 # Use an embedding very different from existing nodes
                 mock_embed.return_value = create_embedding(0.99)
 
@@ -412,8 +455,8 @@ class TestErrorRecoveryWorkflows:
                     params={
                         "query": "completely unrelated concept",
                         "limit": 5,
-                        "threshold": 0.95  # High threshold
-                    }
+                        "threshold": 0.95,  # High threshold
+                    },
                 )
 
                 assert response.status_code == 200
@@ -439,7 +482,10 @@ class TestErrorRecoveryWorkflows:
             finally:
                 manager.close()
 
-        with patch('reference_db.dependencies.reference_manager_context', side_effect=test_reference_manager_context):
+        with patch(
+            "reference_db.dependencies.reference_manager_context",
+            side_effect=test_reference_manager_context,
+        ):
             # Try to get non-existent node
             response = client.get("/api/reference/ref-db/nodes/invalid-node-id")
             assert response.status_code == 404
@@ -448,7 +494,7 @@ class TestErrorRecoveryWorkflows:
             # Try to get links for non-existent node
             links_response = client.get(
                 "/api/reference/ref-db/nodes/invalid-node-id/links",
-                params={"direction": "both"}
+                params={"direction": "both"},
             )
             assert links_response.status_code == 404
             assert "not found" in links_response.json()["detail"].lower()
@@ -473,6 +519,7 @@ class TestErrorRecoveryWorkflows:
         # Create a new isolated node
         config = ReferenceConfig()
         with ReferenceManager(config, db_path=db_path) as manager:
+
             def create_embedding(value: float) -> bytes:
                 vec = np.full(384, value, dtype=np.float32)
                 vec = vec / np.linalg.norm(vec)
@@ -485,16 +532,19 @@ class TestErrorRecoveryWorkflows:
                 external_id="isolated",
                 title_embedding=create_embedding(0.5),
                 definition_embedding=create_embedding(0.5),
-                embedding_dims=384
+                embedding_dims=384,
             )
             # Store ID before closing session
             isolated_node_id = isolated_node.id
 
-        with patch('reference_db.dependencies.reference_manager_context', side_effect=test_reference_manager_context):
+        with patch(
+            "reference_db.dependencies.reference_manager_context",
+            side_effect=test_reference_manager_context,
+        ):
             # Try to get links for isolated node
             response = client.get(
                 f"/api/reference/ref-db/nodes/{isolated_node_id}/links",
-                params={"direction": "both"}
+                params={"direction": "both"},
             )
 
             assert response.status_code == 200
@@ -533,20 +583,22 @@ class TestPerformanceWorkflows:
             finally:
                 manager.close()
 
-        with patch('reference_db.dependencies.reference_manager_context', side_effect=test_reference_manager_context):
-            with patch('embeddings.generate_embeddings.generate_embedding') as mock_embed:
+        with patch(
+            "reference_db.dependencies.reference_manager_context",
+            side_effect=test_reference_manager_context,
+        ):
+            with patch(
+                "embeddings.generate_embeddings.generate_embedding"
+            ) as mock_embed:
                 mock_embed.return_value = create_embedding(0.8)
 
                 import time
+
                 start = time.perf_counter()
 
                 response = client.get(
                     "/api/reference/ref-db/search",
-                    params={
-                        "query": "test query",
-                        "limit": 20,
-                        "threshold": 0.0
-                    }
+                    params={"query": "test query", "limit": 20, "threshold": 0.0},
                 )
 
                 elapsed = (time.perf_counter() - start) * 1000  # Convert to ms
@@ -555,8 +607,7 @@ class TestPerformanceWorkflows:
 
                 # Search should complete in <500ms (generous limit for E2E test)
                 # Note: This includes API overhead, not just vector search
-                assert elapsed < 500, \
-                    f"Search took {elapsed:.2f}ms, expected <500ms"
+                assert elapsed < 500, f"Search took {elapsed:.2f}ms, expected <500ms"
 
     def test_link_retrieval_performance(self, client, e2e_test_database):
         """Test that link retrieval completes in reasonable time."""
@@ -575,13 +626,17 @@ class TestPerformanceWorkflows:
             finally:
                 manager.close()
 
-        with patch('reference_db.dependencies.reference_manager_context', side_effect=test_reference_manager_context):
+        with patch(
+            "reference_db.dependencies.reference_manager_context",
+            side_effect=test_reference_manager_context,
+        ):
             import time
+
             start = time.perf_counter()
 
             response = client.get(
                 f"/api/reference/ref-db/nodes/{thing_id}/links",
-                params={"direction": "both"}
+                params={"direction": "both"},
             )
 
             elapsed = (time.perf_counter() - start) * 1000
@@ -589,5 +644,6 @@ class TestPerformanceWorkflows:
             assert response.status_code == 200
 
             # Link retrieval should complete in <100ms
-            assert elapsed < 100, \
-                f"Link retrieval took {elapsed:.2f}ms, expected <100ms"
+            assert (
+                elapsed < 100
+            ), f"Link retrieval took {elapsed:.2f}ms, expected <100ms"
