@@ -12,7 +12,7 @@ import pytest
 from unittest.mock import Mock, patch
 from datetime import datetime, timezone
 from sqlalchemy.orm import Session
-import pandas as pd
+import pandas as pd  # type: ignore[import-untyped]
 
 from services.incremental_sync_engine import IncrementalSyncEngine
 from services.duckdb_service import DuckDBService
