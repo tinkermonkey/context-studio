@@ -83,6 +83,7 @@ pluggy==1.6.0
 preshed==3.0.10
 prompt_toolkit==3.0.51
 psutil==7.0.0
+types-jsonschema>=4.0
 types-psutil>=7.2.0
 ptyprocess==0.7.0
 pure_eval==0.2.3
