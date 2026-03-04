@@ -16,7 +16,7 @@ from threading import Lock
 from utils.logger import get_logger
 
 if TYPE_CHECKING:
-    import psutil
+    pass
 
 logger = get_logger(__name__)
 
