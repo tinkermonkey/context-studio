@@ -8,8 +8,6 @@ Response dataclasses are defined in this file alongside their corresponding port
 from dataclasses import dataclass, field
 from typing import Protocol, Optional, List
 
-from domain.extraction.entities import ExtractionResult
-
 
 @dataclass
 class LLMResponse:

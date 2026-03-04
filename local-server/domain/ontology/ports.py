@@ -4,7 +4,7 @@ Port interfaces for the Ontology bounded context.
 Ports define the contracts between the domain core and infrastructure adapters.
 They use typing.Protocol for structural subtyping and reference only domain entity types.
 """
-from typing import Protocol, Optional, Sequence, List
+from typing import Protocol, Optional, Sequence, List, Callable
 
 from domain.ontology.entities import (
     Taxonomy,
@@ -151,6 +151,6 @@ class EventPublisher(Protocol):
         """Publish a domain event."""
         ...
 
-    def subscribe(self, event_type: type, handler) -> None:
+    def subscribe(self, event_type: type, handler: Callable[[DomainEvent], None]) -> None:
         """Subscribe a handler to a specific event type."""
         ...
