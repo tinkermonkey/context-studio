@@ -858,7 +858,8 @@ class BatchOperationProcessor:
         try:
             cursor = self.sqlite_conn.cursor()
             cursor.execute("SELECT COUNT(*) FROM entity_versions")
-            row_count = cursor.fetchone()[0]
+            result = cursor.fetchone()
+            row_count = result[0] if result else 0
 
             # Mock size calculation - in reality would export data
             estimated_size = row_count * 1024  # Rough estimate
@@ -871,7 +872,7 @@ class BatchOperationProcessor:
             }
 
         except Exception as e:
-            logger.error(f"Failed to checkpoint entity versions: {e}")
+            logger.debug(f"Failed to checkpoint entity versions: {e}")
             return {"error": str(e), "size_bytes": 0}
 
     def _checkpoint_changesets(self) -> Dict[str, Any]:
@@ -880,7 +881,8 @@ class BatchOperationProcessor:
         try:
             cursor = self.sqlite_conn.cursor()
             cursor.execute("SELECT COUNT(*) FROM changesets")
-            row_count = cursor.fetchone()[0]
+            result = cursor.fetchone()
+            row_count = result[0] if result else 0
 
             estimated_size = row_count * 512
 
@@ -892,7 +894,7 @@ class BatchOperationProcessor:
             }
 
         except Exception as e:
-            logger.error(f"Failed to checkpoint changesets: {e}")
+            logger.debug(f"Failed to checkpoint changesets: {e}")
             return {"error": str(e), "size_bytes": 0}
 
     def _checkpoint_proposals(self) -> Dict[str, Any]:
@@ -901,7 +903,8 @@ class BatchOperationProcessor:
         try:
             cursor = self.sqlite_conn.cursor()
             cursor.execute("SELECT COUNT(*) FROM proposals")
-            row_count = cursor.fetchone()[0]
+            result = cursor.fetchone()
+            row_count = result[0] if result else 0
 
             estimated_size = row_count * 256
 
@@ -913,7 +916,7 @@ class BatchOperationProcessor:
             }
 
         except Exception as e:
-            logger.error(f"Failed to checkpoint proposals: {e}")
+            logger.debug(f"Failed to checkpoint proposals: {e}")
             return {"error": str(e), "size_bytes": 0}
 
     def _checkpoint_user_identities(self) -> Dict[str, Any]:
@@ -922,7 +925,8 @@ class BatchOperationProcessor:
         try:
             cursor = self.sqlite_conn.cursor()
             cursor.execute("SELECT COUNT(*) FROM user_identities")
-            row_count = cursor.fetchone()[0]
+            result = cursor.fetchone()
+            row_count = result[0] if result else 0
 
             estimated_size = row_count * 128
 
@@ -934,7 +938,7 @@ class BatchOperationProcessor:
             }
 
         except Exception as e:
-            logger.error(f"Failed to checkpoint user identities: {e}")
+            logger.debug(f"Failed to checkpoint user identities: {e}")
             return {"error": str(e), "size_bytes": 0}
 
     def get_operation_history(self, limit: int = 100) -> List[BatchOperationResult]:
