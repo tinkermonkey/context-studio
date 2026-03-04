@@ -324,7 +324,8 @@ class DuckDBQueryOptimizer:
     def _generate_partitioned_pattern(self, start_date: str, end_date: str) -> str:
         """Generate S3 path pattern for date range."""
 
-        # Simple implementation - would be more sophisticated in production
+        # Basic pattern generation - advanced partitioning strategies not yet implemented
+        logger.warning("Advanced S3 partitioning strategy not yet implemented - using basic date pattern")
         return f"changes/*/*/*{start_date}*{end_date}*.parquet"
 
     def _generate_query_hash(self, query: str, context: Dict[str, Any]) -> str:
