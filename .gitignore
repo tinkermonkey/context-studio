@@ -3,16 +3,13 @@
 .vscode/
 .mcp.json
 PRPs/
-.repair_cycle.log
 **/.venv/
 **/test_env/
 **/.dr/
 
 # Build and runtime artifacts
-build.log
 *.log
 
 # Database files and SQLite runtime artifacts
-*.db
-*.db-shm
-*.db-wal
+/cache.db*
+/datafiles/
