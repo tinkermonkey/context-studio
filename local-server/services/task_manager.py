@@ -267,7 +267,7 @@ class TaskManager:
         """
         task = self.tasks.get(task_id)
         if task is None:
-            logger.warning(f"Cannot cancel task {task_id}: not found")
+            logger.debug(f"Cannot cancel task {task_id}: not found (may have been cleaned up)")
             return False
 
         if task.status not in [TaskStatus.PENDING, TaskStatus.RUNNING]:

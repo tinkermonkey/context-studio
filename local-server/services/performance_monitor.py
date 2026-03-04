@@ -862,7 +862,7 @@ class PerformanceMonitor:
         if alerts_triggered:
             with self._metrics_lock:
                 self.alerts.extend(alerts_triggered)
-                logger.warning(
+                logger.info(
                     f"Performance alerts triggered: {len(alerts_triggered)} new alerts"
                 )
 
