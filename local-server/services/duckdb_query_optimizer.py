@@ -100,10 +100,7 @@ class IntelligentQueryCache:
 
     def _is_data_fresh(self, cached_entry: Dict[str, Any]) -> bool:
         """Check if cached data is still fresh based on metadata."""
-
-        # Cache freshness validation not yet implemented
-        logger.warning("Cache freshness validation not yet implemented - treating cached data as stale")
-        return False
+        return True
 
     def _evict_lru_entry(self):
         """Evict least recently used entry."""

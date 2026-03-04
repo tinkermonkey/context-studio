@@ -503,7 +503,7 @@ class PerformanceMonitor:
                 "uptime_hours": None,  # Not yet collected by psutil
             }
 
-        except ImportError:
+        except ImportError as e:
             # Fallback if psutil is not available
             logger.warning("System metrics collection not available - psutil not installed")
             return {
@@ -516,6 +516,7 @@ class PerformanceMonitor:
                 "error_rate_percent": None,
                 "uptime_hours": None,
                 "status": "not_implemented",
+                "note": str(e) if str(e) else "psutil not available",
             }
         except Exception as e:
             logger.error(f"Failed to collect system metrics: {e}")
