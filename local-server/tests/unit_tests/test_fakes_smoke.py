@@ -393,8 +393,6 @@ def test_fake_event_publisher_clear():
 
 def test_in_memory_repository_satisfies_protocol():
     """Smoke test verifying InMemoryOntologyRepository satisfies OntologyRepository protocol."""
-    from domain.ontology.ports import OntologyRepository
-    from typing import get_type_hints
 
     repo = InMemoryOntologyRepository()
 

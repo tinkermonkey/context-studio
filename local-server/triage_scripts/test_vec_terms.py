@@ -5,7 +5,7 @@ import os
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from fastapi.testclient import TestClient
-from triage_helper import create_test_app_with_migrations, cleanup_test_database, create_test_client
+from triage_scripts.triage_helper import create_test_app_with_migrations, cleanup_test_database, create_test_client
 import uuid
 from sqlalchemy import text
 from utils.logger import get_logger

@@ -16,14 +16,10 @@ sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
 from config import Settings, ConfigurationManager
 
-# Try to import db_utils, but make tests work without it
-try:
-    from db_utils import get_db_session, get_engine
-    DB_UTILS_AVAILABLE = True
-except ImportError:
-    DB_UTILS_AVAILABLE = False
-    get_engine = None
-    get_db_session = None
+# db_utils is not available in this codebase
+DB_UTILS_AVAILABLE = False
+get_engine = None
+get_db_session = None
 
 
 class TestConfigDatabaseIntegration:
