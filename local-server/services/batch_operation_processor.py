@@ -807,7 +807,7 @@ class BatchOperationProcessor:
 
         analysis = {
             "total_changesets": len(changeset_ids),
-            "potential_conflicts": None,
+            "potential_conflicts": 0,  # Zero conflicts when feature not implemented
             "conflict_complexity": "unknown",
             "recommended_strategy": "manual_review_required",
             "status": "not_implemented",

@@ -199,18 +199,11 @@ def get_optimization_system_health(
         # Check actual service health from each service
         # Each service should implement a health check method
         services_health = {
-            "query_optimizer": (
-                hasattr(query_optimizer, "health_check")
-                and query_optimizer.health_check()
-            ) if hasattr(query_optimizer, "health_check") else None,
-            "storage_optimizer": (
-                hasattr(storage_optimizer, "health_check")
-                and storage_optimizer.health_check()
-            ) if hasattr(storage_optimizer, "health_check") else None,
-            "performance_monitor": (
-                hasattr(performance_monitor, "health_check")
-                and performance_monitor.health_check()
-            ) if hasattr(performance_monitor, "health_check") else None,
+            "query_optimizer": query_optimizer.health_check() if hasattr(query_optimizer, "health_check") else None,
+            "storage_optimizer": storage_optimizer.health_check() if hasattr(storage_optimizer, "health_check") else None,
+            "performance_monitor": performance_monitor.health_check() if hasattr(performance_monitor, "health_check") else None,
+            "diff_engine": None,  # Not yet available as dependency
+            "batch_processor": None,  # Not yet available as dependency
         }
 
         # Get performance dashboard to assess overall health
@@ -634,9 +627,7 @@ def update_optimization_configuration(config: Dict[str, Any]):
     """Update optimization system configuration."""
     # Configuration update not yet implemented
     logger.warning("Optimization configuration update not yet implemented")
-    return {
-        "message": "Configuration update not yet implemented",
-        "status": "not_implemented",
-        "updated_at": datetime.now().isoformat(),
-        "config": config,
-    }
+    raise HTTPException(
+        status_code=501,
+        detail="Configuration update not yet implemented"
+    )
