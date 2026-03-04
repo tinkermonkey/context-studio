@@ -158,37 +158,55 @@ class DuckDBQueryOptimizer:
     def _setup_optimization_settings(self):
         """Configure DuckDB for optimal performance."""
 
+        # Configure critical settings that must succeed
         try:
-            # Enable query optimization features
             self.duckdb_conn.execute("SET enable_optimizer=true;")
-            self.duckdb_conn.execute("SET enable_profiling=true;")
-            self.duckdb_conn.execute("SET profiling_output='query_profile.json';")
-
-            # Optimize memory settings
             self.duckdb_conn.execute("SET memory_limit='4GB';")
-            self.duckdb_conn.execute("SET temp_directory='/tmp/duckdb_temp';")
-
-            # Enable parallel processing
             self.duckdb_conn.execute("SET threads=8;")
-
-            # S3 optimization settings if configured
-            if self.s3_config:
-                self.duckdb_conn.execute("SET s3_use_ssl=true;")
-                self.duckdb_conn.execute("SET s3_url_style='path';")
-                self.duckdb_conn.execute("SET enable_http_metadata_cache=true;")
-
-            logger.info("DuckDB optimization settings configured successfully")
-
+            logger.info("DuckDB critical settings configured successfully")
         except Exception as e:
             logger.error(
                 f"Failed to configure critical DuckDB optimization settings: {e}. "
-                f"Query performance may be severely degraded. "
-                f"This indicates a configuration problem with DuckDB or system resources (memory, temp directory).",
+                f"Query performance will be severely degraded. "
+                f"This indicates a configuration problem with DuckDB or system resources (memory, threads).",
                 exc_info=True
             )
             raise RuntimeError(
-                f"Cannot initialize DuckDBQueryOptimizer without proper optimization settings: {e}"
+                f"Cannot initialize DuckDBQueryOptimizer without critical optimization settings: {e}"
             ) from e
+
+        # Configure optional settings that can fail gracefully
+        try:
+            self.duckdb_conn.execute("SET temp_directory='/tmp/duckdb_temp';")
+        except Exception as e:
+            logger.warning(
+                f"Failed to configure temp directory for DuckDB: {e}. "
+                f"Continuing with system default temp directory.",
+                exc_info=True
+            )
+
+        try:
+            self.duckdb_conn.execute("SET enable_profiling=true;")
+            self.duckdb_conn.execute("SET profiling_output='query_profile.json';")
+        except Exception as e:
+            logger.warning(
+                f"Failed to configure profiling output for DuckDB: {e}. "
+                f"Query profiling will be disabled.",
+                exc_info=True
+            )
+
+        # S3 optimization settings if configured
+        if self.s3_config:
+            try:
+                self.duckdb_conn.execute("SET s3_use_ssl=true;")
+                self.duckdb_conn.execute("SET s3_url_style='path';")
+                self.duckdb_conn.execute("SET enable_http_metadata_cache=true;")
+            except Exception as e:
+                logger.warning(
+                    f"Failed to configure S3 optimization settings for DuckDB: {e}. "
+                    f"S3 operations will continue with default settings.",
+                    exc_info=True
+                )
 
     def optimize_query(
         self, query: str, query_context: Optional[Dict[str, Any]] = None

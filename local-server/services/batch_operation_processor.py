@@ -260,9 +260,17 @@ class BatchOperationProcessor:
                     f"Batch operation marked as failed due to transaction failure.",
                     exc_info=True
                 )
-                batch_result["status"] = "failed"
-                batch_result["error"] = str(transaction_error)
-                batch_result["error_type"] = type(transaction_error).__name__
+                batch_result.failed_items += batch_result.successful_items
+                batch_result.successful_items = 0
+                batch_result.errors.append(
+                    BatchOperationError(
+                        item_id="<transaction>",
+                        error_message=str(transaction_error),
+                        error_type=type(transaction_error).__name__,
+                        timestamp=datetime.now(),
+                        additional_context={"phase": "commit/rollback"}
+                    )
+                )
 
         return batch_result
 
