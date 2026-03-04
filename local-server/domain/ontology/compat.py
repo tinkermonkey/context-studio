@@ -11,20 +11,8 @@ This is the ONLY file in domain/ that is permitted to import from database/.
 """
 
 from database.enums import NodeType as LegacyNodeType
-from database.models import StructureNode as LegacyStructureNode
-from database.models import StructureNodeLink as LegacyStructureNodeLink
-from database.models import Predicate as LegacyPredicate
-from database.models import ChangeEvent as LegacyChangeEvent
-from database.models import PipelineFlavor as LegacyPipelineFlavor
 
 from domain.ontology.value_objects import NodeType as NewNodeType
-from domain.ontology.entities import (
-    Taxonomy,
-    ConceptScheme,
-    Class,
-    Relationship,
-    PropertyDefinition,
-)
 
 # Bidirectional mapping between legacy and new NodeType values
 NODE_TYPE_LEGACY_TO_NEW: dict = {

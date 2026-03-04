@@ -12,7 +12,7 @@ mypy
 sqlalchemy[mypy]
 
 # Type stubs for third-party packages
-boto3-stubs
+boto3-stubs[all]
 botocore-stubs
 pandas-stubs
 types-cachetools
