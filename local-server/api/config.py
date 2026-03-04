@@ -249,9 +249,11 @@ async def update_configuration(request: ConfigUpdateRequest):
                     if current_type is float and isinstance(request.value, int):
                         pass  # Allow int -> float conversion
                     else:
+                        expected_type = current_type.__name__
+                        actual_type = type(request.value).__name__
                         return create_error_response(
                             400,
-                            f"Invalid value type for {request.path}. Expected {current_type.__name__}, got {type(request.value).__name__}",
+                            f"Invalid value type for {request.path}. Expected {expected_type}, got {actual_type}",
                         )
 
         # Try to update the value

@@ -51,7 +51,7 @@ async def get_database_engines_status() -> Dict[str, Any]:
     try:
         manager = get_database_manager()
         health = manager.perform_health_check()
-        
+
         return {
             "timestamp": datetime.now().isoformat(),
             "total_engines": len(manager._engines),
@@ -82,21 +82,21 @@ async def optimize_database_for_workload(
 ) -> Dict[str, Any]:
     """
     Optimize database configuration for specific workload types.
-    
+
     Supported workload types:
     - mixed: General purpose workload
     - read_heavy: Optimized for read operations
-    - write_heavy: Optimized for write operations  
+    - write_heavy: Optimized for write operations
     - analytics: Optimized for analytical queries
     """
     try:
         valid_workloads = ["mixed", "read_heavy", "write_heavy", "analytics"]
         if workload_type not in valid_workloads:
             raise HTTPException(
-                status_code=400, 
+                status_code=400,
                 detail=f"Invalid workload type. Must be one of: {', '.join(valid_workloads)}"
             )
-        
+
         manager = get_database_manager()
         result = manager.optimize_for_workload(workload_type)
         return result
@@ -113,7 +113,7 @@ async def get_performance_recommendations() -> Dict[str, Any]:
         manager = get_database_manager()
         metrics = manager._get_metrics_summary()
         recommendations = manager._generate_performance_recommendations()
-        
+
         return {
             "timestamp": datetime.now().isoformat(),
             "current_metrics": metrics,
@@ -131,7 +131,7 @@ async def reset_performance_metrics() -> Dict[str, Any]:
         manager = get_database_manager()
         old_metrics = manager._get_metrics_summary()
         manager.metrics.reset()
-        
+
         return {
             "status": "success",
             "message": "Performance metrics reset successfully",
@@ -148,15 +148,15 @@ async def get_environment_configuration() -> Dict[str, Any]:
     """Get current database environment configuration and optimizations."""
     try:
         manager = get_database_manager()
-        
+
         # Sample database URL for strategy analysis
         from config import get_settings
         settings = get_settings()
         database_url = settings.database.default_url
-        
+
         optimal_strategy = manager.get_optimal_pool_strategy(database_url)
         pool_config = manager.get_pool_configuration(database_url)
-        
+
         return {
             "timestamp": datetime.now().isoformat(),
             "optimal_pool_strategy": optimal_strategy.value,
@@ -182,16 +182,16 @@ async def create_optimized_database_engine(
     """Create a new optimized database engine with specified configuration."""
     try:
         manager = get_database_manager()
-        
+
         # Use default database URL if not provided
         if database_url is None:
             from config import get_settings
             settings = get_settings()
             database_url = settings.database.default_url
-        
+
         # Create the engine
         engine = manager.create_optimized_engine(database_url, engine_id)
-        
+
         return {
             "status": "success",
             "message": f"Engine '{engine_id}' created successfully",
@@ -200,7 +200,7 @@ async def create_optimized_database_engine(
             "database_url": database_url,
             "pool_info": _get_engine_pool_info(engine)
         }
-        
+
     except HTTPException:
         raise
     except Exception as e:
@@ -214,10 +214,10 @@ async def cleanup_database_resources() -> Dict[str, Any]:
         manager = get_database_manager()
         engines_count = len(manager._engines)
         active_connections = manager.metrics.active_connections
-        
+
         # Perform cleanup
         manager.cleanup_resources()
-        
+
         return {
             "status": "success",
             "message": "Database resources cleaned up successfully",
@@ -237,7 +237,7 @@ async def get_database_dashboard() -> Dict[str, Any]:
         health = manager.perform_health_check()
         metrics = manager._get_metrics_summary()
         recommendations = manager._generate_performance_recommendations()
-        
+
         return {
             "timestamp": datetime.now().isoformat(),
             "dashboard_info": {
@@ -272,27 +272,27 @@ async def get_database_dashboard() -> Dict[str, Any]:
 def _calculate_health_score(metrics: Dict[str, Any]) -> float:
     """Calculate a health score based on performance metrics."""
     score = 100.0
-    
+
     # Penalize for errors
     if metrics["connection_errors"] > 0:
         error_penalty = min(50, metrics["connection_errors"] * 5)
         score -= error_penalty
-    
+
     # Penalize for high response times
     if metrics["avg_connection_time_ms"] > 100:
         time_penalty = min(20, (metrics["avg_connection_time_ms"] - 100) / 10)
         score -= time_penalty
-    
+
     # Penalize for low pool efficiency
     if metrics["pool_efficiency_percent"] < 80:
         efficiency_penalty = (80 - metrics["pool_efficiency_percent"]) / 4
         score -= efficiency_penalty
-    
+
     # Penalize for high query times
     if metrics["avg_query_time_ms"] > 50:
         query_penalty = min(10, (metrics["avg_query_time_ms"] - 50) / 10)
         score -= query_penalty
-    
+
     return max(0.0, score)
 
 

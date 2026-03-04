@@ -76,17 +76,26 @@ async def create_dataset(
         if "already exists" in error_message and "title" in error_message:
             raise HTTPException(
                 status_code=409,
-                detail=f"Duplicate title: A dataset with the title '{request.title}' already exists. Please choose a different title.",
+                detail=(
+                    f"Duplicate title: A dataset with the title '{request.title}' "
+                    "already exists. Please choose a different title."
+                ),
             )
         elif "already exists" in error_message and "filename" in error_message:
             raise HTTPException(
                 status_code=409,
-                detail=f"Duplicate filename: A dataset with the filename '{request.filename}' already exists. Please choose a different filename.",
+                detail=(
+                    f"Duplicate filename: A dataset with the filename '{request.filename}' "
+                    "already exists. Please choose a different filename."
+                ),
             )
         elif "Invalid filename" in error_message:
             raise HTTPException(
                 status_code=400,
-                detail=f"Invalid filename: '{request.filename}' is not a valid filename. Please use a valid filename with .db extension.",
+                detail=(
+                    f"Invalid filename: '{request.filename}' is not a valid filename. "
+                    "Please use a valid filename with .db extension."
+                ),
             )
         else:
             # Fallback for any other ValueError
@@ -95,7 +104,10 @@ async def create_dataset(
         logger.error(f"Failed to create dataset: {e}")
         raise HTTPException(
             status_code=500,
-            detail="An unexpected error occurred while creating the dataset. Please check the server logs for more details.",
+            detail=(
+                "An unexpected error occurred while creating the dataset. "
+                "Please check the server logs for more details."
+            ),
         )
 
 
@@ -169,28 +181,45 @@ async def add_existing_dataset(
         if "does not exist" in error_message:
             raise HTTPException(
                 status_code=400,
-                detail=f"File not found: The specified file '{request.file_path}' does not exist. Please check the file path and try again.",
+                detail=(
+                    f"File not found: The specified file '{request.file_path}' does not exist. "
+                    "Please check the file path and try again."
+                ),
             )
         elif "already exists" in error_message and "title" in error_message:
             raise HTTPException(
                 status_code=409,
-                detail=f"Duplicate title: A dataset with the title '{request.title}' already exists. Please choose a different title.",
+                detail=(
+                    f"Duplicate title: A dataset with the title '{request.title}' "
+                    "already exists. Please choose a different title."
+                ),
             )
         elif "already exists" in error_message and "filename" in error_message:
             filename = os.path.basename(request.file_path)
             raise HTTPException(
                 status_code=409,
-                detail=f"Duplicate filename: A dataset with the filename '{filename}' already exists. Please rename the file or choose a different file.",
+                detail=(
+                    f"Duplicate filename: A dataset with the filename '{filename}' "
+                    "already exists. Please rename the file or choose a different file."
+                ),
             )
         elif "does not appear to be a valid Context Studio dataset" in error_message:
             raise HTTPException(
                 status_code=400,
-                detail=f"Invalid dataset: The file '{request.file_path}' is not a valid Context Studio dataset. It may be empty, corrupted, or from a different application.",
+                detail=(
+                    f"Invalid dataset: The file '{request.file_path}' is not a valid "
+                    "Context Studio dataset. It may be empty, corrupted, or from a "
+                    "different application."
+                ),
             )
         elif "Failed to validate dataset file" in error_message:
             raise HTTPException(
                 status_code=400,
-                detail=f"Database validation failed: The file '{request.file_path}' could not be validated as a SQLite database. It may be corrupted or not a database file.",
+                detail=(
+                    f"Database validation failed: The file '{request.file_path}' could not "
+                    "be validated as a SQLite database. It may be corrupted or not a "
+                    "database file."
+                ),
             )
         else:
             # Fallback for any other ValueError
@@ -199,7 +228,10 @@ async def add_existing_dataset(
         logger.error(f"Failed to add existing dataset: {e}")
         raise HTTPException(
             status_code=500,
-            detail="An unexpected error occurred while adding the dataset. Please check the server logs for more details.",
+            detail=(
+                "An unexpected error occurred while adding the dataset. "
+                "Please check the server logs for more details."
+            ),
         )
 
 
@@ -289,7 +321,10 @@ async def activate_dataset(dataset_id: str, dataset_manager: DatasetManager = De
         if not success:
             raise HTTPException(
                 status_code=400,
-                detail=f"Failed to activate dataset: Could not switch to dataset '{dataset_id}'. The dataset file may be missing, corrupted, or inaccessible.",
+                detail=(
+                    f"Failed to activate dataset: Could not switch to dataset '{dataset_id}'. "
+                    "The dataset file may be missing, corrupted, or inaccessible."
+                ),
             )
 
         # Update EventProcessor to use the new database
@@ -321,7 +356,10 @@ async def activate_dataset(dataset_id: str, dataset_manager: DatasetManager = De
         logger.error(f"Failed to activate dataset {dataset_id}: {e}")
         raise HTTPException(
             status_code=500,
-            detail=f"An unexpected error occurred while activating dataset '{dataset_id}'. Please check the server logs for more details.",
+            detail=(
+                f"An unexpected error occurred while activating dataset '{dataset_id}'. "
+                "Please check the server logs for more details."
+            ),
         )
 
 
@@ -342,7 +380,11 @@ async def delete_dataset(dataset_id: str, dataset_manager: DatasetManager = Depe
         if not success:
             raise HTTPException(
                 status_code=400,
-                detail=f"Failed to delete dataset: Could not delete dataset '{dataset.title}' ({dataset_id}). The dataset may be currently active or the file may be in use.",
+                detail=(
+                    f"Failed to delete dataset: Could not delete dataset '{dataset.title}' "
+                    f"({dataset_id}). The dataset may be currently active or the file may "
+                    "be in use."
+                ),
             )
 
         return {"message": f"Dataset {dataset_id} deleted successfully"}
@@ -352,7 +394,10 @@ async def delete_dataset(dataset_id: str, dataset_manager: DatasetManager = Depe
         logger.error(f"Failed to delete dataset {dataset_id}: {e}")
         raise HTTPException(
             status_code=500,
-            detail=f"An unexpected error occurred while deleting dataset '{dataset_id}'. Please check the server logs for more details.",
+            detail=(
+                f"An unexpected error occurred while deleting dataset '{dataset_id}'. "
+                "Please check the server logs for more details."
+            ),
         )
 
 
@@ -373,7 +418,10 @@ async def forget_dataset(dataset_id: str, dataset_manager: DatasetManager = Depe
         if not success:
             raise HTTPException(
                 status_code=400,
-                detail=f"Failed to forget dataset: Could not remove dataset '{dataset.title}' ({dataset_id}) from inventory. The dataset may be currently active.",
+                detail=(
+                    f"Failed to forget dataset: Could not remove dataset '{dataset.title}' "
+                    f"({dataset_id}) from inventory. The dataset may be currently active."
+                ),
             )
 
         return {"message": f"Dataset {dataset_id} forgotten successfully (file preserved)"}
@@ -383,5 +431,8 @@ async def forget_dataset(dataset_id: str, dataset_manager: DatasetManager = Depe
         logger.error(f"Failed to forget dataset {dataset_id}: {e}")
         raise HTTPException(
             status_code=500,
-            detail=f"An unexpected error occurred while forgetting dataset '{dataset_id}'. Please check the server logs for more details.",
+            detail=(
+                f"An unexpected error occurred while forgetting dataset '{dataset_id}'. "
+                "Please check the server logs for more details."
+            ),
         )

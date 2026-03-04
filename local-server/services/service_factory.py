@@ -356,9 +356,9 @@ class ServiceFactory:
     def get_execution_tracker(self) -> ExecutionTracker:
         """
         Get ExecutionTracker instance.
-        
+
         ExecutionTracker is stateless and doesn't need caching.
-        
+
         Returns:
             ExecutionTracker instance
         """
@@ -399,7 +399,7 @@ class ServiceFactory:
             return ChangesetManager(db, s3_sync, working_tree, version_mgr)
 
         return self._create_service_with_factory(ServiceType.CHANGESET_MANAGER, create_service)
-    
+
     def create_proposal_manager(
         self,
         db: Session,
@@ -423,7 +423,7 @@ class ServiceFactory:
             return ProposalManager(db, s3_sync, changeset_mgr)
 
         return self._create_service_with_factory(ServiceType.PROPOSAL_MANAGER, create_service)
-    
+
     def create_crdt_merge_engine(
         self,
         db: Session,
@@ -447,7 +447,7 @@ class ServiceFactory:
             return CRDTMergeEngine(db, version_mgr, changeset_mgr)
 
         return self._create_service_with_factory(ServiceType.CRDT_MERGE_ENGINE, create_service)
-    
+
     def create_identity_manager(
         self,
         db: Session,
@@ -470,7 +470,6 @@ class ServiceFactory:
         return self._create_service_with_factory(ServiceType.IDENTITY_MANAGER, create_service)
 
     # Phase 4 Advanced Features Services
-
 
     def create_conflict_resolution_engine(
         self, db: Session
@@ -590,7 +589,7 @@ class ServiceFactory:
     # Phase 5 Optimization Services
 
     def create_duckdb_query_optimizer(
-        self, duckdb_conn=None, s3_config: Optional[Dict[str, str]] = None
+        self, duckdb_conn: Optional[Any] = None, s3_config: Optional[Dict[str, str]] = None
     ) -> DuckDBQueryOptimizer:
         """
         Create DuckDBQueryOptimizer with optimized instantiation and dependency injection.
@@ -640,9 +639,9 @@ class ServiceFactory:
                         f"Cannot create DuckDBQueryOptimizer without valid DuckDB connection: {e}"
                     ) from e
             else:
-                duckdb_connection = duckdb_conn
+                duckdb_connection = cast(Any, duckdb_conn)
 
-            return DuckDBQueryOptimizer(duckdb_connection, s3_conf)
+            return DuckDBQueryOptimizer(cast(Any, duckdb_connection), s3_conf)
 
         return self._create_service_with_factory(ServiceType.DUCKDB_QUERY_OPTIMIZER, create_service)
 
@@ -760,7 +759,7 @@ class ServiceFactory:
         """
         # DON'T cache PerformanceMonitor - it holds database connections that become stale
         # Create fresh instance each time to avoid session/connection issues
-        
+
         # Use provided connections or create defaults for tests
         sqlite_connection = db_connection
         if sqlite_connection is None:
