@@ -342,7 +342,9 @@ class SchemaOrgImporter:
 
             except requests.exceptions.Timeout as e:
                 last_error = e
-                logger.warning(
+                # Log as debug on retryable attempts, warning on final failure
+                log_level = logger.debug if attempt < retry_count - 1 else logger.warning
+                log_level(
                     f"Download attempt {attempt + 1}/{retry_count} failed with timeout "
                     f"({timeout}s): {e}"
                 )
@@ -352,7 +354,9 @@ class SchemaOrgImporter:
                     )
             except requests.exceptions.RequestException as e:
                 last_error = e
-                logger.warning(
+                # Log as debug on retryable attempts, warning on final failure
+                log_level = logger.debug if attempt < retry_count - 1 else logger.warning
+                log_level(
                     f"Download attempt {attempt + 1}/{retry_count} failed with network error: {e}"
                 )
                 if attempt == retry_count - 1:
@@ -361,7 +365,9 @@ class SchemaOrgImporter:
                     )
             except Exception as e:
                 last_error = e
-                logger.warning(
+                # Log as debug on retryable attempts, warning on final failure
+                log_level = logger.debug if attempt < retry_count - 1 else logger.warning
+                log_level(
                     f"Download attempt {attempt + 1}/{retry_count} failed: {e}"
                 )
                 if attempt == retry_count - 1:
