@@ -255,7 +255,14 @@ class BatchOperationProcessor:
                 else:
                     self.sqlite_conn.rollback()
             except Exception as transaction_error:
-                logger.error(f"Failed to handle transaction: {transaction_error}")
+                logger.error(
+                    f"Failed to handle transaction - commit/rollback failed: {transaction_error}. "
+                    f"Batch operation marked as failed due to transaction failure.",
+                    exc_info=True
+                )
+                batch_result["status"] = "failed"
+                batch_result["error"] = str(transaction_error)
+                batch_result["error_type"] = type(transaction_error).__name__
 
         return batch_result
 

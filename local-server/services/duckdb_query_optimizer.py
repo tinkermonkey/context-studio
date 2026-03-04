@@ -180,7 +180,15 @@ class DuckDBQueryOptimizer:
             logger.info("DuckDB optimization settings configured successfully")
 
         except Exception as e:
-            logger.warning(f"Failed to set some DuckDB optimization settings: {e}")
+            logger.error(
+                f"Failed to configure critical DuckDB optimization settings: {e}. "
+                f"Query performance may be severely degraded. "
+                f"This indicates a configuration problem with DuckDB or system resources (memory, temp directory).",
+                exc_info=True
+            )
+            raise RuntimeError(
+                f"Cannot initialize DuckDBQueryOptimizer without proper optimization settings: {e}"
+            ) from e
 
     def optimize_query(
         self, query: str, query_context: Optional[Dict[str, Any]] = None

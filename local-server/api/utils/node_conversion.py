@@ -11,6 +11,9 @@ from database.enums import NodeType
 from api.models.structure_nodes import NodeOut, NodeLinkOut, NodeTypeEnum
 from uuid import UUID
 import numpy as np
+from utils.logger import get_logger
+
+logger = get_logger(__name__)
 
 
 def to_node_out(structure_node: StructureNode, include_embeddings: bool = True) -> NodeOut:
@@ -35,16 +38,24 @@ def to_node_out(structure_node: StructureNode, include_embeddings: bool = True) 
             try:
                 # Embeddings are stored as raw numpy float32 bytes via np.float32.tobytes()
                 title_embedding = np.frombuffer(bytes(structure_node.title_embedding), dtype=np.float32).tolist()
-            except Exception:
-                # If deserialization fails, leave as None
+            except Exception as e:
+                logger.warning(
+                    f"Failed to deserialize title embedding for node {structure_node.id}: {e}. "
+                    "Embedding will be excluded from response, which may impact semantic search.",
+                    exc_info=True
+                )
                 title_embedding = None
 
         if hasattr(structure_node, 'definition_embedding') and structure_node.definition_embedding:
             try:
                 # Embeddings are stored as raw numpy float32 bytes via np.float32.tobytes()
                 definition_embedding = np.frombuffer(bytes(structure_node.definition_embedding), dtype=np.float32).tolist()
-            except Exception:
-                # If deserialization fails, leave as None
+            except Exception as e:
+                logger.warning(
+                    f"Failed to deserialize definition embedding for node {structure_node.id}: {e}. "
+                    "Embedding will be excluded from response, which may impact semantic search.",
+                    exc_info=True
+                )
                 definition_embedding = None
     
     # Handle the ID field - ensure it's properly converted to UUID

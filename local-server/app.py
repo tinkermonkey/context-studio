@@ -198,13 +198,14 @@ def create_app(dataset_id=None, engine=None, session_local=None, service_factory
                             f"Event processor started with full version management for dataset: {active_dataset.title}"
                         )
                     except Exception as e:
-                        logger.error(f"Failed to initialize version management services: {e}")
-                        # Fall back to event processor without version management
-                        app.state.event_processor = create_event_processor(database_url=database_url)
-                        app.state.event_processor.start()
-                        logger.warning(
-                            f"Event processor started without version management for dataset: {active_dataset.title}"
+                        logger.error(
+                            f"Failed to initialize version management services: {e}. "
+                            f"Version tracking will not function for this dataset, which is a critical data integrity issue.",
+                            exc_info=True
                         )
+                        raise RuntimeError(
+                            f"Cannot start application without version management services: {e}"
+                        ) from e
             else:
                 app.state.event_processor = None
 

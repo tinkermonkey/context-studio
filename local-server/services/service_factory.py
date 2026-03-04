@@ -562,8 +562,11 @@ class ServiceFactory:
             try:
                 settings = get_settings()
                 s3_config_obj = settings.get_s3_config()
-            except Exception:
-                s3_config_obj = None
+            except Exception as e:
+                logger.error(f"Failed to retrieve S3 configuration for IncrementalSyncEngine: {e}", exc_info=True)
+                raise RuntimeError(
+                    f"Cannot create IncrementalSyncEngine without valid S3 configuration: {e}"
+                ) from e
 
             if s3_config_obj is None:
                 s3_config_dict: Dict[str, str] = {
@@ -604,8 +607,11 @@ class ServiceFactory:
                 try:
                     settings = get_settings()
                     s3_config_obj = settings.get_s3_config()
-                except Exception:
-                    s3_config_obj = None
+                except Exception as e:
+                    logger.error(f"Failed to retrieve S3 configuration for DuckDBQueryOptimizer: {e}", exc_info=True)
+                    raise RuntimeError(
+                        f"Cannot create DuckDBQueryOptimizer without valid S3 configuration: {e}"
+                    ) from e
 
                 if s3_config_obj is not None:
                     s3_conf: Dict[str, str] = {
@@ -628,13 +634,15 @@ class ServiceFactory:
                 try:
                     duckdb_service = self.create_duckdb_service(s3_conf)
                     duckdb_connection = duckdb_service.connection
-                except Exception:
-                    # For tests, use None connection - cast to required type
-                    duckdb_connection = cast(Any, None)
+                except Exception as e:
+                    logger.error(f"Failed to create DuckDB service for DuckDBQueryOptimizer: {e}", exc_info=True)
+                    raise RuntimeError(
+                        f"Cannot create DuckDBQueryOptimizer without valid DuckDB connection: {e}"
+                    ) from e
             else:
                 duckdb_connection = duckdb_conn
 
-            return DuckDBQueryOptimizer(cast(Any, duckdb_connection), s3_conf)
+            return DuckDBQueryOptimizer(duckdb_connection, s3_conf)
 
         return self._create_service_with_factory(ServiceType.DUCKDB_QUERY_OPTIMIZER, create_service)
 
@@ -758,18 +766,22 @@ class ServiceFactory:
         if sqlite_connection is None:
             try:
                 sqlite_connection = self.get_database_connection()
-            except Exception:
-                # Use mock connection for tests
-                sqlite_connection = None
+            except Exception as e:
+                logger.error(f"Failed to get database connection for PerformanceMonitor: {e}", exc_info=True)
+                raise RuntimeError(
+                    f"Cannot create PerformanceMonitor without valid SQLite connection: {e}"
+                ) from e
 
         duckdb_connection = duckdb_conn
         if duckdb_connection is None:
             try:
                 duckdb_service = self.create_duckdb_service()
                 duckdb_connection = duckdb_service.connection
-            except Exception:
-                # Use None for tests
-                duckdb_connection = None
+            except Exception as e:
+                logger.error(f"Failed to create DuckDB service for PerformanceMonitor: {e}", exc_info=True)
+                raise RuntimeError(
+                    f"Cannot create PerformanceMonitor without valid DuckDB connection: {e}"
+                ) from e
 
         s3_sync = s3_sync_manager
 
