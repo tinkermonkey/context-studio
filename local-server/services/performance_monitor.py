@@ -159,35 +159,29 @@ class PerformanceMonitor:
             ]
 
         if not recent_metrics:
-            # Return mock data for tests when no metrics are available
-            logger.info("No recent metrics available, returning fallback trend data")
+            # Return empty result when no metrics are available
+            logger.info("No recent metrics available for trend analysis")
             return {
                 "analysis_window_hours": window_hours,
                 "trends": {
                     "analysis_period_hours": window_hours,
                     "sample_count": 0,
-                    "query_time_trend": {"direction": "stable", "change_percent": 0.0},
-                    "sync_time_trend": {"direction": "stable", "change_percent": 0.0},
-                    "memory_usage_trend": {
-                        "direction": "stable",
-                        "change_percent": 0.0,
-                    },
-                    "error_rate_trend": {"direction": "stable", "change_percent": 0.0},
-                    "throughput_trend": {"direction": "stable", "change_percent": 0.0},
-                    "cache_hit_rate_trend": {
-                        "direction": "stable",
-                        "change_percent": 0.0,
-                    },
+                    "query_time_trend": None,
+                    "sync_time_trend": None,
+                    "memory_usage_trend": None,
+                    "error_rate_trend": None,
+                    "throughput_trend": None,
+                    "cache_hit_rate_trend": None,
                 },
                 "issues": [],
                 "recommendations": [
                     {
-                        "description": "Collect more performance data for better analysis",
+                        "description": "Collect more performance data for analysis to be available",
                         "priority": "low",
                     }
                 ],
-                "overall_health_score": 0.85,
-                "performance_grade": "B",
+                "overall_health_score": None,
+                "performance_grade": None,
             }
 
         trends = {
@@ -448,17 +442,18 @@ class PerformanceMonitor:
             return {"status": "not_configured"}
 
         try:
-            # Mock S3 metrics - in a real implementation, these would be collected from S3 and sync manager
+            # S3 sync manager not yet implemented - return empty/null metrics
+            logger.warning("S3 metrics collection not yet implemented")
             return {
-                "sync_operations_count": 100,  # Mock value
-                "avg_sync_time_ms": 2500,
-                "total_storage_bytes": 10 * 1024 * 1024 * 1024,  # 10GB mock
-                "objects_count": 5000,
-                "failed_sync_count": 2,
-                "success_rate": 0.996,
-                "storage_cost_estimate_usd": 25.50,
-                "bandwidth_usage_gb": 5.2,
-                "status": "healthy",
+                "sync_operations_count": None,
+                "avg_sync_time_ms": None,
+                "total_storage_bytes": None,
+                "objects_count": None,
+                "failed_sync_count": None,
+                "success_rate": None,
+                "storage_cost_estimate_usd": None,
+                "bandwidth_usage_gb": None,
+                "status": "not_implemented",
             }
 
         except Exception as e:
@@ -469,16 +464,17 @@ class PerformanceMonitor:
         """Collect query performance metrics."""
 
         try:
-            # Mock query metrics - in a real implementation, these would come from query optimizer
+            # Query metrics collection not yet implemented - return empty/null metrics
+            logger.warning("Query metrics collection not yet implemented")
             return {
-                "total_queries_executed": 1500,
-                "avg_execution_time_ms": 850,
-                "slow_queries_count": 15,
-                "failed_queries_count": 3,
-                "success_rate": 0.998,
-                "cache_hit_ratio": 0.85,
-                "materialized_views_count": 5,
-                "optimization_level": "high",
+                "total_queries_executed": None,
+                "avg_execution_time_ms": None,
+                "slow_queries_count": None,
+                "failed_queries_count": None,
+                "success_rate": None,
+                "cache_hit_ratio": None,
+                "materialized_views_count": None,
+                "optimization_level": None,
             }
 
         except Exception as e:
@@ -528,15 +524,16 @@ class PerformanceMonitor:
         """Collect cache performance metrics."""
 
         try:
-            # Mock cache metrics - would come from actual cache implementations
+            # Cache metrics collection not yet implemented - return empty/null metrics
+            logger.warning("Cache metrics collection not yet implemented")
             return {
-                "query_cache_size": 1000,
-                "query_cache_hit_rate": 0.82,
-                "materialized_view_cache_hits": 450,
-                "storage_cache_size_mb": 256,
-                "cache_evictions": 25,
-                "cache_memory_usage_mb": 128,
-                "hit_rate": 0.85,  # Overall hit rate
+                "query_cache_size": None,
+                "query_cache_hit_rate": None,
+                "materialized_view_cache_hits": None,
+                "storage_cache_size_mb": None,
+                "cache_evictions": None,
+                "cache_memory_usage_mb": None,
+                "hit_rate": None,
             }
 
         except Exception as e:
@@ -547,17 +544,18 @@ class PerformanceMonitor:
         """Collect batch operation performance metrics."""
 
         try:
-            # Mock batch metrics - would come from BatchOperationProcessor
+            # Batch metrics collection not yet implemented - return empty/null metrics
+            logger.warning("Batch metrics collection not yet implemented")
             return {
-                "total_batch_operations": 50,
-                "avg_throughput_per_second": 125,
-                "avg_processing_time_seconds": 8.5,
-                "successful_operations": 48,
-                "failed_operations": 2,
-                "success_rate": 0.96,
-                "current_batch_size": 1000,
-                "parallel_workers_active": 8,
-                "storage_growth_rate_mb_per_hour": 100,
+                "total_batch_operations": None,
+                "avg_throughput_per_second": None,
+                "avg_processing_time_seconds": None,
+                "successful_operations": None,
+                "failed_operations": None,
+                "success_rate": None,
+                "current_batch_size": None,
+                "parallel_workers_active": None,
+                "storage_growth_rate_mb_per_hour": None,
             }
 
         except Exception as e:

@@ -112,13 +112,8 @@ class S3StorageOptimizer:
             logger.info("S3 lifecycle policies configured successfully")
             return True
         except ClientError as e:
-            # In test environment with invalid credentials, treat as successful for demo purposes
-            if "InvalidAccessKeyId" in str(e) or "The AWS Access Key Id you provided does not exist" in str(e):
-                logger.info("S3 lifecycle policies configured (test/demo mode - credentials not verified)")
-                return True
-            else:
-                logger.error(f"Failed to setup lifecycle policies: {e}")
-                return False
+            logger.error(f"Failed to setup lifecycle policies: {e}")
+            return False
         except Exception as e:
             logger.error(f"Failed to setup lifecycle policies: {e}")
             return False
@@ -343,32 +338,8 @@ class S3StorageOptimizer:
             return storage_analysis
             
         except ClientError as e:
-            # In test environment with invalid credentials, return mock data
-            if "InvalidAccessKeyId" in str(e) or "The AWS Access Key Id you provided does not exist" in str(e):
-                logger.info("Storage cost analysis using mock data (test/demo mode - credentials not verified)")
-                return {
-                    'analysis_period_days': days_back,
-                    'total_objects': 1250,
-                    'total_size_bytes': 10 * 1024**3,  # 10GB
-                    'storage_classes': {'STANDARD': 800, 'STANDARD_IA': 300, 'GLACIER': 150},
-                    'cost_by_prefix': {
-                        'changes': {'object_count': 600, 'total_size': 6 * 1024**3, 'avg_size': 10 * 1024**2},
-                        'snapshots': {'object_count': 400, 'total_size': 3 * 1024**3, 'avg_size': 7.5 * 1024**2},
-                        'temp': {'object_count': 250, 'total_size': 1 * 1024**3, 'avg_size': 4 * 1024**2}
-                    },
-                    'optimization_opportunities': [
-                        {'key': 'old_data_1.parquet', 'size': 100*1024**2, 'recommendation': 'Archive to Glacier'},
-                        {'key': 'old_data_2.parquet', 'size': 150*1024**2, 'recommendation': 'Archive to Glacier'}
-                    ],
-                    'cost_optimization': {
-                        'archival_candidates': 2,
-                        'estimated_monthly_savings_usd': 15.50,
-                        'current_monthly_cost_estimate_usd': 23.00
-                    }
-                }
-            else:
-                logger.error(f"Failed to analyze storage costs: {e}")
-                return {'error': str(e)}
+            logger.error(f"Failed to analyze storage costs: {e}")
+            return {'error': str(e)}
     
     def _analyze_dataframe(self, df: pd.DataFrame) -> Dict[str, Any]:
         """Analyze DataFrame characteristics for optimization."""

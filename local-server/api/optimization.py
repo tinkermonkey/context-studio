@@ -196,13 +196,21 @@ def get_optimization_system_health(
 ):
     """Get comprehensive optimization system health status."""
     try:
-        # Check service health
+        # Check actual service health from each service
+        # Each service should implement a health check method
         services_health = {
-            "query_optimizer": True,  # Service factory ensures healthy instances
-            "storage_optimizer": True,
-            "diff_engine": True,
-            "batch_processor": True,
-            "performance_monitor": True,
+            "query_optimizer": (
+                hasattr(query_optimizer, "health_check")
+                and query_optimizer.health_check()
+            ) if hasattr(query_optimizer, "health_check") else None,
+            "storage_optimizer": (
+                hasattr(storage_optimizer, "health_check")
+                and storage_optimizer.health_check()
+            ) if hasattr(storage_optimizer, "health_check") else None,
+            "performance_monitor": (
+                hasattr(performance_monitor, "health_check")
+                and performance_monitor.health_check()
+            ) if hasattr(performance_monitor, "health_check") else None,
         }
 
         # Get performance dashboard to assess overall health
@@ -440,23 +448,24 @@ def optimize_storage(
         # Start optimization in background
         background_tasks.add_task(run_storage_optimization)
 
-        # Return immediate response with estimated metrics
+        # Return immediate response indicating optimization is in progress.
+        # Actual results will be available once the background task completes.
         return StorageOptimizationOut(
             optimization_actions=[
                 {
                     "action": "compression_optimization",
-                    "status": "running",
-                    "estimated_savings_bytes": 1024 * 1024 * 1024,  # 1GB estimate
+                    "status": "pending",
+                    "details": "Background optimization in progress",
                 },
                 {
                     "action": "lifecycle_policy_application",
-                    "status": "running",
-                    "estimated_cost_reduction": 0.3,
+                    "status": "pending",
+                    "details": "Background optimization in progress",
                 },
             ],
-            storage_saved_bytes=1024 * 1024 * 1024,  # Estimated 1GB
-            cost_reduction_estimate=0.25,  # Estimated 25% reduction
-            objects_optimized=1000,  # Estimated objects
+            storage_saved_bytes=0,  # Actual results pending
+            cost_reduction_estimate=0.0,  # Actual results pending
+            objects_optimized=0,  # Actual results pending
         )
     except Exception as e:
         raise HTTPException(
@@ -623,9 +632,11 @@ def get_optimization_configuration():
 @router.put("/config")
 def update_optimization_configuration(config: Dict[str, Any]):
     """Update optimization system configuration."""
-    # In a real implementation, this would update the configuration
+    # Configuration update not yet implemented
+    logger.warning("Optimization configuration update not yet implemented")
     return {
-        "message": "Configuration updated successfully",
+        "message": "Configuration update not yet implemented",
+        "status": "not_implemented",
         "updated_at": datetime.now().isoformat(),
         "config": config,
     }
