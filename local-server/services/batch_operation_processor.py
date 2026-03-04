@@ -264,10 +264,9 @@ class BatchOperationProcessor:
                 batch_result.successful_items = 0
                 batch_result.errors.append(
                     BatchOperationError(
-                        item_id="<transaction>",
-                        error_message=str(transaction_error),
+                        entity_id="<transaction>",
                         error_type=type(transaction_error).__name__,
-                        timestamp=datetime.now(),
+                        error_message=str(transaction_error),
                         additional_context={"phase": "commit/rollback"}
                     )
                 )
