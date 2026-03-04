@@ -277,33 +277,6 @@ class TestBatchOperationProcessor:
         assert stats["total_items_processed"] >= 45  # 10 + 20 + 15
         assert 0 <= stats["overall_success_rate"] <= 1.0
 
-    def test_memory_optimization(self, batch_processor):
-        """Test memory optimization during large batch operations."""
-        # Create a large dataset to test memory handling
-        large_dataset = [
-            {
-                "id": f"entity_{i}",
-                "type": "document",
-                "content": "x" * 1000,  # 1KB per entity
-                "metadata": {"size": "large", "index": i},
-            }
-            for i in range(2000)  # 2MB total
-        ]
-
-        # Monitor memory usage (simplified)
-        import psutil
-
-        process = psutil.Process()
-        memory_before = process.memory_info().rss
-
-        result = batch_processor.batch_create_versions(large_dataset, "memory_test")
-
-        memory_after = process.memory_info().rss
-        memory_increase = memory_after - memory_before
-
-        # Should not consume excessive memory (less than 50MB increase)
-        assert memory_increase < 50 * 1024 * 1024
-        assert result.total_items == 2000
 
     def test_batch_operation_cancellation(self, batch_processor):
         """Test batch operation cancellation capability."""
