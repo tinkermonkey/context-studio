@@ -7,3 +7,12 @@ PRPs/
 **/.venv/
 **/test_env/
 **/.dr/
+
+# Build and runtime artifacts
+build.log
+*.log
+
+# Database files and SQLite runtime artifacts
+*.db
+*.db-shm
+*.db-wal
