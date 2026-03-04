@@ -20,7 +20,7 @@ Endpoints:
 
 from fastapi import APIRouter, HTTPException, Query, Depends, Path
 from typing import List, Optional, Dict, Any
-import pandas as pd
+import pandas as pd  # type: ignore[import-untyped]
 from services.service_factory import get_change_analytics_engine_via_factory
 from pydantic import BaseModel
 

@@ -679,7 +679,7 @@ class ServiceFactory:
 
             # Create S3 client and extract bucket name from config
             try:
-                import boto3
+                import boto3  # type: ignore[import-untyped]
                 s3_client = boto3.client(
                     's3',
                     aws_access_key_id=s3_conf_dict.get('aws_access_key_id'),
