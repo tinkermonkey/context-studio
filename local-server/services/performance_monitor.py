@@ -499,22 +499,23 @@ class PerformanceMonitor:
                 "memory_available_mb": memory.available / (1024 * 1024),
                 "disk_usage_gb": disk.used / (1024 * 1024 * 1024),
                 "disk_free_gb": disk.free / (1024 * 1024 * 1024),
-                "error_rate_percent": 0.5,  # Mock error rate
-                "uptime_hours": 72.5,  # Mock uptime
+                "error_rate_percent": None,  # Not yet collected by psutil
+                "uptime_hours": None,  # Not yet collected by psutil
             }
 
         except ImportError:
             # Fallback if psutil is not available
+            logger.warning("System metrics collection not available - psutil not installed")
             return {
-                "cpu_usage_percent": 25.0,  # Mock values
-                "memory_usage_mb": 512,
-                "memory_total_mb": 4096,
-                "memory_available_mb": 3584,
-                "disk_usage_gb": 50,
-                "disk_free_gb": 450,
-                "error_rate_percent": 0.3,
-                "uptime_hours": 48.0,
-                "note": "Using mock values - psutil not available",
+                "cpu_usage_percent": None,
+                "memory_usage_mb": None,
+                "memory_total_mb": None,
+                "memory_available_mb": None,
+                "disk_usage_gb": None,
+                "disk_free_gb": None,
+                "error_rate_percent": None,
+                "uptime_hours": None,
+                "status": "not_implemented",
             }
         except Exception as e:
             logger.error(f"Failed to collect system metrics: {e}")
