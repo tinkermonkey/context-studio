@@ -10,7 +10,7 @@ import os
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 import pytest
-import pandas as pd
+import pandas as pd  # type: ignore[import-untyped]
 from unittest.mock import Mock, patch
 
 from services.duckdb_service import DuckDBService, ChangeAnalyticsEngine
