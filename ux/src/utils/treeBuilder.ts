@@ -53,18 +53,15 @@ export function buildHierarchicalTree(input: TreeBuilderInput): HierarchyNode {
 
     // Combine all nodes into a single array for generic processing
     const allNodes = [
-   
-      ...layers.map((n: any)  // eslint-disable-line @typescript-eslint/no-explicit-any
- => ({ ...n, node_type: n.node_type || "layer" })),
-   
-      ...domains.map((n: any)  // eslint-disable-line @typescript-eslint/no-explicit-any
- => ({
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      ...layers.map((n: any) => ({ ...n, node_type: n.node_type || "layer" })),
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      ...domains.map((n: any) => ({
         ...n,
         node_type: n.node_type || "domain",
       })),
-   
-      ...terms.map((n: any)  // eslint-disable-line @typescript-eslint/no-explicit-any
- => ({ ...n, node_type: n.node_type || "term" })),
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      ...terms.map((n: any) => ({ ...n, node_type: n.node_type || "term" })),
     ];
 
     // Build the hierarchy generically
@@ -98,9 +95,7 @@ export function buildNodeHierarchy(nodes: any[]): {
   const topLevelNodes: HierarchyNode[] = [];
 
   // First pass: create all node entries
-   
-  nodes.forEach((node: any)  // eslint-disable-line @typescript-eslint/no-explicit-any
- => {
+  nodes.forEach((node: any) => {  // eslint-disable-line @typescript-eslint/no-explicit-any
     if (!node.id) {
       console.warn("Node missing id:", node);
       return;
@@ -123,9 +118,7 @@ export function buildNodeHierarchy(nodes: any[]): {
   });
 
   // Second pass: establish parent-child relationships
-   
-  nodes.forEach((node: any)  // eslint-disable-line @typescript-eslint/no-explicit-any
- => {
+  nodes.forEach((node: any) => {  // eslint-disable-line @typescript-eslint/no-explicit-any
     const hierarchyNode = nodeMap.get(node.id);
     if (!hierarchyNode) return;
 

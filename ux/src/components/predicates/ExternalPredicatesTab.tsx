@@ -347,10 +347,10 @@ export const ExternalPredicatesTab: React.FC<ExternalPredicatesTabProps> = ({
               </TableRow>
             </TableHead>
             <TableBody className="divide-y">
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-              {displayData.map((predicate: any)  // eslint-disable-line @typescript-eslint/no-explicit-any
- => (
-                <TableRow
+              {displayData.map(
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                (predicate: any) => (
+                  <TableRow
                   key={predicate.id}
                   className="bg-white dark:border-gray-700 dark:bg-gray-800"
                 >
@@ -414,7 +414,8 @@ export const ExternalPredicatesTab: React.FC<ExternalPredicatesTabProps> = ({
                     )}
                   </TableCell>
                 </TableRow>
-              ))}
+                ),
+              )}
             </TableBody>
           </Table>
         )}

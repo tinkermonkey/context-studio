@@ -45,9 +45,7 @@ function RouteComponent() {
     return labels[path] || path;
   };
 
-   
-  const handleUpdateConfig = async (path: string, value: any)  // eslint-disable-line @typescript-eslint/no-explicit-any
- => {
+  const handleUpdateConfig = async (path: string, value: any) => {  // eslint-disable-line @typescript-eslint/no-explicit-any
     const label = getConfigLabel(path);
     await updateConfigMutation.mutateAsync(
       {
@@ -138,9 +136,7 @@ function EnvironmentVariablesSection({
 }: {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   config: any;
-   
-  onUpdate: (path: string, value: any)  // eslint-disable-line @typescript-eslint/no-explicit-any
- => void;
+  onUpdate: (path: string, value: any) => void;  // eslint-disable-line @typescript-eslint/no-explicit-any
   isUpdating: boolean;
 }) {
   if (!config) {
@@ -307,9 +303,7 @@ function RawConfigurationSection({
 }: {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   config: any;
-   
-  onUpdate: (path: string, value: any)  // eslint-disable-line @typescript-eslint/no-explicit-any
- => void;
+  onUpdate: (path: string, value: any) => void;  // eslint-disable-line @typescript-eslint/no-explicit-any
   isUpdating: boolean;
 }) {
   const [configJson, setConfigJson] = useState("");

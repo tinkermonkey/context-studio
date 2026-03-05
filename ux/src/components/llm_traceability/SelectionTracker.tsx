@@ -172,8 +172,8 @@ export const SelectionTracker: React.FC<SelectionTrackerProps> = ({
       let hasTrackedThisEvent = false;
 
    
-      const createHandler = (originalHandler: any)  // eslint-disable-line @typescript-eslint/no-explicit-any
- => (content: string) => {
+      const createHandler = (originalHandler: any) =>  // eslint-disable-line @typescript-eslint/no-explicit-any
+        (content: string) => {
         if (!hasTrackedThisEvent) {
           hasTrackedThisEvent = true;
           handleSelection(content);
@@ -197,8 +197,8 @@ export const SelectionTracker: React.FC<SelectionTrackerProps> = ({
       let isProcessingEvent = false;
 
    
-      const createHandler = (originalHandler: any)  // eslint-disable-line @typescript-eslint/no-explicit-any
- => (content: string) => {
+      const createHandler = (originalHandler: any) =>  // eslint-disable-line @typescript-eslint/no-explicit-any
+        (content: string) => {
         if (!isProcessingEvent) {
           isProcessingEvent = true;
           setTimeout(() => {

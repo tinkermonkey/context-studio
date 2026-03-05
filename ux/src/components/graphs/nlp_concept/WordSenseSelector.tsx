@@ -392,9 +392,8 @@ export const WordSenseSelector: React.FC<WordSenseSelectorProps> = ({
                   },
                   wordnet: {
                     synsets: (state.analysis.wordnet?.synsets || []).map(
-   
-                      (s: any)  // eslint-disable-line @typescript-eslint/no-explicit-any
- => ({
+                      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                      (s: any) => ({
                         name: s.name || s.synset || s.id || s[0] || "unknown",
                         definition: s.definition || s.gloss || s.def || "",
                         lemmas: s.lemmas || [],
@@ -405,9 +404,8 @@ export const WordSenseSelector: React.FC<WordSenseSelectorProps> = ({
                       }),
                     ),
                     definitions: (state.analysis.wordnet?.synsets || []).map(
-   
-                      (s: any)  // eslint-disable-line @typescript-eslint/no-explicit-any
- => s.definition || s.gloss || s.def || "",
+                      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                      (s: any) => s.definition || s.gloss || s.def || "",
                     ),
                   },
                 }}

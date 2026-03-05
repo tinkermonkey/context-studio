@@ -16,9 +16,7 @@ interface RecordSelectorProps {
   loading?: boolean;
   error?: string | null;
   fieldMap?: FieldMap;
-   
-  onSelect?: (record: any)  // eslint-disable-line @typescript-eslint/no-explicit-any
- => void;
+  onSelect?: (record: any) => void;  // eslint-disable-line @typescript-eslint/no-explicit-any
   value?: string;
   className?: string;
   search?: string;

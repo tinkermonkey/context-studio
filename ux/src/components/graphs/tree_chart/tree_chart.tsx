@@ -161,8 +161,7 @@ const TreeChart: React.FC<TreeChartProps> = ({
   // Node click handler to navigate to the node's details
   const handleNodeClick = useCallback(
    
-    (node: any)  // eslint-disable-line @typescript-eslint/no-explicit-any
- => {
+    (node: any) =>  // eslint-disable-line @typescript-eslint/no-explicit-any {
       if (
         node.type === "term" ||
         node.type === "domain" ||

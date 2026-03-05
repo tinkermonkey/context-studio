@@ -174,9 +174,8 @@ function RouteComponent() {
                         {
                           label: "Healthy Engines",
                           value: Object.values(dbHealth.engines).filter(
-   
-                            (e: any)  // eslint-disable-line @typescript-eslint/no-explicit-any
- => e.status === "healthy",
+                            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                            (e: any) => e.status === "healthy",
                           ).length,
                         },
                       ]}

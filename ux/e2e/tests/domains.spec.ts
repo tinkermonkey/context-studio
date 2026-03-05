@@ -122,9 +122,8 @@ test.describe("Domain Management", () => {
       "/api/structure_nodes?node_type=domain",
     );
     const createdDomain = response.data.find(
-       
-      (n: any)  // eslint-disable-line @typescript-eslint/no-explicit-any
- => n.title === domainTitle,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (n: any) => n.title === domainTitle,
     );
 
     expect(createdDomain).toBeDefined();
@@ -420,9 +419,7 @@ test.describe("Domain Management", () => {
     // Verify the specific test domain was not created
     const testDomain = afterResponse.data.find(
        
-      (n: any)  // eslint-disable-line @typescript-eslint/no-explicit-any
- => n.title === "Test Domain Not Submitted",
-    );
+      (n: any) => );  // eslint-disable-line @typescript-eslint/no-explicit-any n.title === "Test Domain Not Submitted",
     expect(testDomain).toBeUndefined();
   });
 

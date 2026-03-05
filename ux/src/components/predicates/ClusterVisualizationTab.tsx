@@ -194,8 +194,7 @@ export const ClusterVisualizationTab: React.FC<
                 <div className="text-3xl font-bold text-green-600 dark:text-green-400">
                   {clusters.clusters.reduce(
    
-                    (sum: number, c: any)  // eslint-disable-line @typescript-eslint/no-explicit-any
- => sum + c.size,
+                    (sum: number, c: any) => sum + c.size,  // eslint-disable-line @typescript-eslint/no-explicit-any
                     0,
                   )}
                 </div>
@@ -208,8 +207,7 @@ export const ClusterVisualizationTab: React.FC<
                   {clusters.total_predicates -
                     clusters.clusters.reduce(
    
-                      (sum: number, c: any)  // eslint-disable-line @typescript-eslint/no-explicit-any
- => sum + c.size,
+                      (sum: number, c: any) => sum + c.size,  // eslint-disable-line @typescript-eslint/no-explicit-any
                       0,
                     )}
                 </div>

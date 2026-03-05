@@ -104,9 +104,7 @@ const PipelineResultView: React.FC<PipelineResultViewProps> = ({
     savedVisibleLocal,
   ]);
 
-   
-  const handleSaveLocal = async (res: any)  // eslint-disable-line @typescript-eslint/no-explicit-any
- => {
+  const handleSaveLocal = async (res: any) => {  // eslint-disable-line @typescript-eslint/no-explicit-any
     // Extract definition from structured_output, legacy format, or raw response
     const definition =
       res?.data?.structured_output?.definition ||

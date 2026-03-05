@@ -216,11 +216,12 @@ function ReferenceAPIsSection({
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const statusByName: Record<string, any> = {};
   if (status?.sources) {
-   
-    status.sources.forEach((sourceStatus: any)  // eslint-disable-line @typescript-eslint/no-explicit-any
- => {
-      statusByName[sourceStatus.name] = sourceStatus;
-    });
+    status.sources.forEach(
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (sourceStatus: any) => {
+        statusByName[sourceStatus.name] = sourceStatus;
+      },
+    );
   }
 
   return (

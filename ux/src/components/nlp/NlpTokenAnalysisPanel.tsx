@@ -79,20 +79,20 @@ export const NlpTokenAnalysisPanel: React.FC<Props> = ({
                 related_terms: relations,
               },
               wordnet: {
-   
-                synsets: (wordnet?.synsets || []).map((s: any)  // eslint-disable-line @typescript-eslint/no-explicit-any
- => ({
-                  name: s.name || s.synset || s.id || s[0] || "unknown",
-                  definition: s.definition || s.gloss || s.def || "",
-                  lemmas: s.lemmas || [],
-                  pos: s.pos || s.partOfSpeech || token.pos || token.tag || "",
-                  offset: s.offset || 0,
-                  domain: s.domain || "general",
-                })),
+                synsets: (wordnet?.synsets || []).map(
+                  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                  (s: any) => ({
+                    name: s.name || s.synset || s.id || s[0] || "unknown",
+                    definition: s.definition || s.gloss || s.def || "",
+                    lemmas: s.lemmas || [],
+                    pos: s.pos || s.partOfSpeech || token.pos || token.tag || "",
+                    offset: s.offset || 0,
+                    domain: s.domain || "general",
+                  }),
+                ),
                 definitions: (wordnet?.synsets || []).map(
-   
-                  (s: any)  // eslint-disable-line @typescript-eslint/no-explicit-any
- => s.definition || s.gloss || s.def || "",
+                  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                  (s: any) => s.definition || s.gloss || s.def || "",
                 ),
               },
             }}

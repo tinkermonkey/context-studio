@@ -322,9 +322,8 @@ function RouteComponent() {
                         },
                       ]}
                       issues={trends.issues.map(
-   
-                        (issue: any)  // eslint-disable-line @typescript-eslint/no-explicit-any
- => issue.description || issue,
+                        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                        (issue: any) => issue.description || issue,
                       )}
                     />
 

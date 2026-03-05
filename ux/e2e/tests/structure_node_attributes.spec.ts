@@ -251,8 +251,7 @@ test.describe("Structure Node Attributes E2E", () => {
     );
     const createdAttr = nodeResponse.find(
        
-      (attr: any)  // eslint-disable-line @typescript-eslint/no-explicit-any
- => attr.key === attributeKey,
+      (attr: any) => attr.key === attributeKey,  // eslint-disable-line @typescript-eslint/no-explicit-any
     );
     expect(createdAttr).toBeDefined();
     expect(createdAttr.value).toBe("test_value");
@@ -348,8 +347,7 @@ test.describe("Structure Node Attributes E2E", () => {
     );
     const jurisdictionAttr = attributes.find(
        
-      (a: any)  // eslint-disable-line @typescript-eslint/no-explicit-any
- => a.key === "jurisdiction",
+      (a: any) => a.key === "jurisdiction",  // eslint-disable-line @typescript-eslint/no-explicit-any
     );
     expect(jurisdictionAttr.value).toBe("California");
   });
@@ -516,9 +514,10 @@ test.describe("Structure Node Attributes E2E", () => {
     expect(attributes.length).toBeGreaterThan(0);
 
     // Check for category attribute
-     
-    const categoryAttr = attributes.find((a: any)  // eslint-disable-line @typescript-eslint/no-explicit-any
- => a.key === "category");
+    const categoryAttr = attributes.find(
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (a: any) => a.key === "category",
+    );
     expect(categoryAttr).toBeDefined();
     expect(categoryAttr.inherited).toBe(true);
   });
@@ -747,36 +746,31 @@ test.describe("Structure Node Attributes E2E", () => {
     expect(
       attributes.some(
          
-        (a: any)  // eslint-disable-line @typescript-eslint/no-explicit-any
- => a.key === "string_attr" && a.value_type === "string",
+        (a: any) => a.key === "string_attr" && a.value_type === "string",  // eslint-disable-line @typescript-eslint/no-explicit-any
       ),
     ).toBe(true);
     expect(
       attributes.some(
          
-        (a: any)  // eslint-disable-line @typescript-eslint/no-explicit-any
- => a.key === "number_attr" && a.value_type === "number",
+        (a: any) => a.key === "number_attr" && a.value_type === "number",  // eslint-disable-line @typescript-eslint/no-explicit-any
       ),
     ).toBe(true);
     expect(
       attributes.some(
          
-        (a: any)  // eslint-disable-line @typescript-eslint/no-explicit-any
- => a.key === "boolean_attr" && a.value_type === "boolean",
+        (a: any) => a.key === "boolean_attr" && a.value_type === "boolean",  // eslint-disable-line @typescript-eslint/no-explicit-any
       ),
     ).toBe(true);
     expect(
       attributes.some(
          
-        (a: any)  // eslint-disable-line @typescript-eslint/no-explicit-any
- => a.key === "date_attr" && a.value_type === "date",
+        (a: any) => a.key === "date_attr" && a.value_type === "date",  // eslint-disable-line @typescript-eslint/no-explicit-any
       ),
     ).toBe(true);
     expect(
       attributes.some(
          
-        (a: any)  // eslint-disable-line @typescript-eslint/no-explicit-any
- => a.key === "url_attr" && a.value_type === "url",
+        (a: any) => a.key === "url_attr" && a.value_type === "url",  // eslint-disable-line @typescript-eslint/no-explicit-any
       ),
     ).toBe(true);
   });

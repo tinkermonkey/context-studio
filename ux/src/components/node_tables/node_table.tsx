@@ -314,20 +314,22 @@ function BaseNodeTable<T>({
     }
 
     const searchLower = debouncedSearchTerm.toLowerCase().trim();
-   
-    return (data ?? []).filter((item: any)  // eslint-disable-line @typescript-eslint/no-explicit-any
- => {
-      // Search in title and definition fields
-      const title = item.title?.toLowerCase() || "";
-      const definition = item.definition?.toLowerCase() || "";
-      const id = item.id?.toLowerCase() || "";
 
-      return (
-        title.includes(searchLower) ||
-        definition.includes(searchLower) ||
-        id.includes(searchLower)
-      );
-    });
+    return (data ?? []).filter(
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (item: any) => {
+        // Search in title and definition fields
+        const title = item.title?.toLowerCase() || "";
+        const definition = item.definition?.toLowerCase() || "";
+        const id = item.id?.toLowerCase() || "";
+
+        return (
+          title.includes(searchLower) ||
+          definition.includes(searchLower) ||
+          id.includes(searchLower)
+        );
+      },
+    );
   }, [data, debouncedSearchTerm]);
 
   // Handle filter changes
@@ -479,9 +481,12 @@ function BaseNodeTable<T>({
       }
 
       // Then delete the selected items
-   
-      await onDelete(pendingDeleteRows.map((row: any)  // eslint-disable-line @typescript-eslint/no-explicit-any
- => getId(row.original)));
+      await onDelete(
+        pendingDeleteRows.map(
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          (row: any) => getId(row.original),
+        ),
+      );
       setPendingDeleteRows([]);
       setChildrenToHandle([]);
 

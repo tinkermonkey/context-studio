@@ -127,9 +127,7 @@ test.describe("RAG Experiments", () => {
       "/api/rag-experiments/paragraphs?limit=100",
     );
      
-    const createdParagraph = response.paragraphs.find((p: any)  // eslint-disable-line @typescript-eslint/no-explicit-any
- =>
-      p.text.includes("E2E Test Paragraph"),
+    const createdParagraph = response.paragraphs.find((p: any) => p.text.includes("E2E Test Paragraph"),  // eslint-disable-line @typescript-eslint/no-explicit-any
     );
 
     expect(createdParagraph).toBeDefined();

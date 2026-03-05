@@ -68,8 +68,10 @@ test.describe("Layer Management", () => {
       "/api/structure_nodes?node_type=layer",
     );
    
-    const createdLayer = response.data.find((n: any)  // eslint-disable-line @typescript-eslint/no-explicit-any
- => n.title === layerTitle);
+    const createdLayer = response.data.find(
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (n: any) => n.title === layerTitle,
+    );
 
     expect(createdLayer).toBeDefined();
     expect(createdLayer?.definition).toBe(layerDefinition);
@@ -350,9 +352,8 @@ test.describe("Layer Management", () => {
 
     // Verify the specific test layer was not created
     const testLayer = afterResponse.data.find(
-   
-      (n: any)  // eslint-disable-line @typescript-eslint/no-explicit-any
- => n.title === "Test Layer Not Submitted",
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (n: any) => n.title === "Test Layer Not Submitted",
     );
     expect(testLayer).toBeUndefined();
   });

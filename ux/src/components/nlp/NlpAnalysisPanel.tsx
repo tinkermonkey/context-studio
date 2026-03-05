@@ -150,8 +150,7 @@ export const NlpAnalysisPanel: React.FC<NlpAnalysisPanelProps> = ({
 
       const token = analysisResult.tokens.find(
    
-        (t: any)  // eslint-disable-line @typescript-eslint/no-explicit-any
- => t.text === text && (t.start ?? 0) === start,
+        (t: any) => t.text === text && (t.start ?? 0) === start,  // eslint-disable-line @typescript-eslint/no-explicit-any
       );
 
       if (!token) {
@@ -218,9 +217,8 @@ export const NlpAnalysisPanel: React.FC<NlpAnalysisPanelProps> = ({
           // Note: related_terms is typed as string[] but actually contains relation objects
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
           const relationsOfType = (relatedTerms as any[]).filter(
-   
-            (rel: any)  // eslint-disable-line @typescript-eslint/no-explicit-any
- =>
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            (rel: any) =>
               rel.relation === relationType &&
               rel.subject?.label === (token.lemma || token.text),
           );
@@ -345,8 +343,9 @@ export const NlpAnalysisPanel: React.FC<NlpAnalysisPanelProps> = ({
                 <div className="flex w-full min-w-0 md:w-2/3">
                   <Accordion alwaysOpen className="w-full">
                     { }
-                    {(analysisResult.tokens || []).map((token: any)  // eslint-disable-line @typescript-eslint/no-explicit-any
- => {
+                    {(analysisResult.tokens || []).map(
+                      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                      (token: any) => {
                       // Create a unique prefix for this token's chart nodes
                       const tokenPrefix = `token-${token.text}-${token.start ?? 0}`;
 

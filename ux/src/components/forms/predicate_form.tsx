@@ -90,9 +90,12 @@ const PredicateForm: React.FC<PredicateFormProps> = ({
           error?.detail;
 
         if (Array.isArray(detail)) {
-   
-          message = detail.map((d: any)  // eslint-disable-line @typescript-eslint/no-explicit-any
- => d.msg).join("; ");
+          message = detail
+            .map(
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
+              (d: any) => d.msg,
+            )
+            .join("; ");
         } else if (error?.message) {
           message = error.message;
         } else if (typeof error === "string") {
