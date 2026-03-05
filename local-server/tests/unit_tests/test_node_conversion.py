@@ -9,14 +9,13 @@ import os
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 import pytest
-from unittest.mock import Mock, MagicMock
+from unittest.mock import Mock
 from datetime import datetime, timezone
 from uuid import UUID
 import numpy as np
 
 from api.utils.node_conversion import to_node_out, to_node_link_out, nodes_to_paginated_response
 from database.models import StructureNode, StructureNodeLink
-from database.enums import NodeType as DBNodeType
 from api.models.structure_nodes import NodeTypeEnum
 
 
@@ -367,8 +366,7 @@ class TestEmbeddingErrorRecovery:
 
         assert result.id is not None
         assert result.title == "Test Node"
-        # Misaligned embedding should be excluded or handled gracefully
-        # The actual behavior depends on numpy - it may truncate or fail
+        assert result.title_embedding is None  # Misaligned embedding should be excluded when error occurs
 
     def test_node_returned_even_if_both_embeddings_fail(self):
         """Test that node is still returned even if both embeddings fail."""
