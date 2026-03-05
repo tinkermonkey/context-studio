@@ -1,0 +1,6 @@
+Defaulting to user installation because normal site-packages is not writeable
+Requirement already satisfied: types-requests in /usr/local/lib/python3.11/site-packages (2.32.4.20260107)
+Requirement already satisfied: urllib3>=2 in /usr/local/lib/python3.11/site-packages (from types-requests) (2.5.0)
+
+[notice] A new release of pip is available: 24.0 -> 26.0.1
+[notice] To update, run: pip install --upgrade pip
