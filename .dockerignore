@@ -17,6 +17,7 @@ build
 .eggs
 .venv
 venv
+venv_test
 env
 ENV
 
