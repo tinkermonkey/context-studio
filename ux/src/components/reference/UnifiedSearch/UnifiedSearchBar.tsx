@@ -4,8 +4,8 @@
  * Main search interface for unified reference search across multiple sources
  */
 
-import React, { useState, useCallback, useEffect } from "react";
-import { TextInput, Spinner, Button, Badge } from "flowbite-react";
+import React, { useState, useCallback} from "react";
+import { TextInput, Spinner, Button,  } from "flowbite-react";
 import { Search, X, Clock, CheckCircle, XCircle } from "lucide-react";
 import {
   useStreamingUnifiedSearch,
@@ -36,7 +36,6 @@ interface UnifiedSearchBarProps {
 export const UnifiedSearchBar: React.FC<UnifiedSearchBarProps> = ({
   placeholder = "Search across all reference sources...",
   minQueryLength = 2,
-  debounceMs = 300,
   autoFocus = false,
   disabled = false,
   onSearchStart,
@@ -52,11 +51,6 @@ export const UnifiedSearchBar: React.FC<UnifiedSearchBarProps> = ({
     search,
     searchState,
     isSearching,
-    hasResults,
-    results,
-    totalResults,
-    completedSources,
-    errorSources,
   } = useStreamingUnifiedSearch({
     onComplete: (state) => {
       onSearchComplete?.(state.aggregatedResults, state.totalResults);

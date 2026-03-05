@@ -17,7 +17,6 @@ import {
   UnifiedSearchResponse,
   UnifiedNode,
   UnifiedLink,
-  UnifiedReferenceError,
   SourceType,
 } from "../../types/unified";
 import { QUERY_KEYS } from "../../config";

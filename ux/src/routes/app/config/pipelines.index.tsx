@@ -2,7 +2,7 @@ import React from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { Breadcrumb } from "flowbite-react";
 import { CsMainTitle } from "@/components/layout/cs_main";
-import { Settings, ChevronRight, Home } from "lucide-react";
+import {  ChevronRight, Home } from "lucide-react";
 import { PipelineTypes } from "@/components/llm_pipelines/pipelineTypes";
 
 export const Route = createFileRoute("/app/config/pipelines/")({

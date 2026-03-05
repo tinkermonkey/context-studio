@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useRef } from "react";
 import { API_CONFIG } from "@/api/config";
 
 export interface EmbeddingProgress {
@@ -91,7 +91,7 @@ export function useEmbeddingRegeneration() {
       const response = await fetch("/api/embeddings/stop", { method: "POST" });
       const result = await response.json();
       return result.stopped;
-    } catch (err) {
+    } catch {
       setError("Failed to stop regeneration");
       return false;
     }

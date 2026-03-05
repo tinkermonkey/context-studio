@@ -3,7 +3,7 @@
  */
 
 import React from "react";
-import { render, screen, waitFor } from "@testing-library/react";
+import { render, screen,  } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { TreeChartPanel } from "@/components/panels/TreeChartPanel";
 import {
@@ -31,7 +31,9 @@ vi.mock("@/api/hooks/graph/useGraph", () => ({
 
 // Mock the TreeMenu component
 vi.mock("@/components/graphs/tree_menu/tree_menu", () => ({
-  TreeMenu: ({ chartData }: any) => (
+   
+  TreeMenu: ({ chartData }: any)  // eslint-disable-line @typescript-eslint/no-explicit-any
+ => (
     <div data-testid="tree-menu">
       Tree Menu - Root: {chartData?.root?.title || "No data"}
     </div>
@@ -80,6 +82,7 @@ describe("TreeChartPanel", () => {
       data: undefined,
       isLoading: false,
       error: null,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } as any);
   });
 
@@ -88,16 +91,19 @@ describe("TreeChartPanel", () => {
       data: undefined,
       isLoading: true,
       error: null,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } as any);
     mockUseDomainNodes.mockReturnValue({
       data: undefined,
       isLoading: true,
       error: null,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } as any);
     mockUseStructureNodeNodes.mockReturnValue({
       data: undefined,
       isLoading: true,
       error: null,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } as any);
 
     render(
@@ -121,16 +127,19 @@ describe("TreeChartPanel", () => {
       data: undefined,
       isLoading: false,
       error: testError,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } as any);
     mockUseDomainNodes.mockReturnValue({
       data: undefined,
       isLoading: false,
       error: null,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } as any);
     mockUseStructureNodeNodes.mockReturnValue({
       data: undefined,
       isLoading: false,
       error: null,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } as any);
 
     render(
@@ -155,16 +164,19 @@ describe("TreeChartPanel", () => {
       data: mockLayers,
       isLoading: false,
       error: null,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } as any);
     mockUseDomainNodes.mockReturnValue({
       data: mockDomains,
       isLoading: false,
       error: null,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } as any);
     mockUseStructureNodeNodes.mockReturnValue({
       data: mockTerms,
       isLoading: false,
       error: null,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } as any);
 
     render(
@@ -194,21 +206,25 @@ describe("TreeChartPanel", () => {
       data: mockLayers,
       isLoading: false,
       error: null,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } as any);
     mockUseDomainNodes.mockReturnValue({
       data: mockDomains,
       isLoading: false,
       error: null,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } as any);
     mockUseStructureNodeNodes.mockReturnValue({
       data: mockTermsWithTarget,
       isLoading: false,
       error: null,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } as any);
     mockUseStructureNode.mockReturnValue({
       data: mockTargetTerm,
       isLoading: false,
       error: null,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } as any);
 
     render(
@@ -234,16 +250,19 @@ describe("TreeChartPanel", () => {
       data: undefined,
       isLoading: true,
       error: null,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } as any);
     mockUseDomainNodes.mockReturnValue({
       data: undefined,
       isLoading: true,
       error: null,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } as any);
     mockUseStructureNodeNodes.mockReturnValue({
       data: undefined,
       isLoading: true,
       error: null,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } as any);
 
     render(
@@ -271,16 +290,19 @@ describe("TreeChartPanel", () => {
       data: undefined,
       isLoading: false,
       error: testError,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } as any);
     mockUseDomainNodes.mockReturnValue({
       data: undefined,
       isLoading: false,
       error: null,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } as any);
     mockUseStructureNodeNodes.mockReturnValue({
       data: undefined,
       isLoading: false,
       error: null,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } as any);
 
     render(
@@ -305,16 +327,19 @@ describe("TreeChartPanel", () => {
       data: mockLayers,
       isLoading: false,
       error: null,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } as any);
     mockUseDomainNodes.mockReturnValue({
       data: mockDomains,
       isLoading: false,
       error: null,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } as any);
     mockUseStructureNodeNodes.mockReturnValue({
       data: mockTerms,
       isLoading: false,
       error: null,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } as any);
 
     const { container } = render(

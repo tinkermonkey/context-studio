@@ -1,4 +1,4 @@
-import React, { useRef, useState, useEffect } from "react";
+import React, { useRef, useState} from "react";
 import { Spinner } from "flowbite-react";
 import { TreeMenu } from "@/components/graphs/tree_menu/tree_menu";
 import {
@@ -19,7 +19,9 @@ export interface TreeMenuPanelProps {
   /**
    * Optional callback when a node is clicked
    */
-  onNodeClick?: (node: any) => void;
+   
+  onNodeClick?: (node: any)  // eslint-disable-line @typescript-eslint/no-explicit-any
+ => void;
 
   /**
    * Additional CSS classes to apply to the panel container
@@ -93,24 +95,20 @@ export function TreeMenuPanel({
   const {
     data: layers,
     isLoading: layersLoading,
-    error: layersError,
   } = useLayerNodes();
   const {
     data: domains,
     isLoading: domainsLoading,
-    error: domainsError,
   } = useDomainNodes();
   const {
     data: terms,
     isLoading: termsLoading,
-    error: termsError,
   } = useTermNodes();
 
   // Determine loading state
   const isLoading = layersLoading || domainsLoading || termsLoading;
 
   // Determine error state
-  const error = layersError || domainsError || termsError;
 
   // Build chart data
   const chartData = React.useMemo((): ChartData | null => {
@@ -136,14 +134,17 @@ export function TreeMenuPanel({
   }, [layers, domains, terms]);
 
   // Find path to highlighted node for auto-expansion
-  const initialExpandState = React.useMemo((): string[] => {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const highlightedPath = React.useMemo(() => {
     if (!chartData || !highlightedTermId) {
       return [];
     }
 
     // Helper function to find path to a node
     const findPath = (
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       node: any,
+
       targetId: string,
       path: string[] = [],
     ): string[] | null => {

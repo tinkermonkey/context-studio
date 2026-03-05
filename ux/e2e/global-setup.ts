@@ -1,4 +1,4 @@
-import { chromium, FullConfig } from "@playwright/test";
+
 import { spawn, ChildProcess } from "child_process";
 import path from "path";
 import fs from "fs";
@@ -22,13 +22,15 @@ async function waitForUrl(url: string, timeout: number = 30000): Promise<void> {
   while (Date.now() - startTime < timeout) {
     try {
       // Use dynamic import for node-fetch if native fetch is not available
-      const fetch = globalThis.fetch || (await import("node-fetch")).default;
+       
+      const fetch = globalThis.fetch || (await import("node-fetch")).then((m: any)  // eslint-disable-line @typescript-eslint/no-explicit-any
+ => m.default);
       const response = await fetch(url);
       if (response.ok) {
         console.log(`✓ ${url} is ready`);
         return;
       }
-    } catch (error) {
+    } catch {
       // Server not ready yet, continue waiting
       const elapsed = Date.now() - startTime;
       if (elapsed % 5000 < interval) {
@@ -56,7 +58,7 @@ async function waitForUrl(url: string, timeout: number = 30000): Promise<void> {
  * The servers will run for the entire test suite and be torn down
  * in global-teardown.ts.
  */
-async function globalSetup(config: FullConfig) {
+async function globalSetup(): Promise<void> {
   console.log("🚀 Starting E2E test environment...\n");
 
   // 1. Clean test databases
@@ -184,7 +186,7 @@ print('Migrations completed')
     }
   });
 
-  backendProcess.on("exit", (code, signal) => {
+  backendProcess.on("exit", (code) => {
     if (code !== null && code !== 0 && code !== 143) {
       // 143 is SIGTERM
       console.error(`❌ Backend process exited with code ${code}`);
@@ -241,7 +243,7 @@ print('Migrations completed')
     }
   });
 
-  frontendProcess.on("exit", (code, signal) => {
+  frontendProcess.on("exit", (code) => {
     if (code !== null && code !== 0 && code !== 143) {
       console.error(`❌ Frontend process exited with code ${code}`);
     }

@@ -1,5 +1,5 @@
 import * as React from "react";
-import { useState, useEffect } from "react";
+import { useState} from "react";
 import NlpConceptChart from "../graphs/nlp_concept/NlpConceptChart";
 import type { TokenData as BaseTokenData } from "@/api/services/nlp";
 
@@ -22,7 +22,9 @@ export const NlpTokenAnalysisPanel: React.FC<Props> = ({
   const measurementContentRef = React.useRef<HTMLDivElement | null>(null);
 
   // Get the token context
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const wordnet = token.wordnet as any;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const concepcy = token.concepcy as any;
   const relations = Array.isArray(concepcy?.related_terms)
     ? concepcy.related_terms
@@ -77,7 +79,9 @@ export const NlpTokenAnalysisPanel: React.FC<Props> = ({
                 related_terms: relations,
               },
               wordnet: {
-                synsets: (wordnet?.synsets || []).map((s: any) => ({
+   
+                synsets: (wordnet?.synsets || []).map((s: any)  // eslint-disable-line @typescript-eslint/no-explicit-any
+ => ({
                   name: s.name || s.synset || s.id || s[0] || "unknown",
                   definition: s.definition || s.gloss || s.def || "",
                   lemmas: s.lemmas || [],
@@ -86,7 +90,9 @@ export const NlpTokenAnalysisPanel: React.FC<Props> = ({
                   domain: s.domain || "general",
                 })),
                 definitions: (wordnet?.synsets || []).map(
-                  (s: any) => s.definition || s.gloss || s.def || "",
+   
+                  (s: any)  // eslint-disable-line @typescript-eslint/no-explicit-any
+ => s.definition || s.gloss || s.def || "",
                 ),
               },
             }}

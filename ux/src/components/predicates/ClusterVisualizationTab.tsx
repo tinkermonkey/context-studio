@@ -7,15 +7,13 @@
  */
 
 import React, { useState } from "react";
-import {
-  Button,
+import { Button,
   Card,
-  Badge,
   Spinner,
   Label,
   TextInput,
   Select,
-} from "flowbite-react";
+ } from "flowbite-react";
 import { GitBranch, Plus } from "lucide-react";
 import { useClusterPredicates } from "@/api/hooks/predicates";
 import { useButterToast } from "@/hooks/useButterToast";
@@ -30,6 +28,7 @@ export const ClusterVisualizationTab: React.FC<
   const [minSamples, setMinSamples] = useState<number>(2);
   const [eps, setEps] = useState<number>(0.3);
   const [sourceFilter, setSourceFilter] = useState<string>("");
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [clusters, setClusters] = useState<any>(null);
   const toast = useButterToast();
 
@@ -68,7 +67,9 @@ export const ClusterVisualizationTab: React.FC<
 
   // Calculate cluster quality based on size and cohesion
   const getClusterQuality = (
-    cluster: any,
+   
+    cluster: any,  // eslint-disable-line @typescript-eslint/no-explicit-any
+
   ): { color: string; label: string } => {
     const size = cluster.predicate_ids.length;
     const avgSimilarity = cluster.avg_similarity || 0;
@@ -192,7 +193,9 @@ export const ClusterVisualizationTab: React.FC<
               <div>
                 <div className="text-3xl font-bold text-green-600 dark:text-green-400">
                   {clusters.clusters.reduce(
-                    (sum: number, c: any) => sum + c.size,
+   
+                    (sum: number, c: any)  // eslint-disable-line @typescript-eslint/no-explicit-any
+ => sum + c.size,
                     0,
                   )}
                 </div>
@@ -204,7 +207,9 @@ export const ClusterVisualizationTab: React.FC<
                 <div className="text-3xl font-bold text-gray-600 dark:text-gray-400">
                   {clusters.total_predicates -
                     clusters.clusters.reduce(
-                      (sum: number, c: any) => sum + c.size,
+   
+                      (sum: number, c: any)  // eslint-disable-line @typescript-eslint/no-explicit-any
+ => sum + c.size,
                       0,
                     )}
                 </div>
@@ -217,7 +222,9 @@ export const ClusterVisualizationTab: React.FC<
 
           {/* Clusters */}
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
-            {clusters.clusters.map((cluster: any, index: number) => {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            {clusters.clusters.map((cluster: any,  // eslint-disable-line @typescript-eslint/no-explicit-any
+ index: number) => {
               const quality = getClusterQuality(cluster);
               return (
                 <Card key={index}>

@@ -4,7 +4,7 @@
  * Simple dropdown for selecting which reference sources to search
  */
 
-import React, { useState, useEffect } from "react";
+import React, { useState} from "react";
 import { Select } from "flowbite-react";
 import { SOURCE_METADATA, SourceType } from "@/api/types/unified";
 

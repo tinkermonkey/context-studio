@@ -6,20 +6,17 @@
  * Supports US-2.2: Cluster Related Predicates (visualization)
  */
 
-import React, { useState, useEffect } from "react";
-import {
-  Table,
+import React, { useState} from "react";
+import { Table,
   TableHead,
   TableHeadCell,
   TableBody,
   TableRow,
-  TableCell,
-  Button,
+    Button,
   Spinner,
-  Badge,
   Label,
   Select,
-} from "flowbite-react";
+  } from "flowbite-react";
 import { Search, X } from "lucide-react";
 import { useSimilarPredicates } from "@/api/hooks/predicates";
 import { useButterToast } from "@/hooks/useButterToast";

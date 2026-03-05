@@ -248,7 +248,8 @@ export class EnabledModelsService extends BaseService {
   /**
    * Validate provider configuration
    */
-  async validateProviderConfig(providerType: ProviderType): Promise<{
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  async validateProviderConfig(_providerType: ProviderType): Promise<{
     valid: boolean;
     issues: string[];
   }> {

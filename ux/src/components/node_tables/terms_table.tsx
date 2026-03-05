@@ -3,7 +3,6 @@ import { createColumnHelper } from "@tanstack/react-table";
 import { Checkbox } from "flowbite-react";
 import { StructureNode } from "@/api/types/structureNodes";
 import { renderShortDateTime, renderShortUuid } from "@/utils/renderers";
-import { TermRenderer } from "@/components/node_renderers/term_renderer";
 import { BaseNodeTable } from "./node_table";
 import { useTermNodes } from "@/api/hooks/structure_nodes/useStructureNodes";
 import { useDeleteStructureNode } from "@/api/hooks/structure_nodes/useStructureNodeMutations";
@@ -135,7 +134,8 @@ export interface TermsTableProps {
   onQueryParamsChange?: (params: Record<string, unknown>) => void;
 }
 
-const TermsTable = React.forwardRef<any, TermsTableProps>((props, ref) => {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+const TermsTable = React.forwardRef<any, TermsTableProps>((props) => {
   const { queryParams = {}, onQueryParamsChange } = props;
 
   // Use query params in the terms hook
@@ -171,6 +171,7 @@ const TermsTable = React.forwardRef<any, TermsTableProps>((props, ref) => {
   // Move child terms when orphaning them during parent deletion
   const moveTermChildren = async (
     childIds: string[],
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     newParentId: string | null,
   ) => {
     if (childIds.length === 0) return;

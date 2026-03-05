@@ -1,4 +1,4 @@
-import { test, expect, Page } from "@playwright/test";
+import { test, expect } from "@playwright/test";
 import { apiRequest } from "../fixtures/test-helpers";
 
 /**
@@ -19,6 +19,7 @@ test.describe("Term Management", () => {
 
   test.beforeEach(async ({ page }) => {
     // Create a test layer
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const layerResponse = await apiRequest<any>(page, "/api/structure_nodes", {
       method: "POST",
       body: {
@@ -30,6 +31,7 @@ test.describe("Term Management", () => {
     testLayerId = layerResponse.id;
 
     // Create a test domain
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const domainResponse = await apiRequest<any>(page, "/api/structure_nodes", {
       method: "POST",
       body: {
@@ -90,6 +92,7 @@ test.describe("Term Management", () => {
 
     // Wait for actual options to load by looking for our specific test domain
     // Get the test domain title first
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const domainResponse = await apiRequest<any>(
       page,
       `/api/structure_nodes/${testDomainId}`,
@@ -120,10 +123,13 @@ test.describe("Term Management", () => {
     );
 
     // Verify term exists in backend with correct domain association
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const response = await apiRequest<{ data: any[] }>(
       page,
       "/api/structure_nodes?node_type=term",
     );
+     
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const createdTerm = response.data.find((n: any) => n.title === termTitle);
 
     expect(createdTerm).toBeDefined();
@@ -139,6 +145,7 @@ test.describe("Term Management", () => {
     const updatedDefinition = "Updated definition via E2E test";
 
     // Create term via API
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const createResponse = await apiRequest<any>(page, "/api/structure_nodes", {
       method: "POST",
       body: {
@@ -178,6 +185,7 @@ test.describe("Term Management", () => {
     );
 
     // Verify backend was updated
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const response = await apiRequest<any>(
       page,
       `/api/structure_nodes/${termId}`,
@@ -189,6 +197,7 @@ test.describe("Term Management", () => {
   test("should delete a term", async ({ page }) => {
     // Create a term to delete
     const termTitle = `E2E Delete Test ${Date.now()}`;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const createResponse = await apiRequest<any>(page, "/api/structure_nodes", {
       method: "POST",
       body: {
@@ -332,6 +341,7 @@ test.describe("Term Management", () => {
     // Create a term
     const termTitle = `E2E Detail Test ${Date.now()}`;
     const termDefinition = "Test term for detail view";
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const createResponse = await apiRequest<any>(page, "/api/structure_nodes", {
       method: "POST",
       body: {
@@ -377,6 +387,7 @@ test.describe("Term Management", () => {
 
   test("should cancel term creation", async ({ page }) => {
     // Get current term count
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const beforeResponse = await apiRequest<{ data: any[]; total: number }>(
       page,
       "/api/structure_nodes?node_type=term",
@@ -401,6 +412,7 @@ test.describe("Term Management", () => {
     await page.waitForLoadState("networkidle");
 
     // Verify no new term was created
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const afterResponse = await apiRequest<{ data: any[]; total: number }>(
       page,
       "/api/structure_nodes?node_type=term",
@@ -411,6 +423,7 @@ test.describe("Term Management", () => {
 
     // Verify the specific test term was not created
     const testTerm = afterResponse.data.find(
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (n: any) => n.title === "Test Term Not Submitted",
     );
     expect(testTerm).toBeUndefined();
@@ -449,7 +462,8 @@ test.describe("Term Management", () => {
   }) => {
     // Create multiple terms
     const timestamp = Date.now();
-    const term1 = await apiRequest<any>(page, "/api/structure_nodes", {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    await apiRequest<any>(page, "/api/structure_nodes", {
       method: "POST",
       body: {
         title: `Bulk Delete 1 ${timestamp}`,
@@ -458,7 +472,8 @@ test.describe("Term Management", () => {
         parent_node_id: testDomainId,
       },
     });
-    const term2 = await apiRequest<any>(page, "/api/structure_nodes", {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    await apiRequest<any>(page, "/api/structure_nodes", {
       method: "POST",
       body: {
         title: `Bulk Delete 2 ${timestamp}`,
@@ -506,6 +521,7 @@ test.describe("Term Management", () => {
 
   test("should filter terms by domain", async ({ page }) => {
     // Create a second domain
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const domain2Response = await apiRequest<any>(
       page,
       "/api/structure_nodes",
@@ -526,7 +542,8 @@ test.describe("Term Management", () => {
     const term2Title = `Term Domain 2 ${timestamp}`;
 
     // Create terms in each domain
-    const term1 = await apiRequest<any>(page, "/api/structure_nodes", {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    await apiRequest<any>(page, "/api/structure_nodes", {
       method: "POST",
       body: {
         title: term1Title,
@@ -536,7 +553,8 @@ test.describe("Term Management", () => {
       },
     });
 
-    const term2 = await apiRequest<any>(page, "/api/structure_nodes", {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    await apiRequest<any>(page, "/api/structure_nodes", {
       method: "POST",
       body: {
         title: term2Title,
@@ -580,6 +598,7 @@ test.describe("Term Management", () => {
 
   test("should filter terms by layer", async ({ page }) => {
     // Create a second layer and domain
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const layer2Response = await apiRequest<any>(page, "/api/structure_nodes", {
       method: "POST",
       body: {
@@ -590,6 +609,7 @@ test.describe("Term Management", () => {
     });
     const layer2Id = layer2Response.id;
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const domain2Response = await apiRequest<any>(
       page,
       "/api/structure_nodes",
@@ -666,6 +686,7 @@ test.describe("Term Management", () => {
     page,
   }) => {
     // Create a second domain in the same layer
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const domain2Response = await apiRequest<any>(
       page,
       "/api/structure_nodes",

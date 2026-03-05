@@ -1,5 +1,5 @@
 import "@testing-library/jest-dom";
-import { vi, beforeEach, afterEach } from "vitest";
+import { vi, beforeEach, afterEach, beforeAll, afterAll } from "vitest";
 import { cleanup } from "@testing-library/react";
 import { server } from "./test/msw/server";
 
@@ -32,6 +32,7 @@ if (typeof document !== "undefined") {
 // DOM compatibility fixes for appendChild issues
 if (typeof Node !== "undefined") {
   const originalAppendChild = Node.prototype.appendChild;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   (Node.prototype as any).appendChild = function (child: any) {
     if (!child || typeof child !== "object") {
       // Create a text node for primitive values
@@ -44,8 +45,11 @@ if (typeof Node !== "undefined") {
   };
 
   const originalInsertBefore = Node.prototype.insertBefore;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   (Node.prototype as any).insertBefore = function (
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     newNode: any,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     referenceNode: any,
   ) {
     if (!newNode || typeof newNode !== "object") {
@@ -74,43 +78,57 @@ Object.defineProperty(window, "matchMedia", {
 });
 
 // Mock IntersectionObserver
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 (global as any).IntersectionObserver = class IntersectionObserver {
   root = null;
   rootMargin = "";
   thresholds: number[] = [];
 
-  constructor(callback: IntersectionObserverCallback) {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  constructor(_$callback: IntersectionObserverCallback) {
     // No-op
   }
 
-  observe(target: Element) {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  observe(_$target: Element) {
     // No-op
   }
 
-  unobserve(target: Element) {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  unobserve(_$target: Element) {
     // No-op
   }
 
+   
   disconnect() {
     // No-op
   }
 
+   
   takeRecords() {
     return [];
   }
 };
 
 // Mock ResizeObserver for tests
-global.ResizeObserver = class ResizeObserver {
-  constructor(callback: ResizeObserverCallback) {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+(global as any).ResizeObserver = class ResizeObserver {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  constructor(_$callback: ResizeObserverCallback) {
     // No-op
   }
-  observe(target: Element, options?: ResizeObserverOptions) {
+
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  observe(_$target: Element, _options?: ResizeObserverOptions) {
     // No-op
   }
-  unobserve(target: Element) {
+
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  unobserve(_$target: Element) {
     // No-op
   }
+
+   
   disconnect() {
     // No-op
   }

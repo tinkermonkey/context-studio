@@ -1,13 +1,12 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { CsMain, CsMainTitle } from "@/components/layout/cs_main";
 import { CsSidebar } from "@/components/layout/cs_sidebar";
-import { Card, Spinner, Tabs, Button, Badge, Alert } from "flowbite-react";
+import { Card, Spinner, Tabs, Alert  } from "flowbite-react";
 import {
-  Server,
+  
   Database,
   Activity,
   Cpu,
-  RefreshCw,
   Shield,
   AlertCircle,
 } from "lucide-react";
@@ -20,8 +19,7 @@ import {
 import {
   SystemHealthCard,
   PerformanceMetricsPanel,
-  AnalyticsChart,
-} from "@/components/monitoring";
+  } from "@/components/monitoring";
 import type { MetricGroup } from "@/components/monitoring/PerformanceMetricsPanel";
 import { useButterToast } from "@/hooks/useButterToast";
 
@@ -78,6 +76,7 @@ function RouteComponent() {
           title: "Database Performance",
           metrics: Object.entries(dbDashboard.performance_metrics)
             .slice(0, 6)
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
             .map(([key, value]: [string, any]) => ({
               label: key
                 .replace(/_/g, " ")
@@ -175,7 +174,9 @@ function RouteComponent() {
                         {
                           label: "Healthy Engines",
                           value: Object.values(dbHealth.engines).filter(
-                            (e: any) => e.status === "healthy",
+   
+                            (e: any)  // eslint-disable-line @typescript-eslint/no-explicit-any
+ => e.status === "healthy",
                           ).length,
                         },
                       ]}

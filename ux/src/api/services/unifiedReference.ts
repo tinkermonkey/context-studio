@@ -13,13 +13,11 @@ import {
   UnifiedLink,
   MultiSourceSearchRequest,
   MultiSourceSearchResponse,
-  SearchNode,
   UnifiedReferenceError,
   SourceType,
 } from "../types/unified";
 import {
   SOURCE_ENDPOINTS,
-  getEnabledSources,
 } from "../types/streamingReference";
 
 export class UnifiedReferenceService extends BaseService {
@@ -103,7 +101,7 @@ export class UnifiedReferenceService extends BaseService {
    */
   async getLinks(
     nodeId: string,
-    direction: "from" | "to" | "both" = "both",
+    
   ): Promise<UnifiedLink[]> {
     return this.withErrorContext(async () => {
       this.validateRequired(nodeId, "Node ID");
@@ -200,10 +198,12 @@ export class UnifiedReferenceService extends BaseService {
     Record<SourceType, { enabled: boolean; endpoint: string }>
   > {
     return this.withErrorContext(async () => {
+       
       const sources: Record<
         SourceType,
         { enabled: boolean; endpoint: string }
-      > = {} as Record<SourceType, { enabled: boolean; endpoint: string }>;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      > = {} as any;
 
       Object.entries(SOURCE_ENDPOINTS).forEach(([source, config]) => {
         sources[source as SourceType] = {

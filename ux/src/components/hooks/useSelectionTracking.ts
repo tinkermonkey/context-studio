@@ -150,7 +150,7 @@ export const useSelectionTracking = (
     ) => {
       // Validate required parameters
       if (!executionId || !recordId || !suggestionField || !selectedContent) {
-        const error = new Error(
+        console.error(
           "Missing required parameters for selection tracking",
         );
 
@@ -197,7 +197,6 @@ export const useSelectionTracking = (
         !request.suggestion_field ||
         !request.selected_content
       ) {
-        const error = new Error("Invalid selection request object");
 
         if (debug) {
           console.warn(

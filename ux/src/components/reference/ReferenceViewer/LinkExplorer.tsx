@@ -5,16 +5,13 @@
  */
 
 import React, { useState, useMemo } from "react";
-import { Card, Badge, Button, Alert, Spinner, Select } from "flowbite-react";
-import {
-  ArrowRight,
-  ArrowLeft,
-  ArrowRightLeft,
+import { Card, Button, Alert, Spinner, Select  } from "flowbite-react";
+import { ArrowRight,
   ExternalLink,
   Filter,
   RotateCcw,
   Info,
-} from "lucide-react";
+  } from "lucide-react";
 import {
   UnifiedLink,
   UnifiedNode,
@@ -71,14 +68,12 @@ const LinkItem: React.FC<LinkItemProps> = ({
   const {
     data: targetNodeFromAPI,
     isLoading: apiLoading,
-    error: apiError,
   } = useNodeDetails(
     targetNodeFromSearch ? null : targetNodeId, // Only call API if not found in search results
   );
 
   const targetNode = targetNodeFromSearch || targetNodeFromAPI;
   const isLoading = !targetNodeFromSearch && apiLoading;
-  const error = !targetNodeFromSearch ? apiError : null;
 
   const confidencePercent = Math.round(link.confidence_score * 100);
 

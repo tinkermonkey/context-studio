@@ -1,5 +1,6 @@
 import { Outlet, createRootRoute } from "@tanstack/react-router";
 import { createTheme, ThemeProvider } from "flowbite-react";
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { TanStackRouterDevtools } from "@tanstack/react-router-devtools";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { queryClient } from "@/api/utils/queryClient";

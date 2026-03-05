@@ -4,8 +4,6 @@ import { TextInput, Textarea, Button, Alert, Label } from "flowbite-react";
 import { Info } from "lucide-react";
 import type {
   StructureNode,
-  StructureNodeCreate,
-  StructureNodeUpdate,
 } from "@/api/types/structureNodes";
 import { useCreateLayer } from "@/api/hooks/structure_nodes/useStructureNodeMutations";
 import { useUpdateStructureNode } from "@/api/hooks/structure_nodes/useStructureNodeMutations";
@@ -42,8 +40,10 @@ const LayerForm: React.FC<LayerFormProps> = ({ onSuccess, layer }) => {
         }
         if (onSuccess) onSuccess(result);
         form.reset();
-      } catch (error: any) {
-        let message = "An error occurred";
+   
+      } catch (error: any)  // eslint-disable-line @typescript-eslint/no-explicit-any
+ {
+        let message: string;
         // Log the full error for debugging
         console.error("Full error object:", error);
         console.error("Error detail:", error?.detail);
@@ -56,7 +56,9 @@ const LayerForm: React.FC<LayerFormProps> = ({ onSuccess, layer }) => {
           error?.detail;
 
         if (Array.isArray(detail)) {
-          message = detail.map((d: any) => d.msg).join("; ");
+   
+          message = detail.map((d: any)  // eslint-disable-line @typescript-eslint/no-explicit-any
+ => d.msg).join("; ");
         } else if (error?.message) {
           message = error.message;
         } else if (typeof error === "string") {

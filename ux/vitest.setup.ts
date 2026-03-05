@@ -83,23 +83,28 @@ Object.defineProperty(window, "matchMedia", {
 });
 
 // Mock IntersectionObserver
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
 (global as any).IntersectionObserver = class IntersectionObserver {
   root: Element | Document | null = null;
   rootMargin = "";
   thresholds: number[] = [];
 
   constructor(
-    callback: IntersectionObserverCallback,
-    options?: IntersectionObserverInit,
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    _callback: IntersectionObserverCallback,
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    _options?: IntersectionObserverInit,
   ) {
     // No-op
   }
 
-  observe(target: Element): void {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  observe(_$target: Element): void {
     // No-op
   }
 
-  unobserve(target: Element): void {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  unobserve(_$target: Element): void {
     // No-op
   }
 
@@ -114,13 +119,16 @@ Object.defineProperty(window, "matchMedia", {
 
 // Mock ResizeObserver for tests
 global.ResizeObserver = class ResizeObserver {
-  constructor(callback: ResizeObserverCallback) {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  constructor(_$callback: ResizeObserverCallback) {
     // No-op
   }
-  observe(target: Element, options?: ResizeObserverOptions) {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  observe(_$target: Element, _options?: ResizeObserverOptions) {
     // No-op
   }
-  unobserve(target: Element) {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  unobserve(_$target: Element) {
     // No-op
   }
   disconnect() {

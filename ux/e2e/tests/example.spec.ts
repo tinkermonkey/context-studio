@@ -21,7 +21,7 @@ test.describe("Smoke Tests", () => {
     await expect(page).toHaveTitle(/Context Studio/i);
   });
 
-  test("should communicate with backend API", async ({ page, request }) => {
+  test("should communicate with backend API", async ({ request }) => {
     // Make a direct API request to verify backend is running
     const response = await request.get("http://localhost:8888/health");
 

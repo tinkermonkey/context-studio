@@ -1,25 +1,14 @@
 import { createFileRoute } from "@tanstack/react-router";
-import {
-  Card,
+import { Card,
   Alert,
-  Badge,
-  Button,
   TextInput,
-  Label,
-  Checkbox,
   Tabs,
-} from "flowbite-react";
+ } from "flowbite-react";
 import { CsMainTitle } from "@/components/layout/cs_main";
 import { ConfigBreadcrumbs } from "@/components/configuration/ConfigBreadcrumbs";
 import {
   Database,
-  AlertTriangle,
-  CheckCircle,
-  XCircle,
-  Settings,
   ExternalLink,
-  RefreshCw,
-  Server,
   Globe,
 } from "lucide-react";
 import {
@@ -65,7 +54,7 @@ const REFERENCE_SOURCE_LABELS: Record<
   schema_org: {
     name: "Schema.org",
     description: "Structured data vocabulary",
-    icon: Settings,
+    icon: Globe,
   },
 };
 
@@ -205,7 +194,9 @@ function ReferenceAPIsSection({
   onToggleProxy,
   isUpdating,
 }: {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   config: any;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   status: any;
   onToggleSource: (sourceName: string, enabled: boolean) => void;
   onUpdateTimeout: (sourceName: string, timeout: number) => void;
@@ -222,9 +213,12 @@ function ReferenceAPIsSection({
     .filter((key) => typeof config[key] === "object");
 
   // Create a map of source status by name for quick lookup
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const statusByName: Record<string, any> = {};
   if (status?.sources) {
-    status.sources.forEach((sourceStatus: any) => {
+   
+    status.sources.forEach((sourceStatus: any)  // eslint-disable-line @typescript-eslint/no-explicit-any
+ => {
       statusByName[sourceStatus.name] = sourceStatus;
     });
   }
@@ -295,7 +289,6 @@ function ReferenceSourceCard({
   sourceName,
   sourceInfo,
   config,
-  status,
   isEnabled,
   hasProxy,
   onToggleSource,
@@ -305,8 +298,11 @@ function ReferenceSourceCard({
   Icon,
 }: {
   sourceName: string;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   sourceInfo: any;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   config: any;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   status: any;
   isEnabled: boolean;
   hasProxy: boolean;
@@ -426,7 +422,9 @@ function ReferenceSourceCard({
 }
 
 // Database Settings Section Component
-function DatabaseSettingsSection({ config }: { config: any }) {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+function DatabaseSettingsSection({ config }: { config: any}
+) {
   if (!config) {
     return <div>No database configuration available</div>;
   }

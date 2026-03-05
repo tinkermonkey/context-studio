@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useMemo, useEffect } from "react";
+import React, { useState, useCallback, useMemo} from "react";
 import { Spinner } from "flowbite-react";
 import { Save } from "lucide-react";
 import { useUpdateWordSenses } from "@/api/hooks/structure_nodes/useWordSenses";
@@ -24,9 +24,11 @@ interface WordAnalysisResult {
   pos?: string;
   tag?: string;
   concepcy?: {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
     related_terms: any[];
   };
   wordnet?: {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
     synsets: any[];
   };
 }
@@ -164,35 +166,6 @@ export const WordSenseSelector: React.FC<WordSenseSelectorProps> = ({
     });
   }, []);
 
-  // Handle sense selection for a word
-  const handleSenseSelect = useCallback((word: string, synset: any) => {
-    // Create WordSense from synset
-    const wordSense: WordSense = {
-      term: word,
-      sense_type: "wordnet",
-      sense_id: synset.name,
-      definition: synset.definition,
-      domain: synset.domain || null,
-    };
-
-    setWordStates((prev) => {
-      const next = new Map(prev);
-      const state = next.get(word);
-
-      if (!state) return prev;
-
-      // Toggle: if same sense clicked, deselect it
-      const newSense =
-        state.selectedSense?.sense_id === wordSense.sense_id ? null : wordSense;
-
-      next.set(word, {
-        ...state,
-        selectedSense: newSense,
-      });
-
-      return next;
-    });
-  }, []);
 
   // Handle node click in the chart (for sense selection)
   const handleNodeClick = useCallback((word: string, nodeId: string) => {
@@ -263,7 +236,7 @@ export const WordSenseSelector: React.FC<WordSenseSelectorProps> = ({
 
   // Effect: Perform NLP analysis for words that need it
   useEffect(() => {
-    const analyzeWord = async (word: string, state: WordState) => {
+    const analyzeWord = async (word: string) => {
       try {
         const response = await fetch(
           `/api/nlp/analyze?text=${encodeURIComponent(word)}`,
@@ -419,7 +392,9 @@ export const WordSenseSelector: React.FC<WordSenseSelectorProps> = ({
                   },
                   wordnet: {
                     synsets: (state.analysis.wordnet?.synsets || []).map(
-                      (s: any) => ({
+   
+                      (s: any)  // eslint-disable-line @typescript-eslint/no-explicit-any
+ => ({
                         name: s.name || s.synset || s.id || s[0] || "unknown",
                         definition: s.definition || s.gloss || s.def || "",
                         lemmas: s.lemmas || [],
@@ -430,7 +405,9 @@ export const WordSenseSelector: React.FC<WordSenseSelectorProps> = ({
                       }),
                     ),
                     definitions: (state.analysis.wordnet?.synsets || []).map(
-                      (s: any) => s.definition || s.gloss || s.def || "",
+   
+                      (s: any)  // eslint-disable-line @typescript-eslint/no-explicit-any
+ => s.definition || s.gloss || s.def || "",
                     ),
                   },
                 }}

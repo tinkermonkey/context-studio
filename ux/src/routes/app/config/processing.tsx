@@ -1,26 +1,15 @@
 import { createFileRoute } from "@tanstack/react-router";
-import {
-  Card,
+import { Card,
   Alert,
-  Badge,
-  Button,
   TextInput,
-  Label,
-  Checkbox,
   Tabs,
-  Select,
-} from "flowbite-react";
+ } from "flowbite-react";
 import { CsMainTitle } from "@/components/layout/cs_main";
 import { ConfigBreadcrumbs } from "@/components/configuration/ConfigBreadcrumbs";
 import {
   Zap,
-  AlertTriangle,
-  CheckCircle,
-  XCircle,
-  Settings,
   Brain,
-  Download,
-  Timer,
+    Timer,
   FileText,
 } from "lucide-react";
 import {
@@ -104,7 +93,9 @@ function RouteComponent() {
     return labels[path] || path;
   };
 
-  const handleUpdateNLPConfig = async (path: string, value: any) => {
+   
+  const handleUpdateNLPConfig = async (path: string, value: any)  // eslint-disable-line @typescript-eslint/no-explicit-any
+ => {
     const label = getNLPConfigLabel(path);
     await updateConfigMutation.mutateAsync(
       {
@@ -124,7 +115,9 @@ function RouteComponent() {
     );
   };
 
-  const handleUpdateLLMConfig = async (path: string, value: any) => {
+   
+  const handleUpdateLLMConfig = async (path: string, value: any)  // eslint-disable-line @typescript-eslint/no-explicit-any
+ => {
     const label = getLLMConfigLabel(path);
     await updateConfigMutation.mutateAsync(
       {
@@ -193,11 +186,13 @@ function RouteComponent() {
 // NLP Configuration Section Component
 function NLPConfigurationSection({
   config,
-  onUpdate,
   isUpdating,
 }: {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   config: any;
-  onUpdate: (path: string, value: any) => void;
+   
+  onUpdate: (path: string, value: any)  // eslint-disable-line @typescript-eslint/no-explicit-any
+ => void;
   isUpdating: boolean;
 }) {
   if (!config) {
@@ -416,12 +411,15 @@ function NLPConfigurationSection({
 function PipelineDefaultsSection({
   config,
   enabledModels,
-  onUpdate,
   isUpdating,
 }: {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   config: any;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   enabledModels: any[];
-  onUpdate: (path: string, value: any) => void;
+   
+  onUpdate: (path: string, value: any)  // eslint-disable-line @typescript-eslint/no-explicit-any
+ => void;
   isUpdating: boolean;
 }) {
   if (!config) {

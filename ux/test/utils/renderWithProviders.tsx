@@ -6,20 +6,25 @@ import { RouterProvider, createRouter } from "@tanstack/react-router";
 export function makeTestRouter() {
   // Minimal router for tests that need RouterProvider. Keep routeTree small to avoid app boot.
   const router = createRouter({
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
     routeTree: { path: "/", children: [] } as any,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
     defaultPreload: "intent" as any,
   });
   // register for types
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+   
   (function register() {
-    // @ts-ignore - test-only register
+    // @ts-expect-error - test-only register
     try {
-      const mod = require("@tanstack/react-router");
+      import * as mod from "@tanstack/react-router";
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
       mod.Register = mod.Register || ({} as any);
-    } catch (e) {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    } catch (_) {
       // noop
     }
   })();
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   return router as any;
 }
 
@@ -33,6 +38,7 @@ export function makeTestQueryClient() {
 
 export function renderWithProviders(
   ui: React.ReactElement,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   { queryClient, router } = {} as any,
 ) {
   const client = queryClient ?? makeTestQueryClient();
@@ -41,6 +47,7 @@ export function renderWithProviders(
   );
   if (router)
     return render(
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
       React.createElement(RouterProvider as any, { router }, content),
     );
   return render(content);

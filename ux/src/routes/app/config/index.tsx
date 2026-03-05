@@ -1,14 +1,11 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { Card, Badge } from "flowbite-react";
+import { Card,  } from "flowbite-react";
 import {
   Brain,
   Database,
-  Settings,
   Shield,
   Zap,
   Globe,
-  Server,
-  Cog,
   ExternalLink,
 } from "lucide-react";
 import { CsMainTitle } from "@/components/layout/cs_main";

@@ -1,4 +1,4 @@
-import { test, expect, Page } from "@playwright/test";
+import { test, expect } from "@playwright/test";
 import { apiRequest } from "../fixtures/test-helpers";
 
 /**
@@ -62,11 +62,14 @@ test.describe("Layer Management", () => {
     );
 
     // Verify layer exists in backend
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const response = await apiRequest<{ data: any[] }>(
       page,
       "/api/structure_nodes?node_type=layer",
     );
-    const createdLayer = response.data.find((n: any) => n.title === layerTitle);
+   
+    const createdLayer = response.data.find((n: any)  // eslint-disable-line @typescript-eslint/no-explicit-any
+ => n.title === layerTitle);
 
     expect(createdLayer).toBeDefined();
     expect(createdLayer?.definition).toBe(layerDefinition);
@@ -80,6 +83,7 @@ test.describe("Layer Management", () => {
     const updatedDefinition = "Updated definition via E2E test";
 
     // Create layer via API for speed
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const createResponse = await apiRequest<any>(page, "/api/structure_nodes", {
       method: "POST",
       body: {
@@ -123,6 +127,7 @@ test.describe("Layer Management", () => {
     );
 
     // Verify backend was updated
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const response = await apiRequest<any>(
       page,
       `/api/structure_nodes/${layerId}`,
@@ -134,6 +139,7 @@ test.describe("Layer Management", () => {
   test("should delete a layer", async ({ page }) => {
     // Create a layer to delete
     const layerTitle = `E2E Delete Test ${Date.now()}`;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const createResponse = await apiRequest<any>(page, "/api/structure_nodes", {
       method: "POST",
       body: {
@@ -260,6 +266,7 @@ test.describe("Layer Management", () => {
     // Create a layer
     const layerTitle = `E2E Detail Test ${Date.now()}`;
     const layerDefinition = "Test layer for detail view";
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const createResponse = await apiRequest<any>(page, "/api/structure_nodes", {
       method: "POST",
       body: {
@@ -307,6 +314,7 @@ test.describe("Layer Management", () => {
     // We simply verify that if we don't click submit, the layer is not created
 
     // Get current layer count
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const beforeResponse = await apiRequest<{ data: any[]; total: number }>(
       page,
       "/api/structure_nodes?node_type=layer",
@@ -331,6 +339,7 @@ test.describe("Layer Management", () => {
     await page.waitForLoadState("networkidle");
 
     // Verify no new layer was created
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const afterResponse = await apiRequest<{ data: any[]; total: number }>(
       page,
       "/api/structure_nodes?node_type=layer",
@@ -341,7 +350,9 @@ test.describe("Layer Management", () => {
 
     // Verify the specific test layer was not created
     const testLayer = afterResponse.data.find(
-      (n: any) => n.title === "Test Layer Not Submitted",
+   
+      (n: any)  // eslint-disable-line @typescript-eslint/no-explicit-any
+ => n.title === "Test Layer Not Submitted",
     );
     expect(testLayer).toBeUndefined();
   });
@@ -373,10 +384,12 @@ test.describe("Layer Management", () => {
   }) => {
     // Create multiple layers
     const timestamp = Date.now();
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const layer1 = await apiRequest<any>(page, "/api/structure_nodes", {
       method: "POST",
       body: { title: `Bulk Delete 1 ${timestamp}`, node_type: "layer" },
     });
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const layer2 = await apiRequest<any>(page, "/api/structure_nodes", {
       method: "POST",
       body: { title: `Bulk Delete 2 ${timestamp}`, node_type: "layer" },

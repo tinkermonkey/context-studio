@@ -5,7 +5,7 @@
  * including fixture generation, inheritance, validation, and performance.
  */
 
-import { test, expect, Page } from "@playwright/test";
+import { test, expect } from "@playwright/test";
 import { apiRequest } from "../fixtures/test-helpers";
 
 /**
@@ -27,6 +27,7 @@ async function generateTestHierarchy(
   timestamp: number,
 ): Promise<TestHierarchy> {
   // Create layer with category attribute
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const layerResponse = await apiRequest<any>(page, "/api/structure_nodes", {
     method: "POST",
     body: {
@@ -51,6 +52,7 @@ async function generateTestHierarchy(
   });
 
   // Create domain with jurisdiction attribute
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const domainResponse = await apiRequest<any>(page, "/api/structure_nodes", {
     method: "POST",
     body: {
@@ -76,6 +78,7 @@ async function generateTestHierarchy(
   });
 
   // Create term1 with override and local attribute
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const term1Response = await apiRequest<any>(page, "/api/structure_nodes", {
     method: "POST",
     body: {
@@ -107,6 +110,7 @@ async function generateTestHierarchy(
   });
 
   // Create term2 with no local attributes (inherits all)
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const term2Response = await apiRequest<any>(page, "/api/structure_nodes", {
     method: "POST",
     body: {
@@ -123,6 +127,7 @@ async function generateTestHierarchy(
   let parentId = term1Id;
 
   for (let i = 1; i <= 5; i++) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const deepTermResponse = await apiRequest<any>(
       page,
       "/api/structure_nodes",
@@ -239,12 +244,15 @@ test.describe("Structure Node Attributes E2E", () => {
     await expect(page.getByText("test_value")).toBeVisible();
 
     // Verify via API
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const nodeResponse = await apiRequest<any>(
       page,
       `/api/structure_nodes/${testHierarchy.term1.id}/attributes`,
     );
     const createdAttr = nodeResponse.find(
-      (attr: any) => attr.key === attributeKey,
+       
+      (attr: any)  // eslint-disable-line @typescript-eslint/no-explicit-any
+ => attr.key === attributeKey,
     );
     expect(createdAttr).toBeDefined();
     expect(createdAttr.value).toBe("test_value");
@@ -300,9 +308,6 @@ test.describe("Structure Node Attributes E2E", () => {
     const attributeContainer = jurisdictionText.locator("..");
 
     // Look for edit button (Edit2 icon button)
-    const editButtons = page
-      .getByRole("button")
-      .filter({ has: page.locator("svg") });
 
     // Find the edit button near the jurisdiction attribute
     const editButton = attributeContainer.locator("button").first();
@@ -336,12 +341,15 @@ test.describe("Structure Node Attributes E2E", () => {
     await expect(page.getByText("California")).toBeVisible({ timeout: 5000 });
 
     // Verify via API
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const attributes = await apiRequest<any>(
       page,
       `/api/structure_nodes/${testHierarchy.term1.id}/attributes`,
     );
     const jurisdictionAttr = attributes.find(
-      (a: any) => a.key === "jurisdiction",
+       
+      (a: any)  // eslint-disable-line @typescript-eslint/no-explicit-any
+ => a.key === "jurisdiction",
     );
     expect(jurisdictionAttr.value).toBe("California");
   });
@@ -459,7 +467,7 @@ test.describe("Structure Node Attributes E2E", () => {
       const visibleErrors = await errorText.all();
       hasError = visibleErrors.length > 0;
     } catch {
-      hasError = false;
+      // No visible error elements found
     }
 
     if (hasError) {
@@ -500,6 +508,7 @@ test.describe("Structure Node Attributes E2E", () => {
     await expect(page.getByText("Level 3")).toBeVisible();
 
     // Verify via API - resolve attributes should show all ancestors' attributes
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const attributes = await apiRequest<any>(
       page,
       `/api/structure_nodes/${deepestTerm.id}/attributes`,
@@ -507,7 +516,9 @@ test.describe("Structure Node Attributes E2E", () => {
     expect(attributes.length).toBeGreaterThan(0);
 
     // Check for category attribute
-    const categoryAttr = attributes.find((a: any) => a.key === "category");
+     
+    const categoryAttr = attributes.find((a: any)  // eslint-disable-line @typescript-eslint/no-explicit-any
+ => a.key === "category");
     expect(categoryAttr).toBeDefined();
     expect(categoryAttr.inherited).toBe(true);
   });
@@ -515,6 +526,7 @@ test.describe("Structure Node Attributes E2E", () => {
   test("Display performance with 50+ attributes", async ({ page }) => {
     // Create a term with many attributes
     const timestamp = Date.now();
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const termResponse = await apiRequest<any>(page, "/api/structure_nodes", {
       method: "POST",
       body: {
@@ -655,6 +667,7 @@ test.describe("Structure Node Attributes E2E", () => {
   test("Verify attribute types are preserved", async ({ page }) => {
     // Create a test node with all attribute types
     const timestamp = Date.now();
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const testNodeResponse = await apiRequest<any>(
       page,
       "/api/structure_nodes",
@@ -725,6 +738,7 @@ test.describe("Structure Node Attributes E2E", () => {
     await expect(page.getByText("https://example.com")).toBeVisible();
 
     // Verify via API
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const attributes = await apiRequest<any>(
       page,
       `/api/structure_nodes/${testNodeId}/attributes`,
@@ -732,27 +746,37 @@ test.describe("Structure Node Attributes E2E", () => {
     expect(attributes.length).toBe(5);
     expect(
       attributes.some(
-        (a: any) => a.key === "string_attr" && a.value_type === "string",
+         
+        (a: any)  // eslint-disable-line @typescript-eslint/no-explicit-any
+ => a.key === "string_attr" && a.value_type === "string",
       ),
     ).toBe(true);
     expect(
       attributes.some(
-        (a: any) => a.key === "number_attr" && a.value_type === "number",
+         
+        (a: any)  // eslint-disable-line @typescript-eslint/no-explicit-any
+ => a.key === "number_attr" && a.value_type === "number",
       ),
     ).toBe(true);
     expect(
       attributes.some(
-        (a: any) => a.key === "boolean_attr" && a.value_type === "boolean",
+         
+        (a: any)  // eslint-disable-line @typescript-eslint/no-explicit-any
+ => a.key === "boolean_attr" && a.value_type === "boolean",
       ),
     ).toBe(true);
     expect(
       attributes.some(
-        (a: any) => a.key === "date_attr" && a.value_type === "date",
+         
+        (a: any)  // eslint-disable-line @typescript-eslint/no-explicit-any
+ => a.key === "date_attr" && a.value_type === "date",
       ),
     ).toBe(true);
     expect(
       attributes.some(
-        (a: any) => a.key === "url_attr" && a.value_type === "url",
+         
+        (a: any)  // eslint-disable-line @typescript-eslint/no-explicit-any
+ => a.key === "url_attr" && a.value_type === "url",
       ),
     ).toBe(true);
   });

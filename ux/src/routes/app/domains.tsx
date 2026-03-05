@@ -30,6 +30,7 @@ export const Route = createFileRoute("/app/domains")({
 });
 
 function DomainsPage() {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const tableRef = React.useRef<any>(null);
   const navigate = useNavigate({ from: "/app/domains" });
   const search = useSearch({ from: "/app/domains" });

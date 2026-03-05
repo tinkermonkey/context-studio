@@ -99,7 +99,9 @@ export function isMeasurementReady(): boolean {
 
 // Extract font properties from chart styles with better parsing
 export function extractFontPropertiesFromStyles(
-  styleObject: any,
+   
+  styleObject: any,  // eslint-disable-line @typescript-eslint/no-explicit-any
+
 ): TextMeasurementOptions {
   // Parse the font shorthand property if it exists
   // Font shorthand format: [font-style] [font-variant] [font-weight] [font-size/line-height] [font-family]
@@ -289,9 +291,7 @@ export function measureHtmlTextHeight(
   measurementHtml.style.maxWidth = `${width}px`; // Enforce max width
 
   // Get the bounding box height
-  const bbox = measurementHtml.getBoundingClientRect();
-  const height = Math.ceil(bbox.height);
-
+  
   // Validate measurement - warn if we got zero for non-empty text
   if (height === 0 && text.length > 0) {
     console.warn(
@@ -353,7 +353,9 @@ export class TextHeightCache {
   private cache = new Map<string, number>();
   private textOptions;
 
-  constructor(styleSource: any) {
+   
+  constructor(styleSource: any)  // eslint-disable-line @typescript-eslint/no-explicit-any
+ {
     this.textOptions = extractFontPropertiesFromStyles(styleSource);
   }
 
@@ -364,7 +366,6 @@ export class TextHeightCache {
       return this.cache.get(cacheKey)!;
     }
 
-    const height = measureHtmlTextHeight(text, width, this.textOptions);
     this.cache.set(cacheKey, height);
     return height;
   }

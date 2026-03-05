@@ -4,7 +4,7 @@
  * Reusable card component for displaying system health status and metrics
  */
 
-import { Card, Badge, Progress } from "flowbite-react";
+import { Card, Progress  } from "flowbite-react";
 import { CheckCircle, AlertTriangle, XCircle, Activity } from "lucide-react";
 
 export interface HealthMetric {

@@ -76,7 +76,9 @@ export interface ChangeEvent {
   event_type: "create" | "update" | "delete";
   record_type: RecordType; // Replaces node_type
   record_id?: string; // Replaces node_id
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   old_data?: any;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   new_data?: any;
   event_timestamp: string;
   processed: boolean;

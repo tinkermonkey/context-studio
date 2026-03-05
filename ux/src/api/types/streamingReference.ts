@@ -6,10 +6,8 @@
 import {
   SourceType,
   UnifiedSearchRequest,
-  UnifiedSearchResponse,
   UnifiedNode,
   SearchLink,
-  SOURCE_METADATA,
 } from "./unified";
 
 /**
@@ -226,7 +224,7 @@ function discoverCrossReferences(nodes: UnifiedNode[]): SearchLink[] {
 
   // Group nodes by normalized title for cross-reference detection
   nodes.forEach((node) => {
-    const normalizedTitle = node.title.toLowerCase().trim();
+    const normalizedTitle = node._title.toLowerCase().trim();
     if (!nodesByTitle.has(normalizedTitle)) {
       nodesByTitle.set(normalizedTitle, []);
     }
@@ -234,7 +232,7 @@ function discoverCrossReferences(nodes: UnifiedNode[]): SearchLink[] {
   });
 
   // Create cross-reference links between nodes with same title from different sources
-  nodesByTitle.forEach((nodesGroup, title) => {
+  nodesByTitle.forEach((nodesGroup) => {
     if (nodesGroup.length > 1) {
       // Create links between nodes from different sources
       for (let i = 0; i < nodesGroup.length; i++) {

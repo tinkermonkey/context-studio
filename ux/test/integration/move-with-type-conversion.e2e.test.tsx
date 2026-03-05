@@ -7,13 +7,14 @@
 
 import React from "react";
 import userEvent from "@testing-library/user-event";
-import { screen, waitFor } from "@testing-library/react";
+import { screen,  } from "@testing-library/react";
 import { describe, it, expect, vi, beforeEach } from "vitest";
 
 // Mock router to avoid app boot
 vi.mock("@tanstack/react-router", () => {
-  const React = require("react");
+  import React from "react";
   return {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
     Link: (props: any) => React.createElement("a", props, props.children),
     useNavigate: () => vi.fn(),
   };
@@ -43,15 +44,6 @@ vi.mock("@/hooks/useButterToast", () => ({
 }));
 
 // Test data fixtures
-const createLayer = (id: string, title: string) => ({
-  id,
-  title,
-  node_type: NodeType.LAYER,
-  parent_node_id: null,
-  created_at: new Date().toISOString(),
-  last_modified: new Date().toISOString(),
-  version: 1,
-});
 
 const createDomain = (id: string, title: string, layerId: string) => ({
   id,
@@ -309,7 +301,6 @@ describe("Move Forms - UI Rendering and Structure", () => {
   it("TermMoveForm: displays correct count for multiple nodes", async () => {
     const qc = makeTestQueryClient();
     const term1 = createTerm("term-1", "Term 1", "domain-1");
-    const term2 = createTerm("term-2", "Term 2", "domain-1");
 
     render(
       <TermMoveForm
@@ -379,9 +370,6 @@ describe("Move Forms - Form Validation and Behavior", () => {
 
     // Text should disappear when unchecked
     await waitFor(() => {
-      const text = screen.queryByText(
-        /All child nodes will also be moved recursively/i,
-      );
       // Text is conditional on checkbox state in the form description
       expect(checkbox).not.toBeChecked();
     });

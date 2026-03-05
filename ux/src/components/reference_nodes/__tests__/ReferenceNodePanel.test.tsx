@@ -3,13 +3,10 @@
  */
 
 import React from "react";
-import {
-  render,
+import { render,
   screen,
-  waitFor,
-  fireEvent,
   cleanup,
-} from "@testing-library/react";
+  } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { vi, describe, it, expect, beforeEach, afterEach } from "vitest";
 
@@ -83,6 +80,7 @@ describe("ReferenceNodePanel", () => {
       data: undefined,
       isLoading: true,
       error: null,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } as any);
 
     render(
@@ -100,6 +98,7 @@ describe("ReferenceNodePanel", () => {
       data: undefined,
       isLoading: false,
       error: new Error(errorMessage),
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } as any);
 
     render(
@@ -118,6 +117,7 @@ describe("ReferenceNodePanel", () => {
       data: [],
       isLoading: false,
       error: null,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } as any);
 
     render(
@@ -144,6 +144,7 @@ describe("ReferenceNodePanel", () => {
       data: mockLinks,
       isLoading: false,
       error: null,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } as any);
 
     render(
@@ -163,6 +164,7 @@ describe("ReferenceNodePanel", () => {
       data: mockLinks,
       isLoading: false,
       error: null,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } as any);
 
     render(
@@ -188,6 +190,7 @@ describe("ReferenceNodePanel", () => {
       data: mockLinks,
       isLoading: false,
       error: null,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } as any);
 
     render(
@@ -209,6 +212,7 @@ describe("ReferenceNodePanel", () => {
       data: [],
       isLoading: false,
       error: null,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } as any);
 
     render(

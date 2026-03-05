@@ -32,7 +32,9 @@ interface TreeMenuProps {
   /**
    * Optional callback when a node is clicked
    */
-  onNodeClick?: (node: any) => void;
+   
+  onNodeClick?: (node: any)  // eslint-disable-line @typescript-eslint/no-explicit-any
+ => void;
   /**
    * Optional view identifier for persisting expand state
    * If not provided, expand state will not be persisted to session storage
@@ -69,7 +71,7 @@ const TreeMenu: React.FC<TreeMenuProps> = ({
   const containerRef = useRef<HTMLDivElement>(null);
   // Initialize with cached width to avoid waiting for measurement on remount
   const [measuredWidth, setMeasuredWidth] = useState<number>(lastMeasuredWidth);
-  const [containerHeight, setContainerHeight] = useState<number>(0);
+
   const [isReady, setIsReady] = useState<boolean>(false);
 
   // Use prop width if provided, otherwise use measured width
@@ -113,7 +115,6 @@ const TreeMenu: React.FC<TreeMenuProps> = ({
     const measureDimensions = () => {
       if (containerRef.current) {
         const width = containerRef.current.clientWidth;
-        const height = containerRef.current.clientHeight;
         //console.log("Container dimensions measured:", { width, height });
         lastMeasuredWidth = width; // Cache for future mounts
         setMeasuredWidth(width);
@@ -261,7 +262,9 @@ const TreeMenu: React.FC<TreeMenuProps> = ({
   // Node click handler to navigate to the node's details
   // Uses provided onNodeClick if present, otherwise navigates to details page
   const handleNodeClick = useCallback(
-    (node: any) => {
+   
+    (node: any)  // eslint-disable-line @typescript-eslint/no-explicit-any
+ => {
       console.log("handleNodeClick:", node);
       if (onNodeClick) {
         onNodeClick(node);
@@ -298,7 +301,9 @@ const TreeMenu: React.FC<TreeMenuProps> = ({
         style={{ display: "block" }} // Remove default inline spacing
       >
         {/* Render all children of the root node */}
-        {root.children.map((child: any, index: number) => {
+        { }
+        {root.children.map((child: any,  // eslint-disable-line @typescript-eslint/no-explicit-any
+ index: number) => {
           child.childIndex = index;
           return (
             <TreeNode

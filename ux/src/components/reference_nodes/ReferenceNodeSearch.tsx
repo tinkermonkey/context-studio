@@ -5,15 +5,13 @@
  * Reuses UnifiedSearchBar and SourceSelector patterns from UnifiedSearchPage.
  */
 
-import React, { useState, useEffect, useRef } from "react";
-import {
-  TextInput,
+import React, { useState, useRef } from "react";
+import { TextInput,
   Button,
   Alert,
   Spinner,
-  Badge,
   Checkbox,
-} from "flowbite-react";
+ } from "flowbite-react";
 import { Search, Info, Clock, CheckCircle, XCircle } from "lucide-react";
 
 import { UnifiedNode, SourceType, SOURCE_METADATA } from "@/api/types/unified";

@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { ArrowLeft, Settings } from "lucide-react";
+// removed import;
 import { Link } from "@tanstack/react-router";
 import { CsMainTitle } from "@/components/layout/cs_main";
 import { PipelineFlavorEditor } from "@/components/llm_pipelines/PipelineFlavorEditor";

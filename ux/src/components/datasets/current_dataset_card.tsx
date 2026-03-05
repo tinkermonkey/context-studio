@@ -1,8 +1,6 @@
 import React, { useEffect, useRef } from "react";
-import { Card, Spinner, Badge, Button, Progress } from "flowbite-react";
-import {
-  Calendar,
-  Database,
+import { Card, Spinner, Button, Progress  } from "flowbite-react";
+import { Database,
   FileText,
   Hash,
   Activity,
@@ -12,7 +10,7 @@ import {
   RefreshCw,
   Square,
   AlertCircle,
-} from "lucide-react";
+ } from "lucide-react";
 import { Link } from "@tanstack/react-router";
 import { useActiveDataset } from "@/api/hooks/datasets/useDatasets";
 import { useEmbeddingRegeneration } from "@/api/hooks/embeddings/useEmbeddingRegeneration";
@@ -46,10 +44,6 @@ export const CurrentDatasetCard: React.FC<CurrentDatasetCardProps> = ({
     });
   };
 
-  const formatFileSize = (filename: string) => {
-    // This would ideally come from the API, but we can estimate or show filename for now
-    return filename;
-  };
 
   const handleStartRegeneration = (force = false) => {
     connect(force);

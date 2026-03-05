@@ -6,17 +6,15 @@
  */
 
 import React, { useState } from "react";
-import {
-  Card,
+import { Card,
   Button,
   TextInput,
   Textarea,
   Label,
-  Badge,
   Spinner,
   Progress,
-} from "flowbite-react";
-import { ArrowLeft, ArrowRight, Check, X } from "lucide-react";
+ } from "flowbite-react";
+import { ArrowRight, Check, X  } from "lucide-react";
 import {
   useCreatePredicate,
   useExternalPredicates,

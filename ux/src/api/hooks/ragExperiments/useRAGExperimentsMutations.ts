@@ -7,12 +7,6 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { ragExperimentsService } from "@/api/services/ragExperiments";
 import { QUERY_KEYS } from "@/api/config";
-import type {
-  CreateTestParagraphRequest,
-  UpdateTestParagraphRequest,
-  CreateAnnotationRequest,
-  RunPipelineTestRequest,
-} from "@/api/services/ragExperiments";
 
 /**
  * Create a new test paragraph

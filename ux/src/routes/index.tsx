@@ -1,12 +1,9 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import {
-  Card,
-  Button,
-  Badge,
+import { Card,
   Spinner,
   DarkThemeToggle,
   Alert,
-} from "flowbite-react";
+ } from "flowbite-react";
 import {
   Database,
   GitBranch,

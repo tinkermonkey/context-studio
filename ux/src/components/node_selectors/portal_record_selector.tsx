@@ -1,22 +1,22 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import ReactDOM from "react-dom";
-import {
-  Button,
-  Badge,
+import { Button,
   TextInput,
   Spinner,
   Checkbox,
   Label,
-} from "flowbite-react";
+ } from "flowbite-react";
 import { ChevronDown, Search, X, CircleX } from "lucide-react";
 import SearchHighlight from "@/components/misc/search_highlight";
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export interface FieldMap<T = any> {
   value: keyof T | string;
   title: keyof T | string;
   definition?: keyof T | string;
 }
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export interface PortalRecordSelectorProps<T = any> {
   records: T[];
   loading?: boolean;
@@ -32,13 +32,13 @@ export interface PortalRecordSelectorProps<T = any> {
   "data-testid"?: string;
 }
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function PortalRecordSelector<T = any>(
   props: PortalRecordSelectorProps<T>,
 ): React.ReactElement {
   const {
     records,
     loading = false,
-    error = null,
     fieldMap,
     placeholder = "Select Record",
     disabled = false,
@@ -60,9 +60,15 @@ export function PortalRecordSelector<T = any>(
   const optionRefs = useRef<Record<string, HTMLDivElement | null>>({});
   const [menuStyle, setMenuStyle] = useState<React.CSSProperties>({});
 
-  const getValue = (item: any) => String(item[fieldMap.value as string] ?? "");
-  const getTitle = (item: any) => String(item[fieldMap.title as string] ?? "");
-  const getDefinition = (item: any) =>
+   
+  const getValue = (item: any)  // eslint-disable-line @typescript-eslint/no-explicit-any
+ => String(item[fieldMap.value as string] ?? "");
+   
+  const getTitle = (item: any)  // eslint-disable-line @typescript-eslint/no-explicit-any
+ => String(item[fieldMap.title as string] ?? "");
+   
+  const getDefinition = (item: any)  // eslint-disable-line @typescript-eslint/no-explicit-any
+ =>
     fieldMap.definition
       ? String(item[fieldMap.definition as string] ?? "")
       : "";

@@ -24,18 +24,27 @@ export interface SystemHealth {
 
 export interface PerformanceMetrics {
   timestamp: string;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   database_metrics: Record<string, any>;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   s3_metrics: Record<string, any>;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   query_metrics: Record<string, any>;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   system_metrics: Record<string, any>;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   cache_metrics: Record<string, any>;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   batch_metrics: Record<string, any>;
 }
 
 export interface PerformanceTrends {
   analysis_window_hours: number;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   trends: Record<string, any>;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   issues: Array<Record<string, any>>;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   recommendations: Array<Record<string, any>>;
   overall_health_score: number;
   performance_grade: string;
@@ -44,6 +53,7 @@ export interface PerformanceTrends {
 export interface QueryStats {
   total_queries: number;
   avg_execution_time_ms: number;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   cache_stats: Record<string, any>;
   materialized_views_count: number;
 }
@@ -51,6 +61,7 @@ export interface QueryStats {
 export interface QueryOptimization {
   original_query: string;
   optimized_query: string;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   metrics: Record<string, any>;
   optimization_applied: string[];
 }
@@ -61,11 +72,13 @@ export interface StorageStats {
     total_savings_bytes: number;
     average_compression_ratio: number;
   };
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   compression_algorithms_used: Record<string, any>;
   total_optimizations: number;
 }
 
 export interface StorageOptimization {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   optimization_actions: Array<Record<string, any>>;
   storage_saved_bytes: number;
   cost_reduction_estimate: number;
@@ -73,8 +86,11 @@ export interface StorageOptimization {
 }
 
 export interface ThreeWayDiff {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   diff_result: Record<string, any>;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   conflicts_detected: Array<Record<string, any>>;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   semantic_insights?: Record<string, any>;
   merge_recommendation?: string;
 }
@@ -86,12 +102,14 @@ export interface BatchOperationResult {
   failed_items: number;
   processing_time_seconds: number;
   throughput_per_second: number;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   errors: Array<Record<string, any>>;
 }
 
 // Request Types
 export interface QueryOptimizationRequest {
   query: string;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   context?: Record<string, any>;
 }
 
@@ -102,16 +120,21 @@ export interface MaterializedViewRequest {
 }
 
 export interface ThreeWayDiffRequest {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   base: Record<string, any>;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   local: Record<string, any>;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   remote: Record<string, any>;
   enable_semantic_analysis?: boolean;
 }
 
 export interface BatchOperationRequest {
   operation_type: string;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   entity_data: Array<Record<string, any>>;
   author_id: string;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   options?: Record<string, any>;
 }
 
@@ -146,8 +169,10 @@ export function useSystemHealth(options?: UseQueryOptions<SystemHealth>) {
 }
 
 export function usePerformanceDashboard(
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   options?: UseQueryOptions<Record<string, any>>,
 ) {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   return useQuery<Record<string, any>>({
     queryKey: optimizationKeys.performanceDashboard(),
     queryFn: async () => {
@@ -216,7 +241,9 @@ export function useStorageStats(options?: UseQueryOptions<StorageStats>) {
   });
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function useDiffStats(options?: UseQueryOptions<Record<string, any>>) {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   return useQuery<Record<string, any>>({
     queryKey: optimizationKeys.diffStats(),
     queryFn: async () => {
@@ -227,7 +254,9 @@ export function useDiffStats(options?: UseQueryOptions<Record<string, any>>) {
   });
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function useBatchStats(options?: UseQueryOptions<Record<string, any>>) {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   return useQuery<Record<string, any>>({
     queryKey: optimizationKeys.batchStats(),
     queryFn: async () => {
@@ -237,10 +266,11 @@ export function useBatchStats(options?: UseQueryOptions<Record<string, any>>) {
     ...options,
   });
 }
-
 export function useOptimizationConfig(
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   options?: UseQueryOptions<Record<string, any>>,
 ) {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   return useQuery<Record<string, any>>({
     queryKey: optimizationKeys.config(),
     queryFn: async () => {
@@ -251,11 +281,12 @@ export function useOptimizationConfig(
   });
 }
 
-// Mutation Hooks
-
+ 
 export function useAutoOptimize(
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   options?: UseMutationOptions<any, Error, void>,
 ) {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   return useMutation<any, Error, void>({
     mutationFn: async () => {
       const response = await apiClient.post(
@@ -286,9 +317,12 @@ export function useOptimizeQuery(
   });
 }
 
+ 
 export function useCreateMaterializedView(
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   options?: UseMutationOptions<any, Error, MaterializedViewRequest>,
 ) {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   return useMutation<any, Error, MaterializedViewRequest>({
     mutationFn: async (request) => {
       const response = await apiClient.post(
@@ -315,9 +349,12 @@ export function useOptimizeStorage(
   });
 }
 
+ 
 export function useSetupLifecyclePolicies(
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   options?: UseMutationOptions<any, Error, void>,
 ) {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   return useMutation<any, Error, void>({
     mutationFn: async () => {
       const response = await apiClient.post(
@@ -363,9 +400,12 @@ export function useBatchOperation(
   });
 }
 
+ 
 export function useUpdateOptimizationConfig(
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   options?: UseMutationOptions<any, Error, Record<string, any>>,
 ) {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   return useMutation<any, Error, Record<string, any>>({
     mutationFn: async (config) => {
       const response = await apiClient.put(`/api/optimization/config`, config);

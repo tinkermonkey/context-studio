@@ -3,7 +3,7 @@
  */
 
 import React from "react";
-import { render, screen, fireEvent } from "@testing-library/react";
+import { render, screen,  } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { PipelineTestRunner } from "../PipelineTestRunner";
 import { vi, describe, it, expect, beforeEach } from "vitest";
@@ -54,6 +54,7 @@ describe("PipelineTestRunner", () => {
       },
       isLoading: false,
       error: null,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } as any);
 
     vi.mocked(ragExperimentsHooks.useRunPipelineTest).mockReturnValue({
@@ -62,6 +63,7 @@ describe("PipelineTestRunner", () => {
       isSuccess: false,
       error: null,
       data: null,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } as any);
   });
 
@@ -124,6 +126,7 @@ describe("PipelineTestRunner", () => {
       data: null,
       isLoading: true,
       error: null,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } as any);
 
     render(<PipelineTestRunner />, { wrapper: createWrapper() });
@@ -136,6 +139,7 @@ describe("PipelineTestRunner", () => {
       data: null,
       isLoading: false,
       error: new Error("Failed to fetch paragraphs"),
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } as any);
 
     render(<PipelineTestRunner />, { wrapper: createWrapper() });
@@ -180,6 +184,7 @@ describe("PipelineTestRunner", () => {
       isSuccess: false,
       error: null,
       data: null,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } as any);
 
     render(<PipelineTestRunner />, { wrapper: createWrapper() });
@@ -199,6 +204,7 @@ describe("PipelineTestRunner", () => {
         failed_runs: 0,
         results: [],
       },
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } as any);
 
     render(<PipelineTestRunner />, { wrapper: createWrapper() });
@@ -214,6 +220,7 @@ describe("PipelineTestRunner", () => {
       isSuccess: false,
       error: new Error("Test execution failed"),
       data: null,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } as any);
 
     render(<PipelineTestRunner />, { wrapper: createWrapper() });
@@ -251,6 +258,7 @@ describe("PipelineTestRunner", () => {
       data: { paragraphs: [], total_count: 0, limit: 100, offset: 0 },
       isLoading: false,
       error: null,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } as any);
 
     render(<PipelineTestRunner />, { wrapper: createWrapper() });

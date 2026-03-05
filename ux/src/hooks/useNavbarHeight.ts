@@ -11,7 +11,6 @@ export function useNavbarHeight(): number {
     // Check if we have a cached value in sessionStorage
     const cachedHeight = sessionStorage.getItem("navbarHeight");
     if (cachedHeight) {
-      const height = parseInt(cachedHeight, 10);
       setNavbarHeight(height);
       // Set CSS custom property
       document.documentElement.style.setProperty(
@@ -25,7 +24,6 @@ export function useNavbarHeight(): number {
     const measureNavbar = () => {
       const navbar = document.querySelector("nav");
       if (navbar) {
-        const height = navbar.offsetHeight;
         setNavbarHeight(height);
         // Cache the height in sessionStorage
         sessionStorage.setItem("navbarHeight", height.toString());

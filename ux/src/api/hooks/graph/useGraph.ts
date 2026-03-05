@@ -9,7 +9,6 @@ import {
   graphService,
   type GraphStats,
   type TermSearchParams,
-  type RelatedTermsParams,
   type DomainHierarchyParams,
   type LayerAnalyticsParams,
   type CommunityDetectionParams,

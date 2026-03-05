@@ -1,14 +1,13 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { Card, Badge, Button, Alert } from "flowbite-react";
+import { Card, Alert  } from "flowbite-react";
 import { CsMainTitle } from "@/components/layout/cs_main";
 import { ConfigBreadcrumbs } from "@/components/configuration/ConfigBreadcrumbs";
 import {
   useEnabledModels,
   useProvidersStatus,
   useToggleModel,
-  useModelsByProvider,
 } from "@/api/hooks";
-import { Server, AlertTriangle, CheckCircle } from "lucide-react";
+import {   CheckCircle } from "lucide-react";
 import type {
   EnabledModelConfig,
   ProviderType,
@@ -270,6 +269,7 @@ function ProviderConfigurationTab({
   providersStatus,
   isLoading,
 }: {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   providersStatus: any;
   isLoading: boolean;
 }) {
@@ -285,6 +285,7 @@ function ProviderConfigurationTab({
     <div className="space-y-6">
       <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
         {Object.entries(providersStatus.providers).map(
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
           ([provider, status]: [string, any]) => (
             <ProviderStatusCard
               key={provider}
@@ -304,6 +305,7 @@ function ProviderStatusCard({
   status,
 }: {
   provider: ProviderType;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   status: any;
 }) {
   const hasEnabledModels = status.enabled_models > 0;

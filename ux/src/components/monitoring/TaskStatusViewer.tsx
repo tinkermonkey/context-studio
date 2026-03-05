@@ -4,9 +4,7 @@
  * Reusable component for displaying background task status and progress
  */
 
-import {
-  Card,
-  Badge,
+import { Card,
   Progress,
   Button,
   Table,
@@ -14,17 +12,14 @@ import {
   TableHeadCell,
   TableBody,
   TableRow,
-  TableCell,
-} from "flowbite-react";
-import {
-  Clock,
+    } from "flowbite-react";
+import { Clock,
   CheckCircle,
   XCircle,
   Loader2,
   Play,
   StopCircle,
-  Trash2,
-} from "lucide-react";
+   } from "lucide-react";
 import type { TaskStatus } from "@/api/hooks/backgroundTasks/useBackgroundTasks";
 
 export interface TaskStatusViewerProps {

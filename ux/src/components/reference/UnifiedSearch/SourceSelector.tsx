@@ -4,7 +4,7 @@
  * Dropdown selector for reference sources with checkboxes
  */
 
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useRef} from "react";
 import { Checkbox, Label, Button } from "flowbite-react";
 import { ChevronDown, Filter } from "lucide-react";
 import { SOURCE_METADATA, SourceType } from "@/api/types/unified";

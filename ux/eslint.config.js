@@ -3,7 +3,7 @@ import tseslint from 'typescript-eslint';
 
 export default [
   {
-    ignores: ['dist', 'node_modules', 'coverage', 'build'],
+    ignores: ['dist', 'node_modules', 'coverage', 'build', 'test/utils/nodeHttpAdapter.*', 'test/utils/mswCompatibleHttpAdapter.ts', 'test/utils/forceMSWAdapter.ts'],
   },
   js.configs.recommended,
   ...tseslint.configs.recommended,

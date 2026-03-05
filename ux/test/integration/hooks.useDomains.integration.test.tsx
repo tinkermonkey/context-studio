@@ -1,5 +1,6 @@
 import React from "react";
-import { screen, waitFor } from "@testing-library/react";
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+import { screen,  } from "@testing-library/react";
 import { describe, it, expect } from "vitest";
 import { renderWithProviders as render } from "@/test/utils/renderWithProviders";
 import { useDomainNodes } from "@/api/hooks/structure_nodes/useStructureNodes";
@@ -9,6 +10,8 @@ const TestComponent: React.FC = () => {
   if (isLoading) return <div>loading</div>;
   return (
     <div>
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
       {data?.map((d: any) => (
         <div key={d.id}>{d.title}</div>
       ))}

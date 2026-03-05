@@ -71,9 +71,12 @@ test.describe("Predicate Management", () => {
     );
 
     // Verify predicate exists in backend
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const response = await apiRequest<{ data: any[] }>(page, "/api/predicates");
     const createdPredicate = response.data.find(
-      (p: any) => p.title === predicateTitle,
+       
+      (p: any)  // eslint-disable-line @typescript-eslint/no-explicit-any
+ => p.title === predicateTitle,
     );
 
     expect(createdPredicate).toBeDefined();
@@ -108,9 +111,12 @@ test.describe("Predicate Management", () => {
     ).not.toBeVisible();
 
     // Verify predicate exists in backend with custom identifier
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const response = await apiRequest<{ data: any[] }>(page, "/api/predicates");
     const createdPredicate = response.data.find(
-      (p: any) => p.title === predicateTitle,
+       
+      (p: any)  // eslint-disable-line @typescript-eslint/no-explicit-any
+ => p.title === predicateTitle,
     );
 
     expect(createdPredicate).toBeDefined();
@@ -124,6 +130,7 @@ test.describe("Predicate Management", () => {
     const updatedDefinition = "Updated definition via E2E test";
 
     // Create predicate via API for speed
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const createResponse = await apiRequest<any>(page, "/api/predicates", {
       method: "POST",
       body: {
@@ -168,6 +175,7 @@ test.describe("Predicate Management", () => {
     );
 
     // Verify backend was updated
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const response = await apiRequest<any>(
       page,
       `/api/predicates/${predicateId}`,
@@ -179,6 +187,7 @@ test.describe("Predicate Management", () => {
   test("should delete a predicate", async ({ page }) => {
     // Create a predicate to delete
     const predicateTitle = `E2E Delete Test ${Date.now()}`;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const createResponse = await apiRequest<any>(page, "/api/predicates", {
       method: "POST",
       body: {
@@ -327,10 +336,12 @@ test.describe("Predicate Management", () => {
   }) => {
     // Create multiple predicates
     const timestamp = Date.now();
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const predicate1 = await apiRequest<any>(page, "/api/predicates", {
       method: "POST",
       body: { title: `Bulk Delete 1 ${timestamp}` },
     });
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const predicate2 = await apiRequest<any>(page, "/api/predicates", {
       method: "POST",
       body: { title: `Bulk Delete 2 ${timestamp}` },
@@ -374,6 +385,7 @@ test.describe("Predicate Management", () => {
 
   test("should cancel predicate creation", async ({ page }) => {
     // Get current predicate count
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const beforeResponse = await apiRequest<{ data: any[]; total: number }>(
       page,
       "/api/predicates",
@@ -400,6 +412,7 @@ test.describe("Predicate Management", () => {
     await page.waitForLoadState("networkidle");
 
     // Verify no new predicate was created
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const afterResponse = await apiRequest<{ data: any[]; total: number }>(
       page,
       "/api/predicates",
@@ -410,7 +423,9 @@ test.describe("Predicate Management", () => {
 
     // Verify the specific test predicate was not created
     const testPredicate = afterResponse.data.find(
-      (p: any) => p.title === "Test Predicate Not Submitted",
+       
+      (p: any)  // eslint-disable-line @typescript-eslint/no-explicit-any
+ => p.title === "Test Predicate Not Submitted",
     );
     expect(testPredicate).toBeUndefined();
   });

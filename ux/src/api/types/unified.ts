@@ -53,14 +53,14 @@ export interface SourceStatus {
   response_time_ms?: number;
 }
 
-// Legacy interfaces for backward compatibility
-export interface UnifiedSearchRequest extends MultiSourceSearchRequest {}
+// Legacy type aliases for backward compatibility
+export type UnifiedSearchRequest = MultiSourceSearchRequest;
 
-export interface UnifiedNode extends SearchNode {}
+export type UnifiedNode = SearchNode;
 
-export interface UnifiedSearchResponse extends MultiSourceSearchResponse {}
+export type UnifiedSearchResponse = MultiSourceSearchResponse;
 
-export interface UnifiedSearchLink extends SearchLink {}
+export type UnifiedSearchLink = SearchLink;
 
 export interface UnifiedLink {
   id: string;
@@ -69,6 +69,7 @@ export interface UnifiedLink {
   predicate: string;
   source: string;
   confidence_score: number;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   metadata?: Record<string, any>;
 }
 
@@ -180,6 +181,7 @@ export interface ConceptNetEdge {
     term: string;
   };
   weight: number;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   sources: Array<any>;
 }
 

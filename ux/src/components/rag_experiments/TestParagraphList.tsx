@@ -5,18 +5,15 @@
  */
 
 import React, { useState } from "react";
-import {
-  Button,
+import { Button,
   Table,
   TableHead,
   TableHeadCell,
   TableBody,
   TableRow,
-  TableCell,
-  Spinner,
-  Badge,
-} from "flowbite-react";
-import { Edit, Trash2, Plus } from "lucide-react";
+    Spinner,
+   } from "flowbite-react";
+import { Edit, Plus  } from "lucide-react";
 import {
   useTestParagraphs,
   useDeleteTestParagraph,

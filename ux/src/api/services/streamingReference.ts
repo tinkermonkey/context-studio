@@ -8,8 +8,6 @@
 import { BaseService } from "./base";
 import {
   UnifiedSearchRequest,
-  UnifiedNode,
-  SearchLink,
   SourceType,
   MultiSourceSearchResponse,
   UnifiedReferenceError,
@@ -18,15 +16,12 @@ import {
   StreamingSearchState,
   StreamingSearchOptions,
   StreamingSearchControl,
-  SourceSearchUpdate,
   StreamingUpdateCallback,
-  StreamingStateCallback,
   createInitialStreamingState,
   updateStreamingState,
   getEnabledSources,
   SOURCE_ENDPOINTS,
   StreamingSearchError,
-  StreamingTimeoutError,
 } from "../types/streamingReference";
 
 export class StreamingReferenceService extends BaseService {
@@ -45,7 +40,6 @@ export class StreamingReferenceService extends BaseService {
         onStateChange,
         timeout = 30000,
         retryAttempts = 1,
-        includePartialResults = true,
       } = options;
 
       const enabledSources = getEnabledSources();
@@ -125,8 +119,6 @@ export class StreamingReferenceService extends BaseService {
       links: [],
     });
 
-    let lastError: Error | undefined;
-
     for (let attempt = 0; attempt <= retryAttempts; attempt++) {
       if (signal.aborted) {
         return;
@@ -170,8 +162,6 @@ export class StreamingReferenceService extends BaseService {
 
         return; // Success - exit retry loop
       } catch (error) {
-        lastError = error as Error;
-
         if (signal.aborted) {
           return;
         }
@@ -261,12 +251,9 @@ export class StreamingReferenceService extends BaseService {
     options: StreamingSearchOptions = {},
   ): Promise<StreamingSearchState> {
     return new Promise((resolve, reject) => {
-      let finalState: StreamingSearchState;
-
       this.searchStreaming(request, {
         ...options,
         onStateChange: (state) => {
-          finalState = state;
           options.onStateChange?.(state);
 
           if (state.isComplete) {
@@ -289,10 +276,8 @@ export class StreamingReferenceService extends BaseService {
    */
   async getSourceStatus(): Promise<Record<SourceType, boolean>> {
     const sources = getEnabledSources();
-    const status: Record<SourceType, boolean> = {} as Record<
-      SourceType,
-      boolean
-    >;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const status: Record<SourceType, boolean> = {} as any;
 
     // For now, just return enabled status
     // Could be enhanced to actually ping each endpoint

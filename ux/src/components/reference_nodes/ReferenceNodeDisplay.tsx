@@ -6,16 +6,14 @@
  */
 
 import React, { useState } from "react";
-import {
-  Button,
-  Badge,
+import { Button,
   Alert,
   Spinner,
   Modal,
   ModalHeader,
   ModalBody,
-} from "flowbite-react";
-import { ExternalLink, Trash2, AlertCircle } from "lucide-react";
+ } from "flowbite-react";
+import { ExternalLink, AlertCircle  } from "lucide-react";
 
 import { ReferenceLink } from "@/api/types/structureNodes";
 import { useRemoveReferenceLink } from "@/api/hooks/structure_nodes/useReferenceLinks";
@@ -69,7 +67,9 @@ export const ReferenceNodeDisplay: React.FC<ReferenceNodeDisplayProps> = ({
 
   const handleViewExternal = (
     url: string,
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     source: string,
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     externalId: string,
   ) => {
     if (typeof window !== "undefined" && window.open) {

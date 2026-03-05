@@ -9,9 +9,7 @@ import {
   ModalBody,
   Textarea,
 } from "flowbite-react";
-import {
-  Calendar,
-  Hash,
+import { Hash,
   Edit3,
   Database,
   Layers,
@@ -20,7 +18,7 @@ import {
   X,
   Plus,
   Move,
-} from "lucide-react";
+ } from "lucide-react";
 import { NodeType } from "@/api/types/structureNodes";
 import { useTermHierarchy } from "@/api/hooks/graph/useGraph";
 import { useQueryClient } from "@tanstack/react-query";
@@ -513,7 +511,8 @@ const EditModal: React.FC<{
         queryKey: [QUERY_KEYS.STRUCTURE_NODES, node.id],
       });
       queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.STRUCTURE_NODES] });
-    } catch (e) {
+    } catch (_e) {  // eslint-disable-line @typescript-eslint/no-unused-vars
+  
       console.warn("Failed to invalidate node queries", e);
     }
   };
@@ -568,7 +567,8 @@ const AddChildModal: React.FC<{
         queryKey: [QUERY_KEYS.STRUCTURE_NODES, node.id],
       });
       queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.STRUCTURE_NODES] });
-    } catch (e) {
+    } catch (_e) {  // eslint-disable-line @typescript-eslint/no-unused-vars
+  
       console.warn("Failed to invalidate node queries", e);
     }
   };
@@ -644,7 +644,8 @@ const MoveModal: React.FC<{
         queryKey: [QUERY_KEYS.STRUCTURE_NODES, node.id],
       });
       queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.STRUCTURE_NODES] });
-    } catch (e) {
+    } catch (_e) {  // eslint-disable-line @typescript-eslint/no-unused-vars
+  
       console.warn("Failed to invalidate node queries", e);
     }
   };

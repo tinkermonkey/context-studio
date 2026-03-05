@@ -169,8 +169,11 @@ export interface StorageCompressionResult {
 export interface DiffConflict {
   path: string;
   conflict_type: string;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   base_value: any;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   local_value: any;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   remote_value: any;
 }
 
@@ -192,6 +195,7 @@ export interface ThreeWayDiff {
 export interface BatchOperationError {
   item_index: number;
   error_message: string;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   item_data: any;
 }
 
@@ -209,6 +213,7 @@ export interface BatchOperationResult {
 export interface QueryTuningRequest {
   query: string;
   context?: {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     table_schemas?: Record<string, any>;
     expected_result_size?: number;
   };
@@ -221,14 +226,18 @@ export interface MaterializedViewRequest {
 }
 
 export interface ThreeWayDiffRequest {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   base: Record<string, any>;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   local: Record<string, any>;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   remote: Record<string, any>;
   enable_semantic_analysis?: boolean;
 }
 
 export interface BatchOperationRequest {
   operation_type: string;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   entity_data: Array<Record<string, any>>;
   author_id: string;
   options?: {
@@ -400,14 +409,16 @@ export function usePerformanceConfig(
       return response.data;
     },
     ...options,
-  });
+});
 }
 
 // Mutation Hooks
 
 export function useAutoTunePerformance(
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   options?: UseMutationOptions<any, Error, void>,
 ) {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   return useMutation<any, Error, void>({
     mutationFn: async () => {
       const response = await apiClient.post(
@@ -433,10 +444,11 @@ export function useTuneQuery(
     ...options,
   });
 }
-
 export function useCreateMaterializedView(
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   options?: UseMutationOptions<any, Error, MaterializedViewRequest>,
 ) {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   return useMutation<any, Error, MaterializedViewRequest>({
     mutationFn: async (request) => {
       const response = await apiClient.post(
@@ -462,10 +474,11 @@ export function useCompressStorage(
     ...options,
   });
 }
-
 export function useSetupLifecyclePolicies(
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   options?: UseMutationOptions<any, Error, void>,
 ) {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   return useMutation<any, Error, void>({
     mutationFn: async () => {
       const response = await apiClient.post(
@@ -511,9 +524,12 @@ export function useBatchOperation(
   });
 }
 
+ 
 export function useUpdatePerformanceConfig(
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   options?: UseMutationOptions<any, Error, PerformanceConfig>,
 ) {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   return useMutation<any, Error, PerformanceConfig>({
     mutationFn: async (config) => {
       const response = await apiClient.put(`/api/optimization/config`, config);

@@ -11,11 +11,14 @@ interface FieldMap {
 }
 
 interface RecordSelectorProps {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   records: any[];
   loading?: boolean;
   error?: string | null;
   fieldMap?: FieldMap;
-  onSelect?: (record: any) => void;
+   
+  onSelect?: (record: any)  // eslint-disable-line @typescript-eslint/no-explicit-any
+ => void;
   value?: string;
   className?: string;
   search?: string;
@@ -245,6 +248,7 @@ export const RecordSelector: React.FC<RecordSelectorProps> = ({
             type="button"
             aria-label="Clear selection"
             className="ml-2 rounded p-1 text-gray-500 hover:bg-gray-100"
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
             onClick={() => onSelect?.(undefined as any)}
           >
             <CircleX className="h-4 w-4" />

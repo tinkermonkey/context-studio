@@ -5,8 +5,7 @@
  */
 
 import { BaseService } from "./base";
-import { ENDPOINTS } from "../config";
-import type { components, operations } from "@/api/client/types";
+import type { components } from "@/api/client/types";
 
 export type ModelCapabilitiesResponse =
   components["schemas"]["ModelCapabilitiesResponse"];
@@ -93,6 +92,7 @@ export class ModelCapabilitiesService extends BaseService {
     const response = await this.getModelCapabilities(modelName);
 
     // Parse the capabilities object which comes as a generic object
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const capabilities = response.capabilities as any;
 
     return {
@@ -141,6 +141,7 @@ export class ModelCapabilitiesService extends BaseService {
 
     return allModels.models.reduce(
       (acc, model) => {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const provider = (model.capabilities as any)?.provider ?? "unknown";
         if (!acc[provider]) {
           acc[provider] = [];

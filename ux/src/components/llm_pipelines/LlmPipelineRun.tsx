@@ -1,6 +1,6 @@
 import React, { useState, useCallback, ReactNode } from "react";
-import { Button, Card, Alert, Spinner, Badge } from "flowbite-react";
-import { Play, Zap, CheckCircle, XCircle, Clock } from "lucide-react";
+import { Button, Alert, Spinner,  } from "flowbite-react";
+import { Play, CheckCircle, XCircle, Clock } from "lucide-react";
 import {
   usePipelineFlavors,
   usePipelineFlavor,
@@ -36,6 +36,7 @@ interface LlmPipelineRunProps {
   pipelineType: PipelineType;
 
   /** JSON blob of context properties for the pipeline */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   context: Record<string, any>;
 
   /** Optional list of specific flavor IDs to use instead of enabled flavors */
@@ -127,6 +128,7 @@ export const LlmPipelineRun: React.FC<LlmPipelineRunProps> = ({
       const startTime = Date.now();
 
       try {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
         let data: any;
 
         // Construct the new generic pipeline execution request format
@@ -138,12 +140,15 @@ export const LlmPipelineRun: React.FC<LlmPipelineRunProps> = ({
 
         switch (pipelineType) {
           case "suggest_term_definition":
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
             data = await termMutation.mutateAsync(pipelineRequest as any);
             break;
           case "suggest_domain_definition":
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
             data = await domainMutation.mutateAsync(pipelineRequest as any);
             break;
           case "suggest_layer_definition":
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
             data = await layerMutation.mutateAsync(pipelineRequest as any);
             break;
           default:
@@ -294,6 +299,7 @@ export const LlmPipelineRun: React.FC<LlmPipelineRunProps> = ({
   // Default result template
   const defaultResultTemplate = (result: PipelineResult) => {
     if (result.status === "success" && result.data) {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const data = result.data as any;
       return (
         <div className="space-y-3">

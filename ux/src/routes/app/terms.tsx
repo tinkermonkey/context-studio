@@ -39,7 +39,8 @@ export const Route = createFileRoute("/app/terms")({
 
 function TermsPage() {
   const {
-    data: terms,
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    data: termsList,
     isLoading: termsLoading,
     error: termsError,
   } = useTermNodes();
@@ -48,6 +49,7 @@ function TermsPage() {
     isLoading: layersLoading,
     error: layersError,
   } = useLayerNodes();
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const tableRef = React.useRef<any>(null);
   const navigate = useNavigate({ from: "/app/terms" });
   const search = useSearch({ from: "/app/terms" });

@@ -64,7 +64,7 @@ export const useAddReferenceLinks = (
       // Show success feedback
       toast.success(`Added ${data.length} reference link(s)`);
     },
-    onError: (err, variables) => {
+    onError: (err) => {
       console.error(`Failed to add reference links to node ${nodeId}:`, err);
       const message =
         err instanceof Error ? err.message : "Failed to add reference links";

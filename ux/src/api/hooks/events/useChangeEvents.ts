@@ -90,7 +90,9 @@ export const changeEventService = new ChangeEventService();
 export const changeEventQueryKeys = {
   all: [QUERY_KEYS.CHANGE_EVENTS] as const,
   lists: () => [...changeEventQueryKeys.all, "list"] as const,
-  list: (params?: any) => [...changeEventQueryKeys.lists(), params] as const,
+   
+  list: (params?: any)  // eslint-disable-line @typescript-eslint/no-explicit-any
+ => [...changeEventQueryKeys.lists(), params] as const,
   details: () => [...changeEventQueryKeys.all, "detail"] as const,
   detail: (id: number) => [...changeEventQueryKeys.details(), id] as const,
   unprocessed: (recordType?: RecordType) =>

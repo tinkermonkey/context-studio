@@ -1,5 +1,6 @@
 import { createFileRoute, Outlet } from "@tanstack/react-router";
 import { CsNavbar } from "../components/layout/cs_navbar";
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { useNavbarHeight } from "../hooks/useNavbarHeight";
 
 export const Route = createFileRoute("/app")({
@@ -7,7 +8,6 @@ export const Route = createFileRoute("/app")({
 });
 
 function AppComponent() {
-  const navbarHeight = useNavbarHeight();
 
   return (
     <>

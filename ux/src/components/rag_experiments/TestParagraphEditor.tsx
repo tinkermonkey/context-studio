@@ -4,7 +4,7 @@
  * Form for creating and editing test paragraphs for RAG pipeline testing
  */
 
-import React, { useState, useEffect } from "react";
+import React, { useState} from "react";
 import { Button, Label, Textarea, TextInput, Spinner } from "flowbite-react";
 import { Save, X } from "lucide-react";
 import {
@@ -32,7 +32,6 @@ export const TestParagraphEditor: React.FC<TestParagraphEditorProps> = ({
 
   const isEditing = !!paragraph;
   const isLoading = createMutation.isPending || updateMutation.isPending;
-  const error = createMutation.error || updateMutation.error;
 
   // Update form when paragraph prop changes
   useEffect(() => {

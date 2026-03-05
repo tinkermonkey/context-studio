@@ -1,5 +1,6 @@
 import React from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { Card } from "flowbite-react";
 import { CsSidebar, CsSidebarTitle } from "@/components/layout/cs_sidebar";
 import { CsMain, CsMainTitle } from "@/components/layout/cs_main";

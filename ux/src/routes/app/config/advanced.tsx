@@ -1,35 +1,23 @@
 import { createFileRoute } from "@tanstack/react-router";
-import {
-  Card,
+import { Card,
   Alert,
-  Badge,
-  Button,
   TextInput,
-  Label,
-  Checkbox,
   Tabs,
   Textarea,
-} from "flowbite-react";
+ } from "flowbite-react";
 import { CsMainTitle } from "@/components/layout/cs_main";
 import { ConfigBreadcrumbs } from "@/components/configuration/ConfigBreadcrumbs";
-import {
-  Cog,
-  AlertTriangle,
-  CheckCircle,
-  XCircle,
-  Settings,
-  Code,
+import { Code,
   Download,
   Upload,
   RotateCcw,
-  Trash2,
   Info,
   CloudOff,
   Database,
   Cpu,
   HardDrive,
   Terminal,
-} from "lucide-react";
+ } from "lucide-react";
 import { useConfiguration, useUpdateConfigurationValue } from "@/api/hooks";
 import { useState } from "react";
 import { useButterToast } from "@/hooks/useButterToast";
@@ -57,7 +45,9 @@ function RouteComponent() {
     return labels[path] || path;
   };
 
-  const handleUpdateConfig = async (path: string, value: any) => {
+   
+  const handleUpdateConfig = async (path: string, value: any)  // eslint-disable-line @typescript-eslint/no-explicit-any
+ => {
     const label = getConfigLabel(path);
     await updateConfigMutation.mutateAsync(
       {
@@ -144,11 +134,13 @@ function RouteComponent() {
 // Environment Variables Section Component
 function EnvironmentVariablesSection({
   config,
-  onUpdate,
   isUpdating,
 }: {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   config: any;
-  onUpdate: (path: string, value: any) => void;
+   
+  onUpdate: (path: string, value: any)  // eslint-disable-line @typescript-eslint/no-explicit-any
+ => void;
   isUpdating: boolean;
 }) {
   if (!config) {
@@ -311,11 +303,13 @@ function EnvironmentVariablesSection({
 // Raw Configuration Section Component
 function RawConfigurationSection({
   config,
-  onUpdate,
   isUpdating,
 }: {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   config: any;
-  onUpdate: (path: string, value: any) => void;
+   
+  onUpdate: (path: string, value: any)  // eslint-disable-line @typescript-eslint/no-explicit-any
+ => void;
   isUpdating: boolean;
 }) {
   const [configJson, setConfigJson] = useState("");

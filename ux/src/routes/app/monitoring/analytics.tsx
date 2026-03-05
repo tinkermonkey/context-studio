@@ -2,15 +2,11 @@ import { useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { CsMain, CsMainTitle } from "@/components/layout/cs_main";
 import { CsSidebar } from "@/components/layout/cs_sidebar";
-import {
-  Card,
-  Button,
-  Select,
+import { Card,
   Spinner,
   Alert,
   Tabs,
-  Badge,
-} from "flowbite-react";
+   } from "flowbite-react";
 import {
   Download,
   TrendingUp,
@@ -378,7 +374,9 @@ function RouteComponent() {
                       description={`Change activity over ${trends.analysis_period_days} days`}
                       data={trends.daily_trends
                         .slice(0, 30)
-                        .map((trend: any) => ({
+   
+                        .map((trend: any)  // eslint-disable-line @typescript-eslint/no-explicit-any
+ => ({
                           label: trend.date || trend.day || "Unknown",
                           value: trend.total_changes || trend.changes || 0,
                         }))}
@@ -391,7 +389,9 @@ function RouteComponent() {
                         description="Activity distribution by hour of day"
                         data={trends.peak_hours
                           .slice(0, 24)
-                          .map((peak: any) => ({
+   
+                          .map((peak: any)  // eslint-disable-line @typescript-eslint/no-explicit-any
+ => ({
                             label: `${peak.hour || 0}:00`,
                             value: peak.activity || peak.count || 0,
                           }))}

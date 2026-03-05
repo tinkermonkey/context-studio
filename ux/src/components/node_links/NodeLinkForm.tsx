@@ -7,7 +7,7 @@
 import React, { useState } from "react";
 import { useForm } from "@tanstack/react-form";
 import { Button, Alert, Label, Radio } from "flowbite-react";
-import { Info, ArrowRight, ArrowLeft } from "lucide-react";
+import { Info, ArrowRight,  } from "lucide-react";
 
 import {
   StructureNode,
@@ -103,7 +103,9 @@ export const NodeLinkForm: React.FC<NodeLinkFormProps> = ({
         };
 
         await createLinkMutation.mutateAsync(linkData);
-      } catch (error: any) {
+   
+      } catch (error: any)  // eslint-disable-line @typescript-eslint/no-explicit-any
+ {
         let message = "An error occurred";
         const detail =
           error?.response?.data?.detail ||
@@ -112,7 +114,9 @@ export const NodeLinkForm: React.FC<NodeLinkFormProps> = ({
           error?.detail;
 
         if (Array.isArray(detail)) {
-          message = detail.map((d: any) => d.msg).join("; ");
+   
+          message = detail.map((d: any)  // eslint-disable-line @typescript-eslint/no-explicit-any
+ => d.msg).join("; ");
         } else if (error?.message) {
           message = error.message;
         } else if (typeof error === "string") {

@@ -5,7 +5,7 @@
  */
 
 import React from "react";
-import { Card, Badge, Button, Alert, Spinner } from "flowbite-react";
+import { Card, Button, Alert, Spinner  } from "flowbite-react";
 import {
   ExternalLink,
   AlertCircle,
@@ -18,8 +18,7 @@ import { UnifiedNode, SourceType } from "@/api/types/unified";
 import { SOURCE_METADATA } from "@/api/types/unified";
 import {
   StreamingSearchState,
-  SourceSearchUpdate,
-} from "@/api/types/streamingReference";
+  } from "@/api/types/streamingReference";
 import { useSourceLoadingStates } from "@/api/hooks/unifiedReference/useStreamingReference";
 import { getSourceBadgeColor, getSourceLabel } from "@/utils/sourceUtils";
 
@@ -278,7 +277,6 @@ export const SearchResults: React.FC<SearchResultsProps> = ({
             </p>
             <div className="text-sm">
               {streamingState.errorSources.map((source) => {
-                const error = sourceLoadingStates.getSourceError(source);
                 return (
                   <div key={source}>
                     <strong>{SOURCE_METADATA[source]?.label || source}:</strong>{" "}

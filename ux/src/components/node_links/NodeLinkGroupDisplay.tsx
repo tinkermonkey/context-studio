@@ -5,7 +5,7 @@
  */
 
 import React from "react";
-import { Badge } from "flowbite-react";
+// removed import;
 
 import { StructureNodeLink } from "@/api/types/structureNodes";
 import { NodeLinkItem } from "./NodeLinkItem";

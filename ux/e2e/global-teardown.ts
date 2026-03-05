@@ -1,10 +1,4 @@
-import { FullConfig } from "@playwright/test";
-import fs from "fs";
-import path from "path";
-import { fileURLToPath } from "url";
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+import { execSync } from "child_process";
 
 /**
  * Kill a process by PID, handling both Unix and Windows platforms.
@@ -13,7 +7,7 @@ function killProcess(pid: number): void {
   try {
     if (process.platform === "win32") {
       // Windows: Use taskkill
-      require("child_process").execSync(`taskkill /pid ${pid} /T /F`, {
+      execSync(`taskkill /pid ${pid} /T /F`, {
         stdio: "ignore",
       });
     } else {
@@ -30,7 +24,7 @@ function killProcess(pid: number): void {
         }
       }, 2000);
     }
-  } catch (error) {
+  } catch {
     // Process already dead or doesn't exist
   }
 }
@@ -46,7 +40,7 @@ function killProcess(pid: number): void {
  * Processes are killed gracefully with SIGTERM, falling back to SIGKILL
  * if they don't respond.
  */
-async function globalTeardown(config: FullConfig) {
+async function globalTeardown(): Promise<void> {
   console.log("\n🧹 Shutting down E2E test environment...\n");
 
   // Kill frontend process

@@ -35,7 +35,7 @@ export interface PredicateMappingManagerProps {
 export const PredicateMappingManager: React.FC<
   PredicateMappingManagerProps
 > = ({ className }) => {
-  const [activeTab, setActiveTab] = useState<number>(0);
+  const [, setActiveTab] = useState<number>(0);
   const [showWorkflowModal, setShowWorkflowModal] = useState<boolean>(false);
   const [selectedPredicateIds, setSelectedPredicateIds] = useState<string[]>(
     [],
@@ -46,7 +46,8 @@ export const PredicateMappingManager: React.FC<
     setShowWorkflowModal(true);
   };
 
-  const handleWorkflowComplete = (predicate: PredicateOut) => {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const handleWorkflowComplete = (_$predicate: PredicateOut) => {
     setShowWorkflowModal(false);
     setSelectedPredicateIds([]);
     // Could switch to a different tab or show success message

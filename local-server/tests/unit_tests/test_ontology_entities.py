@@ -336,7 +336,7 @@ class TestClassBusinessLogicInvariants:
         # Animal <- (Mammal, Bird)
         # Mammal <- (Dog, Cat)
 
-        animal = Class(
+        Class(
             id="animal",
             title="Animal",
             definition=None,

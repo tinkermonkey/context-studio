@@ -4,24 +4,24 @@
  * Test interface for the RAG entity extraction API endpoint
  */
 
-import { useState, useEffect, useMemo } from "react";
-import {
-  Button,
+import { useState, useMemo } from "react";
+import { Button,
   Card,
   Label,
   Textarea,
   Spinner,
   Alert,
   Checkbox,
-  Badge,
-} from "flowbite-react";
+   } from "flowbite-react";
 import { useExtractEntities, useRAGTrace } from "@/api/hooks/rag";
 import { useStructureNode } from "@/api/hooks/structure_nodes/useStructureNodes";
 import { Info, ExternalLink } from "lucide-react";
 import { Link } from "@tanstack/react-router";
 
 // Component to render a single entity with its matched node link
-function EntityItem({ entity }: { entity: any }) {
+   
+function EntityItem({ entity }: { entity: any}  // eslint-disable-line @typescript-eslint/no-explicit-any
+) {
   const { data: node, isLoading } = useStructureNode(
     entity.metadata?.matched_kg_node,
   );
@@ -86,6 +86,7 @@ export default function RAGTestPage() {
   const [inputText, setInputText] = useState("");
   const [enableTrace, setEnableTrace] = useState(true);
   const [enableLlmLayer, setEnableLlmLayer] = useState(false);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [result, setResult] = useState<any>(null);
   const [requestId, setRequestId] = useState<string | null>(null);
 
@@ -274,6 +275,7 @@ export default function RAGTestPage() {
                   typeof value === "object" &&
                   value !== null
                 ) {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
                   const layerMetrics = value as any;
                   return (
                     <div
@@ -332,7 +334,9 @@ export default function RAGTestPage() {
                 Extracted Entities ({result.entities.length})
               </h3>
               <div className="space-y-2">
-                {result.entities.map((entity: any, index: number) => (
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                {result.entities.map((entity: any,  // eslint-disable-line @typescript-eslint/no-explicit-any
+ index: number) => (
                   <EntityItem key={index} entity={entity} />
                 ))}
               </div>
@@ -380,6 +384,7 @@ export default function RAGTestPage() {
             <div>
               <pre className="overflow-auto rounded-lg bg-gray-50 p-4 text-xs dark:bg-gray-900">
                 <code className="text-gray-900 dark:text-white">
+                  {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
                   {JSON.stringify(traceData as any, null, 2)}
                 </code>
               </pre>

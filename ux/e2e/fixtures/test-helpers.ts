@@ -1,4 +1,4 @@
-import { Page, expect } from "@playwright/test";
+import { Page } from "@playwright/test";
 
 /**
  * Test helper utilities for E2E tests.
@@ -18,11 +18,12 @@ export async function waitForAppReady(page: Page): Promise<void> {
 /**
  * Make an API request to the backend and return the response.
  */
-export async function apiRequest<T = any>(
+export async function apiRequest<T = unknown>(
   page: Page,
   endpoint: string,
   options?: {
     method?: "GET" | "POST" | "PUT" | "DELETE" | "PATCH";
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     body?: any;
     headers?: Record<string, string>;
   },
@@ -58,7 +59,7 @@ export async function apiRequest<T = any>(
  * Clear all test data from the backend.
  * Useful for resetting state between tests.
  */
-export async function clearTestData(page: Page): Promise<void> {
+export async function clearTestData(): Promise<void> {
   // Implement based on your API's data clearing endpoint
   // For example:
   // await apiRequest(page, '/api/test/clear', { method: 'POST' });
@@ -68,11 +69,15 @@ export async function clearTestData(page: Page): Promise<void> {
  * Create test data in the backend.
  */
 export async function seedTestData(
-  page: Page,
-  data: {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  _data: {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     layers?: any[];
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     domains?: any[];
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     terms?: any[];
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     predicates?: any[];
   },
 ): Promise<void> {
@@ -104,6 +109,7 @@ export async function waitForElement(
   } catch (error) {
     throw new Error(
       `Element "${selector}" not found after ${options?.timeout || 10000}ms. Current URL: ${page.url()}`,
+      { cause: error },
     );
   }
 }

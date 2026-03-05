@@ -1,6 +1,6 @@
 import React from "react";
 import { createColumnHelper } from "@tanstack/react-table";
-import { Checkbox, Badge } from "flowbite-react";
+import { Checkbox,  } from "flowbite-react";
 import { StructureNode } from "@/api/types/structureNodes";
 import { renderShortDateTime, renderShortUuid } from "@/utils/renderers";
 import { BaseNodeTable } from "./node_table";
@@ -11,7 +11,6 @@ import {
 import { useDeleteStructureNode } from "@/api/hooks/structure_nodes/useStructureNodeMutations";
 import { DomainForm } from "@/components/forms/domain_form";
 import { DomainMoveForm } from "@/components/forms/domain_move_form";
-import { usePredicates } from "@/api/hooks/predicates";
 import type { FieldDefinition } from "@/components/misc/query_filters";
 
 const columnHelper = createColumnHelper<StructureNode>();
@@ -149,7 +148,8 @@ export interface DomainsTableProps {
   onQueryParamsChange?: (params: Record<string, unknown>) => void;
 }
 
-const DomainsTable = React.forwardRef<any, DomainsTableProps>((props, ref) => {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+const DomainsTable = React.forwardRef<any, DomainsTableProps>((props) => {
   const { queryParams = {}, onQueryParamsChange } = props;
 
   // Use query params in the domains hook
@@ -186,6 +186,7 @@ const DomainsTable = React.forwardRef<any, DomainsTableProps>((props, ref) => {
   // Move terms when orphaning them during domain deletion
   const moveDomainsChildren = async (
     childIds: string[],
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     newParentId: string | null,
   ) => {
     if (childIds.length === 0) return;

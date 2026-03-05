@@ -80,6 +80,7 @@ const textWidthCache = new SvgTextWidthCache();
 
 // Text height measurement cache to avoid recalculating heights for the same text
 // Font changes will require a complete chart redraw, so we only cache by text content
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 class HtmlTextHeightCache {
   private cache = new Map<string, number>();
   private textOptions = extractFontPropertiesFromStyles(
@@ -92,7 +93,6 @@ class HtmlTextHeightCache {
       return this.cache.get(`${text}-${width}`)!;
     }
 
-    const height = measureHtmlTextHeight(text, width, this.textOptions);
     this.cache.set(`${text}-${width}`, height);
     return height;
   }
@@ -289,7 +289,6 @@ export function calculateLayout(
     maxX + maxTextWidth + textPadding + (config.margins.right || 0);
 
   // Define minimum width to ensure chart remains usable
-  const minimumWidth = 300;
 
   // Use maxWidth constraint if provided, otherwise use natural width
   let finalWidth = naturalWidth;

@@ -178,7 +178,7 @@ export const testNLPFeatures = async () => {
 
     // Test entity features
     console.log("\n🏷️ Entity Features:");
-    result.entities?.forEach((entity, index) => {
+    result.entities?.forEach((entity) => {
       console.log(`   Entity: "${entity.text}"`);
       console.log(`     - Label: ${entity.label || "N/A"}`);
       console.log(`     - KB ID: ${entity.kb_id || "N/A"}`);

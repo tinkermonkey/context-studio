@@ -1,11 +1,12 @@
 import React from "react";
-import { render, screen, fireEvent } from "@testing-library/react";
+import { render, screen,  } from "@testing-library/react";
 import { vi } from "vitest";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { mockAnalysis } from "../../utils/mockNlpData";
 
 // Mock the useNLPAnalysis hook to return our mockAnalysis
 vi.mock("@/api/hooks/nlp/useNLPAnalysis", () => ({
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   useNLPAnalysis: (text: string, options: any) => ({
     data: options?.enabled === false ? null : text ? mockAnalysis : null,
     isLoading: false,

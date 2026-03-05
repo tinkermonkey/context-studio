@@ -5,15 +5,12 @@ import {
   useReactTable,
   getPaginationRowModel,
 } from "@tanstack/react-table";
-import {
-  Table,
+import { Table,
   TableHead,
   TableHeadCell,
   TableBody,
   TableRow,
-  TableCell,
-  Button,
-  Badge,
+    Button,
   Spinner,
   Modal,
   ModalHeader,
@@ -25,7 +22,7 @@ import {
   Select,
   Radio,
   Label,
-} from "flowbite-react";
+  } from "flowbite-react";
 import {
   RefreshCcw,
   Plus,
@@ -41,6 +38,7 @@ import {
 } from "@/components/misc/query_filters";
 
 export interface BaseNodeTableProps<T> {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   columns: any[];
   data: T[];
   isLoading?: boolean;
@@ -114,8 +112,7 @@ function BaseNodeTable<T>({
   onQueryParamsChange,
   searchEnabled = true,
   searchPlaceholder,
-  onSearchChange,
-  filterFields = [],
+    filterFields = [],
   filtersEnabled = false,
   linkGenerator,
   customRowAction,
@@ -128,7 +125,9 @@ function BaseNodeTable<T>({
   const [showCreateModal, setShowCreateModal] = React.useState(false);
   const [showDeleteModal, setShowDeleteModal] = React.useState(false);
   const [showMoveModal, setShowMoveModal] = React.useState(false);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [pendingDeleteRows, setPendingDeleteRows] = React.useState<any[]>([]);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [pendingMoveRows, setPendingMoveRows] = React.useState<any[]>([]);
   const [childrenToHandle, setChildrenToHandle] = React.useState<T[]>([]);
   const [deleteOption, setDeleteOption] = React.useState<"delete" | "orphan">(
@@ -138,7 +137,8 @@ function BaseNodeTable<T>({
     undefined,
   );
   const [selectedCount, setSelectedCount] = React.useState(0);
-  const [isProcessing, setIsProcessing] = React.useState(false);
+  const [setIsProcessing] = React.useState(false);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const tableRef = React.useRef<any>(null);
   const [columnVisibility, setColumnVisibility] = React.useState<
     Record<string, boolean>
@@ -151,7 +151,6 @@ function BaseNodeTable<T>({
   const [searchTerm, setSearchTerm] = React.useState<string>("");
 
   // Track if we initiated the query change to avoid circular updates
-  const searchUpdateSourceRef = React.useRef<"user" | "external">("external");
 
   // Initialize search term from URL on mount only
   React.useEffect(() => {
@@ -315,7 +314,9 @@ function BaseNodeTable<T>({
     }
 
     const searchLower = debouncedSearchTerm.toLowerCase().trim();
-    return (data ?? []).filter((item: any) => {
+   
+    return (data ?? []).filter((item: any)  // eslint-disable-line @typescript-eslint/no-explicit-any
+ => {
       // Search in title and definition fields
       const title = item.title?.toLowerCase() || "";
       const definition = item.definition?.toLowerCase() || "";
@@ -478,7 +479,9 @@ function BaseNodeTable<T>({
       }
 
       // Then delete the selected items
-      await onDelete(pendingDeleteRows.map((row: any) => getId(row.original)));
+   
+      await onDelete(pendingDeleteRows.map((row: any)  // eslint-disable-line @typescript-eslint/no-explicit-any
+ => getId(row.original)));
       setPendingDeleteRows([]);
       setChildrenToHandle([]);
 

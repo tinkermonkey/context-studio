@@ -5,13 +5,11 @@
  */
 
 import React from "react";
-import {
-  TextInput,
+import { TextInput,
   Checkbox,
   HelperText,
   Label,
-  FileInput,
-} from "flowbite-react";
+   } from "flowbite-react";
 import { AlertCircle } from "lucide-react";
 import type { AttributeValueType } from "@/api/types/structureNodes";
 

@@ -1,4 +1,3 @@
-import { LayoutConfig } from "@/components/graphs/tree_chart/tree_data";
 import { chartStyles, layoutConfig, curveRadius, leadInRadius } from "./config";
 
 /**

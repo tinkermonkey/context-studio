@@ -1,7 +1,6 @@
 import { test, expect } from "@playwright/test";
 import {
   apiRequest,
-  waitForElement,
   endpointExists,
 } from "../fixtures/test-helpers";
 
@@ -122,11 +121,14 @@ test.describe("RAG Experiments", () => {
     ).toContainText("E2E Test Paragraph", { timeout: 5000 });
 
     // Verify paragraph exists in backend
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const response = await apiRequest<{ paragraphs: any[] }>(
       page,
       "/api/rag-experiments/paragraphs?limit=100",
     );
-    const createdParagraph = response.paragraphs.find((p: any) =>
+     
+    const createdParagraph = response.paragraphs.find((p: any)  // eslint-disable-line @typescript-eslint/no-explicit-any
+ =>
       p.text.includes("E2E Test Paragraph"),
     );
 
@@ -138,6 +140,7 @@ test.describe("RAG Experiments", () => {
     const originalText = `E2E Edit Test ${Date.now()}`;
     const updatedText = `${originalText} (Updated)`;
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const createResponse = await apiRequest<any>(
       page,
       "/api/rag-experiments/paragraphs",
@@ -197,6 +200,7 @@ test.describe("RAG Experiments", () => {
     ).toContainText("(Updated)", { timeout: 5000 });
 
     // Verify paragraph updated in backend
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const response = await apiRequest<any>(
       page,
       `/api/rag-experiments/paragraphs/${paragraphId}`,
@@ -208,6 +212,7 @@ test.describe("RAG Experiments", () => {
     // Create a paragraph via API
     const testText = `E2E Delete Test ${Date.now()}`;
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const createResponse = await apiRequest<any>(
       page,
       "/api/rag-experiments/paragraphs",
@@ -293,6 +298,7 @@ test.describe("RAG Experiments", () => {
     // Create a paragraph via API
     const testText = "Test paragraph for annotation";
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const createResponse = await apiRequest<any>(
       page,
       "/api/rag-experiments/paragraphs",

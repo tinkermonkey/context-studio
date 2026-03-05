@@ -6,8 +6,7 @@
  */
 
 import React, { useState } from "react";
-import {
-  Card,
+import { Card,
   Button,
   TextInput,
   Label,
@@ -17,12 +16,10 @@ import {
   TableHeadCell,
   TableBody,
   TableRow,
-  TableCell,
-  Badge,
-  Spinner,
-} from "flowbite-react";
-import { Search, Plus, Trash2 } from "lucide-react";
-import { useExternalPredicates, usePredicates } from "@/api/hooks/predicates";
+    Spinner,
+  } from "flowbite-react";
+import { Search, Plus,  } from "lucide-react";
+import { useExternalPredicates} from "@/api/hooks/predicates";
 import { useButterToast } from "@/hooks/useButterToast";
 
 export interface ManualMappingInterfaceProps {

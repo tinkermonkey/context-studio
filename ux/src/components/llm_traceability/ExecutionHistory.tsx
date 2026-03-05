@@ -6,10 +6,7 @@
  */
 
 import React, { useState, useMemo } from "react";
-import {
-  Card,
-  Table,
-  Badge,
+import { Card,
   Button,
   Select,
   TextInput,
@@ -20,7 +17,7 @@ import {
   AccordionPanel,
   AccordionTitle,
   AccordionContent,
-} from "flowbite-react";
+  } from "flowbite-react";
 import {
   useExecutionHistory,
   useExecutionHistories,
@@ -298,8 +295,6 @@ export const ExecutionHistory: React.FC<ExecutionHistoryProps> = ({
 }) => {
   const {
     maxEntries = 50,
-    autoRefresh = false,
-    refreshInterval = 30 * 1000, // 30 seconds
     showFilters: configShowFilters = true,
   } = config;
 
@@ -344,7 +339,9 @@ export const ExecutionHistory: React.FC<ExecutionHistoryProps> = ({
 
     // Convert flavor execution data to ExecutionHistoryResponse format
     // Map database fields to what the UI component expects
-    return flavorExecutionData.executions.map((exec: any) => ({
+   
+    return flavorExecutionData.executions.map((exec: any)  // eslint-disable-line @typescript-eslint/no-explicit-any
+ => ({
       success: true,
       data: {
         execution: {
@@ -359,7 +356,7 @@ export const ExecutionHistory: React.FC<ExecutionHistoryProps> = ({
               return exec.request_context
                 ? JSON.parse(exec.request_context)
                 : {};
-            } catch (e) {
+            } catch {
               return { raw: exec.request_context };
             }
           })(),

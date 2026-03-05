@@ -1,5 +1,5 @@
 import React from "react";
-import { Badge } from "flowbite-react";
+// removed import;
 import type { components } from "@/api/client/types";
 
 type NodeLinkOut = components["schemas"]["NodeLinkOut"];
@@ -13,7 +13,7 @@ interface RelationshipTermsDisplayProps {
 
 export const RelationshipTermsDisplay: React.FC<
   RelationshipTermsDisplayProps
-> = ({ relationships, currentTermId, direction, color }) => {
+> = ({ relationships, direction, color }) => {
   return (
     <div className="flex flex-wrap gap-2">
       {relationships.map((rel) => {

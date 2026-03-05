@@ -5,9 +5,9 @@
  * Displays existing annotations with highlighting and tooltips.
  */
 
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useRef} from "react";
 import { Button, Spinner, Tooltip } from "flowbite-react";
-import { Trash2, Plus } from "lucide-react";
+import { Plus  } from "lucide-react";
 import { RecordSelector } from "@/components/node_selectors/record_selector";
 import {
   useCreateAnnotation,
@@ -16,8 +16,7 @@ import {
 import { useStructureNodeSearch } from "@/api/hooks/structure_nodes/useStructureNodes";
 import type {
   TestParagraphResponse,
-  AnnotationResponse,
-} from "@/api/services/ragExperiments";
+  } from "@/api/services/ragExperiments";
 import type {
   StructureNode,
   FindStructureNodeResult,
@@ -213,9 +212,6 @@ export const AnnotationSelector: React.FC<AnnotationSelectorProps> = ({
     return <>{segments}</>;
   };
 
-  const selectedNode = selectedNodeId
-    ? (structureNodes || []).find((n: StructureNode) => n.id === selectedNodeId)
-    : undefined;
 
   return (
     <div className="space-y-4" data-testid="annotation-selector">

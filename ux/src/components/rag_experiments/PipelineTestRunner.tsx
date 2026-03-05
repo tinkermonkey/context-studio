@@ -13,8 +13,7 @@ import {
 } from "@/api/hooks/ragExperiments";
 import type {
   RunPipelineTestResponse,
-  PipelineRunResultResponse,
-} from "@/api/services/ragExperiments";
+  } from "@/api/services/ragExperiments";
 
 export interface PipelineTestRunnerProps {
   onTestComplete?: (results: RunPipelineTestResponse) => void;

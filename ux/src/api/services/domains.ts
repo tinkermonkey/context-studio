@@ -113,10 +113,7 @@ export class DomainService extends BaseService {
   /**
    * Get child terms for a domain
    */
-  async getChildTerms(
-    domainId: string,
-    params?: Omit<StructureNodeListParams, "node_type" | "parent_node_id">,
-  ): Promise<StructureNode[]> {
+  async getChildTerms(domainId: string): Promise<StructureNode[]> {
     return this.withErrorContext(async () => {
       this.validateRequired(domainId, "domainId");
       return structureNodeService.getChildNodes(domainId, NodeType.TERM);

@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { Button, Spinner, Alert, Modal } from "flowbite-react";
-import { Plus, Trash2 } from "lucide-react";
+import { Plus,  } from "lucide-react";
 import { Link } from "@tanstack/react-router";
 import { useQueryClient } from "@tanstack/react-query";
 import { usePipelineFlavors } from "@/api/hooks/pipelineFlavors";
