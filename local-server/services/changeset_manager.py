@@ -324,7 +324,7 @@ class ChangesetManager:
             # Check if changeset exists
             changeset = self.get_changeset(changeset_id)
             if not changeset:
-                logger.warning(f"Cannot delete changeset {changeset_id}: changeset not found")
+                logger.debug(f"Cannot delete changeset {changeset_id}: changeset not found")
                 return False
                 
             # Don't allow deletion of merged changesets

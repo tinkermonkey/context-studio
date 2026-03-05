@@ -453,9 +453,8 @@ class BatchOperationProcessor:
             # Create consolidated checkpoint file path
             checkpoint_path = None
             if self.s3_sync:
-                checkpoint_path = f"s3://{self.s3_sync.s3_config.get('bucket', 'default')}/system_checkpoints/{checkpoint_name}_{checkpoint_id}.json"
-                logger.debug(f"Checkpoint path would be written to: {checkpoint_path}")
-                logger.warning("S3 checkpoint writing not yet implemented - checkpoint metadata not persisted to S3")
+                checkpoint_path = f"s3://{self.s3_sync.s3_config.get('bucket', 'default')}/system_checkpoints/{checkpoint_name}_{checkpoint_id}.parquet"
+                logger.debug(f"Checkpoint path to be written to: {checkpoint_path}")
 
             processing_time = time.time() - start_time
 
@@ -485,6 +484,21 @@ class BatchOperationProcessor:
                 compression_ratio=compression_ratio,
                 s3_path=checkpoint_path,
             )
+
+            # Persist checkpoint metadata to S3 if configured
+            if self.s3_sync and checkpoint_path:
+                checkpoint_metadata = {
+                    "checkpoint_id": checkpoint_id,
+                    "checkpoint_name": checkpoint_name,
+                    "created_at": created_at.isoformat(),
+                    "total_size_bytes": total_size,
+                    "compression_ratio": compression_ratio,
+                    "processing_time": processing_time,
+                    "components": list(components_dict.keys()),
+                }
+                success = self.s3_sync.write_metadata_to_s3(checkpoint_metadata, checkpoint_path)
+                if not success:
+                    logger.warning(f"Failed to persist checkpoint {checkpoint_id} to S3, but checkpoint stored locally")
 
             # Store checkpoint in history and checkpoints dict
             with self._operation_lock:
