@@ -8,13 +8,14 @@ openapi:
       get:
         operationId: list_node_links_api_structure_nodes_links_get
         summary: List Node Links
-        description: 'List structure_node links with filtering.
+        description: 'List structure_node links with filtering and pagination.
 
 
           Supports filtering by source structure_node, target structure_node, and
           predicate.
 
-          Returns all relationships in the unified structure_node graph.'
+          Returns all relationships in the unified structure_node graph with pagination
+          metadata.'
         parameters:
         - name: source_node_id
           in: query
@@ -81,10 +82,7 @@ openapi:
             content:
               application/json:
                 schema:
-                  type: array
-                  items:
-                    $ref: '#/components/schemas/NodeLinkOut'
-                  title: Response List Node Links Api Structure Nodes Links Get
+                  $ref: '#/components/schemas/PaginatedNodeLinksResponse'
           '422':
             description: Validation Error
             content:
