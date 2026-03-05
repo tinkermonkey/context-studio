@@ -193,8 +193,17 @@ class ReferenceLinkService:
                 try:
                     links.append(ReferenceLink(**link_dict))
                 except Exception as e:
+                    # Extract validation details if possible
+                    error_msg = str(e)
+                    if hasattr(e, 'errors'):
+                        # Pydantic ValidationError - extract field names
+                        missing_fields = []
+                        for error in e.errors():
+                            missing_fields.append(error.get('loc', ['unknown'])[0])
+                        error_msg = f"Missing/invalid fields: {', '.join(map(str, missing_fields))}"
+
                     logger.warning(
-                        f"Failed to parse reference link for node {node_id}: {e}. "
+                        f"Failed to parse reference link for node {node_id}: {error_msg}. "
                         f"Skipping invalid entry: {link_dict}. "
                         f"ReferenceLink requires 'source' and 'external_id' fields."
                     )
@@ -378,15 +387,23 @@ class ReferenceLinkService:
                 return (True, None)
 
         except Exception as e:
-            # Malformed link data
+            # Malformed link data - extract validation details if possible
+            error_msg = str(e)
+            if hasattr(e, 'errors'):
+                # Pydantic ValidationError - extract field names
+                missing_fields = []
+                for error in e.errors():
+                    missing_fields.append(error.get('loc', ['unknown'])[0])
+                error_msg = f"Missing/invalid fields: {', '.join(map(str, missing_fields))}"
+
             logger.warning(
-                f"Failed to parse reference link for node {node_id}: {e}. "
+                f"Failed to parse reference link for node {node_id}: {error_msg}. "
                 f"ReferenceLink requires 'source' and 'external_id' fields. "
                 f"Invalid data: {link_dict}"
             )
             return (False, {
                 "data": link_dict,
-                "reason": f"Parse error: {str(e)}"
+                "reason": f"Parse error: {error_msg}"
             })
 
     def validate_node_reference_links(
