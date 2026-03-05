@@ -577,11 +577,16 @@ class TestConflictResolutionEngine:
 
 class TestIntelligentConflictDetector:
     """Test suite for IntelligentConflictDetector."""
-    
+
     @pytest.fixture
-    def detector(self, mock_db):
+    def mock_version_manager(self):
+        """Create mock version manager."""
+        return Mock()
+
+    @pytest.fixture
+    def detector(self, mock_version_manager):
         """Create IntelligentConflictDetector instance."""
-        return IntelligentConflictDetector(mock_db)
+        return IntelligentConflictDetector(mock_version_manager)
     
     def test_detect_concurrent_modification_conflict(self, detector):
         """Test detection of concurrent modification conflicts using main detect_conflicts method."""
