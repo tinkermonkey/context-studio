@@ -73,11 +73,10 @@ test.describe("Predicate Management", () => {
     // Verify predicate exists in backend
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const response = await apiRequest<{ data: any[] }>(page, "/api/predicates");
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const createdPredicate = response.data.find(
-       
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (p: any) => p.title === predicateTitle,
-
+    );
     expect(createdPredicate).toBeDefined();
     expect(createdPredicate?.definition).toBe(predicateDefinition);
   });
@@ -422,7 +421,8 @@ test.describe("Predicate Management", () => {
     // Verify the specific test predicate was not created
     const testPredicate = afterResponse.data.find(
        
-      (p: any) => );  // eslint-disable-line @typescript-eslint/no-explicit-any p.title === "Test Predicate Not Submitted",
+      // eslint-disable-line @typescript-eslint/no-explicit-any p.title === "Test Predicate Not
+      (p: any) => Submitted",,
     expect(testPredicate).toBeUndefined();
   });
 

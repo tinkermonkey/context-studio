@@ -149,9 +149,8 @@ export class ConfigurationService extends BaseService {
   /**
    * Update configuration value
    */
-   
-  async updateConfigurationValue(path: string, value: any)  // eslint-disable-line @typescript-eslint/no-explicit-any
-: Promise<void> {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  async updateConfigurationValue(path: string, value: any): Promise<void> {
     this.validateRequired(path, "path");
 
     return this.withErrorContext(async () => {
@@ -247,12 +246,11 @@ export class ConfigurationService extends BaseService {
   /**
    * Update reference source configuration
    */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   async updateReferenceSourceConfig(
     sourceName: string,
     path: string,
-     
-    value: any,  // eslint-disable-line @typescript-eslint/no-explicit-any
-
+    value: any,
   ): Promise<void> {
     this.validateRequired(sourceName, "sourceName");
     this.validateRequired(path, "path");
@@ -266,3 +264,5 @@ export class ConfigurationService extends BaseService {
     }, `updating reference source configuration for ${sourceName}`);
   }
 }
+
+export const configurationService = new ConfigurationService();

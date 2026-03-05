@@ -60,12 +60,14 @@ export function PortalRecordSelector<T = any>(
   const optionRefs = useRef<Record<string, HTMLDivElement | null>>({});
   const [menuStyle, setMenuStyle] = useState<React.CSSProperties>({});
 
-   
-  const getValue = (item: any) =>  // eslint-disable-line @typescript-eslint/no-explicit-any String(item[fieldMap.value as string] ?? "");
-   
-  const getTitle = (item: any) =>  // eslint-disable-line @typescript-eslint/no-explicit-any String(item[fieldMap.title as string] ?? "");
-   
-  const getDefinition = (item: any) =>  // eslint-disable-line @typescript-eslint/no-explicit-any
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const getValue = (item: any) => String(item[fieldMap.value as string] ?? "");
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const getTitle = (item: any) => String(item[fieldMap.title as string] ?? "");
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const getDefinition = (item: any) =>
     fieldMap.definition
       ? String(item[fieldMap.definition as string] ?? "")
       : "";

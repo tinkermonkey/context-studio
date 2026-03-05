@@ -12,8 +12,8 @@ interface CreateChildButtonProps {
   parentId: string;
   parentObject: StructureNode;
   childType: "domain" | "term";
-   
-  onSuccess?: (child: any) =>  // eslint-disable-line @typescript-eslint/no-explicit-any void;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  onSuccess?: (child: any) => void;
   className?: string;
   size?: "xs" | "sm" | "md" | "lg" | "xl";
 }
@@ -61,8 +61,8 @@ export const CreateChildButton: React.FC<CreateChildButtonProps> = ({
     }
   };
 
-   
-  const handleSuccess = (child: any) =>  // eslint-disable-line @typescript-eslint/no-explicit-any {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const handleSuccess = (child: any) => {
     setIsModalOpen(false);
 
     // Invalidate queries to refresh the UI

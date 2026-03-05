@@ -31,8 +31,8 @@ vi.mock("@/api/hooks/graph/useGraph", () => ({
 
 // Mock the TreeMenu component
 vi.mock("@/components/graphs/tree_menu/tree_menu", () => ({
-   
-  TreeMenu: ({ chartData }: any) =>  // eslint-disable-line @typescript-eslint/no-explicit-any (
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  TreeMenu: ({ chartData }: any) => (
     <div data-testid="tree-menu">
       Tree Menu - Root: {chartData?.root?.title || "No data"}
     </div>
