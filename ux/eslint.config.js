@@ -1,18 +1,26 @@
-import tailwindcss from 'eslint-plugin-tailwindcss';
+import js from '@eslint/js';
+import tseslint from 'typescript-eslint';
 
 export default [
   {
     ignores: ['dist', 'node_modules', 'coverage', 'build'],
   },
+  js.configs.recommended,
+  ...tseslint.configs.recommended,
   {
     files: ['**/*.{js,jsx,ts,tsx}'],
-    plugins: {
-      tailwindcss,
+    languageOptions: {
+      parser: tseslint.parser,
+      parserOptions: {
+        ecmaVersion: 'latest',
+        sourceType: 'module',
+        ecmaFeatures: {
+          jsx: true,
+        },
+      },
     },
-    rules: {
-      'tailwindcss/classnames-order': 'warn',
-      'tailwindcss/no-custom-classname': 'warn',
-      'tailwindcss/no-contradicting-classname': 'error',
+    plugins: {
+      '@typescript-eslint': tseslint.plugin,
     },
   },
 ];

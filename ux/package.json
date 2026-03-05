@@ -28,6 +28,7 @@
     "generate-types": "openapi-typescript documentation/openapi.json -o src/api/client/types.ts"
   },
   "devDependencies": {
+    "@eslint/js": "^10.0.1",
     "@playwright/test": "^1.48.0",
     "@tailwindcss/vite": "^4.1.4",
     "@tanstack/router-plugin": "^1.116.1",
@@ -41,11 +42,14 @@
     "@types/react": "^19.1.2",
     "@types/react-dom": "^19.1.2",
     "@types/testing-library__react": "^10.0.1",
+    "@typescript-eslint/eslint-plugin": "^8.56.1",
+    "@typescript-eslint/parser": "^8.56.1",
     "@vitejs/plugin-react": "^4.3.4",
     "@vitest/coverage-istanbul": "^3.2.4",
     "@vitest/coverage-v8": "^1.6.1",
     "c8": "^8.0.0",
-    "eslint-plugin-tailwindcss": "^4.0.0-beta.0",
+    "eslint": "^10.0.2",
+    "eslint-plugin-tailwindcss": "^3.18.2",
     "jsdom": "^26.1.0",
     "msw": "^1.3.1",
     "openapi-typescript": "^7.8.0",
@@ -53,6 +57,7 @@
     "prettier-plugin-tailwindcss": "^0.6.14",
     "tailwindcss": "^4.1.4",
     "typescript": "^5.8.3",
+    "typescript-eslint": "^8.56.1",
     "vite": "^6.2.6",
     "vitest": "^1.6.1"
   },
