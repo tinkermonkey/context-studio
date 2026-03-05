@@ -37,25 +37,32 @@ class NodeType(str, Enum):
 
         This method provides backwards compatibility by translating the old
         terminology (layer, domain, term) to the new terminology.
+        Also supports new terminology values for forward compatibility.
 
         Args:
             legacy_value: A legacy node type string ("layer", "domain", "term")
+                         or new terminology ("taxonomy", "concept_scheme", "class", "individual")
 
         Returns:
             The corresponding NodeType enum value
 
         Raises:
-            ValueError: If the legacy value is not recognized
+            ValueError: If the value is not recognized
         """
         mapping = {
             "layer": cls.TAXONOMY,
             "domain": cls.CONCEPT_SCHEME,
             "term": cls.CLASS,
+            # Forward mappings for new terminology
+            "taxonomy": cls.TAXONOMY,
+            "concept_scheme": cls.CONCEPT_SCHEME,
+            "class": cls.CLASS,
+            "individual": cls.INDIVIDUAL,
         }
         mapped_type = mapping.get(legacy_value)
         if mapped_type is None:
             raise ValueError(
-                f"Unknown legacy node type: {legacy_value!r}. "
+                f"Unknown node type: {legacy_value!r}. "
                 f"Expected one of: {', '.join(mapping.keys())}"
             )
         return mapped_type
@@ -78,11 +85,12 @@ class ExternalReference:
     uri: str
     label: str
     confidence: float
-    metadata: dict = field(default_factory=dict)
+    metadata: types.MappingProxyType = field(default_factory=lambda: types.MappingProxyType({}))
 
     def __post_init__(self) -> None:
         """Wrap mutable dict in a read-only proxy to preserve immutability."""
-        object.__setattr__(self, 'metadata', types.MappingProxyType(self.metadata))
+        if not isinstance(self.metadata, types.MappingProxyType):
+            object.__setattr__(self, 'metadata', types.MappingProxyType(self.metadata))
 
 
 @dataclass(frozen=True)
