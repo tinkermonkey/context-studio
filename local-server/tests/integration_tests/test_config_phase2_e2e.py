@@ -339,54 +339,6 @@ class TestProductionDeploymentE2E:
             mgr2.engine.dispose()
 
 
-class TestEnvironmentOverridesE2E:
-    """End-to-end tests for environment variable override scenarios."""
-
-    def test_environment_variable_override(self):
-        """Test that environment variables can override config.json settings."""  # noqa: E501
-        with tempfile.TemporaryDirectory() as tmpdir:
-            # Create a config file with default values
-            config_file = os.path.join(tmpdir, 'config.json')
-            config_data = {
-                'database': {
-                    'default_url': 'sqlite:///./datafiles/local.db',
-                    'reference_path': './datafiles/reference.db',
-                    'operations_path': './datafiles/operations.db'
-                },
-                'server': {
-                    'port': 8000,
-                    'host': '127.0.0.1'
-                }
-            }
-
-            with open(config_file, 'w') as f:
-                json.dump(config_data, f)
-
-            # Set environment variables to override settings
-            override_port = 9999
-            override_host = '0.0.0.0'
-            os.environ['SERVER__PORT'] = str(override_port)
-            os.environ['SERVER__HOST'] = override_host
-
-            try:
-                # Load config - should apply environment variable overrides
-                config_manager = ConfigurationManager(config_file)
-
-                # Verify environment variable overrides were applied
-                assert config_manager.settings.server.port == override_port, \
-                    f"Environment variable override not applied. Expected {override_port}, got {config_manager.settings.server.port}"  # noqa: E501
-
-                assert config_manager.settings.server.host == override_host, \
-                    f"Environment variable override not applied. Expected {override_host}, got {config_manager.settings.server.host}"  # noqa: E501
-
-            finally:
-                # Clean up environment variables
-                if 'SERVER__PORT' in os.environ:
-                    del os.environ['SERVER__PORT']
-                if 'SERVER__HOST' in os.environ:
-                    del os.environ['SERVER__HOST']
-
-
 class TestRealWorldWorkflowsE2E:
     """End-to-end tests for real-world application workflows."""
 

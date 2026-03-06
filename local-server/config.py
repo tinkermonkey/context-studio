@@ -619,64 +619,24 @@ class ConfigurationManager:
         self.load()
 
     def load(self) -> Settings:
-        """Load configuration from file with defaults and apply environment overrides"""
-        try:
-            # Load environment variables first
-            load_dotenv()
+        """Load configuration from file with defaults"""
+        # Load environment variables first (for .env file support)
+        load_dotenv()
 
-            if os.path.exists(self.config_file):
-                with open(self.config_file, 'r') as f:
-                    config_data = json.load(f)
+        if os.path.exists(self.config_file):
+            with open(self.config_file, 'r') as f:
+                config_data = json.load(f)
 
-                # Apply environment variable overrides to config_data
-                config_data = self._apply_env_overrides(config_data)
-                self.settings = Settings(**config_data)
-                print(f"[ConfigurationManager] Config loaded successfully from {self.config_file}")
-                print(f"[ConfigurationManager] Server port: {self.settings.server.port}")
-                print(f"[ConfigurationManager] Database URL: {self.settings.database.default_url}")
-            else:
-                print(f"[ConfigurationManager] Config file not found: {self.config_file}, using defaults")
-                self.settings = Settings()
-                self.save()  # Create default config file
-        except Exception as e:
-            print(f"Error loading config: {e}")  # Use print to avoid circular dependency
+            self.settings = Settings(**config_data)
+            print(f"[ConfigurationManager] Config loaded successfully from {self.config_file}")
+            print(f"[ConfigurationManager] Server port: {self.settings.server.port}")
+            print(f"[ConfigurationManager] Database URL: {self.settings.database.default_url}")
+        else:
+            print(f"[ConfigurationManager] Config file not found: {self.config_file}, using defaults")
             self.settings = Settings()
+            self.save()  # Create default config file
         return self.settings
 
-    def _apply_env_overrides(self, config_data: dict) -> dict:
-        """Apply environment variable overrides to configuration data"""
-        # Environment variables use double underscore for nesting: SECTION__KEY
-        # e.g., SERVER__PORT overrides server.port
-        env_overrides: Dict[str, Dict[str, Any]] = {}
-
-        # Collect all environment variables that match configuration pattern
-        for env_key, env_value in os.environ.items():
-            if '__' in env_key:
-                parts = env_key.lower().split('__')
-                if len(parts) == 2:
-                    section, key = parts
-                    if section not in env_overrides:
-                        env_overrides[section] = {}
-                    # Try to convert to appropriate type
-                    env_overrides[section][key] = self._convert_env_value(env_value)
-
-        # Apply overrides to config_data
-        for section, overrides in env_overrides.items():
-            if section in config_data:
-                config_data[section].update(overrides)
-            else:
-                config_data[section] = overrides
-
-        return config_data
-
-    def _convert_env_value(self, value: str) -> Any:
-        """Convert environment variable string value to appropriate type"""
-        # Try to parse as JSON first (handles numbers, booleans, etc.)
-        try:
-            return json.loads(value)
-        except (json.JSONDecodeError, ValueError):
-            # Return as string if not valid JSON
-            return value
 
     def save(self) -> bool:
         """Save current configuration to file"""
@@ -805,16 +765,7 @@ def get_config_manager() -> ConfigurationManager:
 
 
 def get_settings() -> Settings:
-    """
-    Get the global settings instance with environment variable overrides.
-
-    Environment variables can override config.json settings using the format:
-    SECTION__KEY (e.g., SERVER__PORT=9999 overrides server.port)
-    """
-    # Load .env into the environment and apply overrides
-    load_dotenv()
-
-    # Return settings from the configuration manager (includes env overrides)
+    """Get the global settings instance from configuration manager"""
     config_manager = get_config_manager()
     settings = config_manager.settings
     if settings is None:

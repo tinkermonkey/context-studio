@@ -38,7 +38,7 @@ Context Studio is local-first, designed to be packaged as a desktop app and run 
 
 - **Do not create documentation files** like implementation reports, design docs, etc.
 - Use meaningful variable and function names - **avoid terms like "enhanced", "improved", "optimized"** in names
-- This is a desktop app - configuration should not rely on environment variables and should instead be managed through the config.json file
+- **Configuration Management**: This is a desktop app - configuration is managed exclusively through the config.json file. Do not implement environment variable overrides for configuration settings. The .env file may be used for development convenience (e.g., setting CONFIG_PATH), but should not override application configuration.
 
 ---
 
