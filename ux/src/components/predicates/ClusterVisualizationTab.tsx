@@ -7,7 +7,15 @@
  */
 
 import React, { useState } from "react";
-import { Badge, Button, Card, Label, Select, Spinner, TextInput  } from "flowbite-react";;
+import {
+  Badge,
+  Button,
+  Card,
+  Label,
+  Select,
+  Spinner,
+  TextInput,
+} from "flowbite-react";
 import { GitBranch, Plus } from "lucide-react";
 import { useClusterPredicates } from "@/api/hooks/predicates";
 import { useButterToast } from "@/hooks/useButterToast";
@@ -61,9 +69,7 @@ export const ClusterVisualizationTab: React.FC<
 
   // Calculate cluster quality based on size and cohesion
   const getClusterQuality = (
-   
-    cluster: any,  // eslint-disable-line @typescript-eslint/no-explicit-any
-
+    cluster: any, // eslint-disable-line @typescript-eslint/no-explicit-any
   ): { color: string; label: string } => {
     const size = cluster.predicate_ids.length;
     const avgSimilarity = cluster.avg_similarity || 0;
@@ -187,8 +193,7 @@ export const ClusterVisualizationTab: React.FC<
               <div>
                 <div className="text-3xl font-bold text-green-600 dark:text-green-400">
                   {clusters.clusters.reduce(
-   
-                    (sum: number, c: any) => sum + c.size,  // eslint-disable-line @typescript-eslint/no-explicit-any
+                    (sum: number, c: any) => sum + c.size, // eslint-disable-line @typescript-eslint/no-explicit-any
                     0,
                   )}
                 </div>
@@ -200,8 +205,7 @@ export const ClusterVisualizationTab: React.FC<
                 <div className="text-3xl font-bold text-gray-600 dark:text-gray-400">
                   {clusters.total_predicates -
                     clusters.clusters.reduce(
-   
-                      (sum: number, c: any) => sum + c.size,  // eslint-disable-line @typescript-eslint/no-explicit-any
+                      (sum: number, c: any) => sum + c.size, // eslint-disable-line @typescript-eslint/no-explicit-any
                       0,
                     )}
                 </div>
@@ -214,68 +218,72 @@ export const ClusterVisualizationTab: React.FC<
 
           {/* Clusters */}
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            {clusters.clusters.map((cluster: any,  // eslint-disable-line @typescript-eslint/no-explicit-any
- index: number) => {
-              const quality = getClusterQuality(cluster);
-              return (
-                <Card key={index}>
-                  <div className="flex items-start justify-between">
-                    <div>
-                      <h5 className="mb-2 text-lg font-bold text-gray-900 dark:text-white">
-                        Cluster {cluster.cluster_id}
-                      </h5>
-                      <div className="mb-2 flex items-center gap-2">
-                        <Badge color="info" size="sm">
-                          {cluster.predicate_ids.length} predicates
-                        </Badge>
-                        <Badge color={quality.color} size="sm">
-                          {quality.label}
-                        </Badge>
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            {clusters.clusters.map(
+              (
+                cluster: any, // eslint-disable-line @typescript-eslint/no-explicit-any
+                index: number,
+              ) => {
+                const quality = getClusterQuality(cluster);
+                return (
+                  <Card key={index}>
+                    <div className="flex items-start justify-between">
+                      <div>
+                        <h5 className="mb-2 text-lg font-bold text-gray-900 dark:text-white">
+                          Cluster {cluster.cluster_id}
+                        </h5>
+                        <div className="mb-2 flex items-center gap-2">
+                          <Badge color="info" size="sm">
+                            {cluster.predicate_ids.length} predicates
+                          </Badge>
+                          <Badge color={quality.color} size="sm">
+                            {quality.label}
+                          </Badge>
+                        </div>
                       </div>
+                      <Button
+                        size="xs"
+                        onClick={() =>
+                          handleCreateGlobalPredicate(cluster.predicate_ids)
+                        }
+                      >
+                        <Plus className="h-3 w-3" />
+                      </Button>
                     </div>
-                    <Button
-                      size="xs"
-                      onClick={() =>
-                        handleCreateGlobalPredicate(cluster.predicate_ids)
-                      }
-                    >
-                      <Plus className="h-3 w-3" />
-                    </Button>
-                  </div>
 
-                  {cluster.representative_predicate && (
-                    <div className="mt-2 rounded-lg bg-gray-50 p-2 dark:bg-gray-700">
-                      <p className="text-sm font-medium text-gray-900 dark:text-white">
-                        {cluster.representative_predicate.title}
-                      </p>
-                      {cluster.representative_predicate.definition && (
-                        <p className="mt-1 text-xs text-gray-600 dark:text-gray-400">
-                          {cluster.representative_predicate.definition}
+                    {cluster.representative_predicate && (
+                      <div className="mt-2 rounded-lg bg-gray-50 p-2 dark:bg-gray-700">
+                        <p className="text-sm font-medium text-gray-900 dark:text-white">
+                          {cluster.representative_predicate.title}
                         </p>
-                      )}
-                    </div>
-                  )}
+                        {cluster.representative_predicate.definition && (
+                          <p className="mt-1 text-xs text-gray-600 dark:text-gray-400">
+                            {cluster.representative_predicate.definition}
+                          </p>
+                        )}
+                      </div>
+                    )}
 
-                  {cluster.avg_similarity && (
-                    <div className="mt-2 text-xs text-gray-600 dark:text-gray-400">
-                      Avg. Similarity:{" "}
-                      {(cluster.avg_similarity * 100).toFixed(1)}%
-                    </div>
-                  )}
+                    {cluster.avg_similarity && (
+                      <div className="mt-2 text-xs text-gray-600 dark:text-gray-400">
+                        Avg. Similarity:{" "}
+                        {(cluster.avg_similarity * 100).toFixed(1)}%
+                      </div>
+                    )}
 
-                  {cluster.sources && cluster.sources.length > 0 && (
-                    <div className="mt-2 flex flex-wrap gap-1">
-                      {cluster.sources.map((source: string) => (
-                        <Badge key={source} color="gray" size="xs">
-                          {source}
-                        </Badge>
-                      ))}
-                    </div>
-                  )}
-                </Card>
-              );
-            })}
+                    {cluster.sources && cluster.sources.length > 0 && (
+                      <div className="mt-2 flex flex-wrap gap-1">
+                        {cluster.sources.map((source: string) => (
+                          <Badge key={source} color="gray" size="xs">
+                            {source}
+                          </Badge>
+                        ))}
+                      </div>
+                    )}
+                  </Card>
+                );
+              },
+            )}
           </div>
 
           {clusters.total_clusters === 0 && (

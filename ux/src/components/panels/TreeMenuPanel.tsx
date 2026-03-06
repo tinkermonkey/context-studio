@@ -19,7 +19,7 @@ export interface TreeMenuPanelProps {
   /**
    * Optional callback when a node is clicked
    */
-  onNodeClick?: (node: any) => void;  // eslint-disable-line @typescript-eslint/no-explicit-any
+  onNodeClick?: (node: any) => void; // eslint-disable-line @typescript-eslint/no-explicit-any
 
   /**
    * Additional CSS classes to apply to the panel container
@@ -90,18 +90,9 @@ export function TreeMenuPanel({
   }, []);
 
   // Load all base data
-  const {
-    data: layers,
-    isLoading: layersLoading,
-  } = useLayerNodes();
-  const {
-    data: domains,
-    isLoading: domainsLoading,
-  } = useDomainNodes();
-  const {
-    data: terms,
-    isLoading: termsLoading,
-  } = useTermNodes();
+  const { data: layers, isLoading: layersLoading } = useLayerNodes();
+  const { data: domains, isLoading: domainsLoading } = useDomainNodes();
+  const { data: terms, isLoading: termsLoading } = useTermNodes();
 
   // Determine loading state
   const isLoading = layersLoading || domainsLoading || termsLoading;
@@ -133,7 +124,7 @@ export function TreeMenuPanel({
   }, [layers, domains, terms]);
 
   // Find path to highlighted node for auto-expansion
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const highlightedPath = React.useMemo(() => {
     if (!chartData || !highlightedTermId) {
       return [];
