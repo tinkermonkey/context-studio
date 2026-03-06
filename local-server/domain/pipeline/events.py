@@ -11,6 +11,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 from domain.ontology.events import DomainEvent
+from domain.pipeline.enums import ExecutionStatus
 
 
 @dataclass(frozen=True)
@@ -19,4 +20,4 @@ class PipelineExecuted(DomainEvent):
 
     execution_id: str
     pipeline_id: str
-    status: str
+    status: ExecutionStatus
