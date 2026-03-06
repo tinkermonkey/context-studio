@@ -4,7 +4,7 @@ Port interfaces for the Ontology bounded context.
 Ports define the contracts between the domain core and infrastructure adapters.
 They use typing.Protocol for structural subtyping and reference only domain entity types.
 """
-from typing import Protocol, Optional, Sequence, Callable
+from typing import Protocol, Optional, Sequence, Callable, Any
 
 from domain.ontology.entities import (
     Taxonomy,
@@ -163,7 +163,7 @@ class OntologyRepository(Protocol):
         ...
 
     # Bulk operations
-    def get_all_entities_and_relationships(self) -> tuple[Sequence[any], Sequence[Relationship]]:
+    def get_all_entities_and_relationships(self) -> tuple[Sequence[Any], Sequence[Relationship]]:
         """Return all entities and relationships for graph building."""
         ...
 

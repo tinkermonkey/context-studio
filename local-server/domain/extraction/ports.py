@@ -103,7 +103,7 @@ class NLPProcessor(Protocol):
     """
 
     def process(self, text: str) -> NLPResult:
-        """Process text and return tokenized, sentence, and entity results."""
+        """Process text and return tokenized, noun chunk, and entity results."""
         ...
 
     def extract_entities(self, text: str) -> List[NLPEntity]:
