@@ -13,7 +13,7 @@ import {
   Alert,
   Spinner,
 } from "flowbite-react";
-import { AlertCircle, Database, Hash, Layers, Trash2 } from "lucide-react";;
+import { AlertCircle, Database, Hash, Layers, Trash2 } from "lucide-react";
 import { useNavigate } from "@tanstack/react-router";
 
 import { StructureNodeLink, NodeType } from "@/api/types/structureNodes";

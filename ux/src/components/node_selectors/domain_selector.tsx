@@ -12,7 +12,7 @@ export interface DomainSelectorProps {
 export const DomainSelector: React.FC<DomainSelectorProps> = ({
   onSelect,
   value,
-    "data-testid": dataTestId,
+  "data-testid": dataTestId,
 }) => {
   const { data: domains, isLoading, error } = useDomainNodes();
   return (
