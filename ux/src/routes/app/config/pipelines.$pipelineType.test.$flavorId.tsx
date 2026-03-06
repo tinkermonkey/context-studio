@@ -1,7 +1,15 @@
 import React, { useState, useEffect } from "react";
 import { createFileRoute } from "@tanstack/react-router";
-import { Alert, Breadcrumb, Button, Card, Modal, Select, Spinner  } from "flowbite-react";;
-import {  BarChart3, Clock, Home, Edit } from "lucide-react";
+import {
+  Alert,
+  Breadcrumb,
+  Button,
+  Card,
+  Modal,
+  Select,
+  Spinner,
+} from "flowbite-react";
+import { BarChart3, Clock, Home, Edit } from "lucide-react";
 import { Link } from "@tanstack/react-router";
 import { CsMainTitle } from "@/components/layout/cs_main";
 import { NlpAnalysisPanel } from "@/components/nlp/NlpAnalysisPanel";
