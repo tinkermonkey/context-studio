@@ -254,7 +254,7 @@ class EventProcessor:
             with self._get_optimized_session() as db:
                 # Get unprocessed ChangeEvents since last processed ID
                 events = db.execute(text("""
-                    SELECT id, event_type, record_type, record_id, old_data, new_data, timestamp  # noqa: E501
+                    SELECT id, event_type, record_type, record_id, old_data, new_data, timestamp
                     FROM change_events
                     WHERE processed = 0 AND id > :last_processed_id
                     ORDER BY id ASC

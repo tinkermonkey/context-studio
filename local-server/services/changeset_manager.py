@@ -122,7 +122,7 @@ class ChangesetManager:
             self.db.rollback()
             raise RuntimeError(f"Failed to create changeset: {e}")
     
-    def get_changeset(self, changeset_id: str) -> Changeset:
+    def get_changeset(self, changeset_id: str) -> Optional[Changeset]:
         """
         Retrieve changeset by ID.
 
@@ -130,10 +130,9 @@ class ChangesetManager:
             changeset_id: Changeset identifier
 
         Returns:
-            Changeset instance
+            Changeset instance or None if not found
 
         Raises:
-            NotFoundError: If changeset does not exist
             RuntimeError: If database operation fails
         """
         logger.debug(f"Retrieving changeset {changeset_id}")
@@ -146,12 +145,10 @@ class ChangesetManager:
 
             if not result:
                 logger.debug(f"Changeset {changeset_id} not found")
-                raise NotFoundError(resource_type="Changeset", resource_id=changeset_id)
+                return None
 
             return row_to_changeset(result)
 
-        except NotFoundError:
-            raise
         except Exception as e:
             logger.error(f"Failed to retrieve changeset {changeset_id}: {e}")
             raise RuntimeError(f"Failed to retrieve changeset {changeset_id}: {e}")
@@ -202,7 +199,7 @@ class ChangesetManager:
             raise RuntimeError(f"Failed to list changesets: {e}")
     
     def update_changeset(self, changeset_id: str, title: Optional[str] = None,
-                        description: Optional[str] = None) -> None:
+                        description: Optional[str] = None) -> bool:
         """
         Update changeset metadata.
 
@@ -211,9 +208,11 @@ class ChangesetManager:
             title: New title (optional)
             description: New description (optional)
 
+        Returns:
+            True if update was successful, False if changeset not found
+
         Raises:
             ValueError: If neither title nor description is provided
-            NotFoundError: If changeset does not exist
             RuntimeError: If database operation fails
         """
         logger.info(f"Updating changeset {changeset_id}")
@@ -240,12 +239,11 @@ class ChangesetManager:
 
             if cursor.rowcount == 0:
                 logger.warning(f"No changeset found with ID {changeset_id}")
-                raise NotFoundError(resource_type="Changeset", resource_id=changeset_id)
+                return False
 
             logger.info(f"Successfully updated changeset {changeset_id}")
+            return True
 
-        except NotFoundError:
-            raise
         except ValueError:
             raise
         except Exception as e:
@@ -253,7 +251,7 @@ class ChangesetManager:
             self.db.rollback()
             raise RuntimeError(f"Failed to update changeset {changeset_id}: {e}")
     
-    def update_changeset_state(self, changeset_id: str, new_state: ChangesetState) -> None:
+    def update_changeset_state(self, changeset_id: str, new_state: ChangesetState) -> bool:
         """
         Update changeset state.
 
@@ -261,8 +259,10 @@ class ChangesetManager:
             changeset_id: Changeset identifier
             new_state: New state
 
+        Returns:
+            True if update was successful, False if changeset not found
+
         Raises:
-            NotFoundError: If changeset does not exist
             RuntimeError: If database operation fails
         """
         logger.info(f"Updating changeset {changeset_id} state to {new_state.value}")
@@ -285,12 +285,11 @@ class ChangesetManager:
 
             if cursor.rowcount == 0:
                 logger.warning(f"No changeset found with ID {changeset_id}")
-                raise NotFoundError(resource_type="Changeset", resource_id=changeset_id)
+                return False
 
             logger.info(f"Successfully updated changeset {changeset_id} state to {new_state.value}")
+            return True
 
-        except NotFoundError:
-            raise
         except Exception as e:
             logger.error(f"Failed to update changeset {changeset_id} state: {e}")
             self.db.rollback()
@@ -446,22 +445,24 @@ class ChangesetManager:
             logger.error(f"Failed to associate versions with changeset {changeset_id}: {e}")
             raise
     
-    def push_changeset_to_s3(self, changeset_id: str) -> None:
+    def push_changeset_to_s3(self, changeset_id: str) -> bool:
         """
         Push changeset data to S3 for collaboration.
 
         Args:
             changeset_id: Changeset identifier
 
-        Raises:
-            NotFoundError: If changeset does not exist
-            RuntimeError: If S3 operation fails
+        Returns:
+            True if push was successful, False otherwise
         """
         logger.info(f"Pushing changeset {changeset_id} to S3")
 
         try:
-            # get_changeset raises NotFoundError if not found
             changeset = self.get_changeset(changeset_id)
+
+            if changeset is None:
+                logger.warning(f"Changeset {changeset_id} not found")
+                return False
 
             # Get associated versions
             version_ids = self.get_changeset_versions(changeset_id)
@@ -477,12 +478,11 @@ class ChangesetManager:
             self.s3_sync.write_metadata_to_s3(changeset_data, s3_path)
 
             logger.info(f"Successfully pushed changeset {changeset_id} to S3")
+            return True
 
-        except NotFoundError:
-            raise
         except Exception as e:
             logger.error(f"Failed to push changeset {changeset_id} to S3: {e}")
-            raise RuntimeError(f"Failed to push changeset {changeset_id} to S3: {e}")
+            return False
 
     def _generate_branch_name(self) -> str:
         """

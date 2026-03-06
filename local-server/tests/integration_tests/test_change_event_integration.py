@@ -246,14 +246,14 @@ def test_move_node_trigger(db_session):
         conn.execute(
             text("""
                 INSERT INTO structure_nodes (id, node_type, title, definition)
-                VALUES (:parent_id, 'domain', 'Old Parent', 'Old parent definition')  # noqa: E501
+                VALUES (:parent_id, 'domain', 'Old Parent', 'Old parent definition')
             """),
             {"parent_id": old_parent_id}
         )
         conn.execute(
             text("""
                 INSERT INTO structure_nodes (id, node_type, title, definition)
-                VALUES (:parent_id, 'domain', 'New Parent', 'New parent definition')  # noqa: E501
+                VALUES (:parent_id, 'domain', 'New Parent', 'New parent definition')
             """),
             {"parent_id": new_parent_id}
         )
@@ -261,8 +261,8 @@ def test_move_node_trigger(db_session):
         # Insert a structure_node with old parent
         conn.execute(
             text("""
-                INSERT INTO structure_nodes (id, node_type, parent_node_id, title, definition)  # noqa: E501
-                VALUES (:node_id, 'term', :old_parent_id, 'Test Node', 'Test definition')  # noqa: E501
+                INSERT INTO structure_nodes (id, node_type, parent_node_id, title, definition)
+                VALUES (:node_id, 'term', :old_parent_id, 'Test Node', 'Test definition')
             """),
             {"node_id": node_id, "old_parent_id": old_parent_id}
         )
