@@ -535,7 +535,7 @@ def optimized_db_session(shared_app, test_database_manager):
             test_database_manager._engines[engine_id] = engine
             test_database_manager._session_locals[engine_id] = session_local
 
-        with test_database_manager.get_optimized_session(engine_id) as session:
+        with test_database_manager.get_session(engine_id) as session:
             yield session
 
     except Exception:

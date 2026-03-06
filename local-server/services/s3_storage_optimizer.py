@@ -1,7 +1,7 @@
 """
-S3 Storage Optimizer - Intelligent storage cost and performance optimization
+S3 Storage Manager - Intelligent storage cost and performance management
 
-This service implements sophisticated S3 storage optimization including lifecycle
+This service implements sophisticated S3 storage management including lifecycle
 policies, intelligent compression, column optimization, and storage checkpoints
 for enterprise-scale cost reduction and performance improvement.
 """
@@ -25,8 +25,8 @@ ClientError = BotoClientError
 logger = get_logger(__name__)
 
 
-class S3StorageOptimizer:
-    """Optimize S3 storage costs and performance through intelligent management."""
+class S3StorageManager:
+    """Manage S3 storage costs and performance through intelligent handling."""
     
     def __init__(self, s3_client, bucket_name: str, duckdb_conn=None):
         """
@@ -43,7 +43,7 @@ class S3StorageOptimizer:
         self.compression_stats: Dict[str, Dict[str, Any]] = {}
         self.optimization_history: list[Dict[str, Any]] = []
         
-        logger.info(f"S3StorageOptimizer initialized for bucket: {bucket_name}")
+        logger.info(f"S3StorageManager initialized for bucket: {bucket_name}")
         
     def setup_lifecycle_policies(self) -> bool:
         """Configure S3 lifecycle policies for cost optimization."""

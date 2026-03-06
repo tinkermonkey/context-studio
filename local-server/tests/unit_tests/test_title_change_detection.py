@@ -420,8 +420,8 @@ class TestNLPReanalysisEdgeCases:
                     mock_service.update_word_senses.side_effect = ValueError("StructureNode not found")
                     mock_wss.return_value = mock_service
 
-                    # Mock _get_optimized_session
-                    with patch.object(event_processor, '_get_optimized_session') as mock_session:
+                    # Mock _get_managed_session
+                    with patch.object(event_processor, '_get_managed_session') as mock_session:
                         mock_session.return_value.__enter__.return_value = Mock()
 
                         result = await event_processor._perform_nlp_reanalysis(str(uuid4()), "test")
@@ -462,8 +462,8 @@ class TestNLPReanalysisEdgeCases:
                     mock_service.update_word_senses.side_effect = update_word_senses_side_effect
                     mock_wss.return_value = mock_service
 
-                    # Mock _get_optimized_session and db.begin()
-                    with patch.object(event_processor, '_get_optimized_session') as mock_session:
+                    # Mock _get_managed_session and db.begin()
+                    with patch.object(event_processor, '_get_managed_session') as mock_session:
                         mock_db = MagicMock()
                         mock_session.return_value.__enter__.return_value = mock_db
 
@@ -497,8 +497,8 @@ class TestNLPReanalysisEdgeCases:
                     mock_service.update_word_senses.side_effect = ConnectionError("Persistent connection error")
                     mock_wss.return_value = mock_service
 
-                    # Mock _get_optimized_session and db.begin()
-                    with patch.object(event_processor, '_get_optimized_session') as mock_session:
+                    # Mock _get_managed_session and db.begin()
+                    with patch.object(event_processor, '_get_managed_session') as mock_session:
                         mock_db = MagicMock()
                         mock_session.return_value.__enter__.return_value = mock_db
 
@@ -533,8 +533,8 @@ class TestNLPReanalysisEdgeCases:
                     mock_service.update_word_senses.side_effect = ValueError("Invalid node ID")
                     mock_wss.return_value = mock_service
 
-                    # Mock _get_optimized_session and db.begin()
-                    with patch.object(event_processor, '_get_optimized_session') as mock_session:
+                    # Mock _get_managed_session and db.begin()
+                    with patch.object(event_processor, '_get_managed_session') as mock_session:
                         mock_db = MagicMock()
                         mock_session.return_value.__enter__.return_value = mock_db
 
@@ -568,7 +568,7 @@ class TestNLPReanalysisEdgeCases:
                     mock_service.update_word_senses.side_effect = ValueError("Database error")
                     mock_wss.return_value = mock_service
 
-                    with patch.object(event_processor, '_get_optimized_session') as mock_session:
+                    with patch.object(event_processor, '_get_managed_session') as mock_session:
                         mock_db = MagicMock()
                         mock_session.return_value.__enter__.return_value = mock_db
 

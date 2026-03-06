@@ -190,7 +190,7 @@ async def create_optimized_database_engine(
             database_url = settings.database.default_url
 
         # Create the engine
-        engine = manager.create_optimized_engine(database_url, engine_id)
+        engine = manager.create_managed_engine(database_url, engine_id)
 
         return {
             "status": "success",

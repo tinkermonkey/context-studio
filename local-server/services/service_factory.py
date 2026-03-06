@@ -29,8 +29,8 @@ from services.conflict_resolution_engine import ConflictResolutionEngine, Intell
 from services.duckdb_service import DuckDBService, ChangeAnalyticsEngine
 from services.incremental_sync_engine import IncrementalSyncEngine
 # Phase 5 Optimization Services
-from services.duckdb_query_optimizer import DuckDBQueryOptimizer
-from services.s3_storage_optimizer import S3StorageOptimizer
+from services.duckdb_query_analyzer import DuckDBQueryAnalyzer
+from services.s3_storage_optimizer import S3StorageManager
 from services.hierarchical_diff_engine import HierarchicalDiffEngine
 from services.batch_operation_processor import BatchOperationProcessor
 from services.performance_monitor import PerformanceMonitor
@@ -599,43 +599,43 @@ class ServiceFactory:
 
     # Phase 5 Optimization Services
 
-    def create_duckdb_query_optimizer(
+    def create_duckdb_query_analyzer(
         self, duckdb_conn: Optional[Any] = None, s3_config: Optional[Dict[str, str]] = None
-    ) -> DuckDBQueryOptimizer:
+    ) -> DuckDBQueryAnalyzer:
         """
-        Create DuckDBQueryOptimizer with optimized instantiation and dependency injection.
+        Create DuckDBQueryAnalyzer with optimized instantiation and dependency injection.
 
         Args:
             duckdb_conn: Optional DuckDB connection
             s3_config: Optional S3 configuration dictionary
 
         Returns:
-            DuckDBQueryOptimizer instance
+            DuckDBQueryAnalyzer instance
         """
-        def create_service() -> DuckDBQueryOptimizer:
+        def create_service() -> DuckDBQueryAnalyzer:
             if s3_config is None:
                 try:
                     settings = get_settings()
                     s3_config_obj = settings.get_s3_config()
                 except Exception as e:
-                    logger.error(f"Failed to retrieve S3 configuration for DuckDBQueryOptimizer: {e}", exc_info=True)
+                    logger.error(f"Failed to retrieve S3 configuration for DuckDBQueryAnalyzer: {e}", exc_info=True)
                     raise RuntimeError(
-                        f"Cannot create DuckDBQueryOptimizer without valid S3 configuration: {e}"
+                        f"Cannot create DuckDBQueryAnalyzer without valid S3 configuration: {e}"
                     ) from e
 
                 if s3_config_obj is None:
                     raise RuntimeError(
-                        "S3 configuration is required for DuckDBQueryOptimizer. "
+                        "S3 configuration is required for DuckDBQueryAnalyzer. "
                         "Please configure S3 settings in your configuration."
                     )
 
                 if not s3_config_obj.bucket:
                     raise RuntimeError(
-                        "S3 bucket is required but not configured for DuckDBQueryOptimizer."
+                        "S3 bucket is required but not configured for DuckDBQueryAnalyzer."
                     )
 
                 s3_conf: Dict[str, str] = {
-                    "enable_optimizer": "True",
+                    "enable_analyzer": "True",
                     "cache_size": "1000",
                     "query_timeout": "30",
                     "bucket_name": s3_config_obj.bucket
@@ -648,30 +648,30 @@ class ServiceFactory:
                     duckdb_service = self.create_duckdb_service(s3_conf)
                     duckdb_connection = duckdb_service.connection
                 except Exception as e:
-                    logger.error(f"Failed to create DuckDB service for DuckDBQueryOptimizer: {e}", exc_info=True)
+                    logger.error(f"Failed to create DuckDB service for DuckDBQueryAnalyzer: {e}", exc_info=True)
                     raise RuntimeError(
-                        f"Cannot create DuckDBQueryOptimizer without valid DuckDB connection: {e}"
+                        f"Cannot create DuckDBQueryAnalyzer without valid DuckDB connection: {e}"
                     ) from e
             else:
                 duckdb_connection = cast(Any, duckdb_conn)
 
-            return DuckDBQueryOptimizer(cast(Any, duckdb_connection), s3_conf)
+            return DuckDBQueryAnalyzer(cast(Any, duckdb_connection), s3_conf)
 
         return self._create_service_with_factory(ServiceType.DUCKDB_QUERY_OPTIMIZER, create_service)
 
-    def create_s3_storage_optimizer(
+    def create_s3_storage_manager(
         self, s3_config: Optional[Dict[str, str]] = None
-    ) -> S3StorageOptimizer:
+    ) -> S3StorageManager:
         """
-        Create S3StorageOptimizer with optimized instantiation and dependency injection.
+        Create S3StorageManager with optimized instantiation and dependency injection.
 
         Args:
             s3_config: Optional S3 configuration dictionary
 
         Returns:
-            S3StorageOptimizer instance
+            S3StorageManager instance
         """
-        def create_service() -> S3StorageOptimizer:
+        def create_service() -> S3StorageManager:
             # Use provided s3_config if available, otherwise retrieve from settings
             s3_conf_dict: Dict[str, str]
             if s3_config is not None:
@@ -682,21 +682,21 @@ class ServiceFactory:
 
                 if s3_config_obj is None:
                     raise RuntimeError(
-                        "S3 configuration is required for S3StorageOptimizer. "
+                        "S3 configuration is required for S3StorageManager. "
                         "Please configure S3 settings in your configuration."
                     )
 
                 if not s3_config_obj.access_key:
                     raise RuntimeError(
-                        "S3 access_key is required but not configured for S3StorageOptimizer."
+                        "S3 access_key is required but not configured for S3StorageManager."
                     )
                 if not s3_config_obj.secret_key:
                     raise RuntimeError(
-                        "S3 secret_key is required but not configured for S3StorageOptimizer."
+                        "S3 secret_key is required but not configured for S3StorageManager."
                     )
                 if not s3_config_obj.bucket:
                     raise RuntimeError(
-                        "S3 bucket is required but not configured for S3StorageOptimizer."
+                        "S3 bucket is required but not configured for S3StorageManager."
                     )
 
                 s3_conf_dict = {
@@ -722,10 +722,10 @@ class ServiceFactory:
             bucket_name = s3_conf_dict.get('bucket_name')
             if not bucket_name:
                 raise RuntimeError(
-                    "S3 bucket_name is required but missing from configuration for S3StorageOptimizer."
+                    "S3 bucket_name is required but missing from configuration for S3StorageManager."
                 )
 
-            return S3StorageOptimizer(s3_client, bucket_name)
+            return S3StorageManager(s3_client, bucket_name)
 
         return self._create_service_with_factory(ServiceType.S3_STORAGE_OPTIMIZER, create_service)
 
@@ -1370,26 +1370,26 @@ def get_incremental_sync_engine_via_factory(db: Session = Depends(get_db)) -> In
 
 # Phase 5 Optimization Service Dependencies
 
-def get_duckdb_query_optimizer_via_factory() -> DuckDBQueryOptimizer:
+def get_duckdb_query_analyzer_via_factory() -> DuckDBQueryAnalyzer:
     """
-    FastAPI dependency for DuckDBQueryOptimizer using optimized service factory.
+    FastAPI dependency for DuckDBQueryAnalyzer using optimized service factory.
 
     Returns:
-        DuckDBQueryOptimizer instance
+        DuckDBQueryAnalyzer instance
     """
     factory = get_service_factory()
-    return factory.create_duckdb_query_optimizer()
+    return factory.create_duckdb_query_analyzer()
 
 
-def get_s3_storage_optimizer_via_factory() -> S3StorageOptimizer:
+def get_s3_storage_manager_via_factory() -> S3StorageManager:
     """
-    FastAPI dependency for S3StorageOptimizer using optimized service factory.
+    FastAPI dependency for S3StorageManager using optimized service factory.
 
     Returns:
-        S3StorageOptimizer instance
+        S3StorageManager instance
     """
     factory = get_service_factory()
-    return factory.create_s3_storage_optimizer()
+    return factory.create_s3_storage_manager()
 
 
 def get_hierarchical_diff_engine_via_factory(db: Session = Depends(get_db)) -> HierarchicalDiffEngine:

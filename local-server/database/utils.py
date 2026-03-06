@@ -25,7 +25,7 @@ class PoolStrategy(Enum):
     NULL_POOL = "null"           # No pooling - new connection per request
     QUEUE_POOL = "queue"         # Connection pooling with queue
     STATIC_POOL = "static"       # Single persistent connection
-    OPTIMIZED = "optimized"      # Intelligent strategy selection
+    ADAPTIVE = "adaptive"         # Intelligent strategy selection
 
 
 @dataclass
@@ -113,11 +113,11 @@ class DatabaseManager:
             } if is_sqlite else {}
         )
 
-    def create_optimized_engine(self,
+    def create_managed_engine(self,
                               database_url: str,  # noqa: E128
                               engine_id: str = "default",  # noqa: E128
                               custom_config: Optional[PoolConfiguration] = None) -> Engine:  # noqa: E501, E128
-        """Create an optimized database engine based on environment and requirements."""  # noqa: E501
+        """Create a database engine based on environment and requirements."""  # noqa: E501
 
         with self._lock:
             # Check if engine already exists
@@ -128,7 +128,7 @@ class DatabaseManager:
             strategy = self.get_optimal_pool_strategy(database_url)
             config = custom_config or self.get_pool_configuration(database_url)
 
-            logger.info(f"Creating optimized engine '{engine_id}' with {strategy.value} pooling")  # noqa: E501
+            logger.info(f"Creating engine '{engine_id}' with {strategy.value} pooling")  # noqa: E501
             logger.debug(f"Pool config: size={config.pool_size}, overflow={config.max_overflow}, timeout={config.pool_timeout}")  # noqa: E501
 
             # Create engine with optimized settings
@@ -254,18 +254,18 @@ class DatabaseManager:
                     self.metrics.avg_query_time_ms = total_time / self.metrics.total_queries_executed  # noqa: E501
 
     @contextmanager
-    def get_optimized_session(self,
-                            engine_id: str = "default",  # noqa: E128
-                            database_url: Optional[str] = None) -> Generator[Session, None, None]:  # noqa: E501, E128
+    def get_session(self,
+                    engine_id: str = "default",  # noqa: E128
+                    database_url: Optional[str] = None) -> Generator[Session, None, None]:  # noqa: E501, E128
         """
-        Get an optimized database session with automatic lifecycle management.
+        Get a database session with automatic lifecycle management.
 
         This context manager ensures proper session cleanup and provides monitoring.  # noqa: E501
         """
         if engine_id not in self._session_locals:
             if database_url is None:
                 raise ValueError(f"Engine '{engine_id}' not found and no database_url provided")  # noqa: E501
-            self.create_optimized_engine(database_url, engine_id)
+            self.create_managed_engine(database_url, engine_id)
 
         session_local = self._session_locals.get(engine_id)
         if session_local is None:
@@ -502,20 +502,20 @@ def get_database_manager() -> DatabaseManager:
     return _database_manager
 
 
-def create_optimized_engine(database_url: str,
-                         engine_id: str = "default",  # noqa: E128
-                         custom_config: PoolConfiguration = None) -> Engine:  # noqa: E128, E501
-    """Create an optimized database engine using the database manager."""
+def create_managed_engine(database_url: str,
+                          engine_id: str = "default",  # noqa: E128
+                          custom_config: PoolConfiguration = None) -> Engine:  # noqa: E128, E501
+    """Create a database engine using the database manager."""
     manager = get_database_manager()
-    return manager.create_optimized_engine(database_url, engine_id, custom_config)  # noqa: E501
+    return manager.create_managed_engine(database_url, engine_id, custom_config)  # noqa: E501
 
 
 @contextmanager
-def optimized_session(database_url: Optional[str] = None,
+def managed_session(database_url: Optional[str] = None,
                     engine_id: str = "default") -> Generator[Session, None, None]:  # noqa: E501, E128
-    """Context manager for optimized database sessions."""
+    """Context manager for managed database sessions."""
     manager = get_database_manager()
-    with manager.get_optimized_session(engine_id, database_url) as session:
+    with manager.get_session(engine_id, database_url) as session:
         yield session
 
 
@@ -682,7 +682,7 @@ def get_engine(database_url=None, use_static_pool=False, connect_args=None):
 
         # Generate a unique engine ID for this request
         engine_id = f"legacy_engine_{id(url)}_{int(time.time())}"
-        return manager.create_optimized_engine(url, engine_id, custom_config)
+        return manager.create_managed_engine(url, engine_id, custom_config)
 
     except Exception as e:
         # Fall back to legacy approach if DatabaseManager fails
@@ -813,8 +813,8 @@ def get_db_for_current_dataset():
 
 
 # Advanced FastAPI dependency functions using DatabaseManager
-def get_optimized_db_session(database_url: Optional[str] = None, engine_id: str = "default"):  # noqa: E501
-    """FastAPI dependency for optimized database sessions."""
+def get_managed_db_session(database_url: Optional[str] = None, engine_id: str = "default"):  # noqa: E501
+    """FastAPI dependency for managed database sessions."""
     manager = get_database_manager()
 
     if engine_id not in manager._session_locals:
@@ -822,7 +822,7 @@ def get_optimized_db_session(database_url: Optional[str] = None, engine_id: str 
             from config import get_settings
             settings = get_settings()
             database_url = settings.database.default_url
-        manager.create_optimized_engine(database_url, engine_id)
+        manager.create_managed_engine(database_url, engine_id)
 
     session_local = manager.get_session_factory(engine_id)
     if not session_local:
@@ -835,12 +835,12 @@ def get_optimized_db_session(database_url: Optional[str] = None, engine_id: str 
         session.close()
 
 
-def get_optimized_db_for_current_dataset():
-    """FastAPI dependency for optimized database sessions using current dataset."""  # noqa: E501
+def get_managed_db_for_current_dataset():
+    """FastAPI dependency for managed database sessions using current dataset."""  # noqa: E501
     # First try to get the current session from dataset manager
     session_local = get_current_session_local()
     if session_local is None:
-        # Fall back to optimized manager with default engine
+        # Fall back to managed manager with default engine
         manager = get_database_manager()
         session_local = manager.get_session_factory("default")
         if not session_local:

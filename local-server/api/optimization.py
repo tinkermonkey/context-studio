@@ -30,8 +30,8 @@ from pydantic import BaseModel, Field
 from datetime import datetime
 
 from services.service_factory import (
-    get_duckdb_query_optimizer_via_factory,
-    get_s3_storage_optimizer_via_factory,
+    get_duckdb_query_analyzer_via_factory,
+    get_s3_storage_manager_via_factory,
     get_hierarchical_diff_engine_via_factory,
     get_batch_operation_processor_via_factory,
     get_performance_monitor_via_factory,
@@ -161,13 +161,13 @@ class BatchOperationOut(BaseModel):
 
 # Dependency functions for service factory
 def get_query_optimizer():
-    """Get DuckDBQueryOptimizer instance via service factory."""
-    return get_duckdb_query_optimizer_via_factory()
+    """Get DuckDBQueryAnalyzer instance via service factory."""
+    return get_duckdb_query_analyzer_via_factory()
 
 
 def get_storage_optimizer():
-    """Get S3StorageOptimizer instance via service factory."""
-    return get_s3_storage_optimizer_via_factory()
+    """Get S3StorageManager instance via service factory."""
+    return get_s3_storage_manager_via_factory()
 
 
 def get_diff_engine(db: Session = Depends(get_db)):

@@ -1,7 +1,7 @@
 """
-Unit tests for DuckDBQueryOptimizer - Testing advanced query optimization functionality.
+Unit tests for DuckDBQueryAnalyzer - Testing advanced query analysis functionality.
 
-Tests query optimization strategies, caching, materialized views, and performance metrics.
+Tests query analysis strategies, caching, materialized views, and performance metrics.
 """
 
 import sys
@@ -16,8 +16,8 @@ import time  # noqa: E402
 from unittest.mock import Mock, patch  # noqa: E402
 from datetime import datetime  # noqa: E402
 
-from services.duckdb_query_optimizer import (  # noqa: E402
-    DuckDBQueryOptimizer,
+from services.duckdb_query_analyzer import (  # noqa: E402
+    DuckDBQueryAnalyzer,
     IntelligentQueryCache,
     QueryPerformanceMetrics
 )
@@ -143,8 +143,8 @@ class TestSanitizationMethods:
 
     @pytest.fixture
     def query_optimizer(self, mock_duckdb_conn, s3_config):
-        """Create a DuckDBQueryOptimizer instance for testing."""
-        return DuckDBQueryOptimizer(mock_duckdb_conn, s3_config)
+        """Create a DuckDBQueryAnalyzer instance for testing."""
+        return DuckDBQueryAnalyzer(mock_duckdb_conn, s3_config)
 
     # Tests for _is_valid_identifier
     def test_is_valid_identifier_valid_names(self, query_optimizer):
@@ -315,7 +315,7 @@ class TestSanitizationMethods:
             ]
         }
 
-        optimized_query, metrics = query_optimizer.optimize_query(test_query, context)
+        optimized_query, metrics = query_optimizer.analyze_query(test_query, context)
 
         # Should only include valid column names
         assert 'id' in optimized_query
@@ -336,7 +336,7 @@ class TestSanitizationMethods:
             }
         }
 
-        optimized_query, metrics = query_optimizer.optimize_query(test_query, context)
+        optimized_query, metrics = query_optimizer.analyze_query(test_query, context)
 
         # Query should be optimized without SQL injection
         # The exact format depends on how partition elimination is applied
@@ -355,7 +355,7 @@ class TestSanitizationMethods:
             ]
         }
 
-        optimized_query, metrics = query_optimizer.optimize_query(test_query, context)
+        optimized_query, metrics = query_optimizer.analyze_query(test_query, context)
 
         # Should safely include valid types
         assert 'valid_type' in optimized_query
@@ -367,8 +367,8 @@ class TestSanitizationMethods:
         assert len(optimized_query) > 0
 
 
-class TestDuckDBQueryOptimizer:
-    """Test cases for DuckDBQueryOptimizer functionality."""
+class TestDuckDBQueryAnalyzer:
+    """Test cases for DuckDBQueryAnalyzer functionality."""
 
     @pytest.fixture
     def mock_duckdb_conn(self):
@@ -389,11 +389,11 @@ class TestDuckDBQueryOptimizer:
 
     @pytest.fixture
     def query_optimizer(self, mock_duckdb_conn, s3_config):
-        """Create a DuckDBQueryOptimizer instance for testing."""
-        return DuckDBQueryOptimizer(mock_duckdb_conn, s3_config)
+        """Create a DuckDBQueryAnalyzer instance for testing."""
+        return DuckDBQueryAnalyzer(mock_duckdb_conn, s3_config)
 
     def test_optimizer_initialization(self, query_optimizer):
-        """Test DuckDBQueryOptimizer initialization."""
+        """Test DuckDBQueryAnalyzer initialization."""
         assert query_optimizer.duckdb_conn is not None
         assert query_optimizer.s3_config is not None
         assert isinstance(query_optimizer.query_cache, IntelligentQueryCache)
@@ -402,7 +402,7 @@ class TestDuckDBQueryOptimizer:
 
     def test_optimization_settings_setup(self, mock_duckdb_conn, s3_config):
         """Test DuckDB optimization settings setup."""
-        DuckDBQueryOptimizer(mock_duckdb_conn, s3_config)
+        DuckDBQueryAnalyzer(mock_duckdb_conn, s3_config)
 
         # Check that optimization settings were applied
         expected_calls = [
@@ -420,11 +420,11 @@ class TestDuckDBQueryOptimizer:
         # Verify that execute was called with optimization settings
         assert mock_duckdb_conn.execute.call_count >= len(expected_calls)
 
-    def test_optimize_query_basic(self, query_optimizer):
+    def test_analyze_query_basic(self, query_optimizer):
         """Test basic query optimization."""
         test_query = "SELECT * FROM test_table WHERE id = 1"
 
-        optimized_query, metrics = query_optimizer.optimize_query(test_query)
+        optimized_query, metrics = query_optimizer.analyze_query(test_query)
 
         assert isinstance(optimized_query, str)
         assert isinstance(metrics, QueryPerformanceMetrics)
@@ -443,7 +443,7 @@ class TestDuckDBQueryOptimizer:
             'entity_types': ['test', 'example']
         }
 
-        optimized_query, metrics = query_optimizer.optimize_query(test_query, context)
+        optimized_query, metrics = query_optimizer.analyze_query(test_query, context)
 
         # Should have applied time-based partitioning
         assert '2024-01-01' in optimized_query or 'changes/*/*/*2024-01-01*2024-01-31*.parquet' in optimized_query
@@ -458,7 +458,7 @@ class TestDuckDBQueryOptimizer:
             'required_columns': ['id', 'name', 'created_at']
         }
 
-        optimized_query, metrics = query_optimizer.optimize_query(test_query, context)
+        optimized_query, metrics = query_optimizer.analyze_query(test_query, context)
 
         # Should replace SELECT * with specific columns
         assert "SELECT id, name, created_at" in optimized_query
@@ -469,10 +469,10 @@ class TestDuckDBQueryOptimizer:
         test_query = "SELECT COUNT(*) FROM test_table"
 
         # First execution should be a cache miss
-        result1, metrics1 = query_optimizer.optimize_query(test_query)
+        result1, metrics1 = query_optimizer.analyze_query(test_query)
 
         # Second execution should use cached result
-        result2, metrics2 = query_optimizer.optimize_query(test_query)
+        result2, metrics2 = query_optimizer.analyze_query(test_query)
 
         # Results should be identical
         assert result1 == result2
@@ -547,7 +547,7 @@ class TestDuckDBQueryOptimizer:
         test_query = "SELECT COUNT(*) FROM test_table"
 
         # Execute query to generate metrics
-        optimized_query, metrics = query_optimizer.optimize_query(test_query)
+        optimized_query, metrics = query_optimizer.analyze_query(test_query)
 
         # Check metrics structure
         assert isinstance(metrics, QueryPerformanceMetrics)
@@ -571,9 +571,9 @@ class TestDuckDBQueryOptimizer:
         ]
 
         for query in queries:
-            query_optimizer.optimize_query(query)
+            query_optimizer.analyze_query(query)
 
-        stats = query_optimizer.get_optimization_statistics()
+        stats = query_optimizer.get_analysis_statistics()
 
         # Check statistics structure
         assert 'total_queries' in stats
@@ -589,7 +589,7 @@ class TestDuckDBQueryOptimizer:
         """Test that performance metrics maintain rolling window."""
         # Generate many queries to test rolling window
         for i in range(1100):  # More than the 1000 limit
-            query_optimizer.optimize_query(f"SELECT {i}")
+            query_optimizer.analyze_query(f"SELECT {i}")
 
         # Should only keep last 1000 metrics
         assert len(query_optimizer.performance_metrics) == 1000
@@ -605,7 +605,7 @@ class TestDuckDBQueryOptimizer:
         mock_duckdb_conn.execute.side_effect = Exception("Query execution failed")
 
         # Query optimization should not raise exception but return error metrics
-        optimized_query, metrics = query_optimizer.optimize_query("SELECT * FROM invalid_table")
+        optimized_query, metrics = query_optimizer.analyze_query("SELECT * FROM invalid_table")
 
         assert metrics.optimization_level == "failed"
         assert metrics.rows_processed == 0
@@ -635,7 +635,7 @@ class TestDuckDBQueryOptimizer:
             'partition_filter': {'year': 2024, 'month': [1, 2, 3]}
         }
 
-        optimized_query, metrics = query_optimizer.optimize_query(complex_query, context)
+        optimized_query, metrics = query_optimizer.analyze_query(complex_query, context)
 
         # Should apply multiple optimization strategies
         # The exact optimized query will depend on implementation details
@@ -651,17 +651,17 @@ class TestDuckDBQueryOptimizer:
         results = []
         exceptions = []
 
-        def optimize_query():
+        def analyze_query():
             try:
                 query = f"SELECT * FROM table_{threading.current_thread().ident}"
-                result = query_optimizer.optimize_query(query)
+                result = query_optimizer.analyze_query(query)
                 results.append(result)
             except Exception as e:
                 exceptions.append(e)
 
         # Execute concurrent optimizations
         with concurrent.futures.ThreadPoolExecutor(max_workers=5) as executor:
-            futures = [executor.submit(optimize_query) for _ in range(10)]
+            futures = [executor.submit(analyze_query) for _ in range(10)]
             concurrent.futures.wait(futures)
 
         # Check results

@@ -1,5 +1,5 @@
 """
-DuckDB Query Optimizer - Advanced optimization for analytical workloads
+DuckDB Query Analyzer - Advanced optimization for analytical workloads
 
 This service implements sophisticated query optimization techniques including
 predicate pushdown, partition elimination, intelligent caching, and materialized
@@ -132,14 +132,14 @@ class IntelligentQueryCache:
         }
 
 
-class DuckDBQueryOptimizer:
-    """Advanced query optimization for analytical workloads."""
+class DuckDBQueryAnalyzer:
+    """Advanced query analysis and optimization for analytical workloads."""
 
     def __init__(
         self, duckdb_conn: duckdb.DuckDBPyConnection, s3_config: Dict[str, str]
     ):
         """
-        Initialize the query optimizer.
+        Initialize the query analyzer.
 
         Args:
             duckdb_conn: DuckDB connection instance
@@ -151,13 +151,13 @@ class DuckDBQueryOptimizer:
         self.materialized_views: Dict[str, Dict[str, Any]] = {}
         self.performance_metrics: list[QueryPerformanceMetrics] = []
 
-        self._setup_optimization_settings()
+        self._setup_analysis_settings()
         logger.info(
-            "DuckDBQueryOptimizer initialized with advanced optimization features"
+            "DuckDBQueryAnalyzer initialized with advanced analysis features"
         )
 
-    def _setup_optimization_settings(self):
-        """Configure DuckDB for optimal performance."""
+    def _setup_analysis_settings(self):
+        """Configure DuckDB for analysis performance."""
 
         # Configure critical settings that must succeed
         try:
@@ -167,13 +167,13 @@ class DuckDBQueryOptimizer:
             logger.info("DuckDB critical settings configured successfully")
         except Exception as e:
             logger.error(
-                f"Failed to configure critical DuckDB optimization settings: {e}. "
+                f"Failed to configure critical DuckDB settings: {e}. "
                 f"Query performance will be severely degraded. "
                 f"This indicates a configuration problem with DuckDB or system resources (memory, threads).",
                 exc_info=True
             )
             raise RuntimeError(
-                f"Cannot initialize DuckDBQueryOptimizer without critical optimization settings: {e}"
+                f"Cannot initialize DuckDBQueryAnalyzer without critical settings: {e}"
             ) from e
 
         # Configure optional settings that can fail gracefully
@@ -196,7 +196,7 @@ class DuckDBQueryOptimizer:
                 exc_info=True
             )
 
-        # S3 optimization settings if configured
+        # S3 analysis settings if configured
         if self.s3_config:
             try:
                 self.duckdb_conn.execute("SET s3_use_ssl=true;")
@@ -204,15 +204,15 @@ class DuckDBQueryOptimizer:
                 self.duckdb_conn.execute("SET enable_http_metadata_cache=true;")
             except Exception as e:
                 logger.warning(
-                    f"Failed to configure S3 optimization settings for DuckDB: {e}. "
+                    f"Failed to configure S3 settings for DuckDB: {e}. "
                     f"S3 operations will continue with default settings.",
                     exc_info=True
                 )
 
-    def optimize_query(
+    def analyze_query(
         self, query: str, query_context: Optional[Dict[str, Any]] = None
     ) -> Tuple[str, QueryPerformanceMetrics]:
-        """Apply optimization techniques to improve query performance."""
+        """Apply analysis techniques to improve query performance."""
 
         query_context = query_context or {}
 
@@ -223,52 +223,52 @@ class DuckDBQueryOptimizer:
         cached_result = self.query_cache.get_cached_result(query_hash)
         if cached_result:
             logger.debug(f"Using cached result for query: {query_hash[:8]}...")
-            return cached_result["optimized_query"], cached_result["metrics"]
+            return cached_result["analyzed_query"], cached_result["metrics"]
 
-        logger.debug(f"Optimizing query: {query_hash[:8]}...")
+        logger.debug(f"Analyzing query: {query_hash[:8]}...")
 
-        # Apply optimization strategies
-        optimized_query = self._apply_optimization_strategies(query, query_context)
+        # Apply analysis strategies
+        analyzed_query = self._apply_analysis_strategies(query, query_context)
 
         # Execute and measure performance
-        metrics = self._measure_query_performance(optimized_query, query_hash)
+        metrics = self._measure_query_performance(analyzed_query, query_hash)
 
-        # Cache optimized query if beneficial
+        # Cache analyzed query if beneficial
         if metrics.execution_time_ms < 10000:  # Cache queries under 10s
             self.query_cache.cache_result(
                 query_hash,
-                {"optimized_query": optimized_query, "metrics": metrics},
+                {"analyzed_query": analyzed_query, "metrics": metrics},
                 query_context,
             )
 
-        return optimized_query, metrics
+        return analyzed_query, metrics
 
-    def _apply_optimization_strategies(
+    def _apply_analysis_strategies(
         self, query: str, context: Dict[str, Any]
     ) -> str:
-        """Apply various optimization strategies to the query."""
+        """Apply various analysis strategies to the query."""
 
-        optimized = query
+        analyzed = query
 
-        # Strategy 1: Predicate pushdown optimization
-        optimized = self._optimize_predicate_pushdown(optimized, context)
+        # Strategy 1: Predicate pushdown analysis
+        analyzed = self._analyze_predicate_pushdown(analyzed, context)
 
         # Strategy 2: Partition elimination
-        optimized = self._optimize_partition_elimination(optimized, context)
+        analyzed = self._analyze_partition_elimination(analyzed, context)
 
         # Strategy 3: Column pruning
-        optimized = self._optimize_column_pruning(optimized, context)
+        analyzed = self._analyze_column_pruning(analyzed, context)
 
-        # Strategy 4: Join optimization
-        optimized = self._optimize_joins(optimized, context)
+        # Strategy 4: Join analysis
+        analyzed = self._analyze_joins(analyzed, context)
 
         # Strategy 5: Aggregation pushdown
-        optimized = self._optimize_aggregation_pushdown(optimized, context)
+        analyzed = self._analyze_aggregation_pushdown(analyzed, context)
 
-        logger.debug(f"Applied {5} optimization strategies to query")
-        return optimized
+        logger.debug(f"Applied {5} analysis strategies to query")
+        return analyzed
 
-    def _optimize_predicate_pushdown(self, query: str, context: Dict[str, Any]) -> str:
+    def _analyze_predicate_pushdown(self, query: str, context: Dict[str, Any]) -> str:
         """Push predicates down to S3 level for efficient filtering."""
 
         # Add time-based partition filters
@@ -301,7 +301,7 @@ class DuckDBQueryOptimizer:
 
         return query
 
-    def _optimize_partition_elimination(
+    def _analyze_partition_elimination(
         self, query: str, context: Dict[str, Any]
     ) -> str:
         """Eliminate unnecessary partitions from S3 scan."""
@@ -339,8 +339,8 @@ class DuckDBQueryOptimizer:
 
         return query
 
-    def _optimize_column_pruning(self, query: str, context: Dict[str, Any]) -> str:
-        """Optimize column selection to reduce I/O."""
+    def _analyze_column_pruning(self, query: str, context: Dict[str, Any]) -> str:
+        """Analyze column selection to reduce I/O."""
 
         # Simple column pruning - replace SELECT * with specific columns if provided
         if "required_columns" in context and "SELECT *" in query:
@@ -358,19 +358,19 @@ class DuckDBQueryOptimizer:
 
         return query
 
-    def _optimize_joins(self, query: str, context: Dict[str, Any]) -> str:
-        """Optimize join operations."""
+    def _analyze_joins(self, query: str, context: Dict[str, Any]) -> str:
+        """Analyze join operations."""
 
-        # Basic join optimization - ensure smaller tables are on the right
+        # Basic join analysis - ensure smaller tables are on the right
         # This is a simplified implementation
         return query
 
-    def _optimize_aggregation_pushdown(
+    def _analyze_aggregation_pushdown(
         self, query: str, context: Dict[str, Any]
     ) -> str:
         """Push aggregations down to reduce data movement."""
 
-        # Basic aggregation optimization
+        # Basic aggregation analysis
         return query
 
     def _is_valid_identifier(self, identifier: str) -> bool:
@@ -615,8 +615,8 @@ class DuckDBQueryOptimizer:
         except Exception:
             return 0
 
-    def get_optimization_statistics(self) -> Dict[str, Any]:
-        """Get comprehensive optimization statistics."""
+    def get_analysis_statistics(self) -> Dict[str, Any]:
+        """Get comprehensive analysis statistics."""
 
         if not self.performance_metrics:
             return {

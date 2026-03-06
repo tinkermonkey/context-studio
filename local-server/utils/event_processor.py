@@ -102,18 +102,18 @@ class EventProcessor:
 
         self.logger.info("EventProcessor initialized")
 
-    def _get_optimized_session(self):
+    def _get_managed_session(self):
         """Get an optimized database session using Database Manager."""
         # Ensure we have an optimized engine for event processing
         if self.engine_id not in self.db_manager._engines:
             try:
-                self.db_manager.create_optimized_engine(self.database_url, self.engine_id)  # noqa: E501
+                self.db_manager.create_managed_engine(self.database_url, self.engine_id)  # noqa: E501
             except Exception as e:
                 self.logger.error(f"Failed to create optimized engine '{self.engine_id}': {e}")  # noqa: E501
                 raise
 
         try:
-            return self.db_manager.get_optimized_session(self.engine_id, self.database_url)  # noqa: E501
+            return self.db_manager.get_session(self.engine_id, self.database_url)  # noqa: E501
         except Exception as e:
             self.logger.error(f"Failed to get optimized session for '{self.engine_id}': {e}")  # noqa: E501
             raise
@@ -121,7 +121,7 @@ class EventProcessor:
     def _initialize_last_processed_id(self):
         """Initialize the last processed event ID from the database."""
         try:
-            with self._get_optimized_session() as db:
+            with self._get_managed_session() as db:
                 result = db.execute(text("""
                     SELECT id FROM change_events
                     WHERE processed = 1
@@ -145,7 +145,7 @@ class EventProcessor:
         self.logger.debug("[EventProcessor] start() called")
         if self._thread is None or not self._thread.is_alive():
             # Create optimized engine before starting threads
-            self.db_manager.create_optimized_engine(self.database_url, self.engine_id)  # noqa: E501
+            self.db_manager.create_managed_engine(self.database_url, self.engine_id)  # noqa: E501
 
             self._stop_event.clear()
             self._thread = threading.Thread(target=self._run, daemon=True)
@@ -251,7 +251,7 @@ class EventProcessor:
         events_processed = 0
 
         try:
-            with self._get_optimized_session() as db:
+            with self._get_managed_session() as db:
                 # Get unprocessed ChangeEvents since last processed ID
                 events = db.execute(text("""
                     SELECT id, event_type, record_type, record_id, old_data, new_data, timestamp
@@ -478,7 +478,7 @@ class EventProcessor:
     def _link_event_to_version(self, event_id: int, version_id: str, change_state):  # noqa: E501
         """Link a change event to its corresponding version."""
         try:
-            with self._get_optimized_session() as db:
+            with self._get_managed_session() as db:
                 db.execute(text("""
                     UPDATE change_events
                     SET version_id = :version_id, change_state = :change_state
@@ -673,7 +673,7 @@ class EventProcessor:
                 nlp_response = process_nlp_result(new_title, doc)
 
                 # Extract word senses from NLP analysis with transaction
-                with self._get_optimized_session() as db:
+                with self._get_managed_session() as db:
                     word_sense_service = WordSenseService(db)
 
                     # Extract new senses
@@ -798,7 +798,7 @@ class EventProcessor:
         cutoff = datetime.now(timezone.utc) - timedelta(hours=hours_to_keep)
 
         try:
-            with self._get_optimized_session() as db:
+            with self._get_managed_session() as db:
                 # Delete old processed events
                 result = db.execute(text("""
                     DELETE FROM change_events
@@ -817,7 +817,7 @@ class EventProcessor:
     def get_stats(self) -> Dict[str, Any]:
         """Get event processor statistics including database metrics."""
         try:
-            with self._get_optimized_session() as db:
+            with self._get_managed_session() as db:
                 # Get current unprocessed count
                 unprocessed_result = db.execute(text("""
                     SELECT COUNT(*) FROM change_events WHERE processed = 0
