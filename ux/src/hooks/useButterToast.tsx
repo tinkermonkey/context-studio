@@ -48,7 +48,7 @@ export const useButterToast = () => {
       const Icon = iconMap[type];
 
       // Render toast using React
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const root = (window as any).ReactDOM?.createRoot?.(toastWrapper);
       if (root) {
         root.render(

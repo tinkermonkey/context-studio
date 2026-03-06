@@ -12,7 +12,7 @@ import { useCallback, useRef } from "react";
  * @param delay - The delay in milliseconds
  * @returns A debounced version of the callback with a cancel method
  */
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const useDebounce = <T extends (...args: any[]) => any>(
   callback: T,
   delay: number,
