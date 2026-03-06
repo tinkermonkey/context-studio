@@ -7,7 +7,7 @@
 import React, { useState } from "react";
 import { useForm } from "@tanstack/react-form";
 import { Button, Alert, Label, Radio } from "flowbite-react";
-import { Info, ArrowRight,  } from "lucide-react";
+import { Info, ArrowRight } from "lucide-react";
 
 import {
   StructureNode,
