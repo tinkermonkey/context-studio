@@ -128,7 +128,7 @@ test.describe("Term Management", () => {
       page,
       "/api/structure_nodes?node_type=term",
     );
-     
+
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const createdTerm = response.data.find((n: any) => n.title === termTitle);
 

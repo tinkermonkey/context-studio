@@ -150,10 +150,9 @@ export function useUpdateConfigurationValue() {
   const queryClient = useQueryClient();
 
   return useMutation({
-     
-    mutationFn: ({ path, value }: { path: string; value: any}  // eslint-disable-line @typescript-eslint/no-explicit-any
-) =>
-      configurationService.updateConfigurationValue(path, value),
+    mutationFn: (
+      { path, value }: { path: string; value: any }, // eslint-disable-line @typescript-eslint/no-explicit-any
+    ) => configurationService.updateConfigurationValue(path, value),
     onSuccess: (_, { path }) => {
       // Invalidate related queries
       queryClient.invalidateQueries({ queryKey: ["configuration"] });
