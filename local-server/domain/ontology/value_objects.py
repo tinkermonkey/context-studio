@@ -4,6 +4,32 @@ Domain value objects for the ontology bounded context.
 Value objects are immutable types that represent domain concepts and are identified
 by their values rather than by identity. All types in this module are framework-free
 and depend only on Python stdlib.
+
+NodeType Enum - Legacy vs. Domain Terminology
+==============================================
+
+IMPORTANT: There are two NodeType enums in the codebase:
+
+1. database.enums.NodeType (LEGACY)
+   - Used by: ORM models, existing database schema, current service layer
+   - Values: LAYER, DOMAIN, TERM
+   - Status: Deprecated, maintained for backwards compatibility only
+
+2. domain.ontology.value_objects.NodeType (NEW - This Module)
+   - Used by: Domain entities, domain services, future adapters
+   - Values: TAXONOMY, CONCEPT_SCHEME, CLASS, INDIVIDUAL
+   - Status: Authoritative for new domain code
+   - Rationale: Clearer semantic meaning aligned with ontology terminology
+
+The NodeType.from_legacy() method (see below) provides conversion between
+the two enums for backwards compatibility during the re-architecture phase.
+
+The domain/ontology/compat.py compatibility bridge maintains bidirectional
+mapping dictionaries (NODE_TYPE_LEGACY_TO_NEW, NODE_TYPE_NEW_TO_LEGACY)
+for use by adapter-layer code that must work with both representations.
+
+This duality is intentional and temporary. Issue #270 tracks the eventual
+consolidation once all adapters have been migrated to domain types.
 """
 
 from __future__ import annotations
