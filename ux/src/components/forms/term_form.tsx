@@ -2,9 +2,7 @@ import React from "react";
 import { useForm } from "@tanstack/react-form";
 import { TextInput, Textarea, Button, Alert, Label } from "flowbite-react";
 import { Info, Database, Hash } from "lucide-react";
-import type {
-  StructureNode,
-} from "@/api/types/structureNodes";
+import type { StructureNode } from "@/api/types/structureNodes";
 import { useCreateTerm } from "@/api/hooks/structure_nodes/useStructureNodeMutations";
 import { useUpdateStructureNode } from "@/api/hooks/structure_nodes/useStructureNodeMutations";
 import { DomainSelector } from "@/components/node_selectors/domain_selector";
@@ -64,8 +62,8 @@ const TermForm: React.FC<TermFormProps> = ({
         }
         if (onSuccess) onSuccess(result);
         form.reset();
-   
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
       } catch (error: any) {
         // Log the full error for debugging
         console.error("Full error object:", error);

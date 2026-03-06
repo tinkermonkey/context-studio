@@ -1,16 +1,10 @@
-import React, {
-  useCallback,
-  useMemo,
-  useRef,
-  useState,
-} from "react";
+import React, { useCallback, useMemo, useRef, useState } from "react";
 import {
   useMeasurementSvg,
   useMeasurementHtml,
 } from "@/components/graphs/tree_chart/useMeasurementElement";
- 
-import {
-} from "@/components/graphs/tree_chart/tree_chart_utils";
+
+import {} from "@/components/graphs/tree_chart/tree_chart_utils";
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { NlpConceptChartLink } from "./NlpConceptChartLink";
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -86,16 +80,13 @@ const STYLES = {
   arrowMarkerSize: 4,
 };
 
-
 const NlpConceptChart: React.FC<NlpConceptChartProps> = ({
   data,
   width: providedWidth,
   onNodeClick,
 }) => {
   const containerRef = useRef<HTMLDivElement>(null);
-  const [containerWidth] = useState<number>(
-    providedWidth || 1000,
-  );
+  const [containerWidth] = useState<number>(providedWidth || 1000);
 
   // Initialize measurement utilities
   useMeasurementSvg();
@@ -139,7 +130,7 @@ const NlpConceptChart: React.FC<NlpConceptChartProps> = ({
   return (
     <div
       ref={containerRef}
-      className="w-full h-auto bg-white rounded-lg border border-gray-200 p-4"
+      className="h-auto w-full rounded-lg border border-gray-200 bg-white p-4"
     >
       <svg
         width={containerWidth}
@@ -151,7 +142,9 @@ const NlpConceptChart: React.FC<NlpConceptChartProps> = ({
         {processedData?.senses.map((sense) => (
           <g key={sense.name}>
             <rect x="0" y="0" width="150" height="60" fill="lightblue" />
-            <text x="10" y="20">{sense.name}</text>
+            <text x="10" y="20">
+              {sense.name}
+            </text>
           </g>
         ))}
 
@@ -161,8 +154,16 @@ const NlpConceptChart: React.FC<NlpConceptChartProps> = ({
             <g key={relationType}>
               {relations.map((relation) => (
                 <g key={relation.text}>
-                  <rect x="200" y="0" width="150" height="60" fill="lightyellow" />
-                  <text x="210" y="20">{relation.text}</text>
+                  <rect
+                    x="200"
+                    y="0"
+                    width="150"
+                    height="60"
+                    fill="lightyellow"
+                  />
+                  <text x="210" y="20">
+                    {relation.text}
+                  </text>
                 </g>
               ))}
             </g>
