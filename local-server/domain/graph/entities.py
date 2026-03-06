@@ -7,8 +7,8 @@ as a whole. They import only from Python stdlib.
 
 from __future__ import annotations
 
-from dataclasses import dataclass, field
-from typing import Optional, List
+from dataclasses import dataclass
+from typing import Optional
 
 
 @dataclass

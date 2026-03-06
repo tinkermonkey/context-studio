@@ -7,7 +7,6 @@ and complete extraction results. They import only from Python stdlib.
 
 from __future__ import annotations
 
-import types
 from dataclasses import dataclass, field
 from typing import Optional
 

@@ -10,7 +10,6 @@ from __future__ import annotations
 import types
 from dataclasses import dataclass
 from enum import Enum
-from typing import List
 
 from domain.versioning.enums import ChangeType
 
