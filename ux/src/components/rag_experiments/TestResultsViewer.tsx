@@ -15,7 +15,7 @@ import {
   useReactTable,
   SortingState,
 } from "@tanstack/react-table";
-import { Badge, Button, Spinner } from "flowbite-react";;
+import { Badge, Button, Spinner } from "flowbite-react";
 import {
   Download,
   ChevronDown,
@@ -25,7 +25,7 @@ import {
 } from "lucide-react";
 import { usePipelineComparison } from "@/api/hooks/ragExperiments";
 import { useButterToast } from "@/hooks/useButterToast";
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 import type { PipelineComparisonResponse } from "@/api/services/ragExperiments";
 import type { components } from "@/api/client/types";
 
@@ -45,7 +45,7 @@ export const TestResultsViewer: React.FC<TestResultsViewerProps> = ({
   const [sorting, setSorting] = useState<SortingState>([
     { id: "f1_score", desc: true },
   ]);
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [setExpandedRows] = useState<Set<string>>(new Set());
   const toast = useButterToast();
 

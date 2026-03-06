@@ -5,15 +5,25 @@
  */
 
 import { useState, useMemo } from "react";
-import { Alert, Badge, Button, Card, Checkbox, Label, Spinner, Textarea  } from "flowbite-react";;
+import {
+  Alert,
+  Badge,
+  Button,
+  Card,
+  Checkbox,
+  Label,
+  Spinner,
+  Textarea,
+} from "flowbite-react";
 import { useExtractEntities, useRAGTrace } from "@/api/hooks/rag";
 import { useStructureNode } from "@/api/hooks/structure_nodes/useStructureNodes";
 import { Info, ExternalLink } from "lucide-react";
 import { Link } from "@tanstack/react-router";
 
 // Component to render a single entity with its matched node link
-   
-function EntityItem({ entity }: { entity: any}  // eslint-disable-line @typescript-eslint/no-explicit-any
+
+function EntityItem(
+  { entity }: { entity: any }, // eslint-disable-line @typescript-eslint/no-explicit-any
 ) {
   const { data: node, isLoading } = useStructureNode(
     entity.metadata?.matched_kg_node,
@@ -268,7 +278,7 @@ export default function RAGTestPage() {
                   typeof value === "object" &&
                   value !== null
                 ) {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                  // eslint-disable-next-line @typescript-eslint/no-explicit-any
                   const layerMetrics = value as any;
                   return (
                     <div
@@ -327,11 +337,15 @@ export default function RAGTestPage() {
                 Extracted Entities ({result.entities.length})
               </h3>
               <div className="space-y-2">
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                {result.entities.map((entity: any,  // eslint-disable-line @typescript-eslint/no-explicit-any
- index: number) => (
-                  <EntityItem key={index} entity={entity} />
-                ))}
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                {result.entities.map(
+                  (
+                    entity: any, // eslint-disable-line @typescript-eslint/no-explicit-any
+                    index: number,
+                  ) => (
+                    <EntityItem key={index} entity={entity} />
+                  ),
+                )}
               </div>
             </div>
           )}
