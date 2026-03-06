@@ -246,16 +246,11 @@ class TestPhase0BaselineTests:
             # Check if embeddings exist (they may be None or lists)
             return node.get("title_embedding") is not None or node.get("definition_embedding") is not None  # noqa: E501
 
-        try:
-            poll_until(
-                embeddings_generated,
-                timeout=15.0,
-                error_message="Embeddings not generated within timeout",
-            )
-        except TimeoutError:
-            # Embeddings might not be generated if model is not available
-            # This is acceptable for Phase 0 baseline
-            pass
+        poll_until(
+            embeddings_generated,
+            timeout=15.0,
+            error_message="Embeddings not generated within timeout",
+        )
 
         # Step 6: Perform semantic search on base class definition
         search_data = {
@@ -472,8 +467,8 @@ class TestPhase0BaselineTests:
         duplicate_response = e2e_client.post(
             "/api/predicates/", json=duplicate_predicate_data
         )
-        # Duplicate creation might fail with 400 or 409
-        assert duplicate_response.status_code in [400, 409, 201]  # 201 if server allows duplicates  # noqa: E501
+        # Duplicate creation must fail with 400 or 409, not succeed with 201
+        assert duplicate_response.status_code in [400, 409], f"Duplicate predicate should be rejected, got {duplicate_response.status_code}"  # noqa: E501
 
         # Step 7: Delete link and verify
         delete_link_response = e2e_client.delete(
