@@ -95,7 +95,6 @@ function RouteComponent() {
         <Tabs.Item title="Raw Config" icon={Code}>
           <RawConfigurationSection
             config={configuration?.data}
-            onUpdate={handleUpdateConfig}
             isUpdating={updateConfigMutation.isPending}
           />
         </Tabs.Item>
@@ -285,12 +284,10 @@ function EnvironmentVariablesSection({
 // Raw Configuration Section Component
 function RawConfigurationSection({
   config,
-  onUpdate,
   isUpdating,
 }: {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   config: any;
-  onUpdate: (path: string, value: any) => void;  // eslint-disable-line @typescript-eslint/no-explicit-any
   isUpdating: boolean;
 }) {
   const [configJson, setConfigJson] = useState("");

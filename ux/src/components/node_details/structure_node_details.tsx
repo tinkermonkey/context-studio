@@ -502,9 +502,8 @@ const EditModal: React.FC<{
         queryKey: [QUERY_KEYS.STRUCTURE_NODES, node.id],
       });
       queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.STRUCTURE_NODES] });
-    } catch (_e) {  // eslint-disable-line @typescript-eslint/no-unused-vars
-  
-      console.warn("Failed to invalidate node queries", _e);
+    } catch (e) {
+      console.warn("Failed to invalidate node queries", e);
     }
   };
 
@@ -558,9 +557,8 @@ const AddChildModal: React.FC<{
         queryKey: [QUERY_KEYS.STRUCTURE_NODES, node.id],
       });
       queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.STRUCTURE_NODES] });
-    } catch (_e) {  // eslint-disable-line @typescript-eslint/no-unused-vars
-  
-      console.warn("Failed to invalidate node queries", _e);
+    } catch (e) {
+      console.warn("Failed to invalidate node queries", e);
     }
   };
 
@@ -635,9 +633,8 @@ const MoveModal: React.FC<{
         queryKey: [QUERY_KEYS.STRUCTURE_NODES, node.id],
       });
       queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.STRUCTURE_NODES] });
-    } catch (_e) {  // eslint-disable-line @typescript-eslint/no-unused-vars
-  
-      console.warn("Failed to invalidate node queries", _e);
+    } catch (e) {
+      console.warn("Failed to invalidate node queries", e);
     }
   };
 

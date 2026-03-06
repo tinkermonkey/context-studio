@@ -26,9 +26,6 @@ export const NlpTokenAnalysisPanel: React.FC<Props> = ({
   const wordnet = token.wordnet as any;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const concepcy = token.concepcy as any;
-  const relations = Array.isArray(concepcy?.related_terms)
-    ? concepcy.related_terms
-    : [];
 
   // Create token prefix for this chart
   const tokenPrefix = `token-${token.text}-${token.start ?? 0}`;

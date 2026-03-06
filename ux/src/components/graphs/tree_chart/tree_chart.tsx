@@ -5,7 +5,7 @@ import React, {
   useRef,
   useState,
 } from "react";
-import { type ChartData } from "./tree_data";
+import { type ChartData, type HierarchyNode } from "./tree_data";
 import { ChartStyles } from "./tree_chart_styles";
 import TreeTrunk from "./tree_trunk";
 import { TreeChartNode } from "./tree_chart_node";
@@ -159,9 +159,8 @@ const TreeChart: React.FC<TreeChartProps> = ({
   }, []);
 
   // Node click handler to navigate to the node's details
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const handleNodeClick = useCallback(
-    (node: any) => {
+    (node: HierarchyNode) => {
       if (
         node.type === "term" ||
         node.type === "domain" ||
@@ -195,9 +194,7 @@ const TreeChart: React.FC<TreeChartProps> = ({
         }}
       >
         {/* Render all children of the root node */}
-        { }
-        {root.children.map((child: any,  // eslint-disable-line @typescript-eslint/no-explicit-any
- index: number) => (
+        {root.children.map((child: HierarchyNode, index: number) => (
           <TreeChartNode
             key={child.id || index}
             node={child}

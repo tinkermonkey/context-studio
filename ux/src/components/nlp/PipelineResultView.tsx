@@ -1,5 +1,4 @@
 import * as React from "react";
-import { useEffect } from "react";
 import { Button, Alert, Spinner } from "flowbite-react";
 import { CheckCircle } from "lucide-react";
 import {

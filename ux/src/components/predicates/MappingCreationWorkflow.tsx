@@ -5,7 +5,7 @@
  * Supports US-3.1: Create Global Predicate from Cluster
  */
 
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { Badge, Button, Card, Label, Progress, Spinner, TextInput, Textarea  } from "flowbite-react";;
 import { ArrowLeft, ArrowRight, Check, X } from "lucide-react";;
 import {

@@ -22,12 +22,10 @@ async function waitForUrl(url: string, timeout: number = 30000): Promise<void> {
   while (Date.now() - startTime < timeout) {
     try {
       // Use dynamic import for node-fetch if native fetch is not available
-      let fetchFn = globalThis.fetch;
+      let fetchFn: typeof fetch = globalThis.fetch;
       if (!fetchFn) {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const nodeFetch = await import("node-fetch");
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        fetchFn = (nodeFetch as any).default;
+        fetchFn = (nodeFetch as unknown as { default: typeof fetch }).default;
       }
       const response = await fetchFn(url);
       if (response.ok) {

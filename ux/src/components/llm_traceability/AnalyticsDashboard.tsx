@@ -5,7 +5,7 @@
  * usage trends, and performance metrics. Uses Flowbite React components for layout.
  */
 
-import React, { useState, useMemo, useEffect } from "react";
+import React, { useState, useMemo } from "react";
 import { Card, Button, Select, Spinner, Alert } from "flowbite-react";
 import {
   useAnalyticsForTimeRange,

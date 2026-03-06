@@ -9,7 +9,6 @@ import {
   pipelineExecutionService,
   type PipelineExecutionRequest,
   type PipelineExecutionResponse,
-  type StreamingChunk,
 } from "../../services/pipelineExecution";
 
 /**

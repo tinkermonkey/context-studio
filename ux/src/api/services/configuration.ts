@@ -246,11 +246,10 @@ export class ConfigurationService extends BaseService {
   /**
    * Update reference source configuration
    */
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   async updateReferenceSourceConfig(
     sourceName: string,
     path: string,
-    value: any,
+    value: string | number | boolean | string[] | Record<string, unknown>,
   ): Promise<void> {
     this.validateRequired(sourceName, "sourceName");
     this.validateRequired(path, "path");
