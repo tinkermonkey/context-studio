@@ -5,7 +5,7 @@
  */
 
 import React from "react";
-import { Alert, Badge, Button, Card, Spinner } from "flowbite-react";;
+import { Alert, Badge, Button, Card, Spinner } from "flowbite-react";
 import {
   ExternalLink,
   AlertCircle,
@@ -16,9 +16,7 @@ import {
 } from "lucide-react";
 import { UnifiedNode, SourceType } from "@/api/types/unified";
 import { SOURCE_METADATA } from "@/api/types/unified";
-import {
-  StreamingSearchState,
-  } from "@/api/types/streamingReference";
+import { StreamingSearchState } from "@/api/types/streamingReference";
 import { useSourceLoadingStates } from "@/api/hooks/unifiedReference/useStreamingReference";
 import { getSourceBadgeColor, getSourceLabel } from "@/utils/sourceUtils";
 
