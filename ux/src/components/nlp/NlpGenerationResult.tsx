@@ -47,7 +47,7 @@ export const NlpGenerationResult: React.FC<NlpGenerationResultProps> = ({
 }) => {
   const [apiContext, setApiContext] = React.useState<Record<
     string,
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     any
   > | null>(null);
 
@@ -77,7 +77,7 @@ export const NlpGenerationResult: React.FC<NlpGenerationResultProps> = ({
   ]);
 
   // Group and sort the selected contexts by token (same logic as in NlpRefinementPanel)
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const groupedContexts = React.useMemo(() => {
     if (selectedNodeContext.size === 0) return [];
 
@@ -155,7 +155,7 @@ export const NlpGenerationResult: React.FC<NlpGenerationResultProps> = ({
   }, [selectedNodeContext]);
 
   // Utility function to normalize predicates to lowercase space-separated words
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const normalizePredicate = React.useCallback((predicate: string): string => {
     if (!predicate) return predicate;
 
@@ -182,7 +182,13 @@ export const NlpGenerationResult: React.FC<NlpGenerationResultProps> = ({
       parentTermContext,
       currentDefinition,
     };
-  }, [selectedNodeContext, term, domainContext, parentTermContext, currentDefinition]);
+  }, [
+    selectedNodeContext,
+    term,
+    domainContext,
+    parentTermContext,
+    currentDefinition,
+  ]);
 
   // Function to generate the API context JSON and prepare for pipeline execution
   React.useEffect(() => {
