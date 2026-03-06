@@ -108,47 +108,45 @@ export interface PredicatesTableProps {
   columnVisibility?: Record<string, boolean>;
 }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-const PredicatesTable = React.forwardRef<any, PredicatesTableProps>(
-  (props) => {
-    const { data: predicates, isLoading, error, refetch } = usePredicates();
-    const deletePredicate = useDeletePredicate();
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const PredicatesTable = React.forwardRef<any, PredicatesTableProps>((props) => {
+  const { data: predicates, isLoading, error, refetch } = usePredicates();
+  const deletePredicate = useDeletePredicate();
 
-    // Default hidden columns: id, mapping, date_created, date_modified
-    const defaultColumnVisibility: Record<string, boolean> = {
-      id: false,
-      mapping: false,
-      date_created: false,
-      date_modified: false,
-    };
-    const columnVisibility = {
-      ...defaultColumnVisibility,
-      ...props.columnVisibility,
-    };
+  // Default hidden columns: id, mapping, date_created, date_modified
+  const defaultColumnVisibility: Record<string, boolean> = {
+    id: false,
+    mapping: false,
+    date_created: false,
+    date_modified: false,
+  };
+  const columnVisibility = {
+    ...defaultColumnVisibility,
+    ...props.columnVisibility,
+  };
 
-    return (
-      <BaseNodeTable
-        columns={columns}
-        data={predicates?.data ?? []}
-        isLoading={isLoading}
-        error={error}
-        onRefetch={refetch}
-        onDelete={async (ids: string[]) => {
-          await Promise.all(ids.map((id) => deletePredicate.mutateAsync(id)));
-        }}
-        createForm={({ onSuccess }) => <PredicateForm onSuccess={onSuccess} />}
-        editForm={({ node, onSuccess }) => (
-          <PredicateForm predicate={node} onSuccess={onSuccess} />
-        )}
-        typeName="Predicate"
-        getId={(item) => item.id}
-        columnVisibility={columnVisibility}
-        linkGenerator={(predicate: PredicateOut) =>
-          `/app/nodes/predicate/${predicate.id}`
-        }
-      />
-    );
-  },
-);
+  return (
+    <BaseNodeTable
+      columns={columns}
+      data={predicates?.data ?? []}
+      isLoading={isLoading}
+      error={error}
+      onRefetch={refetch}
+      onDelete={async (ids: string[]) => {
+        await Promise.all(ids.map((id) => deletePredicate.mutateAsync(id)));
+      }}
+      createForm={({ onSuccess }) => <PredicateForm onSuccess={onSuccess} />}
+      editForm={({ node, onSuccess }) => (
+        <PredicateForm predicate={node} onSuccess={onSuccess} />
+      )}
+      typeName="Predicate"
+      getId={(item) => item.id}
+      columnVisibility={columnVisibility}
+      linkGenerator={(predicate: PredicateOut) =>
+        `/app/nodes/predicate/${predicate.id}`
+      }
+    />
+  );
+});
 
 export { PredicatesTable };

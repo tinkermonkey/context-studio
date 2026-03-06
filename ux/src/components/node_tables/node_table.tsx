@@ -5,7 +5,27 @@ import {
   useReactTable,
   getPaginationRowModel,
 } from "@tanstack/react-table";
-import { Badge, Button, Dropdown, DropdownItem, Label, Modal, ModalBody, ModalHeader, Pagination, Radio, Select, Spinner, Table, TableBody, TableCell, TableHead, TableHeadCell, TableRow, TextInput  } from "flowbite-react";;
+import {
+  Badge,
+  Button,
+  Dropdown,
+  DropdownItem,
+  Label,
+  Modal,
+  ModalBody,
+  ModalHeader,
+  Pagination,
+  Radio,
+  Select,
+  Spinner,
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeadCell,
+  TableRow,
+  TextInput,
+} from "flowbite-react";
 import {
   RefreshCcw,
   Plus,
@@ -95,7 +115,7 @@ function BaseNodeTable<T>({
   onQueryParamsChange,
   searchEnabled = true,
   searchPlaceholder,
-    filterFields = [],
+  filterFields = [],
   filtersEnabled = false,
   linkGenerator,
   customRowAction,
