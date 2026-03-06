@@ -33,16 +33,42 @@ class TestExternalPredicatesE2E:
 
     @pytest.fixture(autouse=True)
     def check_sqlite_vec(self):
-        """Check if sqlite-vec is available, skip tests if not."""
+        """Check if sqlite-vec is available and properly loaded, skip tests if not."""
         try:
             import sqlite_vec  # noqa: F401
         except ImportError:
             pytest.skip("sqlite-vec not available (expected in Docker environment)")
 
+        # Also verify that vec functions are actually available in SQLite
+        test_db_path = None
+        try:
+            from sqlalchemy import create_engine, text
+            from database.utils import init_db
+
+            with tempfile.NamedTemporaryFile(suffix=".db", delete=False) as tf:
+                test_db_path = tf.name
+
+            test_engine = create_engine(f"sqlite:///{test_db_path}")
+            init_db(test_engine)
+
+            # Test if vec_distance_cosine is available
+            with test_engine.connect() as conn:
+                try:
+                    conn.execute(
+                        text("SELECT vec_distance_cosine(x'00000000', x'00000000')")
+                    )
+                except Exception as e:
+                    pytest.skip(f"sqlite-vec extension not properly loaded: {e}")
+
+            test_engine.dispose()
+        finally:
+            if test_db_path and os.path.exists(test_db_path):
+                os.unlink(test_db_path)
+
     @pytest.fixture
     def temp_db(self):
         """Create a temporary database for testing."""
-        with tempfile.NamedTemporaryFile(suffix='.db', delete=False) as tf:
+        with tempfile.NamedTemporaryFile(suffix=".db", delete=False) as tf:
             db_path = tf.name
         yield db_path
         if os.path.exists(db_path):
@@ -71,28 +97,28 @@ class TestExternalPredicatesE2E:
                 {
                     "title": "subClassOf",
                     "definition": "Indicates that one class is a subclass of another class",
-                    "external_id": "subClassOf"
+                    "external_id": "subClassOf",
                 },
                 {
                     "title": "domainIncludes",
                     "definition": "Relates a property to a class that is (one of) the type(s) the property is expected to be used on",
-                    "external_id": "domainIncludes"
+                    "external_id": "domainIncludes",
                 },
                 {
                     "title": "rangeIncludes",
                     "definition": "Relates a property to a class that constitutes (one of) the expected type(s) for values of the property",
-                    "external_id": "rangeIncludes"
+                    "external_id": "rangeIncludes",
                 },
                 {
                     "title": "inverseOf",
                     "definition": "Relates a property to a property that is its inverse",
-                    "external_id": "inverseOf"
+                    "external_id": "inverseOf",
                 },
                 {
                     "title": "supersededBy",
                     "definition": "Relates a term to a term that supersedes it",
-                    "external_id": "supersededBy"
-                }
+                    "external_id": "supersededBy",
+                },
             ]
 
             created_predicates = []
@@ -101,7 +127,7 @@ class TestExternalPredicatesE2E:
                     title=pred_data["title"],
                     definition=pred_data["definition"],
                     source="schema.org",
-                    external_id=pred_data["external_id"]
+                    external_id=pred_data["external_id"],
                 )
                 created_predicates.append(pred)
 
@@ -116,7 +142,7 @@ class TestExternalPredicatesE2E:
                 "class hierarchy type inheritance",
                 source="schema.org",
                 threshold=0.4,
-                limit=5
+                limit=5,
             )
 
             assert len(class_results) > 0
@@ -130,16 +156,20 @@ class TestExternalPredicatesE2E:
                 "property domain range type",
                 source="schema.org",
                 threshold=0.4,
-                limit=5
+                limit=5,
             )
 
             assert len(property_results) > 0
             property_titles = [pred.title for pred, score in property_results]
             # Should find domain/range predicates
-            assert any(t in property_titles for t in ["domainIncludes", "rangeIncludes"])
+            assert any(
+                t in property_titles for t in ["domainIncludes", "rangeIncludes"]
+            )
 
             # Step 5: Retrieve specific predicates by source ID
-            subclass = manager.get_external_predicate_by_source("schema.org", "subClassOf")
+            subclass = manager.get_external_predicate_by_source(
+                "schema.org", "subClassOf"
+            )
             assert subclass is not None
             assert subclass.title == "subClassOf"
             assert "class" in subclass.definition.lower()
@@ -163,14 +193,14 @@ class TestExternalPredicatesE2E:
                 title="subClassOf",
                 definition="Indicates that one class is a subclass of another",
                 source="schema.org",
-                external_id="subClassOf"
+                external_id="subClassOf",
             )
 
             manager.add_external_predicate(
                 title="name",
                 definition="The name of the item",
                 source="schema.org",
-                external_id="name"
+                external_id="name",
             )
 
             # Step 2: Import similar Wikidata predicates
@@ -178,28 +208,26 @@ class TestExternalPredicatesE2E:
                 title="subclass of",
                 definition="Class of which this subject is a particular example or subclass",
                 source="wikidata",
-                external_id="P279"
+                external_id="P279",
             )
 
             manager.add_external_predicate(
                 title="instance of",
                 definition="That class of which this subject is a particular example",
                 source="wikidata",
-                external_id="P31"
+                external_id="P31",
             )
 
             manager.add_external_predicate(
                 title="label",
                 definition="Label or title to describe the entity",
                 source="wikidata",
-                external_id="P1476"
+                external_id="P1476",
             )
 
             # Step 3: Search across all sources
             hierarchy_results = manager.search_external_predicates_by_similarity(
-                "class hierarchy subclass",
-                threshold=0.3,
-                limit=10
+                "class hierarchy subclass", threshold=0.3, limit=10
             )
 
             assert len(hierarchy_results) > 0
@@ -211,19 +239,13 @@ class TestExternalPredicatesE2E:
 
             # Step 4: Filter by specific source
             schema_only = manager.search_external_predicates_by_similarity(
-                "class hierarchy",
-                source="schema.org",
-                threshold=0.3,
-                limit=10
+                "class hierarchy", source="schema.org", threshold=0.3, limit=10
             )
 
             assert all(pred.source == "schema.org" for pred, score in schema_only)
 
             wikidata_only = manager.search_external_predicates_by_similarity(
-                "class hierarchy",
-                source="wikidata",
-                threshold=0.3,
-                limit=10
+                "class hierarchy", source="wikidata", threshold=0.3, limit=10
             )
 
             assert all(pred.source == "wikidata" for pred, score in wikidata_only)
@@ -231,12 +253,16 @@ class TestExternalPredicatesE2E:
             # Step 5: Compare semantic similarity
             # Both "subClassOf" and "subclass of" should have high similarity to query
             schema_subclass = next(
-                (score for pred, score in schema_only if pred.external_id == "subClassOf"),
-                None
+                (
+                    score
+                    for pred, score in schema_only
+                    if pred.external_id == "subClassOf"
+                ),
+                None,
             )
             wikidata_subclass = next(
                 (score for pred, score in wikidata_only if pred.external_id == "P279"),
-                None
+                None,
             )
 
             # Both should be found with reasonable similarity
@@ -261,18 +287,42 @@ class TestExternalPredicatesE2E:
         with ReferenceManager(config, db_path=temp_db) as manager:
             # Step 1: Define internal predicates (simulated as dict)
             internal_predicates = [
-                {"id": "int_001", "label": "is_parent_of", "description": "Child-parent relationship in a hierarchy"},
-                {"id": "int_002", "label": "has_attribute", "description": "Entity has a specific attribute or property"},
-                {"id": "int_003", "label": "refers_to", "description": "One entity refers to or mentions another"},
+                {
+                    "id": "int_001",
+                    "label": "is_parent_of",
+                    "description": "Child-parent relationship in a hierarchy",
+                },
+                {
+                    "id": "int_002",
+                    "label": "has_attribute",
+                    "description": "Entity has a specific attribute or property",
+                },
+                {
+                    "id": "int_003",
+                    "label": "refers_to",
+                    "description": "One entity refers to or mentions another",
+                },
             ]
 
             # Step 2: Import Schema.org predicates
             schema_predicates_data = [
-                ("subClassOf", "Indicates that one class is a subclass of another", "subClassOf"),
-                ("superclassOf", "Indicates that one class is a superclass of another", "superclassOf"),
+                (
+                    "subClassOf",
+                    "Indicates that one class is a subclass of another",
+                    "subClassOf",
+                ),
+                (
+                    "superclassOf",
+                    "Indicates that one class is a superclass of another",
+                    "superclassOf",
+                ),
                 ("property", "A property of the entity", "property"),
                 ("relatedTo", "Related entity or concept", "relatedTo"),
-                ("mentions", "Indicates that this CreativeWork mentions a person, organization, or other entity", "mentions"),
+                (
+                    "mentions",
+                    "Indicates that this CreativeWork mentions a person, organization, or other entity",
+                    "mentions",
+                ),
             ]
 
             for title, definition, external_id in schema_predicates_data:
@@ -280,7 +330,7 @@ class TestExternalPredicatesE2E:
                     title=title,
                     definition=definition,
                     source="schema.org",
-                    external_id=external_id
+                    external_id=external_id,
                 )
 
             # Step 3: For each internal predicate, find matches
@@ -288,39 +338,42 @@ class TestExternalPredicatesE2E:
 
             for internal_pred in internal_predicates:
                 # Combine label and description for search
-                search_query = f"{internal_pred['label']} {internal_pred['description']}"
+                search_query = (
+                    f"{internal_pred['label']} {internal_pred['description']}"
+                )
 
                 # Search for similar external predicates
                 matches = manager.search_external_predicates_by_similarity(
-                    search_query,
-                    source="schema.org",
-                    threshold=0.3,
-                    limit=3
+                    search_query, source="schema.org", threshold=0.3, limit=3
                 )
 
-                mapping_results[internal_pred['id']] = {
-                    'internal': internal_pred,
-                    'matches': [(pred.external_id, pred.title, score) for pred, score in matches]
+                mapping_results[internal_pred["id"]] = {
+                    "internal": internal_pred,
+                    "matches": [
+                        (pred.external_id, pred.title, score) for pred, score in matches
+                    ],
                 }
 
             # Step 4: Validate mappings
             # is_parent_of should match subclass/superclass predicates
-            parent_matches = mapping_results['int_001']['matches']
+            parent_matches = mapping_results["int_001"]["matches"]
             assert len(parent_matches) > 0
             parent_titles = [title for ext_id, title, score in parent_matches]
             assert any("class" in title.lower() for title in parent_titles)
 
             # has_attribute should match property predicates
-            attr_matches = mapping_results['int_002']['matches']
+            attr_matches = mapping_results["int_002"]["matches"]
             assert len(attr_matches) > 0
             attr_titles = [title for ext_id, title, score in attr_matches]
             assert any("property" in title.lower() for title in attr_titles)
 
             # refers_to should match relatedTo or mentions
-            refers_matches = mapping_results['int_003']['matches']
+            refers_matches = mapping_results["int_003"]["matches"]
             assert len(refers_matches) > 0
             refers_titles = [title for ext_id, title, score in refers_matches]
-            assert any(title.lower() in ["relatedto", "mentions"] for title in refers_titles)
+            assert any(
+                title.lower() in ["relatedto", "mentions"] for title in refers_titles
+            )
 
     def test_e2e_incremental_update_workflow(self, temp_db):
         """
@@ -338,7 +391,11 @@ class TestExternalPredicatesE2E:
         with ReferenceManager(config, db_path=temp_db) as manager:
             # Step 1: Initial import
             initial_predicates = [
-                ("subClassOf", "Indicates that one class is a subclass of another", "subClassOf"),
+                (
+                    "subClassOf",
+                    "Indicates that one class is a subclass of another",
+                    "subClassOf",
+                ),
                 ("property", "A property of the entity", "property"),
             ]
 
@@ -347,7 +404,7 @@ class TestExternalPredicatesE2E:
                     title=title,
                     definition=definition,
                     source="schema.org",
-                    external_id=external_id
+                    external_id=external_id,
                 )
 
             initial_count = len(manager.list_external_predicates(source="schema.org"))
@@ -356,9 +413,17 @@ class TestExternalPredicatesE2E:
             # Step 2 & 3: Check for existing and add only new
             predicates_to_import = [
                 ("subClassOf", "Updated definition", "subClassOf"),  # Duplicate
-                ("rangeIncludes", "Relates a property to a class", "rangeIncludes"),  # New
+                (
+                    "rangeIncludes",
+                    "Relates a property to a class",
+                    "rangeIncludes",
+                ),  # New
                 ("property", "Same definition", "property"),  # Duplicate
-                ("domainIncludes", "Relates a property to a class", "domainIncludes"),  # New
+                (
+                    "domainIncludes",
+                    "Relates a property to a class",
+                    "domainIncludes",
+                ),  # New
             ]
 
             added_count = 0
@@ -366,7 +431,9 @@ class TestExternalPredicatesE2E:
 
             for title, definition, external_id in predicates_to_import:
                 # Check if exists
-                existing = manager.get_external_predicate_by_source("schema.org", external_id)
+                existing = manager.get_external_predicate_by_source(
+                    "schema.org", external_id
+                )
 
                 if existing is None:
                     # Add new predicate
@@ -374,7 +441,7 @@ class TestExternalPredicatesE2E:
                         title=title,
                         definition=definition,
                         source="schema.org",
-                        external_id=external_id
+                        external_id=external_id,
                     )
                     added_count += 1
                 else:
@@ -412,7 +479,7 @@ class TestExternalPredicatesE2E:
                     title=f"schema_predicate_{i}",
                     definition=f"A Schema.org predicate for testing, number {i}",
                     source="schema.org",
-                    external_id=f"pred_{i}"
+                    external_id=f"pred_{i}",
                 )
 
             # Wikidata predicates
@@ -421,7 +488,7 @@ class TestExternalPredicatesE2E:
                     title=f"wikidata_property_{i}",
                     definition=f"A Wikidata property for testing, number {i}",
                     source="wikidata",
-                    external_id=f"P{i}"
+                    external_id=f"P{i}",
                 )
 
             # Step 2: Verify import
@@ -436,9 +503,7 @@ class TestExternalPredicatesE2E:
 
             # Step 3: Bulk search
             search_results = manager.search_external_predicates_by_similarity(
-                "predicate property testing",
-                threshold=0.2,
-                limit=20
+                "predicate property testing", threshold=0.2, limit=20
             )
 
             assert len(search_results) > 0
@@ -481,7 +546,7 @@ class TestExternalPredicatesE2E:
                         title=title,
                         definition=definition,
                         source="test",
-                        external_id=external_id
+                        external_id=external_id,
                     )
                     successful.append(pred.external_id)
                 except Exception as e:
@@ -547,7 +612,7 @@ class TestExternalPredicatesE2E:
                     title=title,
                     definition=definition,
                     source="test",
-                    external_id=external_id
+                    external_id=external_id,
                 )
 
             # Step 2 & 3: Search and verify clustering
@@ -557,36 +622,41 @@ class TestExternalPredicatesE2E:
                 "class hierarchy parent child subclass",
                 source="test",
                 threshold=0.3,
-                limit=5
+                limit=5,
             )
 
             hierarchy_titles = [pred.title for pred, score in hierarchy_search]
             # Should find hierarchy predicates at top
-            assert any(t in hierarchy_titles for t in ["subClassOf", "parentClass", "childClass"])
+            assert any(
+                t in hierarchy_titles
+                for t in ["subClassOf", "parentClass", "childClass"]
+            )
 
             # Search for property predicates
             property_search = manager.search_external_predicates_by_similarity(
                 "property attribute characteristic",
                 source="test",
                 threshold=0.3,
-                limit=5
+                limit=5,
             )
 
             property_titles = [pred.title for pred, score in property_search]
             # Should find property predicates at top
-            assert any(t in property_titles for t in ["hasProperty", "propertyValue", "attribute"])
+            assert any(
+                t in property_titles
+                for t in ["hasProperty", "propertyValue", "attribute"]
+            )
 
             # Search for temporal predicates
             temporal_search = manager.search_external_predicates_by_similarity(
-                "date time when created",
-                source="test",
-                threshold=0.3,
-                limit=5
+                "date time when created", source="test", threshold=0.3, limit=5
             )
 
             temporal_titles = [pred.title for pred, score in temporal_search]
             # Should find temporal predicates at top
-            assert any(t in temporal_titles for t in ["startDate", "endDate", "dateCreated"])
+            assert any(
+                t in temporal_titles for t in ["startDate", "endDate", "dateCreated"]
+            )
 
     def test_e2e_cross_lingual_search(self, temp_db):
         """
@@ -605,14 +675,14 @@ class TestExternalPredicatesE2E:
                 title="subClassOf",
                 definition="Indicates that one class is a subclass of another class",
                 source="schema.org",
-                external_id="subClassOf"
+                external_id="subClassOf",
             )
 
             manager.add_external_predicate(
                 title="color",
                 definition="The color of an object or item",
                 source="schema.org",
-                external_id="color"
+                external_id="color",
             )
 
             # Search with synonyms
@@ -620,7 +690,7 @@ class TestExternalPredicatesE2E:
                 "hierarchy inheritance type",
                 source="schema.org",
                 threshold=0.3,
-                limit=5
+                limit=5,
             )
 
             # Should find subClassOf with high relevance
@@ -630,10 +700,7 @@ class TestExternalPredicatesE2E:
 
             # Search for color with synonym
             color_results = manager.search_external_predicates_by_similarity(
-                "hue shade tint",
-                source="schema.org",
-                threshold=0.3,
-                limit=5
+                "hue shade tint", source="schema.org", threshold=0.3, limit=5
             )
 
             # Should find color predicate
@@ -660,14 +727,14 @@ class TestExternalPredicatesE2E:
                 title="persistent1",
                 definition="First persisted predicate",
                 source="test",
-                external_id="persist1"
+                external_id="persist1",
             )
 
             manager.add_external_predicate(
                 title="persistent2",
                 definition="Second persisted predicate",
                 source="test",
-                external_id="persist2"
+                external_id="persist2",
             )
 
         # Manager closed, database file should persist
@@ -690,7 +757,7 @@ class TestExternalPredicatesE2E:
                 title="persistent3",
                 definition="Third persisted predicate",
                 source="test",
-                external_id="persist3"
+                external_id="persist3",
             )
 
         # Step 6: Verify cumulative persistence
@@ -720,21 +787,21 @@ class TestExternalPredicatesE2E:
                 title="location",
                 definition="The geographic location of an entity",
                 source="dbpedia",
-                external_id="dbo:location"
+                external_id="dbo:location",
             )
 
             manager.add_external_predicate(
                 title="isPartOf",
                 definition="Indicates that one entity is part of another",
                 source="dbpedia",
-                external_id="dbo:isPartOf"
+                external_id="dbo:isPartOf",
             )
 
             manager.add_external_predicate(
                 title="nearestCity",
                 definition="The nearest city to a location",
                 source="dbpedia",
-                external_id="dbo:nearestCity"
+                external_id="dbo:nearestCity",
             )
 
             # Search for location-related predicates
@@ -742,11 +809,13 @@ class TestExternalPredicatesE2E:
                 "geographic location place position",
                 source="dbpedia",
                 threshold=0.3,
-                limit=10
+                limit=10,
             )
 
             # Verify we found relevant predicates
-            assert len(location_results) > 0, "Should find location-related DBpedia predicates"
+            assert (
+                len(location_results) > 0
+            ), "Should find location-related DBpedia predicates"
 
             # Check that location predicate is in results
             titles = [pred.title for pred, score in location_results]
@@ -775,35 +844,35 @@ class TestExternalPredicatesE2E:
                 title="RelatedTo",
                 definition="General semantic relationship between concepts",
                 source="conceptnet",
-                external_id="/r/RelatedTo"
+                external_id="/r/RelatedTo",
             )
 
             manager.add_external_predicate(
                 title="IsA",
                 definition="Indicates that one concept is a type or instance of another",
                 source="conceptnet",
-                external_id="/r/IsA"
+                external_id="/r/IsA",
             )
 
             manager.add_external_predicate(
                 title="PartOf",
                 definition="Indicates a part-whole relationship",
                 source="conceptnet",
-                external_id="/r/PartOf"
+                external_id="/r/PartOf",
             )
 
             manager.add_external_predicate(
                 title="HasProperty",
                 definition="Indicates that an entity has a specific property or attribute",
                 source="conceptnet",
-                external_id="/r/HasProperty"
+                external_id="/r/HasProperty",
             )
 
             manager.add_external_predicate(
                 title="Causes",
                 definition="Indicates a causal relationship where one event causes another",
                 source="conceptnet",
-                external_id="/r/Causes"
+                external_id="/r/Causes",
             )
 
             # Search for hierarchy-related predicates
@@ -811,11 +880,13 @@ class TestExternalPredicatesE2E:
                 "type classification taxonomy hierarchy",
                 source="conceptnet",
                 threshold=0.3,
-                limit=10
+                limit=10,
             )
 
             # Verify we found relevant predicates
-            assert len(hierarchy_results) > 0, "Should find hierarchy-related ConceptNet predicates"
+            assert (
+                len(hierarchy_results) > 0
+            ), "Should find hierarchy-related ConceptNet predicates"
 
             # IsA should be among the results for hierarchy queries
             titles = [pred.title for pred, score in hierarchy_results]
@@ -826,11 +897,13 @@ class TestExternalPredicatesE2E:
                 "attribute characteristic property feature",
                 source="conceptnet",
                 threshold=0.3,
-                limit=10
+                limit=10,
             )
 
             # Verify we found property-related predicates
-            assert len(property_results) > 0, "Should find property-related ConceptNet predicates"
+            assert (
+                len(property_results) > 0
+            ), "Should find property-related ConceptNet predicates"
 
             property_titles = [pred.title for pred, score in property_results]
             assert "HasProperty" in property_titles or "RelatedTo" in property_titles
@@ -838,4 +911,6 @@ class TestExternalPredicatesE2E:
             # Verify all scores are valid
             for pred, score in hierarchy_results + property_results:
                 assert 0.0 <= score <= 1.0, f"Score {score} out of range"
-                assert pred.source == "conceptnet", f"Expected conceptnet, got {pred.source}"
+                assert (
+                    pred.source == "conceptnet"
+                ), f"Expected conceptnet, got {pred.source}"
