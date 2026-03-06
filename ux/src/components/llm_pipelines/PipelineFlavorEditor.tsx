@@ -1,5 +1,14 @@
 import React, { useState, useRef, useEffect } from "react";
-import { Alert, Badge, Button, Label, Select, Spinner, TextInput, Textarea  } from "flowbite-react";;
+import {
+  Alert,
+  Badge,
+  Button,
+  Label,
+  Select,
+  Spinner,
+  TextInput,
+  Textarea,
+} from "flowbite-react";
 import { Save, AlertTriangle, Info } from "lucide-react";
 import {
   useCreatePipelineFlavor,
@@ -151,7 +160,7 @@ export const PipelineFlavorEditor: React.FC<PipelineFlavorEditorProps> = ({
         temperature: flavor.llm_config.temperature,
         max_tokens: flavor.llm_config.max_tokens || 1000,
         top_p: flavor.llm_config.top_p || 1,
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         top_k: (flavor.llm_config as any).top_k || 40,
         frequency_penalty: flavor.llm_config.frequency_penalty || 0,
         presence_penalty: flavor.llm_config.presence_penalty || 0,
@@ -187,7 +196,7 @@ export const PipelineFlavorEditor: React.FC<PipelineFlavorEditorProps> = ({
         temperature: defaultFlavor.llm_config.temperature,
         max_tokens: defaultFlavor.llm_config.max_tokens || 1000,
         top_p: defaultFlavor.llm_config.top_p || 1,
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         top_k: (defaultFlavor.llm_config as any).top_k || 40,
         frequency_penalty: defaultFlavor.llm_config.frequency_penalty || 0,
         presence_penalty: defaultFlavor.llm_config.presence_penalty || 0,
