@@ -67,7 +67,7 @@ test.describe("Layer Management", () => {
       page,
       "/api/structure_nodes?node_type=layer",
     );
-   
+
     const createdLayer = response.data.find(
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (n: any) => n.title === layerTitle,
