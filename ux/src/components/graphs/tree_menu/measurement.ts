@@ -99,9 +99,7 @@ export function isMeasurementReady(): boolean {
 
 // Extract font properties from chart styles with better parsing
 export function extractFontPropertiesFromStyles(
-   
-  styleObject: any,  // eslint-disable-line @typescript-eslint/no-explicit-any
-
+  styleObject: any, // eslint-disable-line @typescript-eslint/no-explicit-any
 ): TextMeasurementOptions {
   // Parse the font shorthand property if it exists
   // Font shorthand format: [font-style] [font-variant] [font-weight] [font-size/line-height] [font-family]
@@ -354,9 +352,8 @@ export class TextHeightCache {
   private cache = new Map<string, number>();
   private textOptions;
 
-   
-  constructor(styleSource: any)  // eslint-disable-line @typescript-eslint/no-explicit-any
- {
+  constructor(styleSource: any) {
+    // eslint-disable-line @typescript-eslint/no-explicit-any
     this.textOptions = extractFontPropertiesFromStyles(styleSource);
   }
 

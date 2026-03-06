@@ -42,7 +42,6 @@ const TreeChart: React.FC<TreeChartProps> = ({
   const containerRef = useRef<HTMLDivElement>(null);
   const [containerWidth, setContainerWidth] = useState<number>(0);
 
-
   // Track hovered node for layout adjustments
   const [hoveredNodeId, setHoveredNodeId] = useState<string | null>(null);
 
