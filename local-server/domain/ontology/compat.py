@@ -7,43 +7,26 @@ and the new domain-driven terminology (taxonomy, concept_scheme, class).
 Purpose
 =======
 
-This module exists to support the gradual migration from legacy database-centric
-types (database.enums.NodeType) to domain-driven types
-(domain.ontology.value_objects.NodeType). The re-architecture creates two
-separate NodeType enums intentionally:
+The re-architecture maintains two separate NodeType enums during migration:
 
-- database.enums.NodeType with values LAYER, DOMAIN, TERM
-  - Represents the legacy naming from the database schema
-  - Used by ORM models and existing service code
-  - Status: Deprecated
+1. database.enums.NodeType (legacy)
+   - Values: LAYER, DOMAIN, TERM
+   - Used by: ORM models and existing service code
+   - Status: Deprecated
 
-- domain.ontology.value_objects.NodeType with values TAXONOMY, CONCEPT_SCHEME, CLASS, INDIVIDUAL
-  - Represents the domain's semantic understanding
-  - Used by domain entities and new domain code
-  - Status: Authoritative
+2. domain.ontology.value_objects.NodeType (new, authoritative)
+   - Values: TAXONOMY, CONCEPT_SCHEME, CLASS, INDIVIDUAL
+   - Used by: Domain entities and domain code
+   - Status: Authoritative
 
 This bridge provides:
-1. Bidirectional mapping dicts (NODE_TYPE_LEGACY_TO_NEW, NODE_TYPE_NEW_TO_LEGACY)
-2. Re-exports of new domain types for convenience
-3. Clear documentation of the migration path
+- Bidirectional mappings: NODE_TYPE_LEGACY_TO_NEW, NODE_TYPE_NEW_TO_LEGACY
+- Re-exports of new domain types for convenience
+- The only file in domain/ that imports from database/ (explicitly whitelisted in
+  local-server/scripts/check_domain_imports.py)
 
-The only file in the domain/ layer that imports from database/ is
-domain/ontology/compat.py - this is intentional and whitelisted by the
-import boundary linter (see scripts/check_domain_imports.py).
-
-TEMPORARY: This file will be removed during Phase 5 (Completion) once all
-adapters have been migrated to use domain types directly.
-
-Migration Timeline
-==================
-
-- Phase 0 (Foundation): ✓ Create parallel type definitions with mappings
-- Phase 1 (SQLite Adapter): Use mappings to convert between legacy/domain types
-- Phase 2 (Service Migration): Adapt service layer to return domain types
-- Phase 3-4 (Extraction, Sync): Use domain types throughout
-- Phase 5 (Completion): Remove compat.py and legacy database.enums.NodeType
-
-See issue #270 (Duplicate NodeType Enums) for tracking.
+TEMPORARY: This file will be removed once all consumers have been migrated to
+use domain types directly. See issue #270 for tracking.
 """
 
 from typing import Dict
