@@ -10,7 +10,7 @@ type AddExistingDatasetRequest =
   components["schemas"]["AddExistingDatasetRequest"];
 
 interface AddExistingDatasetFormProps {
-  onSuccess?: (dataset: any) => void;  // eslint-disable-line @typescript-eslint/no-explicit-any
+  onSuccess?: (dataset: any) => void; // eslint-disable-line @typescript-eslint/no-explicit-any
 }
 
 const AddExistingDatasetForm: React.FC<AddExistingDatasetFormProps> = ({
@@ -50,9 +50,9 @@ const AddExistingDatasetForm: React.FC<AddExistingDatasetFormProps> = ({
         );
         if (onSuccess) onSuccess(result);
         form.reset();
-   
-      } catch (error: any)  // eslint-disable-line @typescript-eslint/no-explicit-any
- {
+      } catch (
+        error: any // eslint-disable-line @typescript-eslint/no-explicit-any
+      ) {
         let message = "An error occurred";
         console.error("Full error object:", error);
         console.error("Error detail:", error?.detail);
