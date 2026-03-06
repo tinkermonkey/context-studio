@@ -62,7 +62,7 @@ class LLMConfig(BaseModel):
     model_name: str = Field(default="gpt-4o-mini", description="OpenAI model name")
     temperature: float = Field(default=0.0, ge=0.0, le=2.0, description="Model temperature")
     max_tokens: Optional[int] = Field(default=None, ge=1, le=32000, description="Maximum tokens for response")
-    timeout: int = Field(default=30, ge=1, le=300, description="Request timeout in seconds")
+    timeout: int = Field(default=60, ge=1, le=300, description="Request timeout in seconds")
     max_text_length: int = Field(default=1000, ge=1, le=10000, description="Maximum input text length")
     retry_attempts: int = Field(default=3, ge=0, le=10, description="Number of retry attempts")
     

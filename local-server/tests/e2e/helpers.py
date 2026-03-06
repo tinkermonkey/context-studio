@@ -44,7 +44,7 @@ def poll_until(
     effective_timeout = timeout_seconds if timeout_seconds is not None else timeout
 
     start_time = time.time()
-    last_result = None
+    last_result: Any = None
 
     while True:
         try:
