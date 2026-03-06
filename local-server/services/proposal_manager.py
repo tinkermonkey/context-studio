@@ -418,14 +418,13 @@ class ProposalManager:
     def _auto_merge_if_enabled(self, proposal_id: str):
         """
         Trigger auto-merge for approved proposal if enabled.
-        
+
         Args:
             proposal_id: Proposal identifier
         """
         # For Phase 3, we'll implement this as a placeholder
-        # Auto-merge could be handled by CRDTMergeEngine
+        # Auto-merge will be handled by CRDTMergeEngine
         logger.info(f"Auto-merge triggered for proposal {proposal_id} (placeholder)")
-        # TODO: Integrate with CRDTMergeEngine once implemented
     
     def _store_proposal_locally(self, proposal: Proposal) -> None:
         """
