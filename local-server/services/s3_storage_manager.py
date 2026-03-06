@@ -167,10 +167,10 @@ class S3StorageManager:
             logger.info(f"Parquet compression: {compression_ratio:.2f}x ratio achieved")
 
             return {
-                'compressed_size': improved_size,
+                'compressed_size': compressed_size,
                 'compression_ratio': compression_ratio,
                 'compression_algorithm': compression,
-                'savings_bytes': original_size - improved_size,
+                'savings_bytes': original_size - compressed_size,
                 'write_options': write_options
             }
 
