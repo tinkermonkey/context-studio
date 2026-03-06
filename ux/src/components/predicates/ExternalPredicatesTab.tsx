@@ -6,7 +6,26 @@
  */
 
 import React, { useState, lazy, Suspense } from "react";
-import { Badge, Button, Dropdown, DropdownDivider, DropdownItem, Modal, ModalBody, ModalHeader, Pagination, Select, Spinner, Table, TableBody, TableCell, TableHead, TableHeadCell, TableRow, TextInput  } from "flowbite-react";;
+import {
+  Badge,
+  Button,
+  Dropdown,
+  DropdownDivider,
+  DropdownItem,
+  Modal,
+  ModalBody,
+  ModalHeader,
+  Pagination,
+  Select,
+  Spinner,
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeadCell,
+  TableRow,
+  TextInput,
+} from "flowbite-react";
 import { Search, RefreshCw, X, ChevronDown, Info } from "lucide-react";
 import {
   useExternalPredicates,
@@ -63,7 +82,7 @@ export const ExternalPredicatesTab: React.FC<ExternalPredicatesTabProps> = ({
     },
     {
       enabled: !useSearch,
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } as any,
   );
 
@@ -74,19 +93,17 @@ export const ExternalPredicatesTab: React.FC<ExternalPredicatesTabProps> = ({
   } = listQuery;
 
   // Search external predicates (search mode)
-  const {
-    data: searchData,
-    isLoading: isSearchLoading,
-  } = useSearchExternalPredicates(
-    useSearch
-      ? {
-          query: debouncedSearch,
-          source: source || undefined,
-          limit: 100, // Get more results for search
-          threshold: searchThreshold,
-        }
-      : undefined,
-  );
+  const { data: searchData, isLoading: isSearchLoading } =
+    useSearchExternalPredicates(
+      useSearch
+        ? {
+            query: debouncedSearch,
+            source: source || undefined,
+            limit: 100, // Get more results for search
+            threshold: searchThreshold,
+          }
+        : undefined,
+    );
 
   // Use search data if searching, otherwise use list data
   const data = useSearch ? searchData : listData;
@@ -105,7 +122,6 @@ export const ExternalPredicatesTab: React.FC<ExternalPredicatesTabProps> = ({
       toast.error(`Failed to start discovery: ${error.message}`);
     },
   });
-
 
   const handleDiscoverClick = (sources?: string[]) => {
     discoverMutation.mutate(sources ? { sources } : undefined);
@@ -329,69 +345,69 @@ export const ExternalPredicatesTab: React.FC<ExternalPredicatesTabProps> = ({
                 // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 (predicate: any) => (
                   <TableRow
-                  key={predicate.id}
-                  className="bg-white dark:border-gray-700 dark:bg-gray-800"
-                >
-                  <TableCell className="w-fit whitespace-nowrap">
-                    <Badge
-                      color={getSourceBadgeColor(predicate.source)}
-                      className="w-fit"
-                    >
-                      {predicate.source}
-                    </Badge>
-                  </TableCell>
-                  <TableCell className="font-mono text-xs break-all">
-                    {predicate.external_id}
-                  </TableCell>
-                  <TableCell className="font-medium text-gray-900 dark:text-white">
-                    {predicate.title}
-                  </TableCell>
-                  <TableCell className="break-words">
-                    {predicate.definition || (
-                      <span className="text-gray-400">—</span>
-                    )}
-                  </TableCell>
-                  {useSearch && (
-                    <TableCell className="">
+                    key={predicate.id}
+                    className="bg-white dark:border-gray-700 dark:bg-gray-800"
+                  >
+                    <TableCell className="w-fit whitespace-nowrap">
                       <Badge
-                        color={
-                          predicate.similarity_score >= 0.8
-                            ? "success"
-                            : predicate.similarity_score >= 0.7
-                              ? "warning"
-                              : "gray"
-                        }
+                        color={getSourceBadgeColor(predicate.source)}
+                        className="w-fit"
                       >
-                        {(predicate.similarity_score * 100).toFixed(0)}%
+                        {predicate.source}
                       </Badge>
                     </TableCell>
-                  )}
-                  <TableCell className="">
-                    <Button
-                      size="xs"
-                      color="light"
-                      onClick={() =>
-                        setSelectedPredicate({
-                          source: predicate.source,
-                          externalId: predicate.external_id,
-                        })
-                      }
-                      title="View example uses"
-                    >
-                      <Info className="h-4 w-4" />
-                    </Button>
-                  </TableCell>
-                  <TableCell className="w-1">
-                    {onPredicateSelect && (
+                    <TableCell className="font-mono text-xs break-all">
+                      {predicate.external_id}
+                    </TableCell>
+                    <TableCell className="font-medium text-gray-900 dark:text-white">
+                      {predicate.title}
+                    </TableCell>
+                    <TableCell className="break-words">
+                      {predicate.definition || (
+                        <span className="text-gray-400">—</span>
+                      )}
+                    </TableCell>
+                    {useSearch && (
+                      <TableCell className="">
+                        <Badge
+                          color={
+                            predicate.similarity_score >= 0.8
+                              ? "success"
+                              : predicate.similarity_score >= 0.7
+                                ? "warning"
+                                : "gray"
+                          }
+                        >
+                          {(predicate.similarity_score * 100).toFixed(0)}%
+                        </Badge>
+                      </TableCell>
+                    )}
+                    <TableCell className="">
                       <Button
                         size="xs"
-                        onClick={() => onPredicateSelect(predicate.id)}
+                        color="light"
+                        onClick={() =>
+                          setSelectedPredicate({
+                            source: predicate.source,
+                            externalId: predicate.external_id,
+                          })
+                        }
+                        title="View example uses"
                       >
-                        Select
+                        <Info className="h-4 w-4" />
                       </Button>
-                    )}
-                  </TableCell>
-                </TableRow>
+                    </TableCell>
+                    <TableCell className="w-1">
+                      {onPredicateSelect && (
+                        <Button
+                          size="xs"
+                          onClick={() => onPredicateSelect(predicate.id)}
+                        >
+                          Select
+                        </Button>
+                      )}
+                    </TableCell>
+                  </TableRow>
                 ),
               )}
             </TableBody>

@@ -7,7 +7,7 @@
  */
 
 import React from "react";
-import { Alert, Badge, Spinner  } from "flowbite-react";;
+import { Alert, Badge, Spinner } from "flowbite-react";
 import { AlertCircle, BookOpen } from "lucide-react";
 import { usePredicateExamples } from "@/api/hooks/reference/useReference";
 import { PredicateUsage } from "./PredicateUsage";
