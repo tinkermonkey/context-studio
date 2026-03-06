@@ -258,13 +258,13 @@ export class PredicateService extends BaseService {
    */
   async searchExternalPredicates(
     params: SearchExternalPredicatesParams,
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
   ): Promise<any> {
     return this.withErrorContext(() => {
       this.validateRequired(params, "Search parameters");
       this.validateRequired(params.query, "Search query");
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       return this.getResource<any>(
         `${ENDPOINTS.PREDICATES}/external/search`,
         params,

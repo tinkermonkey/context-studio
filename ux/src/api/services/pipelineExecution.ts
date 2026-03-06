@@ -159,13 +159,12 @@ export class PipelineExecutionService extends BaseService {
   /**
    * Convert new generic response to legacy term definition response format
    */
-   
-  convertToLegacyTermResponse(response: PipelineExecutionResponse): any   // eslint-disable-line @typescript-eslint/no-explicit-any
-{
+
+  convertToLegacyTermResponse(response: PipelineExecutionResponse): any {
+    // eslint-disable-line @typescript-eslint/no-explicit-any
     // Parse the response_content as JSON if it's a string
-     
-    let parsedResult: any   // eslint-disable-line @typescript-eslint/no-explicit-any
-= response.response_content;
+
+    let parsedResult: any = response.response_content; // eslint-disable-line @typescript-eslint/no-explicit-any
     if (typeof response.response_content === "string") {
       try {
         parsedResult = JSON.parse(response.response_content);
@@ -187,12 +186,10 @@ export class PipelineExecutionService extends BaseService {
   /**
    * Convert new generic response to legacy domain definition response format
    */
-   
-  convertToLegacyDomainResponse(response: PipelineExecutionResponse): any   // eslint-disable-line @typescript-eslint/no-explicit-any
-{
-     
-    let parsedResult: any   // eslint-disable-line @typescript-eslint/no-explicit-any
-= response.response_content;
+
+  convertToLegacyDomainResponse(response: PipelineExecutionResponse): any {
+    // eslint-disable-line @typescript-eslint/no-explicit-any
+    let parsedResult: any = response.response_content; // eslint-disable-line @typescript-eslint/no-explicit-any
     if (typeof response.response_content === "string") {
       try {
         parsedResult = JSON.parse(response.response_content);
@@ -212,12 +209,10 @@ export class PipelineExecutionService extends BaseService {
   /**
    * Convert new generic response to legacy layer definition response format
    */
-   
-  convertToLegacyLayerResponse(response: PipelineExecutionResponse): any   // eslint-disable-line @typescript-eslint/no-explicit-any
-{
-     
-    let parsedResult: any   // eslint-disable-line @typescript-eslint/no-explicit-any
-= response.response_content;
+
+  convertToLegacyLayerResponse(response: PipelineExecutionResponse): any {
+    // eslint-disable-line @typescript-eslint/no-explicit-any
+    let parsedResult: any = response.response_content; // eslint-disable-line @typescript-eslint/no-explicit-any
     if (typeof response.response_content === "string") {
       try {
         parsedResult = JSON.parse(response.response_content);
