@@ -860,80 +860,20 @@ class ChangeAnalyticsEngine:
     
     def _get_fallback_user_activity(self, user_id: Optional[str], days: int) -> pd.DataFrame:
         """Fallback user activity when DuckDB not available."""
-        if user_id:
-            return pd.DataFrame([{
-                'author_id': user_id,
-                'total_changes': 450,  # Match test expectations
-                'total_entities': 95,
-                'active_days': 25,
-                'avg_changes_per_day': 18.0,
-                'max_changes_per_day': 55
-            }])
-        else:
-            return pd.DataFrame([
-                {
-                    'author_id': 'user1@example.com',
-                    'total_changes': 450,  # Match test expectations
-                    'total_entities': 95,
-                    'active_days': 25,
-                    'avg_changes_per_day': 18.0,
-                    'max_changes_per_day': 55
-                },
-                {
-                    'author_id': 'user2@example.com',
-                    'total_changes': 180,
-                    'total_entities': 52,
-                    'active_days': 15,
-                    'avg_changes_per_day': 12.0,
-                    'max_changes_per_day': 35
-                },
-                {
-                    'author_id': 'user3@example.com',
-                    'total_changes': 320,
-                    'total_entities': 89,
-                    'active_days': 25,
-                    'avg_changes_per_day': 12.8,
-                    'max_changes_per_day': 50
-                }
-            ])
+        return pd.DataFrame([])
     
     def _get_fallback_entity_hotspots(self, limit: int) -> pd.DataFrame:
         """Fallback entity hotspots when DuckDB not available."""
-        return pd.DataFrame([
-            {
-                'entity_type': 'structure_node',
-                'entity_id': 'entity-1',  # Match test expectations
-                'total_modifications': 85,  # Match test expectations
-                'unique_authors': 5,
-                'lifespan_days': 30,
-                'modification_rate': 1.5
-            },
-            {
-                'entity_type': 'structure_node',
-                'entity_id': 'entity-2',
-                'total_modifications': 32,
-                'unique_authors': 3,
-                'lifespan_days': 25,
-                'modification_rate': 1.28
-            },
-            {
-                'entity_type': 'structure_node',
-                'entity_id': 'entity-3',
-                'total_modifications': 28,
-                'unique_authors': 4,
-                'lifespan_days': 22,
-                'modification_rate': 1.27
-            }
-        ])
+        return pd.DataFrame([])
     
     def _get_fallback_collaboration_metrics(self, days: int) -> Dict[str, Any]:
         """Fallback collaboration metrics when DuckDB not available."""
         return {
-            "proposal_authors": 8,
-            "voters": 12,
-            "total_votes": 48,
-            "avg_response_time_hours": 16.5,
-            "approval_rate": 0.85
+            "proposal_authors": 0,
+            "voters": 0,
+            "total_votes": 0,
+            "avg_response_time_hours": 0,
+            "approval_rate": 0
         }
     
     def _get_fallback_change_impact_analysis(self, changeset_id: str) -> Dict[str, Any]:
@@ -969,56 +909,18 @@ class ChangeAnalyticsEngine:
     def _get_fallback_conflict_resolution_metrics(self) -> Dict[str, Any]:
         """Fallback conflict resolution metrics when DuckDB not available."""
         return {
-            "total_conflicts": 8,
-            "conflict_types": 3,
-            "resolved_conflicts": 6,
-            "high_severity_conflicts": 1,
-            "avg_resolution_time_hours": 4.5
+            "total_conflicts": 0,
+            "conflict_types": 0,
+            "resolved_conflicts": 0,
+            "high_severity_conflicts": 0,
+            "avg_resolution_time_hours": 0
         }
     
     def _get_fallback_change_trends(self, days: int) -> Dict[str, Any]:
         """Fallback change trends when DuckDB not available."""
-        from datetime import datetime, timedelta
-
-        # Generate deterministic mock data for tests
-        base_date = datetime.now() - timedelta(days=days)
-        daily_trends = []
-
-        # Test expects specific values
-        daily_trends.append({
-            "change_date": (base_date + timedelta(days=0)).strftime("%Y-%m-%d"),
-            "total_changes": 45,  # Test expects this specific value
-            "active_users": 5,
-            "entities_affected": 15,
-            "changesets": 8,
-            "creates": 12,
-            "updates": 25,
-            "deletes": 3
-        })
-
-        daily_trends.append({
-            "change_date": (base_date + timedelta(days=1)).strftime("%Y-%m-%d"),
-            "total_changes": 32,
-            "active_users": 4,
-            "entities_affected": 12,
-            "changesets": 6,
-            "creates": 8,
-            "updates": 18,
-            "deletes": 2
-        })
-
-        # Test expects peak_hours with hour_of_day = 9 first
-        peak_hours = []
-        for hour in [9, 14, 16]:  # Mock peak hours
-            peak_hours.append({
-                "hour_of_day": hour,
-                "changes_count": 65 if hour == 9 else 45,
-                "avg_hourly_changes": 45.5
-            })
-
         return {
-            "daily_trends": daily_trends,
-            "peak_hours": peak_hours,
+            "daily_trends": [],
+            "peak_hours": [],
             "analysis_period_days": days
         }
     
@@ -1026,54 +928,21 @@ class ChangeAnalyticsEngine:
         """Fallback performance metrics when DuckDB not available."""
         return {
             "sync_performance": {
-                "total_sync_operations": 145,  # Test expects this value
-                "completed_operations": 142,
-                "avg_sync_time_minutes": 7.5,  # Updated for dashboard test
-                "total_synced_changes": 12450,
-                "total_new_entities": 1250,
-                "total_updated_entities": 11200
+                "total_sync_operations": 0,
+                "completed_operations": 0,
+                "avg_sync_time_minutes": 0,
+                "total_synced_changes": 0,
+                "total_new_entities": 0,
+                "total_updated_entities": 0
             },
-            "system_load": [
-                {"timestamp": "2024-01-01T09:00:00Z", "cpu_percent": 45.2, "memory_percent": 67.8},
-                {"timestamp": "2024-01-01T10:00:00Z", "cpu_percent": 52.1, "memory_percent": 71.3}
-            ]
+            "system_load": []
         }
     
     def _get_fallback_collaboration_insights(self, days: int) -> Dict[str, Any]:
         """Fallback collaboration insights when DuckDB not available."""
         return {
-            "collaboration_networks": [
-                {
-                    "user1": "alice@example.com",
-                    "user2": "bob@example.com",
-                    "shared_entities": 15,
-                    "total_entities": 45
-                },
-                {
-                    "user1": "alice@example.com",
-                    "user2": "charlie@example.com",
-                    "shared_entities": 12,
-                    "total_entities": 38
-                }
-            ],
-            "team_productivity": [
-                {
-                    "author_id": "alice@example.com",
-                    "total_changes": 245,
-                    "unique_entities": 85,
-                    "active_days": 18,
-                    "changesets_created": 32,
-                    "avg_changes_per_day": 13.6
-                },
-                {
-                    "author_id": "bob@example.com",
-                    "total_changes": 198,
-                    "unique_entities": 67,
-                    "active_days": 15,
-                    "changesets_created": 28,
-                    "avg_changes_per_day": 13.2
-                }
-            ],
+            "collaboration_networks": [],
+            "team_productivity": [],
             "analysis_period_days": days
         }
     
@@ -1082,31 +951,25 @@ class ChangeAnalyticsEngine:
         return {
             "summary_period_days": days,
             "key_metrics": {
-                "total_changes": 1250,  # Mock data for tests
-                "active_users": 15,
-                "entities_modified": 340,
-                "avg_changes_per_user": 83.3,
-                "most_active_entity_type": "structure_node"
+                "total_changes": 0,
+                "active_users": 0,
+                "entities_modified": 0,
+                "avg_changes_per_user": 0,
+                "most_active_entity_type": None
             },
             "collaboration_health": {
-                "total_branches": 8,
-                "merge_requests": 12,
-                "conflict_resolution_rate": 95.5
+                "total_branches": 0,
+                "merge_requests": 0,
+                "conflict_resolution_rate": 0
             },
             "system_health": {
-                "high_severity_conflicts": 2,  # Mock data for tests
-                "avg_resolution_time_hours": 4.5,
+                "high_severity_conflicts": 0,
+                "avg_resolution_time_hours": 0,
                 "sync_performance": {
-                    "total_sync_operations": 145,
-                    "avg_sync_time_minutes": 8.5
+                    "total_sync_operations": 0,
+                    "avg_sync_time_minutes": 0
                 }
             },
-            "top_entities": [
-                {
-                    "entity_type": "structure_node",
-                    "entity_id": "entity-1",  # Match test expectations
-                    "total_modifications": 85
-                }
-            ],
+            "top_entities": [],
             "generated_at": datetime.now().isoformat()
         }
