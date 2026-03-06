@@ -15,7 +15,10 @@ class LLMResponse:
 
     content: str
     model: str
-    token_count: int
+    tokens_in: int
+    tokens_out: int
+    duration_ms: float
+    finish_reason: str  # "stop", "length", "error"
     raw_response: dict = field(default_factory=dict)
 
 
@@ -43,10 +46,11 @@ class NLPResult:
 class ReferenceRelation:
     """Relation from a reference source."""
 
-    source_uri: str
+    subject_uri: str
     predicate: str
-    target_uri: str
-    weight: float
+    object_uri: str
+    object_label: Optional[str] = None
+    weight: Optional[float] = None
 
 
 @dataclass
@@ -56,20 +60,36 @@ class ReferenceResult:
     uri: str
     label: str
     description: Optional[str]
-    relations: List[ReferenceRelation]
+    source: str
+    confidence: float
+    metadata: Optional[dict] = None
 
 
 class LLMProvider(Protocol):
-    """Provider port for LLM-based text completion and embedding."""
+    """Provider for LLM inference.
+
+    Implementations route to specific providers (OpenAI, Anthropic, etc.)
+    based on the model identifier.
+    """
 
     def complete(
-        self, prompt: str, system_prompt: Optional[str] = None
+        self,
+        system_prompt: str,
+        user_prompt: str,
+        model: str,
+        temperature: float = 0.0,
+        max_tokens: Optional[int] = None,
+        response_format: Optional[str] = None,  # "json", "text"
     ) -> LLMResponse:
-        """Complete a prompt using the LLM."""
+        """Send prompts to an LLM and receive a completion."""
         ...
 
-    def embed(self, text: str) -> List[float]:
-        """Generate an embedding for text."""
+    def is_model_available(self, model: str) -> bool:
+        """Check if a model is available for use."""
+        ...
+
+    def list_available_models(self) -> list[str]:
+        """List all available models."""
         ...
 
 
@@ -86,12 +106,26 @@ class NLPProcessor(Protocol):
 
 
 class ReferenceSource(Protocol):
-    """Source port for external knowledge base lookups."""
+    """A source of reference knowledge for concept enrichment.
 
-    def lookup(self, term: str) -> Optional[ReferenceResult]:
-        """Look up a term and return reference data."""
+    Each implementation wraps a specific external API (ConceptNet, DBpedia, etc.).
+    The interface is intentionally simple — complex multi-source aggregation
+    is handled by the domain service, not the adapter.
+    """
+
+    @property
+    def source_name(self) -> str:
+        """Get the name of this reference source."""
         ...
 
-    def search(self, query: str, limit: int = 10) -> List[ReferenceResult]:
-        """Search for terms and return reference data."""
+    def search(self, term: str, limit: int = 10) -> list[ReferenceResult]:
+        """Search for a term and return matching results."""
+        ...
+
+    def get_relations(self, uri: str, limit: int = 20) -> list[ReferenceRelation]:
+        """Get relations for an entity identified by URI."""
+        ...
+
+    def is_available(self) -> bool:
+        """Check if this source is available (e.g., API reachable)."""
         ...

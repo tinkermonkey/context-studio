@@ -6,9 +6,20 @@ They use typing.Protocol for structural subtyping and reference only domain enti
 Response dataclasses are defined in this file alongside their corresponding ports.
 """
 from dataclasses import dataclass
+from datetime import datetime
 from typing import Protocol, Optional, Sequence
 
 from domain.versioning.entities import ChangeEvent, ConflictReport, MergeResult
+
+
+@dataclass
+class EntityVersion:
+    """Version snapshot of an entity."""
+
+    entity_id: str
+    version: int
+    state: dict
+    created_at: datetime
 
 
 @dataclass
@@ -31,18 +42,41 @@ class SyncStatus(Protocol):
 
 
 class ChangeRepository(Protocol):
-    """Repository port for managing change events."""
+    """Repository for change events and entity version history."""
 
     def record_change(self, event: ChangeEvent) -> ChangeEvent:
         """Record a change event."""
         ...
 
-    def list_changes(self, since: Optional[str] = None) -> Sequence[ChangeEvent]:
-        """List change events, optionally filtered by timestamp (ISO datetime string)."""
+    def get_changes(
+        self,
+        record_type: Optional[str] = None,
+        record_id: Optional[str] = None,
+        since: Optional[datetime] = None,
+        processed: Optional[bool] = None,
+        limit: int = 100,
+    ) -> Sequence[ChangeEvent]:
+        """Query change events with optional filtering."""
         ...
 
-    def get_change(self, event_id: str) -> Optional[ChangeEvent]:
-        """Retrieve a change event by ID."""
+    def mark_processed(self, event_ids: Sequence[int]) -> int:
+        """Mark events as processed and return count updated."""
+        ...
+
+    def save_version(self, version: EntityVersion) -> EntityVersion:
+        """Save an entity version snapshot."""
+        ...
+
+    def get_version(self, entity_id: str, version: int) -> Optional[EntityVersion]:
+        """Retrieve a specific version of an entity."""
+        ...
+
+    def get_latest_version(self, entity_id: str) -> Optional[EntityVersion]:
+        """Retrieve the latest version of an entity."""
+        ...
+
+    def list_versions(self, entity_id: str) -> Sequence[EntityVersion]:
+        """List all versions of an entity."""
         ...
 
 

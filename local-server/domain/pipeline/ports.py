@@ -10,26 +10,28 @@ from domain.pipeline.entities import PipelineConfiguration, Execution
 
 
 class PipelineRepository(Protocol):
-    """Repository port for managing pipeline configurations and executions."""
+    """Repository for pipeline configurations and execution logs."""
 
-    def get_configuration(self, pipeline_id: str) -> Optional[PipelineConfiguration]:
+    def get_config(self, config_id: str) -> Optional[PipelineConfiguration]:
         """Retrieve a pipeline configuration by ID."""
         ...
 
-    def list_configurations(self) -> Sequence[PipelineConfiguration]:
-        """List all pipeline configurations."""
+    def list_configs(self, pipeline: Optional[str] = None, enabled_only: bool = False) -> Sequence[PipelineConfiguration]:
+        """List pipeline configurations with optional filtering."""
         ...
 
-    def save_configuration(
-        self, config: PipelineConfiguration
-    ) -> PipelineConfiguration:
+    def save_config(self, config: PipelineConfiguration) -> PipelineConfiguration:
         """Save or update a pipeline configuration."""
+        ...
+
+    def delete_config(self, config_id: str) -> bool:
+        """Delete a pipeline configuration. Return True if deleted, False if not found."""
         ...
 
     def record_execution(self, execution: Execution) -> Execution:
         """Record a pipeline execution."""
         ...
 
-    def get_execution(self, execution_id: str) -> Optional[Execution]:
-        """Retrieve a pipeline execution by ID."""
+    def get_executions(self, pipeline_config_id: str, limit: int = 50) -> Sequence[Execution]:
+        """Retrieve execution records for a pipeline configuration."""
         ...

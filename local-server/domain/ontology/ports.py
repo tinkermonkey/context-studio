@@ -60,12 +60,22 @@ class OntologyRepository(Protocol):
         """Retrieve a class by ID."""
         ...
 
-    def list_classes(self, scheme_id: str) -> Sequence[Class]:
-        """List all classes in a concept scheme."""
+    def list_classes(
+        self,
+        scheme_id: Optional[str] = None,
+        parent_class_id: Optional[str] = None,
+        limit: int = 100,
+        offset: int = 0,
+    ) -> Sequence[Class]:
+        """List classes with optional filtering by scheme or parent."""
         ...
 
     def search_classes(self, criteria: SearchCriteria) -> Sequence[Class]:
         """Search classes based on search criteria."""
+        ...
+
+    def count_classes(self, scheme_id: Optional[str] = None) -> int:
+        """Count the number of classes, optionally filtered by scheme."""
         ...
 
     def save_class(self, cls: Class) -> Class:
@@ -98,8 +108,12 @@ class OntologyRepository(Protocol):
         """Retrieve a property definition by ID."""
         ...
 
-    def list_property_definitions(self) -> Sequence[PropertyDefinition]:
-        """List all property definitions."""
+    def get_property_definition_by_identifier(self, identifier: str) -> Optional[PropertyDefinition]:
+        """Retrieve a property definition by its identifier string."""
+        ...
+
+    def list_property_definitions(self, is_relevant: Optional[bool] = None) -> Sequence[PropertyDefinition]:
+        """List all property definitions, optionally filtered by relevance."""
         ...
 
     def save_property_definition(self, prop: PropertyDefinition) -> PropertyDefinition:
@@ -119,12 +133,33 @@ class OntologyRepository(Protocol):
         """
         ...
 
+    def list_individuals(self, class_id: Optional[str] = None) -> Sequence[Individual]:
+        """List individuals, optionally filtered by class.
+
+        NOT IMPLEMENTED: This method is reserved for a future phase.
+        Implementations MUST raise NotImplementedError.
+        """
+        ...
+
     def save_individual(self, individual: Individual) -> Individual:
         """Save or update an individual.
 
         NOT IMPLEMENTED: This method is reserved for a future phase.
         Implementations MUST raise NotImplementedError.
         """
+        ...
+
+    def delete_individual(self, individual_id: str) -> bool:
+        """Delete an individual.
+
+        NOT IMPLEMENTED: This method is reserved for a future phase.
+        Implementations MUST raise NotImplementedError.
+        """
+        ...
+
+    # Bulk operations
+    def get_all_entities_and_relationships(self) -> tuple[Sequence, Sequence[Relationship]]:
+        """Return all entities and relationships for graph building."""
         ...
 
 
