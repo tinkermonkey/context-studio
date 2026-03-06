@@ -61,7 +61,7 @@ export function mswCompatibleHttpAdapter(
         res.on("end", () => {
           const buffer = Buffer.concat(chunks);
           const contentType = res.headers["content-type"] || "";
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
           let data: any = buffer.toString();
 
           if (contentType.includes("application/json")) {
@@ -77,7 +77,7 @@ export function mswCompatibleHttpAdapter(
             status: res.statusCode!,
             statusText: res.statusMessage || "",
             headers: res.headers,
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             config: config as any, // Cast to avoid config type mismatch
             request: req,
           };
