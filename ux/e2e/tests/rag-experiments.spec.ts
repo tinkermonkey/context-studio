@@ -1,8 +1,5 @@
 import { test, expect } from "@playwright/test";
-import {
-  apiRequest,
-  endpointExists,
-} from "../fixtures/test-helpers";
+import { apiRequest, endpointExists } from "../fixtures/test-helpers";
 
 /**
  * RAG Experiments E2E Tests
@@ -126,8 +123,9 @@ test.describe("RAG Experiments", () => {
       page,
       "/api/rag-experiments/paragraphs?limit=100",
     );
-     
-    const createdParagraph = response.paragraphs.find((p: any) => p.text.includes("E2E Test Paragraph"),  // eslint-disable-line @typescript-eslint/no-explicit-any
+
+    const createdParagraph = response.paragraphs.find(
+      (p: any) => p.text.includes("E2E Test Paragraph"), // eslint-disable-line @typescript-eslint/no-explicit-any
     );
 
     expect(createdParagraph).toBeDefined();

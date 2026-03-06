@@ -78,7 +78,10 @@ test.describe("Predicate Management", () => {
     );
 
     // Verify predicate exists in backend
-    const response = await apiRequest<{ data: Predicate[] }>(page, "/api/predicates");
+    const response = await apiRequest<{ data: Predicate[] }>(
+      page,
+      "/api/predicates",
+    );
     const createdPredicate = response.data.find(
       (p: Predicate) => p.title === predicateTitle,
     );
@@ -114,7 +117,10 @@ test.describe("Predicate Management", () => {
     ).not.toBeVisible();
 
     // Verify predicate exists in backend with custom identifier
-    const response = await apiRequest<{ data: Predicate[] }>(page, "/api/predicates");
+    const response = await apiRequest<{ data: Predicate[] }>(
+      page,
+      "/api/predicates",
+    );
     const createdPredicate = response.data.find(
       (p: Predicate) => p.title === predicateTitle,
     );
@@ -130,13 +136,17 @@ test.describe("Predicate Management", () => {
     const updatedDefinition = "Updated definition via E2E test";
 
     // Create predicate via API for speed
-    const createResponse = await apiRequest<Predicate>(page, "/api/predicates", {
-      method: "POST",
-      body: {
-        title: originalTitle,
-        definition: "Original definition",
+    const createResponse = await apiRequest<Predicate>(
+      page,
+      "/api/predicates",
+      {
+        method: "POST",
+        body: {
+          title: originalTitle,
+          definition: "Original definition",
+        },
       },
-    });
+    );
     const predicateId = createResponse.id;
 
     // Refresh the page to see the new predicate
@@ -185,13 +195,17 @@ test.describe("Predicate Management", () => {
   test("should delete a predicate", async ({ page }) => {
     // Create a predicate to delete
     const predicateTitle = `E2E Delete Test ${Date.now()}`;
-    const createResponse = await apiRequest<Predicate>(page, "/api/predicates", {
-      method: "POST",
-      body: {
-        title: predicateTitle,
-        definition: "Predicate to be deleted",
+    const createResponse = await apiRequest<Predicate>(
+      page,
+      "/api/predicates",
+      {
+        method: "POST",
+        body: {
+          title: predicateTitle,
+          definition: "Predicate to be deleted",
+        },
       },
-    });
+    );
     const predicateId = createResponse.id;
 
     // Refresh to see the predicate
