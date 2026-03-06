@@ -6,7 +6,7 @@ import { Spinner } from "flowbite-react";
 import { CsSidebar, CsSidebarTitle } from "@/components/layout/cs_sidebar";
 import { CsMain, CsMainTitle } from "@/components/layout/cs_main";
 import { Layers } from "lucide-react";
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { TreeMenuPanel } from "@/components/panels/TreeMenuPanel";
 
 export const Route = createFileRoute("/app/layers")({

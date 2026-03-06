@@ -1,8 +1,32 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { Alert, Badge, Button, Card, Checkbox, Label, Progress, Select, Tabs, TextInput  } from "flowbite-react";;
+import {
+  Alert,
+  Badge,
+  Button,
+  Card,
+  Checkbox,
+  Label,
+  Progress,
+  Select,
+  Tabs,
+  TextInput,
+} from "flowbite-react";
 import { CsMainTitle } from "@/components/layout/cs_main";
 import { ConfigBreadcrumbs } from "@/components/configuration/ConfigBreadcrumbs";
-import { Activity, AlertTriangle, CheckCircle, Database, FileText, Globe, Lock, Monitor, RotateCcw, Server, Settings, Shield  } from "lucide-react";;
+import {
+  Activity,
+  AlertTriangle,
+  CheckCircle,
+  Database,
+  FileText,
+  Globe,
+  Lock,
+  Monitor,
+  RotateCcw,
+  Server,
+  Settings,
+  Shield,
+} from "lucide-react";
 import { useConfiguration, useUpdateConfigurationValue } from "@/api/hooks";
 import { useButterToast } from "@/hooks/useButterToast";
 
@@ -68,7 +92,8 @@ function RouteComponent() {
     return labels[path] || path;
   };
 
-  const handleUpdateServerConfig = async (path: string, value: any) => {  // eslint-disable-line @typescript-eslint/no-explicit-any
+  const handleUpdateServerConfig = async (path: string, value: any) => {
+    // eslint-disable-line @typescript-eslint/no-explicit-any
     const label = getConfigLabel(path);
     await updateConfigMutation.mutateAsync(
       {
@@ -88,7 +113,8 @@ function RouteComponent() {
     );
   };
 
-  const handleUpdateLoggingConfig = async (path: string, value: any) => {  // eslint-disable-line @typescript-eslint/no-explicit-any
+  const handleUpdateLoggingConfig = async (path: string, value: any) => {
+    // eslint-disable-line @typescript-eslint/no-explicit-any
     const label = getConfigLabel(path);
     await updateConfigMutation.mutateAsync(
       {
@@ -108,8 +134,8 @@ function RouteComponent() {
     );
   };
 
-   
-  const handleUpdateSecurityConfig = async (path: string, value: any) => {  // eslint-disable-line @typescript-eslint/no-explicit-any
+  const handleUpdateSecurityConfig = async (path: string, value: any) => {
+    // eslint-disable-line @typescript-eslint/no-explicit-any
     const label = getConfigLabel(path);
     await updateConfigMutation.mutateAsync(
       {
@@ -197,7 +223,7 @@ function ServerSettingsSection({
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   config: any;
 
-  onUpdate: (path: string, value: any) => void;  // eslint-disable-line @typescript-eslint/no-explicit-any
+  onUpdate: (path: string, value: any) => void; // eslint-disable-line @typescript-eslint/no-explicit-any
   isUpdating: boolean;
 }) {
   if (!config) {
@@ -343,7 +369,7 @@ function LoggingConfigurationSection({
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   config: any;
 
-  onUpdate: (path: string, value: any) => void;  // eslint-disable-line @typescript-eslint/no-explicit-any
+  onUpdate: (path: string, value: any) => void; // eslint-disable-line @typescript-eslint/no-explicit-any
   isUpdating: boolean;
 }) {
   if (!config) {
@@ -537,7 +563,7 @@ function SecuritySettingsSection({
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   config: any;
 
-  onUpdate: (path: string, value: any) => void;  // eslint-disable-line @typescript-eslint/no-explicit-any
+  onUpdate: (path: string, value: any) => void; // eslint-disable-line @typescript-eslint/no-explicit-any
   isUpdating: boolean;
 }) {
   if (!config) {
