@@ -58,21 +58,11 @@ WORKDIR /workspace/context-studio
 # Copy only dependency file for installation
 COPY local-server/requirements.txt /tmp/backend-requirements.txt
 
-# Build sqlite-vec from source for current architecture
-# The pre-built Python wheels contain 32-bit ARM binaries on ARM64
-RUN python3 -m pip install --no-cache-dir sqlite-vec==0.1.6 && \
-    cd /tmp && \
-    wget -q https://github.com/asg017/sqlite-vec/archive/refs/tags/v0.1.6.tar.gz && \
-    tar -xzf v0.1.6.tar.gz && \
-    cd sqlite-vec-0.1.6 && \
-    make loadable && \
-    cp dist/vec0.so /usr/local/lib/python3.11/site-packages/sqlite_vec/vec0.so && \
-    cd / && rm -rf /tmp/sqlite-vec-0.1.6 /tmp/v0.1.6.tar.gz && \
-    python3 -c "import sqlite_vec, platform; print(f'sqlite-vec compiled and installed for {platform.machine()}')"
-
-# Install remaining Python dependencies
+# Install Python dependencies (includes sqlite-vec==0.1.6 from requirements.txt)
+# The sqlite-vec pip package provides a pre-built vec0.so for the current architecture
 RUN pip install --no-cache-dir -r /tmp/backend-requirements.txt && \
-    rm /tmp/backend-requirements.txt
+    rm /tmp/backend-requirements.txt && \
+    python3 -c "import sqlite3, sqlite_vec; conn = sqlite3.connect(':memory:'); conn.enable_load_extension(True); sqlite_vec.load(conn); print('sqlite-vec', conn.execute('SELECT vec_version()').fetchone()[0], 'verified')"
 
 # Install Python development tools and type stubs for mypy
 COPY local-server/requirements-dev.txt /tmp/requirements-dev.txt
