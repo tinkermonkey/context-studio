@@ -74,7 +74,9 @@ export function buildHierarchicalTree(input: TreeBuilderInput): HierarchyNode {
     return rootNode;
   } catch (err) {
     apiLogger.error("Error transforming data to tree:", { error: err });
-    throw new Error("Failed to transform data to tree structure", { cause: err });
+    throw new Error("Failed to transform data to tree structure", {
+      cause: err,
+    });
   }
 }
 
@@ -86,7 +88,7 @@ export function buildHierarchicalTree(input: TreeBuilderInput): HierarchyNode {
  * @param nodes - Array of all node objects (layers, domains, terms, etc.)
  * @returns Object containing the top-level nodes and a map of all nodes
  */
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function buildNodeHierarchy(nodes: any[]): {
   topLevelNodes: HierarchyNode[];
   nodeMap: Map<string, HierarchyNode>;
@@ -95,7 +97,8 @@ export function buildNodeHierarchy(nodes: any[]): {
   const topLevelNodes: HierarchyNode[] = [];
 
   // First pass: create all node entries
-  nodes.forEach((node: any) => {  // eslint-disable-line @typescript-eslint/no-explicit-any
+  nodes.forEach((node: any) => {
+    // eslint-disable-line @typescript-eslint/no-explicit-any
     if (!node.id) {
       console.warn("Node missing id:", node);
       return;
@@ -118,7 +121,8 @@ export function buildNodeHierarchy(nodes: any[]): {
   });
 
   // Second pass: establish parent-child relationships
-  nodes.forEach((node: any) => {  // eslint-disable-line @typescript-eslint/no-explicit-any
+  nodes.forEach((node: any) => {
+    // eslint-disable-line @typescript-eslint/no-explicit-any
     const hierarchyNode = nodeMap.get(node.id);
     if (!hierarchyNode) return;
 
