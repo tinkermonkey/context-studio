@@ -5,7 +5,15 @@
  */
 
 import React, { useState } from "react";
-import { Alert, Badge, Button, Spinner, TabItem, Tabs, TextInput  } from "flowbite-react";;
+import {
+  Alert,
+  Badge,
+  Button,
+  Spinner,
+  TabItem,
+  Tabs,
+  TextInput,
+} from "flowbite-react";
 import {
   Search,
   Info,
@@ -19,11 +27,7 @@ import { SearchResults } from "./UnifiedSearch";
 import { SourceSelector } from "./UnifiedSearch/SourceSelector";
 import { NodeDetails } from "./ReferenceViewer";
 import { GraphView } from "./GraphView";
-import {
-  UnifiedNode,
-  SourceType,
-    SOURCE_METADATA,
-} from "@/api/types/unified";
+import { UnifiedNode, SourceType, SOURCE_METADATA } from "@/api/types/unified";
 import {
   useStreamingUnifiedSearch,
   useSourceLoadingStates,
