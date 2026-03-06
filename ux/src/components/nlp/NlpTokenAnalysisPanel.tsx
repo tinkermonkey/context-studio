@@ -80,7 +80,8 @@ export const NlpTokenAnalysisPanel: React.FC<Props> = ({
                     name: s.name || s.synset || s.id || s[0] || "unknown",
                     definition: s.definition || s.gloss || s.def || "",
                     lemmas: s.lemmas || [],
-                    pos: s.pos || s.partOfSpeech || token.pos || token.tag || "",
+                    pos:
+                      s.pos || s.partOfSpeech || token.pos || token.tag || "",
                     offset: s.offset || 0,
                     domain: s.domain || "general",
                   }),
