@@ -7,16 +7,14 @@
 
 import React, { useState, useRef, useEffect } from "react";
 import { Button, Spinner, Tooltip } from "flowbite-react";
-import { Plus, Trash2 } from "lucide-react";;
+import { Plus, Trash2 } from "lucide-react";
 import { RecordSelector } from "@/components/node_selectors/record_selector";
 import {
   useCreateAnnotation,
   useDeleteAnnotation,
 } from "@/api/hooks/ragExperiments";
 import { useStructureNodeSearch } from "@/api/hooks/structure_nodes/useStructureNodes";
-import type {
-  TestParagraphResponse,
-  } from "@/api/services/ragExperiments";
+import type { TestParagraphResponse } from "@/api/services/ragExperiments";
 import type {
   StructureNode,
   FindStructureNodeResult,
@@ -211,7 +209,6 @@ export const AnnotationSelector: React.FC<AnnotationSelectorProps> = ({
 
     return <>{segments}</>;
   };
-
 
   return (
     <div className="space-y-4" data-testid="annotation-selector">
