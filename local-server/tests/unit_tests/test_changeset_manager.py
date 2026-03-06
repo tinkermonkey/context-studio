@@ -1,24 +1,24 @@
 """
-Unit tests for ChangesetManager - Testing changeset creation, management, and S3 integration.
+Unit tests for ChangesetManager - Testing changeset creation, management, and S3 integration.  # noqa: E501
 
-Tests changeset lifecycle, state management, version tracking, and error handling.
+Tests changeset lifecycle, state management, version tracking, and error handling.  # noqa: E501
 """
 
 import sys
 import os
 
 sys.path.append(
-    os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+    os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))  # noqa: E501
 )
 
-import pytest
-import uuid
-from unittest.mock import Mock, patch
+import pytest  # noqa: E402
+import uuid  # noqa: E402
+from unittest.mock import Mock, patch  # noqa: E402
 
-from services.changeset_manager import ChangesetManager
-from services.collaboration_models import ChangesetState
-from services.working_tree_manager import WorkingTreeManager
-from services.s3_sync_manager import S3SyncManager
+from services.changeset_manager import ChangesetManager  # noqa: E402
+from services.collaboration_models import ChangesetState  # noqa: E402
+from services.working_tree_manager import WorkingTreeManager  # noqa: E402
+from services.s3_sync_manager import S3SyncManager  # noqa: E402
 
 
 class TestChangesetManager:
@@ -55,7 +55,7 @@ class TestChangesetManager:
         return Mock(spec=VersionManager)
 
     @pytest.fixture
-    def changeset_manager(self, mock_db_session, mock_working_tree_manager, mock_s3_sync_manager, mock_version_manager):
+    def changeset_manager(self, mock_db_session, mock_working_tree_manager, mock_s3_sync_manager, mock_version_manager):  # noqa: E501
         """Create ChangesetManager instance for testing."""
         return ChangesetManager(
             db=mock_db_session,
@@ -64,27 +64,27 @@ class TestChangesetManager:
             version_manager=mock_version_manager
         )
 
-    def test_initialization(self, changeset_manager, mock_db_session, mock_working_tree_manager, mock_s3_sync_manager, mock_version_manager):
+    def test_initialization(self, changeset_manager, mock_db_session, mock_working_tree_manager, mock_s3_sync_manager, mock_version_manager):  # noqa: E501
         """Test ChangesetManager initialization."""
         assert changeset_manager.db == mock_db_session
         assert changeset_manager.working_tree == mock_working_tree_manager
         assert changeset_manager.s3_sync == mock_s3_sync_manager
         assert changeset_manager.version_manager == mock_version_manager
 
-    def test_create_changeset_success(self, changeset_manager, mock_working_tree_manager):
+    def test_create_changeset_success(self, changeset_manager, mock_working_tree_manager):  # noqa: E501
         """Test successful changeset creation."""
         # Mock working tree changes
         mock_working_tree_manager.get_staged_changes.return_value = [
-            {"version_id": "v1", "change_type": "create", "entity_type": "node"}
+            {"version_id": "v1", "change_type": "create", "entity_type": "node"}  # noqa: E501
         ]
-        mock_working_tree_manager.capture_version_snapshot.return_value = "snapshot123"
+        mock_working_tree_manager.capture_version_snapshot.return_value = "snapshot123"  # noqa: E501
 
         with patch('uuid.uuid4') as mock_uuid:
-            mock_uuid.return_value = uuid.UUID('12345678-1234-5678-9abc-123456789abc')
-            
+            mock_uuid.return_value = uuid.UUID('12345678-1234-5678-9abc-123456789abc')  # noqa: E501
+
             changeset = changeset_manager.create_changeset(
                 title="Test Changeset",
-                description="Test description", 
+                description="Test description",
                 author_id="user123"
             )
 
@@ -95,7 +95,7 @@ class TestChangesetManager:
         assert changeset.state == ChangesetState.DRAFT
         assert changeset.branch_name is not None
 
-    def test_create_changeset_no_changes(self, changeset_manager, mock_working_tree_manager):
+    def test_create_changeset_no_changes(self, changeset_manager, mock_working_tree_manager):  # noqa: E501
         """Test changeset creation with no changes raises ValueError."""
         mock_working_tree_manager.get_staged_changes.return_value = []
 
@@ -108,14 +108,14 @@ class TestChangesetManager:
 
     def test_create_changeset_invalid_input(self, changeset_manager):
         """Test changeset creation with invalid input."""
-        with pytest.raises(ValueError, match="Title and description are required"):
+        with pytest.raises(ValueError, match="Title and description are required"):  # noqa: E501
             changeset_manager.create_changeset(
                 title="",
                 description="Test",
                 author_id="user123"
             )
 
-        with pytest.raises(ValueError, match="Title and description are required"):
+        with pytest.raises(ValueError, match="Title and description are required"):  # noqa: E501
             changeset_manager.create_changeset(
                 title="Test",
                 description="",
@@ -131,7 +131,7 @@ class TestChangesetManager:
 
     def test_get_changeset_success(self, changeset_manager, mock_db_session):
         """Test successful changeset retrieval."""
-        # Mock database response as tuple matching row_to_changeset() expectations
+        # Mock database response as tuple matching row_to_changeset() expectations  # noqa: E501
         mock_row = (
             "changeset123",                         # id
             "Test Changeset",                       # title
@@ -162,9 +162,9 @@ class TestChangesetManager:
 
         assert changeset is None
 
-    def test_list_changesets_with_filters(self, changeset_manager, mock_db_session):
+    def test_list_changesets_with_filters(self, changeset_manager, mock_db_session):  # noqa: E501
         """Test listing changesets with filters."""
-        # Mock database response as tuple matching row_to_changeset() expectations
+        # Mock database response as tuple matching row_to_changeset() expectations  # noqa: E501
         mock_row = (
             "changeset123",                         # id
             "Test Changeset",                       # title
@@ -190,7 +190,7 @@ class TestChangesetManager:
         assert changesets[0].id == "changeset123"
         assert changesets[0].author_id == "user123"
 
-    def test_update_changeset_success(self, changeset_manager, mock_db_session):
+    def test_update_changeset_success(self, changeset_manager, mock_db_session):  # noqa: E501
         """Test successful changeset update."""
         mock_db_session.execute.return_value.rowcount = 1
 
@@ -202,7 +202,7 @@ class TestChangesetManager:
 
         assert success is True
 
-    def test_update_changeset_not_found(self, changeset_manager, mock_db_session):
+    def test_update_changeset_not_found(self, changeset_manager, mock_db_session):  # noqa: E501
         """Test changeset update when changeset not found."""
         mock_db_session.execute.return_value.rowcount = 0
 
@@ -213,17 +213,17 @@ class TestChangesetManager:
 
         assert success is False
 
-    def test_delete_changeset_success(self, changeset_manager, mock_db_session):
+    def test_delete_changeset_success(self, changeset_manager, mock_db_session):  # noqa: E501
         """Test successful changeset deletion."""
         # Mock changeset exists and is in valid state
         mock_changeset = Mock()
         mock_changeset.state = ChangesetState.DRAFT
-        
-        with patch.object(changeset_manager, 'get_changeset', return_value=mock_changeset):
+
+        with patch.object(changeset_manager, 'get_changeset', return_value=mock_changeset):  # noqa: E501
             mock_db_session.execute.return_value.rowcount = 1
-            
+
             success = changeset_manager.delete_changeset("changeset123")
-            
+
             assert success is True
 
     def test_delete_changeset_invalid_state(self, changeset_manager):
@@ -231,36 +231,36 @@ class TestChangesetManager:
         # Mock changeset in merged state
         mock_changeset = Mock()
         mock_changeset.state = ChangesetState.MERGED
-        
-        with patch.object(changeset_manager, 'get_changeset', return_value=mock_changeset):
-            with pytest.raises(ValueError, match="Cannot delete changeset in merged state"):
+
+        with patch.object(changeset_manager, 'get_changeset', return_value=mock_changeset):  # noqa: E501
+            with pytest.raises(ValueError, match="Cannot delete changeset in merged state"):  # noqa: E501
                 changeset_manager.delete_changeset("changeset123")
 
     def test_delete_changeset_not_found(self, changeset_manager):
         """Test changeset deletion when not found."""
-        with patch.object(changeset_manager, 'get_changeset', return_value=None):
+        with patch.object(changeset_manager, 'get_changeset', return_value=None):  # noqa: E501
             success = changeset_manager.delete_changeset("nonexistent")
             assert success is False
 
-    def test_update_changeset_state_success(self, changeset_manager, mock_db_session):
+    def test_update_changeset_state_success(self, changeset_manager, mock_db_session):  # noqa: E501
         """Test successful changeset state update."""
         mock_db_session.execute.return_value.rowcount = 1
 
         success = changeset_manager.update_changeset_state(
-            "changeset123", 
+            "changeset123",
             ChangesetState.PROPOSED
         )
 
         assert success is True
 
-    def test_push_changeset_to_s3_success(self, changeset_manager, mock_s3_sync_manager):
+    def test_push_changeset_to_s3_success(self, changeset_manager, mock_s3_sync_manager):  # noqa: E501
         """Test successful S3 push."""
         # Mock changeset exists
         mock_changeset = Mock()
         mock_changeset.id = "changeset123"
-        mock_changeset.to_dict.return_value = {"id": "changeset123", "title": "test"}
-        
-        with patch.object(changeset_manager, 'get_changeset', return_value=mock_changeset):
+        mock_changeset.to_dict.return_value = {"id": "changeset123", "title": "test"}  # noqa: E501
+
+        with patch.object(changeset_manager, 'get_changeset', return_value=mock_changeset):  # noqa: E501
             success = changeset_manager.push_changeset_to_s3("changeset123")
 
             assert success is True
@@ -268,21 +268,21 @@ class TestChangesetManager:
 
     def test_push_changeset_to_s3_not_found(self, changeset_manager):
         """Test S3 push when changeset not found."""
-        with patch.object(changeset_manager, 'get_changeset', return_value=None):
+        with patch.object(changeset_manager, 'get_changeset', return_value=None):  # noqa: E501
             success = changeset_manager.push_changeset_to_s3("nonexistent")
             assert success is False
 
-    def test_push_changeset_to_s3_failure(self, changeset_manager, mock_s3_sync_manager):
+    def test_push_changeset_to_s3_failure(self, changeset_manager, mock_s3_sync_manager):  # noqa: E501
         """Test S3 push failure handling."""
         # Mock changeset exists
         mock_changeset = Mock()
         mock_changeset.id = "changeset123"
-        mock_changeset.to_dict.return_value = {"id": "changeset123", "title": "test"}
-        
+        mock_changeset.to_dict.return_value = {"id": "changeset123", "title": "test"}  # noqa: E501
+
         # Mock S3 failure
-        mock_s3_sync_manager.write_metadata_to_s3.side_effect = Exception("S3 error")
-        
-        with patch.object(changeset_manager, 'get_changeset', return_value=mock_changeset):
+        mock_s3_sync_manager.write_metadata_to_s3.side_effect = Exception("S3 error")  # noqa: E501
+
+        with patch.object(changeset_manager, 'get_changeset', return_value=mock_changeset):  # noqa: E501
             success = changeset_manager.push_changeset_to_s3("changeset123")
 
             # Should return False on S3 failure
@@ -302,18 +302,18 @@ class TestChangesetManager:
     def test_generate_branch_name(self, changeset_manager):
         """Test branch name generation."""
         with patch('uuid.uuid4') as mock_uuid:
-            mock_uuid.return_value = uuid.UUID('12345678-1234-5678-9abc-123456789abc')
-            
+            mock_uuid.return_value = uuid.UUID('12345678-1234-5678-9abc-123456789abc')  # noqa: E501
+
             branch_name = changeset_manager._generate_branch_name()
-            
+
             assert branch_name == "changeset-12345678"
 
-    def test_database_transaction_rollback_on_error(self, changeset_manager, mock_db_session, mock_working_tree_manager):
+    def test_database_transaction_rollback_on_error(self, changeset_manager, mock_db_session, mock_working_tree_manager):  # noqa: E501
         """Test database rollback on error."""
         mock_working_tree_manager.get_staged_changes.return_value = [
-            {"version_id": "v1", "change_type": "create", "entity_type": "node"}
+            {"version_id": "v1", "change_type": "create", "entity_type": "node"}  # noqa: E501
         ]
-        mock_working_tree_manager.capture_version_snapshot.side_effect = Exception("Snapshot error")
+        mock_working_tree_manager.capture_version_snapshot.side_effect = Exception("Snapshot error")  # noqa: E501
 
         with pytest.raises(RuntimeError, match="Failed to create changeset"):
             changeset_manager.create_changeset(

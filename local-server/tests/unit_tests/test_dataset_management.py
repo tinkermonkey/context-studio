@@ -9,9 +9,9 @@ import pytest
 # Add project root to path
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from dataset.manager import DatasetManager
-from dataset.models import DatasetMetrics
-from database.migrations.migration_manager import MigrationManager
+from dataset.manager import DatasetManager  # noqa: E402
+from dataset.models import DatasetMetrics  # noqa: E402
+from database.migrations.migration_manager import MigrationManager  # noqa: E402, E501
 
 
 class TestDatasetManager:
@@ -24,7 +24,7 @@ class TestDatasetManager:
         self.config_path = os.path.join(self.temp_dir, "datasets.json")
 
         self.manager = DatasetManager(
-            datasets_config_path=self.config_path, datasets_directory=self.datasets_dir
+            datasets_config_path=self.config_path, datasets_directory=self.datasets_dir  # noqa: E501
         )
 
     def teardown_method(self):
@@ -38,11 +38,11 @@ class TestDatasetManager:
         assert dataset.title == "Test Dataset"
         assert dataset.filename == "test.db"
 
-        # Verify schema version matches the target version from migration manager
+        # Verify schema version matches the target version from migration manager  # noqa: E501
         dataset_path = self.manager.get_dataset_file_path("test.db")
         migration_manager = MigrationManager(dataset_path)
         assert dataset.schema_version == migration_manager.target_version, \
-            f"Expected schema version {migration_manager.target_version}, got {dataset.schema_version}"
+            f"Expected schema version {migration_manager.target_version}, got {dataset.schema_version}"  # noqa: E501
 
         assert isinstance(dataset.metrics, DatasetMetrics)
 
@@ -106,7 +106,7 @@ class TestDatasetManager:
         self.manager.create_dataset("Test Dataset", "test1.db")
 
         with pytest.raises(
-            ValueError, match="Dataset with title 'Test Dataset' already exists"
+            ValueError, match="Dataset with title 'Test Dataset' already exists"  # noqa: E501
         ):
             self.manager.create_dataset("Test Dataset", "test2.db")
 
@@ -180,7 +180,7 @@ class TestDatasetManager:
         shutil.copy2(original_path, external_file)
 
         with pytest.raises(
-            ValueError, match="Dataset with title 'Test Dataset' already exists"
+            ValueError, match="Dataset with title 'Test Dataset' already exists"  # noqa: E501
         ):
             self.manager.add_existing_dataset("Test Dataset", external_file)
 
@@ -196,11 +196,11 @@ class TestDatasetManager:
         with open(invalid_file, "w") as f:
             f.write("This is not a SQLite database")
 
-        with pytest.raises(ValueError, match="Failed to validate dataset file"):
+        with pytest.raises(ValueError, match="Failed to validate dataset file"):  # noqa: E501
             self.manager.add_existing_dataset("Invalid", invalid_file)
 
     def test_forget_dataset(self):
-        """Test forgetting a dataset (removing from inventory but keeping file)."""
+        """Test forgetting a dataset (removing from inventory but keeping file)."""  # noqa: E501
         # Create dataset
         dataset = self.manager.create_dataset("Test Dataset", "test.db")
         dataset_path = self.manager.get_dataset_file_path("test.db")

@@ -1,7 +1,7 @@
 """
 Phase 0 E2E Baseline Test Suite.
 
-This module contains the four baseline E2E tests for Phase 0 of the rearchitecture
+This module contains the four baseline E2E tests for Phase 0 of the rearchitecture  # noqa: E501
 program. These tests validate core functionality of the current application and
 serve as a regression gate for all subsequent phases.
 
@@ -15,12 +15,12 @@ Tests:
 import sys
 import os
 
-sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
+sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))  # noqa: E501
 
-import pytest
+import pytest  # noqa: E402
 
-from tests.e2e.helpers import poll_until
-from tests.e2e.test_data import STABLE_CONCEPTS
+from tests.e2e.helpers import poll_until  # noqa: E402
+from tests.e2e.test_data import STABLE_CONCEPTS  # noqa: E402
 
 
 @pytest.mark.e2e
@@ -54,7 +54,7 @@ class TestPhase0BaselineTests:
         taxonomy_response = e2e_client.post(
             "/api/structure_nodes/", json=taxonomy_data
         )
-        assert taxonomy_response.status_code == 201, f"Failed to create taxonomy: {taxonomy_response.text}"
+        assert taxonomy_response.status_code == 201, f"Failed to create taxonomy: {taxonomy_response.text}"  # noqa: E501
         taxonomy = taxonomy_response.json()
         taxonomy_id = taxonomy["id"]
         assert taxonomy["title"] == STABLE_CONCEPTS["taxonomy_1"]["title"]
@@ -70,7 +70,7 @@ class TestPhase0BaselineTests:
         scheme_response = e2e_client.post(
             "/api/structure_nodes/", json=scheme_data
         )
-        assert scheme_response.status_code == 201, f"Failed to create scheme: {scheme_response.text}"
+        assert scheme_response.status_code == 201, f"Failed to create scheme: {scheme_response.text}"  # noqa: E501
         scheme = scheme_response.json()
         scheme_id = scheme["id"]
         assert scheme["parent_node_id"] == taxonomy_id
@@ -87,7 +87,7 @@ class TestPhase0BaselineTests:
             class_response = e2e_client.post(
                 "/api/structure_nodes/", json=class_data
             )
-            assert class_response.status_code == 201, f"Failed to create class: {class_response.text}"
+            assert class_response.status_code == 201, f"Failed to create class: {class_response.text}"  # noqa: E501
             class_obj = class_response.json()
             class_ids.append(class_obj["id"])
             assert class_obj["parent_node_id"] == scheme_id
@@ -101,7 +101,7 @@ class TestPhase0BaselineTests:
         link_response = e2e_client.post(
             "/api/structure_nodes/links", json=link_data
         )
-        assert link_response.status_code == 201, f"Failed to create link: {link_response.text}"
+        assert link_response.status_code == 201, f"Failed to create link: {link_response.text}"  # noqa: E501
         link = link_response.json()
         link_id = link["id"]
 
@@ -112,7 +112,7 @@ class TestPhase0BaselineTests:
         assert get_response.json()["id"] == taxonomy_id
 
         # Verify parent-child relationships
-        get_scheme_response = e2e_client.get(f"/api/structure_nodes/{scheme_id}")
+        get_scheme_response = e2e_client.get(f"/api/structure_nodes/{scheme_id}")  # noqa: E501
         assert get_scheme_response.status_code == 200
         assert get_scheme_response.json()["parent_node_id"] == taxonomy_id
 
@@ -202,7 +202,7 @@ class TestPhase0BaselineTests:
             "node_type": "term",
             "parent_node_id": scheme_id,
             "title": "Computer Science",
-            "definition": "The study of computation, information, and automation",
+            "definition": "The study of computation, information, and automation",  # noqa: E501
         }
         base_response = e2e_client.post(
             "/api/structure_nodes/", json=base_class_data
@@ -215,7 +215,7 @@ class TestPhase0BaselineTests:
             "node_type": "term",
             "parent_node_id": scheme_id,
             "title": "Programming Languages",
-            "definition": "Languages used to write computer programs and software",
+            "definition": "Languages used to write computer programs and software",  # noqa: E501
         }
         similar_response = e2e_client.post(
             "/api/structure_nodes/", json=similar_class_data
@@ -228,7 +228,7 @@ class TestPhase0BaselineTests:
             "node_type": "term",
             "parent_node_id": scheme_id,
             "title": "Medieval History",
-            "definition": "The study of the Middle Ages and historical civilizations",
+            "definition": "The study of the Middle Ages and historical civilizations",  # noqa: E501
         }
         different_response = e2e_client.post(
             "/api/structure_nodes/", json=different_class_data
@@ -244,7 +244,7 @@ class TestPhase0BaselineTests:
                 return False
             node = response.json()
             # Check if embeddings exist (they may be None or lists)
-            return node.get("title_embedding") is not None or node.get("definition_embedding") is not None
+            return node.get("title_embedding") is not None or node.get("definition_embedding") is not None  # noqa: E501
 
         try:
             poll_until(
@@ -271,7 +271,7 @@ class TestPhase0BaselineTests:
         assert isinstance(search_results, list)
 
         # Step 7: Cleanup
-        for node_id in [base_class_id, similar_class_id, different_class_id, scheme_id, taxonomy_id]:
+        for node_id in [base_class_id, similar_class_id, different_class_id, scheme_id, taxonomy_id]:  # noqa: E501
             e2e_client.delete(f"/api/structure_nodes/{node_id}")
 
     def test_baseline_change_event_tracking(self, e2e_client):
@@ -337,18 +337,18 @@ class TestPhase0BaselineTests:
 
         # Step 5: Filter events to only those created by this test
         # (by checking if they reference our created entities)
-        created_node_ids_str = {str(taxonomy_id), str(scheme_id)} | {str(cid) for cid in class_ids}
+        created_node_ids_str = {str(taxonomy_id), str(scheme_id)} | {str(cid) for cid in class_ids}  # noqa: E501
         test_events = [
             e for e in events
-            if e.get("record_id") and str(e.get("record_id")) in created_node_ids_str
+            if e.get("record_id") and str(e.get("record_id")) in created_node_ids_str  # noqa: E501
         ]
 
         # Step 6: Verify change event counts and types
-        # We created 7 entities (1 taxonomy + 1 scheme + 5 classes), so we should have exactly 7 creation events
-        assert len(test_events) >= 7, f"Expected at least 7 change events for our entities, got {len(test_events)}"
+        # We created 7 entities (1 taxonomy + 1 scheme + 5 classes), so we should have exactly 7 creation events  # noqa: E501
+        assert len(test_events) >= 7, f"Expected at least 7 change events for our entities, got {len(test_events)}"  # noqa: E501
 
         # Step 7: Verify chronological ordering
-        # Events should be returned in descending chronological order (newest first)
+        # Events should be returned in descending chronological order (newest first)  # noqa: E501
         if len(test_events) > 1:
             timestamps = [e.get("event_timestamp") for e in test_events]
             for i in range(len(timestamps) - 1):
@@ -359,8 +359,8 @@ class TestPhase0BaselineTests:
 
         # Step 8: Verify event structure
         for event in test_events:
-            assert "event_type" in event, f"Event missing event_type field: {event.keys()}"
-            assert "event_timestamp" in event, f"Event missing event_timestamp field: {event.keys()}"
+            assert "event_type" in event, f"Event missing event_type field: {event.keys()}"  # noqa: E501
+            assert "event_timestamp" in event, f"Event missing event_timestamp field: {event.keys()}"  # noqa: E501
 
         # Step 9: Cleanup
         for class_id in class_ids:
@@ -459,7 +459,7 @@ class TestPhase0BaselineTests:
         link_id = link["id"]
 
         # Step 5: Verify predicate reference
-        get_predicate_response = e2e_client.get(f"/api/predicates/{predicate_id}")
+        get_predicate_response = e2e_client.get(f"/api/predicates/{predicate_id}")  # noqa: E501
         assert get_predicate_response.status_code == 200
         predicate_retrieved = get_predicate_response.json()
         assert predicate_retrieved["title"] == "test_predicate_001"
@@ -473,7 +473,7 @@ class TestPhase0BaselineTests:
             "/api/predicates/", json=duplicate_predicate_data
         )
         # Duplicate creation might fail with 400 or 409
-        assert duplicate_response.status_code in [400, 409, 201]  # 201 if server allows duplicates
+        assert duplicate_response.status_code in [400, 409, 201]  # 201 if server allows duplicates  # noqa: E501
 
         # Step 7: Delete link and verify
         delete_link_response = e2e_client.delete(

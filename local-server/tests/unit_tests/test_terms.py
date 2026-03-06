@@ -2,7 +2,7 @@ import sys
 import os
 import uuid
 
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "../../")))
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "../../")))  # noqa: E501
 
 # All fixtures are now provided by conftest.py
 
@@ -10,7 +10,7 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "../.
 def create_layer_and_domain(shared_client):
     # Create layer using structure_nodes API
     layer_resp = shared_client.post(
-        "/api/structure_nodes/", json={"node_type": "layer", "title": str(uuid.uuid4())}
+        "/api/structure_nodes/", json={"node_type": "layer", "title": str(uuid.uuid4())}  # noqa: E501
     )
     assert layer_resp.status_code == 201
     layer_id = layer_resp.json()["id"]
@@ -32,13 +32,13 @@ def create_layer_and_domain(shared_client):
 
 
 def create_term(
-    shared_client, domain_id, layer_id, title=None, definition=None, parent_term_id=None
+    shared_client, domain_id, layer_id, title=None, definition=None, parent_term_id=None  # noqa: E501
 ):
     data = {
         "node_type": "term",
         "title": title or str(uuid.uuid4()),
         "definition": definition or "def",
-        "parent_node_id": domain_id if parent_term_id is None else parent_term_id,
+        "parent_node_id": domain_id if parent_term_id is None else parent_term_id,  # noqa: E501
     }
     resp = shared_client.post("/api/structure_nodes/", json=data)
     assert resp.status_code == 201, resp.text
@@ -47,7 +47,7 @@ def create_term(
 
 def test_create_get_update_delete_term(shared_client):
     layer_id, domain_id = create_layer_and_domain(shared_client)
-    term = create_term(shared_client, domain_id, layer_id, title="T1", definition="D1")
+    term = create_term(shared_client, domain_id, layer_id, title="T1", definition="D1")  # noqa: E501
     term_id = term["id"]
     # Get
     resp = shared_client.get(f"/api/structure_nodes/{term_id}")
@@ -81,7 +81,7 @@ def test_term_duplicate_title_within_domain(shared_client):
     )
     assert resp.status_code == 409
     detail = resp.json()["detail"]
-    detail_str = str(detail).lower() if isinstance(detail, list) else detail.lower()
+    detail_str = str(detail).lower() if isinstance(detail, list) else detail.lower()  # noqa: E501
     assert "unique" in detail_str
 
 
@@ -105,7 +105,7 @@ def test_term_parent_and_circular_reference(shared_client):
     layer_id, domain_id = create_layer_and_domain(shared_client)
     t1 = create_term(shared_client, domain_id, layer_id, title="Parent")
     t2 = create_term(
-        shared_client, domain_id, layer_id, title="Child", parent_term_id=t1["id"]
+        shared_client, domain_id, layer_id, title="Child", parent_term_id=t1["id"]  # noqa: E501
     )
     # Parent must exist
     bad_uuid = str(uuid.uuid4())
@@ -118,7 +118,7 @@ def test_term_parent_and_circular_reference(shared_client):
             "parent_node_id": bad_uuid,
         },
     )
-    assert resp.status_code == 400  # Changed from 422 to match actual API behavior
+    assert resp.status_code == 400  # Changed from 422 to match actual API behavior  # noqa: E501
     # Circular reference
     resp = shared_client.put(
         f"/api/structure_nodes/{t1['id']}", json={"parent_node_id": t2["id"]}
@@ -135,12 +135,12 @@ def test_list_terms_pagination(shared_client):
         create_term(shared_client, domain_id, layer_id, title=f"T{i}")
     # List terms using structure_nodes API filtered by node_type and parent
     resp = shared_client.get(
-        f"/api/structure_nodes/?node_type=term&parent_node_id={domain_id}&limit=2"
+        f"/api/structure_nodes/?node_type=term&parent_node_id={domain_id}&limit=2"  # noqa: E501
     )
     assert resp.status_code == 200
     assert len(resp.json()["data"]) <= 2
     resp = shared_client.get(
-        f"/api/structure_nodes/?node_type=term&parent_node_id={domain_id}&sort_by=title"
+        f"/api/structure_nodes/?node_type=term&parent_node_id={domain_id}&sort_by=title"  # noqa: E501
     )
     assert resp.status_code == 200
     titles = [t["title"] for t in resp.json()["data"]]
@@ -165,7 +165,7 @@ def test_create_get_update_delete_term_relationship(shared_client):
     rel_id = rel["id"]
     # Get - need to list and find our specific link
     resp = shared_client.get(
-        f"/api/structure_nodes/links?source_node_id={t1['id']}&target_node_id={t2['id']}"
+        f"/api/structure_nodes/links?source_node_id={t1['id']}&target_node_id={t2['id']}"  # noqa: E501
     )
     assert resp.status_code == 200
     response_data = resp.json()
@@ -189,7 +189,7 @@ def test_create_get_update_delete_term_relationship(shared_client):
     assert resp.status_code == 204
     # Get after delete - should be empty list
     resp = shared_client.get(
-        f"/api/structure_nodes/links?source_node_id={t1['id']}&target_node_id={t2['id']}"
+        f"/api/structure_nodes/links?source_node_id={t1['id']}&target_node_id={t2['id']}"  # noqa: E501
     )
     assert resp.status_code == 200
     response_data = resp.json()
@@ -230,23 +230,23 @@ def test_term_relationship_invalid_cases(shared_client):
             "predicate": "rel",
         },
     )
-    assert resp2.status_code == 400  # Changed from 409 to match actual API behavior
+    assert resp2.status_code == 400  # Changed from 409 to match actual API behavior  # noqa: E501
     detail = resp2.json()["detail"]
-    detail_str = str(detail).lower() if isinstance(detail, list) else detail.lower()
+    detail_str = str(detail).lower() if isinstance(detail, list) else detail.lower()  # noqa: E501
     assert "duplicate" in detail_str or "already exists" in detail_str
     # Update non-existent
     resp = shared_client.put(
         f"/api/structure_nodes/links/{bad_uuid}",
-        json={"source_node_id": t1["id"], "target_node_id": t2["id"], "predicate": "x"},
+        json={"source_node_id": t1["id"], "target_node_id": t2["id"], "predicate": "x"},  # noqa: E501
     )
     assert (
         resp.status_code == 400
-    )  # Changed from 404 to match actual API behavior - validation happens before existence check
+    )  # Changed from 404 to match actual API behavior - validation happens before existence check  # noqa: E501
     # Delete non-existent
     resp = shared_client.delete(f"/api/structure_nodes/links/{bad_uuid}")
     assert (
         resp.status_code == 400
-    )  # Changed from 404 to match actual API behavior - validation happens before existence check
+    )  # Changed from 404 to match actual API behavior - validation happens before existence check  # noqa: E501
 
 
 def test_move_terms_basic(shared_client):
@@ -342,7 +342,7 @@ def test_move_terms_with_children(shared_client):
     assert move_resp.status_code == 200
     move_data = move_resp.json()
 
-    # Verify parent was moved (children may or may not be included in moved_nodes depending on implementation)
+    # Verify parent was moved (children may or may not be included in moved_nodes depending on implementation)  # noqa: E501
     assert len(move_data["moved_nodes"]) >= 1
 
     # Verify the parent term was moved
@@ -407,10 +407,10 @@ def test_move_terms_without_children(shared_client):
     assert len(move_data["moved_nodes"]) == 1
     assert move_data["moved_nodes"][0]["id"] == parent_term["id"]
 
-    # Verify child term still exists and has been properly handled (may be orphaned or reassigned)
+    # Verify child term still exists and has been properly handled (may be orphaned or reassigned)  # noqa: E501
     child_resp = shared_client.get(f"/api/structure_nodes/{child_term['id']}")
     assert child_resp.status_code == 200
-    # Child should be reassigned to the domain or orphaned - implementation determines exact behavior
+    # Child should be reassigned to the domain or orphaned - implementation determines exact behavior  # noqa: E501
     child_parent = child_resp.json()["parent_node_id"]
     # The child should not be deleted and should have a valid parent
     assert child_parent is not None
@@ -458,7 +458,7 @@ def test_move_terms_conflict_warning(shared_client):
 
     # Should have warnings about title conflict
     assert len(move_data["warnings"]) > 0
-    assert any("already exists" in warning for warning in move_data["warnings"])
+    assert any("already exists" in warning for warning in move_data["warnings"])  # noqa: E501
 
 
 def test_move_terms_invalid_target(shared_client):
@@ -518,10 +518,10 @@ def test_safe_deletion_workflow(shared_client):
         parent_term_id=parent_term["id"],
     )
 
-    # Step 1: Move children to have domain as parent (orphan them from the parent term)
+    # Step 1: Move children to have domain as parent (orphan them from the parent term)  # noqa: E501
     children_ids = [child1["id"], child2["id"]]
 
-    # For orphaning, we can move them to have the domain as parent by updating them individually
+    # For orphaning, we can move them to have the domain as parent by updating them individually  # noqa: E501
     for child_id in children_ids:
         update_resp = shared_client.put(
             f"/api/structure_nodes/{child_id}",
@@ -536,11 +536,11 @@ def test_safe_deletion_workflow(shared_client):
         assert child_resp.json()["parent_node_id"] == source_domain_id
 
     # Step 3: Delete the parent (should succeed without cascading)
-    delete_resp = shared_client.delete(f"/api/structure_nodes/{parent_term['id']}")
+    delete_resp = shared_client.delete(f"/api/structure_nodes/{parent_term['id']}")  # noqa: E501
     assert delete_resp.status_code == 204
 
     # Step 4: Verify parent is deleted but children still exist
-    parent_resp = shared_client.get(f"/api/structure_nodes/{parent_term['id']}")
+    parent_resp = shared_client.get(f"/api/structure_nodes/{parent_term['id']}")  # noqa: E501
     assert parent_resp.status_code == 404
 
     for child_id in children_ids:

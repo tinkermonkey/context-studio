@@ -1,5 +1,5 @@
 """
-Integration tests for Phase 2: Verify datafiles directory creation across all database managers.
+Integration tests for Phase 2: Verify datafiles directory creation across all database managers.  # noqa: E501
 
 Tests the integration of directory creation logic with database initialization,
 file system operations, and manager initialization workflows.
@@ -16,7 +16,7 @@ import pytest
 # Add local-server to path for imports
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
-from config import Settings, ConfigurationManager
+from config import Settings, ConfigurationManager  # noqa: E402
 
 
 @pytest.fixture(autouse=True)
@@ -33,7 +33,7 @@ class TestDatabaseManagerDirectoryIntegration:
     """Test directory creation integration across database managers."""
 
     def test_pipeline_manager_integration_with_config(self):
-        """Test OperationsDatabaseManager creates directory using config paths."""
+        """Test OperationsDatabaseManager creates directory using config paths."""  # noqa: E501
         with tempfile.TemporaryDirectory() as tmpdir:
             # Create config with custom datafiles path
             config_data = {
@@ -58,7 +58,7 @@ class TestDatabaseManagerDirectoryIntegration:
             from pipeline.manager import OperationsDatabaseManager
 
             operations_path = config_manager.settings.database.operations_path
-            manager = OperationsDatabaseManager(operations_db_path=operations_path)
+            manager = OperationsDatabaseManager(operations_db_path=operations_path)  # noqa: E501
 
             # Verify directory was created
             assert os.path.exists(datafiles_dir)
@@ -122,7 +122,7 @@ class TestDatabaseManagerDirectoryIntegration:
             manager.close()
 
     def test_all_managers_coexist_in_same_directory(self):
-        """Test that all database managers can coexist in the same datafiles directory."""
+        """Test that all database managers can coexist in the same datafiles directory."""  # noqa: E501
         with tempfile.TemporaryDirectory() as tmpdir:
             datafiles_dir = os.path.join(tmpdir, "datafiles")
 
@@ -145,7 +145,7 @@ class TestDatabaseManagerDirectoryIntegration:
 
             # Initialize reference manager (directory already exists)
             ref_config = ReferenceConfig()
-            reference_mgr = ReferenceManager(ref_config, db_path=reference_path)
+            reference_mgr = ReferenceManager(ref_config, db_path=reference_path)  # noqa: E501
 
             # Verify both databases exist
             assert os.path.exists(operations_path)
@@ -160,7 +160,7 @@ class TestDatabaseManagerDirectoryIntegration:
             reference_mgr.close()
 
     def test_proxy_manager_directory_creation_integration(self):
-        """Test ReferenceAPIProxyManager creates directory for cache database."""
+        """Test ReferenceAPIProxyManager creates directory for cache database."""  # noqa: E501
         with tempfile.TemporaryDirectory() as tmpdir:
             cache_dir = os.path.join(tmpdir, "datafiles")
             cache_path = os.path.join(cache_dir, "reference_api_cache.db")
@@ -178,10 +178,10 @@ class TestDatabaseManagerDirectoryIntegration:
 
             mock_settings = MagicMock()
             mock_settings.ENABLE_CACHING_PROXY = {"test": True}
-            mock_settings.get_reference_api_buddy_config.return_value = mock_config
+            mock_settings.get_reference_api_buddy_config.return_value = mock_config  # noqa: E501
 
-            with patch("nlp.proxy_manager.get_settings", return_value=mock_settings):
-                with patch("nlp.proxy_manager.CachingProxy") as mock_proxy_class:
+            with patch("nlp.proxy_manager.get_settings", return_value=mock_settings):  # noqa: E501
+                with patch("nlp.proxy_manager.CachingProxy") as mock_proxy_class:  # noqa: E501
                     mock_proxy_instance = MagicMock()
                     mock_proxy_class.return_value = mock_proxy_instance
 
@@ -236,7 +236,7 @@ class TestDirectoryCreationWithFileSystemOperations:
 
                 from pipeline.manager import OperationsDatabaseManager
 
-                manager = OperationsDatabaseManager(operations_db_path=relative_path)
+                manager = OperationsDatabaseManager(operations_db_path=relative_path)  # noqa: E501
 
                 # Verify directory was created in current directory
                 assert os.path.exists("./datafiles")
@@ -274,7 +274,7 @@ class TestDirectoryCreationWithFileSystemOperations:
             manager.engine.dispose()
 
     def test_concurrent_directory_creation(self):
-        """Test that multiple managers can safely create the same directory concurrently."""
+        """Test that multiple managers can safely create the same directory concurrently."""  # noqa: E501
         import threading
 
         with tempfile.TemporaryDirectory() as tmpdir:
@@ -294,7 +294,7 @@ class TestDirectoryCreationWithFileSystemOperations:
 
             # Create multiple threads that try to create the directory
             threads = [
-                threading.Thread(target=create_manager, args=(f"operations_{i}.db",))
+                threading.Thread(target=create_manager, args=(f"operations_{i}.db",))  # noqa: E501
                 for i in range(5)
             ]
 
@@ -318,10 +318,10 @@ class TestDirectoryCreationWithFileSystemOperations:
 
 
 class TestManagerInitializationSequencing:
-    """Test that directory creation happens at the right time during initialization."""
+    """Test that directory creation happens at the right time during initialization."""  # noqa: E501
 
     def test_pipeline_manager_creates_dir_before_db_init(self):
-        """Test that OperationsDatabaseManager creates directory before database initialization."""
+        """Test that OperationsDatabaseManager creates directory before database initialization."""  # noqa: E501
         with tempfile.TemporaryDirectory() as tmpdir:
             datafiles_dir = os.path.join(tmpdir, "datafiles")
             db_path = os.path.join(datafiles_dir, "operations.db")
@@ -346,11 +346,11 @@ class TestManagerInitializationSequencing:
 
             with patch("os.makedirs", side_effect=tracked_makedirs):
                 with patch(
-                    "pipeline.manager.create_engine", side_effect=tracked_create_engine
+                    "pipeline.manager.create_engine", side_effect=tracked_create_engine  # noqa: E501
                 ):
                     from pipeline.manager import OperationsDatabaseManager
 
-                    manager = OperationsDatabaseManager(operations_db_path=db_path)
+                    manager = OperationsDatabaseManager(operations_db_path=db_path)  # noqa: E501
 
                     # Verify makedirs was called before create_engine
                     if (
@@ -367,7 +367,7 @@ class TestManagerInitializationSequencing:
                     manager.engine.dispose()
 
     def test_reference_manager_creates_dir_before_engine(self):
-        """Test that ReferenceManager creates directory before engine creation."""
+        """Test that ReferenceManager creates directory before engine creation."""  # noqa: E501
         with tempfile.TemporaryDirectory() as tmpdir:
             datafiles_dir = os.path.join(tmpdir, "datafiles")
             db_path = os.path.join(datafiles_dir, "reference.db")
@@ -393,7 +393,7 @@ class TestFreshInstallationScenarios:
     """Test fresh installation scenarios with no existing directories."""
 
     def test_fresh_install_with_default_config(self):
-        """Test application startup on fresh installation with default config."""
+        """Test application startup on fresh installation with default config."""  # noqa: E501
         with tempfile.TemporaryDirectory() as tmpdir:
             # Create default config
             config_data = {
@@ -421,7 +421,7 @@ class TestFreshInstallationScenarios:
 
             # Start operations manager
             operations_mgr = OperationsDatabaseManager(
-                operations_db_path=config_manager.settings.database.operations_path
+                operations_db_path=config_manager.settings.database.operations_path  # noqa: E501
             )
 
             # Verify directory was created
@@ -430,12 +430,12 @@ class TestFreshInstallationScenarios:
             # Start reference manager
             ref_config = ReferenceConfig()
             ref_mgr = ReferenceManager(
-                ref_config, db_path=config_manager.settings.database.reference_path
+                ref_config, db_path=config_manager.settings.database.reference_path  # noqa: E501
             )
 
             # Verify all databases exist
-            assert os.path.exists(config_manager.settings.database.operations_path)
-            assert os.path.exists(config_manager.settings.database.reference_path)
+            assert os.path.exists(config_manager.settings.database.operations_path)  # noqa: E501
+            assert os.path.exists(config_manager.settings.database.reference_path)  # noqa: E501
 
             # Verify managers are functional
             assert operations_mgr.engine is not None
@@ -473,7 +473,7 @@ class TestFreshInstallationScenarios:
                 "SELECT name FROM sqlite_master WHERE type='table'"
             )
             operations_tables = operations_cursor.fetchall()
-            assert len(operations_tables) > 0, "Operations database should have tables"
+            assert len(operations_tables) > 0, "Operations database should have tables"  # noqa: E501
             operations_conn.close()
 
             # Check reference database
@@ -483,7 +483,7 @@ class TestFreshInstallationScenarios:
                 "SELECT name FROM sqlite_master WHERE type='table'"
             )
             reference_tables = reference_cursor.fetchall()
-            assert len(reference_tables) > 0, "Reference database should have tables"
+            assert len(reference_tables) > 0, "Reference database should have tables"  # noqa: E501
             reference_conn.close()
 
             # Clean up
@@ -494,7 +494,7 @@ class TestFreshInstallationScenarios:
         """Test fresh installation with custom directory structure."""
         with tempfile.TemporaryDirectory() as tmpdir:
             # Use custom directory structure
-            custom_dir = os.path.join(tmpdir, "my_app", "databases", "datafiles")
+            custom_dir = os.path.join(tmpdir, "my_app", "databases", "datafiles")  # noqa: E501
 
             config_data = {
                 "database": {
@@ -517,12 +517,12 @@ class TestFreshInstallationScenarios:
             from pipeline.manager import OperationsDatabaseManager
 
             operations_mgr = OperationsDatabaseManager(
-                operations_db_path=config_manager.settings.database.operations_path
+                operations_db_path=config_manager.settings.database.operations_path  # noqa: E501
             )
 
             # Verify entire path was created
             assert os.path.exists(custom_dir)
-            assert os.path.exists(config_manager.settings.database.operations_path)
+            assert os.path.exists(config_manager.settings.database.operations_path)  # noqa: E501
 
             # Clean up
             operations_mgr.engine.dispose()
@@ -543,7 +543,7 @@ class TestDatasetManagerDirectoryIntegration:
             from dataset.manager import DatasetManager
 
             _ = DatasetManager(
-                datasets_config_path=config_path, datasets_directory=datasets_dir
+                datasets_config_path=config_path, datasets_directory=datasets_dir  # noqa: E501
             )
 
             # Verify directory was created
@@ -562,7 +562,7 @@ class TestDatasetManagerDirectoryIntegration:
             from dataset.manager import DatasetManager
 
             _ = DatasetManager(
-                datasets_config_path=config_path, datasets_directory=datasets_dir
+                datasets_config_path=config_path, datasets_directory=datasets_dir  # noqa: E501
             )
 
             # Verify full path was created
@@ -585,7 +585,7 @@ class TestDatasetManagerDirectoryIntegration:
                 operations_db_path=operations_path
             )
             _ = DatasetManager(
-                datasets_config_path=config_path, datasets_directory=datasets_dir
+                datasets_config_path=config_path, datasets_directory=datasets_dir  # noqa: E501
             )
 
             # Verify both directories were created
@@ -597,11 +597,11 @@ class TestDatasetManagerDirectoryIntegration:
 
 
 class TestErrorHandlingIntegration:
-    """Test error handling in directory creation across integration scenarios."""
+    """Test error handling in directory creation across integration scenarios."""  # noqa: E501
 
     def test_invalid_path_handling(self):
         """Test handling of invalid paths during directory creation."""
-        # Note: The current implementation accepts empty paths and uses config defaults
+        # Note: The current implementation accepts empty paths and uses config defaults  # noqa: E501
         # This test verifies that behavior works without errors
         from pipeline.manager import OperationsDatabaseManager
 
@@ -611,7 +611,7 @@ class TestErrorHandlingIntegration:
         manager.engine.dispose()
 
     def test_directory_cleanup_on_error(self):
-        """Test that resources are cleaned up properly if initialization fails."""
+        """Test that resources are cleaned up properly if initialization fails."""  # noqa: E501
         with tempfile.TemporaryDirectory() as tmpdir:
             db_path = os.path.join(tmpdir, "datafiles", "test.db")
 

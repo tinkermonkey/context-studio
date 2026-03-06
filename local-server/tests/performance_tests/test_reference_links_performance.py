@@ -9,33 +9,33 @@ import os
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-import pytest
-import time
-from uuid import uuid4
+import pytest  # noqa: E402
+import time  # noqa: E402
+from uuid import uuid4  # noqa: E402
 
 # Performance timeout constants (in seconds)
-# Bulk validation timeout: allows for parsing 100+ node definitions and checking reference link syntax
-# Set to 10s to accommodate slower CI environments while catching performance regressions
+# Bulk validation timeout: allows for parsing 100+ node definitions and checking reference link syntax  # noqa: E501
+# Set to 10s to accommodate slower CI environments while catching performance regressions  # noqa: E501
 BULK_VALIDATION_TIMEOUT_SECONDS = 10.0
 
-# Individual validation timeout: single node validation should be nearly instantaneous
+# Individual validation timeout: single node validation should be nearly instantaneous  # noqa: E501
 # Set to 1s to allow for database queries and link parsing on a single node
 INDIVIDUAL_VALIDATION_TIMEOUT_SECONDS = 1.0
 
-# Bulk fetch timeout: retrieving reference links for multiple nodes should be fast
-# Set to 5s for fetching 20 nodes, allowing ~250ms per node including DB overhead
+# Bulk fetch timeout: retrieving reference links for multiple nodes should be fast  # noqa: E501
+# Set to 5s for fetching 20 nodes, allowing ~250ms per node including DB overhead  # noqa: E501
 BULK_FETCH_TIMEOUT_SECONDS = 5.0
 
-# Scalability factor: maximum allowed performance degradation between small and large batches
-# Set to 5x to detect quadratic complexity issues while allowing for startup overhead
+# Scalability factor: maximum allowed performance degradation between small and large batches  # noqa: E501
+# Set to 5x to detect quadratic complexity issues while allowing for startup overhead  # noqa: E501
 SCALABILITY_FACTOR_LIMIT = 5.0
 
 # Test data constants
-# Node count chosen to exceed 100 to test bulk operations with a realistic dataset size
+# Node count chosen to exceed 100 to test bulk operations with a realistic dataset size  # noqa: E501
 # 110 provides margin above the common 100-item batch threshold
 PERFORMANCE_TEST_NODE_COUNT = 110
 
-# Small sample size for testing individual operations where each is timed separately
+# Small sample size for testing individual operations where each is timed separately  # noqa: E501
 SAMPLE_NODE_COUNT_SMALL = 10
 
 # Medium sample size for testing repeated fetch operations in a loop
@@ -51,7 +51,7 @@ def test_nodes(shared_client):
         "title": f"PerfTestLayer_{uuid4()}",
         "definition": "Layer for performance testing",
     }
-    layer_resp = shared_client.post("/api/structure_nodes/", json=layer_payload)
+    layer_resp = shared_client.post("/api/structure_nodes/", json=layer_payload)  # noqa: E501
     assert layer_resp.status_code == 201
     layer_id = layer_resp.json()["id"]
 
@@ -79,7 +79,7 @@ def test_bulk_validation_performance(shared_client, test_nodes):
 
     # Run bulk validation
     resp = shared_client.post(
-        f"/api/structure_nodes/reference_links/validate?limit={PERFORMANCE_TEST_NODE_COUNT}"
+        f"/api/structure_nodes/reference_links/validate?limit={PERFORMANCE_TEST_NODE_COUNT}"  # noqa: E501
     )
 
     elapsed_time = time.time() - start_time
@@ -94,13 +94,13 @@ def test_bulk_validation_performance(shared_client, test_nodes):
     # Performance assertion: should complete within timeout
     # (even with empty reference links, parsing 100+ nodes should be fast)
     assert elapsed_time < BULK_VALIDATION_TIMEOUT_SECONDS, \
-        f"Bulk validation took {elapsed_time:.2f}s (expected < {BULK_VALIDATION_TIMEOUT_SECONDS}s)"
+        f"Bulk validation took {elapsed_time:.2f}s (expected < {BULK_VALIDATION_TIMEOUT_SECONDS}s)"  # noqa: E501
 
     # Log performance metrics
     print("\nBulk validation performance:")
     print(f"  - Nodes checked: {data['total_nodes_checked']}")
     print(f"  - Time elapsed: {elapsed_time:.2f}s")
-    print(f"  - Nodes per second: {data['total_nodes_checked'] / elapsed_time:.2f}")
+    print(f"  - Nodes per second: {data['total_nodes_checked'] / elapsed_time:.2f}")  # noqa: E501
 
 
 def test_individual_validation_performance(shared_client, test_nodes):
@@ -123,7 +123,7 @@ def test_individual_validation_performance(shared_client, test_nodes):
 
         # Each individual validation should be very fast
         assert elapsed_time < INDIVIDUAL_VALIDATION_TIMEOUT_SECONDS, \
-            f"Individual validation took {elapsed_time:.2f}s (expected < {INDIVIDUAL_VALIDATION_TIMEOUT_SECONDS}s)"
+            f"Individual validation took {elapsed_time:.2f}s (expected < {INDIVIDUAL_VALIDATION_TIMEOUT_SECONDS}s)"  # noqa: E501
 
     avg_time = total_time / len(sample_nodes)
     print("\nIndividual validation performance:")
@@ -140,14 +140,14 @@ def test_get_reference_links_performance(shared_client, test_nodes):
     start_time = time.time()
 
     for node_id in sample_nodes:
-        resp = shared_client.get(f"/api/structure_nodes/{node_id}/reference_links")
+        resp = shared_client.get(f"/api/structure_nodes/{node_id}/reference_links")  # noqa: E501
         assert resp.status_code == 200
 
     elapsed_time = time.time() - start_time
 
     # Should be able to fetch nodes' reference links quickly
     assert elapsed_time < BULK_FETCH_TIMEOUT_SECONDS, \
-        f"Fetching {len(sample_nodes)} nodes took {elapsed_time:.2f}s (expected < {BULK_FETCH_TIMEOUT_SECONDS}s)"
+        f"Fetching {len(sample_nodes)} nodes took {elapsed_time:.2f}s (expected < {BULK_FETCH_TIMEOUT_SECONDS}s)"  # noqa: E501
 
     print("\nGet reference links performance:")
     print(f"  - Nodes fetched: {len(sample_nodes)}")
@@ -170,7 +170,7 @@ def test_get_word_senses_performance(shared_client, test_nodes):
 
     # Should be able to fetch nodes' word senses quickly
     assert elapsed_time < BULK_FETCH_TIMEOUT_SECONDS, \
-        f"Fetching {len(sample_nodes)} nodes took {elapsed_time:.2f}s (expected < {BULK_FETCH_TIMEOUT_SECONDS}s)"
+        f"Fetching {len(sample_nodes)} nodes took {elapsed_time:.2f}s (expected < {BULK_FETCH_TIMEOUT_SECONDS}s)"  # noqa: E501
 
     print("\nGet word senses performance:")
     print(f"  - Nodes fetched: {len(sample_nodes)}")
@@ -178,12 +178,12 @@ def test_get_word_senses_performance(shared_client, test_nodes):
     print(f"  - Fetches per second: {len(sample_nodes) / elapsed_time:.2f}")
 
 
-def test_bulk_validation_with_no_existence_check_faster(shared_client, test_nodes):
+def test_bulk_validation_with_no_existence_check_faster(shared_client, test_nodes):  # noqa: E501
     """Test that validation without existence check is faster than with it."""
     # Time with existence check
     start_with_check = time.time()
     resp1 = shared_client.post(
-        "/api/structure_nodes/reference_links/validate?check_existence=true&limit=50"
+        "/api/structure_nodes/reference_links/validate?check_existence=true&limit=50"  # noqa: E501
     )
     time_with_check = time.time() - start_with_check
     assert resp1.status_code == 200
@@ -191,7 +191,7 @@ def test_bulk_validation_with_no_existence_check_faster(shared_client, test_node
     # Time without existence check
     start_no_check = time.time()
     resp2 = shared_client.post(
-        "/api/structure_nodes/reference_links/validate?check_existence=false&limit=50"
+        "/api/structure_nodes/reference_links/validate?check_existence=false&limit=50"  # noqa: E501
     )
     time_no_check = time.time() - start_no_check
     assert resp2.status_code == 200
@@ -201,8 +201,8 @@ def test_bulk_validation_with_no_existence_check_faster(shared_client, test_node
     print(f"  - Without existence check: {time_no_check:.2f}s")
     print(f"  - Speedup factor: {time_with_check / time_no_check:.2f}x")
 
-    # Without existence check should be significantly faster (at least when reference.db is empty)
-    # Note: This assertion may not always hold if reference.db access is very fast
+    # Without existence check should be significantly faster (at least when reference.db is empty)  # noqa: E501
+    # Note: This assertion may not always hold if reference.db access is very fast  # noqa: E501
     # so we just log the comparison
 
 
@@ -218,7 +218,7 @@ def test_scalability_100_plus_nodes(shared_client, test_nodes):
         start_time = time.time()
 
         resp = shared_client.post(
-            f"/api/structure_nodes/reference_links/validate?limit={batch_size}&check_existence=false"
+            f"/api/structure_nodes/reference_links/validate?limit={batch_size}&check_existence=false"  # noqa: E501
         )
 
         elapsed_time = time.time() - start_time
@@ -228,13 +228,13 @@ def test_scalability_100_plus_nodes(shared_client, test_nodes):
 
     print("\nScalability test results:")
     for batch_size, elapsed_time in zip(batch_sizes, times):
-        print(f"  - {batch_size} nodes: {elapsed_time:.2f}s ({elapsed_time/batch_size:.4f}s per node)")
+        print(f"  - {batch_size} nodes: {elapsed_time:.2f}s ({elapsed_time/batch_size:.4f}s per node)")  # noqa: E501
 
-    # Verify that time per node doesn't grow dramatically (should be roughly linear)
+    # Verify that time per node doesn't grow dramatically (should be roughly linear)  # noqa: E501
     time_per_node_10 = times[0] / batch_sizes[0]
     time_per_node_100 = times[2] / batch_sizes[2]
 
-    # Time per node for 100 should be within scalability factor limit of time per node for 10
+    # Time per node for 100 should be within scalability factor limit of time per node for 10  # noqa: E501
     # (allowing for startup overhead and caching effects)
     assert time_per_node_100 < time_per_node_10 * SCALABILITY_FACTOR_LIMIT, \
-        f"Performance degraded significantly: {time_per_node_10:.4f}s/node -> {time_per_node_100:.4f}s/node"
+        f"Performance degraded significantly: {time_per_node_10:.4f}s/node -> {time_per_node_100:.4f}s/node"  # noqa: E501

@@ -7,9 +7,9 @@ import os
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-import pytest
-from unittest.mock import Mock, patch
-from nlp.proxy_manager import ReferenceAPIProxyManager, get_proxy_manager
+import pytest  # noqa: E402
+from unittest.mock import Mock, patch  # noqa: E402
+from nlp.proxy_manager import ReferenceAPIProxyManager, get_proxy_manager  # noqa: E402, E501
 
 
 class TestReferenceAPIProxyManager:
@@ -78,7 +78,7 @@ class TestReferenceAPIProxyManager:
                 },
             },
             "throttling": {
-                "domain_limits": {"conceptnet": 3600, "dbpedia_spotlight": 3600}
+                "domain_limits": {"conceptnet": 3600, "dbpedia_spotlight": 3600}  # noqa: E501
             },
         }
         mock_get_settings.return_value = mock_settings
@@ -117,7 +117,7 @@ class TestReferenceAPIProxyManager:
                 },
             },
             "throttling": {
-                "domain_limits": {"conceptnet": 3600, "dbpedia_spotlight": 3600}
+                "domain_limits": {"conceptnet": 3600, "dbpedia_spotlight": 3600}  # noqa: E501
             },
         }
         mock_get_settings.return_value = mock_settings
@@ -243,7 +243,7 @@ class TestReferenceAPIProxyManager:
                 },
             },
             "throttling": {
-                "domain_limits": {"conceptnet": 3600, "dbpedia_spotlight": 3600}
+                "domain_limits": {"conceptnet": 3600, "dbpedia_spotlight": 3600}  # noqa: E501
             },
         }
         mock_get_settings.return_value = mock_settings

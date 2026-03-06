@@ -8,15 +8,15 @@ import sys
 import os
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-import pytest
-from unittest.mock import Mock, patch
-from datetime import datetime, timezone
-from sqlalchemy.orm import Session
-import pandas as pd  # type: ignore[import-untyped]
+import pytest  # noqa: E402
+from unittest.mock import Mock, patch  # noqa: E402
+from datetime import datetime, timezone  # noqa: E402
+from sqlalchemy.orm import Session  # noqa: E402
+import pandas as pd  # type: ignore[import-untyped]  # noqa: E402
 
-from services.incremental_sync_engine import IncrementalSyncEngine
-from services.duckdb_service import DuckDBService
-from services.version_manager import VersionManager
+from services.incremental_sync_engine import IncrementalSyncEngine  # noqa: E402, E501
+from services.duckdb_service import DuckDBService  # noqa: E402
+from services.version_manager import VersionManager  # noqa: E402
 
 
 class TestIncrementalSyncEngine:
@@ -48,7 +48,7 @@ class TestIncrementalSyncEngine:
         }
 
     @pytest.fixture
-    def sync_engine(self, mock_db, mock_duckdb_service, mock_version_manager, mock_s3_config):
+    def sync_engine(self, mock_db, mock_duckdb_service, mock_version_manager, mock_s3_config):  # noqa: E501
         """Create IncrementalSyncEngine instance with mocked dependencies."""
         return IncrementalSyncEngine(
             db=mock_db,
@@ -57,7 +57,7 @@ class TestIncrementalSyncEngine:
             s3_config=mock_s3_config
         )
 
-    def test_init_sync_engine(self, mock_db, mock_duckdb_service, mock_version_manager, mock_s3_config):
+    def test_init_sync_engine(self, mock_db, mock_duckdb_service, mock_version_manager, mock_s3_config):  # noqa: E501
         """Test IncrementalSyncEngine initialization."""
         engine = IncrementalSyncEngine(
             db=mock_db,
@@ -71,10 +71,10 @@ class TestIncrementalSyncEngine:
         assert engine.version_manager == mock_version_manager
         assert engine.s3_config == mock_s3_config
 
-    @patch('services.incremental_sync_engine.IncrementalSyncEngine._create_sync_operation')
-    @patch('services.incremental_sync_engine.IncrementalSyncEngine._store_sync_operation')
-    @patch('services.incremental_sync_engine.IncrementalSyncEngine._complete_sync_operation')
-    def test_sync_incremental_invalid_time_range(self, mock_complete, mock_store, mock_create, sync_engine, mock_duckdb_service):
+    @patch('services.incremental_sync_engine.IncrementalSyncEngine._create_sync_operation')  # noqa: E501
+    @patch('services.incremental_sync_engine.IncrementalSyncEngine._store_sync_operation')  # noqa: E501
+    @patch('services.incremental_sync_engine.IncrementalSyncEngine._complete_sync_operation')  # noqa: E501
+    def test_sync_incremental_invalid_time_range(self, mock_complete, mock_store, mock_create, sync_engine, mock_duckdb_service):  # noqa: E501
         """Test incremental sync with invalid time range."""
         # Mock the sync operation creation
         mock_sync_op = Mock()
@@ -97,10 +97,10 @@ class TestIncrementalSyncEngine:
         # Should return a result with the operation_id
         assert "operation_id" in result
 
-    @patch('services.incremental_sync_engine.IncrementalSyncEngine._create_sync_operation')
-    @patch('services.incremental_sync_engine.IncrementalSyncEngine._store_sync_operation')
-    @patch('services.incremental_sync_engine.IncrementalSyncEngine._complete_sync_operation')
-    def test_sync_incremental_success(self, mock_complete, mock_store, mock_create, sync_engine, mock_db, mock_duckdb_service):
+    @patch('services.incremental_sync_engine.IncrementalSyncEngine._create_sync_operation')  # noqa: E501
+    @patch('services.incremental_sync_engine.IncrementalSyncEngine._store_sync_operation')  # noqa: E501
+    @patch('services.incremental_sync_engine.IncrementalSyncEngine._complete_sync_operation')  # noqa: E501
+    def test_sync_incremental_success(self, mock_complete, mock_store, mock_create, sync_engine, mock_db, mock_duckdb_service):  # noqa: E501
         """Test successful incremental sync operation."""
         # Mock the sync operation creation
         mock_sync_op = Mock()
@@ -149,11 +149,11 @@ class TestIncrementalSyncEngine:
 
         assert "recommended_strategy" in result
         assert "reasoning" in result
-        assert result["recommended_strategy"] in ["sequential", "parallel", "auto"]
+        assert result["recommended_strategy"] in ["sequential", "parallel", "auto"]  # noqa: E501
 
     def test_get_sync_history(self, sync_engine, mock_db):
         """Test sync history retrieval."""
-        # Mock database query result - simpler format matching actual SyncOperation fields
+        # Mock database query result - simpler format matching actual SyncOperation fields  # noqa: E501
         mock_db.execute.return_value.fetchall.return_value = [
             ("sync-123", "incremental", "2024-01-01T00:00:00+00:00",
              "2024-01-01T00:05:00+00:00", 100, "sequential", '{}')
@@ -163,7 +163,7 @@ class TestIncrementalSyncEngine:
 
         assert isinstance(result, list)
         if result:  # Only check if we have results
-            # The method returns SyncOperation objects, so check object attributes
+            # The method returns SyncOperation objects, so check object attributes  # noqa: E501
             sync_op = result[0]
             assert hasattr(sync_op, 'id')
             assert hasattr(sync_op, 'operation_type')

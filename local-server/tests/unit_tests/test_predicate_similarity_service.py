@@ -26,7 +26,7 @@ from embeddings.generate_embeddings import generate_embedding
 
 
 # Skip if embeddings not available
-pytest.importorskip("embeddings.generate_embeddings", reason="embeddings module not available")
+pytest.importorskip("embeddings.generate_embeddings", reason="embeddings module not available")  # noqa: E501
 
 
 @pytest.fixture
@@ -40,7 +40,7 @@ def test_manager():
 
     # Add some test external predicates
     test_predicates = [
-        ("subClassOf", "Indicates that one class is a subclass of another", "schema.org"),
+        ("subClassOf", "Indicates that one class is a subclass of another", "schema.org"),  # noqa: E501
         ("relatedTo", "Indicates a general semantic relation", "conceptnet"),
         ("locatedIn", "Indicates spatial location", "dbpedia"),
         ("hasProperty", "Indicates entity has a property", "wikidata"),
@@ -270,9 +270,9 @@ class TestPredicateSimilarityService:
         """Test basic clustering functionality."""
         # Create test predicates with clear groupings (using UUIDs)
         predicates = [
-            (str(uuid4()), "spatial_relation_1", "Indicates location in space"),
+            (str(uuid4()), "spatial_relation_1", "Indicates location in space"),  # noqa: E501
             (str(uuid4()), "spatial_relation_2", "Indicates position in area"),
-            (str(uuid4()), "temporal_relation_1", "Indicates time relationship"),
+            (str(uuid4()), "temporal_relation_1", "Indicates time relationship"),  # noqa: E501
             (str(uuid4()), "temporal_relation_2", "Indicates timing of event"),
             (str(uuid4()), "causal_relation_1", "Indicates cause and effect"),
         ]
@@ -365,7 +365,7 @@ class TestEdgeCases:
         assert clusters == []
 
     def test_clustering_too_many_predicates(self, similarity_service):
-        """Test clustering with too many predicates (resource exhaustion protection)."""
+        """Test clustering with too many predicates (resource exhaustion protection)."""  # noqa: E501
         # Create a list that exceeds max_predicates limit
         large_list = [
             (str(uuid4()), f"predicate_{i}", f"definition_{i}")

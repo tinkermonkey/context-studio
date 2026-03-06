@@ -11,17 +11,17 @@ from pathlib import Path
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-import pytest
-from fastapi.testclient import TestClient
-from sqlalchemy import text
+import pytest  # noqa: E402
+from fastapi.testclient import TestClient  # noqa: E402
+from sqlalchemy import text  # noqa: E402
 
-from app import create_app
-from config import (
+from app import create_app  # noqa: E402
+from config import (  # noqa: E402
     notify_configuration_change,
     Settings,
 )
-from database.migrations.migration_manager import MigrationManager
-from database.utils import (
+from database.migrations.migration_manager import MigrationManager  # noqa: E402, E501
+from database.utils import (  # noqa: E402
     get_engine,
     get_session_local,
     init_db,
@@ -29,14 +29,14 @@ from database.utils import (
     cleanup_database_resources,
     set_current_engine_for_testing,
 )
-from dataset.manager import DatasetManager
-from pydantic import ValidationError
-from services.service_factory import (
+from dataset.manager import DatasetManager  # noqa: E402
+from pydantic import ValidationError  # noqa: E402
+from services.service_factory import (  # noqa: E402
     ServiceFactory,
     set_service_factory,
 )
-from tests.test_config import TestConfigurationManager
-from utils.event_processor import get_global_event_processor, set_global_event_processor
+from tests.test_config import TestConfigurationManager  # noqa: E402
+from utils.event_processor import get_global_event_processor, set_global_event_processor  # noqa: E402, E501
 
 
 def pytest_collection_modifyitems(config, items):
@@ -46,12 +46,12 @@ def pytest_collection_modifyitems(config, items):
 
 
 def pytest_ignore_collect(collection_path, config):
-    """Ignore collection from utility files that have non-test Test* classes."""
+    """Ignore collection from utility files that have non-test Test* classes."""  # noqa: E501
     # Get the string representation of the path
     path_str = str(collection_path)
 
     # List of utility files that should not be collected
-    utility_files = ["test_config.py", "test_db_utils.py", "test_environment.py"]
+    utility_files = ["test_config.py", "test_db_utils.py", "test_environment.py"]  # noqa: E501
 
     # Check if this is one of our utility files (not in subdirectories)
     for util_file in utility_files:
@@ -150,7 +150,7 @@ def global_test_isolation():
                         obj = getattr(obj, part)
                     else:
                         raise KeyError(
-                            f"Configuration path not found: {'.'.join(parts[:-1])}"
+                            f"Configuration path not found: {'.'.join(parts[:-1])}"  # noqa: E501
                         )
 
                 # Set the final value
@@ -158,7 +158,7 @@ def global_test_isolation():
                 if hasattr(obj, final_key):
                     setattr(obj, final_key, value)
 
-                    # Trigger notifications like the real ConfigurationManager does
+                    # Trigger notifications like the real ConfigurationManager does  # noqa: E501
                     try:
                         loop = asyncio.get_event_loop()
                         loop.create_task(notify_configuration_change(path))
@@ -217,7 +217,7 @@ def global_test_isolation():
     # Apply dataset manager monkey patch
     db_utils.get_dataset_manager = get_test_dataset_manager
 
-    # Reset the global dataset manager instance to force recreation with test settings
+    # Reset the global dataset manager instance to force recreation with test settings  # noqa: E501
     if hasattr(db_utils, "_dataset_manager"):
         db_utils._dataset_manager = None
 
@@ -236,20 +236,20 @@ def global_test_isolation():
         # Enhanced cleanup and verification
         config_manager.cleanup()
 
-        # Verify test isolation - check that critical files haven't been polluted
-        if os.path.exists("./config.json") and os.path.exists("./datasets.json"):
+        # Verify test isolation - check that critical files haven't been polluted  # noqa: E501
+        if os.path.exists("./config.json") and os.path.exists("./datasets.json"):  # noqa: E501
             # Verify config.json and datasets.json were not modified by tests
             # This is critical for data safety
             try:
                 result = subprocess.run(
-                    ["git", "status", "--porcelain", "config.json", "datasets.json"],
+                    ["git", "status", "--porcelain", "config.json", "datasets.json"],  # noqa: E501
                     capture_output=True,
                     text=True,
                     cwd=".",
                 )
                 if result.stdout.strip():
                     print(
-                        f"WARNING: Test isolation failed - critical files modified: {result.stdout.strip()}"
+                        f"WARNING: Test isolation failed - critical files modified: {result.stdout.strip()}"  # noqa: E501
                     )
             except Exception:
                 # Git not available or other issue, skip verification
@@ -259,7 +259,7 @@ def global_test_isolation():
         root_test_files = glob.glob("test_*.db") + glob.glob("*test*.json")
         if root_test_files:
             print(
-                f"WARNING: Test isolation incomplete - cleaning up {len(root_test_files)} stray test files"
+                f"WARNING: Test isolation incomplete - cleaning up {len(root_test_files)} stray test files"  # noqa: E501
             )
             for test_file in root_test_files:
                 try:
@@ -314,7 +314,7 @@ def reset_service_factory_cache(request, test_service_factory):
     try:
         test_service_factory.clear_cache()
     except Exception as e:
-        print(f"Warning: Error clearing service factory cache before test: {e}")
+        print(f"Warning: Error clearing service factory cache before test: {e}")  # noqa: E501
 
     yield
 
@@ -382,15 +382,15 @@ def isolated_test_settings(tmp_path):
     return _create_settings_with_overrides
 
 
-# Note: For performance reasons, we maintain the existing shared database approach
-# and only provide configuration isolation. Database isolation fixtures are available
-# in tests/test_db_utils.py and tests/test_environment.py for tests that specifically
+# Note: For performance reasons, we maintain the existing shared database approach  # noqa: E501
+# and only provide configuration isolation. Database isolation fixtures are available  # noqa: E501
+# in tests/test_db_utils.py and tests/test_environment.py for tests that specifically  # noqa: E501
 # need complete database isolation.
 
 
 @pytest.fixture(scope="session")
 def shared_app(test_service_factory):
-    """Create shared app instance for the entire test session - reused across all tests."""
+    """Create shared app instance for the entire test session - reused across all tests."""  # noqa: E501
     engine, session_local, db_path = create_test_database_with_migrations()
     try:
         # Set the global engine state for testing
@@ -412,7 +412,7 @@ def shared_app(test_service_factory):
                 set_global_event_processor(None)
             except Exception as e:
                 print(
-                    f"Warning: Error stopping global EventProcessor during cleanup: {e}"
+                    f"Warning: Error stopping global EventProcessor during cleanup: {e}"  # noqa: E501
                 )
 
         # Always cleanup the temporary database
@@ -422,7 +422,7 @@ def shared_app(test_service_factory):
 
 @pytest.fixture(scope="session")
 def shared_client(shared_app):
-    """Create shared test client for the entire session - reused across all tests."""
+    """Create shared test client for the entire session - reused across all tests."""  # noqa: E501
     app, engine, session_local = shared_app
     with TestClient(app) as c:
         yield c
@@ -430,7 +430,7 @@ def shared_client(shared_app):
 
 @pytest.fixture(scope="function")
 def db_session(shared_app):
-    """Provide clean database session for each test function - auto-rollback."""
+    """Provide clean database session for each test function - auto-rollback."""  # noqa: E501
     app, engine, session_local = shared_app
 
     # Create a new session for this test
@@ -447,7 +447,7 @@ def db_session(shared_app):
                 # (that's handled in session cleanup)
                 global_processor.stop()
             except Exception as e:
-                print(f"Warning: Error stopping EventProcessor in test cleanup: {e}")
+                print(f"Warning: Error stopping EventProcessor in test cleanup: {e}")  # noqa: E501
 
         # Always close the session first
         session.close()
@@ -457,7 +457,7 @@ def db_session(shared_app):
         try:
             # Get all table names except migration tracking
             tables_result = cleanup_session.execute(text("""
-                SELECT name FROM sqlite_master 
+                SELECT name FROM sqlite_master
                 WHERE type='table' AND name NOT LIKE 'sqlite_%'
                 AND name NOT IN ('migration_versions', 'alembic_version')
                 ORDER BY name
@@ -501,7 +501,7 @@ def clean_db_session(shared_app):
         try:
             # Get all table names
             tables_result = cleanup_session.execute(text("""
-                SELECT name FROM sqlite_master 
+                SELECT name FROM sqlite_master
                 WHERE type='table' AND name NOT LIKE 'sqlite_%'
                 ORDER BY name
             """)).fetchall()
@@ -523,7 +523,7 @@ def clean_db_session(shared_app):
 # Legacy fixtures for backwards compatibility - these now use the shared app
 @pytest.fixture(scope="function")
 def optimized_db_session(shared_app, test_database_manager):
-    """Provide optimized database session using DatabaseManager for enhanced testing."""
+    """Provide optimized database session using DatabaseManager for enhanced testing."""  # noqa: E501
     app, engine, session_local = shared_app
 
     # Use database manager for optimized session handling
@@ -550,14 +550,14 @@ def optimized_db_session(shared_app, test_database_manager):
 # Legacy fixtures for backwards compatibility - these now use the shared app
 @pytest.fixture(scope="function")
 def test_app(shared_app):
-    """Legacy fixture name - now returns shared app for backwards compatibility."""
+    """Legacy fixture name - now returns shared app for backwards compatibility."""  # noqa: E501
     app, engine, session_local = shared_app
     return app
 
 
 @pytest.fixture(scope="function")
 def client(request, shared_client):
-    """Legacy fixture name - now returns shared client for backwards compatibility."""
+    """Legacy fixture name - now returns shared client for backwards compatibility."""  # noqa: E501
     # Skip for integration tests to avoid fixture collisions
     if "integration_tests" in str(request.fspath):
         pytest.skip("Skipping conftest client fixture for integration tests")

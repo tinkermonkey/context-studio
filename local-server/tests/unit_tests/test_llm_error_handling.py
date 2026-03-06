@@ -10,14 +10,14 @@ from unittest.mock import patch
 # Add the project root to Python path for imports
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from llm.exceptions import (
+from llm.exceptions import (  # noqa: E402
     LLMConfigurationError,
     LLMProcessingError,
     LLMTimeoutError,
     LLMQuotaExceededError,
 )
-from api.llm import handle_llm_error
-from fastapi import HTTPException, status
+from api.llm import handle_llm_error  # noqa: E402
+from fastapi import HTTPException, status  # noqa: E402
 
 
 class TestLLMErrorHandling:
@@ -45,8 +45,8 @@ class TestLLMErrorHandling:
                 LLMConfigurationError("Missing API key"),
                 status.HTTP_500_INTERNAL_SERVER_ERROR,
             ),
-            (LLMProcessingError("Invalid request"), status.HTTP_400_BAD_REQUEST),
-            (LLMTimeoutError("Request timeout"), status.HTTP_504_GATEWAY_TIMEOUT),
+            (LLMProcessingError("Invalid request"), status.HTTP_400_BAD_REQUEST),  # noqa: E501
+            (LLMTimeoutError("Request timeout"), status.HTTP_504_GATEWAY_TIMEOUT),  # noqa: E501
             (
                 LLMQuotaExceededError("API quota exceeded"),
                 status.HTTP_429_TOO_MANY_REQUESTS,
@@ -105,7 +105,7 @@ class TestLLMErrorHandling:
             "domain_title": "Test Domain"
         }
 
-        result = service._render_user_prompt_generic(valid_template, valid_context)
+        result = service._render_user_prompt_generic(valid_template, valid_context)  # noqa: E501
 
         assert "test term" in result
         assert "Test Domain" in result
@@ -136,11 +136,11 @@ class TestLLMErrorHandling:
         # Find execute_pipeline endpoint
         execute_pipeline_route = None
         for route in router.routes:
-            if hasattr(route, "path") and "/execute_pipeline" in route.path and "/stream" not in route.path:
+            if hasattr(route, "path") and "/execute_pipeline" in route.path and "/stream" not in route.path:  # noqa: E501
                 execute_pipeline_route = route
                 break
 
-        assert execute_pipeline_route is not None, "No LLM execute_pipeline endpoint found"
+        assert execute_pipeline_route is not None, "No LLM execute_pipeline endpoint found"  # noqa: E501
 
         # Verify endpoint has proper type annotations
         endpoint_func = execute_pipeline_route.endpoint

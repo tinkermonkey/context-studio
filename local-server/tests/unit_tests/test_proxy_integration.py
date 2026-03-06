@@ -1,5 +1,5 @@
-# mypy: ignore-errors
 #!/usr/bin/env python3
+# mypy: ignore-errors
 """
 Test script to verify the reference_api_buddy integration works correctly.
 """
@@ -8,10 +8,10 @@ import sys
 import os
 
 sys.path.append(
-    os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+    os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))  # noqa: E501
 )
 
-from nlp.proxy_manager import get_proxy_manager
+from nlp.proxy_manager import get_proxy_manager  # noqa: E402
 
 
 def test_proxy_basic_functionality(test_settings):
@@ -30,10 +30,10 @@ def test_proxy_basic_functionality(test_settings):
     settings = test_settings
 
     concepcy_config_direct = settings.get_concepcy_config(use_proxy=False)
-    print(f"   Concepcy direct config has URL: {'url' in concepcy_config_direct}")
+    print(f"   Concepcy direct config has URL: {'url' in concepcy_config_direct}")  # noqa: E501
 
     concepcy_config_proxy = settings.get_concepcy_config(use_proxy=True)
-    print(f"   Concepcy with proxy URL: {concepcy_config_proxy.get('url', 'No URL')}")
+    print(f"   Concepcy with proxy URL: {concepcy_config_proxy.get('url', 'No URL')}")  # noqa: E501
 
     # Test 3: Test configuration generation scenarios
     print("\n3. Testing proxy configuration generation scenarios...")
@@ -54,7 +54,7 @@ def test_proxy_basic_functionality(test_settings):
         domain_mappings = {}
 
         if scenario.get("concepcy", False):
-            domain_mappings["conceptnet"] = {"upstream": "https://api.conceptnet.io"}
+            domain_mappings["conceptnet"] = {"upstream": "https://api.conceptnet.io"}  # noqa: E501
 
         if scenario.get("spacy_dbpedia_spotlight", False):
             domain_mappings["dbpedia_spotlight"] = {
@@ -65,7 +65,7 @@ def test_proxy_basic_functionality(test_settings):
             config = base_config.copy()
             config["domain_mappings"] = domain_mappings
             print(
-                f"     Would generate config with domains: {list(domain_mappings.keys())}"
+                f"     Would generate config with domains: {list(domain_mappings.keys())}"  # noqa: E501
             )
         else:
             print("     Would generate no config (no APIs enabled)")

@@ -1,19 +1,19 @@
 """
-Unit tests for HierarchicalDiffEngine - Testing advanced diff computation functionality.
+Unit tests for HierarchicalDiffEngine - Testing advanced diff computation functionality.  # noqa: E501
 
-Tests hierarchical diff algorithms, semantic analysis, three-way merge, and conflict detection.
+Tests hierarchical diff algorithms, semantic analysis, three-way merge, and conflict detection.  # noqa: E501
 """
 
 import sys
 import os
 import time
 
-sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
+sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))  # noqa: E501
 
-import pytest
-from unittest.mock import Mock, patch
+import pytest  # noqa: E402
+from unittest.mock import Mock, patch  # noqa: E402
 
-from services.hierarchical_diff_engine import HierarchicalDiffEngine, ConflictDescriptor
+from services.hierarchical_diff_engine import HierarchicalDiffEngine, ConflictDescriptor  # noqa: E402, E501
 
 
 class TestHierarchicalDiffEngine:
@@ -29,7 +29,7 @@ class TestHierarchicalDiffEngine:
         """Create a mock NLP service."""
         mock_service = Mock()
         mock_service.extract_entities.return_value = ["entity1", "entity2"]
-        mock_service.analyze_sentiment.return_value = {"score": 0.5, "label": "neutral"}
+        mock_service.analyze_sentiment.return_value = {"score": 0.5, "label": "neutral"}  # noqa: E501
         return mock_service
 
     @pytest.fixture
@@ -37,21 +37,21 @@ class TestHierarchicalDiffEngine:
         """Create a HierarchicalDiffEngine instance for testing."""
         return HierarchicalDiffEngine(mock_db, mock_nlp_service)
 
-    def test_engine_initialization(self, diff_engine, mock_db, mock_nlp_service):
+    def test_engine_initialization(self, diff_engine, mock_db, mock_nlp_service):  # noqa: E501
         """Test HierarchicalDiffEngine initialization."""
         assert diff_engine.db == mock_db
         assert diff_engine.nlp_service == mock_nlp_service
-        # assert isinstance(diff_engine.semantic_analyzer, SemanticSimilarityAnalyzer)  # Commented out - SemanticSimilarityAnalyzer not implemented yet
+        # assert isinstance(diff_engine.semantic_analyzer, SemanticSimilarityAnalyzer)  # Commented out - SemanticSimilarityAnalyzer not implemented yet  # noqa: E501
         assert diff_engine.performance_metrics == []
 
     def test_compute_basic_diff(self, diff_engine):
         """Test basic hierarchical diff computation."""
-        old_data = {"id": "entity_1", "name": "Original Name", "properties": {"type": "document", "status": "draft"}}
+        old_data = {"id": "entity_1", "name": "Original Name", "properties": {"type": "document", "status": "draft"}}  # noqa: E501
 
         new_data = {
             "id": "entity_1",
             "name": "Updated Name",
-            "properties": {"type": "document", "status": "published", "tags": ["important"]},
+            "properties": {"type": "document", "status": "published", "tags": ["important"]},  # noqa: E501
         }
 
         diff_result = diff_engine.compute_hierarchical_diff(old_data, new_data)
@@ -72,7 +72,7 @@ class TestHierarchicalDiffEngine:
         assert name_ops[0]["new_value"] == "Updated Name"
 
         # Should detect status change
-        status_ops = [op for op in operations if op["path"] == "properties.status"]
+        status_ops = [op for op in operations if op["path"] == "properties.status"]  # noqa: E501
         assert len(status_ops) == 1
         assert status_ops[0]["operation"] == "modify"
 
@@ -83,7 +83,7 @@ class TestHierarchicalDiffEngine:
 
     def test_compute_three_way_diff(self, diff_engine):
         """Test three-way diff computation with conflict detection."""
-        base = {"id": "entity_1", "name": "Base Name", "description": "Base description", "properties": {"version": 1}}
+        base = {"id": "entity_1", "name": "Base Name", "description": "Base description", "properties": {"version": 1}}  # noqa: E501
 
         local = {
             "id": "entity_1",
@@ -99,7 +99,7 @@ class TestHierarchicalDiffEngine:
             "properties": {"version": 1, "remote_flag": True},
         }
 
-        three_way_result = diff_engine.compute_three_way_diff(base, local, remote)
+        three_way_result = diff_engine.compute_three_way_diff(base, local, remote)  # noqa: E501
 
         # Check three-way diff structure
         assert "base_to_local" in three_way_result
@@ -130,17 +130,17 @@ class TestHierarchicalDiffEngine:
 
         # These are semantically similar but textually different
         conflict = diff_engine._analyze_semantic_conflict(
-            path="description", base_value=base_text, local_value=local_text, remote_value=remote_text
+            path="description", base_value=base_text, local_value=local_text, remote_value=remote_text  # noqa: E501
         )
 
         assert conflict is not None
-        assert conflict["type"] in ["semantic_conflict", "modification_conflict"]
+        assert conflict["type"] in ["semantic_conflict", "modification_conflict"]  # noqa: E501
         assert "semantic_similarity" in conflict
         assert "resolution_suggestions" in conflict
 
     def test_structural_diff_detection(self, diff_engine):
         """Test structural change detection."""
-        old_structure = {"type": "object", "fields": {"name": {"type": "string"}, "age": {"type": "integer"}}}
+        old_structure = {"type": "object", "fields": {"name": {"type": "string"}, "age": {"type": "integer"}}}  # noqa: E501
 
         new_structure = {
             "type": "object",
@@ -151,7 +151,7 @@ class TestHierarchicalDiffEngine:
             },
         }
 
-        diff_result = diff_engine.compute_hierarchical_diff(old_structure, new_structure)
+        diff_result = diff_engine.compute_hierarchical_diff(old_structure, new_structure)  # noqa: E501
 
         operations = diff_result["operations"]
 
@@ -165,14 +165,14 @@ class TestHierarchicalDiffEngine:
     def test_performance_optimized_diff(self, diff_engine):
         """Test performance optimization for large data structures."""
         # Create large nested structures
-        large_old = {"data": {f"item_{i}": {"value": i, "status": "active"} for i in range(1000)}}
+        large_old = {"data": {f"item_{i}": {"value": i, "status": "active"} for i in range(1000)}}  # noqa: E501
 
-        large_new = {"data": {f"item_{i}": {"value": i + 1, "status": "active"} for i in range(1000)}}
+        large_new = {"data": {f"item_{i}": {"value": i + 1, "status": "active"} for i in range(1000)}}  # noqa: E501
         # Add one new item
         large_new["data"]["item_1000"] = {"value": 1000, "status": "new"}
 
         start_time = time.time()
-        diff_result = diff_engine.compute_hierarchical_diff(large_old, large_new)
+        diff_result = diff_engine.compute_hierarchical_diff(large_old, large_new)  # noqa: E501
         execution_time = time.time() - start_time
 
         # Should complete within reasonable time (less than 5 seconds)
@@ -192,7 +192,7 @@ class TestHierarchicalDiffEngine:
             "remote_value": "Remotely updated description with changes",
         }
 
-        suggestions = diff_engine._generate_conflict_resolution_suggestions(conflict)
+        suggestions = diff_engine._generate_conflict_resolution_suggestions(conflict)  # noqa: E501
 
         assert len(suggestions) > 0
         for suggestion in suggestions:
@@ -225,9 +225,9 @@ class TestHierarchicalDiffEngine:
         new_data = {
             "tags": ["python", "ai", "data-science", "deep-learning"],
             "authors": [
-                {"name": "John Doe", "email": "john.doe@example.com"},  # email changed
+                {"name": "John Doe", "email": "john.doe@example.com"},  # email changed  # noqa: E501
                 {"name": "Jane Smith", "email": "jane@example.com"},
-                {"name": "Bob Johnson", "email": "bob@example.com"},  # new author
+                {"name": "Bob Johnson", "email": "bob@example.com"},  # new author  # noqa: E501
             ],
         }
 
@@ -277,15 +277,15 @@ class TestHierarchicalDiffEngine:
         assert metadata["depth_analyzed"] >= 1
         assert metadata["processing_time_ms"] > 0
 
-    def test_semantic_analysis_integration(self, diff_engine, mock_nlp_service):
+    def test_semantic_analysis_integration(self, diff_engine, mock_nlp_service):  # noqa: E501
         """Test integration with semantic analysis service."""
         old_data = {
-            "content": "This document contains important information about machine learning",
+            "content": "This document contains important information about machine learning",  # noqa: E501
             "category": "technical",
         }
 
         new_data = {
-            "content": "This paper includes crucial details about artificial intelligence",
+            "content": "This paper includes crucial details about artificial intelligence",  # noqa: E501
             "category": "research",
         }
 
@@ -321,7 +321,7 @@ class TestHierarchicalDiffEngine:
     def test_get_performance_statistics(self, diff_engine):
         """Test performance statistics aggregation."""
         # Generate some test diffs to create metrics
-        test_cases = [({"a": 1}, {"a": 2}), ({"b": "old"}, {"b": "new"}), ({"c": [1, 2]}, {"c": [1, 2, 3]})]
+        test_cases = [({"a": 1}, {"a": 2}), ({"b": "old"}, {"b": "new"}), ({"c": [1, 2]}, {"c": [1, 2, 3]})]  # noqa: E501
 
         for old, new in test_cases:
             diff_engine.compute_hierarchical_diff(old, new)
@@ -341,11 +341,11 @@ class TestHierarchicalDiffEngine:
     def test_error_handling_malformed_data(self, diff_engine):
         """Test error handling with malformed data structures."""
         # Test with None values
-        diff_result1 = diff_engine.compute_hierarchical_diff(None, {"test": "data"})
+        diff_result1 = diff_engine.compute_hierarchical_diff(None, {"test": "data"})  # noqa: E501
         assert "operations" in diff_result1
 
         # Test with mixed types
-        diff_result2 = diff_engine.compute_hierarchical_diff("string", {"test": "data"})
+        diff_result2 = diff_engine.compute_hierarchical_diff("string", {"test": "data"})  # noqa: E501
         assert "operations" in diff_result2
 
         # Should handle gracefully without exceptions
@@ -359,7 +359,7 @@ class TestHierarchicalDiffEngine:
         def create_nested_dict(depth, value):
             if depth == 0:
                 return value
-            return {"level": depth, "nested": create_nested_dict(depth - 1, value)}
+            return {"level": depth, "nested": create_nested_dict(depth - 1, value)}  # noqa: E501
 
         old_data = create_nested_dict(10, "old_value")
         new_data = create_nested_dict(10, "new_value")
@@ -396,7 +396,7 @@ class TestHierarchicalDiffEngine:
             try:
                 old_data = {"thread_id": thread_id, "value": thread_id * 10}
                 new_data = {"thread_id": thread_id, "value": thread_id * 20}
-                result = diff_engine.compute_hierarchical_diff(old_data, new_data)
+                result = diff_engine.compute_hierarchical_diff(old_data, new_data)  # noqa: E501
                 results.append(result)
             except Exception as e:
                 exceptions.append(e)
@@ -460,6 +460,4 @@ class TestConflictDescriptor:
 
 
 if __name__ == "__main__":
-    import time
-
     pytest.main([__file__, "-v"])

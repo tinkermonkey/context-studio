@@ -16,10 +16,10 @@ import asyncio
 from fastapi.testclient import TestClient
 
 # Add parent directory to path for imports
-sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
+sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))  # noqa: E501
 
-from app import create_app
-from services.task_manager import initialize_task_manager, shutdown_task_manager
+from app import create_app  # noqa: E402
+from services.task_manager import initialize_task_manager, shutdown_task_manager  # noqa: E402, E501
 
 
 @pytest.fixture

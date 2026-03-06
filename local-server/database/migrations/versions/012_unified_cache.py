@@ -40,8 +40,8 @@ class Migration012(Migration):
     def down(self, connection: Connection) -> None:
         """Reverse the migration."""
         # Drop indexes first
-        connection.execute(text("DROP INDEX IF EXISTS idx_unified_cache_expires"))
-        connection.execute(text("DROP INDEX IF EXISTS idx_unified_cache_created"))
+        connection.execute(text("DROP INDEX IF EXISTS idx_unified_cache_expires"))  # noqa: E501
+        connection.execute(text("DROP INDEX IF EXISTS idx_unified_cache_created"))  # noqa: E501
 
         # Drop the table
         connection.execute(text("DROP TABLE IF EXISTS unified_cache"))

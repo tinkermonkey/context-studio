@@ -11,12 +11,12 @@ import os
 from uuid import uuid4
 
 sys.path.insert(
-    0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+    0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))  # noqa: E501
 )
 
 
 class TestVersionManagementPracticalAPI:
-    """Test practical version management API functionality that's currently working."""
+    """Test practical version management API functionality that's currently working."""  # noqa: E501
 
     def test_health_endpoint(self, client):
         """Test the version management health endpoint."""
@@ -44,7 +44,7 @@ class TestVersionManagementPracticalAPI:
 
     @pytest.mark.skip_suite
     def test_stats_endpoint_implemented(self, client):
-        """Test that the stats endpoint is implemented and returns proper structure."""
+        """Test that the stats endpoint is implemented and returns proper structure."""  # noqa: E501
         response = client.get("/api/versions/stats")
         assert response.status_code == 200  # Endpoint is implemented
 
@@ -52,7 +52,7 @@ class TestVersionManagementPracticalAPI:
         # Test expected fields from VersionManagementStatsOut model
         expected_fields = [
             "versions_by_entity_type",
-            "versions_by_state", 
+            "versions_by_state",
             "working_tree_summary",
             "recent_activity",
             "performance_metrics",
@@ -115,13 +115,13 @@ class TestVersionManagementPracticalAPI:
         assert response.status_code == 200
 
         preview = response.json()
-        # The endpoint returns List[EntityDiffOut], not a dict with entities/summary
+        # The endpoint returns List[EntityDiffOut], not a dict with entities/summary  # noqa: E501
         assert isinstance(preview, list)
         # Preview can be empty list when no staged changes exist
 
     @pytest.mark.skip_suite
     def test_empty_version_operations(self, client):
-        """Test version operations with non-existent entities return empty results."""
+        """Test version operations with non-existent entities return empty results."""  # noqa: E501
         fake_id = str(uuid4())
 
         # Test getting versions for non-existent entity - returns empty list
@@ -140,13 +140,13 @@ class TestVersionManagementPracticalAPI:
         assert response.status_code == 404
 
         # Test getting diff for non-existent entity
-        response = client.get(f"/api/versions/entities/structure_node/{fake_id}/diff")
+        response = client.get(f"/api/versions/entities/structure_node/{fake_id}/diff")  # noqa: E501
         assert response.status_code == 404
 
     def test_invalid_requests(self, client):
         """Test various invalid request formats."""
         # Test invalid entity type
-        response = client.get("/api/versions/entities/invalid_type/123/versions")
+        response = client.get("/api/versions/entities/invalid_type/123/versions")  # noqa: E501
         assert response.status_code == 422  # Validation error
 
         # Test invalid UUID format
@@ -159,7 +159,7 @@ class TestVersionManagementPracticalAPI:
         response = client.get(
             f"/api/versions/entities/structure_node/{uuid4()}/versions/-1"
         )
-        assert response.status_code in [404, 422]  # Not found or validation error
+        assert response.status_code in [404, 422]  # Not found or validation error  # noqa: E501
 
     def test_stage_operations_invalid_data(self, client):
         """Test staging operations with invalid data."""
@@ -169,7 +169,7 @@ class TestVersionManagementPracticalAPI:
 
         # Test staging with invalid entity type
         stage_data = {"entity_type": "invalid_type", "entity_id": str(uuid4())}
-        response = client.post("/api/versions/working-tree/stage", json=stage_data)
+        response = client.post("/api/versions/working-tree/stage", json=stage_data)  # noqa: E501
         assert response.status_code == 422  # Validation error
 
     @pytest.mark.skip_suite
@@ -179,9 +179,9 @@ class TestVersionManagementPracticalAPI:
         response = client.post("/api/versions/working-tree/commit", json={})
         assert response.status_code == 422  # Validation error
 
-        # Test commit with empty message - this returns 400 (Bad Request) for no staged changes
+        # Test commit with empty message - this returns 400 (Bad Request) for no staged changes  # noqa: E501
         commit_data = {"message": "", "author_id": "test-user"}
-        response = client.post("/api/versions/working-tree/commit", json=commit_data)
+        response = client.post("/api/versions/working-tree/commit", json=commit_data)  # noqa: E501
         # Should return 400 for no staged changes to commit
         assert response.status_code == 400
 
@@ -191,7 +191,7 @@ class TestVersionManagementPracticalAPI:
 
         # Test rollback with missing fields
         response = client.post(
-            f"/api/versions/entities/structure_node/{fake_id}/rollback", json={}
+            f"/api/versions/entities/structure_node/{fake_id}/rollback", json={}  # noqa: E501
         )
         assert response.status_code == 422  # Validation error
 
@@ -201,7 +201,7 @@ class TestVersionManagementPracticalAPI:
             f"/api/versions/entities/structure_node/{fake_id}/rollback",
             json=rollback_data,
         )
-        assert response.status_code in [404, 422]  # Not found or validation error
+        assert response.status_code in [404, 422]  # Not found or validation error  # noqa: E501
 
     def test_diff_comparison_invalid_data(self, client):
         """Test diff comparison with invalid data."""
@@ -216,15 +216,15 @@ class TestVersionManagementPracticalAPI:
             "before_version_number": 1,
             "after_version_number": 2,
         }
-        response = client.post("/api/versions/diffs/compare", json=compare_data)
+        response = client.post("/api/versions/diffs/compare", json=compare_data)  # noqa: E501
         assert response.status_code == 422  # Validation error
 
     @pytest.mark.skip_suite
     def test_api_endpoint_existence(self, client):
-        """Test that implemented API endpoints exist and return expected status codes."""
+        """Test that implemented API endpoints exist and return expected status codes."""  # noqa: E501
         endpoints_to_test = [
             ("/api/versions/health", "GET", 200),
-            ("/api/versions/stats", "GET", 200), # Stats endpoint is now implemented
+            ("/api/versions/stats", "GET", 200),  # Stats endpoint is now implemented  # noqa: E501
             ("/api/versions/working-tree/status", "GET", 200),
             ("/api/versions/working-tree/changes", "GET", 200),
             ("/api/versions/working-tree/preview", "GET", 200),
@@ -240,13 +240,13 @@ class TestVersionManagementPracticalAPI:
                 continue
 
             # Should not return 404 (endpoint exists)
-            assert response.status_code != 404, f"Endpoint {endpoint} not found"
+            assert response.status_code != 404, f"Endpoint {endpoint} not found"  # noqa: E501
 
             # For GET endpoints, we expect them to work
             if method == "GET":
                 assert (
                     response.status_code == expected_status
-                ), f"Endpoint {endpoint} returned {response.status_code}, expected {expected_status}"
+                ), f"Endpoint {endpoint} returned {response.status_code}, expected {expected_status}"  # noqa: E501
 
     def test_content_type_headers(self, client):
         """Test that API endpoints return correct content-type headers."""
@@ -258,7 +258,7 @@ class TestVersionManagementPracticalAPI:
         """Test CORS headers if applicable."""
         response = client.get("/api/versions/health")
         # CORS headers may or may not be present depending on configuration
-        # This is just checking that the request doesn't fail due to CORS issues
+        # This is just checking that the request doesn't fail due to CORS issues  # noqa: E501
         assert response.status_code == 200
 
     @pytest.mark.skip_suite
@@ -274,7 +274,7 @@ class TestVersionManagementPracticalAPI:
         # Check that error response is valid JSON
         error_data = response.json()
         assert isinstance(error_data, dict)
-        # FastAPI typically returns {"detail": "error message"} for HTTP exceptions
+        # FastAPI typically returns {"detail": "error message"} for HTTP exceptions  # noqa: E501
         assert "detail" in error_data
 
     @pytest.mark.skip_suite
@@ -284,7 +284,7 @@ class TestVersionManagementPracticalAPI:
 
         # Test limit parameter - returns empty list for non-existent entity
         response = client.get(
-            f"/api/versions/entities/structure_node/{fake_id}/versions?limit=10"
+            f"/api/versions/entities/structure_node/{fake_id}/versions?limit=10"  # noqa: E501
         )
         assert response.status_code == 200
         versions = response.json()
@@ -293,7 +293,7 @@ class TestVersionManagementPracticalAPI:
 
         # Test offset parameter
         response = client.get(
-            f"/api/versions/entities/structure_node/{fake_id}/versions?offset=0"
+            f"/api/versions/entities/structure_node/{fake_id}/versions?offset=0"  # noqa: E501
         )
         assert response.status_code == 200
         versions = response.json()
@@ -302,7 +302,7 @@ class TestVersionManagementPracticalAPI:
 
         # Test invalid limit (negative) - should be handled gracefully
         response = client.get(
-            f"/api/versions/entities/structure_node/{fake_id}/versions?limit=-1"
+            f"/api/versions/entities/structure_node/{fake_id}/versions?limit=-1"  # noqa: E501
         )
-        # Should handle invalid parameter gracefully, might return validation error or empty results
+        # Should handle invalid parameter gracefully, might return validation error or empty results  # noqa: E501
         assert response.status_code in [200, 422]

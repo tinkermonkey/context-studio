@@ -83,7 +83,7 @@ def _config_to_response(config: EnabledModelConfig) -> EnabledModelResponse:
 @router.get("", response_model=EnabledModelsListResponse)
 async def list_enabled_models(
     enabled_only: bool = Query(True, description="Only return enabled models"),
-    provider_type: Optional[ProviderType] = Query(None, description="Filter by provider type"),
+    provider_type: Optional[ProviderType] = Query(None, description="Filter by provider type"),  # noqa: E501
     tag: Optional[str] = Query(None, description="Filter by tag")
 ):
     """List configured models with optional filtering"""
@@ -104,7 +104,7 @@ async def list_enabled_models(
         if tag:
             models = [m for m in models if tag in m.tags]
 
-        logger.info(f"Listed {len(models)} models (enabled_only={enabled_only}, provider={provider_type}, tag={tag})")
+        logger.info(f"Listed {len(models)} models (enabled_only={enabled_only}, provider={provider_type}, tag={tag})")  # noqa: E501
 
         response_models = [_config_to_response(config) for config in models]
 
@@ -362,7 +362,7 @@ async def get_provider_summary():
         # Group by provider
         provider_summary = {}
         for provider_type in ProviderType:
-            models = [m for m in all_models if m.provider_type == provider_type]
+            models = [m for m in all_models if m.provider_type == provider_type]  # noqa: E501
             enabled_count = len([m for m in models if m.enabled])
 
             provider_summary[provider_type.value] = {

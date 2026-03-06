@@ -44,27 +44,27 @@ def manager_with_schema_org_data():
         },
         {
             "title": "Organization",
-            "definition": "An organization such as a school, NGO, corporation, club, etc.",
+            "definition": "An organization such as a school, NGO, corporation, club, etc.",  # noqa: E501
             "external_id": "Organization",
         },
         {
             "title": "CreativeWork",
-            "definition": "The most generic kind of creative work, including books, movies, photographs, software programs, etc.",
+            "definition": "The most generic kind of creative work, including books, movies, photographs, software programs, etc.",  # noqa: E501
             "external_id": "CreativeWork",
         },
         {
             "title": "Event",
-            "definition": "An event happening at a certain time and location, such as a concert, lecture, or festival.",
+            "definition": "An event happening at a certain time and location, such as a concert, lecture, or festival.",  # noqa: E501
             "external_id": "Event",
         },
         {
             "title": "Place",
-            "definition": "Entities that have a somewhat fixed, physical extension.",
+            "definition": "Entities that have a somewhat fixed, physical extension.",  # noqa: E501
             "external_id": "Place",
         },
         {
             "title": "Product",
-            "definition": "Any offered product or service. For example: a pair of shoes; a concert ticket; the rental of a car.",
+            "definition": "Any offered product or service. For example: a pair of shoes; a concert ticket; the rental of a car.",  # noqa: E501
             "external_id": "Product",
         },
         {"title": "Book", "definition": "A book.", "external_id": "Book"},
@@ -81,17 +81,17 @@ def manager_with_schema_org_data():
         },
         {
             "title": "Hotel",
-            "definition": "A hotel is an establishment that provides paid lodging.",
+            "definition": "A hotel is an establishment that provides paid lodging.",  # noqa: E501
             "external_id": "Hotel",
         },
         {
             "title": "LocalBusiness",
-            "definition": "A particular physical business or branch of an organization.",
+            "definition": "A particular physical business or branch of an organization.",  # noqa: E501
             "external_id": "LocalBusiness",
         },
         {
             "title": "Article",
-            "definition": "An article, such as a news article or piece of investigative report.",
+            "definition": "An article, such as a news article or piece of investigative report.",  # noqa: E501
             "external_id": "Article",
         },
         {
@@ -101,7 +101,7 @@ def manager_with_schema_org_data():
         },
         {
             "title": "WebPage",
-            "definition": "A web page. Every web page is implicitly assumed to be declared to be of type WebPage.",
+            "definition": "A web page. Every web page is implicitly assumed to be declared to be of type WebPage.",  # noqa: E501
             "external_id": "WebPage",
         },
     ]
@@ -217,10 +217,10 @@ class TestVectorSearchAccuracy:
                 print(f"    Expected: {failure['expected']}")
                 print(f"    Got top-3: {failure['got_top_3']}")
 
-        # Validate TC-I002: ≥90% accuracy (allows 2-3 failures out of 15-20 queries)
+        # Validate TC-I002: ≥90% accuracy (allows 2-3 failures out of 15-20 queries)  # noqa: E501
         assert (
             accuracy >= 90.0
-        ), f"Vector search accuracy {accuracy:.1f}% is below required 90% (TC-I002)"
+        ), f"Vector search accuracy {accuracy:.1f}% is below required 90% (TC-I002)"  # noqa: E501
 
     def test_threshold_filtering_accuracy(self, manager_with_schema_org_data):
         """
@@ -335,11 +335,11 @@ class TestVectorSearchPerformance:
         print(f"Individual times: {[f'{t:.2f}ms' for t in search_times]}")
 
         # Validate TC-P002 and TC-S003: <50ms for top-20 queries
-        # Note: This is for the search operation only, not including embedding generation
+        # Note: This is for the search operation only, not including embedding generation  # noqa: E501
         # In production, embedding generation would be done once and cached
         assert (
             avg_search_time < 50.0
-        ), f"Average search time {avg_search_time:.2f}ms exceeds 50ms requirement (TC-P002, TC-S003)"
+        ), f"Average search time {avg_search_time:.2f}ms exceeds 50ms requirement (TC-P002, TC-S003)"  # noqa: E501
 
     def test_search_fails_fast_on_error(self, manager_with_schema_org_data):
         """

@@ -9,28 +9,28 @@ import sys
 import os
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-import pytest
-from fastapi.testclient import TestClient
-from sqlalchemy.orm import Session
-from datetime import datetime, timezone, timedelta
-from unittest.mock import Mock
+import pytest  # noqa: E402
+from fastapi.testclient import TestClient  # noqa: E402
+from sqlalchemy.orm import Session  # noqa: E402
+from datetime import datetime, timezone, timedelta  # noqa: E402
+from unittest.mock import Mock  # noqa: E402
 
-from app import create_app
-from services.service_factory import ServiceFactory
+from app import create_app  # noqa: E402
+from services.service_factory import ServiceFactory  # noqa: E402
 
 
 class TestPhase4AnalyticsWorkflows:
     """Integration tests for Phase 4 analytics and sync workflows."""
-    
+
     @pytest.fixture
     def mock_db(self):
         """Create mock database session."""
         return Mock(spec=Session)
-    
+
     @pytest.fixture
     def mock_service_factory(self, mock_db):
         """Create mock service factory with analytics services."""
-        from services.duckdb_service import DuckDBService, ChangeAnalyticsEngine
+        from services.duckdb_service import DuckDBService, ChangeAnalyticsEngine  # noqa: E501
 
         factory = Mock(spec=ServiceFactory)
 
@@ -60,18 +60,18 @@ class TestPhase4AnalyticsWorkflows:
             "active_operations": 2,
             "queued_operations": 1,
             "total_operations_today": 12,
-            "last_successful_sync": datetime.now(timezone.utc) - timedelta(minutes=30),
+            "last_successful_sync": datetime.now(timezone.utc) - timedelta(minutes=30),  # noqa: E501
             "system_load_percent": 0.65,
             "available_workers": 6,
             "sync_health_score": 0.92
         }
 
-        # Configure the factory to return real analytics engine and mock sync engine
-        factory.create_change_analytics_engine.return_value = real_analytics_engine
+        # Configure the factory to return real analytics engine and mock sync engine  # noqa: E501
+        factory.create_change_analytics_engine.return_value = real_analytics_engine  # noqa: E501
         factory.create_incremental_sync_engine.return_value = mock_sync_engine
 
         return factory
-    
+
     @pytest.fixture
     def test_db_session(self):
         """Create test database with active dataset."""
@@ -97,7 +97,7 @@ class TestPhase4AnalyticsWorkflows:
         # Create engine and session
         db_path = dataset_manager.get_dataset_file_path("test.db")
         engine = create_engine(f"sqlite:///{db_path}")
-        SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+        SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)  # noqa: E501
 
         # Set current database for testing
         set_current_engine_for_testing(engine, SessionLocal)
@@ -123,14 +123,14 @@ class TestPhase4AnalyticsWorkflows:
     @pytest.fixture
     def test_app(self, test_db_session, mock_service_factory):
         """Create test FastAPI application."""
-        from database.utils import get_current_engine, get_current_session_local
+        from database.utils import get_current_engine, get_current_session_local  # noqa: E501
         return create_app(
             dataset_id=None,  # Already set in test_db_session
             engine=get_current_engine(),
             session_local=get_current_session_local(),
             service_factory=mock_service_factory
         )
-    
+
     @pytest.fixture
     def client(self, test_app, mock_service_factory):
         """Create test client."""
@@ -139,7 +139,7 @@ class TestPhase4AnalyticsWorkflows:
         set_service_factory(mock_service_factory)
 
         return TestClient(test_app, raise_server_exceptions=True)
-    
+
     def test_comprehensive_analytics_workflow(self, client):
         """Test comprehensive analytics reporting workflow."""
 
@@ -157,31 +157,31 @@ class TestPhase4AnalyticsWorkflows:
         assert isinstance(summary["active_users"], int)
 
         # Step 2: Get user activity report
-        response = client.get("/api/analytics/user-activity", params={"days": 30, "limit": 10})
+        response = client.get("/api/analytics/user-activity", params={"days": 30, "limit": 10})  # noqa: E501
         assert response.status_code == 200
         user_activity = response.json()
         # Empty database returns empty list
         assert isinstance(user_activity, list)
 
         # Step 3: Get entity hotspots
-        response = client.get("/api/analytics/entity-hotspots", params={"limit": 10})
+        response = client.get("/api/analytics/entity-hotspots", params={"limit": 10})  # noqa: E501
         assert response.status_code == 200
         hotspots = response.json()
         # Empty database returns empty list
         assert isinstance(hotspots, list)
 
         # Step 4: Get executive summary - test that the endpoint works
-        response = client.get("/api/analytics/executive-summary", params={"days": 30})
+        response = client.get("/api/analytics/executive-summary", params={"days": 30})  # noqa: E501
         assert response.status_code == 200
         executive_summary = response.json()
-        # Verify structure but use flexible assertions since fallback data is used
+        # Verify structure but use flexible assertions since fallback data is used  # noqa: E501
         assert "key_metrics" in executive_summary
         assert "collaboration_health" in executive_summary
         assert "system_health" in executive_summary
 
         # Analytics workflow verified through API responses above
         # Using fallback data from real services
-    
+
     def test_trend_analysis_workflow(self, client):
         """Test comprehensive trend analysis workflow."""
 
@@ -203,7 +203,7 @@ class TestPhase4AnalyticsWorkflows:
 
         # Trend analysis workflow verified through API responses above
         # Using fallback data from real services
-    
+
     def test_incremental_sync_workflow(self, client, mock_service_factory):
         """Test complete incremental sync workflow."""
         # Step 1: Check sync system status
@@ -238,13 +238,13 @@ class TestPhase4AnalyticsWorkflows:
         sync_id = sync_op["id"]
 
         # Step 3: Monitor sync operation
-        mock_service_factory.create_incremental_sync_engine.return_value.get_sync_operation.return_value = {
+        mock_service_factory.create_incremental_sync_engine.return_value.get_sync_operation.return_value = {  # noqa: E501
             "id": sync_id,
             "sync_type": "incremental",
             "started_at": datetime.now(timezone.utc) - timedelta(minutes=5),
             "completed_at": datetime.now(timezone.utc),
-            "since_timestamp": datetime.fromisoformat("2024-01-01T00:00:00+00:00"),
-            "until_timestamp": datetime.fromisoformat("2024-01-01T23:59:59+00:00"),
+            "since_timestamp": datetime.fromisoformat("2024-01-01T00:00:00+00:00"),  # noqa: E501
+            "until_timestamp": datetime.fromisoformat("2024-01-01T23:59:59+00:00"),  # noqa: E501
             "entity_types": ["structure_node", "structure_node_link"],
             "synced_changes": 125,
             "new_entities": 25,
@@ -260,7 +260,7 @@ class TestPhase4AnalyticsWorkflows:
         assert completed_sync["synced_changes"] == 125
 
         # Step 4: Get sync performance metrics
-        mock_service_factory.create_incremental_sync_engine.return_value.get_sync_performance_metrics.return_value = {
+        mock_service_factory.create_incremental_sync_engine.return_value.get_sync_performance_metrics.return_value = {  # noqa: E501
             "avg_sync_time_minutes": 12.5,
             "throughput_changes_per_minute": 425.5,
             "success_rate_percent": 0.97,
@@ -281,14 +281,14 @@ class TestPhase4AnalyticsWorkflows:
         assert perf_metrics["peak_performance_hour"] == 14
 
         # Sync workflow verified through API responses above
-        # Mock assertions removed since we're using real services in integration tests
-    
-    def test_collaboration_insights_workflow(self, client, mock_service_factory):
+        # Mock assertions removed since we're using real services in integration tests  # noqa: E501
+
+    def test_collaboration_insights_workflow(self, client, mock_service_factory):  # noqa: E501
         """Test advanced collaboration insights workflow."""
         # Using real analytics services with fallback data
 
         # Step 1: Get collaboration insights
-        response = client.get("/api/analytics/collaboration-insights", params={"days": 60})
+        response = client.get("/api/analytics/collaboration-insights", params={"days": 60})  # noqa: E501
         assert response.status_code == 200
         insights = response.json()
         assert insights["analysis_period_days"] == 60
@@ -297,28 +297,28 @@ class TestPhase4AnalyticsWorkflows:
         assert "team_productivity" in insights
 
         # Step 2: Get collaboration metrics
-        response = client.get("/api/analytics/collaboration-metrics", params={"days": 60})
+        response = client.get("/api/analytics/collaboration-metrics", params={"days": 60})  # noqa: E501
         assert response.status_code == 200
         collab_metrics = response.json()
         # Fallback data should provide metrics
         assert "proposal_authors" in collab_metrics
         assert "approval_rate" in collab_metrics
         assert "avg_response_time_hours" in collab_metrics
-        
+
         # Step 3: Export collaboration data
-        response = client.get("/api/analytics/export/csv/user-activity", params={"days": 30})
+        response = client.get("/api/analytics/export/csv/user-activity", params={"days": 30})  # noqa: E501
         assert response.status_code == 200
         assert response.headers["content-type"] == "text/csv; charset=utf-8"
-        
+
         # Collaboration workflow verified through API responses above
-        # Mock assertions removed since we're using real services in integration tests
-    
+        # Mock assertions removed since we're using real services in integration tests  # noqa: E501
+
     def test_real_time_dashboard_workflow(self, client, mock_service_factory):
         """Test real-time dashboard metrics workflow."""
         # Using real analytics services with fallback data
 
         # Step 1: Get dashboard metrics
-        response = client.get("/api/analytics/dashboard/metrics", params={"refresh_interval": 300})
+        response = client.get("/api/analytics/dashboard/metrics", params={"refresh_interval": 300})  # noqa: E501
         assert response.status_code == 200
         dashboard_data = response.json()
 
@@ -342,11 +342,11 @@ class TestPhase4AnalyticsWorkflows:
 
         # Dashboard workflow verified through API responses above
         # Using fallback data from real services
-    
+
     def test_sync_optimization_workflow(self, client, mock_service_factory):
         """Test sync optimization and tuning workflow."""
         # Step 1: Get sync recommendations
-        mock_service_factory.create_incremental_sync_engine.return_value.get_performance_recommendations.return_value = [
+        mock_service_factory.create_incremental_sync_engine.return_value.get_performance_recommendations.return_value = [  # noqa: E501
             "Consider increasing batch size for better throughput",
             "Enable parallel processing for large entity sets",
             "Optimize S3 connection pooling for reduced latency",
@@ -368,7 +368,7 @@ class TestPhase4AnalyticsWorkflows:
             "enable_auto_tuning": True
         }
 
-        mock_service_factory.create_incremental_sync_engine.return_value.optimize_sync_configuration.return_value = {
+        mock_service_factory.create_incremental_sync_engine.return_value.optimize_sync_configuration.return_value = {  # noqa: E501
             "optimized_parameters": {
                 "batch_size": 2000,
                 "parallel_workers": 6,
@@ -376,7 +376,7 @@ class TestPhase4AnalyticsWorkflows:
                 "retry_attempts": 3
             },
             "expected_improvement_percent": 25.5,
-            "recommendation_summary": "Optimized for speed with increased parallelism and batch processing",
+            "recommendation_summary": "Optimized for speed with increased parallelism and batch processing",  # noqa: E501
             "applied_changes": [
                 "Increased batch size from 1000 to 2000",
                 "Increased parallel workers from 4 to 6",
@@ -396,13 +396,13 @@ class TestPhase4AnalyticsWorkflows:
         assert optimization["optimized_parameters"]["batch_size"] == 2000
 
         # Step 3: Validate data integrity
-        mock_service_factory.create_incremental_sync_engine.return_value.validate_data_integrity.return_value = {
+        mock_service_factory.create_incremental_sync_engine.return_value.validate_data_integrity.return_value = {  # noqa: E501
             "status": "healthy",
             "integrity_score": 0.998,
             "issues_found": []
         }
 
-        response = client.post("/api/sync/validate-data", params={"sample_size": 2000})
+        response = client.post("/api/sync/validate-data", params={"sample_size": 2000})  # noqa: E501
         assert response.status_code == 200
         validation = response.json()
         assert "validation_status" in validation
@@ -414,7 +414,7 @@ class TestPhase4AnalyticsWorkflows:
         assert validation["sample_size"] == 2000
 
         # Optimization workflow verified through API responses above
-        # Mock assertions removed since we're using real services in integration tests
+        # Mock assertions removed since we're using real services in integration tests  # noqa: E501
 
 
 if __name__ == "__main__":

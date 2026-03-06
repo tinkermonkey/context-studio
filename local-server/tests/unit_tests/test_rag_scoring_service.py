@@ -9,9 +9,9 @@ import sys
 import os
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-import pytest
-from rag.test_scoring import RAGTestScoringService, AnnotationSpan
-from rag.models import ExtractedEntity
+import pytest  # noqa: E402
+from rag.test_scoring import RAGTestScoringService, AnnotationSpan  # noqa: E402, E501
+from rag.models import ExtractedEntity  # noqa: E402
 
 
 class TestRAGScoringService:
@@ -24,7 +24,7 @@ class TestRAGScoringService:
 
     @pytest.fixture
     def strict_scoring_service(self):
-        """Create a scoring service with strict threshold (1.0 for exact match only)."""
+        """Create a scoring service with strict threshold (1.0 for exact match only)."""  # noqa: E501
         return RAGTestScoringService(overlap_threshold=1.0)
 
     # ==================== Overlap Calculation Tests ====================
@@ -63,30 +63,30 @@ class TestRAGScoringService:
         assert overlap == 0.0
 
     def test_adjacent_spans(self, scoring_service):
-        """Test that adjacent spans (touching but not overlapping) return 0.0."""
+        """Test that adjacent spans (touching but not overlapping) return 0.0."""  # noqa: E501
         overlap = scoring_service._calculate_overlap((0, 10), (10, 20))
         assert overlap == 0.0
 
-    # ==================== Precision/Recall/F1 Calculation Tests ====================
+    # ==================== Precision/Recall/F1 Calculation Tests ====================  # noqa: E501
 
     def test_perfect_precision(self, scoring_service):
         """Test precision with no false positives."""
-        precision = scoring_service._calculate_precision(true_positives=10, false_positives=0)
+        precision = scoring_service._calculate_precision(true_positives=10, false_positives=0)  # noqa: E501
         assert precision == 1.0
 
     def test_perfect_recall(self, scoring_service):
         """Test recall with no false negatives."""
-        recall = scoring_service._calculate_recall(true_positives=10, false_negatives=0)
+        recall = scoring_service._calculate_recall(true_positives=10, false_negatives=0)  # noqa: E501
         assert recall == 1.0
 
     def test_zero_precision(self, scoring_service):
         """Test precision when there are no true positives."""
-        precision = scoring_service._calculate_precision(true_positives=0, false_positives=10)
+        precision = scoring_service._calculate_precision(true_positives=0, false_positives=10)  # noqa: E501
         assert precision == 0.0
 
     def test_zero_recall(self, scoring_service):
         """Test recall when there are no true positives."""
-        recall = scoring_service._calculate_recall(true_positives=0, false_negatives=10)
+        recall = scoring_service._calculate_recall(true_positives=0, false_negatives=10)  # noqa: E501
         assert recall == 0.0
 
     def test_f1_perfect_score(self, scoring_service):
@@ -163,7 +163,7 @@ class TestRAGScoringService:
                 confidence=0.95,
                 source_layer="llm",
                 sentence_index=0,
-                metadata={"char_range": [0, 6], "matched_kg_node": "node_python"}
+                metadata={"char_range": [0, 6], "matched_kg_node": "node_python"}  # noqa: E501
             )
         ]
 
@@ -188,7 +188,7 @@ class TestRAGScoringService:
         assert result.false_negatives == 0
 
     def test_no_extractions(self, scoring_service):
-        """Test scoring when no entities are extracted (all false negatives)."""
+        """Test scoring when no entities are extracted (all false negatives)."""  # noqa: E501
         paragraph_text = "Python is a programming language."
 
         extracted_entities = []
@@ -220,7 +220,7 @@ class TestRAGScoringService:
         assert result.false_negatives == 2
 
     def test_no_ground_truth(self, scoring_service):
-        """Test scoring when there are no ground truth annotations (all false positives)."""
+        """Test scoring when there are no ground truth annotations (all false positives)."""  # noqa: E501
         paragraph_text = "Python is a programming language."
 
         extracted_entities = [
@@ -267,7 +267,7 @@ class TestRAGScoringService:
                 confidence=0.95,
                 source_layer="llm",
                 sentence_index=0,
-                metadata={"char_range": [0, 7], "matched_kg_node": "node_python"}
+                metadata={"char_range": [0, 7], "matched_kg_node": "node_python"}  # noqa: E501
             )
         ]
 
@@ -302,7 +302,7 @@ class TestRAGScoringService:
                 confidence=0.95,
                 source_layer="llm",
                 sentence_index=0,
-                metadata={"char_range": [0, 7], "matched_kg_node": "node_python"}
+                metadata={"char_range": [0, 7], "matched_kg_node": "node_python"}  # noqa: E501
             )
         ]
 
@@ -325,7 +325,7 @@ class TestRAGScoringService:
         assert result.true_positives == 1
 
     def test_multiple_entities_mixed_results(self, scoring_service):
-        """Test scoring with mix of correct, missed, and spurious extractions."""
+        """Test scoring with mix of correct, missed, and spurious extractions."""  # noqa: E501
         paragraph_text = "Python is a programming language developed by Guido."
 
         extracted_entities = [
@@ -336,7 +336,7 @@ class TestRAGScoringService:
                 confidence=0.95,
                 source_layer="llm",
                 sentence_index=0,
-                metadata={"char_range": [0, 6], "matched_kg_node": "node_python"}
+                metadata={"char_range": [0, 6], "matched_kg_node": "node_python"}  # noqa: E501
             ),
             # False positive - not in ground truth
             ExtractedEntity(
@@ -387,7 +387,7 @@ class TestRAGScoringService:
                 confidence=0.95,
                 source_layer="llm",
                 sentence_index=0,
-                metadata={"char_range": [0, 6], "matched_kg_node": "node_wrong"}
+                metadata={"char_range": [0, 6], "matched_kg_node": "node_wrong"}  # noqa: E501
             )
         ]
 
@@ -453,7 +453,7 @@ class TestRAGScoringService:
                 confidence=0.95,
                 source_layer="llm",
                 sentence_index=0,
-                metadata={"char_range": [0, 6], "matched_kg_node": "node_python"}
+                metadata={"char_range": [0, 6], "matched_kg_node": "node_python"}  # noqa: E501
             )
         ]
 
@@ -493,7 +493,7 @@ class TestRAGScoringService:
                 confidence=0.95,
                 source_layer="llm",
                 sentence_index=0,
-                metadata={"char_range": [0, 6], "matched_kg_node": "node_python"}
+                metadata={"char_range": [0, 6], "matched_kg_node": "node_python"}  # noqa: E501
             ),
             ExtractedEntity(
                 text="Java",

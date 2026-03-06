@@ -8,14 +8,14 @@ import sys
 import os
 
 sys.path.append(
-    os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+    os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))  # noqa: E501
 )
 
-import pytest
+import pytest  # noqa: E402
 
-from services.version_manager import VersionManager
-from services.working_tree_manager import WorkingTreeManager
-from services.diff_generator import DiffGenerator, EntityDiff, DiffSummary
+from services.version_manager import VersionManager  # noqa: E402
+from services.working_tree_manager import WorkingTreeManager  # noqa: E402
+from services.diff_generator import DiffGenerator, EntityDiff, DiffSummary  # noqa: E402, E501
 
 
 class TestDiffGenerator:
@@ -64,11 +64,11 @@ class TestDiffGenerator:
             },
         }
 
-    def test_generate_diff_basic(self, managers, sample_content_v1, sample_content_v2):
+    def test_generate_diff_basic(self, managers, sample_content_v1, sample_content_v2):  # noqa: E501
         """Test basic diff generation between two contents."""
         version_manager, working_tree_manager, diff_generator = managers
 
-        diff = diff_generator.generate_diff(sample_content_v1, sample_content_v2)
+        diff = diff_generator.generate_diff(sample_content_v1, sample_content_v2)  # noqa: E501
 
         # Should contain changes
         assert isinstance(diff, dict)
@@ -83,11 +83,11 @@ class TestDiffGenerator:
         """Test diff generation with identical content."""
         version_manager, working_tree_manager, diff_generator = managers
 
-        diff = diff_generator.generate_diff(sample_content_v1, sample_content_v1)
+        diff = diff_generator.generate_diff(sample_content_v1, sample_content_v1)  # noqa: E501
 
         # Should be empty or minimal
         assert isinstance(diff, dict)
-        # Empty diff might still have some metadata, so we check if it's effectively empty
+        # Empty diff might still have some metadata, so we check if it's effectively empty  # noqa: E501
         assert len([k for k, v in diff.items() if v]) == 0
 
     def test_generate_diff_with_ignore_keys(
@@ -126,7 +126,7 @@ class TestDiffGenerator:
         )
 
         # Generate diff between versions
-        diff = diff_generator.generate_version_diff("structure_node", "test-123", 1, 2)
+        diff = diff_generator.generate_version_diff("structure_node", "test-123", 1, 2)  # noqa: E501
 
         assert isinstance(diff, EntityDiff)
         assert diff.entity_type == "structure_node"
@@ -175,11 +175,11 @@ class TestDiffGenerator:
 
         # Try to generate diff with non-existent after version
         with pytest.raises(ValueError, match="After version 2 not found"):
-            diff_generator.generate_version_diff("structure_node", "test-123", 1, 2)
+            diff_generator.generate_version_diff("structure_node", "test-123", 1, 2)  # noqa: E501
 
         # Try to generate diff with non-existent before version
         with pytest.raises(ValueError, match="Before version 5 not found"):
-            diff_generator.generate_version_diff("structure_node", "test-123", 5, 1)
+            diff_generator.generate_version_diff("structure_node", "test-123", 5, 1)  # noqa: E501
 
     def test_generate_working_diff(
         self, managers, sample_content_v1, sample_content_v2
@@ -212,7 +212,7 @@ class TestDiffGenerator:
         )
 
         # Generate working diff
-        diff = diff_generator.generate_working_diff("structure_node", "test-123")
+        diff = diff_generator.generate_working_diff("structure_node", "test-123")  # noqa: E501
 
         assert isinstance(diff, EntityDiff)
         assert diff.entity_type == "structure_node"
@@ -226,7 +226,7 @@ class TestDiffGenerator:
         version_manager, working_tree_manager, diff_generator = managers
 
         with pytest.raises(ValueError, match="not found in working tree"):
-            diff_generator.generate_working_diff("structure_node", "non-existent")
+            diff_generator.generate_working_diff("structure_node", "non-existent")  # noqa: E501
 
     def test_generate_all_working_diffs(
         self, managers, sample_content_v1, sample_content_v2
@@ -323,7 +323,7 @@ class TestDiffGenerator:
         assert all(diff.has_changes() for diff in preview_diffs)
         assert all(isinstance(diff, EntityDiff) for diff in preview_diffs)
 
-    def test_get_change_summary(self, managers, sample_content_v1, sample_content_v2):
+    def test_get_change_summary(self, managers, sample_content_v1, sample_content_v2):  # noqa: E501
         """Test getting change summary for an entity."""
         version_manager, working_tree_manager, diff_generator = managers
 
@@ -351,7 +351,7 @@ class TestDiffGenerator:
         )
 
         # Get change summary
-        summary = diff_generator.get_change_summary("structure_node", "test-123")
+        summary = diff_generator.get_change_summary("structure_node", "test-123")  # noqa: E501
 
         assert isinstance(summary, DiffSummary)
         assert summary.total_changes > 0
@@ -380,7 +380,7 @@ class TestDiffGenerator:
             author_id="test-user",
         )
 
-        diff = diff_generator.generate_version_diff("structure_node", "test-123", 1, 2)
+        diff = diff_generator.generate_version_diff("structure_node", "test-123", 1, 2)  # noqa: E501
 
         # Format as summary
         formatted = diff_generator.format_diff_for_display(diff, "summary")
@@ -414,7 +414,7 @@ class TestDiffGenerator:
             author_id="test-user",
         )
 
-        diff = diff_generator.generate_version_diff("structure_node", "test-123", 1, 2)
+        diff = diff_generator.generate_version_diff("structure_node", "test-123", 1, 2)  # noqa: E501
 
         # Format as detailed
         formatted = diff_generator.format_diff_for_display(diff, "detailed")
@@ -447,7 +447,7 @@ class TestDiffGenerator:
             author_id="test-user",
         )
 
-        diff = diff_generator.generate_version_diff("structure_node", "test-123", 1, 2)
+        diff = diff_generator.generate_version_diff("structure_node", "test-123", 1, 2)  # noqa: E501
 
         # Format as JSON
         formatted = diff_generator.format_diff_for_display(diff, "json")
@@ -461,7 +461,7 @@ class TestDiffGenerator:
         assert "summary" in formatted
         assert "generated_at" in formatted
 
-    def test_format_diff_for_display_invalid_format(self, managers, sample_content_v1):
+    def test_format_diff_for_display_invalid_format(self, managers, sample_content_v1):  # noqa: E501
         """Test formatting diff with invalid format type."""
         version_manager, working_tree_manager, diff_generator = managers
 

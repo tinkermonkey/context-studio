@@ -9,8 +9,8 @@ from fastapi.testclient import TestClient
 # Add the project root to Python path for imports
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from app import create_app
-from config import get_config_manager
+from app import create_app  # noqa: E402
+from config import get_config_manager  # noqa: E402
 
 
 class TestConfigurationAPI:
@@ -73,7 +73,7 @@ class TestConfigurationAPI:
 
     def test_patch_invalid_configuration_path(self):
         """Test PATCH with invalid path returns 400"""
-        update_data = {"path": "invalid.nonexistent.path", "value": "test_value"}
+        update_data = {"path": "invalid.nonexistent.path", "value": "test_value"}  # noqa: E501
 
         response = self.client.patch("/api/config/", json=update_data)
 
@@ -155,11 +155,11 @@ class TestConfigurationAPI:
         assert response.status_code == 422
 
         # Missing value field
-        response = self.client.patch("/api/config/", json={"path": "server.port"})
+        response = self.client.patch("/api/config/", json={"path": "server.port"})  # noqa: E501
         assert response.status_code == 422
 
         # Empty path
-        response = self.client.patch("/api/config/", json={"path": "", "value": "test"})
+        response = self.client.patch("/api/config/", json={"path": "", "value": "test"})  # noqa: E501
         assert response.status_code == 400
 
     def test_configuration_endpoint_error_handling(self):

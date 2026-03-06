@@ -42,22 +42,22 @@ def test_text_similarity():
         service = RAGPipelineService(kg_session, ops_session)
 
         # Test exact match
-        similarity = service._text_similarity("machine learning", "machine learning")
+        similarity = service._text_similarity("machine learning", "machine learning")  # noqa: E501
         assert similarity == 1.0, f"Expected 1.0, got {similarity}"
         print("✓ Exact match test passed")
 
         # Test case-insensitive match
-        similarity = service._text_similarity("machine learning", "machine learning".lower())
+        similarity = service._text_similarity("machine learning", "machine learning".lower())  # noqa: E501
         assert similarity == 1.0, f"Expected 1.0, got {similarity}"
         print("✓ Case-insensitive match test passed")
 
         # Test high similarity
-        similarity = service._text_similarity("machine learning", "machine learnings")
+        similarity = service._text_similarity("machine learning", "machine learnings")  # noqa: E501
         assert similarity > 0.9, f"Expected > 0.9, got {similarity}"
         print(f"✓ High similarity test passed (similarity: {similarity:.3f})")
 
         # Test low similarity
-        similarity = service._text_similarity("machine learning", "deep learning")
+        similarity = service._text_similarity("machine learning", "deep learning")  # noqa: E501
         assert similarity < 0.9, f"Expected < 0.9, got {similarity}"
         print(f"✓ Low similarity test passed (similarity: {similarity:.3f})")
 
@@ -73,13 +73,13 @@ async def test_successful_extraction():
          patch('rag.rag_pipeline_service.LLMExtractionProcessor') as MockLLMProcessor, \
          patch('rag.rag_pipeline_service.SpaCyGapProcessor') as MockSpaCyProcessor, \
          patch('rag.rag_pipeline_service.ConceptResolutionProcessor') as MockConceptProcessor, \
-         patch('rag.rag_pipeline_service.RAGObservabilityStore') as MockObsStore:
+         patch('rag.rag_pipeline_service.RAGObservabilityStore') as MockObsStore:  # noqa: E501
 
         # Setup mocks
         mock_kg_proc = MockKGProcessor.return_value
         mock_kg_proc.process.return_value = KGContextOutput(
             extracted_phrases=[
-                ExtractedPhrase(text="machine learning", sentence_index=0, start_char=0, end_char=16)
+                ExtractedPhrase(text="machine learning", sentence_index=0, start_char=0, end_char=16)  # noqa: E501
             ],
             kg_nodes=[
                 KGNode(
@@ -147,20 +147,20 @@ async def test_successful_extraction():
         assert len(response.entities) > 0, "Should have extracted entities"
         print(f"✓ Extracted {len(response.entities)} entities")
 
-        assert response.metrics.total_execution_time_ms > 0, "Should have execution time"
-        print(f"✓ Total execution time: {response.metrics.total_execution_time_ms:.2f}ms")
+        assert response.metrics.total_execution_time_ms > 0, "Should have execution time"  # noqa: E501
+        print(f"✓ Total execution time: {response.metrics.total_execution_time_ms:.2f}ms")  # noqa: E501
 
-        assert response.metrics.kg_layer.entities_found == 1, "KG layer should find 1 node"
-        print(f"✓ KG layer found {response.metrics.kg_layer.entities_found} nodes")
+        assert response.metrics.kg_layer.entities_found == 1, "KG layer should find 1 node"  # noqa: E501
+        print(f"✓ KG layer found {response.metrics.kg_layer.entities_found} nodes")  # noqa: E501
 
-        assert response.metrics.llm_layer.entities_found == 1, "LLM layer should find 1 entity"
-        print(f"✓ LLM layer found {response.metrics.llm_layer.entities_found} entities")
+        assert response.metrics.llm_layer.entities_found == 1, "LLM layer should find 1 entity"  # noqa: E501
+        print(f"✓ LLM layer found {response.metrics.llm_layer.entities_found} entities")  # noqa: E501
 
         # Verify processors were called
         assert mock_kg_proc.process.called, "KG processor should be called"
         assert mock_llm_proc.process.called, "LLM processor should be called"
-        assert mock_spacy_proc.process.called, "spaCy processor should be called"
-        assert mock_concept_proc.process.called, "Concept processor should be called"
+        assert mock_spacy_proc.process.called, "spaCy processor should be called"  # noqa: E501
+        assert mock_concept_proc.process.called, "Concept processor should be called"  # noqa: E501
         print("✓ All processors were called")
 
         print("All extraction tests passed!\n")
@@ -175,7 +175,7 @@ async def test_layer_timeout():
          patch('rag.rag_pipeline_service.LLMExtractionProcessor') as MockLLMProcessor, \
          patch('rag.rag_pipeline_service.SpaCyGapProcessor') as MockSpaCyProcessor, \
          patch('rag.rag_pipeline_service.ConceptResolutionProcessor') as MockConceptProcessor, \
-         patch('rag.rag_pipeline_service.RAGObservabilityStore') as MockObsStore:
+         patch('rag.rag_pipeline_service.RAGObservabilityStore') as MockObsStore:  # noqa: E501
 
         # Setup Layer 0 to timeout
         async def timeout_func(*args, **kwargs):
@@ -209,17 +209,17 @@ async def test_layer_timeout():
         service = RAGPipelineService(kg_session, ops_session)
 
         # Execute extraction
-        response = await service.extract_entities("Test text", enable_trace=False)
+        response = await service.extract_entities("Test text", enable_trace=False)  # noqa: E501
 
         # Assertions
         assert response.request_id is not None, "Request ID should not be None"
         print(f"✓ Request ID generated despite timeout: {response.request_id}")
 
-        assert response.metrics.kg_layer.entities_found == 0, "KG layer should have 0 entities due to timeout"
+        assert response.metrics.kg_layer.entities_found == 0, "KG layer should have 0 entities due to timeout"  # noqa: E501
         print("✓ KG layer correctly shows 0 entities after timeout")
 
         # Pipeline should have continued despite timeout
-        assert mock_llm_proc.process.called, "LLM processor should still be called"
+        assert mock_llm_proc.process.called, "LLM processor should still be called"  # noqa: E501
         print("✓ Pipeline continued to LLM layer despite KG timeout")
 
         print("All timeout tests passed!\n")

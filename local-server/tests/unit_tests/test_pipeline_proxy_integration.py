@@ -7,9 +7,9 @@ import os
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-import pytest
-from unittest.mock import Mock, patch
-from nlp.pipeline import NLPPipeline
+import pytest  # noqa: E402
+from unittest.mock import Mock, patch  # noqa: E402
+from nlp.pipeline import NLPPipeline  # noqa: E402
 
 
 class TestPipelineProxyIntegration:
@@ -27,7 +27,7 @@ class TestPipelineProxyIntegration:
     @patch("nlp.pipeline.get_model_downloader")
     @patch("nlp.pipeline.spacy.load")
     def test_pipeline_init_with_proxy_disabled(
-        self, mock_spacy_load, mock_get_model_downloader, mock_get_proxy_manager, mock_get_settings
+        self, mock_spacy_load, mock_get_model_downloader, mock_get_proxy_manager, mock_get_settings  # noqa: E501
     ):
         """Test pipeline initialization when proxy is disabled"""
         # Mock settings
@@ -68,7 +68,7 @@ class TestPipelineProxyIntegration:
     @patch("nlp.pipeline.get_model_downloader")
     @patch("nlp.pipeline.spacy.load")
     def test_pipeline_init_with_proxy_enabled(
-        self, mock_spacy_load, mock_get_model_downloader, mock_get_proxy_manager, mock_get_settings
+        self, mock_spacy_load, mock_get_model_downloader, mock_get_proxy_manager, mock_get_settings  # noqa: E501
     ):
         """Test pipeline initialization when proxy is enabled"""
         # Mock settings
@@ -100,7 +100,7 @@ class TestPipelineProxyIntegration:
         mock_nlp.pipe_names = []  # Make pipe_names iterable
         mock_spacy_load.return_value = mock_nlp
 
-        _pipeline = NLPPipeline()
+        _pipeline = NLPPipeline()  # noqa: F841
 
         # Verify proxy was started
         mock_proxy_manager.start_proxy.assert_called_once()
@@ -131,7 +131,7 @@ class TestPipelineProxyIntegration:
         assert not pipeline._initialized
         assert "Failed to start reference API caching proxy" in pipeline._error
 
-    @patch("nlp.pipeline.concepcy", Mock())  # Mock concepcy module as available
+    @patch("nlp.pipeline.concepcy", Mock())  # Mock concepcy module as available  # noqa: E501
     @patch("nlp.pipeline.get_settings")
     @patch("nlp.pipeline.get_config_manager")
     @patch("nlp.pipeline.get_proxy_manager")
@@ -193,14 +193,14 @@ class TestPipelineProxyIntegration:
         mock_nlp.pipe_names = []  # Make pipe_names iterable
         mock_spacy_load.return_value = mock_nlp
 
-        _pipeline = NLPPipeline()
+        _pipeline = NLPPipeline()  # noqa: F841
 
         # Verify concepcy was added with proxy config
         expected_config = {
             "relations_of_interest": ["RELATED_TO", "IS_A", "PART_OF"],
             "filter_missing_text": True,
             "filter_edge_weight": 2.0,
-            "url": "http://127.0.0.1:18080/conceptnet/query?node=/c/{lang}/{word}&other=/c/{lang}",
+            "url": "http://127.0.0.1:18080/conceptnet/query?node=/c/{lang}/{word}&other=/c/{lang}",  # noqa: E501
         }
         mock_nlp.add_pipe.assert_any_call("concepcy", config=expected_config)
 
@@ -244,7 +244,7 @@ class TestPipelineProxyIntegration:
         # Mock reference sources
         mock_reference_sources = Mock()
         mock_reference_sources.conceptnet = mock_conceptnet_config
-        mock_reference_sources.dbpedia_spotlight = mock_dbpedia_spotlight_config
+        mock_reference_sources.dbpedia_spotlight = mock_dbpedia_spotlight_config  # noqa: E501
 
         # Setup settings mock
         mock_settings.reference_sources = mock_reference_sources
@@ -268,13 +268,13 @@ class TestPipelineProxyIntegration:
         mock_nlp.pipe_names = []  # Make pipe_names iterable
         mock_spacy_load.return_value = mock_nlp
 
-        _pipeline = NLPPipeline()
+        _pipeline = NLPPipeline()  # noqa: F841
 
         # Verify DBpedia Spotlight was added with proxy config
         mock_nlp.add_pipe.assert_any_call(
             "dbpedia_spotlight",
             config={
-                "dbpedia_rest_endpoint": "http://127.0.0.1:18080/dbpedia_spotlight"
+                "dbpedia_rest_endpoint": "http://127.0.0.1:18080/dbpedia_spotlight"  # noqa: E501
             },
         )
 
@@ -316,7 +316,7 @@ class TestPipelineProxyIntegration:
         # Mock reference sources
         mock_reference_sources = Mock()
         mock_reference_sources.conceptnet = mock_conceptnet_config
-        mock_reference_sources.dbpedia_spotlight = mock_dbpedia_spotlight_config
+        mock_reference_sources.dbpedia_spotlight = mock_dbpedia_spotlight_config  # noqa: E501
 
         # Setup settings mock
         mock_settings.reference_sources = mock_reference_sources
@@ -339,20 +339,20 @@ class TestPipelineProxyIntegration:
         mock_nlp.pipe_names = []  # Make pipe_names iterable
         mock_spacy_load.return_value = mock_nlp
 
-        _pipeline = NLPPipeline()
+        _pipeline = NLPPipeline()  # noqa: F841
 
         # Verify DBpedia Spotlight was added with upstream URL (no proxy)
         expected_config = {
             "dbpedia_rest_endpoint": "https://api.dbpedia-spotlight.org/en/"
         }
-        mock_nlp.add_pipe.assert_any_call("dbpedia_spotlight", config=expected_config)
+        mock_nlp.add_pipe.assert_any_call("dbpedia_spotlight", config=expected_config)  # noqa: E501
 
     @patch("nlp.pipeline.get_settings")
     @patch("nlp.pipeline.get_proxy_manager")
     @patch("nlp.pipeline.get_model_downloader")
     @patch("nlp.pipeline.spacy.load")
     def test_reload_pipeline(
-        self, mock_spacy_load, mock_get_model_downloader, mock_get_proxy_manager, mock_get_settings
+        self, mock_spacy_load, mock_get_model_downloader, mock_get_proxy_manager, mock_get_settings  # noqa: E501
     ):
         """Test pipeline reload functionality"""
         # Mock settings
@@ -395,7 +395,7 @@ class TestPipelineProxyIntegration:
     @patch("nlp.pipeline.get_proxy_manager")
     @patch("nlp.pipeline.get_model_downloader")
     @patch("nlp.pipeline.spacy.load")
-    def test_shutdown(self, mock_spacy_load, mock_get_model_downloader, mock_get_proxy_manager, mock_get_settings):
+    def test_shutdown(self, mock_spacy_load, mock_get_model_downloader, mock_get_proxy_manager, mock_get_settings):  # noqa: E501
         """Test pipeline shutdown functionality"""
         # Mock settings
         mock_settings = Mock()

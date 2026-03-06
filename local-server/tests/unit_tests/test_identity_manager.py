@@ -1,23 +1,23 @@
 """
-Unit tests for IdentityManager - Testing user identity, email verification, and trust systems.
+Unit tests for IdentityManager - Testing user identity, email verification, and trust systems.  # noqa: E501
 
-Tests user registration, email verification, peer trust networks, and identity management.
+Tests user registration, email verification, peer trust networks, and identity management.  # noqa: E501
 """
 
 import sys
 import os
 
 sys.path.append(
-    os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+    os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))  # noqa: E501
 )
 
-import pytest
-from datetime import datetime, timezone
-from unittest.mock import Mock, patch
+import pytest  # noqa: E402
+from datetime import datetime, timezone  # noqa: E402
+from unittest.mock import Mock, patch  # noqa: E402
 
-from services.identity_manager import IdentityManager
-from services.collaboration_models import UserIdentity
-from services.s3_sync_manager import S3SyncManager
+from services.identity_manager import IdentityManager  # noqa: E402
+from services.collaboration_models import UserIdentity  # noqa: E402
+from services.s3_sync_manager import S3SyncManager  # noqa: E402
 
 
 class TestIdentityManager:
@@ -72,7 +72,7 @@ class TestIdentityManager:
         user.verified_at = None
         return user
 
-    def test_initialization(self, identity_manager, mock_db_session, mock_s3_sync_manager):
+    def test_initialization(self, identity_manager, mock_db_session, mock_s3_sync_manager):  # noqa: E501
         """Test IdentityManager initialization."""
         assert identity_manager.db == mock_db_session
         assert identity_manager.s3_sync == mock_s3_sync_manager
@@ -80,11 +80,11 @@ class TestIdentityManager:
     def test_register_user_success(self, identity_manager):
         """Test successful user registration."""
         with patch.object(identity_manager, 'get_user', return_value=None):
-            with patch.object(identity_manager, '_generate_user_id', return_value="user123"):
+            with patch.object(identity_manager, '_generate_user_id', return_value="user123"):  # noqa: E501
                 with patch.object(identity_manager, '_store_identity_locally'):
-                    with patch.object(identity_manager, '_generate_verification_code', return_value="123456"):
-                        with patch.object(identity_manager, '_store_verification_code'):
-                            
+                    with patch.object(identity_manager, '_generate_verification_code', return_value="123456"):  # noqa: E501
+                        with patch.object(identity_manager, '_store_verification_code'):  # noqa: E501
+
                             result = identity_manager.register_user(
                                 email="test@example.com",
                                 display_name="Test User"
@@ -96,19 +96,19 @@ class TestIdentityManager:
         assert result["user_identity"].email == "test@example.com"
         assert result["user_identity"].display_name == "Test User"
 
-    def test_register_user_existing(self, identity_manager, mock_user_identity):
+    def test_register_user_existing(self, identity_manager, mock_user_identity):  # noqa: E501
         """Test registration of existing user."""
-        with patch.object(identity_manager, 'get_user', return_value=mock_user_identity):
-            with patch.object(identity_manager, '_generate_user_id', return_value="user123"):
-                with patch.object(identity_manager, '_generate_verification_code', return_value="654321"):
-                    with patch.object(identity_manager, '_store_verification_code'):
-                        
+        with patch.object(identity_manager, 'get_user', return_value=mock_user_identity):  # noqa: E501
+            with patch.object(identity_manager, '_generate_user_id', return_value="user123"):  # noqa: E501
+                with patch.object(identity_manager, '_generate_verification_code', return_value="654321"):  # noqa: E501
+                    with patch.object(identity_manager, '_store_verification_code'):  # noqa: E501
+
                         result = identity_manager.register_user(
                             email="test@example.com",
                             display_name="Test User"
                         )
 
-        assert result["message"] == "User already exists, new verification code generated"
+        assert result["message"] == "User already exists, new verification code generated"  # noqa: E501
         assert result["verification_code"] == "654321"
         assert result["user_identity"] == mock_user_identity
 
@@ -128,13 +128,13 @@ class TestIdentityManager:
 
     def test_register_user_empty_fields(self, identity_manager):
         """Test user registration with empty fields."""
-        with pytest.raises(ValueError, match="Email and display name are required"):
+        with pytest.raises(ValueError, match="Email and display name are required"):  # noqa: E501
             identity_manager.register_user(
                 email="",
                 display_name="Test User"
             )
 
-        with pytest.raises(ValueError, match="Email and display name are required"):
+        with pytest.raises(ValueError, match="Email and display name are required"):  # noqa: E501
             identity_manager.register_user(
                 email="test@example.com",
                 display_name=""
@@ -142,33 +142,33 @@ class TestIdentityManager:
 
     def test_verify_email_success(self, identity_manager, mock_db_session):
         """Test successful email verification."""
-        with patch.object(identity_manager, '_get_verification_code', return_value="123456"):
+        with patch.object(identity_manager, '_get_verification_code', return_value="123456"):  # noqa: E501
             with patch.object(identity_manager, '_delete_verification_code'):
                 mock_db_session.execute.return_value.rowcount = 1
-                
+
                 success = identity_manager.verify_email("user123", "123456")
 
         assert success is True
 
     def test_verify_email_invalid_code(self, identity_manager):
         """Test email verification with invalid code."""
-        with patch.object(identity_manager, '_get_verification_code', return_value="123456"):
+        with patch.object(identity_manager, '_get_verification_code', return_value="123456"):  # noqa: E501
             success = identity_manager.verify_email("user123", "wrong_code")
 
         assert success is False
 
     def test_verify_email_no_code(self, identity_manager):
         """Test email verification when no code exists."""
-        with patch.object(identity_manager, '_get_verification_code', return_value=None):
+        with patch.object(identity_manager, '_get_verification_code', return_value=None):  # noqa: E501
             success = identity_manager.verify_email("user123", "123456")
 
         assert success is False
 
-    def test_verify_email_user_not_found(self, identity_manager, mock_db_session):
+    def test_verify_email_user_not_found(self, identity_manager, mock_db_session):  # noqa: E501
         """Test email verification when user not found."""
-        with patch.object(identity_manager, '_get_verification_code', return_value="123456"):
+        with patch.object(identity_manager, '_get_verification_code', return_value="123456"):  # noqa: E501
             mock_db_session.execute.return_value.rowcount = 0
-            
+
             success = identity_manager.verify_email("nonexistent", "123456")
 
         assert success is False
@@ -185,9 +185,9 @@ class TestIdentityManager:
 
         with patch.object(identity_manager, 'get_user') as mock_get_user:
             mock_get_user.side_effect = [mock_trustee, mock_trusted]
-            with patch.object(identity_manager, '_count_trust_relationships', return_value=1):
-                
-                success = identity_manager.trust_user("trustee123", "trusted456")
+            with patch.object(identity_manager, '_count_trust_relationships', return_value=1):  # noqa: E501
+
+                success = identity_manager.trust_user("trustee123", "trusted456")  # noqa: E501
 
         assert success is True
 
@@ -197,7 +197,7 @@ class TestIdentityManager:
         mock_trustee = Mock()
         mock_trustee.trust_level = 0
 
-        with patch.object(identity_manager, 'get_user', return_value=mock_trustee):
+        with patch.object(identity_manager, 'get_user', return_value=mock_trustee):  # noqa: E501
             success = identity_manager.trust_user("trustee123", "trusted456")
 
         assert success is False
@@ -217,7 +217,7 @@ class TestIdentityManager:
 
         with patch.object(identity_manager, 'get_user') as mock_get_user:
             mock_get_user.side_effect = [mock_trustee, None]
-            
+
             success = identity_manager.trust_user("trustee123", "nonexistent")
 
         assert success is False
@@ -228,13 +228,13 @@ class TestIdentityManager:
         mock_user = Mock()
         mock_user.trust_level = 1
 
-        with patch.object(identity_manager, 'get_user', return_value=mock_user):
+        with patch.object(identity_manager, 'get_user', return_value=mock_user):  # noqa: E501
             success = identity_manager.trust_user("user123", "user123")
 
         assert success is False
 
-    def test_trust_user_promotion_to_team_verified(self, identity_manager, mock_db_session):
-        """Test user promotion to team-verified when reaching trust threshold."""
+    def test_trust_user_promotion_to_team_verified(self, identity_manager, mock_db_session):  # noqa: E501
+        """Test user promotion to team-verified when reaching trust threshold."""  # noqa: E501
         # Mock verified trustee
         mock_trustee = Mock()
         mock_trustee.trust_level = 1
@@ -245,9 +245,9 @@ class TestIdentityManager:
 
         with patch.object(identity_manager, 'get_user') as mock_get_user:
             mock_get_user.side_effect = [mock_trustee, mock_trusted]
-            with patch.object(identity_manager, '_count_trust_relationships', return_value=2):
-                
-                success = identity_manager.trust_user("trustee123", "trusted456")
+            with patch.object(identity_manager, '_count_trust_relationships', return_value=2):  # noqa: E501
+
+                success = identity_manager.trust_user("trustee123", "trusted456")  # noqa: E501
 
         assert success is True
         # Verify trust level was updated to 2 (team-verified)
@@ -259,12 +259,12 @@ class TestIdentityManager:
                 if "trust_level = 2" in sql_statement:
                     call_found = True
                     break
-        assert call_found, f"Expected trust_level=2 update not found in calls: {mock_db_session.execute.call_args_list}"
+        assert call_found, f"Expected trust_level=2 update not found in calls: {mock_db_session.execute.call_args_list}"  # noqa: E501
 
     def test_get_user_success(self, identity_manager, mock_db_session):
         """Test successful user retrieval."""
         # Mock database response - needs to be indexable like a tuple
-        mock_row = ("user123", "test@example.com", "Test User", None, 1, 1, "2023-01-01T00:00:00+00:00", "2023-01-01T01:00:00+00:00")
+        mock_row = ("user123", "test@example.com", "Test User", None, 1, 1, "2023-01-01T00:00:00+00:00", "2023-01-01T01:00:00+00:00")  # noqa: E501
 
         mock_db_session.execute.return_value.fetchone.return_value = mock_row
 
@@ -283,10 +283,10 @@ class TestIdentityManager:
 
         assert user is None
 
-    def test_get_user_by_email_success(self, identity_manager, mock_db_session):
+    def test_get_user_by_email_success(self, identity_manager, mock_db_session):  # noqa: E501
         """Test successful user retrieval by email."""
         # Mock database response - needs to be indexable like a tuple
-        mock_row = ("user123", "test@example.com", "Test User", None, 1, 1, "2023-01-01T00:00:00+00:00", "2023-01-01T01:00:00+00:00")
+        mock_row = ("user123", "test@example.com", "Test User", None, 1, 1, "2023-01-01T00:00:00+00:00", "2023-01-01T01:00:00+00:00")  # noqa: E501
 
         mock_db_session.execute.return_value.fetchone.return_value = mock_row
 
@@ -295,7 +295,7 @@ class TestIdentityManager:
         assert user is not None
         assert user.email == "test@example.com"
 
-    def test_get_user_by_email_case_insensitive(self, identity_manager, mock_db_session):
+    def test_get_user_by_email_case_insensitive(self, identity_manager, mock_db_session):  # noqa: E501
         """Test user retrieval by email is case insensitive."""
         mock_db_session.execute.return_value.fetchone.return_value = None
 
@@ -308,7 +308,7 @@ class TestIdentityManager:
     def test_list_users_with_filters(self, identity_manager, mock_db_session):
         """Test listing users with filters."""
         # Mock database response - needs to be indexable like a tuple
-        mock_row = ("user123", "test@example.com", "Test User", None, 1, 2, "2023-01-01T00:00:00+00:00", "2023-01-01T01:00:00+00:00")
+        mock_row = ("user123", "test@example.com", "Test User", None, 1, 2, "2023-01-01T00:00:00+00:00", "2023-01-01T01:00:00+00:00")  # noqa: E501
 
         mock_db_session.execute.return_value.fetchall.return_value = [mock_row]
 
@@ -322,15 +322,15 @@ class TestIdentityManager:
         assert users[0].user_id == "user123"
         assert users[0].trust_level == 2
 
-    def test_get_trust_network_success(self, identity_manager, mock_db_session):
+    def test_get_trust_network_success(self, identity_manager, mock_db_session):  # noqa: E501
         """Test getting trust network."""
-        # Mock trustees (users who trust this user) - needs to be indexable like tuples
+        # Mock trustees (users who trust this user) - needs to be indexable like tuples  # noqa: E501
         mock_trustee_rows = [
             ("trustee1", "2023-01-01T00:00:00+00:00"),
             ("trustee2", "2023-01-02T00:00:00+00:00")
         ]
 
-        # Mock trusted (users this user trusts) - needs to be indexable like tuples
+        # Mock trusted (users this user trusts) - needs to be indexable like tuples  # noqa: E501
         mock_trusted_rows = [
             ("trusted1", "2023-01-03T00:00:00+00:00")
         ]
@@ -350,17 +350,17 @@ class TestIdentityManager:
     def test_generate_user_id_deterministic(self, identity_manager):
         """Test user ID generation is deterministic."""
         email = "test@example.com"
-        
+
         user_id1 = identity_manager._generate_user_id(email)
         user_id2 = identity_manager._generate_user_id(email)
-        
+
         assert user_id1 == user_id2
         assert len(user_id1) == 16  # First 16 chars of SHA-256
 
     def test_generate_verification_code_format(self, identity_manager):
         """Test verification code generation format."""
         code = identity_manager._generate_verification_code()
-        
+
         assert len(code) == 6
         assert code.isdigit()
 
@@ -381,7 +381,7 @@ class TestIdentityManager:
         # Verify database insert was called
         mock_db_session.execute.assert_called()
 
-    def test_count_trust_relationships(self, identity_manager, mock_db_session):
+    def test_count_trust_relationships(self, identity_manager, mock_db_session):  # noqa: E501
         """Test counting trust relationships."""
         # Mock database response - needs to be indexable like a tuple/list
         mock_db_session.execute.return_value.fetchone.return_value = (3,)
@@ -390,13 +390,13 @@ class TestIdentityManager:
 
         assert count == 3
 
-    def test_database_transaction_rollback_on_error(self, identity_manager, mock_db_session):
+    def test_database_transaction_rollback_on_error(self, identity_manager, mock_db_session):  # noqa: E501
         """Test database rollback on error."""
         with patch.object(identity_manager, 'get_user', return_value=None):
-            with patch.object(identity_manager, '_generate_user_id', return_value="user123"):
-                mock_db_session.execute.side_effect = Exception("Database error")
+            with patch.object(identity_manager, '_generate_user_id', return_value="user123"):  # noqa: E501
+                mock_db_session.execute.side_effect = Exception("Database error")  # noqa: E501
 
-                with pytest.raises(RuntimeError, match="Failed to register user"):
+                with pytest.raises(RuntimeError, match="Failed to register user"):  # noqa: E501
                     identity_manager.register_user(
                         email="test@example.com",
                         display_name="Test User"
@@ -405,12 +405,12 @@ class TestIdentityManager:
         # Verify rollback was called
         mock_db_session.rollback.assert_called_once()
 
-    def test_verification_code_cleanup_on_verification(self, identity_manager, mock_db_session):
-        """Test verification code is cleaned up after successful verification."""
-        with patch.object(identity_manager, '_get_verification_code', return_value="123456"):
-            with patch.object(identity_manager, '_delete_verification_code') as mock_delete:
+    def test_verification_code_cleanup_on_verification(self, identity_manager, mock_db_session):  # noqa: E501
+        """Test verification code is cleaned up after successful verification."""  # noqa: E501
+        with patch.object(identity_manager, '_get_verification_code', return_value="123456"):  # noqa: E501
+            with patch.object(identity_manager, '_delete_verification_code') as mock_delete:  # noqa: E501
                 mock_db_session.execute.return_value.rowcount = 1
-                
+
                 success = identity_manager.verify_email("user123", "123456")
 
         assert success is True

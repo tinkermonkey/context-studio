@@ -1,29 +1,29 @@
 """
-Unit tests for ServiceFactory - Testing the service factory pattern implementation.
+Unit tests for ServiceFactory - Testing the service factory pattern implementation.  # noqa: E501
 
-Tests service caching, metrics tracking, performance optimization, and thread safety.
+Tests service caching, metrics tracking, performance optimization, and thread safety.  # noqa: E501
 """
 
 import sys
 import os
 
 sys.path.append(
-    os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+    os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))  # noqa: E501
 )
 
-import pytest
-import time
-import threading
-from unittest.mock import Mock, patch
+import pytest  # noqa: E402
+import time  # noqa: E402
+import threading  # noqa: E402
+from unittest.mock import Mock, patch  # noqa: E402
 
-from services.service_factory import (
+from services.service_factory import (  # noqa: E402
     ServiceFactory,
     ServiceType,
     ServiceMetrics,
     CachedServiceEntry,
 )
-from services.node_service import NodeService
-from services.node_link_service import NodeLinkService
+from services.node_service import NodeService  # noqa: E402
+from services.node_link_service import NodeLinkService  # noqa: E402
 
 
 class TestServiceFactory:
@@ -94,10 +94,10 @@ class TestServiceFactory:
         # Create factory with very short TTL
         factory = ServiceFactory(cache_ttl_seconds=0.1, cleanup_interval=1)
 
-        # Create service - NodeService creates dependencies (version_manager, working_tree_manager)
+        # Create service - NodeService creates dependencies (version_manager, working_tree_manager)  # noqa: E501
         factory.create_node_service(mock_db_session)
         stats = factory.get_cache_stats()
-        # NodeService creation triggers: version_manager, working_tree_manager, node_service
+        # NodeService creation triggers: version_manager, working_tree_manager, node_service  # noqa: E501
         assert len(stats["cache_entries"]) == 3
 
         # Wait for cache to expire
@@ -107,14 +107,14 @@ class TestServiceFactory:
         factory.create_node_service(mock_db_session)
         stats = factory.get_cache_stats()
         node_metrics = stats["service_metrics"]["node_service"]
-        assert node_metrics["cache_misses"] == 2  # Both were misses due to expiration
+        assert node_metrics["cache_misses"] == 2  # Both were misses due to expiration  # noqa: E501
 
     def test_cache_cleanup(self, mock_db_session):
         """Test automatic cache cleanup."""
         factory = ServiceFactory(cache_ttl_seconds=0.1, cleanup_interval=1)
 
         # Create multiple services
-        # NodeService creates: version_manager, working_tree_manager, node_service (3 entries)
+        # NodeService creates: version_manager, working_tree_manager, node_service (3 entries)  # noqa: E501
         factory.create_node_service(mock_db_session)
         # NodeLinkService creates: node_link_service (1 entry)
         factory.create_node_link_service(mock_db_session)
@@ -171,9 +171,9 @@ class TestServiceFactory:
     def test_performance_summary(self, service_factory, mock_db_session):
         """Test performance summary generation."""
         # Create some services to generate metrics
-        service_factory.create_node_service(mock_db_session)  # Creates 3 services (version_manager, working_tree_manager, node_service)
-        service_factory.create_node_service(mock_db_session)  # Cache hits for all 3
-        service_factory.create_node_link_service(mock_db_session)  # Creates 1 service (node_link_service)
+        service_factory.create_node_service(mock_db_session)  # Creates 3 services (version_manager, working_tree_manager, node_service)  # noqa: E501
+        service_factory.create_node_service(mock_db_session)  # Cache hits for all 3  # noqa: E501
+        service_factory.create_node_link_service(mock_db_session)  # Creates 1 service (node_link_service)  # noqa: E501
 
         summary = service_factory.get_performance_summary()
 
@@ -216,7 +216,7 @@ class TestServiceFactory:
     def test_clear_cache(self, service_factory, mock_db_session):
         """Test cache clearing functionality."""
         # Create services
-        # NodeService creates: version_manager, working_tree_manager, node_service (3 entries)
+        # NodeService creates: version_manager, working_tree_manager, node_service (3 entries)  # noqa: E501
         service_factory.create_node_service(mock_db_session)
         # NodeLinkService creates: node_link_service (1 entry)
         service_factory.create_node_link_service(mock_db_session)
@@ -241,7 +241,7 @@ class TestServiceFactory:
         self, mock_logger, service_factory, mock_db_session
     ):
         """Test error handling when service creation fails."""
-        # Mock the NodeService constructor to raise an exception during instantiation
+        # Mock the NodeService constructor to raise an exception during instantiation  # noqa: E501
         service_factory._create_service.__globals__['NodeService']
 
         class FailingNodeService:
@@ -254,9 +254,9 @@ class TestServiceFactory:
                 service_factory.create_node_service(mock_db_session)
 
             # Cache will have dependencies that were created before failure
-            # version_manager and working_tree_manager are created first, then node_service fails
+            # version_manager and working_tree_manager are created first, then node_service fails  # noqa: E501
             stats = service_factory.get_cache_stats()
-            assert len(stats["cache_entries"]) == 2  # version_manager and working_tree_manager
+            assert len(stats["cache_entries"]) == 2  # version_manager and working_tree_manager  # noqa: E501
 
     def test_thread_safety(self, service_factory, mock_db_session):
         """Test thread safety of service factory operations."""

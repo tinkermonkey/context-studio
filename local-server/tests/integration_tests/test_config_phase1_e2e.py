@@ -13,14 +13,14 @@ from pathlib import Path
 # Add local-server to path for imports
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
-from config import Settings, ConfigurationManager
+from config import Settings, ConfigurationManager  # noqa: E402
 
 
 class TestApplicationStartupE2E:
-    """Test complete application startup and operation with new configuration"""
+    """Test complete application startup and operation with new configuration"""  # noqa: E501
 
     def test_config_loads_on_application_import(self):
-        """Test that config loads correctly when application modules are imported"""
+        """Test that config loads correctly when application modules are imported"""  # noqa: E501
         # This simulates application startup
         config_data = {
             'database': {
@@ -31,7 +31,7 @@ class TestApplicationStartupE2E:
             }
         }
 
-        with tempfile.NamedTemporaryFile(mode='w', suffix='.json', delete=False) as f:
+        with tempfile.NamedTemporaryFile(mode='w', suffix='.json', delete=False) as f:  # noqa: E501
             json.dump(config_data, f)
             temp_config = f.name
 
@@ -45,7 +45,7 @@ class TestApplicationStartupE2E:
 
             # Verify config loaded successfully
             assert config_manager.settings is not None
-            assert not hasattr(config_manager.settings.database, 'schema_org_path')
+            assert not hasattr(config_manager.settings.database, 'schema_org_path')  # noqa: E501
 
             # Verify validation passes
             errors = config_manager.validate()
@@ -62,7 +62,7 @@ class TestApplicationStartupE2E:
                 os.unlink(temp_config)
 
     def test_full_config_workflow(self):
-        """Test complete workflow: create config, start app, modify config, reload"""
+        """Test complete workflow: create config, start app, modify config, reload"""  # noqa: E501
         with tempfile.TemporaryDirectory() as tmpdir:
             config_file = os.path.join(tmpdir, 'config.json')
             db_dir = os.path.join(tmpdir, 'datafiles')
@@ -91,12 +91,12 @@ class TestApplicationStartupE2E:
             assert not hasattr(manager2.settings.database, 'schema_org_path')
 
             # Step 4: Modify config
-            manager2.settings.database.default_url = f'sqlite:///{db_dir}/modified.db'
+            manager2.settings.database.default_url = f'sqlite:///{db_dir}/modified.db'  # noqa: E501
             assert manager2.save()
 
             # Step 5: Reload (simulates app restart)
             manager3 = ConfigurationManager(config_file)
-            assert manager3.settings.database.default_url == f'sqlite:///{db_dir}/modified.db'
+            assert manager3.settings.database.default_url == f'sqlite:///{db_dir}/modified.db'  # noqa: E501
             assert not hasattr(manager3.settings.database, 'schema_org_path')
 
             # Step 6: Validate final state
@@ -153,7 +153,7 @@ class TestApplicationStartupE2E:
             assert db_config.operations_path
 
     def test_multi_user_config_scenario(self):
-        """Test scenario with multiple config files (e.g., dev, staging, prod)"""
+        """Test scenario with multiple config files (e.g., dev, staging, prod)"""  # noqa: E501
         with tempfile.TemporaryDirectory() as tmpdir:
             environments = ['dev', 'staging', 'prod']
             configs = {}
@@ -181,7 +181,7 @@ class TestApplicationStartupE2E:
                 manager = ConfigurationManager(configs[env])
 
                 # Verify no schema_org_path
-                assert not hasattr(manager.settings.database, 'schema_org_path')
+                assert not hasattr(manager.settings.database, 'schema_org_path')  # noqa: E501
 
                 # Verify environment-specific paths
                 assert env in manager.settings.database.default_url
@@ -262,7 +262,7 @@ class TestApplicationStartupE2E:
 
             # Load and verify changes
             manager2 = ConfigurationManager(config_file)
-            assert manager2.settings.database.default_url == 'sqlite:///./modified.db'
+            assert manager2.settings.database.default_url == 'sqlite:///./modified.db'  # noqa: E501
 
     def test_config_backup_and_restore(self):
         """Test workflow for backing up and restoring configuration"""
@@ -294,14 +294,14 @@ class TestApplicationStartupE2E:
 
             # Verify modification
             manager2 = ConfigurationManager(config_file)
-            assert manager2.settings.database.default_url == 'sqlite:///./modified.db'
+            assert manager2.settings.database.default_url == 'sqlite:///./modified.db'  # noqa: E501
 
             # Restore from backup
             shutil.copy(backup_file, config_file)
 
             # Verify restoration
             manager3 = ConfigurationManager(config_file)
-            assert manager3.settings.database.default_url == 'sqlite:///./original.db'
+            assert manager3.settings.database.default_url == 'sqlite:///./original.db'  # noqa: E501
             assert not hasattr(manager3.settings.database, 'schema_org_path')
 
     def test_concurrent_config_access(self):
@@ -331,7 +331,7 @@ class TestApplicationStartupE2E:
                 try:
                     m = ConfigurationManager(config_file)
                     # Verify no schema_org_path
-                    has_deprecated = hasattr(m.settings.database, 'schema_org_path')
+                    has_deprecated = hasattr(m.settings.database, 'schema_org_path')  # noqa: E501
                     results.append(not has_deprecated)
                 except Exception as e:
                     errors.append(str(e))
@@ -378,11 +378,11 @@ class TestApplicationStartupE2E:
             assert not errors, f"Startup validation failed: {errors}"
 
             # Verify app can proceed
-            assert manager.settings.database.default_url == 'sqlite:///./local.db'
+            assert manager.settings.database.default_url == 'sqlite:///./local.db'  # noqa: E501
             assert not hasattr(manager.settings.database, 'schema_org_path')
 
     def test_migration_preserves_configuration(self):
-        """Test that migrating from old config preserves all non-deprecated settings"""
+        """Test that migrating from old config preserves all non-deprecated settings"""  # noqa: E501
         with tempfile.TemporaryDirectory() as tmpdir:
             config_file = os.path.join(tmpdir, 'config.json')
 
@@ -406,21 +406,21 @@ class TestApplicationStartupE2E:
             # Verify deprecated field is removed
             assert not hasattr(manager.settings.database, 'schema_org_path')
 
-            # Verify all non-deprecated fields are preserved with original values
-            assert manager.settings.database.default_url == 'sqlite:///./custom_local.db'
-            assert manager.settings.database.reference_path == './custom_reference.db'
-            assert manager.settings.database.reference_cache_path == './custom_cache.db'
-            assert manager.settings.database.operations_path == './custom_operations.db'
+            # Verify all non-deprecated fields are preserved with original values  # noqa: E501
+            assert manager.settings.database.default_url == 'sqlite:///./custom_local.db'  # noqa: E501
+            assert manager.settings.database.reference_path == './custom_reference.db'  # noqa: E501
+            assert manager.settings.database.reference_cache_path == './custom_cache.db'  # noqa: E501
+            assert manager.settings.database.operations_path == './custom_operations.db'  # noqa: E501
 
             # Save config to persist migration
             assert manager.save()
 
             # Reload and verify all settings are still preserved
             manager2 = ConfigurationManager(config_file)
-            assert manager2.settings.database.default_url == 'sqlite:///./custom_local.db'
-            assert manager2.settings.database.reference_path == './custom_reference.db'
-            assert manager2.settings.database.reference_cache_path == './custom_cache.db'
-            assert manager2.settings.database.operations_path == './custom_operations.db'
+            assert manager2.settings.database.default_url == 'sqlite:///./custom_local.db'  # noqa: E501
+            assert manager2.settings.database.reference_path == './custom_reference.db'  # noqa: E501
+            assert manager2.settings.database.reference_cache_path == './custom_cache.db'  # noqa: E501
+            assert manager2.settings.database.operations_path == './custom_operations.db'  # noqa: E501
             assert not hasattr(manager2.settings.database, 'schema_org_path')
 
             # Verify saved config file doesn't contain deprecated field
@@ -428,7 +428,7 @@ class TestApplicationStartupE2E:
                 saved_config = json.load(f)
 
             assert 'schema_org_path' not in saved_config.get('database', {})
-            assert saved_config['database']['default_url'] == 'sqlite:///./custom_local.db'
+            assert saved_config['database']['default_url'] == 'sqlite:///./custom_local.db'  # noqa: E501
 
     def test_api_reflects_config_changes(self):
         """Test that API endpoints reflect configuration changes correctly"""
@@ -453,24 +453,24 @@ class TestApplicationStartupE2E:
 
             # Verify initial config through API-like access
             manager2 = ConfigurationManager(config_file)
-            assert manager2.settings.database.default_url == f'sqlite:///{db_dir}/local.db'
+            assert manager2.settings.database.default_url == f'sqlite:///{db_dir}/local.db'  # noqa: E501
             assert not hasattr(manager2.settings.database, 'schema_org_path')
 
             # Modify config (simulating user changing settings)
             new_db_dir = os.path.join(tmpdir, 'new_datafiles')
             os.makedirs(new_db_dir, exist_ok=True)
 
-            manager2.settings.database.default_url = f'sqlite:///{new_db_dir}/local.db'
-            manager2.settings.database.reference_path = f'{new_db_dir}/reference.db'
+            manager2.settings.database.default_url = f'sqlite:///{new_db_dir}/local.db'  # noqa: E501
+            manager2.settings.database.reference_path = f'{new_db_dir}/reference.db'  # noqa: E501
             assert manager2.save()
 
             # Verify changes are reflected when config is reloaded
             manager3 = ConfigurationManager(config_file)
-            assert manager3.settings.database.default_url == f'sqlite:///{new_db_dir}/local.db'
-            assert manager3.settings.database.reference_path == f'{new_db_dir}/reference.db'
-            assert manager3.settings.database.reference_cache_path == f'{db_dir}/cache.db'  # Unchanged
+            assert manager3.settings.database.default_url == f'sqlite:///{new_db_dir}/local.db'  # noqa: E501
+            assert manager3.settings.database.reference_path == f'{new_db_dir}/reference.db'  # noqa: E501
+            assert manager3.settings.database.reference_cache_path == f'{db_dir}/cache.db'  # Unchanged  # noqa: E501
             assert not hasattr(manager3.settings.database, 'schema_org_path')
 
             # Validate config is still valid after changes
             errors = manager3.validate()
-            assert not errors, f"Validation failed after config changes: {errors}"
+            assert not errors, f"Validation failed after config changes: {errors}"  # noqa: E501

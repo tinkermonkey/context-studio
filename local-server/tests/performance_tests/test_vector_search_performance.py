@@ -16,7 +16,7 @@ from reference_db.manager import ReferenceManager
 
 
 # Skip if embeddings not available
-pytest.importorskip("embeddings.generate_embeddings", reason="embeddings module not available")
+pytest.importorskip("embeddings.generate_embeddings", reason="embeddings module not available")  # noqa: E501
 
 
 @pytest.fixture(scope="module")
@@ -45,15 +45,15 @@ def large_dataset_manager():
         "Review", "Rating", "Comment", "Question", "Answer",
         "Course", "EducationalOrganization", "School", "College", "University",
         "MedicalEntity", "Drug", "MedicalCondition", "Hospital", "Physician",
-        "Recipe", "NutritionInformation", "Diet", "ExercisePlan", "PhysicalActivity",
+        "Recipe", "NutritionInformation", "Diet", "ExercisePlan", "PhysicalActivity",  # noqa: E501
         "Vehicle", "Car", "Motorcycle", "BusOrCoach", "Airplane",
-        "TVSeries", "TVEpisode", "RadioSeries", "RadioEpisode", "PodcastSeries",
-        "JobPosting", "Occupation", "EducationalOccupationalCredential", "WorkersUnion", "ProfessionalService",
-        "GovernmentOrganization", "NGO", "Corporation", "LegalService", "PerformingGroup",
-        "MusicGroup", "DanceGroup", "TheaterGroup", "SportsTeam", "SportsOrganization",
+        "TVSeries", "TVEpisode", "RadioSeries", "RadioEpisode", "PodcastSeries",  # noqa: E501
+        "JobPosting", "Occupation", "EducationalOccupationalCredential", "WorkersUnion", "ProfessionalService",  # noqa: E501
+        "GovernmentOrganization", "NGO", "Corporation", "LegalService", "PerformingGroup",  # noqa: E501
+        "MusicGroup", "DanceGroup", "TheaterGroup", "SportsTeam", "SportsOrganization",  # noqa: E501
         "Airline", "Consortium", "FundingScheme", "Project", "ResearchProject",
         "Brand", "ContactPoint", "PostalAddress", "GeoCoordinates", "GeoShape",
-        "Country", "State", "City", "AdministrativeArea", "LandmarksOrHistoricalBuildings",
+        "Country", "State", "City", "AdministrativeArea", "LandmarksOrHistoricalBuildings",  # noqa: E501
         "Park", "Beach", "Mountain", "BodyOfWater", "Continent",
         "Cemetery", "Crematorium", "EventVenue", "CivicStructure", "Bridge",
         "BusStation", "Airport", "SubwayStation", "TrainStation", "TaxiStand",
@@ -161,12 +161,12 @@ class TestVectorSearchLatency:
         median_time = statistics.median(search_times)
         max_time = max(search_times)
         min_time = min(search_times)
-        p95_time = statistics.quantiles(search_times, n=20)[18]  # 95th percentile
+        p95_time = statistics.quantiles(search_times, n=20)[18]  # 95th percentile  # noqa: E501
 
         print(f"\n{'='*60}")
         print("Vector Search Performance Test Results (TC-P002, TC-S003)")
         print(f"{'='*60}")
-        print(f"Dataset size: {len(test_queries)} queries against {90}+ entities")
+        print(f"Dataset size: {len(test_queries)} queries against {90}+ entities")  # noqa: E501
         print("Search limit: 20 results")
         print("\nLatency Statistics:")
         print(f"  Average:    {avg_time:6.2f} ms")
@@ -231,12 +231,12 @@ class TestVectorSearchLatency:
         time_ratio = times[100] / times[10]
         limit_ratio = 100 / 10
 
-        print(f"\nScaling factor: {time_ratio:.2f}x time for {limit_ratio:.0f}x limit")
+        print(f"\nScaling factor: {time_ratio:.2f}x time for {limit_ratio:.0f}x limit")  # noqa: E501
         print(f"Efficiency: {'GOOD' if time_ratio < limit_ratio else 'POOR'}")
 
         # Time should not scale worse than linearly
         assert time_ratio < limit_ratio * 1.5, \
-            f"Search scaling is suboptimal: {time_ratio:.2f}x time for {limit_ratio:.0f}x limit"
+            f"Search scaling is suboptimal: {time_ratio:.2f}x time for {limit_ratio:.0f}x limit"  # noqa: E501
 
     def test_threshold_filtering_performance(self, large_dataset_manager):
         """
@@ -283,12 +283,12 @@ class TestVectorSearchLatency:
         print("\nThreshold Filtering Performance:")
         print(f"  No threshold (0.0):   {avg_no_threshold:6.2f} ms")
         print(f"  With threshold (0.8): {avg_with_threshold:6.2f} ms")
-        print(f"  Overhead:             {avg_with_threshold - avg_no_threshold:6.2f} ms")
+        print(f"  Overhead:             {avg_with_threshold - avg_no_threshold:6.2f} ms")  # noqa: E501
 
         # Threshold filtering should not add significant overhead
-        overhead_pct = ((avg_with_threshold - avg_no_threshold) / avg_no_threshold) * 100
+        overhead_pct = ((avg_with_threshold - avg_no_threshold) / avg_no_threshold) * 100  # noqa: E501
 
         print(f"  Overhead %:           {overhead_pct:6.2f}%")
 
         assert overhead_pct < 20.0, \
-            f"Threshold filtering adds {overhead_pct:.1f}% overhead (should be <20%)"
+            f"Threshold filtering adds {overhead_pct:.1f}% overhead (should be <20%)"  # noqa: E501

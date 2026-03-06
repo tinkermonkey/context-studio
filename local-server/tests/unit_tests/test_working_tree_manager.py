@@ -1,5 +1,5 @@
 """
-Unit tests for WorkingTreeManager - Testing working tree state management functionality.
+Unit tests for WorkingTreeManager - Testing working tree state management functionality.  # noqa: E501
 
 Tests staging operations, working tree status, and commit operations.
 """
@@ -8,13 +8,13 @@ import sys
 import os
 
 sys.path.append(
-    os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+    os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))  # noqa: E501
 )
 
-import pytest
+import pytest  # noqa: E402
 
-from services.version_manager import VersionManager, ChangeState
-from services.working_tree_manager import (
+from services.version_manager import VersionManager, ChangeState  # noqa: E402
+from services.working_tree_manager import (  # noqa: E402
     WorkingTreeManager,
 )
 
@@ -168,7 +168,7 @@ class TestWorkingTreeManager:
                 "structure_node", "non-existent", "version-id"
             )
 
-    def test_update_current_version_nonexistent_version(self, managers, sample_content):
+    def test_update_current_version_nonexistent_version(self, managers, sample_content):  # noqa: E501
         """Test updating current version with non-existent version."""
         version_manager, working_tree_manager = managers
 
@@ -222,7 +222,7 @@ class TestWorkingTreeManager:
         )
 
         # Stage the entity
-        success = working_tree_manager.stage_entity("structure_node", "test-123")
+        success = working_tree_manager.stage_entity("structure_node", "test-123")  # noqa: E501
         assert success is True
 
         # Verify staged status
@@ -248,7 +248,7 @@ class TestWorkingTreeManager:
         )
 
         # Try to stage without changes
-        success = working_tree_manager.stage_entity("structure_node", "test-123")
+        success = working_tree_manager.stage_entity("structure_node", "test-123")  # noqa: E501
         assert success is False  # No changes to stage
 
     def test_stage_entity_not_in_working_tree(self, managers):
@@ -291,7 +291,7 @@ class TestWorkingTreeManager:
         working_tree_manager.stage_entity("structure_node", "test-123")
 
         # Unstage
-        success = working_tree_manager.unstage_entity("structure_node", "test-123")
+        success = working_tree_manager.unstage_entity("structure_node", "test-123")  # noqa: E501
         assert success is True
 
         # Verify unstaged status
@@ -318,7 +318,7 @@ class TestWorkingTreeManager:
         )
 
         # Try to unstage
-        success = working_tree_manager.unstage_entity("structure_node", "test-123")
+        success = working_tree_manager.unstage_entity("structure_node", "test-123")  # noqa: E501
         assert success is True  # Should succeed even if not staged
 
     def test_get_working_tree_entry(self, managers, sample_content):
@@ -345,7 +345,7 @@ class TestWorkingTreeManager:
         assert retrieved_entry is not None
         assert retrieved_entry.entity_type == created_entry.entity_type
         assert retrieved_entry.entity_id == created_entry.entity_id
-        assert retrieved_entry.current_version_id == created_entry.current_version_id
+        assert retrieved_entry.current_version_id == created_entry.current_version_id  # noqa: E501
 
     def test_get_working_tree_entry_not_found(self, managers):
         """Test retrieving non-existent working tree entry."""
@@ -491,7 +491,7 @@ class TestWorkingTreeManager:
 
                 # Stage entities 2 and 3
                 if i >= 2:
-                    working_tree_manager.stage_entity("structure_node", entity_id)
+                    working_tree_manager.stage_entity("structure_node", entity_id)  # noqa: E501
 
         # Get working tree status
         status = working_tree_manager.get_working_tree_status()
@@ -543,7 +543,7 @@ class TestWorkingTreeManager:
             staged_entities.append((entity_id, version2.id))
 
         # Commit staged changes
-        committed_versions = working_tree_manager.commit_staged_changes("commit-user")
+        committed_versions = working_tree_manager.commit_staged_changes("commit-user")  # noqa: E501
 
         assert len(committed_versions) == 2
 
@@ -564,5 +564,5 @@ class TestWorkingTreeManager:
         """Test committing when no changes are staged."""
         version_manager, working_tree_manager = managers
 
-        committed_versions = working_tree_manager.commit_staged_changes("commit-user")
+        committed_versions = working_tree_manager.commit_staged_changes("commit-user")  # noqa: E501
         assert len(committed_versions) == 0

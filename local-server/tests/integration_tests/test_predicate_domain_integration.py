@@ -5,8 +5,8 @@ import os
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-import pytest
-import uuid
+import pytest  # noqa: E402
+import uuid  # noqa: E402
 
 
 class TestPredicateDomainIntegration:
@@ -67,7 +67,7 @@ class TestPredicateDomainIntegration:
 
     @pytest.mark.skip_suite
     def test_create_domain_with_predicate_set(self, client, test_data):
-        """Test creating domain with structural predicate (replaces predicate set concept)."""
+        """Test creating domain with structural predicate (replaces predicate set concept)."""  # noqa: E501
 
         predicate_id = test_data["predicates"][1]["id"]  # Use second predicate
 
@@ -94,7 +94,7 @@ class TestPredicateDomainIntegration:
             "title": "Test Domain 3",
             "definition": "Domain for testing",
             "parent_node_id": test_data["layer"]["id"],
-            "structural_predicate_id": str(uuid.uuid4()),  # Non-existent predicate
+            "structural_predicate_id": str(uuid.uuid4()),  # Non-existent predicate  # noqa: E501
         }
 
         response = client.post("/api/structure_nodes/", json=domain_data)
@@ -106,13 +106,13 @@ class TestPredicateDomainIntegration:
     def test_create_domain_with_invalid_predicate_set(self, client, test_data):
         """Test creating domain with invalid structural predicate fails."""
 
-        # Create a predicate first, then try to delete it or use non-existent one
+        # Create a predicate first, then try to delete it or use non-existent one  # noqa: E501
         domain_data = {
             "node_type": "domain",
             "title": "Test Domain 4",
             "definition": "Domain for testing",
             "parent_node_id": test_data["layer"]["id"],
-            "structural_predicate_id": str(uuid.uuid4()),  # Non-existent predicate ID
+            "structural_predicate_id": str(uuid.uuid4()),  # Non-existent predicate ID  # noqa: E501
         }
 
         response = client.post("/api/structure_nodes/", json=domain_data)

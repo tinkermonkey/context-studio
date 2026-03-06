@@ -18,9 +18,9 @@ import asyncio
 import logging
 
 # Add parent directory to path for imports
-sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
+sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))  # noqa: E501
 
-from services.task_manager import (
+from services.task_manager import (  # noqa: E402
     TaskManager,
     BackgroundTask,
     TaskStatus,
@@ -38,9 +38,9 @@ async def cleanup_task_manager():
         await shutdown_task_manager()
     except RuntimeError:
         pass  # Not initialized, that's fine
-    
+
     yield
-    
+
     # Cleanup after test
     try:
         await shutdown_task_manager()
@@ -260,7 +260,7 @@ class TestTaskStateTransitions:
         # Initial state should be pending
         status = task_manager.get_task_status(task_id)
         # Note: task might already be running by the time we check
-        assert status["status"] in [TaskStatus.PENDING.value, TaskStatus.RUNNING.value]
+        assert status["status"] in [TaskStatus.PENDING.value, TaskStatus.RUNNING.value]  # noqa: E501
 
         # Wait for completion
         await asyncio.sleep(0.3)
@@ -393,7 +393,7 @@ class TestProgressTracking:
             if hasattr(task_manager, '_update_progress'):
                 # First update progress internally
                 task_manager._update_progress(task_id, 0.5)
-                # Then call callback if it exists (simulating what the wrapper would do)
+                # Then call callback if it exists (simulating what the wrapper would do)  # noqa: E501
                 progress_callback(task_id, 0.5)
             await asyncio.sleep(0.05)
             return "done"
@@ -608,7 +608,7 @@ class TestDeadLetterQueue:
         async def failing_task(n):
             raise RuntimeError(f"Error {n}")
 
-        # Suppress expected DLQ eviction warnings (they are tested for correctness,
+        # Suppress expected DLQ eviction warnings (they are tested for correctness,  # noqa: E501
         # not for logging output). The warnings confirm eviction is happening,
         # but we'll verify behavior through the DLQ state instead.
         logger = logging.getLogger("services.task_manager")
@@ -629,7 +629,7 @@ class TestDeadLetterQueue:
         # DLQ should contain only the last 5 tasks (FIFO eviction)
         assert len(dlq) == 5
 
-        # Verify oldest tasks were evicted (errors 0-4 should be gone, 5-9 should remain)
+        # Verify oldest tasks were evicted (errors 0-4 should be gone, 5-9 should remain)  # noqa: E501
         errors_in_dlq = [task["error"] for task in dlq]
         assert any("Error 5" in error for error in errors_in_dlq)
         assert not any("Error 0" in error for error in errors_in_dlq)
@@ -775,7 +775,7 @@ class TestResourceCleanup:
             assert status["status"] in [
                 TaskStatus.CANCELLED.value,
                 TaskStatus.PENDING.value,
-                TaskStatus.RUNNING.value  # Might be running if shutdown is fast
+                TaskStatus.RUNNING.value  # Might be running if shutdown is fast  # noqa: E501
             ]
 
     @pytest.mark.asyncio
@@ -933,7 +933,7 @@ class TestEdgeCases:
         task_manager = TaskManager()
         await task_manager.start()
 
-        # Manually create task without coroutine (shouldn't happen in normal usage)
+        # Manually create task without coroutine (shouldn't happen in normal usage)  # noqa: E501
         task = BackgroundTask(task_id="test-123", task_type="test")
         await task_manager.task_queue.put(task)
         async with task_manager._tasks_lock:

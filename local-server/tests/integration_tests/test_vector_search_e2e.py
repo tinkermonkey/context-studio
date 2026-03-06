@@ -23,7 +23,7 @@ def check_sqlite_vec():
     try:
         import sqlite_vec  # noqa: F401
     except ImportError:
-        pytest.skip("sqlite-vec not available (expected in Docker environment)")
+        pytest.skip("sqlite-vec not available (expected in Docker environment)")  # noqa: E501
 
     # Also verify that vec functions are actually available in SQLite
     test_db_path = None
@@ -41,7 +41,7 @@ def check_sqlite_vec():
         with test_engine.connect() as conn:
             try:
                 conn.execute(
-                    text("SELECT vec_distance_cosine(x'00000000', x'00000000')")
+                    text("SELECT vec_distance_cosine(x'00000000', x'00000000')")  # noqa: E501
                 )
             except Exception as e:
                 pytest.skip(f"sqlite-vec extension not properly loaded: {e}")
@@ -63,14 +63,14 @@ def e2e_test_database():
     manager = ReferenceManager(config, db_path=db_path)
 
     # Create embeddings helper that creates distinct vectors
-    # Use a seed based on the value to get reproducible but different embeddings
+    # Use a seed based on the value to get reproducible but different embeddings  # noqa: E501
     def create_embedding(value: float) -> bytes:
         rng = np.random.RandomState(seed=int(value * 1000))
         vec = rng.randn(384).astype(np.float32)
         vec = vec / np.linalg.norm(vec)
         return vec.tobytes()
 
-    # Build a small knowledge graph: Person → memberOf → Organization → locatedIn → Place
+    # Build a small knowledge graph: Person → memberOf → Organization → locatedIn → Place  # noqa: E501
     person_node = manager.add_reference_node(
         title="Person",
         definition="An individual human being",
@@ -251,7 +251,7 @@ class TestSemanticDiscoveryWorkflow:
                 # Step 1: User searches for "human being"
                 search_response = client.get(
                     "/api/reference/ref-db/search",
-                    params={"query": "human being", "limit": 5, "threshold": 0.0},
+                    params={"query": "human being", "limit": 5, "threshold": 0.0},  # noqa: E501
                 )
 
                 assert search_response.status_code == 200
@@ -260,7 +260,7 @@ class TestSemanticDiscoveryWorkflow:
 
                 # Find the Person node in results
                 person_result = next(
-                    (r for r in search_data["results"] if r["title"] == "Person"), None
+                    (r for r in search_data["results"] if r["title"] == "Person"), None  # noqa: E501
                 )
                 assert (
                     person_result is not None
@@ -268,7 +268,7 @@ class TestSemanticDiscoveryWorkflow:
 
                 # Step 2: User retrieves the full node details
                 node_id = person_result["id"]
-                node_response = client.get(f"/api/reference/ref-db/nodes/{node_id}")
+                node_response = client.get(f"/api/reference/ref-db/nodes/{node_id}")  # noqa: E501
 
                 assert node_response.status_code == 200
                 node_data = node_response.json()
@@ -283,17 +283,17 @@ class TestSemanticDiscoveryWorkflow:
                 assert links_response.status_code == 200
                 links_data = links_response.json()
 
-                # Person should have 2 outbound links (subClassOf Thing, memberOf Organization)
+                # Person should have 2 outbound links (subClassOf Thing, memberOf Organization)  # noqa: E501
                 assert links_data["total_links"] == 2
 
                 # Verify relationship types
-                predicates = [link["predicate"] for link in links_data["links"]]
+                predicates = [link["predicate"] for link in links_data["links"]]  # noqa: E501
                 assert "subClassOf" in predicates
                 assert "memberOf" in predicates
 
     def test_graph_traversal_workflow(self, client, e2e_test_database):
         """
-        Test workflow: Find Person → Follow memberOf → Find Organization → Follow locatedIn.
+        Test workflow: Find Person → Follow memberOf → Find Organization → Follow locatedIn.  # noqa: E501
 
         This tests multi-hop graph traversal.
         """
@@ -334,7 +334,7 @@ class TestSemanticDiscoveryWorkflow:
             assert returned_org_id == org_id
 
             # Step 2: Get Organization node details
-            org_response = client.get(f"/api/reference/ref-db/nodes/{returned_org_id}")
+            org_response = client.get(f"/api/reference/ref-db/nodes/{returned_org_id}")  # noqa: E501
             assert org_response.status_code == 200
             assert org_response.json()["title"] == "Organization"
 
@@ -364,7 +364,7 @@ class TestSemanticDiscoveryWorkflow:
 
     def test_reverse_relationship_discovery(self, client, e2e_test_database):
         """
-        Test workflow: Find Thing → Get inbound links → Discover all subclasses.
+        Test workflow: Find Thing → Get inbound links → Discover all subclasses.  # noqa: E501
 
         This tests finding "what points to this node" (inverse relationships).
         """
@@ -396,7 +396,7 @@ class TestSemanticDiscoveryWorkflow:
             assert links_response.status_code == 200
             links_data = links_response.json()
 
-            # Thing should have 3 inbound subClassOf links (Person, Organization, Place)
+            # Thing should have 3 inbound subClassOf links (Person, Organization, Place)  # noqa: E501
             assert links_data["total_links"] == 3
 
             # Verify all are subClassOf relationships
@@ -405,7 +405,7 @@ class TestSemanticDiscoveryWorkflow:
                 assert link["object_node"] == thing_id
 
             # Extract subject nodes (the subclasses)
-            subclass_ids = [link["subject_node"] for link in links_data["links"]]
+            subclass_ids = [link["subject_node"] for link in links_data["links"]]  # noqa: E501
 
             # Verify we found all three subclasses
             expected_subclasses = {
@@ -487,7 +487,7 @@ class TestErrorRecoveryWorkflows:
             side_effect=test_reference_manager_context,
         ):
             # Try to get non-existent node
-            response = client.get("/api/reference/ref-db/nodes/invalid-node-id")
+            response = client.get("/api/reference/ref-db/nodes/invalid-node-id")  # noqa: E501
             assert response.status_code == 404
             assert "not found" in response.json()["detail"].lower()
 
@@ -559,7 +559,7 @@ class TestPerformanceWorkflows:
     """
     Test performance characteristics of real-world workflows.
 
-    These tests validate that typical workflows complete within acceptable time.
+    These tests validate that typical workflows complete within acceptable time.  # noqa: E501
     """
 
     def test_search_performance_is_acceptable(self, client, e2e_test_database):
@@ -598,16 +598,16 @@ class TestPerformanceWorkflows:
 
                 response = client.get(
                     "/api/reference/ref-db/search",
-                    params={"query": "test query", "limit": 20, "threshold": 0.0},
+                    params={"query": "test query", "limit": 20, "threshold": 0.0},  # noqa: E501
                 )
 
                 elapsed = (time.perf_counter() - start) * 1000  # Convert to ms
 
                 assert response.status_code == 200
 
-                # Search should complete in <500ms (generous limit for E2E test)
+                # Search should complete in <500ms (generous limit for E2E test)  # noqa: E501
                 # Note: This includes API overhead, not just vector search
-                assert elapsed < 500, f"Search took {elapsed:.2f}ms, expected <500ms"
+                assert elapsed < 500, f"Search took {elapsed:.2f}ms, expected <500ms"  # noqa: E501
 
     def test_link_retrieval_performance(self, client, e2e_test_database):
         """Test that link retrieval completes in reasonable time."""

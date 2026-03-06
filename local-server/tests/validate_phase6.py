@@ -9,12 +9,12 @@ import json
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-def test_imports():
+def test_imports():  # noqa: E302
     """Test that all required modules can be imported."""
     print("Testing imports...")
     try:
-        from services.reference_filter_service import ReferenceFilterService  # noqa: F401
-        from reference_db.models import ReferenceLink, ExternalPredicate, ReferenceNode  # noqa: F401
+        from services.reference_filter_service import ReferenceFilterService  # noqa: F401, E501
+        from reference_db.models import ReferenceLink, ExternalPredicate, ReferenceNode  # noqa: F401, E501
         from reference_db.manager import ReferenceManager  # noqa: F401
         from reference_db.config import ReferenceConfig  # noqa: F401
         from database.models import Predicate  # noqa: F401
@@ -37,14 +37,14 @@ def test_configuration():
 
         # Check for enable_relevance_filtering setting
         assert hasattr(settings.reference_sources, 'enable_relevance_filtering'), \
-            "Missing enable_relevance_filtering setting"
+            "Missing enable_relevance_filtering setting"  # noqa: E501
 
         # Check for filter_cache_ttl setting
         assert hasattr(settings.reference_sources, 'filter_cache_ttl'), \
             "Missing filter_cache_ttl setting"
 
-        print(f"  ✓ enable_relevance_filtering: {settings.reference_sources.enable_relevance_filtering}")
-        print(f"  ✓ filter_cache_ttl: {settings.reference_sources.filter_cache_ttl}")
+        print(f"  ✓ enable_relevance_filtering: {settings.reference_sources.enable_relevance_filtering}")  # noqa: E501
+        print(f"  ✓ filter_cache_ttl: {settings.reference_sources.filter_cache_ttl}")  # noqa: E501
         return True
     except Exception as e:
         print(f"  ✗ Configuration test failed: {e}")
@@ -98,8 +98,8 @@ def test_filter_service_basic():
         mock_links = [Mock(spec=ReferenceLink) for _ in range(3)]
         filtered, stats = service.filter_links(mock_links)
 
-        assert len(filtered) == 3, "Should return all links when no filtering configured"
-        assert stats["filtering_active"] is False, "Filtering should not be active"
+        assert len(filtered) == 3, "Should return all links when no filtering configured"  # noqa: E501
+        assert stats["filtering_active"] is False, "Filtering should not be active"  # noqa: E501
         assert stats["total_before"] == 3, "Should track total_before"
         assert stats["total_after"] == 3, "Should track total_after"
         assert stats["filtered_count"] == 0, "Should track filtered_count"
@@ -128,9 +128,9 @@ def test_filter_statistics():
 
         # Mock predicates with different relevance states
         mock_preds = [
-            Mock(id="p1", is_relevant=True, mapping=json.dumps([{"source": "test", "external_id": "test1"}])),
-            Mock(id="p2", is_relevant=False, mapping=json.dumps([{"source": "test", "external_id": "test2"}])),
-            Mock(id="p3", is_relevant=None, mapping=json.dumps([{"source": "test", "external_id": "test3"}])),
+            Mock(id="p1", is_relevant=True, mapping=json.dumps([{"source": "test", "external_id": "test1"}])),  # noqa: E501
+            Mock(id="p2", is_relevant=False, mapping=json.dumps([{"source": "test", "external_id": "test2"}])),  # noqa: E501
+            Mock(id="p3", is_relevant=None, mapping=json.dumps([{"source": "test", "external_id": "test3"}])),  # noqa: E501
         ]
         mock_session.query.return_value.all.return_value = mock_preds
 
@@ -139,10 +139,10 @@ def test_filter_statistics():
 
         assert stats["total_predicates"] == 3, "Should count total predicates"
         assert stats["relevant_count"] == 1, "Should count relevant predicates"
-        assert stats["irrelevant_count"] == 1, "Should count irrelevant predicates"
+        assert stats["irrelevant_count"] == 1, "Should count irrelevant predicates"  # noqa: E501
         assert stats["unmapped_count"] == 1, "Should count unmapped predicates"
-        assert len(stats["relevant_external_predicates"]) == 1, "Should list relevant external predicates"
-        assert len(stats["irrelevant_external_predicates"]) == 1, "Should list irrelevant external predicates"
+        assert len(stats["relevant_external_predicates"]) == 1, "Should list relevant external predicates"  # noqa: E501
+        assert len(stats["irrelevant_external_predicates"]) == 1, "Should list irrelevant external predicates"  # noqa: E501
 
         print("  ✓ Statistics calculated correctly")
         print(f"    - Total: {stats['total_predicates']}")

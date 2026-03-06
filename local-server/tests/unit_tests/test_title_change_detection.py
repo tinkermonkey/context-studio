@@ -6,14 +6,14 @@ Tests edge cases and error handling for the title change detection logic.
 
 import sys
 import os
-sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
+sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))  # noqa: E501
 
-import pytest
-import json
-from unittest.mock import Mock, patch, MagicMock
-from uuid import uuid4
+import pytest  # noqa: E402
+import json  # noqa: E402
+from unittest.mock import Mock, patch, MagicMock  # noqa: E402
+from uuid import uuid4  # noqa: E402
 
-from utils.event_processor import EventProcessor
+from utils.event_processor import EventProcessor  # noqa: E402
 
 
 class TestTitleChangeDetection:
@@ -48,7 +48,7 @@ class TestTitleChangeDetection:
         })
 
         # Mock the enqueue method
-        with patch.object(event_processor, '_enqueue_nlp_reanalysis') as mock_enqueue:
+        with patch.object(event_processor, '_enqueue_nlp_reanalysis') as mock_enqueue:  # noqa: E501
             event_processor._handle_title_change(event)
 
             # Verify enqueue was called with correct parameters
@@ -70,7 +70,7 @@ class TestTitleChangeDetection:
         })
 
         # Mock the enqueue method
-        with patch.object(event_processor, '_enqueue_nlp_reanalysis') as mock_enqueue:
+        with patch.object(event_processor, '_enqueue_nlp_reanalysis') as mock_enqueue:  # noqa: E501
             event_processor._handle_title_change(event)
 
             # Verify enqueue was NOT called
@@ -86,7 +86,7 @@ class TestTitleChangeDetection:
         event.new_data = json.dumps({"title": "new title"})
 
         # Should not raise exception
-        with patch.object(event_processor, '_enqueue_nlp_reanalysis') as mock_enqueue:
+        with patch.object(event_processor, '_enqueue_nlp_reanalysis') as mock_enqueue:  # noqa: E501
             event_processor._handle_title_change(event)
 
             # Verify error was logged
@@ -105,7 +105,7 @@ class TestTitleChangeDetection:
         event.new_data = "not valid json{"
 
         # Should not raise exception
-        with patch.object(event_processor, '_enqueue_nlp_reanalysis') as mock_enqueue:
+        with patch.object(event_processor, '_enqueue_nlp_reanalysis') as mock_enqueue:  # noqa: E501
             event_processor._handle_title_change(event)
 
             # Verify error was logged
@@ -124,7 +124,7 @@ class TestTitleChangeDetection:
         event.new_data = json.dumps({"title": "new title"})
 
         # Should not trigger re-analysis (no old title to compare)
-        with patch.object(event_processor, '_enqueue_nlp_reanalysis') as mock_enqueue:
+        with patch.object(event_processor, '_enqueue_nlp_reanalysis') as mock_enqueue:  # noqa: E501
             event_processor._handle_title_change(event)
 
             # Verify enqueue was NOT called
@@ -140,7 +140,7 @@ class TestTitleChangeDetection:
         event.new_data = json.dumps({"definition": "test"})  # No title
 
         # Should not trigger re-analysis (no new title)
-        with patch.object(event_processor, '_enqueue_nlp_reanalysis') as mock_enqueue:
+        with patch.object(event_processor, '_enqueue_nlp_reanalysis') as mock_enqueue:  # noqa: E501
             event_processor._handle_title_change(event)
 
             # Verify enqueue was NOT called
@@ -156,7 +156,7 @@ class TestTitleChangeDetection:
         event.new_data = json.dumps({"title": ""})
 
         # Should not trigger re-analysis (empty titles)
-        with patch.object(event_processor, '_enqueue_nlp_reanalysis') as mock_enqueue:
+        with patch.object(event_processor, '_enqueue_nlp_reanalysis') as mock_enqueue:  # noqa: E501
             event_processor._handle_title_change(event)
 
             # Verify enqueue was NOT called
@@ -172,7 +172,7 @@ class TestTitleChangeDetection:
         event.new_data = json.dumps({"title": "new title"})
 
         # Should not trigger re-analysis (no old data)
-        with patch.object(event_processor, '_enqueue_nlp_reanalysis') as mock_enqueue:
+        with patch.object(event_processor, '_enqueue_nlp_reanalysis') as mock_enqueue:  # noqa: E501
             event_processor._handle_title_change(event)
 
             # Verify enqueue was NOT called
@@ -188,7 +188,7 @@ class TestTitleChangeDetection:
         event.new_data = None
 
         # Should not trigger re-analysis (no new data)
-        with patch.object(event_processor, '_enqueue_nlp_reanalysis') as mock_enqueue:
+        with patch.object(event_processor, '_enqueue_nlp_reanalysis') as mock_enqueue:  # noqa: E501
             event_processor._handle_title_change(event)
 
             # Verify enqueue was NOT called
@@ -203,11 +203,11 @@ class TestTitleChangeDetection:
         event.old_data = json.dumps({"title": "   "})
         event.new_data = json.dumps({"title": "   "})
 
-        # Should not trigger re-analysis (whitespace-only titles are functionally empty)
-        with patch.object(event_processor, '_enqueue_nlp_reanalysis') as mock_enqueue:
+        # Should not trigger re-analysis (whitespace-only titles are functionally empty)  # noqa: E501
+        with patch.object(event_processor, '_enqueue_nlp_reanalysis') as mock_enqueue:  # noqa: E501
             event_processor._handle_title_change(event)
 
-            # Verify enqueue was NOT called (whitespace is treated as valid but no change)
+            # Verify enqueue was NOT called (whitespace is treated as valid but no change)  # noqa: E501
             mock_enqueue.assert_not_called()
 
     def test_title_change_case_sensitive(self, event_processor):
@@ -220,17 +220,17 @@ class TestTitleChangeDetection:
         event.new_data = json.dumps({"title": "bank"})
 
         # Should trigger re-analysis (case change is considered a change)
-        with patch.object(event_processor, '_enqueue_nlp_reanalysis') as mock_enqueue:
+        with patch.object(event_processor, '_enqueue_nlp_reanalysis') as mock_enqueue:  # noqa: E501
             event_processor._handle_title_change(event)
 
             # Verify enqueue WAS called (case change counts as title change)
             mock_enqueue.assert_called_once_with(event.record_id, "bank")
 
-    def test_enqueue_nlp_reanalysis_task_manager_not_initialized(self, event_processor):
+    def test_enqueue_nlp_reanalysis_task_manager_not_initialized(self, event_processor):  # noqa: E501
         """Test handling when TaskManager is not initialized."""
 
         with patch('services.task_manager.get_task_manager') as mock_get_tm:
-            mock_get_tm.side_effect = RuntimeError("TaskManager not initialized")
+            mock_get_tm.side_effect = RuntimeError("TaskManager not initialized")  # noqa: E501
 
             # Should not raise exception
             event_processor._enqueue_nlp_reanalysis(str(uuid4()), "test title")
@@ -260,7 +260,7 @@ class TestTitleChangeDetection:
         event.new_data = {"title": "new title"}  # Already a dict
 
         # Should handle gracefully
-        with patch.object(event_processor, '_enqueue_nlp_reanalysis') as mock_enqueue:
+        with patch.object(event_processor, '_enqueue_nlp_reanalysis') as mock_enqueue:  # noqa: E501
             event_processor._handle_title_change(event)
 
             # Verify enqueue was called
@@ -276,7 +276,7 @@ class TestTitleChangeDetection:
         event.new_data = json.dumps({"title": "   "})  # Whitespace only
 
         # Should not trigger re-analysis (empty after strip)
-        with patch.object(event_processor, '_enqueue_nlp_reanalysis') as mock_enqueue:
+        with patch.object(event_processor, '_enqueue_nlp_reanalysis') as mock_enqueue:  # noqa: E501
             event_processor._handle_title_change(event)
 
             # Verify warning was logged
@@ -297,7 +297,7 @@ class TestTitleChangeDetection:
         event.new_data = json.dumps({"title": long_title})
 
         # Should not trigger re-analysis (title too long)
-        with patch.object(event_processor, '_enqueue_nlp_reanalysis') as mock_enqueue:
+        with patch.object(event_processor, '_enqueue_nlp_reanalysis') as mock_enqueue:  # noqa: E501
             event_processor._handle_title_change(event)
 
             # Verify warning was logged
@@ -331,16 +331,16 @@ class TestTitleChangeDetection:
             enqueue_calls.append((node_id, title))
             time.sleep(0.1)  # Simulate slow processing
 
-        with patch.object(event_processor, '_enqueue_nlp_reanalysis', side_effect=slow_enqueue):
+        with patch.object(event_processor, '_enqueue_nlp_reanalysis', side_effect=slow_enqueue):  # noqa: E501
             # Start processing first event in thread 1
-            thread1 = threading.Thread(target=event_processor._handle_title_change, args=(event1,))
+            thread1 = threading.Thread(target=event_processor._handle_title_change, args=(event1,))  # noqa: E501
             thread1.start()
 
             # Small delay to ensure thread1 acquires lock
             time.sleep(0.01)
 
             # Try to process second event for same node in thread 2
-            thread2 = threading.Thread(target=event_processor._handle_title_change, args=(event2,))
+            thread2 = threading.Thread(target=event_processor._handle_title_change, args=(event2,))  # noqa: E501
             thread2.start()
 
             thread1.join()
@@ -376,7 +376,7 @@ class TestNLPReanalysisEdgeCases:
             mock_pipeline.is_initialized.return_value = False
             mock_get_pipeline.return_value = mock_pipeline
 
-            result = await event_processor._perform_nlp_reanalysis(str(uuid4()), "test")
+            result = await event_processor._perform_nlp_reanalysis(str(uuid4()), "test")  # noqa: E501
 
             # Should return error result
             assert result['success'] is False
@@ -392,7 +392,7 @@ class TestNLPReanalysisEdgeCases:
             mock_pipeline.get_nlp.return_value = None
             mock_get_pipeline.return_value = mock_pipeline
 
-            result = await event_processor._perform_nlp_reanalysis(str(uuid4()), "test")
+            result = await event_processor._perform_nlp_reanalysis(str(uuid4()), "test")  # noqa: E501
 
             # Should return error result
             assert result['success'] is False
@@ -415,16 +415,16 @@ class TestNLPReanalysisEdgeCases:
                 mock_process.return_value = Mock(tokens=[])
 
                 # Mock WordSenseService to raise ValueError (node not found)
-                with patch('services.word_sense_service.WordSenseService') as mock_wss:
+                with patch('services.word_sense_service.WordSenseService') as mock_wss:  # noqa: E501
                     mock_service = Mock()
-                    mock_service.update_word_senses.side_effect = ValueError("StructureNode not found")
+                    mock_service.update_word_senses.side_effect = ValueError("StructureNode not found")  # noqa: E501
                     mock_wss.return_value = mock_service
 
                     # Mock _get_optimized_session
-                    with patch.object(event_processor, '_get_optimized_session') as mock_session:
-                        mock_session.return_value.__enter__.return_value = Mock()
+                    with patch.object(event_processor, '_get_optimized_session') as mock_session:  # noqa: E501
+                        mock_session.return_value.__enter__.return_value = Mock()  # noqa: E501
 
-                        result = await event_processor._perform_nlp_reanalysis(str(uuid4()), "test")
+                        result = await event_processor._perform_nlp_reanalysis(str(uuid4()), "test")  # noqa: E501
 
                         # Should return error result
                         assert result['success'] is False
@@ -456,18 +456,18 @@ class TestNLPReanalysisEdgeCases:
                         raise ConnectionError("Temporary connection error")
                     return []
 
-                with patch('services.word_sense_service.WordSenseService') as mock_wss:
+                with patch('services.word_sense_service.WordSenseService') as mock_wss:  # noqa: E501
                     mock_service = Mock()
                     mock_service.extract_word_senses.return_value = []
-                    mock_service.update_word_senses.side_effect = update_word_senses_side_effect
+                    mock_service.update_word_senses.side_effect = update_word_senses_side_effect  # noqa: E501
                     mock_wss.return_value = mock_service
 
                     # Mock _get_optimized_session and db.begin()
-                    with patch.object(event_processor, '_get_optimized_session') as mock_session:
+                    with patch.object(event_processor, '_get_optimized_session') as mock_session:  # noqa: E501
                         mock_db = MagicMock()
-                        mock_session.return_value.__enter__.return_value = mock_db
+                        mock_session.return_value.__enter__.return_value = mock_db  # noqa: E501
 
-                        result = await event_processor._perform_nlp_reanalysis(str(uuid4()), "test")
+                        result = await event_processor._perform_nlp_reanalysis(str(uuid4()), "test")  # noqa: E501
 
                         # Should succeed after retry
                         assert result['success'] is True
@@ -491,22 +491,22 @@ class TestNLPReanalysisEdgeCases:
                 mock_process.return_value = Mock(tokens=[])
 
                 # Mock WordSenseService - always fail with transient error
-                with patch('services.word_sense_service.WordSenseService') as mock_wss:
+                with patch('services.word_sense_service.WordSenseService') as mock_wss:  # noqa: E501
                     mock_service = Mock()
                     mock_service.extract_word_senses.return_value = []
-                    mock_service.update_word_senses.side_effect = ConnectionError("Persistent connection error")
+                    mock_service.update_word_senses.side_effect = ConnectionError("Persistent connection error")  # noqa: E501
                     mock_wss.return_value = mock_service
 
                     # Mock _get_optimized_session and db.begin()
-                    with patch.object(event_processor, '_get_optimized_session') as mock_session:
+                    with patch.object(event_processor, '_get_optimized_session') as mock_session:  # noqa: E501
                         mock_db = MagicMock()
-                        mock_session.return_value.__enter__.return_value = mock_db
+                        mock_session.return_value.__enter__.return_value = mock_db  # noqa: E501
 
-                        result = await event_processor._perform_nlp_reanalysis(str(uuid4()), "test")
+                        result = await event_processor._perform_nlp_reanalysis(str(uuid4()), "test")  # noqa: E501
 
                         # Should fail after all retries
                         assert result['success'] is False
-                        assert result['attempts'] == event_processor.NLP_RETRY_ATTEMPTS
+                        assert result['attempts'] == event_processor.NLP_RETRY_ATTEMPTS  # noqa: E501
                         assert 'error' in result
 
     @pytest.mark.asyncio
@@ -527,18 +527,18 @@ class TestNLPReanalysisEdgeCases:
                 mock_process.return_value = Mock(tokens=[])
 
                 # Mock WordSenseService - fail with non-transient error
-                with patch('services.word_sense_service.WordSenseService') as mock_wss:
+                with patch('services.word_sense_service.WordSenseService') as mock_wss:  # noqa: E501
                     mock_service = Mock()
                     mock_service.extract_word_senses.return_value = []
-                    mock_service.update_word_senses.side_effect = ValueError("Invalid node ID")
+                    mock_service.update_word_senses.side_effect = ValueError("Invalid node ID")  # noqa: E501
                     mock_wss.return_value = mock_service
 
                     # Mock _get_optimized_session and db.begin()
-                    with patch.object(event_processor, '_get_optimized_session') as mock_session:
+                    with patch.object(event_processor, '_get_optimized_session') as mock_session:  # noqa: E501
                         mock_db = MagicMock()
-                        mock_session.return_value.__enter__.return_value = mock_db
+                        mock_session.return_value.__enter__.return_value = mock_db  # noqa: E501
 
-                        result = await event_processor._perform_nlp_reanalysis(str(uuid4()), "test")
+                        result = await event_processor._perform_nlp_reanalysis(str(uuid4()), "test")  # noqa: E501
 
                         # Should fail immediately without retries
                         assert result['success'] is False
@@ -561,18 +561,18 @@ class TestNLPReanalysisEdgeCases:
             with patch('nlp.processors.process_nlp_result') as mock_process:
                 mock_process.return_value = Mock(tokens=[])
 
-                with patch('services.word_sense_service.WordSenseService') as mock_wss:
+                with patch('services.word_sense_service.WordSenseService') as mock_wss:  # noqa: E501
                     mock_service = Mock()
                     mock_service.extract_word_senses.return_value = []
                     # Simulate error during transaction
-                    mock_service.update_word_senses.side_effect = ValueError("Database error")
+                    mock_service.update_word_senses.side_effect = ValueError("Database error")  # noqa: E501
                     mock_wss.return_value = mock_service
 
-                    with patch.object(event_processor, '_get_optimized_session') as mock_session:
+                    with patch.object(event_processor, '_get_optimized_session') as mock_session:  # noqa: E501
                         mock_db = MagicMock()
-                        mock_session.return_value.__enter__.return_value = mock_db
+                        mock_session.return_value.__enter__.return_value = mock_db  # noqa: E501
 
-                        result = await event_processor._perform_nlp_reanalysis(str(uuid4()), "test")
+                        result = await event_processor._perform_nlp_reanalysis(str(uuid4()), "test")  # noqa: E501
 
                         # Verify transaction begin was called
                         assert mock_db.begin.called

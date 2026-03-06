@@ -7,10 +7,10 @@ import sys
 import os
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-import pytest
-import asyncio
-from unittest.mock import Mock, patch
-from rag.cleanup_scheduler import RAGCleanupScheduler
+import pytest  # noqa: E402
+import asyncio  # noqa: E402
+from unittest.mock import Mock, patch  # noqa: E402
+from rag.cleanup_scheduler import RAGCleanupScheduler  # noqa: E402
 
 
 @pytest.fixture
@@ -187,10 +187,10 @@ class TestRAGCleanupScheduler:
             assert mock_store.cleanup_old_data.call_count >= 2
 
     @pytest.mark.asyncio
-    async def test_cleanup_operation_logging(self, mock_db_session):
+    async def test_cleanup_operation_logging(self, mock_db_session):  # noqa: E501
         """Test that cleanup operations are logged."""
         with patch('rag.cleanup_scheduler.RAGObservabilityStore') as MockStore, \
-             patch('rag.cleanup_scheduler.logger') as mock_logger:
+             patch('rag.cleanup_scheduler.logger') as mock_logger:  # noqa: E501
 
             mock_store = MockStore.return_value
             mock_store.cleanup_old_data.return_value = {
@@ -210,7 +210,7 @@ class TestRAGCleanupScheduler:
 
             # Check for cleanup completion log
             log_calls = [str(call) for call in mock_logger.info.call_args_list]
-            assert any("cleanup completed" in str(call).lower() for call in log_calls)
+            assert any("cleanup completed" in str(call).lower() for call in log_calls)  # noqa: E501
 
     @pytest.mark.asyncio
     async def test_graceful_cancellation(self, mock_db_session):
@@ -240,7 +240,6 @@ class TestRAGCleanupScheduler:
         """Test stop handles timeout when task doesn't complete."""
         with patch('rag.cleanup_scheduler.RAGObservabilityStore'), \
              patch('rag.cleanup_scheduler.logger'):
-
 
             # Make cleanup_old_data take a long time
             async def slow_cleanup():

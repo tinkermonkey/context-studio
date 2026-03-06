@@ -9,15 +9,15 @@ import sys
 import os
 
 sys.path.append(
-    os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+    os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))  # noqa: E501
 )
 
-import pytest
-from sqlalchemy import text
-from unittest.mock import patch
+import pytest  # noqa: E402
+from sqlalchemy import text  # noqa: E402
+from unittest.mock import patch  # noqa: E402
 
-from services.service_factory import ServiceFactory
-from services.collaboration_models import ChangesetState, ProposalStatus
+from services.service_factory import ServiceFactory  # noqa: E402
+from services.collaboration_models import ChangesetState, ProposalStatus  # noqa: E402, E501
 
 
 @pytest.fixture
@@ -51,7 +51,7 @@ def crdt_merge_engine(db_session, service_factory):
 
 
 def test_complete_collaboration_workflow(
-    db_session, identity_manager, changeset_manager, proposal_manager, crdt_merge_engine
+    db_session, identity_manager, changeset_manager, proposal_manager, crdt_merge_engine  # noqa: E501
 ):
     """Test complete end-to-end collaboration workflow."""
 
@@ -83,7 +83,7 @@ def test_complete_collaboration_workflow(
     assert identity_manager.trust_user(user1_id, user2_id) is True
     assert identity_manager.trust_user(user1_id, user3_id) is True
     assert identity_manager.trust_user(user2_id, user3_id) is True
-    assert identity_manager.trust_user(user3_id, user2_id) is True  # user3 trusts user2
+    assert identity_manager.trust_user(user3_id, user2_id) is True  # user3 trusts user2  # noqa: E501
 
     # Verify trust levels increased
     user2 = identity_manager.get_user(user2_id)
@@ -99,7 +99,7 @@ def test_complete_collaboration_workflow(
             changeset_manager.working_tree, "capture_version_snapshot"
         ) as mock_snapshot:
             mock_staged.return_value = [
-                {"version_id": "v1", "change_type": "create", "entity_type": "node"}
+                {"version_id": "v1", "change_type": "create", "entity_type": "node"}  # noqa: E501
             ]
             mock_snapshot.return_value = "snapshot123"
 
@@ -241,7 +241,7 @@ def test_complete_collaboration_workflow(
 
 
 def test_collaboration_workflow_with_conflicts(
-    db_session, identity_manager, changeset_manager, proposal_manager, crdt_merge_engine
+    db_session, identity_manager, changeset_manager, proposal_manager, crdt_merge_engine  # noqa: E501
 ):
     """Test collaboration workflow with CRDT conflict resolution."""
 
@@ -262,7 +262,7 @@ def test_collaboration_workflow_with_conflicts(
         with patch.object(
             changeset_manager.working_tree, "capture_version_snapshot"
         ) as mock_snapshot:
-            mock_staged.return_value = [{"version_id": "v1", "change_type": "update"}]
+            mock_staged.return_value = [{"version_id": "v1", "change_type": "update"}]  # noqa: E501
             mock_snapshot.return_value = "snapshot123"
 
             changeset1 = changeset_manager.create_changeset(
@@ -331,8 +331,8 @@ def test_collaboration_workflow_rejection(
 
     # Setup users
     user1_result = identity_manager.register_user("author@test.com", "Author")
-    user2_result = identity_manager.register_user("reviewer1@test.com", "Reviewer 1")
-    user3_result = identity_manager.register_user("reviewer2@test.com", "Reviewer 2")
+    user2_result = identity_manager.register_user("reviewer1@test.com", "Reviewer 1")  # noqa: E501
+    user3_result = identity_manager.register_user("reviewer2@test.com", "Reviewer 2")  # noqa: E501
 
     user1_id = user1_result["user_identity"].user_id
     user2_id = user2_result["user_identity"].user_id
@@ -350,7 +350,7 @@ def test_collaboration_workflow_rejection(
         with patch.object(
             changeset_manager.working_tree, "capture_version_snapshot"
         ) as mock_snapshot:
-            mock_staged.return_value = [{"version_id": "v1", "change_type": "create"}]
+            mock_staged.return_value = [{"version_id": "v1", "change_type": "create"}]  # noqa: E501
             mock_snapshot.return_value = "snapshot123"
 
             changeset = changeset_manager.create_changeset(
@@ -398,8 +398,8 @@ def test_collaboration_workflow_vote_updates(
     """Test collaboration workflow with vote updates."""
 
     # Setup
-    user1_result = identity_manager.register_user("user1@update.com", "User One")
-    user2_result = identity_manager.register_user("user2@update.com", "User Two")
+    user1_result = identity_manager.register_user("user1@update.com", "User One")  # noqa: E501
+    user2_result = identity_manager.register_user("user2@update.com", "User Two")  # noqa: E501
 
     user1_id = user1_result["user_identity"].user_id
     user2_id = user2_result["user_identity"].user_id
@@ -414,7 +414,7 @@ def test_collaboration_workflow_vote_updates(
         with patch.object(
             changeset_manager.working_tree, "capture_version_snapshot"
         ) as mock_snapshot:
-            mock_staged.return_value = [{"version_id": "v1", "change_type": "create"}]
+            mock_staged.return_value = [{"version_id": "v1", "change_type": "create"}]  # noqa: E501
             mock_snapshot.return_value = "snapshot123"
 
             changeset = changeset_manager.create_changeset(
@@ -478,7 +478,7 @@ def test_migration_008_creates_collaboration_tables(db_session):
     for table_name in tables_to_check:
         result = db_session.execute(
             text(
-                f"SELECT name FROM sqlite_master WHERE type='table' AND name='{table_name}'"
+                f"SELECT name FROM sqlite_master WHERE type='table' AND name='{table_name}'"  # noqa: E501
             )
         ).fetchone()
         assert (
@@ -513,4 +513,4 @@ def test_migration_008_creates_collaboration_tables(db_session):
     foreign_keys = db_session.execute(
         text("PRAGMA foreign_key_list(proposals)")
     ).fetchall()
-    assert len(foreign_keys) > 0, "Proposals table should have foreign key constraints"
+    assert len(foreign_keys) > 0, "Proposals table should have foreign key constraints"  # noqa: E501

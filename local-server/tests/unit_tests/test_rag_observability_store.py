@@ -7,14 +7,14 @@ import sys
 import os
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-import pytest
-import tempfile
-from datetime import datetime, timedelta, timezone
-from sqlalchemy import create_engine, text
-from sqlalchemy.orm import sessionmaker
-import json
+import pytest  # noqa: E402
+import tempfile  # noqa: E402
+from datetime import datetime, timedelta, timezone  # noqa: E402
+from sqlalchemy import create_engine, text  # noqa: E402
+from sqlalchemy.orm import sessionmaker  # noqa: E402
+import json  # noqa: E402
 
-from rag.observability_store import RAGObservabilityStore
+from rag.observability_store import RAGObservabilityStore  # noqa: E402
 
 
 @pytest.fixture
@@ -197,7 +197,7 @@ class TestRAGObservabilityStore:
 
             # Query database directly to verify
             result = session.execute(text("""
-                SELECT request_id, sentence_index, layer_name, operation_type, trace_data
+                SELECT request_id, sentence_index, layer_name, operation_type, trace_data  # noqa: E501
                 FROM rag_observability_trace
                 WHERE id = :id
             """), {"id": trace_id}).fetchone()
@@ -359,7 +359,7 @@ class TestRAGObservabilityStore:
             session.close()
 
     def test_get_traces_empty(self, test_db):
-        """Test retrieving traces for non-existent request returns empty list."""
+        """Test retrieving traces for non-existent request returns empty list."""  # noqa: E501
         engine, SessionLocal = test_db
         session = SessionLocal()
 
@@ -373,7 +373,7 @@ class TestRAGObservabilityStore:
             session.close()
 
     def test_get_traces_ordered(self, test_db):
-        """Test that traces are returned ordered by sentence index and timestamp."""
+        """Test that traces are returned ordered by sentence index and timestamp."""  # noqa: E501
         engine, SessionLocal = test_db
         session = SessionLocal()
 
@@ -422,11 +422,11 @@ class TestRAGObservabilityStore:
             old_timestamp = datetime.now(timezone.utc) - timedelta(days=40)
             session.execute(text("""
                 INSERT INTO rag_processing_metrics (
-                    id, request_id, sentence_text, layer_0_time_ms, layer_0_count,
-                    layer_1_time_ms, layer_1_count, layer_2_time_ms, layer_2_count,
-                    layer_3_time_ms, layer_3_count, total_time_ms, timestamp, retention_days
+                    id, request_id, sentence_text, layer_0_time_ms, layer_0_count,  # noqa: E501
+                    layer_1_time_ms, layer_1_count, layer_2_time_ms, layer_2_count,  # noqa: E501
+                    layer_3_time_ms, layer_3_count, total_time_ms, timestamp, retention_days  # noqa: E501
                 ) VALUES (
-                    'old-metric-1', 'old-request', 'old text', 10, 0, 20, 0, 30, 0, 40, 0, 100, :timestamp, 30
+                    'old-metric-1', 'old-request', 'old text', 10, 0, 20, 0, 30, 0, 40, 0, 100, :timestamp, 30  # noqa: E501
                 )
             """), {"timestamp": old_timestamp})
 
@@ -434,16 +434,16 @@ class TestRAGObservabilityStore:
             recent_timestamp = datetime.now(timezone.utc) - timedelta(days=10)
             session.execute(text("""
                 INSERT INTO rag_processing_metrics (
-                    id, request_id, sentence_text, layer_0_time_ms, layer_0_count,
-                    layer_1_time_ms, layer_1_count, layer_2_time_ms, layer_2_count,
-                    layer_3_time_ms, layer_3_count, total_time_ms, timestamp, retention_days
+                    id, request_id, sentence_text, layer_0_time_ms, layer_0_count,  # noqa: E501
+                    layer_1_time_ms, layer_1_count, layer_2_time_ms, layer_2_count,  # noqa: E501
+                    layer_3_time_ms, layer_3_count, total_time_ms, timestamp, retention_days  # noqa: E501
                 ) VALUES (
-                    'recent-metric-1', 'recent-request', 'recent text', 10, 0, 20, 0, 30, 0, 40, 0, 100, :timestamp, 30
+                    'recent-metric-1', 'recent-request', 'recent text', 10, 0, 20, 0, 30, 0, 40, 0, 100, :timestamp, 30  # noqa: E501
                 )
             """), {"timestamp": recent_timestamp})
 
-            # Insert old traces (10 days old, should be deleted with 7-day retention)
-            old_trace_timestamp = datetime.now(timezone.utc) - timedelta(days=10)
+            # Insert old traces (10 days old, should be deleted with 7-day retention)  # noqa: E501
+            old_trace_timestamp = datetime.now(timezone.utc) - timedelta(days=10)  # noqa: E501
             session.execute(text("""
                 INSERT INTO rag_observability_trace (
                     id, request_id, sentence_index, layer_name, operation_type,
@@ -455,13 +455,13 @@ class TestRAGObservabilityStore:
             """), {"timestamp": old_trace_timestamp})
 
             # Insert recent traces (2 days old)
-            recent_trace_timestamp = datetime.now(timezone.utc) - timedelta(days=2)
+            recent_trace_timestamp = datetime.now(timezone.utc) - timedelta(days=2)  # noqa: E501
             session.execute(text("""
                 INSERT INTO rag_observability_trace (
                     id, request_id, sentence_index, layer_name, operation_type,
                     trace_data, timestamp, retention_days
                 ) VALUES (
-                    'recent-trace-1', 'recent-request', 0, 'kg_context', 'output',
+                    'recent-trace-1', 'recent-request', 0, 'kg_context', 'output',  # noqa: E501
                     '{}', :timestamp, 7
                 )
             """), {"timestamp": recent_trace_timestamp})

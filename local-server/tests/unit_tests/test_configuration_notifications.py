@@ -11,7 +11,7 @@ from typing import List, Tuple
 # Add the project root to Python path for imports
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from config import get_config_manager, get_config_notifier, ConfigurationNotifier
+from config import get_config_manager, get_config_notifier, ConfigurationNotifier  # noqa: E402, E501
 
 
 class NotificationCapture:
@@ -64,7 +64,7 @@ class TestConfigurationNotifications:
 
     @pytest.mark.asyncio
     async def test_path_specific_listeners(self):
-        """Test that path-specific listeners only receive relevant notifications"""
+        """Test that path-specific listeners only receive relevant notifications"""  # noqa: E501
         config_manager = get_config_manager()
         notifier = get_config_notifier()
 
@@ -136,9 +136,9 @@ class TestConfigurationNotifications:
         config_manager.set("server.port", 9002)
         await asyncio.sleep(0.1)
 
-        # The good listener should still receive notifications despite the failing one
+        # The good listener should still receive notifications despite the failing one  # noqa: E501
         assert len(self.capture.notifications) >= 1
-        assert any(notif[0] == "server.port" for notif in self.capture.notifications)
+        assert any(notif[0] == "server.port" for notif in self.capture.notifications)  # noqa: E501
 
     def test_notifier_initialization(self):
         """Test that configuration notifier initializes correctly"""
@@ -163,7 +163,7 @@ class TestConfigurationNotifications:
         assert len(notifier.global_listeners) == 1
 
     def test_config_manager_set_triggers_notifications(self):
-        """Test that ConfigurationManager.set() method includes notification triggering"""
+        """Test that ConfigurationManager.set() method includes notification triggering"""  # noqa: E501
         config_manager = get_config_manager()
 
         # Test that set method returns True for valid operations
@@ -172,7 +172,7 @@ class TestConfigurationNotifications:
         assert result is True
 
         # Test that set method returns False for invalid operations
-        result = config_manager.set("invalid.path.that.does.not.exist", "value")
+        result = config_manager.set("invalid.path.that.does.not.exist", "value")  # noqa: E501
         assert result is False
 
     @pytest.mark.asyncio
@@ -191,7 +191,7 @@ class TestConfigurationNotifications:
         ]
 
         for pattern in expected_patterns:
-            assert pattern in notifier.listeners, f"Missing handler for {pattern}"
+            assert pattern in notifier.listeners, f"Missing handler for {pattern}"  # noqa: E501
             assert (
                 len(notifier.listeners[pattern]) > 0
             ), f"No handlers registered for {pattern}"

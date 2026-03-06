@@ -304,7 +304,7 @@ class SPARQLService:
         PREFIX cs: <http://context-studio.local/vocab/>
         PREFIX entity: <http://context-studio.local/entity/>
         PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
-        
+
         SELECT ?term ?title ?definition ?parent ?layer WHERE {{
             ?term a cs:Term ;
                   rdfs:label ?title ;
@@ -341,10 +341,10 @@ class SPARQLService:
         PREFIX entity: <http://context-studio.local/entity/>
         PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
         PREFIX skos: <http://www.w3.org/2004/02/skos/core#>
-        
+
         SELECT ?relatedTerm ?relation ?title ?definition WHERE {{
             VALUES ?startTerm {{ <{term_uri}> }}
-            
+
             {{
                 ?startTerm ?relation ?relatedTerm .
                 FILTER(?relation != rdf:type && ?relation != rdfs:label && ?relation != rdfs:comment)
@@ -352,7 +352,7 @@ class SPARQLService:
                 ?relatedTerm ?relation ?startTerm .
                 FILTER(?relation != rdf:type && ?relation != rdfs:label && ?relation != rdfs:comment)
             }}
-            
+
             ?relatedTerm a cs:Term ;
                         rdfs:label ?title .
             OPTIONAL {{ ?relatedTerm rdfs:comment ?definition }}
@@ -380,7 +380,7 @@ class SPARQLService:
         PREFIX cs: <http://context-studio.local/vocab/>
         PREFIX entity: <http://context-studio.local/entity/>
         PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
-        
+
         SELECT ?domain ?domainTitle ?layer ?layerTitle WHERE {{
             ?domain a cs:Domain ;
                    rdfs:label ?domainTitle ;
@@ -405,7 +405,7 @@ class SPARQLService:
         PREFIX cs: <http://context-studio.local/vocab/>
         PREFIX entity: <http://context-studio.local/entity/>
         PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
-        
+
         SELECT ?structure_node ?title ?type ?embedding WHERE {
             ?structure_node rdfs:label ?title ;
                   a ?type ;
@@ -439,14 +439,14 @@ class SPARQLService:
         PREFIX cs: <http://context-studio.local/vocab/>
         PREFIX entity: <http://context-studio.local/entity/>
         PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
-        
+
         SELECT ?relation ?target ?targetTitle ?targetType WHERE {{
             VALUES ?structure_node {{ {node_values} }}
-            
+
             ?structure_node ?relation ?target .
             ?target rdfs:label ?targetTitle ;
                    a ?targetType .
-            
+
             FILTER(?relation != rdf:type && ?relation != rdfs:label && ?relation != rdfs:comment)
             FILTER(?targetType = cs:Layer || ?targetType = cs:Domain || ?targetType = cs:Term)
         }}

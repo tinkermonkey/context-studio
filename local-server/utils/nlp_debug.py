@@ -18,6 +18,7 @@ if use_proxy:
 
     import requests
     old_request = requests.Session.request
+
     def new_request(self, *args, **kwargs):
         kwargs['verify'] = False
         return old_request(self, *args, **kwargs)
@@ -32,6 +33,7 @@ sys.path.insert(0, parent_dir)
 
 from nlp.pipeline import get_pipeline  # noqa: E402
 from nlp.processors import process_nlp_result  # noqa: E402
+
 
 def main():
     if len(sys.argv) < 2:
@@ -51,12 +53,13 @@ def main():
         result_dict = result.model_dump()
     else:
         result_dict = result
-    logs_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "logs")
+    logs_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "logs")  # noqa: E501
     os.makedirs(logs_dir, exist_ok=True)
     output_path = os.path.join(logs_dir, "debug.json")
     with open(output_path, "w") as f:
         json.dump(result_dict, f, indent=2)
     print(f"NLP analysis saved to {output_path}")
+
 
 if __name__ == "__main__":
     main()

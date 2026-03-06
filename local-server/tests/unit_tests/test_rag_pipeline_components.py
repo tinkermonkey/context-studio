@@ -1,7 +1,7 @@
 """
-Unit tests for RAG pipeline components (registry, standard pipeline, test service).
+Unit tests for RAG pipeline components (registry, standard pipeline, test service).  # noqa: E501
 
-These tests verify the core functionality without requiring full application initialization.
+These tests verify the core functionality without requiring full application initialization.  # noqa: E501
 """
 
 import pytest
@@ -10,7 +10,7 @@ import sys
 import os
 
 # Add parent directory to path for imports
-sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
+sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))  # noqa: E501
 
 
 class TestPipelineRegistry:
@@ -23,7 +23,7 @@ class TestPipelineRegistry:
         instance1 = PipelineRegistry()
         instance2 = PipelineRegistry()
 
-        assert instance1 is instance2, "PipelineRegistry should return the same instance"
+        assert instance1 is instance2, "PipelineRegistry should return the same instance"  # noqa: E501
 
     def test_register_pipeline(self):
         """Test registering a pipeline class."""
@@ -40,7 +40,7 @@ class TestPipelineRegistry:
             def get_description():
                 return "Mock pipeline for testing"
 
-            async def extract_entities(self, text, enable_trace=False, enable_llm_layer=True):
+            async def extract_entities(self, text, enable_trace=False, enable_llm_layer=True):  # noqa: E501
                 pass
 
             def get_config(self):
@@ -54,7 +54,7 @@ class TestPipelineRegistry:
 
         # Verify it's in the registry
         assert "MockPipeline" in PipelineRegistry.list_pipelines()
-        assert PipelineRegistry.get_pipeline_class("MockPipeline") == MockPipeline
+        assert PipelineRegistry.get_pipeline_class("MockPipeline") == MockPipeline  # noqa: E501
 
     def test_get_pipeline_info(self):
         """Test retrieving pipeline information."""
@@ -70,7 +70,7 @@ class TestPipelineRegistry:
             def get_description():
                 return "Test description"
 
-            async def extract_entities(self, text, enable_trace=False, enable_llm_layer=True):
+            async def extract_entities(self, text, enable_trace=False, enable_llm_layer=True):  # noqa: E501
                 pass
 
             def get_config(self):
@@ -100,7 +100,7 @@ class TestPipelineRegistry:
             def get_description():
                 return "Test"
 
-            async def extract_entities(self, text, enable_trace=False, enable_llm_layer=True):
+            async def extract_entities(self, text, enable_trace=False, enable_llm_layer=True):  # noqa: E501
                 pass
 
             def get_config(self):
@@ -141,7 +141,7 @@ class TestStandardPipelineValidation:
         mock_kg_session = Mock()
         mock_ops_session = Mock()
 
-        with pytest.raises(ValueError, match="kg_vector_threshold must be between 0 and 1"):
+        with pytest.raises(ValueError, match="kg_vector_threshold must be between 0 and 1"):  # noqa: E501
             StandardRAGPipeline(
                 kg_db_session=mock_kg_session,
                 ops_db_session=mock_ops_session,
@@ -155,7 +155,7 @@ class TestStandardPipelineValidation:
         mock_kg_session = Mock()
         mock_ops_session = Mock()
 
-        with pytest.raises(ValueError, match="timeout_layer_1 must be positive"):
+        with pytest.raises(ValueError, match="timeout_layer_1 must be positive"):  # noqa: E501
             StandardRAGPipeline(
                 kg_db_session=mock_kg_session,
                 ops_db_session=mock_ops_session,
@@ -169,7 +169,7 @@ class TestStandardPipelineValidation:
         mock_kg_session = Mock()
         mock_ops_session = Mock()
 
-        with pytest.raises(ValueError, match="dedup_similarity_threshold must be between 0 and 1"):
+        with pytest.raises(ValueError, match="dedup_similarity_threshold must be between 0 and 1"):  # noqa: E501
             StandardRAGPipeline(
                 kg_db_session=mock_kg_session,
                 ops_db_session=mock_ops_session,
@@ -214,7 +214,7 @@ class TestRAGTestManagementService:
 
         # Mock query to return a node
         mock_node = Mock(spec=StructureNode)
-        mock_kg_session.query.return_value.filter.return_value.first.return_value = mock_node
+        mock_kg_session.query.return_value.filter.return_value.first.return_value = mock_node  # noqa: E501
 
         service = RAGTestManagementService(mock_kg_session, mock_ops_session)
 
@@ -230,7 +230,7 @@ class TestRAGTestManagementService:
         mock_ops_session = Mock()
 
         # Mock query to return None
-        mock_kg_session.query.return_value.filter.return_value.first.return_value = None
+        mock_kg_session.query.return_value.filter.return_value.first.return_value = None  # noqa: E501
 
         service = RAGTestManagementService(mock_kg_session, mock_ops_session)
 

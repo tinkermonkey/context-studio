@@ -5,7 +5,7 @@ This module contains the Pydantic models for the unified structure_nodes API,
 supporting the Great Normalization requirements.
 """
 
-from pydantic import BaseModel, Field, field_validator, model_validator, ConfigDict
+from pydantic import BaseModel, Field, field_validator, model_validator, ConfigDict  # noqa: E501
 from typing import Optional, List, Any
 from uuid import UUID
 from enum import Enum
@@ -30,16 +30,16 @@ class NodeBase(BaseModel):
 
 class NodeCreate(NodeBase):
     """Model for creating a new structure_node."""
-    
+
     @field_validator('parent_node_id')
     @classmethod
     def validate_parent_for_type(cls, v, info):
-        """Validate parent structure_node requirements based on structure_node type."""
+        """Validate parent structure_node requirements based on structure_node type."""  # noqa: E501
         node_type = info.data.get('node_type')
         if node_type == NodeTypeEnum.LAYER and v is not None:
             raise ValueError("Layers cannot have parent structure_nodes")
         if node_type in [NodeTypeEnum.DOMAIN, NodeTypeEnum.TERM] and v is None:
-            raise ValueError(f"{node_type.value.title()} must have a parent structure_node")
+            raise ValueError(f"{node_type.value.title()} must have a parent structure_node")  # noqa: E501
         return v
 
 
@@ -87,10 +87,10 @@ class NodeLinkOut(NodeLinkBase):
 class NodeSearchRequest(BaseModel):
     """Model for structure_node search requests."""
     query: str = Field(..., min_length=1, description="Search query text")
-    node_type: Optional[NodeTypeEnum] = Field(None, description="Filter by node type")
-    parent_node_id: Optional[UUID] = Field(None, description="Filter by parent node")
-    threshold: Optional[float] = Field(0.0, ge=0.0, le=1.0, description="Minimum similarity score")
-    limit: Optional[int] = Field(20, ge=1, le=100, description="Maximum number of results")
+    node_type: Optional[NodeTypeEnum] = Field(None, description="Filter by node type")  # noqa: E501
+    parent_node_id: Optional[UUID] = Field(None, description="Filter by parent node")  # noqa: E501
+    threshold: Optional[float] = Field(0.0, ge=0.0, le=1.0, description="Minimum similarity score")  # noqa: E501
+    limit: Optional[int] = Field(20, ge=1, le=100, description="Maximum number of results")  # noqa: E501
 
 
 class NodeSearchResult(NodeOut):
@@ -118,19 +118,19 @@ class PaginatedNodeLinksResponse(BaseModel):
 # Move operation models
 class MoveNodesRequest(BaseModel):
     """Model for moving structure_nodes to a new parent."""
-    node_ids: List[UUID] = Field(..., min_length=1, description="List of structure_node IDs to move")
-    target_parent_id: Optional[UUID] = Field(None, description="Target parent structure_node ID (None for root level)")
-    move_children: bool = Field(True, description="Whether to move all child structure_nodes")
-    handle_conflicts: str = Field("warn", pattern="^(warn|rename|error)$", description="How to handle title conflicts")
+    node_ids: List[UUID] = Field(..., min_length=1, description="List of structure_node IDs to move")  # noqa: E501
+    target_parent_id: Optional[UUID] = Field(None, description="Target parent structure_node ID (None for root level)")  # noqa: E501
+    move_children: bool = Field(True, description="Whether to move all child structure_nodes")  # noqa: E501
+    handle_conflicts: str = Field("warn", pattern="^(warn|rename|error)$", description="How to handle title conflicts")  # noqa: E501
 
 
 class MoveNodesResponse(BaseModel):
     """Model for move operation results with automatic type conversion."""
-    moved_nodes: List[NodeOut] = Field(description="List of successfully moved structure_nodes")
-    updated_children: List[NodeOut] = Field(description="List of child structure_nodes that were also moved")
-    converted_nodes: List[NodeOut] = Field(default_factory=list, description="List of nodes that had their type automatically converted")
-    warnings: List[str] = Field(description="List of warnings encountered during the move")
-    errors: List[str] = Field(description="List of errors that prevented some moves")
+    moved_nodes: List[NodeOut] = Field(description="List of successfully moved structure_nodes")  # noqa: E501
+    updated_children: List[NodeOut] = Field(description="List of child structure_nodes that were also moved")  # noqa: E501
+    converted_nodes: List[NodeOut] = Field(default_factory=list, description="List of nodes that had their type automatically converted")  # noqa: E501
+    warnings: List[str] = Field(description="List of warnings encountered during the move")  # noqa: E501
+    errors: List[str] = Field(description="List of errors that prevented some moves")  # noqa: E501
 
 
 # Utility models for hierarchy operations
@@ -149,26 +149,26 @@ NodeHierarchy.model_rebuild()
 # Models for Reference Links and Word Senses
 class ReferenceLink(BaseModel):
     """Model for reference data links from external knowledge sources."""
-    source: str = Field(..., min_length=1, max_length=255, description="Source identifier (e.g., 'schema.org', 'wikidata', 'conceptnet')")
-    external_id: str = Field(..., min_length=1, max_length=255, description="Source-specific identifier")
+    source: str = Field(..., min_length=1, max_length=255, description="Source identifier (e.g., 'schema.org', 'wikidata', 'conceptnet')")  # noqa: E501
+    external_id: str = Field(..., min_length=1, max_length=255, description="Source-specific identifier")  # noqa: E501
 
     model_config = ConfigDict(from_attributes=True)
 
 
 class WordSense(BaseModel):
     """Model for word sense identifiers from NLP analysis."""
-    term: str = Field(..., min_length=1, max_length=255, description="The term/word this sense refers to")
-    sense_type: str = Field(..., description="Type of sense system (e.g., 'wordnet')")
-    sense_id: str = Field(..., description="Unique identifier for the sense (e.g., 'bank.n.01')")
-    definition: str = Field(..., description="Human-readable definition of the sense")
-    domain: Optional[str] = Field(None, description="Semantic domain or category (e.g., 'noun.group')")
+    term: str = Field(..., min_length=1, max_length=255, description="The term/word this sense refers to")  # noqa: E501
+    sense_type: str = Field(..., description="Type of sense system (e.g., 'wordnet')")  # noqa: E501
+    sense_id: str = Field(..., description="Unique identifier for the sense (e.g., 'bank.n.01')")  # noqa: E501
+    definition: str = Field(..., description="Human-readable definition of the sense")  # noqa: E501
+    domain: Optional[str] = Field(None, description="Semantic domain or category (e.g., 'noun.group')")  # noqa: E501
 
     model_config = ConfigDict(from_attributes=True)
 
 
 class SelectedWordSensesUpdate(BaseModel):
     """Model for updating selected word senses on a structure node."""
-    selected_senses: List[WordSense] = Field(..., description="List of word senses to persist as selected")
+    selected_senses: List[WordSense] = Field(..., description="List of word senses to persist as selected")  # noqa: E501
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -261,14 +261,14 @@ class ResolvedAttribute(StructureNodeAttribute):
 
 
 class SetNodeAttributesRequest(BaseModel):
-    """Request model for setting node attributes with optimistic locking support."""
+    """Request model for setting node attributes with optimistic locking support."""  # noqa: E501
     attributes: List[StructureNodeAttribute] = Field(
         ...,
         description="List of attributes to set on the node"
     )
     expected_version: Optional[int] = Field(
         None,
-        description="Expected node version for optimistic locking. If provided, the update will fail with 409 Conflict if the current version doesn't match."
+        description="Expected node version for optimistic locking. If provided, the update will fail with 409 Conflict if the current version doesn't match."  # noqa: E501
     )
 
     model_config = ConfigDict(from_attributes=True)

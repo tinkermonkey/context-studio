@@ -10,16 +10,16 @@ import sys
 import os
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-import pytest
-from unittest.mock import Mock
-from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker
-import json
+import pytest  # noqa: E402
+from unittest.mock import Mock  # noqa: E402
+from sqlalchemy import create_engine  # noqa: E402
+from sqlalchemy.orm import sessionmaker  # noqa: E402
+import json  # noqa: E402
 
-from database.models import Base, Predicate
-from reference_db.models import Base as ReferenceBase, ReferenceNode, ReferenceLink, ExternalPredicate
-from reference_db.manager import ReferenceManager
-from services.reference_filter_service import ReferenceFilterService
+from database.models import Base, Predicate  # noqa: E402
+from reference_db.models import Base as ReferenceBase, ReferenceNode, ReferenceLink, ExternalPredicate  # noqa: E402, E501
+from reference_db.manager import ReferenceManager  # noqa: E402
+from services.reference_filter_service import ReferenceFilterService  # noqa: E402, E501
 
 
 @pytest.fixture
@@ -50,6 +50,7 @@ def mock_ref_manager(ref_db_session):
     manager = Mock(spec=ReferenceManager)
     manager.session = ref_db_session
     # Mock the list_external_predicates method to query the test database
+
     def list_external_predicates(source=None, limit=None):
         from reference_db.models import ExternalPredicate
         query = ref_db_session.query(ExternalPredicate)
@@ -68,7 +69,7 @@ def filter_service(local_db_session, mock_ref_manager):
     return ReferenceFilterService(local_db_session, mock_ref_manager)
 
 
-def test_filter_service_with_real_database_interaction(local_db_session, ref_db_session, mock_ref_manager):
+def test_filter_service_with_real_database_interaction(local_db_session, ref_db_session, mock_ref_manager):  # noqa: E501
     """Test filter service with actual database reads."""
     # Create global predicate with mapping
     predicate = Predicate(
@@ -143,7 +144,7 @@ def test_filter_service_with_real_database_interaction(local_db_session, ref_db_
     assert stats["filter_mode"] == "whitelist"
 
 
-def test_filter_service_handles_database_errors_gracefully(local_db_session, mock_ref_manager):
+def test_filter_service_handles_database_errors_gracefully(local_db_session, mock_ref_manager):  # noqa: E501
     """Test that database errors are handled gracefully."""
     from unittest.mock import patch
 
@@ -154,7 +155,7 @@ def test_filter_service_handles_database_errors_gracefully(local_db_session, moc
     link.predicate = "testPred"
 
     # Mock the _build_relevance_sets method to raise an exception
-    with patch.object(service, '_build_relevance_sets', side_effect=Exception("Database error")):
+    with patch.object(service, '_build_relevance_sets', side_effect=Exception("Database error")):  # noqa: E501
         # Should handle error and return unfiltered links
         filtered_links, stats = service.filter_links([link])
 
@@ -165,7 +166,7 @@ def test_filter_service_handles_database_errors_gracefully(local_db_session, moc
         assert stats["filtering_active"] is False
 
 
-def test_filter_statistics_with_real_predicates(local_db_session, mock_ref_manager):
+def test_filter_statistics_with_real_predicates(local_db_session, mock_ref_manager):  # noqa: E501
     """Test filter statistics calculation with real database predicates."""
     # Create various predicates
     predicates = [
@@ -211,7 +212,7 @@ def test_filter_statistics_with_real_predicates(local_db_session, mock_ref_manag
     assert "dbpedia:irrel1" in stats["irrelevant_external_predicates"]
 
 
-def test_cache_behavior_with_database_updates(local_db_session, mock_ref_manager):
+def test_cache_behavior_with_database_updates(local_db_session, mock_ref_manager):  # noqa: E501
     """Test that cache is properly used and invalidated."""
     # Create initial predicate
     predicate = Predicate(
@@ -248,7 +249,7 @@ def test_cache_behavior_with_database_updates(local_db_session, mock_ref_manager
     assert "schema.org:cached" not in relevant3
 
 
-def test_batch_predicate_fetch_optimization(local_db_session, ref_db_session, mock_ref_manager):
+def test_batch_predicate_fetch_optimization(local_db_session, ref_db_session, mock_ref_manager):  # noqa: E501
     """Test that batch fetching optimizes database queries."""
     from datetime import date
     # Create multiple external predicates
@@ -306,8 +307,8 @@ def test_filter_mode_determination_logic(local_db_session, mock_ref_manager):
     assert mode == "whitelist"
 
 
-def test_filter_service_with_null_relevance_values(local_db_session, mock_ref_manager):
-    """Test that predicates with null is_relevant values don't affect filtering."""
+def test_filter_service_with_null_relevance_values(local_db_session, mock_ref_manager):  # noqa: E501
+    """Test that predicates with null is_relevant values don't affect filtering."""  # noqa: E501
     # Create predicates with various relevance states
     predicates = [
         Predicate(

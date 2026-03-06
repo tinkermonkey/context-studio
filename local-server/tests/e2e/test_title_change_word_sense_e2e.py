@@ -11,9 +11,9 @@ import os
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-import pytest
-import time
-from uuid import uuid4
+import pytest  # noqa: E402
+import time  # noqa: E402
+from uuid import uuid4  # noqa: E402
 
 
 def create_layer(shared_client):
@@ -80,23 +80,23 @@ def test_title_change_triggers_word_sense_update(shared_client):
     assert updated_node["title"] == new_title
 
     # Step 4: Wait for event processor to handle the title change
-    # The event processor should detect the title change and trigger NLP re-analysis
+    # The event processor should detect the title change and trigger NLP re-analysis  # noqa: E501
     time.sleep(2)  # Allow time for async event processing
 
     # Step 5: Verify word senses have been updated
-    final_resp = shared_client.get(f"/api/structure_nodes/{domain_id}/word_senses")
+    final_resp = shared_client.get(f"/api/structure_nodes/{domain_id}/word_senses")  # noqa: E501
     assert final_resp.status_code == 200
     final_word_senses = final_resp.json()
 
     # Assertions about the word sense update
     # Note: The exact word senses depend on the NLP service implementation
-    # We're testing that the system responds to title changes, not the specific NLP results
+    # We're testing that the system responds to title changes, not the specific NLP results  # noqa: E501
 
     # The word senses should be a list
     assert isinstance(final_word_senses, list)
 
-    # If NLP processing is working, changing from "Computer" to "Database" should
-    # potentially result in different word senses (though this depends on the NLP service)
+    # If NLP processing is working, changing from "Computer" to "Database" should  # noqa: E501
+    # potentially result in different word senses (though this depends on the NLP service)  # noqa: E501
     # At minimum, we can verify the endpoint is working and returns valid data
     for sense in final_word_senses:
         assert "sense_id" in sense
@@ -111,9 +111,9 @@ def test_title_change_triggers_word_sense_update(shared_client):
 
 def test_title_change_event_recorded(shared_client):
     """
-    Test that title changes create change events that can trigger word sense updates.
+    Test that title changes create change events that can trigger word sense updates.  # noqa: E501
 
-    This test verifies that the change_events table properly records title modifications,
+    This test verifies that the change_events table properly records title modifications,  # noqa: E501
     which is the mechanism that triggers word sense re-analysis.
     """
     # Create a node
@@ -135,7 +135,7 @@ def test_title_change_event_recorded(shared_client):
     node_data = get_resp.json()
     assert node_data["title"] == new_title
 
-    # Note: We don't directly check change_events here as that's an internal table,
+    # Note: We don't directly check change_events here as that's an internal table,  # noqa: E501
     # but the fact that the update succeeded and we can retrieve word senses
     # indicates the event system is functioning
 
@@ -143,7 +143,7 @@ def test_title_change_event_recorded(shared_client):
     time.sleep(1)
 
     # Word senses endpoint should work without errors
-    word_senses_resp = shared_client.get(f"/api/structure_nodes/{domain_id}/word_senses")
+    word_senses_resp = shared_client.get(f"/api/structure_nodes/{domain_id}/word_senses")  # noqa: E501
     assert word_senses_resp.status_code == 200
     assert isinstance(word_senses_resp.json(), list)
 
@@ -180,7 +180,7 @@ def test_multiple_title_changes_handled_correctly(shared_client):
     assert final_node["title"] == titles[-1]
 
     # Word senses should be accessible
-    word_senses_resp = shared_client.get(f"/api/structure_nodes/{domain_id}/word_senses")
+    word_senses_resp = shared_client.get(f"/api/structure_nodes/{domain_id}/word_senses")  # noqa: E501
     assert word_senses_resp.status_code == 200
     word_senses = word_senses_resp.json()
     assert isinstance(word_senses, list)

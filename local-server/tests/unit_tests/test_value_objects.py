@@ -1,7 +1,7 @@
 """
 Unit Tests for domain ontology value objects
 
-Tests the immutable value objects including NodeType, ExternalReference, LexicalSense,
+Tests the immutable value objects including NodeType, ExternalReference, LexicalSense,  # noqa: E501
 DataPropertyValue, OntologyMapping, and SearchCriteria.
 """
 
@@ -9,9 +9,9 @@ import sys
 import os
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-import pytest
-import types
-from domain.ontology.value_objects import (
+import pytest  # noqa: E402
+import types  # noqa: E402
+from domain.ontology.value_objects import (  # noqa: E402
     NodeType,
     ExternalReference,
     LexicalSense,
@@ -137,7 +137,7 @@ class TestNodeTypeFromLegacy:
             assert result.value == modern
 
     def test_from_legacy_idempotent_for_modern_values(self):
-        """Test that modern values can be processed by from_legacy and return unchanged."""
+        """Test that modern values can be processed by from_legacy and return unchanged."""  # noqa: E501
         modern_values = ["taxonomy", "concept_scheme", "class", "individual"]
 
         for modern_value in modern_values:
@@ -145,7 +145,7 @@ class TestNodeTypeFromLegacy:
             assert result.value == modern_value
 
     def test_from_legacy_symmetry(self):
-        """Test that legacy and modern values produce the same NodeType enum."""
+        """Test that legacy and modern values produce the same NodeType enum."""  # noqa: E501
         # These pairs should all produce the same enum value
         pairs = [
             ("layer", "taxonomy"),
@@ -179,7 +179,7 @@ class TestNodeTypeFromLegacy:
             NodeType.from_legacy(1)
 
     def test_from_legacy_multiple_calls_consistent(self):
-        """Test that multiple calls to from_legacy return consistent results."""
+        """Test that multiple calls to from_legacy return consistent results."""  # noqa: E501
         result1 = NodeType.from_legacy("layer")
         result2 = NodeType.from_legacy("layer")
         result3 = NodeType.from_legacy("layer")

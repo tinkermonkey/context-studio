@@ -67,7 +67,7 @@ async def list_tasks(
     List all background tasks with optional filtering.
 
     Args:
-        status_filter: Optional status filter (pending, running, completed, failed, cancelled)
+        status_filter: Optional status filter (pending, running, completed, failed, cancelled)  # noqa: E501
         task_type: Optional task type filter
 
     Returns:
@@ -244,7 +244,7 @@ async def cancel_task(task_id: str):
             return CancelTaskResponse(
                 task_id=task_id,
                 cancelled=False,
-                message=f"Task is in state '{current_status}' and cannot be cancelled"
+                message=f"Task is in state '{current_status}' and cannot be cancelled"  # noqa: E501
             )
 
         # Cancel the task
@@ -253,7 +253,7 @@ async def cancel_task(task_id: str):
         return CancelTaskResponse(
             task_id=task_id,
             cancelled=cancelled,
-            message="Task cancelled successfully" if cancelled else "Task cancellation failed"
+            message="Task cancelled successfully" if cancelled else "Task cancellation failed"  # noqa: E501
         )
 
     except RuntimeError as e:

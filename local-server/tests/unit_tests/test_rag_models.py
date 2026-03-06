@@ -8,13 +8,13 @@ import sys
 import os
 
 sys.path.append(
-    os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+    os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))  # noqa: E501
 )
 
-import pytest
-from pydantic import ValidationError
-from uuid import UUID
-from rag.models import (
+import pytest  # noqa: E402
+from pydantic import ValidationError  # noqa: E402
+from uuid import UUID  # noqa: E402
+from rag.models import (  # noqa: E402
     RAGExtractionRequest,
     RAGExtractionResponse,
     ExtractedEntity,
@@ -30,7 +30,7 @@ class TestRAGExtractionRequest:
         """Test creating a basic RAG extraction request."""
         request = RAGExtractionRequest(text="This is a test sentence.")
         assert request.text == "This is a test sentence."
-        assert request.enable_trace is False  # Default per architect requirement
+        assert request.enable_trace is False  # Default per architect requirement  # noqa: E501
 
     def test_request_with_trace_enabled(self):
         """Test creating request with trace enabled."""
@@ -151,7 +151,7 @@ class TestExtractedEntity:
                     sentence_index=0
                 )
             error_message = str(exc_info.value)
-            assert "source_layer must be one of" in error_message or "Value error" in error_message
+            assert "source_layer must be one of" in error_message or "Value error" in error_message  # noqa: E501
 
     def test_entity_sentence_index_validation(self):
         """Test sentence_index validation (must be >= 0)."""
@@ -406,7 +406,7 @@ class TestRAGExtractionResponse:
                 metrics=metrics
             )
         error_message = str(exc_info.value)
-        assert "request_id must be a valid UUID string" in error_message or "Value error" in error_message
+        assert "request_id must be a valid UUID string" in error_message or "Value error" in error_message  # noqa: E501
 
         # Valid UUID should work
         valid_uuid = "550e8400-e29b-41d4-a716-446655440000"
@@ -458,8 +458,8 @@ class TestModelDocstrings:
         ]
 
         for model in models:
-            assert model.__doc__ is not None, f"{model.__name__} has no docstring"
-            assert len(model.__doc__.strip()) > 0, f"{model.__name__} has empty docstring"
+            assert model.__doc__ is not None, f"{model.__name__} has no docstring"  # noqa: E501
+            assert len(model.__doc__.strip()) > 0, f"{model.__name__} has empty docstring"  # noqa: E501
 
     def test_all_fields_have_descriptions(self):
         """Test that all fields have descriptions."""

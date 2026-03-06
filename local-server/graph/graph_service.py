@@ -24,10 +24,10 @@ class GraphService:
     """
     Combined graph service that provides both SPARQL querying and NetworkX analytics.
     This is the main interface for graph operations in the Context Studio.
-    
+
     Updated to work with the unified structure_nodes table from the Great Normalization.
     """
-    
+
     def __init__(self, db_session: Session):
         """
         Initialize the combined graph service.
@@ -50,13 +50,13 @@ class GraphService:
         self.network_service._ensure_graph_built()
 
         logger.info("GraphService initialized with both NetworkX and SPARQL capabilities")
-    
-    
+
+
     def _build_graph(self):
         """Build graph structure from unified structure_nodes table."""
         self.structure_nodes = {}
         self.edges = {}
-        
+
         # Load all structure_nodes
         structure_nodes = self.db_session.query(StructureNode).all()
         for structure_node in structure_nodes:
@@ -67,14 +67,14 @@ class GraphService:
                 'parent_id': structure_node.parent_node_id,
                 'children': []
             }
-        
+
         # Build parent-child relationships
         for node_id, node_data in self.structure_nodes.items():
             if node_data['parent_id']:
                 parent = self.structure_nodes.get(node_data['parent_id'])
                 if parent:
                     parent['children'].append(node_id)
-        
+
         # Load structure_node links
         links = self.db_session.query(StructureNodeLink).all()
         for link in links:
@@ -85,82 +85,82 @@ class GraphService:
                 'target_id': link.target_node_id,
                 'predicate': link.predicate
             })
-    
+
     def would_create_cycle(self, node_id: str, new_parent_id: str) -> bool:
         """
         Check if setting new_parent_id as parent of node_id would create a cycle.
-        
+
         Args:
             node_id: The structure_node that would get a new parent
             new_parent_id: The proposed parent structure_node
-            
+
         Returns:
             True if setting the parent would create a cycle
         """
         if not node_id or not new_parent_id:
             return False
-        
+
         # Walk up the ancestor chain from new_parent_id
         current = new_parent_id
         visited = set()
-        
+
         while current and current not in visited:
             if current == node_id:
                 return True
             visited.add(current)
             node_data = self.structure_nodes.get(current)
             current = node_data['parent_id'] if node_data else None  # type: ignore
-        
+
         return False
-    
+
     def check_title_uniqueness_in_domain(self, domain_id: str, title: str, exclude_id: Optional[str] = None) -> bool:
         """
         Check if title is unique within domain using graph traversal.
-        
+
         Args:
             domain_id: The domain to check within
             title: The title to check for uniqueness
             exclude_id: Optional structure_node ID to exclude from the check (for updates)
-            
+
         Returns:
             True if a conflicting title is found
         """
         # Get all structure_nodes in the domain subtree
         domain_nodes = self._get_domain_subtree(domain_id)
-        
+
         for node_id in domain_nodes:
             node_data = self.structure_nodes.get(node_id)
-            if (node_data and 
-                node_data['title'] == title and 
+            if (node_data and
+                node_data['title'] == title and
                 node_id != exclude_id and
                 node_data['type'] == 'term'):
                 return True
-        
+
         return False
-    
+
     def _get_domain_subtree(self, domain_id: str) -> List[str]:
         """
         Get all structure_nodes in a domain's subtree.
-        
+
         Args:
             domain_id: The domain ID to get subtree for
-            
+
         Returns:
             List of all structure_node IDs in the domain subtree
         """
         result = []
         stack = [domain_id]
-        
+
         while stack:
             current_id = stack.pop()
             result.append(current_id)
-            
+
             node_data = self.structure_nodes.get(current_id)
             if node_data:
                 stack.extend(node_data['children'])
-        
+
         return result
-    
+
     def refresh(self):
         """Refresh both SPARQL and NetworkX graphs from the database."""
         logger.info("Refreshing NetworkX and SPARQL graphs...")
@@ -168,11 +168,11 @@ class GraphService:
         self.network_service.refresh()
         # Rebuild our internal graph structure for cycle detection and uniqueness checking
         self._build_graph()
-    
+
     def get_comprehensive_stats(self) -> Dict[str, Any]:
         """
         Get comprehensive statistics from both graph representations.
-        
+
         Returns:
             Combined statistics from SPARQL and NetworkX services
         """
@@ -184,7 +184,7 @@ class GraphService:
                 "last_updated": datetime.now().isoformat()
             }
         }
-        
+
         # Add SPARQL stats when service is available
         if self.sparql_service:
             stats["sparql_stats"] = self.sparql_service.get_graph_stats()
@@ -192,78 +192,78 @@ class GraphService:
         else:
             stats["sparql_stats"] = {"note": "SPARQL service disabled - pending update for unified structure_nodes table"}
             stats["service_info"]["sparql_triples"] = 0
-        
+
         return stats
-    
+
     # SPARQL-based operations (temporarily disabled)
     def sparql_query(self, query: str, **kwargs) -> List[Dict[str, Any]]:
         """Execute a SPARQL query."""
         if not self.sparql_service:
             return [{"error": "SPARQL service disabled - pending update for unified structure_nodes table"}]
         return self.sparql_service.query(query, **kwargs)
-    
+
     def find_terms_by_title(self, title: str, exact: bool = False) -> List[Dict[str, Any]]:
         """Find terms by title using SPARQL."""
         return self.sparql_service.find_terms_by_title(title, exact)
-    
+
     def get_domain_hierarchy(self, layer_id: Optional[str] = None) -> List[Dict[str, Any]]:
         """Get domain hierarchy using SPARQL."""
         return self.sparql_service.get_domain_hierarchy(layer_id)
-    
+
     def serialize_rdf(self, format: str = "turtle") -> str:
         """Serialize the RDF graph."""
         return self.sparql_service.serialize(format)
-    
+
     # NetworkX-based operations
     def calculate_centrality(self, method: str = "pagerank") -> Dict[str, float]:
         """Calculate structure_node centrality using NetworkX."""
         return self.network_service.calculate_centrality(method)
-    
-    def find_shortest_path(self, source_id: str, target_id: str, 
+
+    def find_shortest_path(self, source_id: str, target_id: str,
                           source_type: str = "term", target_type: str = "term") -> Optional[List[str]]:
         """Find shortest path between structure_nodes using NetworkX."""
         return self.network_service.find_shortest_path(source_id, target_id, source_type, target_type)
-    
-    def get_neighbors(self, entity_id: str, entity_type: str = "term", 
+
+    def get_neighbors(self, entity_id: str, entity_type: str = "term",
                      depth: int = 1, direction: str = "both") -> Dict[str, List[str]]:
         """Get neighbors using NetworkX."""
         return self.network_service.get_neighbors(entity_id, entity_type, depth, direction)
-    
+
     def detect_communities(self, method: str = "louvain") -> List[List[str]]:
         """Detect communities using NetworkX."""
         communities = self.network_service.detect_communities(method)
         return [list(community) for community in communities]
-    
+
     def get_term_hierarchy(self, term_id: str) -> Dict[str, Any]:
         """Get term hierarchy using NetworkX."""
         return self.network_service.get_term_hierarchy(term_id)
-    
+
     def get_node_info(self, entity_id: str, entity_type: str = "term") -> Optional[Dict[str, Any]]:
         """Get detailed structure_node information using NetworkX."""
         return self.network_service.get_node_info(entity_id, entity_type)
-    
+
     # Combined operations that leverage both services
     def find_related_terms_comprehensive(self, term_id: str, max_depth: int = 2) -> Dict[str, Any]:
         """
         Find related terms using both SPARQL and NetworkX for comprehensive results.
-        
+
         Args:
             term_id: The ID of the term to find relations for
             max_depth: Maximum depth of relationships to traverse
-            
+
         Returns:
             Combined results from both services
         """
         # Use SPARQL for semantic relationships
         sparql_results = self.sparql_service.find_related_terms(term_id, max_depth)
-        
+
         # Use NetworkX for structural analysis
         network_neighbors = self.network_service.get_neighbors(term_id, "term", max_depth, "both")
-        
+
         # Get centrality information
         centrality = self.network_service.calculate_centrality("pagerank")
         term_node = f"term:{term_id}"
-        
+
         return {
             "term_id": term_id,
             "semantic_relationships": sparql_results,
@@ -272,14 +272,14 @@ class GraphService:
             "hierarchy": self.network_service.get_term_hierarchy(term_id),
             "analysis_timestamp": datetime.now().isoformat()
         }
-    
+
     def analyze_domain_structure(self, domain_id: str) -> Dict[str, Any]:
         """
         Comprehensive analysis of a domain's structure using both services.
-        
+
         Args:
             domain_id: Domain ID to analyze
-            
+
         Returns:
             Comprehensive domain analysis
         """
@@ -288,7 +288,7 @@ class GraphService:
         PREFIX cs: <http://context-studio.local/vocab/>
         PREFIX entity: <http://context-studio.local/entity/>
         PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
-        
+
         SELECT ?domain ?title ?definition ?layer ?layerTitle WHERE {{
             BIND(<http://context-studio.local/entity/domain/{domain_id}> AS ?domain)
             ?domain a cs:Domain ;
@@ -298,22 +298,22 @@ class GraphService:
             ?layer rdfs:label ?layerTitle .
         }}
         """
-        
+
         domain_info = self.sparql_service.query(domain_query)
-        
+
         # NetworkX analysis for terms in domain
         terms_in_domain = self.network_service.find_terms_in_domain_tree(domain_id)
-        
+
         # Calculate centrality for domain terms
         centrality = self.network_service.calculate_centrality("pagerank")
         term_centralities = {
-            term_id: centrality.get(f"term:{term_id}", 0.0) 
+            term_id: centrality.get(f"term:{term_id}", 0.0)
             for term_id in terms_in_domain
         }
-        
+
         # Get domain structure_node info
         domain_node_info = self.network_service.get_node_info(domain_id, "domain")
-        
+
         return {
             "domain_metadata": domain_info[0] if domain_info else None,
             "terms_count": len(terms_in_domain),
@@ -322,21 +322,21 @@ class GraphService:
             "domain_network_info": domain_node_info,
             "analysis_timestamp": datetime.now().isoformat()
         }
-    
+
     def search_and_analyze(self, search_term: str, analysis_depth: int = 1) -> Dict[str, Any]:
         """
         Search for terms and provide comprehensive analysis.
-        
+
         Args:
             search_term: Term to search for
             analysis_depth: Depth of analysis to perform
-            
+
         Returns:
             Search results with comprehensive analysis
         """
         # Find matching terms using SPARQL
         matching_terms = self.sparql_service.find_terms_by_title(search_term, exact=False)
-        
+
         # Analyze each matching term
         analyzed_terms = []
         for term in matching_terms:
@@ -344,56 +344,56 @@ class GraphService:
             term_uri = term.get("term", "")
             if "term/" in term_uri:
                 term_id = term_uri.split("term/")[-1]
-                
+
                 # Get comprehensive analysis
                 analysis = self.find_related_terms_comprehensive(term_id, analysis_depth)
-                
+
                 analyzed_terms.append({
                     "term_info": term,
                     "analysis": analysis
                 })
-        
+
         return {
             "search_term": search_term,
             "matches_found": len(matching_terms),
             "analyzed_terms": analyzed_terms,
             "search_timestamp": datetime.now().isoformat()
         }
-    
+
     def get_layer_analytics(self, layer_id: Optional[str] = None) -> Dict[str, Any]:
         """
         Get comprehensive analytics for a layer or all layers.
-        
+
         Args:
             layer_id: Optional layer ID to analyze
-            
+
         Returns:
             Layer analytics from both services
         """
         # Get domain hierarchy from SPARQL
         hierarchy = self.sparql_service.get_domain_hierarchy(layer_id)
-        
+
         # Get network statistics
         network_stats = self.network_service.get_graph_stats()
-        
+
         # Calculate layer-specific metrics
         layer_metrics = {}
-        
+
         if layer_id:
             # Analyze specific layer
             layer_info = self.network_service.get_node_info(layer_id, "layer")
-            
+
             # Find all domains and terms in this layer
             domains_in_layer = []
             terms_in_layer = []
-            
+
             for structure_node in self.network_service.graph.nodes(data=True):  # type: ignore
                 node_id, node_data = structure_node
                 if node_data.get("type") == "domain" and node_data.get("layer_id") == layer_id:
                     domains_in_layer.append(node_data.get("entity_id"))
                 elif node_data.get("type") == "term" and node_data.get("layer_id") == layer_id:
                     terms_in_layer.append(node_data.get("entity_id"))
-            
+
             layer_metrics = {
                 "layer_info": layer_info,
                 "domains_count": len(domains_in_layer),
@@ -401,7 +401,7 @@ class GraphService:
                 "domains": domains_in_layer,
                 "terms": terms_in_layer
             }
-        
+
         return {
             "layer_id": layer_id,
             "hierarchy": hierarchy,
@@ -409,14 +409,14 @@ class GraphService:
             "layer_metrics": layer_metrics,
             "analysis_timestamp": datetime.now().isoformat()
         }
-    
+
     def export_graph_data(self, format: str = "json") -> Union[str, Dict[str, Any]]:
         """
         Export comprehensive graph data in various formats.
-        
+
         Args:
             format: Export format ("json", "turtle", "graphml")
-            
+
         Returns:
             Exported graph data
         """
@@ -436,7 +436,7 @@ class GraphService:
             # This would need to be saved to a file
             import tempfile
             import os
-            
+
             with tempfile.NamedTemporaryFile(mode='w', suffix='.graphml', delete=False) as f:
                 self.network_service.export_to_graphml(f.name)
                 with open(f.name, 'r') as graphml_file:

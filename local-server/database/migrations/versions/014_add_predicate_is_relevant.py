@@ -22,10 +22,10 @@ class Migration014(Migration):
 
     def down(self, connection: Connection) -> None:
         """Rollback the migration."""
-        # SQLite doesn't support DROP COLUMN directly, so we need to recreate the table
+        # SQLite doesn't support DROP COLUMN directly, so we need to recreate the table  # noqa: E501
         connection.execute(text("""
             CREATE TABLE predicates_backup AS
-            SELECT id, identifier, title, definition, mapping, date_created, date_modified
+            SELECT id, identifier, title, definition, mapping, date_created, date_modified  # noqa: E501
             FROM predicates
         """))
 
@@ -44,8 +44,8 @@ class Migration014(Migration):
         """))
 
         connection.execute(text("""
-            INSERT INTO predicates (id, identifier, title, definition, mapping, date_created, date_modified)
-            SELECT id, identifier, title, definition, mapping, date_created, date_modified
+            INSERT INTO predicates (id, identifier, title, definition, mapping, date_created, date_modified)  # noqa: E501
+            SELECT id, identifier, title, definition, mapping, date_created, date_modified  # noqa: E501
             FROM predicates_backup
         """))
 

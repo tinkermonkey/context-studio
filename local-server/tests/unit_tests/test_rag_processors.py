@@ -5,13 +5,13 @@ Tests each of the four processor layers with mocked dependencies.
 """
 import sys
 import os
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))  # noqa: E501
 
-import pytest
-from unittest.mock import Mock, patch
-import numpy as np
+import pytest  # noqa: E402
+from unittest.mock import Mock, patch  # noqa: E402
+import numpy as np  # noqa: E402
 
-from rag.processors.models import (
+from rag.processors.models import (  # noqa: E402
     ProcessorInput,
     KGContextOutput,
     LLMExtractionOutput,
@@ -54,7 +54,7 @@ class TestKGContextProcessor:
         """Mock embedding model"""
         with patch('rag.processors.kg_context.get_model') as mock:
             model = Mock()
-            model.encode.return_value = [np.random.rand(384).astype(np.float32)]
+            model.encode.return_value = [np.random.rand(384).astype(np.float32)]  # noqa: E501
             mock.return_value = model
             yield mock
 
@@ -66,7 +66,7 @@ class TestKGContextProcessor:
         assert processor.top_k == 30
         assert processor.db_session == mock_db_session
 
-    def test_process_with_empty_text(self, mock_db_session, mock_nlp_pipeline, mock_embedding_model):
+    def test_process_with_empty_text(self, mock_db_session, mock_nlp_pipeline, mock_embedding_model):  # noqa: E501
         """Test processing with empty text"""
         from rag.processors.kg_context import KGContextProcessor
 
@@ -80,7 +80,7 @@ class TestKGContextProcessor:
         assert isinstance(output.extracted_phrases, list)
         assert isinstance(output.kg_nodes, list)
 
-    def test_trace_capture_enabled(self, mock_db_session, mock_nlp_pipeline, mock_embedding_model):
+    def test_trace_capture_enabled(self, mock_db_session, mock_nlp_pipeline, mock_embedding_model):  # noqa: E501
         """Test that trace data is captured when enabled"""
         from rag.processors.kg_context import KGContextProcessor
 
@@ -89,7 +89,7 @@ class TestKGContextProcessor:
 
         output = processor.process(input_data)
 
-        assert 'extracted_phrases' in output.trace_data or len(output.trace_data) >= 0
+        assert 'extracted_phrases' in output.trace_data or len(output.trace_data) >= 0  # noqa: E501
 
     def test_cosine_similarity(self):
         """Test cosine similarity calculation"""
@@ -99,11 +99,11 @@ class TestKGContextProcessor:
         vec2 = np.array([1.0, 0.0, 0.0], dtype=np.float32)
 
         similarity = KGContextProcessor._cosine_similarity(vec1, vec2)
-        assert abs(similarity - 1.0) < 0.001  # Should be 1.0 (identical vectors)
+        assert abs(similarity - 1.0) < 0.001  # Should be 1.0 (identical vectors)  # noqa: E501
 
         vec3 = np.array([0.0, 1.0, 0.0], dtype=np.float32)
         similarity = KGContextProcessor._cosine_similarity(vec1, vec3)
-        assert abs(similarity - 0.0) < 0.001  # Should be 0.0 (orthogonal vectors)
+        assert abs(similarity - 0.0) < 0.001  # Should be 0.0 (orthogonal vectors)  # noqa: E501
 
 
 class TestLLMExtractionProcessor:
@@ -137,7 +137,7 @@ class TestLLMExtractionProcessor:
         from rag.processors.llm_extraction import LLMExtractionProcessor
 
         processor = LLMExtractionProcessor()
-        input_data = ProcessorInput(text="Test text about concepts", enable_trace=False)
+        input_data = ProcessorInput(text="Test text about concepts", enable_trace=False)  # noqa: E501
 
         kg_context = KGContextOutput(
             extracted_phrases=[],
@@ -165,7 +165,7 @@ class TestLLMExtractionProcessor:
         )
 
         # Mock the execute_pipeline_flavor_sync method
-        processor.llm_service.execute_pipeline_flavor_sync.return_value = mock_response
+        processor.llm_service.execute_pipeline_flavor_sync.return_value = mock_response  # noqa: E501
 
         output = processor.process(input_data, kg_context)
 
@@ -201,7 +201,7 @@ class TestLLMExtractionProcessor:
         )
 
         formatted = processor._format_kg_context(kg_context)
-        assert "concept1" in formatted or "Relevant Knowledge Graph Context" in formatted
+        assert "concept1" in formatted or "Relevant Knowledge Graph Context" in formatted  # noqa: E501
         assert isinstance(formatted, str)
 
 
@@ -312,13 +312,13 @@ class TestConceptResolutionProcessor:
         """Mock embedding model"""
         with patch('rag.processors.concept_resolution.get_model') as mock:
             model = Mock()
-            model.encode.return_value = [np.random.rand(384).astype(np.float32)]
+            model.encode.return_value = [np.random.rand(384).astype(np.float32)]  # noqa: E501
             mock.return_value = model
             yield mock
 
-    def test_processor_initialization(self, mock_db_session, mock_web_search_client):
+    def test_processor_initialization(self, mock_db_session, mock_web_search_client):  # noqa: E501
         """Test processor initializes correctly"""
-        from rag.processors.concept_resolution import ConceptResolutionProcessor
+        from rag.processors.concept_resolution import ConceptResolutionProcessor  # noqa: E501
 
         processor = ConceptResolutionProcessor(
             mock_db_session,
@@ -328,11 +328,11 @@ class TestConceptResolutionProcessor:
         assert processor.similarity_threshold == 0.7
         assert processor.web_search_client == mock_web_search_client
 
-    def test_process_with_no_gaps(self, mock_db_session, mock_web_search_client, mock_embedding_model):
+    def test_process_with_no_gaps(self, mock_db_session, mock_web_search_client, mock_embedding_model):  # noqa: E501
         """Test processing with no gaps"""
-        from rag.processors.concept_resolution import ConceptResolutionProcessor
+        from rag.processors.concept_resolution import ConceptResolutionProcessor  # noqa: E501
 
-        processor = ConceptResolutionProcessor(mock_db_session, mock_web_search_client)
+        processor = ConceptResolutionProcessor(mock_db_session, mock_web_search_client)  # noqa: E501
         input_data = ProcessorInput(text="Test", enable_trace=False)
 
         kg_context = KGContextOutput(
@@ -356,35 +356,35 @@ class TestConceptResolutionProcessor:
             trace_data={}
         )
 
-        output = processor.process(input_data, kg_context, llm_output, gap_output)
+        output = processor.process(input_data, kg_context, llm_output, gap_output)  # noqa: E501
 
         assert isinstance(output, ConceptResolutionOutput)
         assert len(output.resolved_concepts) == 0
         assert len(output.unresolved_gaps) == 0
 
-    def test_confidence_calculation(self, mock_db_session, mock_web_search_client):
+    def test_confidence_calculation(self, mock_db_session, mock_web_search_client):  # noqa: E501
         """Test confidence score calculation"""
-        from rag.processors.concept_resolution import ConceptResolutionProcessor
+        from rag.processors.concept_resolution import ConceptResolutionProcessor  # noqa: E501
 
-        processor = ConceptResolutionProcessor(mock_db_session, mock_web_search_client)
+        processor = ConceptResolutionProcessor(mock_db_session, mock_web_search_client)  # noqa: E501
 
         # Test cached KG confidence
-        conf = processor._calculate_confidence(ResolutionMethod.CACHED_KG, similarity=0.9)
+        conf = processor._calculate_confidence(ResolutionMethod.CACHED_KG, similarity=0.9)  # noqa: E501
         assert 0.7 <= conf <= 0.8
 
         # Test full KG confidence
-        conf = processor._calculate_confidence(ResolutionMethod.FULL_KG, similarity=0.7)
+        conf = processor._calculate_confidence(ResolutionMethod.FULL_KG, similarity=0.7)  # noqa: E501
         assert 0.6 <= conf <= 0.75
 
         # Test web search confidence
-        conf = processor._calculate_confidence(ResolutionMethod.WEB_SEARCH, snippet_length=150)
+        conf = processor._calculate_confidence(ResolutionMethod.WEB_SEARCH, snippet_length=150)  # noqa: E501
         assert 0.5 <= conf <= 0.6
 
-    def test_should_perform_web_search(self, mock_db_session, mock_web_search_client):
+    def test_should_perform_web_search(self, mock_db_session, mock_web_search_client):  # noqa: E501
         """Test web search criteria evaluation"""
-        from rag.processors.concept_resolution import ConceptResolutionProcessor
+        from rag.processors.concept_resolution import ConceptResolutionProcessor  # noqa: E501
 
-        processor = ConceptResolutionProcessor(mock_db_session, mock_web_search_client)
+        processor = ConceptResolutionProcessor(mock_db_session, mock_web_search_client)  # noqa: E501
 
         # Critical priority should be searched
         gap_critical = GapConcept(
@@ -447,7 +447,7 @@ class TestWebSearchClient:
         """Test web search client initializes correctly"""
         from rag.processors.web_search import RateLimitedWebSearchClient
 
-        client = RateLimitedWebSearchClient(rate_limit_per_minute=10, max_attempts_per_session=20)
+        client = RateLimitedWebSearchClient(rate_limit_per_minute=10, max_attempts_per_session=20)  # noqa: E501
         assert client.max_attempts_per_session == 20
         assert client.session_attempt_count == 0
 
@@ -483,10 +483,10 @@ class TestWebSearchClient:
         }
         mock_get.return_value = mock_response
 
-        client = RateLimitedWebSearchClient(rate_limit_per_minute=60)  # High rate for testing
+        client = RateLimitedWebSearchClient(rate_limit_per_minute=60)  # High rate for testing  # noqa: E501
         result = client.search("test query")
 
-        assert result is not None or result is None  # May succeed or fail depending on timing
+        assert result is not None or result is None  # May succeed or fail depending on timing  # noqa: E501
         assert client.session_attempt_count >= 0  # Counter incremented
 
 

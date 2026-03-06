@@ -1,7 +1,7 @@
 """
 Dependency injection for LLM and Pipeline services
 
-This module provides optimized dependency injection for LLM and pipeline-related services
+This module provides optimized dependency injection for LLM and pipeline-related services  # noqa: E501
 using the service factory pattern for better performance.
 """
 
@@ -13,10 +13,10 @@ from llm.service import LLMService
 
 def get_pipeline_flavor_service() -> PipelineFlavorService:
     """
-    Optimized dependency injection for PipelineFlavorService using service factory.
-    
-    Note: PipelineFlavorService manages its own database connections internally.
-    
+    Optimized dependency injection for PipelineFlavorService using service factory.  # noqa: E501
+
+    Note: PipelineFlavorService manages its own database connections internally.  # noqa: E501
+
     Returns:
         PipelineFlavorService instance
     """
@@ -30,11 +30,11 @@ def get_llm_service(
 ) -> LLMService:
     """
     Optimized dependency injection for LLMService using service factory.
-    
+
     Args:
         model_name: LLM model name
         temperature: Temperature setting for the model
-        
+
     Returns:
         LLMService instance configured with the provided parameters
     """
@@ -45,7 +45,7 @@ def get_llm_service(
 def get_default_llm_service() -> LLMService:
     """
     Get LLMService with default configuration for most endpoints.
-    
+
     Returns:
         LLMService instance with default GPT-3.5-turbo configuration
     """
@@ -55,7 +55,7 @@ def get_default_llm_service() -> LLMService:
 def get_creative_llm_service() -> LLMService:
     """
     Get LLMService with higher temperature for creative tasks.
-    
+
     Returns:
         LLMService instance with higher temperature setting
     """

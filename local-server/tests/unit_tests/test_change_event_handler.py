@@ -4,13 +4,13 @@ import sys
 import os
 
 sys.path.append(
-    os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+    os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))  # noqa: E501
 )
 
-import pytest
-from services.change_event_handler import ChangeEventHandler
-from database.models import ChangeEvent
-from database.enums import RecordType
+import pytest  # noqa: E402
+from services.change_event_handler import ChangeEventHandler  # noqa: E402
+from database.models import ChangeEvent  # noqa: E402
+from database.enums import RecordType  # noqa: E402
 
 
 def test_change_event_creation_with_record_type_enum(db_session):
@@ -52,8 +52,8 @@ def test_change_event_update_with_record_type_enum(db_session):
     # Test data
     record_type = RecordType.STRUCTURE_NODE_LINK
     record_id = "test-link-456"
-    old_data = {"id": record_id, "parent_id": "old-parent", "child_id": "child-id"}
-    new_data = {"id": record_id, "parent_id": "new-parent", "child_id": "child-id"}
+    old_data = {"id": record_id, "parent_id": "old-parent", "child_id": "child-id"}  # noqa: E501
+    new_data = {"id": record_id, "parent_id": "new-parent", "child_id": "child-id"}  # noqa: E501
 
     # Create event
     event = handler.fire_updated_event(
@@ -112,11 +112,11 @@ def test_get_events_for_record(db_session):
     record_type = RecordType.STRUCTURE_NODE
 
     # Create multiple events for the same record
-    event1 = handler.fire_created_event(record_type, record_id, {"title": "Created"})
+    event1 = handler.fire_created_event(record_type, record_id, {"title": "Created"})  # noqa: E501
     event2 = handler.fire_updated_event(
         record_type, record_id, {"title": "Created"}, {"title": "Updated"}
     )
-    event3 = handler.fire_deleted_event(record_type, record_id, {"title": "Updated"})
+    event3 = handler.fire_deleted_event(record_type, record_id, {"title": "Updated"})  # noqa: E501
 
     # Query events for this record
     events = handler.get_events_for_record(record_id)
@@ -143,7 +143,7 @@ def test_get_events_for_record_with_limit(db_session):
 
     # Create multiple events for the same record
     for i in range(5):
-        handler.fire_created_event(record_type, record_id, {"title": f"Event {i}"})
+        handler.fire_created_event(record_type, record_id, {"title": f"Event {i}"})  # noqa: E501
 
     # Query events with limit
     events = handler.get_events_for_record(record_id, limit=3)
@@ -160,24 +160,24 @@ def test_get_unprocessed_events_filtered_by_record_type(db_session):
     handler = ChangeEventHandler(db_session)
 
     # Create events for different record types
-    handler.fire_created_event(RecordType.STRUCTURE_NODE, "node-1", {"title": "Node 1"})
+    handler.fire_created_event(RecordType.STRUCTURE_NODE, "node-1", {"title": "Node 1"})  # noqa: E501
     handler.fire_created_event(
-        RecordType.STRUCTURE_NODE_LINK, "link-1", {"parent": "p1", "child": "c1"}
+        RecordType.STRUCTURE_NODE_LINK, "link-1", {"parent": "p1", "child": "c1"}  # noqa: E501
     )
-    handler.fire_created_event(RecordType.PREDICATE, "pred-1", {"title": "Predicate 1"})
-    handler.fire_created_event(RecordType.STRUCTURE_NODE, "node-2", {"title": "Node 2"})
+    handler.fire_created_event(RecordType.PREDICATE, "pred-1", {"title": "Predicate 1"})  # noqa: E501
+    handler.fire_created_event(RecordType.STRUCTURE_NODE, "node-2", {"title": "Node 2"})  # noqa: E501
 
     # Get all unprocessed events
     all_events = handler.get_unprocessed_events()
     assert len(all_events) == 4
 
     # Get only structure_node events
-    node_events = handler.get_unprocessed_events(record_type=RecordType.STRUCTURE_NODE)
+    node_events = handler.get_unprocessed_events(record_type=RecordType.STRUCTURE_NODE)  # noqa: E501
     assert len(node_events) == 2
-    assert all(event.record_type == RecordType.STRUCTURE_NODE for event in node_events)
+    assert all(event.record_type == RecordType.STRUCTURE_NODE for event in node_events)  # noqa: E501
 
     # Get only predicate events
-    predicate_events = handler.get_unprocessed_events(record_type=RecordType.PREDICATE)
+    predicate_events = handler.get_unprocessed_events(record_type=RecordType.PREDICATE)  # noqa: E501
     assert len(predicate_events) == 1
     assert predicate_events[0].record_type == RecordType.PREDICATE
 
@@ -243,7 +243,7 @@ def test_event_creation_with_enum_validation(db_session):
         )
         assert event.record_type == record_type
 
-    # Test that invalid string values raise errors when passed directly to create_event
+    # Test that invalid string values raise errors when passed directly to create_event  # noqa: E501
     with pytest.raises(ValueError):
         # This should fail because "invalid_type" is not a valid RecordType
         from database.enums import RecordType as RT
@@ -262,7 +262,7 @@ def test_normalized_structure_node_events(db_session):
     node_data = {"id": node_id, "title": "Structure Node Test"}
 
     # Use new normalized method with RecordType enum
-    event = handler.fire_created_event(RecordType.STRUCTURE_NODE, node_id, node_data)
+    event = handler.fire_created_event(RecordType.STRUCTURE_NODE, node_id, node_data)  # noqa: E501
 
     # Should create a ChangeEvent with structure_node record type
     assert event.record_id == node_id
@@ -287,7 +287,7 @@ def test_mark_event_processed(db_session):
     handler.mark_event_processed(event.id)
 
     # Verify it's marked as processed
-    updated_event = db_session.query(ChangeEvent).filter_by(id=event.id).first()
+    updated_event = db_session.query(ChangeEvent).filter_by(id=event.id).first()  # noqa: E501
     assert updated_event.processed is True
 
 
@@ -298,14 +298,14 @@ def test_get_event_stats(db_session):
     handler = ChangeEventHandler(db_session)
 
     # Create some test events
-    handler.fire_created_event(RecordType.STRUCTURE_NODE, "node-1", {"title": "Node 1"})
+    handler.fire_created_event(RecordType.STRUCTURE_NODE, "node-1", {"title": "Node 1"})  # noqa: E501
     handler.fire_updated_event(
         RecordType.STRUCTURE_NODE,
         "node-1",
         {"title": "Node 1"},
         {"title": "Updated Node 1"},
     )
-    handler.fire_created_event(RecordType.PREDICATE, "pred-1", {"title": "Predicate 1"})
+    handler.fire_created_event(RecordType.PREDICATE, "pred-1", {"title": "Predicate 1"})  # noqa: E501
 
     # Mark one as processed
     events = handler.get_unprocessed_events()

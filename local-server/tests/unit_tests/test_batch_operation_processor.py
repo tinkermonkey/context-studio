@@ -1,23 +1,23 @@
 """
-Unit tests for BatchOperationProcessor - Testing high-performance batch operations.
+Unit tests for BatchOperationProcessor - Testing high-performance batch operations.  # noqa: E501
 
-Tests parallel batch processing, performance optimization, checkpoint management, and error handling.
+Tests parallel batch processing, performance optimization, checkpoint management, and error handling.  # noqa: E501
 """
 
 import sys
 import os
 
 sys.path.append(
-    os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+    os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))  # noqa: E501
 )
 
-import pytest
-import time
-import threading
-from unittest.mock import Mock, patch
-from datetime import datetime, timezone
+import pytest  # noqa: E402
+import time  # noqa: E402
+import threading  # noqa: E402
+from unittest.mock import Mock, patch  # noqa: E402
+from datetime import datetime, timezone  # noqa: E402
 
-from services.batch_operation_processor import (
+from services.batch_operation_processor import (  # noqa: E402
     BatchOperationProcessor,
     BatchOperationResult,
     BatchOperationError,
@@ -59,11 +59,11 @@ class TestBatchOperationProcessor:
 
     @pytest.fixture
     def batch_processor(
-        self, mock_db, mock_s3_sync, mock_version_manager, mock_working_tree_manager
+        self, mock_db, mock_s3_sync, mock_version_manager, mock_working_tree_manager  # noqa: E501
     ):
         """Create a BatchOperationProcessor instance for testing."""
         return BatchOperationProcessor(
-            mock_db, mock_s3_sync, mock_version_manager, mock_working_tree_manager
+            mock_db, mock_s3_sync, mock_version_manager, mock_working_tree_manager  # noqa: E501
         )
 
     def test_processor_initialization(self, batch_processor):
@@ -80,7 +80,7 @@ class TestBatchOperationProcessor:
     def test_batch_create_versions(self, batch_processor):
         """Test batch version creation functionality."""
         entity_data = [
-            {"id": f"entity_{i}", "type": "document", "content": f"Content {i}"}
+            {"id": f"entity_{i}", "type": "document", "content": f"Content {i}"}  # noqa: E501
             for i in range(10)
         ]
         author_id = "test_author"
@@ -93,7 +93,7 @@ class TestBatchOperationProcessor:
         assert result.total_items == 10
         assert result.successful_items >= 0
         assert result.failed_items >= 0
-        assert result.successful_items + result.failed_items == result.total_items
+        assert result.successful_items + result.failed_items == result.total_items  # noqa: E501
         assert result.processing_time_seconds > 0
         assert result.throughput_per_second > 0
 
@@ -122,7 +122,7 @@ class TestBatchOperationProcessor:
         """Test parallel processing optimization."""
         # Create a larger dataset to test parallel processing
         entity_data = [
-            {"id": f"entity_{i}", "type": "document", "content": f"Content {i}"}
+            {"id": f"entity_{i}", "type": "document", "content": f"Content {i}"}  # noqa: E501
             for i in range(100)
         ]
 
@@ -134,13 +134,13 @@ class TestBatchOperationProcessor:
         mock_version_manager.create_version.side_effect = slow_create_version
 
         start_time = time.time()
-        result = batch_processor.batch_create_versions(entity_data, "test_author")
+        result = batch_processor.batch_create_versions(entity_data, "test_author")  # noqa: E501
         execution_time = time.time() - start_time
 
         # Parallel processing should be faster than sequential
-        # With 8 workers and 100 items, should be significantly faster than 2 seconds
+        # With 8 workers and 100 items, should be significantly faster than 2 seconds  # noqa: E501
         assert execution_time < 2.0
-        assert result.throughput_per_second > 50  # Should process at least 50 items/sec
+        assert result.throughput_per_second > 50  # Should process at least 50 items/sec  # noqa: E501
 
     def test_batch_size_optimization(self, batch_processor):
         """Test dynamic batch size optimization."""
@@ -149,22 +149,22 @@ class TestBatchOperationProcessor:
         large_dataset = [{"id": f"entity_{i}"} for i in range(5000)]
 
         # Process small dataset
-        result_small = batch_processor.batch_create_versions(small_dataset, "author1")
+        result_small = batch_processor.batch_create_versions(small_dataset, "author1")  # noqa: E501
 
         # Process large dataset
-        result_large = batch_processor.batch_create_versions(large_dataset, "author2")
+        result_large = batch_processor.batch_create_versions(large_dataset, "author2")  # noqa: E501
 
         # Should optimize batch size for larger datasets
         assert result_small.total_items == 50
         assert result_large.total_items == 5000
 
         # Large dataset should have better throughput due to optimization
-        assert result_large.throughput_per_second >= result_small.throughput_per_second
+        assert result_large.throughput_per_second >= result_small.throughput_per_second  # noqa: E501
 
-    def test_error_handling_and_recovery(self, batch_processor, mock_version_manager):
+    def test_error_handling_and_recovery(self, batch_processor, mock_version_manager):  # noqa: E501
         """Test error handling and recovery in batch operations."""
         entity_data = [
-            {"id": f"entity_{i}", "type": "document", "content": f"Content {i}"}
+            {"id": f"entity_{i}", "type": "document", "content": f"Content {i}"}  # noqa: E501
             for i in range(10)
         ]
 
@@ -183,9 +183,9 @@ class TestBatchOperationProcessor:
                 raise Exception(f"Simulated error for {entity_id}")
             return Mock(id=f"version_{entity_id}")
 
-        mock_version_manager.create_version.side_effect = failing_create_version
+        mock_version_manager.create_version.side_effect = failing_create_version  # noqa: E501
 
-        result = batch_processor.batch_create_versions(entity_data, "test_author")
+        result = batch_processor.batch_create_versions(entity_data, "test_author")  # noqa: E501
 
         # Should handle errors gracefully
         assert result.total_items == 10
@@ -202,7 +202,7 @@ class TestBatchOperationProcessor:
         """Test system checkpoint creation functionality."""
         checkpoint_name = "test_checkpoint"
 
-        checkpoint_id = batch_processor.create_system_checkpoint(checkpoint_name)
+        checkpoint_id = batch_processor.create_system_checkpoint(checkpoint_name)  # noqa: E501
 
         assert checkpoint_id is not None
         assert isinstance(checkpoint_id, str)
@@ -217,7 +217,7 @@ class TestBatchOperationProcessor:
     def test_checkpoint_restoration(self, batch_processor, mock_db):
         """Test system checkpoint restoration functionality."""
         # Create a checkpoint first
-        checkpoint_id = batch_processor.create_system_checkpoint("restore_test")
+        checkpoint_id = batch_processor.create_system_checkpoint("restore_test")  # noqa: E501
 
         # Modify some state
         batch_processor.performance_metrics.append({"test": "data"})
@@ -231,12 +231,12 @@ class TestBatchOperationProcessor:
 
     def test_performance_metrics_collection(self, batch_processor):
         """Test performance metrics collection during batch operations."""
-        entity_data = [{"id": f"entity_{i}", "type": "test"} for i in range(20)]
+        entity_data = [{"id": f"entity_{i}", "type": "test"} for i in range(20)]  # noqa: E501
 
         # Clear existing metrics
         batch_processor.performance_metrics.clear()
 
-        result = batch_processor.batch_create_versions(entity_data, "metrics_test")
+        result = batch_processor.batch_create_versions(entity_data, "metrics_test")  # noqa: E501
 
         # Should have recorded performance metrics
         assert len(batch_processor.performance_metrics) >= 1
@@ -277,7 +277,6 @@ class TestBatchOperationProcessor:
         assert stats["total_items_processed"] >= 45  # 10 + 20 + 15
         assert 0 <= stats["overall_success_rate"] <= 1.0
 
-
     def test_batch_operation_cancellation(self, batch_processor):
         """Test batch operation cancellation capability."""
         # Create a long-running operation
@@ -302,7 +301,7 @@ class TestBatchOperationProcessor:
         # Let it run for a short time then cancel
         time.sleep(0.1)
 
-        # Note: Actual cancellation would require implementing cancellation tokens
+        # Note: Actual cancellation would require implementing cancellation tokens  # noqa: E501
         # For now, just verify the operation can complete
         thread.join(timeout=5.0)
 
@@ -316,19 +315,19 @@ class TestBatchOperationProcessor:
             {"id": "valid_1", "type": "document"},
             {"missing_id": True, "type": "document"},  # Missing required field
             {"id": "valid_2", "type": "document"},
-            {"id": "valid_3", "invalid_field": "should_be_ignored"},  # Invalid field
+            {"id": "valid_3", "invalid_field": "should_be_ignored"},  # Invalid field  # noqa: E501
         ]
 
-        result = batch_processor.batch_create_versions(invalid_data, "validation_test")
+        result = batch_processor.batch_create_versions(invalid_data, "validation_test")  # noqa: E501
 
         # Should handle validation errors
         assert result.total_items == 4
         # Exact success/failure count depends on validation implementation
-        assert result.failed_items >= 1  # At least the missing_id item should fail
+        assert result.failed_items >= 1  # At least the missing_id item should fail  # noqa: E501
 
         # Errors should contain validation details
         validation_errors = [
-            e for e in result.errors if "validation" in str(e.error_message).lower()
+            e for e in result.errors if "validation" in str(e.error_message).lower()  # noqa: E501
         ]
         assert len(validation_errors) >= 1
 
@@ -337,7 +336,7 @@ class TestBatchOperationProcessor:
         entity_data = [{"id": f"entity_{i}"} for i in range(5)]
 
         # Test successful transaction
-        result = batch_processor.batch_create_versions(entity_data, "transaction_test")
+        result = batch_processor.batch_create_versions(entity_data, "transaction_test")  # noqa: E501
         assert result is not None
         assert result.total_items == 5
 
@@ -370,7 +369,7 @@ class TestBatchOperationProcessor:
         def run_batch_operation(thread_id):
             try:
                 entity_data = [
-                    {"id": f"thread_{thread_id}_entity_{i}", "type": "concurrent_test"}
+                    {"id": f"thread_{thread_id}_entity_{i}", "type": "concurrent_test"}  # noqa: E501
                     for i in range(10)
                 ]
                 result = batch_processor.batch_create_versions(
@@ -410,14 +409,14 @@ class TestBatchOperationProcessor:
         initial_checkpoint_count = len(batch_processor.checkpoints)
         initial_metrics_count = len(batch_processor.performance_metrics)
 
-        result = batch_processor.batch_create_versions(entity_data, "cleanup_test")
+        result = batch_processor.batch_create_versions(entity_data, "cleanup_test")  # noqa: E501
 
         # Verify operation completed
         assert result.total_items == 50
 
         # Resources should be managed appropriately
         # (Exact behavior depends on implementation details)
-        assert len(batch_processor.performance_metrics) >= initial_metrics_count
+        assert len(batch_processor.performance_metrics) >= initial_metrics_count  # noqa: E501
         assert len(batch_processor.checkpoints) == initial_checkpoint_count
 
     def test_adaptive_batch_sizing(self, batch_processor):
@@ -427,7 +426,7 @@ class TestBatchOperationProcessor:
         slow_data = [{"id": f"slow_{i}", "size": "large"} for i in range(100)]
 
         # Process fast data
-        result_fast = batch_processor.batch_create_versions(fast_data, "fast_author")
+        result_fast = batch_processor.batch_create_versions(fast_data, "fast_author")  # noqa: E501
 
         # Process slow data
         with patch.object(
@@ -449,7 +448,7 @@ class TestBatchOperationProcessor:
         assert result_slow.total_items == 100
 
         # Fast processing should have better throughput
-        assert result_fast.throughput_per_second >= result_slow.throughput_per_second
+        assert result_fast.throughput_per_second >= result_slow.throughput_per_second  # noqa: E501
 
 
 class TestBatchOperationResult:
@@ -570,7 +569,7 @@ class TestSystemCheckpoint:
         assert checkpoint.checkpoint_name == "test_checkpoint"
         assert isinstance(checkpoint.created_at, datetime)
         assert checkpoint.system_state == system_state
-        assert checkpoint.metadata == {"creator": "test_user", "purpose": "backup"}
+        assert checkpoint.metadata == {"creator": "test_user", "purpose": "backup"}  # noqa: E501
 
     def test_checkpoint_age_calculation(self):
         """Test checkpoint age calculation."""

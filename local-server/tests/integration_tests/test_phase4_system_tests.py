@@ -61,7 +61,7 @@ def test_database_with_schema_org():
         external_id="Thing",
         attributes='{"@type": "entity"}',
         title_embedding=create_embedding("Thing", 0.3),
-        definition_embedding=create_embedding("The most generic type of item.", 0.3),
+        definition_embedding=create_embedding("The most generic type of item.", 0.3),  # noqa: E501
         embedding_dims=384,
     )
 
@@ -200,7 +200,7 @@ def test_database_with_schema_org():
         "book": {"id": book_node.id, "title": book_node.title},
         "author": {"id": author_prop.id, "title": author_prop.title},
         "name": {"id": name_prop.id, "title": name_prop.title},
-        "givenName": {"id": given_name_prop.id, "title": given_name_prop.title},
+        "givenName": {"id": given_name_prop.id, "title": given_name_prop.title},  # noqa: E501
     }
 
     manager.close()
@@ -290,7 +290,7 @@ class TestTC_S001_EndToEndWorkflow:
 
         # Step 2: Verify Person entity is found
         assert search_data["total_results"] > 0, "No results found"
-        person_results = [r for r in search_data["results"] if r["title"] == "Person"]
+        person_results = [r for r in search_data["results"] if r["title"] == "Person"]  # noqa: E501
         assert len(person_results) > 0, "Person entity not found in results"
 
         person_result = person_results[0]
@@ -325,11 +325,11 @@ class TestTC_S001_EndToEndWorkflow:
         # Verify name and givenName are in the properties
         property_titles = []
         for prop_id in property_ids:
-            prop_response = app_client.get(f"/api/reference/ref-db/nodes/{prop_id}")
+            prop_response = app_client.get(f"/api/reference/ref-db/nodes/{prop_id}")  # noqa: E501
             if prop_response.status_code == 200:
                 property_titles.append(prop_response.json()["title"])
 
-        assert "name" in property_titles, "name property not found via domainIncludes"
+        assert "name" in property_titles, "name property not found via domainIncludes"  # noqa: E501
         assert (
             "givenName" in property_titles
         ), "givenName property not found via domainIncludes"
@@ -352,7 +352,7 @@ class TestTC_S002_HealthCheck:
         """Verify health check returns correct JSON schema."""
         response = app_client.get("/api/reference/ref-db/health")
 
-        assert response.status_code == 200, f"Health check failed: {response.text}"
+        assert response.status_code == 200, f"Health check failed: {response.text}"  # noqa: E501
         data = response.json()
 
         # Validate schema
@@ -400,16 +400,16 @@ class TestTC_S002_HealthCheck:
         ), f"Health check took {execution_time}ms, expected <200ms"
 
     def test_health_check_missing_database(self):
-        """Verify health check reports 'missing' when database doesn't exist."""
+        """Verify health check reports 'missing' when database doesn't exist."""  # noqa: E501
         with tempfile.TemporaryDirectory() as tmpdir:
             non_existent_db = os.path.join(tmpdir, "nonexistent.db")
 
             # Use a manager with non-existent DB
             config = ReferenceConfig()
 
-            # Directly test the manager's get_status method with a non-existent database
+            # Directly test the manager's get_status method with a non-existent database  # noqa: E501
             # This is more direct than trying to patch the API
-            status = ReferenceManager(config, db_path=non_existent_db).get_status()
+            status = ReferenceManager(config, db_path=non_existent_db).get_status()  # noqa: E501
 
             assert (
                 status["status"] == "missing"
@@ -436,7 +436,7 @@ class TestTC_S003_APIContractValidation:
             side_effect=mock_embedding,
         ):
             response = app_client.get(
-                "/api/reference/ref-db/search", params={"query": "test", "limit": 10}
+                "/api/reference/ref-db/search", params={"query": "test", "limit": 10}  # noqa: E501
             )
 
         assert response.status_code == 200
@@ -460,7 +460,7 @@ class TestTC_S003_APIContractValidation:
             assert isinstance(result["similarity_score"], (int, float))
             assert 0 <= result["similarity_score"] <= 1
 
-    def test_node_retrieval_api_schema(self, app_client, test_database_with_schema_org):
+    def test_node_retrieval_api_schema(self, app_client, test_database_with_schema_org):  # noqa: E501
         """Verify node retrieval API returns expected schema."""
         db_path, nodes = test_database_with_schema_org
         person_id = nodes["nodes"]["person"]["id"]
@@ -479,7 +479,7 @@ class TestTC_S003_APIContractValidation:
         assert "created_at" in data
         assert "updated_at" in data
 
-    def test_links_api_response_schema(self, app_client, test_database_with_schema_org):
+    def test_links_api_response_schema(self, app_client, test_database_with_schema_org):  # noqa: E501
         """Verify links API returns expected response schema."""
         db_path, nodes = test_database_with_schema_org
         person_id = nodes["nodes"]["person"]["id"]

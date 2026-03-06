@@ -2,7 +2,7 @@
 """
 Unit tests for Migration 017 - Add reference_links and word_senses columns.
 
-Tests the addition of reference_links and word_senses columns to the structure_nodes table,
+Tests the addition of reference_links and word_senses columns to the structure_nodes table,  # noqa: E501
 including schema validation, data preservation, and rollback functionality.
 """
 
@@ -10,17 +10,17 @@ import sys
 import os
 
 sys.path.append(
-    os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+    os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))  # noqa: E501
 )
 
-import pytest
-import tempfile
-import json
-from typing import Dict, List
-from sqlalchemy import create_engine, text
+import pytest  # noqa: E402
+import tempfile  # noqa: E402
+import json  # noqa: E402
+from typing import Dict, List  # noqa: E402
+from sqlalchemy import create_engine, text  # noqa: E402
 
-from database.migrations.migration_manager import MigrationManager
-from database.utils import init_db
+from database.migrations.migration_manager import MigrationManager  # noqa: E402, E501
+from database.utils import init_db  # noqa: E402
 
 
 class MigrationTestHarness:
@@ -54,7 +54,7 @@ class MigrationTestHarness:
             return [m for m in all_migrations if m.version <= 16]
 
         # Monkey patch to exclude migration 017
-        self.migration_manager._discover_migrations = discover_migrations_up_to_16
+        self.migration_manager._discover_migrations = discover_migrations_up_to_16  # noqa: E501
 
         # Apply migrations 1-16
         success = self.migration_manager.migrate_to_latest()
@@ -81,28 +81,28 @@ class MigrationTestHarness:
             # Create a layer
             cursor.execute(
                 """
-                INSERT INTO structure_nodes (id, node_type, title, definition, created_at, version, last_modified)
+                INSERT INTO structure_nodes (id, node_type, title, definition, created_at, version, last_modified)  # noqa: E501
                 VALUES
-                    ('node-1', 'layer', 'Test Layer', 'Test layer definition', '2023-01-01 10:00:00', 1, '2023-01-01 10:00:00')
+                    ('node-1', 'layer', 'Test Layer', 'Test layer definition', '2023-01-01 10:00:00', 1, '2023-01-01 10:00:00')  # noqa: E501
             """
             )
 
             # Create a domain
             cursor.execute(
                 """
-                INSERT INTO structure_nodes (id, node_type, parent_node_id, title, definition, created_at, version, last_modified)
+                INSERT INTO structure_nodes (id, node_type, parent_node_id, title, definition, created_at, version, last_modified)  # noqa: E501
                 VALUES
-                    ('node-2', 'domain', 'node-1', 'Test Domain', 'Test domain definition', '2023-01-02 10:00:00', 1, '2023-01-02 10:00:00')
+                    ('node-2', 'domain', 'node-1', 'Test Domain', 'Test domain definition', '2023-01-02 10:00:00', 1, '2023-01-02 10:00:00')  # noqa: E501
             """
             )
 
             # Create terms
             cursor.execute(
                 """
-                INSERT INTO structure_nodes (id, node_type, parent_node_id, title, definition, created_at, version, last_modified)
+                INSERT INTO structure_nodes (id, node_type, parent_node_id, title, definition, created_at, version, last_modified)  # noqa: E501
                 VALUES
-                    ('node-3', 'term', 'node-2', 'Bank', 'Financial institution', '2023-01-03 10:00:00', 1, '2023-01-03 10:00:00'),
-                    ('node-4', 'term', 'node-2', 'River Bank', 'Edge of a river', '2023-01-04 10:00:00', 1, '2023-01-04 10:00:00')
+                    ('node-3', 'term', 'node-2', 'Bank', 'Financial institution', '2023-01-03 10:00:00', 1, '2023-01-03 10:00:00'),  # noqa: E501
+                    ('node-4', 'term', 'node-2', 'River Bank', 'Edge of a river', '2023-01-04 10:00:00', 1, '2023-01-04 10:00:00')  # noqa: E501
             """
             )
 
@@ -157,8 +157,8 @@ class MigrationTestHarness:
                 conn.execute(
                     text(
                         """
-                    INSERT INTO schema_history (version, description, migration_file, checksum, execution_time_ms)
-                    VALUES (:version, :description, :migration_file, :checksum, :execution_time_ms)
+                    INSERT INTO schema_history (version, description, migration_file, checksum, execution_time_ms)  # noqa: E501
+                    VALUES (:version, :description, :migration_file, :checksum, :execution_time_ms)  # noqa: E501
                 """
                     ),
                     {
@@ -185,12 +185,12 @@ class MigrationTestHarness:
             with conn.begin():
                 migration_017.down(conn)
                 # Remove from schema_history
-                conn.execute(text("DELETE FROM schema_history WHERE version = 17"))
+                conn.execute(text("DELETE FROM schema_history WHERE version = 17"))  # noqa: E501
 
         # Update current version
         self.migration_manager.current_version = 16
 
-    def insert_node_with_new_columns(self, node_id: str, reference_links: List[Dict], word_senses: List[Dict]):
+    def insert_node_with_new_columns(self, node_id: str, reference_links: List[Dict], word_senses: List[Dict]):  # noqa: E501
         """Insert a structure_node with reference_links and word_senses."""
         conn = self.get_connection()
         cursor = conn.cursor()
@@ -199,7 +199,7 @@ class MigrationTestHarness:
             cursor.execute(
                 """
                 INSERT INTO structure_nodes
-                (id, node_type, title, definition, reference_links, word_senses, created_at, version, last_modified)
+                (id, node_type, title, definition, reference_links, word_senses, created_at, version, last_modified)  # noqa: E501
                 VALUES (?, ?, ?, ?, ?, ?, datetime('now'), 1, datetime('now'))
             """,
                 (
@@ -218,7 +218,7 @@ class MigrationTestHarness:
         finally:
             cursor.close()
 
-    def update_node_columns(self, node_id: str, reference_links: List[Dict] = None, word_senses: List[Dict] = None):
+    def update_node_columns(self, node_id: str, reference_links: List[Dict] = None, word_senses: List[Dict] = None):  # noqa: E501
         """Update reference_links and/or word_senses for a structure_node."""
         conn = self.get_connection()
         cursor = conn.cursor()
@@ -238,7 +238,7 @@ class MigrationTestHarness:
             if updates:
                 params.append(node_id)
                 cursor.execute(
-                    f"UPDATE structure_nodes SET {', '.join(updates)} WHERE id = ?",
+                    f"UPDATE structure_nodes SET {', '.join(updates)} WHERE id = ?",  # noqa: E501
                     params
                 )
                 conn.commit()
@@ -255,7 +255,7 @@ class MigrationTestHarness:
 
         try:
             cursor.execute(
-                "SELECT reference_links, word_senses FROM structure_nodes WHERE id = ?",
+                "SELECT reference_links, word_senses FROM structure_nodes WHERE id = ?",  # noqa: E501
                 (node_id,)
             )
             row = cursor.fetchone()
@@ -304,24 +304,24 @@ class TestMigration017SchemaChanges:
     def test_migration_adds_reference_links_column(self, migration_harness):
         """Test that migration adds reference_links column."""
         # Verify column doesn't exist before migration
-        assert not migration_harness.verify_column_exists("structure_nodes", "reference_links")
+        assert not migration_harness.verify_column_exists("structure_nodes", "reference_links")  # noqa: E501
 
         # Run migration
         migration_harness.run_migration_017()
 
         # Verify column exists after migration
-        assert migration_harness.verify_column_exists("structure_nodes", "reference_links")
+        assert migration_harness.verify_column_exists("structure_nodes", "reference_links")  # noqa: E501
 
     def test_migration_adds_word_senses_column(self, migration_harness):
         """Test that migration adds word_senses column."""
         # Verify column doesn't exist before migration
-        assert not migration_harness.verify_column_exists("structure_nodes", "word_senses")
+        assert not migration_harness.verify_column_exists("structure_nodes", "word_senses")  # noqa: E501
 
         # Run migration
         migration_harness.run_migration_017()
 
         # Verify column exists after migration
-        assert migration_harness.verify_column_exists("structure_nodes", "word_senses")
+        assert migration_harness.verify_column_exists("structure_nodes", "word_senses")  # noqa: E501
 
     def test_reference_links_column_type(self, migration_harness):
         """Test that reference_links column has correct type."""
@@ -329,7 +329,7 @@ class TestMigration017SchemaChanges:
         migration_harness.run_migration_017()
 
         # Verify column type is TEXT
-        column_type = migration_harness.get_column_type("structure_nodes", "reference_links")
+        column_type = migration_harness.get_column_type("structure_nodes", "reference_links")  # noqa: E501
         assert column_type == "TEXT"
 
     def test_word_senses_column_type(self, migration_harness):
@@ -338,7 +338,7 @@ class TestMigration017SchemaChanges:
         migration_harness.run_migration_017()
 
         # Verify column type is TEXT
-        column_type = migration_harness.get_column_type("structure_nodes", "word_senses")
+        column_type = migration_harness.get_column_type("structure_nodes", "word_senses")  # noqa: E501
         assert column_type == "TEXT"
 
 
@@ -375,7 +375,7 @@ class TestMigration017DataPreservation:
 
         try:
             cursor.execute(
-                "SELECT id, node_type, title, definition FROM structure_nodes WHERE id = 'node-3'"
+                "SELECT id, node_type, title, definition FROM structure_nodes WHERE id = 'node-3'"  # noqa: E501
             )
             node = cursor.fetchone()
             assert node is not None
@@ -400,7 +400,7 @@ class TestMigration017DataPreservation:
 
         try:
             cursor.execute(
-                "SELECT reference_links, word_senses FROM structure_nodes WHERE id = 'node-3'"
+                "SELECT reference_links, word_senses FROM structure_nodes WHERE id = 'node-3'"  # noqa: E501
             )
             row = cursor.fetchone()
             assert row[0] is None  # reference_links should be NULL
@@ -422,7 +422,7 @@ class TestMigration017NewColumnFunctionality:
             {"source": "schema.org", "external_id": "Person"},
             {"source": "wikidata", "external_id": "Q5"}
         ]
-        migration_harness.insert_node_with_new_columns("test-node-1", reference_links, [])
+        migration_harness.insert_node_with_new_columns("test-node-1", reference_links, [])  # noqa: E501
 
         # Verify data was stored correctly
         result = migration_harness.get_node_columns("test-node-1")
@@ -451,7 +451,7 @@ class TestMigration017NewColumnFunctionality:
                 "domain": "noun.object"
             }
         ]
-        migration_harness.insert_node_with_new_columns("test-node-2", [], word_senses)
+        migration_harness.insert_node_with_new_columns("test-node-2", [], word_senses)  # noqa: E501
 
         # Verify data was stored correctly
         result = migration_harness.get_node_columns("test-node-2")
@@ -467,7 +467,7 @@ class TestMigration017NewColumnFunctionality:
         migration_harness.run_migration_017()
 
         # Update existing node with new column data
-        reference_links = [{"source": "conceptnet", "external_id": "/c/en/bank"}]
+        reference_links = [{"source": "conceptnet", "external_id": "/c/en/bank"}]  # noqa: E501
         word_senses = [
             {
                 "term": "bank",
@@ -477,7 +477,7 @@ class TestMigration017NewColumnFunctionality:
                 "domain": "noun.group"
             }
         ]
-        migration_harness.update_node_columns("node-3", reference_links, word_senses)
+        migration_harness.update_node_columns("node-3", reference_links, word_senses)  # noqa: E501
 
         # Verify updates
         result = migration_harness.get_node_columns("node-3")
@@ -491,7 +491,7 @@ class TestMigration017NewColumnFunctionality:
         migration_harness.run_migration_017()
 
         # Insert node with NULL values
-        migration_harness.insert_node_with_new_columns("test-node-null", None, None)
+        migration_harness.insert_node_with_new_columns("test-node-null", None, None)  # noqa: E501
 
         # Verify NULL values
         result = migration_harness.get_node_columns("test-node-null")
@@ -507,25 +507,25 @@ class TestMigration017Rollback:
         """Test that rollback removes reference_links column."""
         # Run migration
         migration_harness.run_migration_017()
-        assert migration_harness.verify_column_exists("structure_nodes", "reference_links")
+        assert migration_harness.verify_column_exists("structure_nodes", "reference_links")  # noqa: E501
 
         # Rollback migration
         migration_harness.rollback_migration_017()
 
         # Verify column is removed
-        assert not migration_harness.verify_column_exists("structure_nodes", "reference_links")
+        assert not migration_harness.verify_column_exists("structure_nodes", "reference_links")  # noqa: E501
 
     def test_rollback_removes_word_senses_column(self, migration_harness):
         """Test that rollback removes word_senses column."""
         # Run migration
         migration_harness.run_migration_017()
-        assert migration_harness.verify_column_exists("structure_nodes", "word_senses")
+        assert migration_harness.verify_column_exists("structure_nodes", "word_senses")  # noqa: E501
 
         # Rollback migration
         migration_harness.rollback_migration_017()
 
         # Verify column is removed
-        assert not migration_harness.verify_column_exists("structure_nodes", "word_senses")
+        assert not migration_harness.verify_column_exists("structure_nodes", "word_senses")  # noqa: E501
 
     def test_rollback_preserves_existing_data(self, migration_harness):
         """Test that rollback preserves all original data."""
@@ -549,7 +549,7 @@ class TestMigration017Rollback:
 
         try:
             cursor.execute(
-                "SELECT id, node_type, title, definition, parent_node_id FROM structure_nodes WHERE id = 'node-3'"
+                "SELECT id, node_type, title, definition, parent_node_id FROM structure_nodes WHERE id = 'node-3'"  # noqa: E501
             )
             node = cursor.fetchone()
             assert node is not None
@@ -571,7 +571,7 @@ class TestMigration017Rollback:
 
         # Add data to new columns
         reference_links = [{"source": "wikidata", "external_id": "Q5"}]
-        migration_harness.update_node_columns("node-3", reference_links=reference_links)
+        migration_harness.update_node_columns("node-3", reference_links=reference_links)  # noqa: E501
 
         # Rollback migration
         migration_harness.rollback_migration_017()
@@ -590,8 +590,8 @@ class TestMigration017Rollback:
             assert node[1] == "Bank"
 
             # Verify new columns don't exist
-            assert not migration_harness.verify_column_exists("structure_nodes", "reference_links")
-            assert not migration_harness.verify_column_exists("structure_nodes", "word_senses")
+            assert not migration_harness.verify_column_exists("structure_nodes", "reference_links")  # noqa: E501
+            assert not migration_harness.verify_column_exists("structure_nodes", "word_senses")  # noqa: E501
         finally:
             cursor.close()
 
@@ -609,8 +609,8 @@ class TestMigration017EdgeCases:
         migration_harness.run_migration_017()
 
         # Verify migration succeeded
-        assert migration_harness.verify_column_exists("structure_nodes", "reference_links")
-        assert migration_harness.verify_column_exists("structure_nodes", "word_senses")
+        assert migration_harness.verify_column_exists("structure_nodes", "reference_links")  # noqa: E501
+        assert migration_harness.verify_column_exists("structure_nodes", "word_senses")  # noqa: E501
 
         # Verify count is still 0
         count_after = migration_harness.get_structure_nodes_count()
@@ -636,7 +636,7 @@ class TestMigration017EdgeCases:
                 "domain": "noun.Tops"
             }
         ]
-        migration_harness.insert_node_with_new_columns("test-json", reference_links, word_senses)
+        migration_harness.insert_node_with_new_columns("test-json", reference_links, word_senses)  # noqa: E501
 
         # Verify JSON arrays are stored and retrieved correctly
         result = migration_harness.get_node_columns("test-json")

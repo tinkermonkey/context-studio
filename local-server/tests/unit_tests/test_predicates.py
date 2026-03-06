@@ -1,18 +1,18 @@
-"""Unit tests for predicate CRUD operations, identifier generation, and ConceptNet mapping."""
+"""Unit tests for predicate CRUD operations, identifier generation, and ConceptNet mapping."""  # noqa: E501
 
 import sys
 import os
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-import pytest
-import json
-import uuid
-from unittest.mock import Mock, patch
-from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker
-from database.models import Base, Predicate, StructureNode, StructureNodeLink
-from database.predicate_utils import generate_identifier_from_title
+import pytest  # noqa: E402
+import json  # noqa: E402
+import uuid  # noqa: E402
+from unittest.mock import Mock, patch  # noqa: E402
+from sqlalchemy import create_engine  # noqa: E402
+from sqlalchemy.orm import sessionmaker  # noqa: E402
+from database.models import Base, Predicate, StructureNode, StructureNodeLink  # noqa: E402, E501
+from database.predicate_utils import generate_identifier_from_title  # noqa: E402, E501
 
 
 class TestPredicateCRUDOperations:
@@ -49,7 +49,7 @@ class TestPredicateCRUDOperations:
 
         # Verify predicate was created
         saved_predicate = (
-            db_session.query(Predicate).filter_by(identifier="related_to").first()
+            db_session.query(Predicate).filter_by(identifier="related_to").first()  # noqa: E501
         )
         assert saved_predicate is not None
         assert saved_predicate.title == "Related To"
@@ -78,7 +78,7 @@ class TestPredicateCRUDOperations:
         assert saved_predicate.mapping is None
 
     def test_create_predicate_unique_constraints(self, db_session):
-        """Test that unique constraints are enforced on identifier and title."""
+        """Test that unique constraints are enforced on identifier and title."""  # noqa: E501
         # Create first predicate
         predicate1 = Predicate(identifier="test_id", title="Test Title")
         db_session.add(predicate1)
@@ -107,7 +107,7 @@ class TestPredicateCRUDOperations:
         db_session.commit()
 
         # Read by ID
-        found_predicate = db_session.query(Predicate).filter_by(id=predicate.id).first()
+        found_predicate = db_session.query(Predicate).filter_by(id=predicate.id).first()  # noqa: E501
         assert found_predicate is not None
         assert found_predicate.identifier == "test"
         assert found_predicate.title == "Test"
@@ -120,7 +120,7 @@ class TestPredicateCRUDOperations:
 
         # Read by identifier
         found_predicate = (
-            db_session.query(Predicate).filter_by(identifier="test_identifier").first()
+            db_session.query(Predicate).filter_by(identifier="test_identifier").first()  # noqa: E501
         )
         assert found_predicate is not None
         assert found_predicate.title == "Test"
@@ -130,7 +130,6 @@ class TestPredicateCRUDOperations:
         predicate = Predicate(identifier="test", title="Original Title")
         db_session.add(predicate)
         db_session.commit()
-
 
         # Update predicate
         predicate.title = "Updated Title"
@@ -182,7 +181,7 @@ class TestPredicateCRUDOperations:
     def test_list_predicates_sorting(self, db_session):
         """Test listing predicates with sorting."""
         # Create predicates in random order
-        predicates_data = [("zebra", "Zebra"), ("alpha", "Alpha"), ("beta", "Beta")]
+        predicates_data = [("zebra", "Zebra"), ("alpha", "Alpha"), ("beta", "Beta")]  # noqa: E501
 
         for identifier, title in predicates_data:
             predicate = Predicate(identifier=identifier, title=title)
@@ -190,7 +189,7 @@ class TestPredicateCRUDOperations:
         db_session.commit()
 
         # Sort by title
-        sorted_by_title = db_session.query(Predicate).order_by(Predicate.title).all()
+        sorted_by_title = db_session.query(Predicate).order_by(Predicate.title).all()  # noqa: E501
         assert sorted_by_title[0].title == "Alpha"
         assert sorted_by_title[1].title == "Beta"
         assert sorted_by_title[2].title == "Zebra"
@@ -226,8 +225,8 @@ class TestIdentifierGeneration:
             generate_identifier_from_title("Related  To  Something")
             == "related_to_something"
         )
-        assert generate_identifier_from_title("  Leading Spaces") == "leading_spaces"
-        assert generate_identifier_from_title("Trailing Spaces  ") == "trailing_spaces"
+        assert generate_identifier_from_title("  Leading Spaces") == "leading_spaces"  # noqa: E501
+        assert generate_identifier_from_title("Trailing Spaces  ") == "trailing_spaces"  # noqa: E501
 
     def test_generate_identifier_numbers(self):
         """Test identifier generation with numbers."""
@@ -289,7 +288,7 @@ class TestConceptNetMapping:
 
         # Verify mapping is stored correctly
         saved_predicate = (
-            db_session.query(Predicate).filter_by(identifier=unique_identifier).first()
+            db_session.query(Predicate).filter_by(identifier=unique_identifier).first()  # noqa: E501
         )
         stored_mapping = json.loads(saved_predicate.mapping)
         assert stored_mapping["conceptnet"]["relation"] == unique_title
@@ -314,14 +313,14 @@ class TestConceptNetMapping:
         # Test with valid ConceptNet mapping
         mapping = {"conceptnet": {"relation": "RelatedTo"}}
         predicate = Predicate(
-            identifier="related_to", title="RelatedTo", mapping=json.dumps(mapping)
+            identifier="related_to", title="RelatedTo", mapping=json.dumps(mapping)  # noqa: E501
         )
 
         assert get_conceptnet_relation_for_predicate(predicate) == "RelatedTo"
 
         # Test with no mapping
         predicate_no_mapping = Predicate(identifier="test", title="Test")
-        assert get_conceptnet_relation_for_predicate(predicate_no_mapping) is None
+        assert get_conceptnet_relation_for_predicate(predicate_no_mapping) is None  # noqa: E501
 
         # Test with invalid JSON
         predicate_invalid = Predicate(
@@ -359,7 +358,7 @@ class TestConceptNetMapping:
                 identifier = relation.lower()
 
                 # Check if already exists
-                existing = db.query(Predicate).filter_by(identifier=identifier).first()
+                existing = db.query(Predicate).filter_by(identifier=identifier).first()  # noqa: E501
                 if existing:
                     continue
 
@@ -396,12 +395,12 @@ class TestConceptNetMapping:
 
         # Check each imported predicate
         test1_id = f"testrelation1_{unique_suffix}"
-        test1 = db_session.query(Predicate).filter_by(identifier=test1_id).first()
+        test1 = db_session.query(Predicate).filter_by(identifier=test1_id).first()  # noqa: E501
         assert test1 is not None
         assert test1.title == f"TestRelation1_{unique_suffix}"
 
         mapping = json.loads(test1.mapping)
-        assert mapping["conceptnet"]["relation"] == f"TestRelation1_{unique_suffix}"
+        assert mapping["conceptnet"]["relation"] == f"TestRelation1_{unique_suffix}"  # noqa: E501
         assert (
             mapping["conceptnet"]["url"]
             == f"https://conceptnet.io/r/TestRelation1_{unique_suffix}"
@@ -489,7 +488,7 @@ class TestPredicateRelationships:
 
         # Check structure node still exists but reference is null
         remaining_node = (
-            db_session.query(StructureNode).filter_by(id=structure_node.id).first()
+            db_session.query(StructureNode).filter_by(id=structure_node.id).first()  # noqa: E501
         )
         assert remaining_node is not None
         # Note: Actual behavior depends on foreign key constraints setup

@@ -1,18 +1,18 @@
-"""Tests for validating the migration forwards and backwards for Phase 2 normalization."""
+"""Tests for validating the migration forwards and backwards for Phase 2 normalization."""  # noqa: E501
 
 import sys
 import os
 
 sys.path.append(
-    os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+    os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))  # noqa: E501
 )
 
-import pytest
-import tempfile
-import shutil
-from pathlib import Path
-from sqlalchemy import create_engine, text, inspect
-from database.migrations.migration_manager import MigrationManager
+import pytest  # noqa: E402
+import tempfile  # noqa: E402
+import shutil  # noqa: E402
+from pathlib import Path  # noqa: E402
+from sqlalchemy import create_engine, text, inspect  # noqa: E402
+from database.migrations.migration_manager import MigrationManager  # noqa: E402, E501
 
 
 @pytest.fixture
@@ -29,7 +29,7 @@ def temp_db():
 
 
 def test_migration_006_creates_change_events_table(temp_db):
-    """Test that migration 006 creates the change_events table with correct schema."""
+    """Test that migration 006 creates the change_events table with correct schema."""  # noqa: E501
     db_url, temp_db_path = temp_db
 
     # Create migration manager
@@ -100,7 +100,7 @@ def test_migration_006_creates_predicate_triggers(temp_db):
         triggers = conn.execute(
             text(
                 """
-            SELECT name FROM sqlite_master 
+            SELECT name FROM sqlite_master
             WHERE type='trigger' AND name LIKE '%predicate%'
         """
             )
@@ -117,7 +117,7 @@ def test_migration_006_creates_predicate_triggers(temp_db):
 
 
 def test_migration_006_updates_structure_node_triggers(temp_db):
-    """Test that migration 006 updates structure node triggers to use change_events."""
+    """Test that migration 006 updates structure node triggers to use change_events."""  # noqa: E501
     db_url, temp_db_path = temp_db
 
     # Create migration manager
@@ -132,7 +132,7 @@ def test_migration_006_updates_structure_node_triggers(temp_db):
         triggers = conn.execute(
             text(
                 """
-            SELECT name, sql FROM sqlite_master 
+            SELECT name, sql FROM sqlite_master
             WHERE type='trigger' AND name LIKE '%structure_node%'
         """
             )
@@ -155,7 +155,7 @@ def test_migration_006_updates_structure_node_triggers(temp_db):
 
 
 def test_migration_006_migrates_existing_events(temp_db):
-    """Test that migration 006 properly migrates existing events to new schema."""
+    """Test that migration 006 properly migrates existing events to new schema."""  # noqa: E501
     db_url, temp_db_path = temp_db
     engine = create_engine(db_url)
 
@@ -165,13 +165,13 @@ def test_migration_006_migrates_existing_events(temp_db):
     # Run migrations up to 005 (before our changes)
     migration_manager.migrate_to_version("005")
 
-    # Insert some test data in old format (if structure_node_events table exists)
+    # Insert some test data in old format (if structure_node_events table exists)  # noqa: E501
     with engine.connect() as conn:
         # Check if we have any event table from previous migrations
         existing_tables = conn.execute(
             text(
                 """
-            SELECT name FROM sqlite_master WHERE type='table' AND name LIKE '%event%'
+            SELECT name FROM sqlite_master WHERE type='table' AND name LIKE '%event%'  # noqa: E501
         """
             )
         ).fetchall()
@@ -188,12 +188,12 @@ def test_migration_006_migrates_existing_events(temp_db):
                         conn.execute(
                             text(
                                 f"""
-                            INSERT INTO {table_name} 
-                            (event_type, node_type, node_id, old_data, new_data, processed, timestamp)
-                            VALUES 
-                            ('create', 'layer', 'test-layer-1', NULL, '{{"title": "Test Layer"}}', 0, datetime('now')),
-                            ('update', 'domain', 'test-domain-1', '{{"title": "Old"}}', '{{"title": "New"}}', 0, datetime('now')),
-                            ('delete', 'term', 'test-term-1', '{{"title": "Deleted"}}', NULL, 1, datetime('now'))
+                            INSERT INTO {table_name}
+                            (event_type, node_type, node_id, old_data, new_data, processed, timestamp)  # noqa: E501
+                            VALUES
+                            ('create', 'layer', 'test-layer-1', NULL, '{{"title": "Test Layer"}}', 0, datetime('now')),  # noqa: E501
+                            ('update', 'domain', 'test-domain-1', '{{"title": "Old"}}', '{{"title": "New"}}', 0, datetime('now')),  # noqa: E501
+                            ('delete', 'term', 'test-term-1', '{{"title": "Deleted"}}', NULL, 1, datetime('now'))  # noqa: E501
                         """
                             )
                         )
@@ -202,10 +202,10 @@ def test_migration_006_migrates_existing_events(temp_db):
                             text(
                                 f"""
                             INSERT INTO {table_name}
-                            (event_type, entity_type, old_data, new_data, processed, timestamp)
+                            (event_type, entity_type, old_data, new_data, processed, timestamp)  # noqa: E501
                             VALUES
-                            ('create', 'layer', NULL, '{{"title": "Test Layer"}}', 0, datetime('now')),
-                            ('update', 'domain', '{{"title": "Old"}}', '{{"title": "New"}}', 0, datetime('now'))
+                            ('create', 'layer', NULL, '{{"title": "Test Layer"}}', 0, datetime('now')),  # noqa: E501
+                            ('update', 'domain', '{{"title": "Old"}}', '{{"title": "New"}}', 0, datetime('now'))  # noqa: E501
                         """
                             )
                         )
@@ -221,7 +221,7 @@ def test_migration_006_migrates_existing_events(temp_db):
         migrated_events = conn.execute(
             text(
                 """
-            SELECT event_type, record_type, record_id, old_data, new_data, processed
+            SELECT event_type, record_type, record_id, old_data, new_data, processed  # noqa: E501
             FROM change_events
             ORDER BY id
         """
@@ -232,7 +232,7 @@ def test_migration_006_migrates_existing_events(temp_db):
         if len(migrated_events) > 0:
             # Verify schema transformation
             for event in migrated_events:
-                event_type, record_type, record_id, old_data, new_data, processed = (
+                event_type, record_type, record_id, old_data, new_data, processed = (  # noqa: E501
                     event
                 )
 
@@ -268,11 +268,11 @@ def test_migration_006_rollback_preserves_data(temp_db):
         conn.execute(
             text(
                 """
-            INSERT INTO change_events 
-            (event_type, record_type, record_id, old_data, new_data, processed, timestamp)
-            VALUES 
-            ('create', 'structure_node', 'rollback-test-1', NULL, '{"title": "Test Node"}', 0, datetime('now')),
-            ('update', 'predicate', 'rollback-test-2', '{"old": "data"}', '{"new": "data"}', 1, datetime('now'))
+            INSERT INTO change_events
+            (event_type, record_type, record_id, old_data, new_data, processed, timestamp)  # noqa: E501
+            VALUES
+            ('create', 'structure_node', 'rollback-test-1', NULL, '{"title": "Test Node"}', 0, datetime('now')),  # noqa: E501
+            ('update', 'predicate', 'rollback-test-2', '{"old": "data"}', '{"new": "data"}', 1, datetime('now'))  # noqa: E501
         """
             )
         )
@@ -292,26 +292,26 @@ def test_migration_006_rollback_preserves_data(temp_db):
     tables = inspector.get_table_names()
     assert "change_events" not in tables
 
-    # If structure_node_events table was recreated, verify data was migrated back
+    # If structure_node_events table was recreated, verify data was migrated back  # noqa: E501
     if "structure_node_events" in tables:
         with engine.connect() as conn:
             # Should have migrated structure_node events back
             structure_events = conn.execute(
                 text(
                     """
-                SELECT event_type, node_type, node_id, old_data, new_data, processed
+                SELECT event_type, node_type, node_id, old_data, new_data, processed  # noqa: E501
                 FROM structure_node_events
                 WHERE node_id LIKE 'rollback-test%'
             """
                 )
             ).fetchall()
 
-            # Should have at least the structure_node event (predicate events won't migrate back)
+            # Should have at least the structure_node event (predicate events won't migrate back)  # noqa: E501
             assert len(structure_events) >= 1
 
             # Verify data integrity
             for event in structure_events:
-                event_type, node_type, node_id, old_data, new_data, processed = event
+                event_type, node_type, node_id, old_data, new_data, processed = event  # noqa: E501
                 assert event_type in ["create", "update", "delete"]
                 assert node_id.startswith("rollback-test")
 
@@ -338,11 +338,11 @@ def test_migration_006_forward_and_backward_compatibility(temp_db):
             text(
                 """
             INSERT INTO change_events
-            (event_type, record_type, record_id, old_data, new_data, processed, timestamp)
+            (event_type, record_type, record_id, old_data, new_data, processed, timestamp)  # noqa: E501
             VALUES
-            ('create', 'structure_node', 'cycle-test-node', NULL, '{"title": "Cycle Test"}', 0, datetime('now')),
-            ('create', 'predicate', 'cycle-test-pred', NULL, '{"title": "Cycle Predicate"}', 0, datetime('now')),
-            ('create', 'structure_node_link', 'cycle-test-link', NULL, '{"parent": "p1", "child": "c1"}', 0, datetime('now'))
+            ('create', 'structure_node', 'cycle-test-node', NULL, '{"title": "Cycle Test"}', 0, datetime('now')),  # noqa: E501
+            ('create', 'predicate', 'cycle-test-pred', NULL, '{"title": "Cycle Predicate"}', 0, datetime('now')),  # noqa: E501
+            ('create', 'structure_node_link', 'cycle-test-link', NULL, '{"parent": "p1", "child": "c1"}', 0, datetime('now'))  # noqa: E501
         """
             )
         )
@@ -392,7 +392,7 @@ def test_migration_validation_comprehensive(temp_db):
     # Comprehensive validation
     with engine.connect() as conn:
         # 1. Verify table exists with correct columns
-        table_info = conn.execute(text("PRAGMA table_info(change_events)")).fetchall()
+        table_info = conn.execute(text("PRAGMA table_info(change_events)")).fetchall()  # noqa: E501
         columns = {col[1]: col[2] for col in table_info}  # name: type
 
         assert "id" in columns
@@ -408,7 +408,7 @@ def test_migration_validation_comprehensive(temp_db):
         indexes = conn.execute(
             text(
                 """
-            SELECT name FROM sqlite_master 
+            SELECT name FROM sqlite_master
             WHERE type='index' AND tbl_name='change_events'
         """
             )
@@ -466,7 +466,7 @@ def test_migration_performance_validation(temp_db):
         tables = conn.execute(
             text(
                 """
-            SELECT name FROM sqlite_master WHERE type='table' AND name LIKE '%event%'
+            SELECT name FROM sqlite_master WHERE type='table' AND name LIKE '%event%'  # noqa: E501
         """
             )
         ).fetchall()

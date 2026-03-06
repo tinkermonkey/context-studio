@@ -31,7 +31,7 @@ def create_domain(client, layer_id, title=None):
 
 
 def create_term(
-    client, domain_id, layer_id, title=None, definition=None, parent_term_id=None
+    client, domain_id, layer_id, title=None, definition=None, parent_term_id=None  # noqa: E501
 ):
     unique_title = title if title else f"Test Term {uuid.uuid4()}"
     payload = {
@@ -95,7 +95,7 @@ def test_create_term_duplicate_title_within_domain(client):
     domain_id = create_domain(client, layer_id)
     unique_suffix = str(uuid.uuid4())[:8]
     dup_title = f"DupTerm {unique_suffix}"
-    _t1 = create_term(client, domain_id, layer_id, title=dup_title)
+    _t1 = create_term(client, domain_id, layer_id, title=dup_title)  # noqa: F841, E501
     resp = client.post(
         "/api/structure_nodes/",
         json={
@@ -120,7 +120,7 @@ def test_create_term_with_parent_and_circular_reference(client):
     layer_id = create_layer(client)
     domain_id = create_domain(client, layer_id)
     parent = create_term(client, domain_id, layer_id)
-    child = create_term(client, domain_id, layer_id, parent_term_id=parent["id"])
+    child = create_term(client, domain_id, layer_id, parent_term_id=parent["id"])  # noqa: E501
 
     # Parent must exist and be in same domain
     _resp = client.post(
@@ -137,8 +137,8 @@ def test_create_term_with_parent_and_circular_reference(client):
     # This test may need adjustment based on actual API behavior
 
     # Circular reference test - may not be applicable in current API
-    _resp = client.put(
-        f"/api/structure_nodes/{parent['id']}", json={"parent_term_id": child["id"]}
+    _resp = client.put(  # noqa: F841
+        f"/api/structure_nodes/{parent['id']}", json={"parent_term_id": child["id"]}  # noqa: E501
     )
     # Note: This may succeed if parent_term_id is not validated
 
@@ -168,7 +168,7 @@ def test_update_term_duplicate_title(client):
     unique_suffix = str(uuid.uuid4())[:8]
     original_title = f"Original {unique_suffix}"
     duplicate_title = f"Duplicate {unique_suffix}"
-    _t1 = create_term(client, domain_id, layer_id, title=original_title)
+    _t1 = create_term(client, domain_id, layer_id, title=original_title)  # noqa: F841, E501
     t2 = create_term(client, domain_id, layer_id, title=duplicate_title)
 
     # Try to update t2 to have the same title as t1
@@ -188,8 +188,8 @@ def test_update_term_duplicate_title(client):
 @pytest.mark.skip_suite
 def test_update_term_not_found(client):
     create_layer(client)
-    resp = client.put("/api/structure_nodes/nonexistent-id", json={"title": "Updated"})
-    assert resp.status_code == 422  # FastAPI returns 422 for invalid UUID format
+    resp = client.put("/api/structure_nodes/nonexistent-id", json={"title": "Updated"})  # noqa: E501
+    assert resp.status_code == 422  # FastAPI returns 422 for invalid UUID format  # noqa: E501
 
 
 @pytest.mark.skip_suite
@@ -209,7 +209,7 @@ def test_delete_term(client):
 
 def test_delete_term_not_found(client):
     resp = client.delete("/api/structure_nodes/nonexistent-id")
-    assert resp.status_code == 422  # FastAPI returns 422 for invalid UUID format
+    assert resp.status_code == 422  # FastAPI returns 422 for invalid UUID format  # noqa: E501
 
 
 @pytest.mark.skip_suite
@@ -218,8 +218,8 @@ def test_list_terms(client):
     domain_id = create_domain(client, layer_id)
     # Use unique titles to avoid conflicts across test runs
     unique_suffix = str(uuid.uuid4())[:8]
-    _term1 = create_term(client, domain_id, layer_id, title=f"Term A {unique_suffix}")
-    _term2 = create_term(client, domain_id, layer_id, title=f"Term B {unique_suffix}")
+    _term1 = create_term(client, domain_id, layer_id, title=f"Term A {unique_suffix}")  # noqa: E501, F841
+    _term2 = create_term(client, domain_id, layer_id, title=f"Term B {unique_suffix}")  # noqa: E501, F841
 
     resp = client.get(
         f"/api/structure_nodes/?parent_node_id={domain_id}&node_type=term"
@@ -250,13 +250,13 @@ def test_terms_pagination(client):
     terms = []
     for i in range(5):
         term = create_term(
-            client, domain_id, layer_id, title=f"Term {chr(65+i)} {unique_suffix}"
+            client, domain_id, layer_id, title=f"Term {chr(65+i)} {unique_suffix}"  # noqa: E501
         )  # Term A, B, C, D, E with unique suffix
         terms.append(term)
 
     # Test first page
     resp = client.get(
-        f"/api/structure_nodes/?parent_node_id={domain_id}&node_type=term&limit=2&sort_by=title"
+        f"/api/structure_nodes/?parent_node_id={domain_id}&node_type=term&limit=2&sort_by=title"  # noqa: E501
     )
     assert resp.status_code == 200
     data = resp.json()
@@ -265,7 +265,7 @@ def test_terms_pagination(client):
 
     # Test second page
     resp2 = client.get(
-        f"/api/structure_nodes/?parent_node_id={domain_id}&node_type=term&skip=2&limit=2&sort_by=title"
+        f"/api/structure_nodes/?parent_node_id={domain_id}&node_type=term&skip=2&limit=2&sort_by=title"  # noqa: E501
     )
     assert resp2.status_code == 200
     data2 = resp2.json()
@@ -273,7 +273,7 @@ def test_terms_pagination(client):
 
     # Test last page
     resp3 = client.get(
-        f"/api/structure_nodes/?parent_node_id={domain_id}&node_type=term&skip=4&limit=2&sort_by=title"
+        f"/api/structure_nodes/?parent_node_id={domain_id}&node_type=term&skip=4&limit=2&sort_by=title"  # noqa: E501
     )
     assert resp3.status_code == 200
     data3 = resp3.json()

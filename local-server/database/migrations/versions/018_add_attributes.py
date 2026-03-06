@@ -20,7 +20,7 @@ class Migration018(Migration):
 
         # Add attributes column (JSON array stored as TEXT)
         # Stores typed metadata attributes like:
-        # [{"key": "source_language", "title": "Source Language", "value_type": "string", "value": "English"}]
+        # [{"key": "source_language", "title": "Source Language", "value_type": "string", "value": "English"}]  # noqa: E501
         connection.execute(text("""
             ALTER TABLE structure_nodes
             ADD COLUMN attributes TEXT NULL
@@ -33,10 +33,10 @@ class Migration018(Migration):
         """Rollback the migration."""
         logger.info("Removing attributes column from structure_nodes table...")
 
-        # SQLite doesn't support DROP COLUMN directly, so we need to recreate the table
+        # SQLite doesn't support DROP COLUMN directly, so we need to recreate the table  # noqa: E501
         # This is the standard SQLite approach for removing columns
 
-        # Step 1: Create a temporary table with the original schema (without the new column)
+        # Step 1: Create a temporary table with the original schema (without the new column)  # noqa: E501
         connection.execute(text("""
             CREATE TABLE structure_nodes_temp (
                 id TEXT PRIMARY KEY,
@@ -52,7 +52,7 @@ class Migration018(Migration):
                 created_at DATETIME,
                 version INTEGER DEFAULT 1,
                 last_modified DATETIME,
-                FOREIGN KEY (parent_node_id) REFERENCES structure_nodes(id) ON DELETE CASCADE,
+                FOREIGN KEY (parent_node_id) REFERENCES structure_nodes(id) ON DELETE CASCADE,  # noqa: E501
                 FOREIGN KEY (structural_predicate_id) REFERENCES predicates(id)
             )
         """))
@@ -62,12 +62,12 @@ class Migration018(Migration):
             INSERT INTO structure_nodes_temp (
                 id, node_type, parent_node_id, title, definition,
                 structural_predicate_id, title_embedding, definition_embedding,
-                reference_links, word_senses, created_at, version, last_modified
+                reference_links, word_senses, created_at, version, last_modified  # noqa: E501
             )
             SELECT
                 id, node_type, parent_node_id, title, definition,
                 structural_predicate_id, title_embedding, definition_embedding,
-                reference_links, word_senses, created_at, version, last_modified
+                reference_links, word_senses, created_at, version, last_modified  # noqa: E501
             FROM structure_nodes
         """))
 
@@ -75,7 +75,7 @@ class Migration018(Migration):
         connection.execute(text("DROP TABLE structure_nodes"))
 
         # Step 4: Rename the temp table to the original name
-        connection.execute(text("ALTER TABLE structure_nodes_temp RENAME TO structure_nodes"))
+        connection.execute(text("ALTER TABLE structure_nodes_temp RENAME TO structure_nodes"))  # noqa: E501
 
         # Step 5: Recreate indexes that existed on the original table
         # Check for existing indexes in migration 013
@@ -84,4 +84,4 @@ class Migration018(Migration):
             ON structure_nodes(title)
         """))
 
-        logger.info("Successfully removed attributes column from structure_nodes")
+        logger.info("Successfully removed attributes column from structure_nodes")  # noqa: E501

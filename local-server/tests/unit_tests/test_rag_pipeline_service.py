@@ -5,11 +5,11 @@ import sys
 import os
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-import pytest
-from unittest.mock import Mock, patch
+import pytest  # noqa: E402
+from unittest.mock import Mock, patch  # noqa: E402
 
-from rag.rag_pipeline_service import RAGPipelineService
-from rag.processors.models import (
+from rag.rag_pipeline_service import RAGPipelineService  # noqa: E402
+from rag.processors.models import (  # noqa: E402
     KGContextOutput,
     LLMExtractionOutput,
     SpaCyGapOutput,
@@ -40,8 +40,8 @@ def mock_kg_context_output():
     """Create mock KG context output."""
     return KGContextOutput(
         extracted_phrases=[
-            ExtractedPhrase(text="machine learning", sentence_index=0, start_char=0, end_char=16),
-            ExtractedPhrase(text="neural networks", sentence_index=0, start_char=20, end_char=35)
+            ExtractedPhrase(text="machine learning", sentence_index=0, start_char=0, end_char=16),  # noqa: E501
+            ExtractedPhrase(text="neural networks", sentence_index=0, start_char=20, end_char=35)  # noqa: E501
         ],
         kg_nodes=[
             KGNode(
@@ -56,7 +56,7 @@ def mock_kg_context_output():
                 title="Neural Networks",
                 node_type="term",
                 similarity_score=0.90,
-                definition="Computing systems inspired by biological neural networks"
+                definition="Computing systems inspired by biological neural networks"  # noqa: E501
             )
         ],
         total_sentences=1,
@@ -163,7 +163,7 @@ class TestRAGPipelineService:
              patch('rag.rag_pipeline_service.LLMExtractionProcessor') as MockLLMProcessor, \
              patch('rag.rag_pipeline_service.SpaCyGapProcessor') as MockSpaCyProcessor, \
              patch('rag.rag_pipeline_service.ConceptResolutionProcessor') as MockConceptProcessor, \
-             patch('rag.rag_pipeline_service.RAGObservabilityStore') as MockObsStore:
+             patch('rag.rag_pipeline_service.RAGObservabilityStore') as MockObsStore:  # noqa: E501
 
             # Setup mocks
             mock_kg_proc = MockKGProcessor.return_value
@@ -176,7 +176,7 @@ class TestRAGPipelineService:
             mock_spacy_proc.process.return_value = mock_spacy_gap_output
 
             mock_concept_proc = MockConceptProcessor.return_value
-            mock_concept_proc.process.return_value = mock_concept_resolution_output
+            mock_concept_proc.process.return_value = mock_concept_resolution_output  # noqa: E501
 
             mock_obs_store = MockObsStore.return_value
             mock_obs_store.save_metrics.return_value = "metrics123"
@@ -186,7 +186,7 @@ class TestRAGPipelineService:
             service = RAGPipelineService(kg_session, ops_session)
 
             # Execute extraction
-            text = "Machine learning uses deep learning techniques in artificial intelligence."
+            text = "Machine learning uses deep learning techniques in artificial intelligence."  # noqa: E501
             response = await service.extract_entities(text, enable_trace=False)
 
             # Assertions
@@ -206,15 +206,15 @@ class TestRAGPipelineService:
             mock_concept_proc.process.assert_called_once()
 
     @pytest.mark.asyncio
-    async def test_layer_0_timeout_graceful_degradation(self, mock_db_sessions):
-        """Test that Layer 0 timeout allows pipeline to continue with empty KG context."""
+    async def test_layer_0_timeout_graceful_degradation(self, mock_db_sessions):  # noqa: E501
+        """Test that Layer 0 timeout allows pipeline to continue with empty KG context."""  # noqa: E501
         kg_session, ops_session = mock_db_sessions
 
         with patch('rag.rag_pipeline_service.KGContextProcessor') as MockKGProcessor, \
              patch('rag.rag_pipeline_service.LLMExtractionProcessor') as MockLLMProcessor, \
              patch('rag.rag_pipeline_service.SpaCyGapProcessor') as MockSpaCyProcessor, \
              patch('rag.rag_pipeline_service.ConceptResolutionProcessor') as MockConceptProcessor, \
-             patch('rag.rag_pipeline_service.RAGObservabilityStore') as MockObsStore:
+             patch('rag.rag_pipeline_service.RAGObservabilityStore') as MockObsStore:  # noqa: E501
 
             # Setup Layer 0 to timeout
             mock_kg_proc = MockKGProcessor.return_value
@@ -262,7 +262,7 @@ class TestRAGPipelineService:
             service = RAGPipelineService(kg_session, ops_session)
 
             # Execute extraction
-            response = await service.extract_entities("Test text", enable_trace=False)
+            response = await service.extract_entities("Test text", enable_trace=False)  # noqa: E501
 
             # Assertions
             assert response.request_id is not None
@@ -277,14 +277,14 @@ class TestRAGPipelineService:
         mock_db_sessions,
         mock_kg_context_output
     ):
-        """Test that Layer 1 timeout allows pipeline to continue without LLM entities."""
+        """Test that Layer 1 timeout allows pipeline to continue without LLM entities."""  # noqa: E501
         kg_session, ops_session = mock_db_sessions
 
         with patch('rag.rag_pipeline_service.KGContextProcessor') as MockKGProcessor, \
              patch('rag.rag_pipeline_service.LLMExtractionProcessor') as MockLLMProcessor, \
              patch('rag.rag_pipeline_service.SpaCyGapProcessor') as MockSpaCyProcessor, \
              patch('rag.rag_pipeline_service.ConceptResolutionProcessor') as MockConceptProcessor, \
-             patch('rag.rag_pipeline_service.RAGObservabilityStore') as MockObsStore:
+             patch('rag.rag_pipeline_service.RAGObservabilityStore') as MockObsStore:  # noqa: E501
 
             # Setup Layer 0 to succeed
             mock_kg_proc = MockKGProcessor.return_value
@@ -307,7 +307,7 @@ class TestRAGPipelineService:
 
             # Create service with shorter Layer 1 timeout for testing
             # Use 2.5s timeout since the mock processor sleeps for 2s
-            service = RAGPipelineService(kg_session, ops_session, timeout_layer_1=2.5)
+            service = RAGPipelineService(kg_session, ops_session, timeout_layer_1=2.5)  # noqa: E501
 
             # Setup other layers to succeed
             mock_spacy_proc = MockSpaCyProcessor.return_value
@@ -329,7 +329,7 @@ class TestRAGPipelineService:
             mock_obs_store.save_metrics.return_value = "metrics123"
 
             # Execute extraction
-            response = await service.extract_entities("Test text", enable_trace=False)
+            response = await service.extract_entities("Test text", enable_trace=False)  # noqa: E501
 
             # Assertions
             assert response.request_id is not None
@@ -339,7 +339,7 @@ class TestRAGPipelineService:
             mock_spacy_proc.process.assert_called_once()
 
     @pytest.mark.asyncio
-    async def test_entity_deduplication_90_percent_threshold(self, mock_db_sessions):
+    async def test_entity_deduplication_90_percent_threshold(self, mock_db_sessions):  # noqa: E501
         """Test that entities with 90%+ similarity are deduplicated."""
         kg_session, ops_session = mock_db_sessions
 
@@ -347,7 +347,7 @@ class TestRAGPipelineService:
              patch('rag.rag_pipeline_service.LLMExtractionProcessor') as MockLLMProcessor, \
              patch('rag.rag_pipeline_service.SpaCyGapProcessor') as MockSpaCyProcessor, \
              patch('rag.rag_pipeline_service.ConceptResolutionProcessor') as MockConceptProcessor, \
-             patch('rag.rag_pipeline_service.RAGObservabilityStore') as MockObsStore:
+             patch('rag.rag_pipeline_service.RAGObservabilityStore') as MockObsStore:  # noqa: E501
 
             # Setup mocks
             mock_kg_proc = MockKGProcessor.return_value
@@ -424,7 +424,7 @@ class TestRAGPipelineService:
             service = RAGPipelineService(kg_session, ops_session)
 
             # Execute extraction
-            response = await service.extract_entities("Machine learning test", enable_trace=False)
+            response = await service.extract_entities("Machine learning test", enable_trace=False)  # noqa: E501
 
             # Assertions - should only have 1 entity after deduplication
             assert len(response.entities) == 1
@@ -448,7 +448,7 @@ class TestRAGPipelineService:
              patch('rag.rag_pipeline_service.LLMExtractionProcessor') as MockLLMProcessor, \
              patch('rag.rag_pipeline_service.SpaCyGapProcessor') as MockSpaCyProcessor, \
              patch('rag.rag_pipeline_service.ConceptResolutionProcessor') as MockConceptProcessor, \
-             patch('rag.rag_pipeline_service.RAGObservabilityStore') as MockObsStore:
+             patch('rag.rag_pipeline_service.RAGObservabilityStore') as MockObsStore:  # noqa: E501
 
             # Setup mocks
             mock_kg_proc = MockKGProcessor.return_value
@@ -461,7 +461,7 @@ class TestRAGPipelineService:
             mock_spacy_proc.process.return_value = mock_spacy_gap_output
 
             mock_concept_proc = MockConceptProcessor.return_value
-            mock_concept_proc.process.return_value = mock_concept_resolution_output
+            mock_concept_proc.process.return_value = mock_concept_resolution_output  # noqa: E501
 
             mock_obs_store = MockObsStore.return_value
             mock_obs_store.save_metrics.return_value = "metrics123"
@@ -470,7 +470,7 @@ class TestRAGPipelineService:
             service = RAGPipelineService(kg_session, ops_session)
 
             # Execute extraction
-            response = await service.extract_entities("Test text", enable_trace=False)
+            response = await service.extract_entities("Test text", enable_trace=False)  # noqa: E501
 
             # Verify save_metrics was called with correct parameters
             mock_obs_store.save_metrics.assert_called_once()
@@ -496,7 +496,7 @@ class TestRAGPipelineService:
              patch('rag.rag_pipeline_service.LLMExtractionProcessor') as MockLLMProcessor, \
              patch('rag.rag_pipeline_service.SpaCyGapProcessor') as MockSpaCyProcessor, \
              patch('rag.rag_pipeline_service.ConceptResolutionProcessor') as MockConceptProcessor, \
-             patch('rag.rag_pipeline_service.RAGObservabilityStore') as MockObsStore:
+             patch('rag.rag_pipeline_service.RAGObservabilityStore') as MockObsStore:  # noqa: E501
 
             # Setup mocks
             mock_kg_proc = MockKGProcessor.return_value
@@ -509,7 +509,7 @@ class TestRAGPipelineService:
             mock_spacy_proc.process.return_value = mock_spacy_gap_output
 
             mock_concept_proc = MockConceptProcessor.return_value
-            mock_concept_proc.process.return_value = mock_concept_resolution_output
+            mock_concept_proc.process.return_value = mock_concept_resolution_output  # noqa: E501
 
             mock_obs_store = MockObsStore.return_value
             mock_obs_store.save_metrics.return_value = "metrics123"
@@ -519,12 +519,11 @@ class TestRAGPipelineService:
             service = RAGPipelineService(kg_session, ops_session)
 
             # Execute extraction WITH trace enabled
-            response = await service.extract_entities("Test text", enable_trace=True)
+            response = await service.extract_entities("Test text", enable_trace=True)  # noqa: E501
 
             # Verify save_trace was called for each layer
             assert mock_obs_store.save_trace.call_count == 4  # One per layer
             assert response.trace_available is True
-
 
 
 if __name__ == "__main__":

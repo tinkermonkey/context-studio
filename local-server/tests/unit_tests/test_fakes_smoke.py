@@ -10,14 +10,14 @@ import os
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from tests.fakes import (
+from tests.fakes import (  # noqa: E402
     InMemoryOntologyRepository,
     FakeEmbeddingService,
     FakeEventPublisher,
 )
-from domain.ontology.value_objects import NodeType, SearchCriteria
-from domain.ontology.entities import Taxonomy, Class, ConceptScheme
-from domain.ontology.events import ClassCreated
+from domain.ontology.value_objects import NodeType, SearchCriteria  # noqa: E402, E501
+from domain.ontology.entities import Taxonomy, Class, ConceptScheme  # noqa: E402, E501
+from domain.ontology.events import ClassCreated  # noqa: E402
 
 
 def test_in_memory_repository_basic_taxonomy_operations():
@@ -392,11 +392,11 @@ def test_fake_event_publisher_clear():
 
 
 def test_in_memory_repository_satisfies_protocol():
-    """Smoke test verifying InMemoryOntologyRepository satisfies OntologyRepository protocol."""
+    """Smoke test verifying InMemoryOntologyRepository satisfies OntologyRepository protocol."""  # noqa: E501
 
     repo = InMemoryOntologyRepository()
 
-    # Verify structural protocol compliance by checking all protocol methods exist
+    # Verify structural protocol compliance by checking all protocol methods exist  # noqa: E501
     protocol_methods = {
         "get_taxonomy",
         "list_taxonomies",

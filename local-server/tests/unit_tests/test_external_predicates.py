@@ -1,5 +1,5 @@
 """
-Unit tests for external predicates functionality in the reference database module.
+Unit tests for external predicates functionality in the reference database module.  # noqa: E501
 
 This module contains comprehensive tests for ExternalPredicate model and
 ReferenceManager external predicate operations.
@@ -47,7 +47,7 @@ class TestExternalPredicateModel:
 
         assert predicate.id is not None
         assert predicate.title == "subClassOf"
-        assert predicate.definition == "Indicates that one class is a subclass of another"
+        assert predicate.definition == "Indicates that one class is a subclass of another"  # noqa: E501
         assert predicate.source == "schema.org"
         assert predicate.external_id == "subClassOf"
         assert predicate.attributes is None
@@ -64,7 +64,7 @@ class TestExternalPredicateModel:
         """
         predicate = ExternalPredicate(
             id="test-uuid-123",
-            title="A very long predicate title that should be truncated in the repr output",
+            title="A very long predicate title that should be truncated in the repr output",  # noqa: E501
             definition="Test definition",
             source="schema.org",
             external_id="testPredicate",
@@ -86,7 +86,7 @@ class TestExternalPredicateManager:
     """
     Test suite for ReferenceManager external predicate operations.
 
-    These tests require sqlite-vec extension and will be skipped if not available.
+    These tests require sqlite-vec extension and will be skipped if not available.  # noqa: E501
     """
 
     @pytest.fixture(autouse=True)
@@ -95,7 +95,7 @@ class TestExternalPredicateManager:
         try:
             import sqlite_vec  # noqa: F401
         except ImportError:
-            pytest.skip("sqlite-vec not available (expected in Docker environment)")
+            pytest.skip("sqlite-vec not available (expected in Docker environment)")  # noqa: E501
 
     def test_add_external_predicate_with_embeddings(self):
         """
@@ -114,11 +114,11 @@ class TestExternalPredicateManager:
         try:
             with ReferenceManager(config, db_path=db_path) as manager:
                 # Create fake embedding (128 dimensions * 4 bytes = 512 bytes)
-                fake_embedding = b'\x00' * (EMBEDDING_DIMS_SMALL * BYTES_PER_FLOAT32)
+                fake_embedding = b'\x00' * (EMBEDDING_DIMS_SMALL * BYTES_PER_FLOAT32)  # noqa: E501
 
                 predicate = manager.add_external_predicate(
                     title="subClassOf",
-                    definition="Indicates that one class is a subclass of another",
+                    definition="Indicates that one class is a subclass of another",  # noqa: E501
                     source="schema.org",
                     external_id="subClassOf",
                     title_embedding=fake_embedding,
@@ -131,7 +131,7 @@ class TestExternalPredicateManager:
                 assert predicate.title_embedding == fake_embedding
 
                 # Try to add duplicate - should fail with UNIQUE constraint
-                with pytest.raises(Exception):  # SQLAlchemy will raise IntegrityError
+                with pytest.raises(Exception):  # SQLAlchemy will raise IntegrityError  # noqa: E501
                     manager.add_external_predicate(
                         title="subClassOf (duplicate)",
                         definition="Duplicate entry",
@@ -160,7 +160,7 @@ class TestExternalPredicateManager:
             with ReferenceManager(config, db_path=db_path) as manager:
                 predicate = manager.add_external_predicate(
                     title="relatedTo",
-                    definition="Indicates a general relationship between entities",
+                    definition="Indicates a general relationship between entities",  # noqa: E501
                     source="schema.org",
                     external_id="relatedTo"
                 )
@@ -169,7 +169,7 @@ class TestExternalPredicateManager:
                 assert predicate.title == "relatedTo"
                 assert predicate.title_embedding is not None
                 assert predicate.definition_embedding is not None
-                # Verify embeddings have correct size (384 dims * 4 bytes = 1536 bytes)
+                # Verify embeddings have correct size (384 dims * 4 bytes = 1536 bytes)  # noqa: E501
                 # all-MiniLM-L6-v2 produces 384-dimensional embeddings
                 assert len(predicate.title_embedding) == 384 * 4
                 assert len(predicate.definition_embedding) == 384 * 4
@@ -239,14 +239,14 @@ class TestExternalPredicateManager:
                 )
 
                 # Retrieve by source and external_id
-                retrieved = manager.get_external_predicate_by_source("schema.org", "partOf")
+                retrieved = manager.get_external_predicate_by_source("schema.org", "partOf")  # noqa: E501
                 assert retrieved is not None
                 assert retrieved.title == "partOf"
                 assert retrieved.source == "schema.org"
                 assert retrieved.external_id == "partOf"
 
                 # Try non-existent combination
-                not_found = manager.get_external_predicate_by_source("wikidata", "partOf")
+                not_found = manager.get_external_predicate_by_source("wikidata", "partOf")  # noqa: E501
                 assert not_found is None
 
         finally:
@@ -294,7 +294,7 @@ class TestExternalPredicateManager:
                 assert len(all_predicates) == 3
 
                 # Filter by source
-                schema_predicates = manager.list_external_predicates(source="schema.org")
+                schema_predicates = manager.list_external_predicates(source="schema.org")  # noqa: E501
                 assert len(schema_predicates) == 2
                 for p in schema_predicates:
                     assert p.source == "schema.org"
@@ -327,7 +327,7 @@ class TestExternalPredicateManager:
                 # Create predicates with semantically related terms
                 manager.add_external_predicate(
                     title="subClassOf",
-                    definition="Indicates that one class is a subclass of another class",
+                    definition="Indicates that one class is a subclass of another class",  # noqa: E501
                     source="schema.org",
                     external_id="subClassOf"
                 )
@@ -385,25 +385,25 @@ class TestExternalPredicateManager:
         try:
             with ReferenceManager(config, db_path=db_path) as manager:
                 # Test empty query text
-                with pytest.raises(ValueError, match="query_text cannot be empty"):
+                with pytest.raises(ValueError, match="query_text cannot be empty"):  # noqa: E501
                     manager.search_external_predicates_by_similarity("")
 
                 # Test invalid threshold (too high)
-                with pytest.raises(ValueError, match="threshold must be between"):
+                with pytest.raises(ValueError, match="threshold must be between"):  # noqa: E501
                     manager.search_external_predicates_by_similarity(
                         "test",
                         threshold=1.5
                     )
 
                 # Test invalid threshold (too low)
-                with pytest.raises(ValueError, match="threshold must be between"):
+                with pytest.raises(ValueError, match="threshold must be between"):  # noqa: E501
                     manager.search_external_predicates_by_similarity(
                         "test",
                         threshold=-1.5
                     )
 
                 # Test invalid limit (non-positive)
-                with pytest.raises(ValueError, match="limit must be a positive integer"):
+                with pytest.raises(ValueError, match="limit must be a positive integer"):  # noqa: E501
                     manager.search_external_predicates_by_similarity(
                         "test",
                         limit=0
@@ -437,7 +437,7 @@ class TestExternalPredicateManager:
         try:
             with ReferenceManager(config, db_path=db_path) as manager:
                 # Create embedding with wrong dimensions
-                wrong_size_embedding = b'\x00' * 256  # 64 dimensions instead of 128
+                wrong_size_embedding = b'\x00' * 256  # 64 dimensions instead of 128  # noqa: E501
 
                 with pytest.raises(ValueError) as exc_info:
                     manager.add_external_predicate(
@@ -459,7 +459,7 @@ class TestExternalPredicateManager:
 
     def test_external_predicate_indexes_created(self):
         """
-        Test that all required indexes are created for the external_predicates table.
+        Test that all required indexes are created for the external_predicates table.  # noqa: E501
 
         Validates:
         - source index exists
@@ -479,14 +479,14 @@ class TestExternalPredicateManager:
                 # Query SQLite's index information
                 with manager.engine.connect() as conn:
                     result = conn.execute(
-                        text("SELECT name FROM sqlite_master WHERE type='index' AND tbl_name='external_predicates'")
+                        text("SELECT name FROM sqlite_master WHERE type='index' AND tbl_name='external_predicates'")  # noqa: E501
                     )
                     indexes = [row[0] for row in result]
 
-                # Check for expected indexes (SQLAlchemy auto-generates index names)
-                # The indexes should include columns: source, external_id, title,
+                # Check for expected indexes (SQLAlchemy auto-generates index names)  # noqa: E501
+                # The indexes should include columns: source, external_id, title,  # noqa: E501
                 # title_embedding, definition_embedding
-                assert len(indexes) >= 5, f"Expected at least 5 indexes, found {len(indexes)}: {indexes}"
+                assert len(indexes) >= 5, f"Expected at least 5 indexes, found {len(indexes)}: {indexes}"  # noqa: E501
 
         finally:
             if os.path.exists(db_path):
@@ -494,7 +494,7 @@ class TestExternalPredicateManager:
 
     def test_external_predicate_unique_constraint(self):
         """
-        Test that the UNIQUE constraint on (source, external_id) works correctly.
+        Test that the UNIQUE constraint on (source, external_id) works correctly.  # noqa: E501
 
         Validates:
         - First insert succeeds
@@ -517,7 +517,7 @@ class TestExternalPredicateManager:
                 )
 
                 # Duplicate (source, external_id) should fail
-                with pytest.raises(Exception):  # SQLAlchemy raises IntegrityError
+                with pytest.raises(Exception):  # SQLAlchemy raises IntegrityError  # noqa: E501
                     manager.add_external_predicate(
                         title="duplicatePredicate",
                         definition="This should fail",
@@ -537,8 +537,8 @@ class TestExternalPredicateManager:
                 )
 
                 # Verify both exist
-                schema_pred = manager.get_external_predicate_by_source("schema.org", "test1")
-                wikidata_pred = manager.get_external_predicate_by_source("wikidata", "test1")
+                schema_pred = manager.get_external_predicate_by_source("schema.org", "test1")  # noqa: E501
+                wikidata_pred = manager.get_external_predicate_by_source("wikidata", "test1")  # noqa: E501
                 assert schema_pred is not None
                 assert wikidata_pred is not None
                 assert schema_pred.id != wikidata_pred.id
@@ -549,7 +549,7 @@ class TestExternalPredicateManager:
 
     def test_external_predicate_thread_safe_access(self):
         """
-        Test that external predicate operations work correctly with check_same_thread=False.
+        Test that external predicate operations work correctly with check_same_thread=False.  # noqa: E501
 
         Validates:
         - Database can be accessed from different contexts
@@ -571,7 +571,7 @@ class TestExternalPredicateManager:
                 )
 
                 # Query it back - should work without threading errors
-                predicate = manager.get_external_predicate_by_source("schema.org", "threadTest")
+                predicate = manager.get_external_predicate_by_source("schema.org", "threadTest")  # noqa: E501
                 assert predicate is not None
                 assert predicate.title == "testThreadSafe"
 

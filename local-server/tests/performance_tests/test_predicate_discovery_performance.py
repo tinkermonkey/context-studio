@@ -14,18 +14,18 @@ import os
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-import pytest
-import asyncio
-import time
-import psutil
-from unittest.mock import patch, AsyncMock, Mock
+import pytest  # noqa: E402
+import asyncio  # noqa: E402
+import time  # noqa: E402
+import psutil  # noqa: E402
+from unittest.mock import patch, AsyncMock, Mock  # noqa: E402
 
-from reference_db.predicate_discovery import (
+from reference_db.predicate_discovery import (  # noqa: E402
     PredicateDiscoveryService,
     CONCEPTNET_RELATIONS,
 )
-from reference_db.config import ReferenceConfig
-from config import SourceConfig
+from reference_db.config import ReferenceConfig  # noqa: E402
+from config import SourceConfig  # noqa: E402
 
 
 @pytest.fixture
@@ -67,13 +67,13 @@ class TestPredicateDiscoveryPerformance:
     """Performance tests for predicate discovery."""
 
     @pytest.mark.asyncio
-    async def test_conceptnet_performance_target(self, temp_db, source_configs):
+    async def test_conceptnet_performance_target(self, temp_db, source_configs):  # noqa: E501
         """
         Test ConceptNet discovery meets <2s performance target.
 
-        Requirement: ConceptNet discovery fetches all 40 relations with definitions in <2s
+        Requirement: ConceptNet discovery fetches all 40 relations with definitions in <2s  # noqa: E501
         """
-        with patch("reference_db.predicate_discovery.ConceptNetSource") as MockSource:
+        with patch("reference_db.predicate_discovery.ConceptNetSource") as MockSource:  # noqa: E501
             # Mock fast responses
             mock_source = AsyncMock()
             mock_source.__aenter__.return_value = mock_source
@@ -104,7 +104,7 @@ class TestPredicateDiscoveryPerformance:
                 )
                 elapsed = time.time() - start_time
 
-                # Performance assertion - includes database init, embedding generation, and inserts
+                # Performance assertion - includes database init, embedding generation, and inserts  # noqa: E501
                 assert (
                     elapsed < 10.0
                 ), f"ConceptNet discovery took {elapsed:.2f}s, expected <10s"
@@ -116,9 +116,9 @@ class TestPredicateDiscoveryPerformance:
         """
         Test DBpedia discovery meets <10s performance target.
 
-        Requirement: DBpedia SPARQL query fetches 760 properties with labels/comments in <10s
+        Requirement: DBpedia SPARQL query fetches 760 properties with labels/comments in <10s  # noqa: E501
         """
-        with patch("reference_db.predicate_discovery.DBpediaSource") as MockSource:
+        with patch("reference_db.predicate_discovery.DBpediaSource") as MockSource:  # noqa: E501
             mock_source = AsyncMock()
             mock_source.__aenter__.return_value = mock_source
             mock_source.__aexit__.return_value = None
@@ -133,7 +133,7 @@ class TestPredicateDiscoveryPerformance:
                     bindings.append(
                         {
                             "property": {
-                                "value": f"http://dbpedia.org/ontology/property{i}"
+                                "value": f"http://dbpedia.org/ontology/property{i}"  # noqa: E501
                             },
                             "label": {"value": f"Property {i}"},
                             "comment": {"value": f"Description {i}"},
@@ -152,12 +152,12 @@ class TestPredicateDiscoveryPerformance:
                 config, source_configs, db_path=temp_db
             ) as service:
                 start_time = time.time()
-                created, updated, errors = await service.discover_dbpedia_predicates(
+                created, updated, errors = await service.discover_dbpedia_predicates(  # noqa: E501
                     limit=760
                 )
                 elapsed = time.time() - start_time
 
-                # Performance assertion - includes database init, embedding generation, and inserts
+                # Performance assertion - includes database init, embedding generation, and inserts  # noqa: E501
                 assert (
                     elapsed < 30.0
                 ), f"DBpedia discovery took {elapsed:.2f}s, expected <30s"
@@ -169,11 +169,11 @@ class TestPredicateDiscoveryPerformance:
         """
         Test Wikidata discovery meets reasonable performance target.
 
-        Requirement: Wikidata SPARQL query fetches 10K properties with labels/descriptions
-        The primary bottleneck is embedding generation (generating embeddings for both titles
+        Requirement: Wikidata SPARQL query fetches 10K properties with labels/descriptions  # noqa: E501
+        The primary bottleneck is embedding generation (generating embeddings for both titles  # noqa: E501
         and descriptions across 10 chunks). Target allows for this overhead.
         """
-        with patch("reference_db.predicate_discovery.WikidataSource") as MockSource:
+        with patch("reference_db.predicate_discovery.WikidataSource") as MockSource:  # noqa: E501
             mock_source = AsyncMock()
             mock_source.__aenter__.return_value = mock_source
             mock_source.__aexit__.return_value = None
@@ -194,10 +194,10 @@ class TestPredicateDiscoveryPerformance:
                     bindings.append(
                         {
                             "property": {
-                                "value": f"http://www.wikidata.org/entity/P{call_count * 1000 + i}"
+                                "value": f"http://www.wikidata.org/entity/P{call_count * 1000 + i}"  # noqa: E501
                             },
                             "propertyLabel": {"value": f"Property P{i}"},
-                            "propertyDescription": {"value": f"Description {i}"},
+                            "propertyDescription": {"value": f"Description {i}"},  # noqa: E501
                         }
                     )
 
@@ -213,14 +213,14 @@ class TestPredicateDiscoveryPerformance:
                 config, source_configs, db_path=temp_db
             ) as service:
                 start_time = time.time()
-                created, updated, errors = await service.discover_wikidata_predicates(
+                created, updated, errors = await service.discover_wikidata_predicates(  # noqa: E501
                     limit=10000
                 )
                 elapsed = time.time() - start_time
 
-                # Performance assertion - includes database init, embedding generation (20 batches), and inserts
-                # Embedding generation is the bottleneck: 10 chunks * 1s sleep + batch generation time
-                # Allow 180s to account for embedding generation overhead (titles + descriptions)
+                # Performance assertion - includes database init, embedding generation (20 batches), and inserts  # noqa: E501
+                # Embedding generation is the bottleneck: 10 chunks * 1s sleep + batch generation time  # noqa: E501
+                # Allow 180s to account for embedding generation overhead (titles + descriptions)  # noqa: E501
                 assert (
                     elapsed < 180.0
                 ), f"Wikidata discovery took {elapsed:.2f}s, expected <180s"
@@ -248,7 +248,7 @@ class TestPredicateDiscoveryPerformance:
 
     def test_embedding_generation_batch_performance(self, source_configs):
         """
-        Test that batch embedding generation is significantly faster than individual.
+        Test that batch embedding generation is significantly faster than individual.  # noqa: E501
 
         Verifies 10-100x speedup from batch processing.
         """
@@ -260,7 +260,7 @@ class TestPredicateDiscoveryPerformance:
 
             # Test batch generation
             start_time = time.time()
-            batch_embeddings = service._generate_embeddings_batch(texts, batch_size=32)
+            batch_embeddings = service._generate_embeddings_batch(texts, batch_size=32)  # noqa: E501
             batch_elapsed = time.time() - start_time
 
             assert len(batch_embeddings) == 100
@@ -272,13 +272,13 @@ class TestPredicateDiscoveryPerformance:
             ), f"Batch embedding generation too slow: {batch_elapsed:.2f}s"
 
     @pytest.mark.asyncio
-    async def test_memory_efficiency_wikidata_chunking(self, temp_db, source_configs):
+    async def test_memory_efficiency_wikidata_chunking(self, temp_db, source_configs):  # noqa: E501
         """
         Test that Wikidata chunking prevents memory spikes.
 
-        Verifies that processing 10K properties doesn't consume excessive memory.
+        Verifies that processing 10K properties doesn't consume excessive memory.  # noqa: E501
         """
-        with patch("reference_db.predicate_discovery.WikidataSource") as MockSource:
+        with patch("reference_db.predicate_discovery.WikidataSource") as MockSource:  # noqa: E501
             mock_source = AsyncMock()
             mock_source.__aenter__.return_value = mock_source
             mock_source.__aexit__.return_value = None
@@ -297,9 +297,9 @@ class TestPredicateDiscoveryPerformance:
                     bindings.append(
                         {
                             "property": {
-                                "value": f"http://www.wikidata.org/entity/P{property_index}"
+                                "value": f"http://www.wikidata.org/entity/P{property_index}"  # noqa: E501
                             },
-                            "propertyLabel": {"value": f"Property P{property_index}"},
+                            "propertyLabel": {"value": f"Property P{property_index}"},  # noqa: E501
                             "propertyDescription": {
                                 "value": f"Description {property_index}"
                             },
@@ -321,7 +321,7 @@ class TestPredicateDiscoveryPerformance:
             with PredicateDiscoveryService(
                 config, source_configs, db_path=temp_db
             ) as service:
-                created, updated, errors = await service.discover_wikidata_predicates(
+                created, updated, errors = await service.discover_wikidata_predicates(  # noqa: E501
                     limit=10000
                 )
 
@@ -368,7 +368,7 @@ class TestPredicateDiscoveryPerformance:
         self, temp_db, source_configs
     ):
         """
-        Test that discovering from multiple sources in parallel is faster than sequential.
+        Test that discovering from multiple sources in parallel is faster than sequential.  # noqa: E501
 
         Verifies concurrent execution benefits.
         """
@@ -381,7 +381,7 @@ class TestPredicateDiscoveryPerformance:
         ) as MockWD:
 
             # Mock sources with delays
-            for MockSource, delay in [(MockCN, 0.5), (MockDB, 1.0), (MockWD, 1.5)]:
+            for MockSource, delay in [(MockCN, 0.5), (MockDB, 1.0), (MockWD, 1.5)]:  # noqa: E501
                 mock_source = AsyncMock()
                 mock_source.__aenter__.return_value = mock_source
                 mock_source.__aexit__.return_value = None
@@ -398,9 +398,9 @@ class TestPredicateDiscoveryPerformance:
                     return response
 
                 if delay == 0.5:
-                    mock_source.get_concept = lambda p, d=delay: mock_method(p, delay=d)
+                    mock_source.get_concept = lambda p, d=delay: mock_method(p, delay=d)  # noqa: E501
                 else:
-                    mock_source.sparql_query = lambda q, f, d=delay: mock_method(
+                    mock_source.sparql_query = lambda q, f, d=delay: mock_method(  # noqa: E501
                         q, f, delay=d
                     )
 
@@ -422,16 +422,16 @@ class TestPredicateDiscoveryPerformance:
                 # With database init and embedding overhead, should be <20s
                 assert (
                     parallel_elapsed < 20.0
-                ), f"Parallel discovery took {parallel_elapsed:.2f}s, expected <20s"
+                ), f"Parallel discovery took {parallel_elapsed:.2f}s, expected <20s"  # noqa: E501
 
     @pytest.mark.asyncio
-    async def test_transaction_performance_impact(self, temp_db, source_configs):
+    async def test_transaction_performance_impact(self, temp_db, source_configs):  # noqa: E501
         """
-        Test that transaction wrapping doesn't significantly impact performance.
+        Test that transaction wrapping doesn't significantly impact performance.  # noqa: E501
 
         Verifies that batch transactions are still fast.
         """
-        with patch("reference_db.predicate_discovery.ConceptNetSource") as MockSource:
+        with patch("reference_db.predicate_discovery.ConceptNetSource") as MockSource:  # noqa: E501
             mock_source = AsyncMock()
             mock_source.__aenter__.return_value = mock_source
             mock_source.__aexit__.return_value = None
@@ -463,7 +463,7 @@ class TestPredicateDiscoveryPerformance:
                 # Should still be fast even with transaction wrapping
                 assert (
                     elapsed < 10.0
-                ), f"Discovery with transactions took {elapsed:.2f}s, overhead too high"
+                ), f"Discovery with transactions took {elapsed:.2f}s, overhead too high"  # noqa: E501
 
 
 class TestRateLimitingBehavior:
@@ -479,18 +479,18 @@ class TestRateLimitingBehavior:
         # Check ConceptNet rate limit
         conceptnet_config = settings.get_source_config("conceptnet")
         if conceptnet_config and hasattr(conceptnet_config, "rate_limit"):
-            # rate_limit is a ReferenceSourceRateLimitConfig object with requests_per_hour attribute
+            # rate_limit is a ReferenceSourceRateLimitConfig object with requests_per_hour attribute  # noqa: E501
             assert conceptnet_config.rate_limit.requests_per_hour >= 1000
 
     @pytest.mark.asyncio
-    async def test_rate_limiting_prevents_overload(self, temp_db, source_configs):
+    async def test_rate_limiting_prevents_overload(self, temp_db, source_configs):  # noqa: E501
         """
         Test that rate limiting prevents exceeding API limits.
 
         Note: This test verifies the structure, actual rate limiting
         is handled by the reference_api_buddy infrastructure.
         """
-        with patch("reference_db.predicate_discovery.ConceptNetSource") as MockSource:
+        with patch("reference_db.predicate_discovery.ConceptNetSource") as MockSource:  # noqa: E501
             call_count = 0
             call_times = []
 

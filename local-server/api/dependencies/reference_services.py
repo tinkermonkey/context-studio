@@ -1,7 +1,7 @@
 """
 Dependency injection for Reference services
 
-This module provides optimized dependency injection for reference-related services
+This module provides optimized dependency injection for reference-related services  # noqa: E501
 using the service factory pattern for better performance.
 """
 

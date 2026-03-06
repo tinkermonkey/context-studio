@@ -7,17 +7,17 @@ import sys
 import os
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-import pytest
-import tempfile
-from fastapi.testclient import TestClient
-from sqlalchemy import create_engine, text
-from sqlalchemy.orm import sessionmaker
-from uuid import uuid4
+import pytest  # noqa: E402
+import tempfile  # noqa: E402
+from fastapi.testclient import TestClient  # noqa: E402
+from sqlalchemy import create_engine, text  # noqa: E402
+from sqlalchemy.orm import sessionmaker  # noqa: E402
+from uuid import uuid4  # noqa: E402
 
-from app import create_app
-from database.models import Base, StructureNode
-from database.custom_types import NodeType
-import numpy as np
+from app import create_app  # noqa: E402
+from database.models import Base, StructureNode  # noqa: E402
+from database.custom_types import NodeType  # noqa: E402
+import numpy as np  # noqa: E402
 
 
 @pytest.fixture
@@ -39,9 +39,9 @@ def test_kg_db():
 
         # Add test terms with embeddings
         terms_data = [
-            ("Machine Learning", "A field of artificial intelligence focused on algorithms that learn from data"),
-            ("Neural Networks", "Computing systems inspired by biological neural networks"),
-            ("Artificial Intelligence", "The simulation of human intelligence by machines"),
+            ("Machine Learning", "A field of artificial intelligence focused on algorithms that learn from data"),  # noqa: E501
+            ("Neural Networks", "Computing systems inspired by biological neural networks"),  # noqa: E501
+            ("Artificial Intelligence", "The simulation of human intelligence by machines"),  # noqa: E501
         ]
 
         for title, definition in terms_data:
@@ -153,7 +153,7 @@ class TestRAGPipelineAPIEndpoints:
         response = test_client.post(
             "/api/rag/extract",
             json={
-                "text": "Machine learning and neural networks are key technologies.",
+                "text": "Machine learning and neural networks are key technologies.",  # noqa: E501
                 "enable_trace": False
             }
         )
@@ -264,7 +264,7 @@ class TestRAGPipelineAPIEndpoints:
         assert "total_time_ms" in metrics_data
 
     def test_get_metrics_not_found(self, test_client):
-        """Test GET /api/rag/metrics/{request_id} with non-existent request_id."""
+        """Test GET /api/rag/metrics/{request_id} with non-existent request_id."""  # noqa: E501
         fake_request_id = str(uuid4())
         response = test_client.get(f"/api/rag/metrics/{fake_request_id}")
 
@@ -278,7 +278,7 @@ class TestRAGPipelineAPIEndpoints:
         extract_response = test_client.post(
             "/api/rag/extract",
             json={
-                "text": "Machine learning algorithms process data efficiently.",
+                "text": "Machine learning algorithms process data efficiently.",  # noqa: E501
                 "enable_trace": True
             }
         )
@@ -316,7 +316,7 @@ class TestRAGPipelineAPIEndpoints:
         assert trace_response.status_code == 404
 
     def test_get_trace_by_layer_success(self, test_client):
-        """Test GET /api/rag/trace/{request_id}/layer/{layer_name} with valid layer."""
+        """Test GET /api/rag/trace/{request_id}/layer/{layer_name} with valid layer."""  # noqa: E501
         # Create extraction with trace enabled
         extract_response = test_client.post(
             "/api/rag/extract",
@@ -328,10 +328,10 @@ class TestRAGPipelineAPIEndpoints:
         assert extract_response.status_code == 200
         request_id = extract_response.json()["request_id"]
 
-        # Get trace for specific layer - using concept_resolution which reliably completes
-        # (kg_context may timeout in test environment due to embedding model loading)
+        # Get trace for specific layer - using concept_resolution which reliably completes  # noqa: E501
+        # (kg_context may timeout in test environment due to embedding model loading)  # noqa: E501
         layer_name = "concept_resolution"
-        trace_response = test_client.get(f"/api/rag/trace/{request_id}/layer/{layer_name}")
+        trace_response = test_client.get(f"/api/rag/trace/{request_id}/layer/{layer_name}")  # noqa: E501
 
         assert trace_response.status_code == 200
         trace_data = trace_response.json()
@@ -342,7 +342,7 @@ class TestRAGPipelineAPIEndpoints:
         assert "traces" in trace_data
 
     def test_get_trace_by_layer_invalid_layer(self, test_client):
-        """Test GET /api/rag/trace/{request_id}/layer/{layer_name} with invalid layer."""
+        """Test GET /api/rag/trace/{request_id}/layer/{layer_name} with invalid layer."""  # noqa: E501
         # Create extraction with trace enabled
         extract_response = test_client.post(
             "/api/rag/extract",
@@ -356,7 +356,7 @@ class TestRAGPipelineAPIEndpoints:
 
         # Try to get trace for invalid layer
         invalid_layer = "invalid_layer_name"
-        trace_response = test_client.get(f"/api/rag/trace/{request_id}/layer/{invalid_layer}")
+        trace_response = test_client.get(f"/api/rag/trace/{request_id}/layer/{invalid_layer}")  # noqa: E501
 
         assert trace_response.status_code == 400
         assert "invalid layer name" in trace_response.json()["detail"].lower()
@@ -392,7 +392,7 @@ class TestRAGPipelineAPIEndpoints:
         assert trace_response_after.status_code == 404
 
     def test_delete_trace_not_found(self, test_client):
-        """Test DELETE /api/rag/trace/{request_id} with non-existent request_id."""
+        """Test DELETE /api/rag/trace/{request_id} with non-existent request_id."""  # noqa: E501
         fake_request_id = str(uuid4())
         response = test_client.delete(f"/api/rag/trace/{fake_request_id}")
 
@@ -425,7 +425,7 @@ class TestRAGPipelineAPIEndpoints:
         assert current_config["timeout_layer_2"] == 1.5
 
     def test_update_config_dedup_threshold(self, test_client):
-        """Test POST /api/rag/config/update to modify deduplication threshold."""
+        """Test POST /api/rag/config/update to modify deduplication threshold."""  # noqa: E501
         response = test_client.post(
             "/api/rag/config/update",
             json={
@@ -467,7 +467,7 @@ class TestRAGPipelineAPIEndpoints:
         assert "positive number" in response.json()["detail"].lower()
 
     def test_update_config_invalid_dedup_threshold(self, test_client):
-        """Test POST /api/rag/config/update with out-of-range dedup threshold."""
+        """Test POST /api/rag/config/update with out-of-range dedup threshold."""  # noqa: E501
         response = test_client.post(
             "/api/rag/config/update",
             json={
@@ -488,7 +488,7 @@ class TestRAGPipelineAPIEndpoints:
         )
 
         assert response.status_code == 400
-        assert "invalid configuration keys" in response.json()["detail"].lower()
+        assert "invalid configuration keys" in response.json()["detail"].lower()  # noqa: E501
 
     def test_update_config_multiple_settings(self, test_client):
         """Test POST /api/rag/config/update with multiple settings at once."""

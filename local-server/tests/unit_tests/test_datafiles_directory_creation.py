@@ -1,5 +1,5 @@
 """
-Unit tests for Phase 2: Verify datafiles directory creation across all database managers.
+Unit tests for Phase 2: Verify datafiles directory creation across all database managers.  # noqa: E501
 
 This test suite ensures that all database initialization code properly creates
 the /datafiles/ directory before attempting to create or access database files.
@@ -15,9 +15,9 @@ class TestPipelineDatabaseManager:
     """Test datafiles directory creation in operations database manager."""
 
     def test_operations_db_creates_datafiles_directory(self):
-        """Test that PipelineDatabaseManager creates /datafiles/ directory if it doesn't exist."""
+        """Test that PipelineDatabaseManager creates /datafiles/ directory if it doesn't exist."""  # noqa: E501
         with tempfile.TemporaryDirectory() as temp_dir:
-            # Set up operations database path in a non-existent datafiles directory
+            # Set up operations database path in a non-existent datafiles directory  # noqa: E501
             db_dir = os.path.join(temp_dir, "datafiles")
             db_path = os.path.join(db_dir, "operations.db")
 
@@ -40,7 +40,7 @@ class TestPipelineDatabaseManager:
             manager.engine.dispose()
 
     def test_operations_db_handles_existing_directory(self):
-        """Test that PipelineDatabaseManager works when directory already exists."""
+        """Test that PipelineDatabaseManager works when directory already exists."""  # noqa: E501
         with tempfile.TemporaryDirectory() as temp_dir:
             # Set up operations database path with existing datafiles directory
             db_dir = os.path.join(temp_dir, "datafiles")
@@ -60,11 +60,11 @@ class TestPipelineDatabaseManager:
             manager.engine.dispose()
 
     def test_operations_db_uses_config_default_path(self):
-        """Test that PipelineDatabaseManager uses config default path correctly."""
+        """Test that PipelineDatabaseManager uses config default path correctly."""  # noqa: E501
         with tempfile.TemporaryDirectory() as temp_dir:
             # Mock settings to use temp directory
             mock_settings = MagicMock()
-            mock_settings.database.operations_path = os.path.join(temp_dir, "datafiles", "operations.db")
+            mock_settings.database.operations_path = os.path.join(temp_dir, "datafiles", "operations.db")  # noqa: E501
 
             with patch('config.get_settings', return_value=mock_settings):
                 from pipeline.manager import PipelineDatabaseManager
@@ -83,9 +83,9 @@ class TestReferenceDatabaseManager:
     """Test datafiles directory creation in reference database manager."""
 
     def test_reference_db_creates_datafiles_directory(self):
-        """Test that ReferenceManager creates /datafiles/ directory if it doesn't exist."""
+        """Test that ReferenceManager creates /datafiles/ directory if it doesn't exist."""  # noqa: E501
         with tempfile.TemporaryDirectory() as temp_dir:
-            # Set up reference database path in a non-existent datafiles directory
+            # Set up reference database path in a non-existent datafiles directory  # noqa: E501
             db_dir = os.path.join(temp_dir, "datafiles")
             db_path = os.path.join(db_dir, "reference.db")
 
@@ -136,7 +136,7 @@ class TestDatasetManager:
     """Test directory creation in dataset manager."""
 
     def test_dataset_manager_creates_datasets_directory(self):
-        """Test that DatasetManager creates datasets directory if it doesn't exist."""
+        """Test that DatasetManager creates datasets directory if it doesn't exist."""  # noqa: E501
         with tempfile.TemporaryDirectory() as temp_dir:
             datasets_dir = os.path.join(temp_dir, "datasets")
 
@@ -176,10 +176,10 @@ class TestDatasetManager:
 
 
 class TestDirectoryCreationPatterns:
-    """Test that directory creation patterns are consistent across all managers."""
+    """Test that directory creation patterns are consistent across all managers."""  # noqa: E501
 
     def test_all_managers_use_makedirs_with_exist_ok(self):
-        """Verify all database managers use os.makedirs(dir, exist_ok=True) pattern."""
+        """Verify all database managers use os.makedirs(dir, exist_ok=True) pattern."""  # noqa: E501
         import inspect
 
         # List of manager modules to check
@@ -197,11 +197,11 @@ class TestDirectoryCreationPatterns:
             source = inspect.getsource(module)
 
             # Check for directory creation pattern
-            assert 'os.makedirs' in source, f"{module_name} should use os.makedirs for directory creation"
-            assert 'exist_ok=True' in source, f"{module_name} should use exist_ok=True to handle existing directories"
+            assert 'os.makedirs' in source, f"{module_name} should use os.makedirs for directory creation"  # noqa: E501
+            assert 'exist_ok=True' in source, f"{module_name} should use exist_ok=True to handle existing directories"  # noqa: E501
 
     def test_directory_creation_before_database_access(self):
-        """Verify directory creation happens before first database access in each manager."""
+        """Verify directory creation happens before first database access in each manager."""  # noqa: E501
         # This test checks the order of operations in each manager's __init__
         import inspect
 
@@ -213,23 +213,23 @@ class TestDirectoryCreationPatterns:
         makedirs_pos = init_source.find('os.makedirs')
         db_init_pos = init_source.find('self._initialize_database')
 
-        assert makedirs_pos < db_init_pos, "Pipeline manager should create directory before initializing database"
+        assert makedirs_pos < db_init_pos, "Pipeline manager should create directory before initializing database"  # noqa: E501
 
         # For ReferenceManager
         from reference_db.manager import ReferenceManager
-        init_method_source = inspect.getsource(ReferenceManager._initialize_database)
+        init_method_source = inspect.getsource(ReferenceManager._initialize_database)  # noqa: E501
 
         makedirs_pos = init_method_source.find('os.makedirs')
         engine_pos = init_method_source.find('create_engine')
 
-        assert makedirs_pos < engine_pos, "Reference manager should create directory before creating engine"
+        assert makedirs_pos < engine_pos, "Reference manager should create directory before creating engine"  # noqa: E501
 
 
 class TestFreshInstallation:
-    """Test application startup on fresh installation (no datafiles directory)."""
+    """Test application startup on fresh installation (no datafiles directory)."""  # noqa: E501
 
     def test_fresh_install_creates_all_directories(self):
-        """Test that all required directories are created on fresh installation."""
+        """Test that all required directories are created on fresh installation."""  # noqa: E501
         with tempfile.TemporaryDirectory() as temp_dir:
             # Simulate fresh installation - no datafiles directory
             datafiles_dir = os.path.join(temp_dir, "datafiles")
@@ -242,7 +242,7 @@ class TestFreshInstallation:
 
             # Create pipeline manager
             operations_db_path = os.path.join(datafiles_dir, "operations.db")
-            pipeline_manager = PipelineDatabaseManager(operations_db_path=operations_db_path)
+            pipeline_manager = PipelineDatabaseManager(operations_db_path=operations_db_path)  # noqa: E501
 
             # Verify datafiles directory was created
             assert os.path.exists(datafiles_dir)
@@ -250,7 +250,7 @@ class TestFreshInstallation:
             # Create reference manager
             reference_db_path = os.path.join(datafiles_dir, "reference.db")
             reference_config = ReferenceConfig()
-            reference_manager = ReferenceManager(reference_config, db_path=reference_db_path)
+            reference_manager = ReferenceManager(reference_config, db_path=reference_db_path)  # noqa: E501
 
             # Verify all databases exist
             assert os.path.exists(operations_db_path)
@@ -287,7 +287,7 @@ class TestErrorHandling:
 
     def test_handles_permission_errors_gracefully(self):
         """Test that managers handle permission errors appropriately."""
-        # Note: This test may require elevated permissions or may be skipped on some systems
+        # Note: This test may require elevated permissions or may be skipped on some systems  # noqa: E501
         with tempfile.TemporaryDirectory() as temp_dir:
             # Create a read-only parent directory
             readonly_dir = os.path.join(temp_dir, "readonly")

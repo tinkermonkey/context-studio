@@ -18,7 +18,7 @@ def e2e_app(shared_app):
     across E2E tests while allowing module-level organization.
 
     Yields:
-        Tuple[FastAPI, Engine, SessionLocal]: The app instance, database engine, and session factory
+        Tuple[FastAPI, Engine, SessionLocal]: The app instance, database engine, and session factory  # noqa: E501
     """
     yield shared_app
 

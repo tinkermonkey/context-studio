@@ -1,23 +1,23 @@
 """
 Unit tests for ReferenceLinkService.
 
-Tests JSON operations, validation, and error handling for reference link management.
+Tests JSON operations, validation, and error handling for reference link management.  # noqa: E501
 """
 
 import sys
 import os
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-import pytest
-import json
-from unittest.mock import Mock, patch
-from sqlalchemy.orm import Session
+import pytest  # noqa: E402
+import json  # noqa: E402
+from unittest.mock import Mock, patch  # noqa: E402
+from sqlalchemy.orm import Session  # noqa: E402
 
-from services.reference_link_service import ReferenceLinkService
-from api.models.structure_nodes import ReferenceLink
-from database.models import StructureNode
-from database.enums import NodeType
-from services.exceptions import NotFoundError, ReferenceNotFoundError, ValidationError
+from services.reference_link_service import ReferenceLinkService  # noqa: E402
+from api.models.structure_nodes import ReferenceLink  # noqa: E402
+from database.models import StructureNode  # noqa: E402
+from database.enums import NodeType  # noqa: E402
+from services.exceptions import NotFoundError, ReferenceNotFoundError, ValidationError  # noqa: E402, E501
 
 
 class TestReferenceLinkService:
@@ -52,15 +52,15 @@ class TestReferenceLinkService:
             ReferenceLink(source="wikidata", external_id="Q5"),
         ]
 
-    def test_add_reference_links_success(self, service, mock_db, sample_node, sample_links):
+    def test_add_reference_links_success(self, service, mock_db, sample_node, sample_links):  # noqa: E501
         """Test successfully adding reference links to a node."""
         # Setup
-        mock_db.query.return_value.filter.return_value.first.return_value = sample_node
+        mock_db.query.return_value.filter.return_value.first.return_value = sample_node  # noqa: E501
 
         # Mock reference validation
-        with patch('services.reference_link_service.get_reference_manager') as mock_ref_mgr:
+        with patch('services.reference_link_service.get_reference_manager') as mock_ref_mgr:  # noqa: E501
             mock_manager = Mock()
-            mock_manager.get_reference_node_by_source.return_value = Mock()  # Reference exists
+            mock_manager.get_reference_node_by_source.return_value = Mock()  # Reference exists  # noqa: E501
             mock_ref_mgr.return_value = mock_manager
 
             # Execute
@@ -73,45 +73,45 @@ class TestReferenceLinkService:
             assert sample_node.version == 2
             mock_db.commit.assert_called_once()
 
-    def test_add_reference_links_node_not_found(self, service, mock_db, sample_links):
+    def test_add_reference_links_node_not_found(self, service, mock_db, sample_links):  # noqa: E501
         """Test adding reference links when node doesn't exist."""
         # Setup
-        mock_db.query.return_value.filter.return_value.first.return_value = None
+        mock_db.query.return_value.filter.return_value.first.return_value = None  # noqa: E501
 
         # Execute & Assert
         with pytest.raises(NotFoundError, match="StructureNode not found"):
             service.add_reference_links("nonexistent-node", sample_links)
 
-    def test_add_reference_links_invalid_reference(self, service, mock_db, sample_node, sample_links):
+    def test_add_reference_links_invalid_reference(self, service, mock_db, sample_node, sample_links):  # noqa: E501
         """Test adding reference links with invalid reference."""
         # Setup
-        mock_db.query.return_value.filter.return_value.first.return_value = sample_node
+        mock_db.query.return_value.filter.return_value.first.return_value = sample_node  # noqa: E501
 
         # Mock reference validation to return None (reference doesn't exist)
-        with patch('services.reference_link_service.get_reference_manager') as mock_ref_mgr:
+        with patch('services.reference_link_service.get_reference_manager') as mock_ref_mgr:  # noqa: E501
             mock_manager = Mock()
             mock_manager.get_reference_node_by_source.return_value = None
             mock_ref_mgr.return_value = mock_manager
 
             # Execute & Assert
-            with pytest.raises(ReferenceNotFoundError, match="Reference not found: schema.org:Person"):
+            with pytest.raises(ReferenceNotFoundError, match="Reference not found: schema.org:Person"):  # noqa: E501
                 service.add_reference_links("test-node-123", sample_links)
 
-    def test_add_reference_links_prevents_duplicates(self, service, mock_db, sample_node):
+    def test_add_reference_links_prevents_duplicates(self, service, mock_db, sample_node):  # noqa: E501
         """Test that duplicate links are not added."""
         # Setup - node already has one link
-        existing_link = ReferenceLink(source="schema.org", external_id="Person")
+        existing_link = ReferenceLink(source="schema.org", external_id="Person")  # noqa: E501
         sample_node.reference_links = json.dumps([existing_link.model_dump()])
 
-        mock_db.query.return_value.filter.return_value.first.return_value = sample_node
+        mock_db.query.return_value.filter.return_value.first.return_value = sample_node  # noqa: E501
 
         # Try to add same link again plus a new one
         new_links = [
-            ReferenceLink(source="schema.org", external_id="Person"),  # Duplicate
+            ReferenceLink(source="schema.org", external_id="Person"),  # Duplicate  # noqa: E501
             ReferenceLink(source="wikidata", external_id="Q5"),  # New
         ]
 
-        with patch('services.reference_link_service.get_reference_manager') as mock_ref_mgr:
+        with patch('services.reference_link_service.get_reference_manager') as mock_ref_mgr:  # noqa: E501
             mock_manager = Mock()
             mock_manager.get_reference_node_by_source.return_value = Mock()
             mock_ref_mgr.return_value = mock_manager
@@ -122,22 +122,22 @@ class TestReferenceLinkService:
             # Assert - should have 2 links (1 existing + 1 new), not 3
             assert len(result) == 2
 
-    def test_remove_reference_links_success(self, service, mock_db, sample_node):
+    def test_remove_reference_links_success(self, service, mock_db, sample_node):  # noqa: E501
         """Test successfully removing reference links."""
         # Setup - node has two links
         links = [
             ReferenceLink(source="schema.org", external_id="Person"),
             ReferenceLink(source="wikidata", external_id="Q5"),
         ]
-        sample_node.reference_links = json.dumps([link.model_dump() for link in links])
+        sample_node.reference_links = json.dumps([link.model_dump() for link in links])  # noqa: E501
 
-        mock_db.query.return_value.filter.return_value.first.return_value = sample_node
+        mock_db.query.return_value.filter.return_value.first.return_value = sample_node  # noqa: E501
 
         # Remove one link
-        links_to_remove = [ReferenceLink(source="schema.org", external_id="Person")]
+        links_to_remove = [ReferenceLink(source="schema.org", external_id="Person")]  # noqa: E501
 
         # Execute
-        result = service.remove_reference_links("test-node-123", links_to_remove)
+        result = service.remove_reference_links("test-node-123", links_to_remove)  # noqa: E501
 
         # Assert
         assert len(result) == 1
@@ -148,27 +148,27 @@ class TestReferenceLinkService:
     def test_remove_reference_links_node_not_found(self, service, mock_db):
         """Test removing links when node doesn't exist."""
         # Setup
-        mock_db.query.return_value.filter.return_value.first.return_value = None
+        mock_db.query.return_value.filter.return_value.first.return_value = None  # noqa: E501
 
-        links_to_remove = [ReferenceLink(source="schema.org", external_id="Person")]
+        links_to_remove = [ReferenceLink(source="schema.org", external_id="Person")]  # noqa: E501
 
         # Execute & Assert
         with pytest.raises(NotFoundError, match="StructureNode not found"):
             service.remove_reference_links("nonexistent-node", links_to_remove)
 
-    def test_remove_reference_links_empty_result(self, service, mock_db, sample_node):
+    def test_remove_reference_links_empty_result(self, service, mock_db, sample_node):  # noqa: E501
         """Test removing all links leaves empty array."""
         # Setup - node has one link
         link = ReferenceLink(source="schema.org", external_id="Person")
         sample_node.reference_links = json.dumps([link.model_dump()])
 
-        mock_db.query.return_value.filter.return_value.first.return_value = sample_node
+        mock_db.query.return_value.filter.return_value.first.return_value = sample_node  # noqa: E501
 
         # Remove the link
         links_to_remove = [link]
 
         # Execute
-        result = service.remove_reference_links("test-node-123", links_to_remove)
+        result = service.remove_reference_links("test-node-123", links_to_remove)  # noqa: E501
 
         # Assert
         assert len(result) == 0
@@ -183,9 +183,9 @@ class TestReferenceLinkService:
             ReferenceLink(source="schema.org", external_id="Person"),
             ReferenceLink(source="wikidata", external_id="Q5"),
         ]
-        sample_node.reference_links = json.dumps([link.model_dump() for link in links])
+        sample_node.reference_links = json.dumps([link.model_dump() for link in links])  # noqa: E501
 
-        mock_db.query.return_value.filter.return_value.first.return_value = sample_node
+        mock_db.query.return_value.filter.return_value.first.return_value = sample_node  # noqa: E501
 
         # Execute
         result = service.get_reference_links("test-node-123")
@@ -204,7 +204,7 @@ class TestReferenceLinkService:
             "[]",  # Empty JSON array
         ]
 
-        mock_db.query.return_value.filter.return_value.first.return_value = sample_node
+        mock_db.query.return_value.filter.return_value.first.return_value = sample_node  # noqa: E501
 
         for empty_value in test_cases:
             sample_node.reference_links = empty_value
@@ -215,12 +215,12 @@ class TestReferenceLinkService:
             # Assert
             assert result == []
 
-    def test_get_reference_links_malformed_json(self, service, mock_db, sample_node):
+    def test_get_reference_links_malformed_json(self, service, mock_db, sample_node):  # noqa: E501
         """Test handling of malformed JSON."""
         # Setup
         sample_node.reference_links = "{invalid json"
 
-        mock_db.query.return_value.filter.return_value.first.return_value = sample_node
+        mock_db.query.return_value.filter.return_value.first.return_value = sample_node  # noqa: E501
 
         # Execute
         result = service.get_reference_links("test-node-123")
@@ -228,12 +228,12 @@ class TestReferenceLinkService:
         # Assert - should return empty list, not raise exception
         assert result == []
 
-    def test_get_reference_links_not_array(self, service, mock_db, sample_node):
+    def test_get_reference_links_not_array(self, service, mock_db, sample_node):  # noqa: E501
         """Test handling when JSON is not an array."""
         # Setup
         sample_node.reference_links = json.dumps({"not": "an array"})
 
-        mock_db.query.return_value.filter.return_value.first.return_value = sample_node
+        mock_db.query.return_value.filter.return_value.first.return_value = sample_node  # noqa: E501
 
         # Execute
         result = service.get_reference_links("test-node-123")
@@ -241,7 +241,7 @@ class TestReferenceLinkService:
         # Assert - should return empty list
         assert result == []
 
-    def test_get_reference_links_invalid_link_data(self, service, mock_db, sample_node):
+    def test_get_reference_links_invalid_link_data(self, service, mock_db, sample_node):  # noqa: E501
         """Test handling when link data is invalid."""
         # Setup - one valid link, one invalid
         sample_node.reference_links = json.dumps([
@@ -249,7 +249,7 @@ class TestReferenceLinkService:
             {"invalid": "data"},  # Invalid - missing required fields
         ])
 
-        mock_db.query.return_value.filter.return_value.first.return_value = sample_node
+        mock_db.query.return_value.filter.return_value.first.return_value = sample_node  # noqa: E501
 
         # Execute
         result = service.get_reference_links("test-node-123")
@@ -261,67 +261,66 @@ class TestReferenceLinkService:
     def test_validate_reference_link_success(self, service):
         """Test successful reference validation."""
         # Mock reference manager
-        with patch('services.reference_link_service.get_reference_manager') as mock_ref_mgr:
+        with patch('services.reference_link_service.get_reference_manager') as mock_ref_mgr:  # noqa: E501
             mock_manager = Mock()
-            mock_manager.get_reference_node_by_source.return_value = Mock()  # Reference exists
+            mock_manager.get_reference_node_by_source.return_value = Mock()  # Reference exists  # noqa: E501
             mock_ref_mgr.return_value = mock_manager
 
             # Execute - should not raise exception
             service.validate_reference_link("schema.org", "Person")
 
             # Assert - if we get here, validation succeeded
-            mock_manager.get_reference_node_by_source.assert_called_once_with("schema.org", "Person")
+            mock_manager.get_reference_node_by_source.assert_called_once_with("schema.org", "Person")  # noqa: E501
 
     def test_validate_reference_link_not_found(self, service):
         """Test validation when reference doesn't exist."""
         # Mock reference manager
-        with patch('services.reference_link_service.get_reference_manager') as mock_ref_mgr:
+        with patch('services.reference_link_service.get_reference_manager') as mock_ref_mgr:  # noqa: E501
             mock_manager = Mock()
             mock_manager.get_reference_node_by_source.return_value = None
             mock_ref_mgr.return_value = mock_manager
 
             # Execute & Assert
-            with pytest.raises(ReferenceNotFoundError, match="Reference not found: schema.org:NonExistent"):
+            with pytest.raises(ReferenceNotFoundError, match="Reference not found: schema.org:NonExistent"):  # noqa: E501
                 service.validate_reference_link("schema.org", "NonExistent")
 
-    def test_commit_failure_rollback(self, service, mock_db, sample_node, sample_links):
+    def test_commit_failure_rollback(self, service, mock_db, sample_node, sample_links):  # noqa: E501
         """Test that database rollback occurs on commit failure."""
         # Setup
-        mock_db.query.return_value.filter.return_value.first.return_value = sample_node
+        mock_db.query.return_value.filter.return_value.first.return_value = sample_node  # noqa: E501
         mock_db.commit.side_effect = Exception("Database error")
 
-        with patch('services.reference_link_service.get_reference_manager') as mock_ref_mgr:
+        with patch('services.reference_link_service.get_reference_manager') as mock_ref_mgr:  # noqa: E501
             mock_manager = Mock()
             mock_manager.get_reference_node_by_source.return_value = Mock()
             mock_ref_mgr.return_value = mock_manager
 
             # Execute & Assert
-            with pytest.raises(ValidationError, match="Failed to add reference links"):
+            with pytest.raises(ValidationError, match="Failed to add reference links"):  # noqa: E501
                 service.add_reference_links("test-node-123", sample_links)
 
             # Verify rollback was called
             mock_db.rollback.assert_called_once()
 
-
-    def test_validate_node_reference_links_success(self, service, mock_db, sample_node):
+    def test_validate_node_reference_links_success(self, service, mock_db, sample_node):  # noqa: E501
         """Test successful validation of node reference links."""
         # Setup - node with valid links
         links = [
             ReferenceLink(source="schema.org", external_id="Person"),
             ReferenceLink(source="wikidata", external_id="Q5"),
         ]
-        sample_node.reference_links = json.dumps([link.model_dump() for link in links])
+        sample_node.reference_links = json.dumps([link.model_dump() for link in links])  # noqa: E501
 
-        mock_db.query.return_value.filter.return_value.first.return_value = sample_node
+        mock_db.query.return_value.filter.return_value.first.return_value = sample_node  # noqa: E501
 
         # Mock reference validation
-        with patch('services.reference_link_service.get_reference_manager') as mock_ref_mgr:
+        with patch('services.reference_link_service.get_reference_manager') as mock_ref_mgr:  # noqa: E501
             mock_manager = Mock()
-            mock_manager.get_reference_node_by_source.return_value = Mock()  # All refs exist
+            mock_manager.get_reference_node_by_source.return_value = Mock()  # All refs exist  # noqa: E501
             mock_ref_mgr.return_value = mock_manager
 
             # Execute
-            result = service.validate_node_reference_links("test-node-123", check_existence=True)
+            result = service.validate_node_reference_links("test-node-123", check_existence=True)  # noqa: E501
 
             # Assert
             assert result["node_id"] == "test-node-123"
@@ -330,19 +329,19 @@ class TestReferenceLinkService:
             assert len(result["orphaned_links"]) == 0
             assert len(result["malformed_links"]) == 0
 
-    def test_validate_node_reference_links_orphaned(self, service, mock_db, sample_node):
+    def test_validate_node_reference_links_orphaned(self, service, mock_db, sample_node):  # noqa: E501
         """Test validation detects orphaned links."""
         # Setup - node with one valid and one orphaned link
         links = [
             ReferenceLink(source="schema.org", external_id="Person"),
             ReferenceLink(source="wikidata", external_id="Q_NONEXISTENT"),
         ]
-        sample_node.reference_links = json.dumps([link.model_dump() for link in links])
+        sample_node.reference_links = json.dumps([link.model_dump() for link in links])  # noqa: E501
 
-        mock_db.query.return_value.filter.return_value.first.return_value = sample_node
+        mock_db.query.return_value.filter.return_value.first.return_value = sample_node  # noqa: E501
 
         # Mock reference validation - first exists, second doesn't
-        with patch('services.reference_link_service.get_reference_manager') as mock_ref_mgr:
+        with patch('services.reference_link_service.get_reference_manager') as mock_ref_mgr:  # noqa: E501
             mock_manager = Mock()
 
             def get_ref_node(source, external_id):
@@ -350,20 +349,20 @@ class TestReferenceLinkService:
                     return None
                 return Mock()
 
-            mock_manager.get_reference_node_by_source.side_effect = get_ref_node
+            mock_manager.get_reference_node_by_source.side_effect = get_ref_node  # noqa: E501
             mock_ref_mgr.return_value = mock_manager
 
             # Execute
-            result = service.validate_node_reference_links("test-node-123", check_existence=True)
+            result = service.validate_node_reference_links("test-node-123", check_existence=True)  # noqa: E501
 
             # Assert
             assert result["total_links"] == 2
             assert result["valid_links"] == 1
             assert len(result["orphaned_links"]) == 1
             assert result["orphaned_links"][0]["source"] == "wikidata"
-            assert result["orphaned_links"][0]["external_id"] == "Q_NONEXISTENT"
+            assert result["orphaned_links"][0]["external_id"] == "Q_NONEXISTENT"  # noqa: E501
 
-    def test_validate_node_reference_links_malformed(self, service, mock_db, sample_node):
+    def test_validate_node_reference_links_malformed(self, service, mock_db, sample_node):  # noqa: E501
         """Test validation detects malformed links."""
         # Setup - one valid, one malformed
         sample_node.reference_links = json.dumps([
@@ -371,42 +370,42 @@ class TestReferenceLinkService:
             {"invalid_field": "bad_data"},  # Malformed
         ])
 
-        mock_db.query.return_value.filter.return_value.first.return_value = sample_node
+        mock_db.query.return_value.filter.return_value.first.return_value = sample_node  # noqa: E501
 
-        with patch('services.reference_link_service.get_reference_manager') as mock_ref_mgr:
+        with patch('services.reference_link_service.get_reference_manager') as mock_ref_mgr:  # noqa: E501
             mock_manager = Mock()
             mock_manager.get_reference_node_by_source.return_value = Mock()
             mock_ref_mgr.return_value = mock_manager
 
             # Execute
-            result = service.validate_node_reference_links("test-node-123", check_existence=True)
+            result = service.validate_node_reference_links("test-node-123", check_existence=True)  # noqa: E501
 
             # Assert
             assert result["total_links"] == 2
             assert result["valid_links"] == 1
             assert len(result["malformed_links"]) == 1
 
-    def test_validate_node_reference_links_no_existence_check(self, service, mock_db, sample_node):
+    def test_validate_node_reference_links_no_existence_check(self, service, mock_db, sample_node):  # noqa: E501
         """Test validation without checking existence."""
         # Setup
         links = [ReferenceLink(source="schema.org", external_id="Person")]
-        sample_node.reference_links = json.dumps([link.model_dump() for link in links])
+        sample_node.reference_links = json.dumps([link.model_dump() for link in links])  # noqa: E501
 
-        mock_db.query.return_value.filter.return_value.first.return_value = sample_node
+        mock_db.query.return_value.filter.return_value.first.return_value = sample_node  # noqa: E501
 
         # Execute - without existence check
-        result = service.validate_node_reference_links("test-node-123", check_existence=False)
+        result = service.validate_node_reference_links("test-node-123", check_existence=False)  # noqa: E501
 
         # Assert - should mark as valid without checking reference.db
         assert result["valid_links"] == 1
         assert len(result["orphaned_links"]) == 0
 
-    def test_validate_node_reference_links_empty(self, service, mock_db, sample_node):
+    def test_validate_node_reference_links_empty(self, service, mock_db, sample_node):  # noqa: E501
         """Test validation with no links."""
         # Setup
         sample_node.reference_links = None
 
-        mock_db.query.return_value.filter.return_value.first.return_value = sample_node
+        mock_db.query.return_value.filter.return_value.first.return_value = sample_node  # noqa: E501
 
         # Execute
         result = service.validate_node_reference_links("test-node-123")
@@ -438,7 +437,7 @@ class TestReferenceLinkService:
         mock_db.query.return_value = query_mock
 
         # Mock individual node validation
-        with patch.object(service, 'validate_node_reference_links') as mock_validate:
+        with patch.object(service, 'validate_node_reference_links') as mock_validate:  # noqa: E501
             mock_validate.return_value = {
                 "node_id": "node-0",
                 "total_links": 1,
@@ -447,18 +446,18 @@ class TestReferenceLinkService:
                 "malformed_links": []
             }
 
-            with patch('services.reference_link_service.get_reference_manager') as mock_ref_mgr:
+            with patch('services.reference_link_service.get_reference_manager') as mock_ref_mgr:  # noqa: E501
                 mock_ref_mgr.return_value = Mock()
 
                 # Execute
-                result = service.validate_all_reference_links(check_existence=True, limit=10)
+                result = service.validate_all_reference_links(check_existence=True, limit=10)  # noqa: E501
 
                 # Assert
                 assert result["total_nodes_checked"] == 3
                 assert result["nodes_with_links"] == 3
                 assert result["reference_db_available"] is True
 
-    def test_validate_all_reference_links_unavailable_db(self, service, mock_db):
+    def test_validate_all_reference_links_unavailable_db(self, service, mock_db):  # noqa: E501
         """Test bulk validation gracefully handles unavailable reference.db."""
         # Setup - create mock nodes
         node = Mock(spec=StructureNode)
@@ -477,10 +476,10 @@ class TestReferenceLinkService:
         mock_db.query.return_value = query_mock
 
         # Mock reference manager to fail
-        with patch('services.reference_link_service.get_reference_manager') as mock_ref_mgr:
+        with patch('services.reference_link_service.get_reference_manager') as mock_ref_mgr:  # noqa: E501
             mock_ref_mgr.side_effect = Exception("Database unavailable")
 
-            with patch.object(service, 'validate_node_reference_links') as mock_validate:
+            with patch.object(service, 'validate_node_reference_links') as mock_validate:  # noqa: E501
                 mock_validate.return_value = {
                     "total_links": 1,
                     "valid_links": 1,
@@ -489,23 +488,23 @@ class TestReferenceLinkService:
                 }
 
                 # Execute
-                result = service.validate_all_reference_links(check_existence=True)
+                result = service.validate_all_reference_links(check_existence=True)  # noqa: E501
 
                 # Assert - should degrade gracefully
                 assert result["reference_db_available"] is False
                 # Validation should continue without checking existence
-                mock_validate.assert_called_with("node-1", check_existence=False)
+                mock_validate.assert_called_with("node-1", check_existence=False)  # noqa: E501
 
-    def test_validate_node_reference_links_raises_on_missing_node(self, service, mock_db):
+    def test_validate_node_reference_links_raises_on_missing_node(self, service, mock_db):  # noqa: E501
         """Test that validation raises NotFoundError when node is not found."""
         # Setup - node doesn't exist
-        mock_db.query.return_value.filter.return_value.first.return_value = None
+        mock_db.query.return_value.filter.return_value.first.return_value = None  # noqa: E501
 
-        # Execute & Assert - should raise NotFoundError, not return error in dict
+        # Execute & Assert - should raise NotFoundError, not return error in dict  # noqa: E501
         with pytest.raises(NotFoundError, match="StructureNode not found"):
             service.validate_node_reference_links("nonexistent-node")
 
-    def test_validate_all_reference_links_with_database_query_failure(self, service, mock_db):
+    def test_validate_all_reference_links_with_database_query_failure(self, service, mock_db):  # noqa: E501
         """Test bulk validation handles database query failures."""
         # Setup - query fails
         query_mock = Mock()
@@ -519,7 +518,7 @@ class TestReferenceLinkService:
         assert "error" in result
         assert "Database connection lost" in result["error"]
 
-    def test_validate_all_reference_links_with_mixed_valid_invalid_nodes(self, service, mock_db):
+    def test_validate_all_reference_links_with_mixed_valid_invalid_nodes(self, service, mock_db):  # noqa: E501
         """Test bulk validation with mixed valid and problematic nodes."""
         # Setup - create nodes with different validation results
         nodes = []
@@ -553,7 +552,7 @@ class TestReferenceLinkService:
                 "node_id": "node-1",
                 "total_links": 2,
                 "valid_links": 1,
-                "orphaned_links": [{"source": "wikidata", "external_id": "Q_BAD", "reason": "Not found"}],
+                "orphaned_links": [{"source": "wikidata", "external_id": "Q_BAD", "reason": "Not found"}],  # noqa: E501
                 "malformed_links": []
             },
             {  # Node 2: Has malformed links
@@ -565,14 +564,14 @@ class TestReferenceLinkService:
             }
         ]
 
-        with patch.object(service, 'validate_node_reference_links') as mock_validate:
+        with patch.object(service, 'validate_node_reference_links') as mock_validate:  # noqa: E501
             mock_validate.side_effect = validation_results
 
-            with patch('services.reference_link_service.get_reference_manager') as mock_ref_mgr:
+            with patch('services.reference_link_service.get_reference_manager') as mock_ref_mgr:  # noqa: E501
                 mock_ref_mgr.return_value = Mock()
 
                 # Execute
-                result = service.validate_all_reference_links(check_existence=True)
+                result = service.validate_all_reference_links(check_existence=True)  # noqa: E501
 
                 # Assert
                 assert result["total_nodes_checked"] == 3
@@ -583,8 +582,8 @@ class TestReferenceLinkService:
                 assert len(result["problematic_nodes"]) == 2  # Nodes 1 and 2
                 assert result["reference_db_available"] is True
 
-    def test_validate_all_reference_links_performance_when_reference_db_unavailable(self, service, mock_db):
-        """Test that validation without reference.db access doesn't fail catastrophically."""
+    def test_validate_all_reference_links_performance_when_reference_db_unavailable(self, service, mock_db):  # noqa: E501
+        """Test that validation without reference.db access doesn't fail catastrophically."""  # noqa: E501
         # Setup - create many nodes
         nodes = []
         for i in range(50):
@@ -605,10 +604,10 @@ class TestReferenceLinkService:
         mock_db.query.return_value = query_mock
 
         # Mock reference manager to be unavailable
-        with patch('services.reference_link_service.get_reference_manager') as mock_ref_mgr:
+        with patch('services.reference_link_service.get_reference_manager') as mock_ref_mgr:  # noqa: E501
             mock_ref_mgr.side_effect = Exception("reference.db not accessible")
 
-            with patch.object(service, 'validate_node_reference_links') as mock_validate:
+            with patch.object(service, 'validate_node_reference_links') as mock_validate:  # noqa: E501
                 mock_validate.return_value = {
                     "total_links": 1,
                     "valid_links": 1,
@@ -617,12 +616,12 @@ class TestReferenceLinkService:
                 }
 
                 # Execute
-                result = service.validate_all_reference_links(check_existence=True, limit=50)
+                result = service.validate_all_reference_links(check_existence=True, limit=50)  # noqa: E501
 
-                # Assert - should complete without errors, just mark DB as unavailable
+                # Assert - should complete without errors, just mark DB as unavailable  # noqa: E501
                 assert result["reference_db_available"] is False
                 assert result["total_nodes_checked"] == 50
-                # Should have called validate_node_reference_links with check_existence=False
+                # Should have called validate_node_reference_links with check_existence=False  # noqa: E501
                 # for all nodes after detecting DB unavailability
                 for call in mock_validate.call_args_list:
                     assert call[1]["check_existence"] is False

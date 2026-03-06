@@ -55,7 +55,7 @@ class DatabaseConfig(BaseModel):
     operations_path: str = Field(default="./datafiles/operations.db", description="Operations database path (pipeline configs, audit logs, task management)")
     check_same_thread: bool = Field(default=False, description="SQLite check_same_thread setting")
     pool_timeout: int = Field(default=30, ge=1, description="Database pool timeout seconds")
-    
+
 
 class LLMConfig(BaseModel):
     """Large Language Model configuration section"""
@@ -65,7 +65,7 @@ class LLMConfig(BaseModel):
     timeout: int = Field(default=60, ge=1, le=300, description="Request timeout in seconds")
     max_text_length: int = Field(default=1000, ge=1, le=10000, description="Maximum input text length")
     retry_attempts: int = Field(default=3, ge=0, le=10, description="Number of retry attempts")
-    
+
 
 class NLPConfig(BaseModel):
     """Natural Language Processing configuration section"""
@@ -139,7 +139,7 @@ class ReferenceSourceConfig(BaseModel):
     timeout: int = Field(default=30, ge=1, le=300, description="Request timeout in seconds")
     max_retries: int = Field(default=3, ge=0, le=10, description="Maximum retry attempts")
     rate_limit: ReferenceSourceRateLimitConfig = Field(default_factory=ReferenceSourceRateLimitConfig)
-    
+
     # Source-specific configuration overrides
     custom_headers: Dict[str, str] = Field(default_factory=dict, description="Custom headers for requests")
     custom_params: Dict[str, str] = Field(default_factory=dict, description="Custom query parameters")
@@ -167,7 +167,7 @@ class ReferenceSourcesConfig(BaseModel):
             requests_per_second=1    # Very conservative to avoid API hangs
         )
     ))
-    
+
     # DBpedia has multiple services, so we configure them separately
     dbpedia_lookup: ReferenceSourceConfig = Field(default_factory=lambda: ReferenceSourceConfig(
         upstream_url="https://lookup.dbpedia.org",
@@ -195,7 +195,7 @@ class ReferenceSourcesConfig(BaseModel):
             requests_per_second=30      # Conservative based on documented performance
         )
     ))
-    
+
     wikidata: ReferenceSourceConfig = Field(default_factory=lambda: ReferenceSourceConfig(
         upstream_url="https://query.wikidata.org",
         rate_limit=ReferenceSourceRateLimitConfig(
@@ -204,7 +204,7 @@ class ReferenceSourcesConfig(BaseModel):
             requests_per_second=2       # Conservative: allow short bursts but avoid overwhelming
         )
     ))
-    
+
     duckduckgo: ReferenceSourceConfig = Field(default_factory=lambda: ReferenceSourceConfig(
         upstream_url="https://api.duckduckgo.com",
         rate_limit=ReferenceSourceRateLimitConfig(
@@ -264,11 +264,11 @@ class ProxyServerConfig(BaseModel):
     enabled: bool = Field(default=True, description="Enable proxy server globally")
     database_path: str = Field(default="./datafiles/reference_api_cache.db", description="Cache database path")
     max_cache_entries: int = Field(default=10000, ge=100, description="Maximum total cache entries")
-    
+
     # Global cache defaults (can be overridden per source)
     default_cache_ttl: int = Field(default=3600, ge=60, description="Default cache TTL (seconds)")
     default_max_response_size: int = Field(default=10485760, ge=1024, description="Default maximum cached response size (bytes)")
-    
+
     # Global rate limiting defaults
     default_requests_per_hour: int = Field(default=1000, ge=1, description="Default requests per hour")
     progressive_max_delay: int = Field(default=300, ge=1, description="Default maximum progressive delay (seconds)")
@@ -373,7 +373,7 @@ class Settings(BaseModel):
     @property
     def duckdb_threads(self) -> int:
         return self.DUCKDB_THREADS
-    
+
     def get_s3_config(self) -> Optional[S3Config]:
         if not self.s3_bucket:
             return None
@@ -384,22 +384,22 @@ class Settings(BaseModel):
             secret_key=self.s3_secret_key,
             endpoint=self.s3_endpoint
         )
-    
+
     def get_source_config(self, source_name: str) -> ReferenceSourceConfig:
         """
         Get configuration for a specific reference source.
-        
+
         Supports aliases for backwards compatibility:
         - 'dbpedia' maps to 'dbpedia_sparql' (SPARQL endpoint used for discovery)
         """
         # Handle aliases
         if source_name == 'dbpedia':
             source_name = 'dbpedia_sparql'
-        
+
         if hasattr(self.reference_sources, source_name):
             return getattr(self.reference_sources, source_name)
         raise ValueError(f"Unknown reference source: {source_name}")
-    
+
     def get_enabled_sources(self) -> List[str]:
         """Get list of enabled reference sources"""
         enabled = []
@@ -408,19 +408,19 @@ class Settings(BaseModel):
             if config and config.enabled:
                 enabled.append(source_name)
         return enabled
-    
+
     def get_proxy_enabled_sources(self) -> List[str]:
         """Get list of sources that should use the proxy"""
         proxy_enabled: List[str] = []
         if not self.proxy_server.enabled:
             return proxy_enabled
-            
+
         for source_name in self.get_enabled_sources():
             config = getattr(self.reference_sources, source_name)
             if config.use_proxy:
                 proxy_enabled.append(source_name)
         return proxy_enabled
-    
+
     def get_proxy_domain_mappings(self) -> Dict[str, Dict[str, Any]]:
         """Build domain mappings for proxy configuration compatibility"""
         mappings = {}
@@ -477,7 +477,7 @@ class Settings(BaseModel):
             for legacy_key in legacy_keys.get(source_name, []):
                 if legacy_key != source_name:
                     domain_mappings[legacy_key] = mapping_entry
-        
+
         return {
             "server": {
                 "host": self.proxy_server.host,
@@ -519,32 +519,32 @@ class Settings(BaseModel):
         }
 
     # Legacy compatibility properties for gradual migration
-    
+
     @property
     def NLP_MAX_TEXT_LENGTH(self) -> int:
         """Legacy compatibility property"""
         return self.nlp.max_text_length
-    
+
     @property
     def LLM_MODEL_NAME(self) -> str:
         """Legacy compatibility property"""
         return self.llm.model_name
-    
+
     @property
     def LLM_TEMPERATURE(self) -> float:
         """Legacy compatibility property"""
         return self.llm.temperature
-    
+
     @property
     def LLM_MAX_TOKENS(self) -> Optional[int]:
         """Legacy compatibility property"""
         return self.llm.max_tokens
-    
+
     @property
     def LLM_TIMEOUT(self) -> int:
         """Legacy compatibility property"""
         return self.llm.timeout
-    
+
     @property
     def ENABLE_CACHING_PROXY(self) -> Dict[str, bool]:
         """Legacy compatibility property"""
@@ -573,19 +573,19 @@ class Settings(BaseModel):
             "anthropic": (self.reference_sources.anthropic.enabled and
                          self.reference_sources.anthropic.use_proxy)
         }
-    
+
     @property
     def REFERENCE_API_BUDDY_CONFIG(self) -> Dict[str, Any]:
         """Legacy compatibility property"""
         return self.get_reference_api_buddy_config()
-    
+
     @property
     def s2v_config(self) -> Dict[str, Any]:
         """Legacy compatibility property"""
         return {
             "abs_path": os.path.abspath(self.nlp.sense2vec_path)
         }
-    
+
     @property
     def concepcy_config(self) -> Dict[str, Any]:
         """Legacy compatibility property"""
@@ -617,7 +617,7 @@ class ConfigurationManager:
         self._lock = threading.Lock()
         print(f"[ConfigurationManager] Loading config from: {self.config_file}")
         self.load()
-    
+
     def load(self) -> Settings:
         """Load configuration from file with defaults and apply environment overrides"""
         try:
@@ -677,7 +677,7 @@ class ConfigurationManager:
         except (json.JSONDecodeError, ValueError):
             # Return as string if not valid JSON
             return value
-    
+
     def save(self) -> bool:
         """Save current configuration to file"""
         try:
@@ -686,7 +686,7 @@ class ConfigurationManager:
         except Exception as e:
             print(f"Error saving config: {e}")  # Use print to avoid circular dependency
             return False
-    
+
     def _save_locked(self) -> bool:
         """Save configuration to file (assumes lock is already held)"""
         try:
@@ -701,7 +701,7 @@ class ConfigurationManager:
         except Exception as e:
             print(f"Error saving config: {e}")  # Use print to avoid circular dependency
             return False
-    
+
     def get(self, path: str) -> Any:
         """Get configuration value using dot notation"""
         try:
@@ -717,30 +717,30 @@ class ConfigurationManager:
         except Exception as e:
             print(f"Error getting config value {path}: {e}")  # Use print to avoid circular dependency
             raise
-    
+
     def set(self, path: str, value: Any) -> bool:
         """Set configuration value using dot notation"""
         try:
             with self._lock:
                 parts = path.split('.')
                 obj = self.settings
-                
+
                 # Navigate to parent object
                 for part in parts[:-1]:
                     if hasattr(obj, part):
                         obj = getattr(obj, part)
                     else:
                         raise KeyError(f"Configuration path not found: {'.'.join(parts[:-1])}")
-                
+
                 # Set the final value
                 final_key = parts[-1]
                 if hasattr(obj, final_key):
                     setattr(obj, final_key, value)
                 else:
                     raise KeyError(f"Configuration key not found: {final_key}")
-                
+
                 save_success = self._save_locked()
-                
+
                 # Trigger notifications if save was successful
                 if save_success:
                     try:
@@ -750,12 +750,12 @@ class ConfigurationManager:
                     except RuntimeError:
                         # No event loop available, skip notifications
                         pass
-                
+
                 return save_success
         except Exception as e:
             print(f"Error setting config value {path}: {e}")  # Use print to avoid circular dependency
             return False
-    
+
     def get_reference_sources(self) -> Dict[str, Any]:
         """Get all reference source configurations"""
         if self.settings is None:
@@ -768,14 +768,14 @@ class ConfigurationManager:
             raise ValueError("Settings not initialized")
         if not hasattr(self.settings.reference_sources, source_name):
             raise ValueError(f"Reference source '{source_name}' not found")
-        
+
         # Update each field in the source configuration
         for key, value in update_data.items():
             path = f"reference_sources.{source_name}.{key}"
             success = self.set(path, value)
             if not success:
                 raise ValueError(f"Failed to update {path}")
-    
+
     def validate(self) -> List[str]:
         """Validate current configuration and return errors"""
         errors = []
@@ -825,20 +825,20 @@ def get_settings() -> Settings:
 def get_test_settings() -> Settings:
     """
     Get settings instance for testing with dependency injection support.
-    
+
     This function is designed to be overridden in tests using FastAPI's
     dependency injection system (app.dependency_overrides) or pytest fixtures.
-    
+
     By default, it returns the same settings as get_settings(), but tests
     can override this to provide isolated test configurations.
-    
+
     Example usage in tests:
         @pytest.fixture
         def test_settings():
             return create_test_settings(temp_dir, overrides)
-            
+
         app.dependency_overrides[get_test_settings] = lambda: test_settings
-        
+
     Returns:
         Settings instance (can be overridden for testing)
     """
@@ -847,21 +847,21 @@ def get_test_settings() -> Settings:
 
 class ConfigurationNotifier:
     """Manages configuration change notifications"""
-    
+
     def __init__(self):
         self.listeners: Dict[str, List[Callable]] = {}
         self.global_listeners: List[Callable] = []
-    
+
     def register_listener(self, path_pattern: str, callback: Callable):
         """Register a listener for specific configuration paths"""
         if path_pattern not in self.listeners:
             self.listeners[path_pattern] = []
         self.listeners[path_pattern].append(callback)
-    
+
     def register_global_listener(self, callback: Callable):
         """Register a listener for all configuration changes"""
         self.global_listeners.append(callback)
-    
+
     async def notify(self, path: str, new_value: Any):
         """Notify listeners of configuration changes"""
         # Notify specific path listeners
@@ -875,7 +875,7 @@ class ConfigurationNotifier:
                             callback(path, new_value)
                     except Exception as e:
                         print(f"Error in config listener for {pattern}: {e}")
-        
+
         # Notify global listeners
         for callback in self.global_listeners:
             try:
@@ -930,7 +930,7 @@ async def handle_reference_source_config_change(path: str, value: Any):
         if len(parts) >= 2:
             source_name = parts[1]
             field = parts[2] if len(parts) > 2 else None
-            
+
             # Invalidate NLP pipeline if NLP-related sources change
             if source_name in ["conceptnet", "dbpedia_spotlight"] and field in ["enabled", "use_proxy", "upstream_url"]:
                 try:

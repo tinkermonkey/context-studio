@@ -473,7 +473,7 @@ class SchemaOrgImporter:
                 try:
                     # Extract fields
                     external_id = item.get("@id", "")
-                    
+
                     # Extract title - handle both string and JSON-LD object format
                     title_raw = (
                         item.get("rdfs:label") or
@@ -489,7 +489,7 @@ class SchemaOrgImporter:
                         title = next((t.get("@value", t) if isinstance(t, dict) else t for t in title_raw), "")
                     else:
                         title = str(title_raw) if title_raw else ""
-                    
+
                     # Extract definition - handle both string and JSON-LD object format
                     definition_raw = (
                         item.get("rdfs:comment") or
@@ -858,7 +858,7 @@ class SchemaOrgImporter:
         # so property metadata relationships (domainIncludes, rangeIncludes, inverseOf)
         # will be stored in the ExternalPredicate.attributes field rather than as links.
         # Only subClassOf relationships between entities will be stored as ReferenceLinks.
-        
+
         # Extract relationships for entities only (subClassOf)
         for item in entities:
             external_id = item.get("@id", "")

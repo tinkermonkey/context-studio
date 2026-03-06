@@ -10,8 +10,9 @@ from utils.logger import get_logger
 
 logger = get_logger("import_csv")
 
+
 def get_or_create_import_layer(session: Session) -> "Layer":  # noqa: F821
-    layer = session.query(Layer).filter_by(title="Import").first()  # noqa: F821
+    layer = session.query(Layer).filter_by(title="Import").first()  # noqa: F821, E501
     if not layer:
         layer = Layer(  # noqa: F821
             id=str(uuid.uuid4()),
@@ -25,11 +26,13 @@ def get_or_create_import_layer(session: Session) -> "Layer":  # noqa: F821
         logger.info(f"Using existing Import layer with id: {layer.id}")
     return layer
 
+
 def read_csv_rows(file_path):
     with open(file_path, newline='', encoding='utf-8') as csvfile:
         reader = csv.DictReader(csvfile)
         rows = [dict(row) for row in reader]
     return rows
+
 
 def import_records(rows, session: Session, layer: "Layer"):  # noqa: F821
     # Track last seen Layer, Domain, and Term by depth for parent relationships
@@ -49,7 +52,7 @@ def import_records(rows, session: Session, layer: "Layer"):  # noqa: F821
             layer_id = row.get("ID") or str(uuid.uuid4())
             title = row.get("Title")
             definition = row.get("Definition")
-            lyr = session.query(Layer).filter_by(id=layer_id).first()  # noqa: F821
+            lyr = session.query(Layer).filter_by(id=layer_id).first()  # noqa: F821, E501
             if not lyr:
                 lyr = Layer(  # noqa: F821
                     id=layer_id,
@@ -71,7 +74,7 @@ def import_records(rows, session: Session, layer: "Layer"):  # noqa: F821
             definition = row.get("Definition")
             # Use last_layer if present, else fallback to provided layer
             layer_id = last_layer.id if last_layer else layer.id
-            domain = session.query(Domain).filter_by(id=domain_id).first()  # noqa: F821
+            domain = session.query(Domain).filter_by(id=domain_id).first()  # noqa: F821, E501
             if not domain:
                 domain = Domain(  # noqa: F821
                     id=domain_id,
@@ -101,10 +104,10 @@ def import_records(rows, session: Session, layer: "Layer"):  # noqa: F821
             domain_id = last_domain.id if last_domain else None
             layer_id = last_layer.id if last_layer else layer.id
             if not domain_id:
-                logger.warning(f"No domain found for term {title} (ID: {term_id}), skipping.")
+                logger.warning(f"No domain found for term {title} (ID: {term_id}), skipping.")  # noqa: E501
                 continue
             try:
-                term = session.query(Term).filter_by(id=term_id).first()  # noqa: F821
+                term = session.query(Term).filter_by(id=term_id).first()  # noqa: F821, E501
                 if not term:
                     term = Term(  # noqa: F821
                         id=term_id,
@@ -128,15 +131,16 @@ def import_records(rows, session: Session, layer: "Layer"):  # noqa: F821
             except Exception as e:
                 session.rollback()
                 if 'UNIQUE constraint failed: terms.id' in str(e):
-                    logger.error(f"Skipped duplicate Term with id {term_id} (title: {title}). This term already exists in the database. If you want to update it, please remove the duplicate or update the CSV.")
+                    logger.error(f"Skipped duplicate Term with id {term_id} (title: {title}). This term already exists in the database. If you want to update it, please remove the duplicate or update the CSV.")  # noqa: E501
                 else:
-                    logger.error(f"Error processing Term {title} (ID: {term_id}): {e}")
+                    logger.error(f"Error processing Term {title} (ID: {term_id}): {e}")  # noqa: E501
+
 
 def main():
-    parser = argparse.ArgumentParser(description="Import taxonomy data from CSV into database.")
-    parser.add_argument("-f", "--file", required=True, help="Path to the CSV file to import")
-    parser.add_argument("-d", "--debug", action="store_true", help="Enable debug logging")
-    parser.add_argument("--test", action="store_true", help="Import only the first 10 rows for smoke testing")
+    parser = argparse.ArgumentParser(description="Import taxonomy data from CSV into database.")  # noqa: E501
+    parser.add_argument("-f", "--file", required=True, help="Path to the CSV file to import")  # noqa: E501
+    parser.add_argument("-d", "--debug", action="store_true", help="Enable debug logging")  # noqa: E501
+    parser.add_argument("--test", action="store_true", help="Import only the first 10 rows for smoke testing")  # noqa: E501
     args = parser.parse_args()
 
     if args.debug:
@@ -170,6 +174,6 @@ def main():
     finally:
         session.close()
 
+
 if __name__ == "__main__":
     main()
-

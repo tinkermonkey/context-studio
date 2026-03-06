@@ -148,7 +148,7 @@ class TestSchemaOrgImporterDownload:
 
         # Test that Pydantic validation rejects non-HTTPS URLs for remote hosts
         with pytest.raises(ValidationError) as exc_info:
-            ReferenceConfig(schema_org_api_url="http://malicious.com/schema.jsonld")
+            ReferenceConfig(schema_org_api_url="http://malicious.com/schema.jsonld")  # noqa: E501
 
         # Verify the error message mentions security/HTTPS
         error_str = str(exc_info.value)
@@ -304,7 +304,7 @@ class TestSchemaOrgImporterTransactions:
             assert len(nodes) == 2
 
     def test_transaction_rollback_on_failure(self, tmp_path):
-        """Test transaction rollback works correctly on SQLAlchemy errors (TC-I004.1)."""
+        """Test transaction rollback works correctly on SQLAlchemy errors (TC-I004.1)."""  # noqa: E501
         config = ReferenceConfig()
         db_path = tmp_path / "test.db"
 
@@ -372,7 +372,7 @@ class TestSchemaOrgImporterVectorTables:
 
             result = manager.session.execute(
                 text(
-                    "SELECT name FROM sqlite_master WHERE type='table' AND name='reference_nodes_vec'"
+                    "SELECT name FROM sqlite_master WHERE type='table' AND name='reference_nodes_vec'"  # noqa: E501
                 )
             ).fetchone()
 
@@ -506,14 +506,14 @@ class TestSchemaOrgImporterRelationships:
             node_map = importer._insert_nodes_transaction(embedded_nodes)
 
             # Extract relationships
-            # Note: domainIncludes and rangeIncludes are property metadata relationships
-            # which are stored in ExternalPredicate.attributes, not as ReferenceLinks.
-            # Only subClassOf relationships between entities are stored as ReferenceLinks.
+            # Note: domainIncludes and rangeIncludes are property metadata relationships  # noqa: E501
+            # which are stored in ExternalPredicate.attributes, not as ReferenceLinks.  # noqa: E501
+            # Only subClassOf relationships between entities are stored as ReferenceLinks.  # noqa: E501
             entities = []
             properties = [
                 {
                     "@id": "https://schema.org/name",
-                    "schema:domainIncludes": {"@id": "https://schema.org/Thing"},
+                    "schema:domainIncludes": {"@id": "https://schema.org/Thing"},  # noqa: E501
                     "schema:rangeIncludes": {"@id": "https://schema.org/Text"},
                 }
             ]
@@ -525,7 +525,7 @@ class TestSchemaOrgImporterRelationships:
                 entities, properties, node_map, predicate_map
             )
 
-            # Property relationships are not stored as links, only in predicate attributes
+            # Property relationships are not stored as links, only in predicate attributes  # noqa: E501
             assert link_count == 0
 
     def test_relationship_metadata_stored(self, tmp_path):
@@ -617,7 +617,7 @@ class TestSchemaOrgImporterLockFile:
             assert not os.path.exists(importer.lock_path)
 
     def test_stale_lock_file_detected(self, tmp_path):
-        """Test stale lock files (>1 hour old) detected and handled (TC-I004.5)."""
+        """Test stale lock files (>1 hour old) detected and handled (TC-I004.5)."""  # noqa: E501
         config = ReferenceConfig()
         db_path = tmp_path / "test.db"
 
@@ -653,7 +653,7 @@ class TestSchemaOrgImporterIdempotency:
     """Test import idempotency."""
 
     def test_import_can_rerun_after_failure(self, tmp_path):
-        """Test import is idempotent - can safely re-run after failure (TC-I004.2)."""
+        """Test import is idempotent - can safely re-run after failure (TC-I004.2)."""  # noqa: E501
         config = ReferenceConfig()
         db_path = tmp_path / "test.db"
 

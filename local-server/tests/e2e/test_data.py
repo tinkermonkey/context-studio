@@ -77,12 +77,12 @@ EMBEDDING_TEST_CONCEPTS = {
     },
     "embedding_similar_class": {
         "title": "Similar Embedding Test Class",
-        "definition": "Semantically similar class for testing semantic search ranking",
+        "definition": "Semantically similar class for testing semantic search ranking",  # noqa: E501
         "type": "CLASS",
     },
     "embedding_different_class": {
         "title": "Different Embedding Test Class",
-        "definition": "Semantically different class for testing ranking accuracy",
+        "definition": "Semantically different class for testing ranking accuracy",  # noqa: E501
         "type": "CLASS",
     },
 }
