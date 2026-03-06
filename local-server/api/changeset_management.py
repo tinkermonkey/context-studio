@@ -22,6 +22,7 @@ from datetime import datetime
 
 from services.changeset_manager import ChangesetManager
 from services.collaboration_models import ChangesetState
+from services.exceptions import NotFoundError
 from services.service_factory import ServiceFactory
 from database.utils import get_db
 from sqlalchemy.orm import Session
@@ -142,21 +143,21 @@ def list_changesets(
 ):
     """
     List changesets with optional filtering.
-    
+
     Args:
         author_id: Optional author ID filter
         state: Optional changeset state filter
         limit: Maximum number of results
         changeset_manager: ChangesetManager dependency
-        
+
     Returns:
         List of changesets matching filters
-        
+
     Raises:
-        HTTPException: If invalid state provided
+        HTTPException: If invalid state provided or query fails
     """
     logger.debug(f"Listing changesets (author={author_id}, state={state}, limit={limit})")
-    
+
     try:
         # Validate state if provided
         changeset_state = None
@@ -166,16 +167,16 @@ def list_changesets(
             except ValueError:
                 valid_states = [s.value for s in ChangesetState]
                 raise HTTPException(
-                    status_code=400, 
+                    status_code=400,
                     detail=f"Invalid state '{state}'. Valid states: {valid_states}"
                 )
-        
+
         changesets = changeset_manager.list_changesets(
             author_id=author_id,
             state=changeset_state,
             limit=limit
         )
-        
+
         changeset_responses = []
         for changeset in changesets:
             changeset_responses.append(ChangesetResponse(
@@ -190,15 +191,15 @@ def list_changesets(
                 merged_at=changeset.merged_at,
                 metadata=changeset.metadata
             ))
-        
+
         return ChangesetListResponse(
             changesets=changeset_responses,
             total_count=len(changeset_responses)
         )
-        
+
     except HTTPException:
         raise
-    except Exception as e:
+    except RuntimeError as e:
         logger.error(f"Failed to list changesets: {e}")
         raise HTTPException(status_code=500, detail="Failed to list changesets")
 
@@ -210,24 +211,22 @@ def get_changeset(
 ):
     """
     Get changeset details by ID.
-    
+
     Args:
         changeset_id: Changeset identifier
         changeset_manager: ChangesetManager dependency
-        
+
     Returns:
         Changeset details
-        
+
     Raises:
-        HTTPException: If changeset not found
+        HTTPException: If changeset not found or retrieval fails
     """
     logger.debug(f"Getting changeset {changeset_id}")
-    
+
     try:
         changeset = changeset_manager.get_changeset(changeset_id)
-        if not changeset:
-            raise HTTPException(status_code=404, detail=f"Changeset {changeset_id} not found")
-        
+
         return ChangesetResponse(
             id=changeset.id,
             title=changeset.title,
@@ -240,10 +239,11 @@ def get_changeset(
             merged_at=changeset.merged_at,
             metadata=changeset.metadata
         )
-        
-    except HTTPException:
-        raise
-    except Exception as e:
+
+    except NotFoundError as e:
+        logger.debug(f"Changeset not found: {e}")
+        raise HTTPException(status_code=404, detail=f"Changeset {changeset_id} not found")
+    except RuntimeError as e:
         logger.error(f"Failed to get changeset {changeset_id}: {e}")
         raise HTTPException(status_code=500, detail="Failed to get changeset")
 
@@ -256,15 +256,15 @@ def update_changeset(
 ):
     """
     Update changeset metadata.
-    
+
     Args:
         changeset_id: Changeset identifier
         request: Update request with new values
         changeset_manager: ChangesetManager dependency
-        
+
     Returns:
         Updated changeset details
-        
+
     Raises:
         HTTPException: If changeset not found or update fails
     """
@@ -278,26 +278,16 @@ def update_changeset(
                 detail="At least one field (title or description) must be provided for update"
             )
 
-        # Check if changeset exists
-        changeset = changeset_manager.get_changeset(changeset_id)
-        if not changeset:
-            raise HTTPException(status_code=404, detail=f"Changeset {changeset_id} not found")
-
-        # Update changeset
-        success = changeset_manager.update_changeset(
+        # Update changeset (will raise NotFoundError if not found)
+        changeset_manager.update_changeset(
             changeset_id=changeset_id,
             title=request.title,
             description=request.description
         )
-        
-        if not success:
-            raise HTTPException(status_code=400, detail="No updates provided or changeset not found")
-        
+
         # Get updated changeset
         updated_changeset = changeset_manager.get_changeset(changeset_id)
-        if not updated_changeset:
-            raise HTTPException(status_code=500, detail="Failed to retrieve updated changeset")
-        
+
         return ChangesetResponse(
             id=updated_changeset.id,
             title=updated_changeset.title,
@@ -310,10 +300,16 @@ def update_changeset(
             merged_at=updated_changeset.merged_at,
             metadata=updated_changeset.metadata
         )
-        
+
     except HTTPException:
         raise
-    except Exception as e:
+    except NotFoundError as e:
+        logger.debug(f"Changeset not found: {e}")
+        raise HTTPException(status_code=404, detail=f"Changeset {changeset_id} not found")
+    except ValueError as e:
+        logger.warning(f"Invalid update request: {e}")
+        raise HTTPException(status_code=400, detail=str(e))
+    except RuntimeError as e:
         logger.error(f"Failed to update changeset {changeset_id}: {e}")
         raise HTTPException(status_code=500, detail="Failed to update changeset")
 
@@ -360,27 +356,28 @@ def push_changeset_to_s3(
 ):
     """
     Push changeset to S3 for collaboration.
-    
+
     Args:
         changeset_id: Changeset identifier
         changeset_manager: ChangesetManager dependency
-        
+
     Returns:
         Success message
-        
+
     Raises:
         HTTPException: If changeset not found or push fails
     """
     logger.info(f"Pushing changeset {changeset_id} to S3")
-    
+
     try:
-        success = changeset_manager.push_changeset_to_s3(changeset_id)
-        if not success:
-            raise HTTPException(status_code=500, detail="Failed to push changeset to S3")
-        
+        changeset_manager.push_changeset_to_s3(changeset_id)
+
         return {"message": f"Changeset {changeset_id} pushed to S3 successfully"}
-        
-    except Exception as e:
+
+    except NotFoundError as e:
+        logger.debug(f"Changeset not found: {e}")
+        raise HTTPException(status_code=404, detail=f"Changeset {changeset_id} not found")
+    except RuntimeError as e:
         logger.error(f"Failed to push changeset {changeset_id} to S3: {e}")
         raise HTTPException(status_code=500, detail="Failed to push changeset to S3")
 
@@ -392,35 +389,36 @@ def get_changeset_versions(
 ):
     """
     Get version details for a changeset.
-    
+
     Args:
         changeset_id: Changeset identifier
         changeset_manager: ChangesetManager dependency
-        
+
     Returns:
         Changeset version details
-        
+
     Raises:
-        HTTPException: If changeset not found
+        HTTPException: If changeset not found or query fails
     """
     logger.debug(f"Getting versions for changeset {changeset_id}")
-    
+
     try:
-        # Check if changeset exists
-        changeset = changeset_manager.get_changeset(changeset_id)
-        if not changeset:
-            raise HTTPException(status_code=404, detail=f"Changeset {changeset_id} not found")
-        
+        # Check if changeset exists (will raise NotFoundError if not found)
+        changeset_manager.get_changeset(changeset_id)
+
         version_ids = changeset_manager.get_changeset_versions(changeset_id)
-        
+
         return ChangesetVersionsResponse(
             changeset_id=changeset_id,
             version_ids=version_ids,
             version_count=len(version_ids)
         )
-        
+
     except HTTPException:
         raise
-    except Exception as e:
+    except NotFoundError as e:
+        logger.debug(f"Changeset not found: {e}")
+        raise HTTPException(status_code=404, detail=f"Changeset {changeset_id} not found")
+    except RuntimeError as e:
         logger.error(f"Failed to get versions for changeset {changeset_id}: {e}")
         raise HTTPException(status_code=500, detail="Failed to get changeset versions")
