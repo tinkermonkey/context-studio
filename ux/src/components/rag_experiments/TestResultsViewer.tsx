@@ -15,7 +15,7 @@ import {
   useReactTable,
   SortingState,
 } from "@tanstack/react-table";
-import { Button, Spinner  } from "flowbite-react";
+import { Badge, Button, Spinner } from "flowbite-react";;
 import {
   Download,
   ChevronDown,

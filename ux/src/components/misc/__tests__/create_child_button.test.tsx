@@ -1,9 +1,10 @@
 import React from "react";
+import { fireEvent } from "@testing-library/react";
+
 import { vi } from "vitest";
 import {
   renderWithProviders as render,
   screen,
-  fireEvent,
 } from "@/test/utils/renderWithProviders";
 import { CreateChildButton } from "../create_child_button";
 import { NodeType } from "@/api/types/structureNodes";

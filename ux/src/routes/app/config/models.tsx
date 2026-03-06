@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { Card, Alert  } from "flowbite-react";
+import { Alert, Badge, Button, Card } from "flowbite-react";;
 import { CsMainTitle } from "@/components/layout/cs_main";
 import { ConfigBreadcrumbs } from "@/components/configuration/ConfigBreadcrumbs";
 import {
@@ -7,7 +7,7 @@ import {
   useProvidersStatus,
   useToggleModel,
 } from "@/api/hooks";
-import {   CheckCircle } from "lucide-react";
+import { AlertTriangle, CheckCircle, Server } from "lucide-react";;
 import type {
   EnabledModelConfig,
   ProviderType,

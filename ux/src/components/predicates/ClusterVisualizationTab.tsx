@@ -7,13 +7,7 @@
  */
 
 import React, { useState } from "react";
-import { Button,
-  Card,
-  Spinner,
-  Label,
-  TextInput,
-  Select,
- } from "flowbite-react";
+import { Badge, Button, Card, Label, Select, Spinner, TextInput  } from "flowbite-react";;
 import { GitBranch, Plus } from "lucide-react";
 import { useClusterPredicates } from "@/api/hooks/predicates";
 import { useButterToast } from "@/hooks/useButterToast";

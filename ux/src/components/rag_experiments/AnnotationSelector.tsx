@@ -5,9 +5,9 @@
  * Displays existing annotations with highlighting and tooltips.
  */
 
-import React, { useState, useRef} from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { Button, Spinner, Tooltip } from "flowbite-react";
-import { Plus  } from "lucide-react";
+import { Plus, Trash2 } from "lucide-react";;
 import { RecordSelector } from "@/components/node_selectors/record_selector";
 import {
   useCreateAnnotation,

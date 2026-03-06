@@ -6,14 +6,8 @@
  */
 
 import React, { useState } from "react";
-import { Button,
-  Alert,
-  Spinner,
-  Modal,
-  ModalHeader,
-  ModalBody,
- } from "flowbite-react";
-import { ExternalLink, AlertCircle  } from "lucide-react";
+import { Alert, Badge, Button, Modal, ModalBody, ModalHeader, Spinner  } from "flowbite-react";;
+import { AlertCircle, ExternalLink, Trash2 } from "lucide-react";;
 
 import { ReferenceLink } from "@/api/types/structureNodes";
 import { useRemoveReferenceLink } from "@/api/hooks/structure_nodes/useReferenceLinks";

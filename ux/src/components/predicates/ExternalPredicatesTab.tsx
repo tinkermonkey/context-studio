@@ -5,24 +5,8 @@
  * Supports US-2.1: Find Similar Predicates Across Sources
  */
 
-import React, { useState, lazy, Suspense } from "react";
-import { Table,
-  TableHead,
-  TableHeadCell,
-  TableBody,
-  TableRow,
-    Button,
-  Select,
-  Spinner,
-  TextInput,
-  Pagination,
-  Dropdown,
-  DropdownItem,
-  DropdownDivider,
-  Modal,
-  ModalHeader,
-  ModalBody,
-  } from "flowbite-react";
+import React, { useState, lazy, Suspense, useEffect } from "react";
+import { Badge, Button, Dropdown, DropdownDivider, DropdownItem, Modal, ModalBody, ModalHeader, Pagination, Select, Spinner, Table, TableBody, TableCell, TableHead, TableHeadCell, TableRow, TextInput  } from "flowbite-react";;
 import { Search, RefreshCw, X, ChevronDown, Info } from "lucide-react";
 import {
   useExternalPredicates,

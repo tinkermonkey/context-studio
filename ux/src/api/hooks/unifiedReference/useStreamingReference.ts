@@ -4,7 +4,7 @@
  * React hooks for real-time unified reference search with streaming results
  */
 
-import { useState, useCallback, useRef} from "react";
+import { useState, useCallback, useRef, useEffect } from "react";
 import { useQueryClient, useMutation } from "@tanstack/react-query";
 import { streamingReferenceService } from "../../services/streamingReference";
 import { UnifiedSearchRequest, SourceType } from "../../types/unified";

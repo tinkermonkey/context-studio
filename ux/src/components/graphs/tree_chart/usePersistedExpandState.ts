@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { ExpandState, toggleExpandState } from "./tree_chart_layout";
 
 const EXPAND_STATE_STORAGE_KEY_PREFIX = "tree-chart-expand-state";

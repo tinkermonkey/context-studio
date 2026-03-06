@@ -1,3 +1,4 @@
+import { ArrowLeft, Settings } from "lucide-react";
 import { createFileRoute } from "@tanstack/react-router";
 // removed import;
 import { Link } from "@tanstack/react-router";

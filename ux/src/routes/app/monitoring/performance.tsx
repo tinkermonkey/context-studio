@@ -2,11 +2,7 @@ import { useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { CsMain, CsMainTitle } from "@/components/layout/cs_main";
 import { CsSidebar } from "@/components/layout/cs_sidebar";
-import { Card,
-  Spinner,
-  Alert,
-  Tabs,
-   } from "flowbite-react";
+import { Alert, Badge, Button, Card, Select, Spinner, Tabs  } from "flowbite-react";;
 import {
   Gauge,
   Database,

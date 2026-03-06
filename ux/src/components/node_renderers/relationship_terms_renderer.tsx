@@ -1,3 +1,4 @@
+import { Badge } from "flowbite-react";
 import React from "react";
 // removed import;
 import type { components } from "@/api/client/types";

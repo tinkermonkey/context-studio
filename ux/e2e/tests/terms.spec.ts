@@ -463,7 +463,7 @@ test.describe("Term Management", () => {
     // Create multiple terms
     const timestamp = Date.now();
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    await apiRequest<any>(page, "/api/structure_nodes", {
+    const term1 = await apiRequest<any>(page, "/api/structure_nodes", {
       method: "POST",
       body: {
         title: `Bulk Delete 1 ${timestamp}`,
@@ -473,7 +473,7 @@ test.describe("Term Management", () => {
       },
     });
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    await apiRequest<any>(page, "/api/structure_nodes", {
+    const term2 = await apiRequest<any>(page, "/api/structure_nodes", {
       method: "POST",
       body: {
         title: `Bulk Delete 2 ${timestamp}`,

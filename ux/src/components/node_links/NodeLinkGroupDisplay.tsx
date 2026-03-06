@@ -4,6 +4,7 @@
  * Displays a group of links that share the same predicate
  */
 
+import { Badge } from "flowbite-react";
 import React from "react";
 // removed import;
 

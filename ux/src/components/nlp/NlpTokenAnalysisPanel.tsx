@@ -1,5 +1,5 @@
 import * as React from "react";
-import { useState} from "react";
+import { useState, useEffect } from "react";
 import NlpConceptChart from "../graphs/nlp_concept/NlpConceptChart";
 import type { TokenData as BaseTokenData } from "@/api/services/nlp";
 

@@ -1,17 +1,8 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { Card,
-  Alert,
-  TextInput,
-  Tabs,
- } from "flowbite-react";
+import { Alert, Badge, Card, Checkbox, Label, Select, Tabs, TextInput  } from "flowbite-react";;
 import { CsMainTitle } from "@/components/layout/cs_main";
 import { ConfigBreadcrumbs } from "@/components/configuration/ConfigBreadcrumbs";
-import {
-  Zap,
-  Brain,
-    Timer,
-  FileText,
-} from "lucide-react";
+import { AlertTriangle, Brain, FileText, Settings, Timer, Zap  } from "lucide-react";;
 import {
   useConfiguration,
   useUpdateConfigurationValue,

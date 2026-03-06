@@ -1,11 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import ReactDOM from "react-dom";
-import { Button,
-  TextInput,
-  Spinner,
-  Checkbox,
-  Label,
- } from "flowbite-react";
+import { Badge, Button, Checkbox, Label, Spinner, TextInput  } from "flowbite-react";;
 import { ChevronDown, Search, X, CircleX } from "lucide-react";
 import SearchHighlight from "@/components/misc/search_highlight";
 

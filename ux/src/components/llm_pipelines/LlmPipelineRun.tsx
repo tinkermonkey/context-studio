@@ -1,5 +1,5 @@
-import React, { useState, useCallback, ReactNode } from "react";
-import { Button, Alert, Spinner,  } from "flowbite-react";
+import React, { useState, useCallback, ReactNode, useEffect } from "react";
+import { Alert, Badge, Button, Spinner  } from "flowbite-react";;
 import { Play, CheckCircle, XCircle, Clock } from "lucide-react";
 import {
   usePipelineFlavors,

@@ -1,16 +1,6 @@
 import React, { useEffect, useRef } from "react";
-import { Card, Spinner, Button, Progress  } from "flowbite-react";
-import { Database,
-  FileText,
-  Hash,
-  Activity,
-  Settings,
-  Clock,
-  ChevronRight,
-  RefreshCw,
-  Square,
-  AlertCircle,
- } from "lucide-react";
+import { Badge, Button, Card, Progress, Spinner } from "flowbite-react";;
+import { Activity, AlertCircle, Calendar, ChevronRight, Clock, Database, FileText, Hash, RefreshCw, Settings, Square  } from "lucide-react";;
 import { Link } from "@tanstack/react-router";
 import { useActiveDataset } from "@/api/hooks/datasets/useDatasets";
 import { useEmbeddingRegeneration } from "@/api/hooks/embeddings/useEmbeddingRegeneration";

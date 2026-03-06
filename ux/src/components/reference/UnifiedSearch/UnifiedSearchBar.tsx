@@ -5,7 +5,7 @@
  */
 
 import React, { useState, useCallback} from "react";
-import { TextInput, Spinner, Button,  } from "flowbite-react";
+import { Badge, Button, Spinner, TextInput  } from "flowbite-react";;
 import { Search, X, Clock, CheckCircle, XCircle } from "lucide-react";
 import {
   useStreamingUnifiedSearch,

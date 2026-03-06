@@ -1,15 +1,8 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { CsMain, CsMainTitle } from "@/components/layout/cs_main";
 import { CsSidebar } from "@/components/layout/cs_sidebar";
-import { Card, Spinner, Tabs, Alert  } from "flowbite-react";
-import {
-  
-  Database,
-  Activity,
-  Cpu,
-  Shield,
-  AlertCircle,
-} from "lucide-react";
+import { Alert, Badge, Button, Card, Spinner, Tabs } from "flowbite-react";;
+import { Activity, AlertCircle, Cpu, Database, RefreshCw, Server, Shield  } from "lucide-react";;
 import {
   useDatabaseHealth,
   useDatabaseDashboard,

@@ -6,19 +6,8 @@
  */
 
 import React, { useState } from "react";
-import { Card,
-  Button,
-  TextInput,
-  Label,
-  Select,
-  Table,
-  TableHead,
-  TableHeadCell,
-  TableBody,
-  TableRow,
-    Spinner,
-  } from "flowbite-react";
-import { Search, Plus,  } from "lucide-react";
+import { Badge, Button, Card, Label, Select, Spinner, Table, TableBody, TableCell, TableHead, TableHeadCell, TableRow, TextInput  } from "flowbite-react";;
+import { Plus, Search, Trash2  } from "lucide-react";;
 import { useExternalPredicates} from "@/api/hooks/predicates";
 import { useButterToast } from "@/hooks/useButterToast";
 

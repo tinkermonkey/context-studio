@@ -1,21 +1,8 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { Card,
-  Alert,
-  TextInput,
-  Tabs,
- } from "flowbite-react";
+import { Alert, Badge, Button, Card, Checkbox, Label, Tabs, TextInput  } from "flowbite-react";;
 import { CsMainTitle } from "@/components/layout/cs_main";
 import { ConfigBreadcrumbs } from "@/components/configuration/ConfigBreadcrumbs";
-import {
-  Globe,
-  Shield,
-  Database,
-  Activity,
-  Wifi,
-  Clock,
-  HardDrive,
-  Zap,
-} from "lucide-react";
+import { Activity, CheckCircle, Clock, Database, Globe, HardDrive, Server, Shield, Wifi, Zap  } from "lucide-react";;
 import { useConfiguration, useUpdateConfigurationValue } from "@/api/hooks";
 import { useButterToast } from "@/hooks/useButterToast";
 

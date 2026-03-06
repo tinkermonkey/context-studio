@@ -4,7 +4,7 @@
  * Form for creating and editing predicates
  */
 
-import React from "react";
+import React, { useEffect } from "react";
 import { useForm } from "@tanstack/react-form";
 import { TextInput, Textarea, Button, Alert, Label } from "flowbite-react";
 import { Info } from "lucide-react";

@@ -1,28 +1,11 @@
-import React from "react";
+import React, { useEffect } from "react";
 import {
   flexRender,
   getCoreRowModel,
   useReactTable,
   getPaginationRowModel,
 } from "@tanstack/react-table";
-import { Table,
-  TableHead,
-  TableHeadCell,
-  TableBody,
-  TableRow,
-    Button,
-  Spinner,
-  Modal,
-  ModalHeader,
-  ModalBody,
-  Dropdown,
-  DropdownItem,
-  TextInput,
-  Pagination,
-  Select,
-  Radio,
-  Label,
-  } from "flowbite-react";
+import { Badge, Button, Dropdown, DropdownItem, Label, Modal, ModalBody, ModalHeader, Pagination, Radio, Select, Spinner, Table, TableBody, TableCell, TableHead, TableHeadCell, TableRow, TextInput  } from "flowbite-react";;
 import {
   RefreshCcw,
   Plus,

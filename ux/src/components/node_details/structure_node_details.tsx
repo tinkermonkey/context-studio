@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import {
   Spinner,
   Button,
@@ -9,16 +9,7 @@ import {
   ModalBody,
   Textarea,
 } from "flowbite-react";
-import { Hash,
-  Edit3,
-  Database,
-  Layers,
-  Brain,
-  Check,
-  X,
-  Plus,
-  Move,
- } from "lucide-react";
+import { Brain, Calendar, Check, Database, Edit3, Hash, Layers, Move, Plus, X  } from "lucide-react";;
 import { NodeType } from "@/api/types/structureNodes";
 import { useTermHierarchy } from "@/api/hooks/graph/useGraph";
 import { useQueryClient } from "@tanstack/react-query";

@@ -5,7 +5,7 @@
  */
 
 import React, { useState } from "react";
-import { Modal, Card, Button, Spinner, Alert  } from "flowbite-react";
+import { Alert, Badge, Button, Card, Modal, Spinner } from "flowbite-react";;
 import { ExternalLink,
   Copy,
   X,

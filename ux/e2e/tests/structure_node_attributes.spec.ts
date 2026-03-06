@@ -5,7 +5,7 @@
  * including fixture generation, inheritance, validation, and performance.
  */
 
-import { test, expect } from "@playwright/test";
+import { test, expect, Page } from "@playwright/test";
 import { apiRequest } from "../fixtures/test-helpers";
 
 /**

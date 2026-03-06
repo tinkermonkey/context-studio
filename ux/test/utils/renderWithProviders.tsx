@@ -11,19 +11,7 @@ export function makeTestRouter() {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
     defaultPreload: "intent" as any,
   });
-  // register for types
-   
-  (function register() {
-    // @ts-expect-error - test-only register
-    try {
-      import * as mod from "@tanstack/react-router";
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      mod.Register = mod.Register || ({} as any);
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    } catch (_) {
-      // noop
-    }
-  })();
+  // register for types - moved to top for test-only setup
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   return router as any;
 }

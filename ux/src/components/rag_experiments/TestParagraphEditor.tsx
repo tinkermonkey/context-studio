@@ -4,7 +4,7 @@
  * Form for creating and editing test paragraphs for RAG pipeline testing
  */
 
-import React, { useState} from "react";
+import React, { useState, useEffect } from "react";
 import { Button, Label, Textarea, TextInput, Spinner } from "flowbite-react";
 import { Save, X } from "lucide-react";
 import {

@@ -6,18 +6,7 @@
  */
 
 import React, { useState, useMemo } from "react";
-import { Card,
-  Button,
-  Select,
-  TextInput,
-  Spinner,
-  Alert,
-  Modal,
-  Accordion,
-  AccordionPanel,
-  AccordionTitle,
-  AccordionContent,
-  } from "flowbite-react";
+import { Accordion, AccordionContent, AccordionPanel, AccordionTitle, Alert, Badge, Button, Card, Modal, Select, Spinner, TextInput  } from "flowbite-react";;
 import {
   useExecutionHistory,
   useExecutionHistories,

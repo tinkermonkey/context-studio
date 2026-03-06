@@ -5,14 +5,7 @@
  */
 
 import { useState, useMemo } from "react";
-import { Button,
-  Card,
-  Label,
-  Textarea,
-  Spinner,
-  Alert,
-  Checkbox,
-   } from "flowbite-react";
+import { Alert, Badge, Button, Card, Checkbox, Label, Spinner, Textarea  } from "flowbite-react";;
 import { useExtractEntities, useRAGTrace } from "@/api/hooks/rag";
 import { useStructureNode } from "@/api/hooks/structure_nodes/useStructureNodes";
 import { Info, ExternalLink } from "lucide-react";

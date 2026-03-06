@@ -1,23 +1,8 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { Card,
-  Alert,
-  TextInput,
-  Tabs,
-  Textarea,
- } from "flowbite-react";
+import { Alert, Badge, Button, Card, Label, Tabs, TextInput, Textarea  } from "flowbite-react";;
 import { CsMainTitle } from "@/components/layout/cs_main";
 import { ConfigBreadcrumbs } from "@/components/configuration/ConfigBreadcrumbs";
-import { Code,
-  Download,
-  Upload,
-  RotateCcw,
-  Info,
-  CloudOff,
-  Database,
-  Cpu,
-  HardDrive,
-  Terminal,
- } from "lucide-react";
+import { AlertTriangle, CheckCircle, CloudOff, Code, Cpu, Database, Download, HardDrive, Info, RotateCcw, Settings, Terminal, Trash2, Upload, XCircle  } from "lucide-react";;
 import { useConfiguration, useUpdateConfigurationValue } from "@/api/hooks";
 import { useState } from "react";
 import { useButterToast } from "@/hooks/useButterToast";

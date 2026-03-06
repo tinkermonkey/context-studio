@@ -6,8 +6,8 @@
  * Supports US-4.3: View Filtered Relationship Statistics
  */
 
-import React from "react";
-import { Card, Spinner, ToggleSwitch, Button  } from "flowbite-react";
+import React, { useEffect } from "react";
+import { Badge, Button, Card, Spinner, ToggleSwitch } from "flowbite-react";;
 import { RefreshCw, Filter, CheckCircle, XCircle } from "lucide-react";
 import { useFilterStatistics } from "@/api/hooks/reference/useReference";
 import { useButterToast } from "@/hooks/useButterToast";

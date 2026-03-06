@@ -111,10 +111,10 @@ test.describe("Predicate Management", () => {
     // Verify predicate exists in backend with custom identifier
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const response = await apiRequest<{ data: any[] }>(page, "/api/predicates");
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const createdPredicate = response.data.find(
-       
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (p: any) => p.title === predicateTitle,
+    );
 
     expect(createdPredicate).toBeDefined();
     expect(createdPredicate?.identifier).toBe(customIdentifier);
@@ -419,10 +419,10 @@ test.describe("Predicate Management", () => {
     expect(afterCount).toBe(beforeCount);
 
     // Verify the specific test predicate was not created
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const testPredicate = afterResponse.data.find(
-       
-      // eslint-disable-line @typescript-eslint/no-explicit-any p.title === "Test Predicate Not
-      (p: any) => Submitted",,
+      (p: any) => p.title === "Test Predicate Not Submitted",
+    );
     expect(testPredicate).toBeUndefined();
   });
 

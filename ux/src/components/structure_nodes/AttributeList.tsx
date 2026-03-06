@@ -5,8 +5,8 @@
  */
 
 import React, { useMemo } from "react";
-import { Tooltip, Button  } from "flowbite-react";
-import { Link, Edit2  } from "lucide-react";
+import { Badge, Button, Tooltip } from "flowbite-react";;
+import { Edit2, Link, Trash2 } from "lucide-react";;
 import type {
   ResolvedAttribute,
   StructureNodeAttribute,

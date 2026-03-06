@@ -1,5 +1,5 @@
 import React from "react";
-import { render, screen,  } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { vi, describe, it, expect, beforeEach, afterEach } from "vitest";
 import WordSenseSelector from "@/components/graphs/nlp_concept/WordSenseSelector";

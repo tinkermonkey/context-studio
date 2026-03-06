@@ -2,12 +2,8 @@ import { useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { CsMain, CsMainTitle } from "@/components/layout/cs_main";
 import { CsSidebar } from "@/components/layout/cs_sidebar";
-import { Card,
-  Spinner,
-  Tabs,
-  Alert,
- } from "flowbite-react";
-import { ListTodo, AlertCircle, Activity} from "lucide-react";
+import { Alert, Badge, Card, Select, Spinner, Tabs  } from "flowbite-react";;
+import { Activity, AlertCircle, ListTodo, Settings } from "lucide-react";;
 import {
   useTaskList,
   useTaskStats,

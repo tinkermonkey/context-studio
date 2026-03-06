@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useMemo} from "react";
+import React, { useState, useCallback, useMemo, useEffect } from "react";
 import { Spinner } from "flowbite-react";
 import { Save } from "lucide-react";
 import { useUpdateWordSenses } from "@/api/hooks/structure_nodes/useWordSenses";

@@ -4,15 +4,7 @@
  * Reusable component for displaying background task status and progress
  */
 
-import { Card,
-  Progress,
-  Button,
-  Table,
-  TableHead,
-  TableHeadCell,
-  TableBody,
-  TableRow,
-    } from "flowbite-react";
+import { Badge, Button, Card, Progress, Table, TableBody, TableCell, TableHead, TableHeadCell, TableRow  } from "flowbite-react";;
 import { Clock,
   CheckCircle,
   XCircle,

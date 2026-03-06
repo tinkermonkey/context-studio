@@ -4,7 +4,7 @@
  * Main graph visualization component for search results using Reagraph
  */
 
-import React, { useMemo, useState, useRef } from "react";
+import React, { useMemo, useState, useRef, useEffect } from "react";
 import { Alert, Spinner } from "flowbite-react";
 import { Info, AlertTriangle } from "lucide-react";
 import { GraphCanvas, lightTheme } from "reagraph";

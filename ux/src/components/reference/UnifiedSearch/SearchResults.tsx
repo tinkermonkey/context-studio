@@ -5,7 +5,7 @@
  */
 
 import React from "react";
-import { Card, Button, Alert, Spinner  } from "flowbite-react";
+import { Alert, Badge, Button, Card, Spinner } from "flowbite-react";;
 import {
   ExternalLink,
   AlertCircle,

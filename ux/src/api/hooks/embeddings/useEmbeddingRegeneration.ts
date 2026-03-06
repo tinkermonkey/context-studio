@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { API_CONFIG } from "@/api/config";
 
 export interface EmbeddingProgress {

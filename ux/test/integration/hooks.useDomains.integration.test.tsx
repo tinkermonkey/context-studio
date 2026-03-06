@@ -1,6 +1,6 @@
 import React from "react";
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-import { screen,  } from "@testing-library/react";
+import { screen, waitFor } from "@testing-library/react";
 import { describe, it, expect } from "vitest";
 import { renderWithProviders as render } from "@/test/utils/renderWithProviders";
 import { useDomainNodes } from "@/api/hooks/structure_nodes/useStructureNodes";

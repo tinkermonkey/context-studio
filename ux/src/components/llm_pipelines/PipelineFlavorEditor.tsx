@@ -1,12 +1,5 @@
-import React, { useState, useRef } from "react";
-import { Button,
-  Label,
-  TextInput,
-  Textarea,
-  Select,
-  Alert,
-  Spinner,
-   } from "flowbite-react";
+import React, { useState, useRef, useEffect } from "react";
+import { Alert, Badge, Button, Label, Select, Spinner, TextInput, Textarea  } from "flowbite-react";;
 import { Save, AlertTriangle, Info } from "lucide-react";
 import {
   useCreatePipelineFlavor,
