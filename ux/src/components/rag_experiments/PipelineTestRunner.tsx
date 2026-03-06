@@ -11,9 +11,7 @@ import {
   useTestParagraphs,
   useRunPipelineTest,
 } from "@/api/hooks/ragExperiments";
-import type {
-  RunPipelineTestResponse,
-  } from "@/api/services/ragExperiments";
+import type { RunPipelineTestResponse } from "@/api/services/ragExperiments";
 
 export interface PipelineTestRunnerProps {
   onTestComplete?: (results: RunPipelineTestResponse) => void;
