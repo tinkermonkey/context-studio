@@ -422,8 +422,7 @@ class ProposalManager:
         Args:
             proposal_id: Proposal identifier
         """
-        # For Phase 3, we'll implement this as a placeholder
-        # Auto-merge will be handled by CRDTMergeEngine
+        # Auto-merge not yet wired to CRDTMergeEngine
         logger.info(f"Auto-merge triggered for proposal {proposal_id} (placeholder)")
     
     def _store_proposal_locally(self, proposal: Proposal) -> None:
