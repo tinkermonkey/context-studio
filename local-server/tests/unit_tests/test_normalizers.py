@@ -2,7 +2,7 @@
 
 import sys
 import os
-sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))  # noqa: E501
+sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
 import pytest  # noqa: E402
 from datetime import datetime, UTC  # noqa: E402
@@ -10,9 +10,9 @@ from unittest.mock import Mock  # noqa: E402
 
 from reference_api.normalizers import ResultNormalizer  # noqa: E402
 from reference_api.models import (  # noqa: E402
-    SourceType, DBpediaSearchResponse, DBpediaSearchResult, DBpediaResourceResponse, ConceptNetQueryResponse, ConceptNetConceptResponse, ConceptNetRelatedResponse,  # noqa: E501
+    SourceType, DBpediaSearchResponse, DBpediaSearchResult, DBpediaResourceResponse, ConceptNetQueryResponse, ConceptNetConceptResponse, ConceptNetRelatedResponse,
     WikidataSparqlResponse, WikidataEntityResponse,
-    SchemaOrgSearchResponse, SchemaOrgSearchResult, SchemaOrgEntityResponse, SchemaOrgEntity,  # noqa: E501
+    SchemaOrgSearchResponse, SchemaOrgSearchResult, SchemaOrgEntityResponse, SchemaOrgEntity,
     SchemaOrgPropertyResponse, SchemaOrgPropertyData
 )
 
@@ -62,7 +62,7 @@ class TestResultNormalizer:
         )
 
         # Normalize
-        nodes, links = normalizer.normalize_dbpedia_search_response(response, "python")  # noqa: E501
+        nodes, links = normalizer.normalize_dbpedia_search_response(response, "python")
 
         # Verify results
         assert len(nodes) == 2
@@ -73,12 +73,12 @@ class TestResultNormalizer:
         assert nodes[0].source == SourceType.DBPEDIA
         assert nodes[0].title == "Python (programming language)"
         assert nodes[0].definition == "High-level programming language"
-        assert nodes[0].attributes["uri"] == "http://dbpedia.org/resource/Python"  # noqa: E501
-        assert nodes[0].attributes["types"] == ["ProgrammingLanguage", "Language"]  # noqa: E501
+        assert nodes[0].attributes["uri"] == "http://dbpedia.org/resource/Python"
+        assert nodes[0].attributes["types"] == ["ProgrammingLanguage", "Language"]
         assert nodes[0].relevance_score == 1.0  # Max score normalized to 1.0
 
         # Check second node
-        assert nodes[1].relevance_score == pytest.approx(0.894, rel=1e-2)  # 0.85/0.95  # noqa: E501
+        assert nodes[1].relevance_score == pytest.approx(0.894, rel=1e-2)  # 0.85/0.95
 
     def test_normalize_dbpedia_search_response_empty(self, normalizer):
         """Test DBpedia search response with no results."""
@@ -91,7 +91,7 @@ class TestResultNormalizer:
             results=[]
         )
 
-        nodes, links = normalizer.normalize_dbpedia_search_response(response, "nonexistent")  # noqa: E501
+        nodes, links = normalizer.normalize_dbpedia_search_response(response, "nonexistent")
 
         assert len(nodes) == 0
         assert len(links) == 0
@@ -106,7 +106,7 @@ class TestResultNormalizer:
             results=[]
         )
 
-        nodes, links = normalizer.normalize_dbpedia_search_response(response, "test")  # noqa: E501
+        nodes, links = normalizer.normalize_dbpedia_search_response(response, "test")
 
         assert len(nodes) == 0
         assert len(links) == 0
@@ -129,7 +129,7 @@ class TestResultNormalizer:
             }
         )
 
-        nodes, links = normalizer.normalize_dbpedia_resource_response(response, "python")  # noqa: E501
+        nodes, links = normalizer.normalize_dbpedia_resource_response(response, "python")
 
         assert len(nodes) == 1
         assert len(links) == 0
@@ -138,9 +138,9 @@ class TestResultNormalizer:
         assert node.id == "dbpedia:http://dbpedia.org/resource/Python"
         assert node.source == SourceType.DBPEDIA
         assert node.title == "Python (programming language)"
-        assert node.definition == "Python is a high-level programming language."  # noqa: E501
+        assert node.definition == "Python is a high-level programming language."
         assert node.attributes["uri"] == "http://dbpedia.org/resource/Python"
-        assert node.attributes["data_url"] == "http://dbpedia.org/data/Python.json"  # noqa: E501
+        assert node.attributes["data_url"] == "http://dbpedia.org/data/Python.json"
         assert node.relevance_score == 1.0
 
     def test_normalize_conceptnet_query_response_success(self, normalizer):
@@ -171,9 +171,9 @@ class TestResultNormalizer:
             edges=edges
         )
 
-        nodes, links = normalizer.normalize_conceptnet_query_response(response, "dog")  # noqa: E501
+        nodes, links = normalizer.normalize_conceptnet_query_response(response, "dog")
 
-        # Should have 2 nodes (dog, animal) and 2 links (IsA relation + external URL)  # noqa: E501
+        # Should have 2 nodes (dog, animal) and 2 links (IsA relation + external URL)
         assert len(nodes) == 2
         assert len(links) == 2
 
@@ -195,10 +195,10 @@ class TestResultNormalizer:
         assert isa_link.object == "conceptnet:/c/en/animal"
         assert isa_link.weight == 0.8
 
-        external_link = next(lnk for lnk in links if lnk.predicate == "externalURL")  # noqa: E501
+        external_link = next(lnk for lnk in links if lnk.predicate == "externalURL")
         assert external_link.source == SourceType.CONCEPTNET
         assert external_link.subject == "conceptnet:/c/en/dog"
-        assert external_link.object == "dbpedia:http://dbpedia.org/resource/Dog"  # noqa: E501
+        assert external_link.object == "dbpedia:http://dbpedia.org/resource/Dog"
         assert external_link.attributes["link_type"] == "external_reference"
 
     def test_normalize_wikidata_sparql_response_success(self, normalizer):
@@ -211,12 +211,12 @@ class TestResultNormalizer:
                 "results": {
                     "bindings": [
                         {
-                            "item": {"value": "http://www.wikidata.org/entity/Q28865"},  # noqa: E501
+                            "item": {"value": "http://www.wikidata.org/entity/Q28865"},
                             "itemLabel": {"value": "Python"},
-                            "itemDescription": {"value": "programming language"},  # noqa: E501
-                            "property": {"value": "http://www.wikidata.org/prop/direct/P31"},  # noqa: E501
+                            "itemDescription": {"value": "programming language"},
+                            "property": {"value": "http://www.wikidata.org/prop/direct/P31"},
                             "propertyLabel": {"value": "instance of"},
-                            "object": {"value": "http://www.wikidata.org/entity/Q9143"},  # noqa: E501
+                            "object": {"value": "http://www.wikidata.org/entity/Q9143"},
                             "objectLabel": {"value": "programming language"}
                         }
                     ]
@@ -224,15 +224,15 @@ class TestResultNormalizer:
             }
         )
 
-        nodes, links = normalizer.normalize_wikidata_sparql_response(response, "python")  # noqa: E501
+        nodes, links = normalizer.normalize_wikidata_sparql_response(response, "python")
 
-        # Should have 2 nodes (Python entity and programming language object) and 1 link  # noqa: E501
+        # Should have 2 nodes (Python entity and programming language object) and 1 link
         assert len(nodes) == 2
         assert len(links) == 1
 
         # Check main entity node
         python_node = next(n for n in nodes if n.title == "Python")
-        assert python_node.id == "wikidata:http://www.wikidata.org/entity/Q28865"  # noqa: E501
+        assert python_node.id == "wikidata:http://www.wikidata.org/entity/Q28865"
         assert python_node.source == SourceType.WIKIDATA
         assert python_node.definition == "programming language"
         assert python_node.relevance_score == 1.0
@@ -278,16 +278,16 @@ class TestResultNormalizer:
             results=results
         )
 
-        nodes, links = normalizer.normalize_schema_org_search_response(response, "person")  # noqa: E501
+        nodes, links = normalizer.normalize_schema_org_search_response(response, "person")
 
         assert len(nodes) == 2
-        assert len(links) == 0  # Schema.org search doesn't provide relationship data  # noqa: E501
+        assert len(links) == 0  # Schema.org search doesn't provide relationship data
 
         # Check Person entity
         person_node = next(n for n in nodes if n.title == "Person")
         assert person_node.id == "schema_org:Person"
         assert person_node.source == SourceType.SCHEMA_ORG
-        assert person_node.definition == "A person (alive, dead, undead, or fictional)."  # noqa: E501
+        assert person_node.definition == "A person (alive, dead, undead, or fictional)."
         assert person_node.attributes["type"] == "entity"
         assert person_node.source_url == "https://schema.org/Person"
         assert person_node.relevance_score == 0.95
@@ -317,7 +317,7 @@ class TestResultNormalizer:
             entity=entity
         )
 
-        nodes, links = normalizer.normalize_schema_org_entity_response(response, "Person")  # noqa: E501
+        nodes, links = normalizer.normalize_schema_org_entity_response(response, "Person")
 
         assert len(nodes) == 1
         assert len(links) == 0
@@ -326,7 +326,7 @@ class TestResultNormalizer:
         assert node.id == "schema_org:Person"
         assert node.source == SourceType.SCHEMA_ORG
         assert node.title == "Person"
-        assert node.definition == "A person (alive, dead, undead, or fictional)."  # noqa: E501
+        assert node.definition == "A person (alive, dead, undead, or fictional)."
         assert node.attributes["parent_identifier"] == "Thing"
         assert node.relevance_score == 1.0
 
@@ -340,7 +340,7 @@ class TestResultNormalizer:
             data={"label": "dog", "additional_info": "test"}
         )
 
-        nodes, links = normalizer.normalize_conceptnet_concept_response(response, "/c/en/dog")  # noqa: E501
+        nodes, links = normalizer.normalize_conceptnet_concept_response(response, "/c/en/dog")
 
         assert len(nodes) == 1
         assert len(links) == 0
@@ -354,7 +354,7 @@ class TestResultNormalizer:
         assert node.relevance_score == 1.0
 
     def test_normalize_conceptnet_related_response_success(self, normalizer):
-        """Test successful ConceptNet related concepts response normalization."""  # noqa: E501
+        """Test successful ConceptNet related concepts response normalization."""
         related_concepts = [
             {"@id": "/c/en/animal", "label": "animal", "weight": 0.8},
             {"@id": "/c/en/pet", "label": "pet", "weight": 0.7}
@@ -368,7 +368,7 @@ class TestResultNormalizer:
             related=related_concepts
         )
 
-        nodes, links = normalizer.normalize_conceptnet_related_response(response, "/c/en/dog")  # noqa: E501
+        nodes, links = normalizer.normalize_conceptnet_related_response(response, "/c/en/dog")
 
         assert len(nodes) == 2
         assert len(links) == 0
@@ -400,7 +400,7 @@ class TestResultNormalizer:
             }
         )
 
-        nodes, links = normalizer.normalize_wikidata_entity_response(response, "Q28865")  # noqa: E501
+        nodes, links = normalizer.normalize_wikidata_entity_response(response, "Q28865")
 
         assert len(nodes) == 1
         assert len(links) == 0
@@ -434,7 +434,7 @@ class TestResultNormalizer:
             property=property_data
         )
 
-        nodes, links = normalizer.normalize_schema_org_property_response(response, "name")  # noqa: E501
+        nodes, links = normalizer.normalize_schema_org_property_response(response, "name")
 
         assert len(nodes) == 1
         assert len(links) == 0
@@ -449,7 +449,7 @@ class TestResultNormalizer:
         assert node.relevance_score == 1.0
 
     def test_language_filtering_conceptnet(self, normalizer):
-        """Test that ConceptNet normalization filters by configured language."""  # noqa: E501
+        """Test that ConceptNet normalization filters by configured language."""
         # Test with Spanish concepts when default language is English
         edges = [
             {
@@ -477,11 +477,11 @@ class TestResultNormalizer:
             edges=edges
         )
 
-        nodes, links = normalizer.normalize_conceptnet_query_response(response, "dog")  # noqa: E501
+        nodes, links = normalizer.normalize_conceptnet_query_response(response, "dog")
 
         # Should only include English concepts since default_language is "en"
         assert len(nodes) == 2  # dog and animal (both English)
-        assert all("/c/en/" in node.attributes["concept_uri"] for node in nodes)  # noqa: E501
+        assert all("/c/en/" in node.attributes["concept_uri"] for node in nodes)
 
     def test_error_handling_malformed_data(self, normalizer):
         """Test error handling with malformed response data."""
@@ -493,7 +493,7 @@ class TestResultNormalizer:
             results={"malformed": "data"}  # Missing expected structure
         )
 
-        nodes, links = normalizer.normalize_wikidata_sparql_response(response, "test")  # noqa: E501
+        nodes, links = normalizer.normalize_wikidata_sparql_response(response, "test")
 
         # Should handle gracefully and return empty results
         assert len(nodes) == 0

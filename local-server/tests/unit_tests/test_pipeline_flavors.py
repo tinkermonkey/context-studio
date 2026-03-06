@@ -109,7 +109,7 @@ class TestPipelineFlavorService:
             mock_db.return_value.__enter__.return_value = mock_session
 
             # Mock existing flavor with same title
-            mock_session.execute.return_value.fetchone.return_value = ["existing_id"]  # noqa: E501
+            mock_session.execute.return_value.fetchone.return_value = ["existing_id"]
 
             with pytest.raises(FlavorValidationError) as exc_info:
                 flavor_service.create_flavor(sample_create_request)
@@ -189,7 +189,7 @@ class TestPipelineFlavorService:
                 datetime.utcnow(),
                 datetime.utcnow(),
             ]
-            mock_session.execute.return_value.fetchone.return_value = default_row  # noqa: E501
+            mock_session.execute.return_value.fetchone.return_value = default_row
 
             # Try to rename default flavor
             rename_request = UpdatePipelineFlavorRequest(title="New Name")
@@ -206,7 +206,7 @@ class TestPipelineFlavorService:
             mock_db.return_value.__enter__.return_value = mock_session
 
             # Mock existing non-default flavor
-            mock_session.execute.return_value.fetchone.return_value = ["Test Flavor"]  # noqa: E501
+            mock_session.execute.return_value.fetchone.return_value = ["Test Flavor"]
             mock_session.execute.return_value.rowcount = 1
 
             result = flavor_service.delete_flavor("test-flavor-id")
@@ -224,7 +224,7 @@ class TestPipelineFlavorService:
             mock_db.return_value.__enter__.return_value = mock_session
 
             # Mock existing default flavor
-            mock_session.execute.return_value.fetchone.return_value = ["Default"]  # noqa: E501
+            mock_session.execute.return_value.fetchone.return_value = ["Default"]
 
             with pytest.raises(FlavorValidationError) as exc_info:
                 flavor_service.delete_flavor("default-id")
@@ -250,7 +250,7 @@ class TestPipelineFlavorService:
         with patch("llm.flavor_service.get_pipeline_session") as mock_db:
             mock_session = Mock()
             mock_db.return_value.__enter__.return_value = mock_session
-            mock_session.execute.return_value.fetchone.return_value = mock_flavor_row  # noqa: E501
+            mock_session.execute.return_value.fetchone.return_value = mock_flavor_row
 
             result = flavor_service.get_flavor_by_id("test-flavor-id")
 
@@ -272,12 +272,12 @@ class TestPipelineFlavorService:
 
             assert "not found" in str(exc_info.value)
 
-    def test_get_flavor_by_title_success(self, flavor_service, mock_flavor_row):  # noqa: E501
+    def test_get_flavor_by_title_success(self, flavor_service, mock_flavor_row):
         """Test successfully getting a flavor by title"""
         with patch("llm.flavor_service.get_pipeline_session") as mock_db:
             mock_session = Mock()
             mock_db.return_value.__enter__.return_value = mock_session
-            mock_session.execute.return_value.fetchone.return_value = mock_flavor_row  # noqa: E501
+            mock_session.execute.return_value.fetchone.return_value = mock_flavor_row
 
             result = flavor_service.get_flavor_by_title(
                 PipelineType.SUGGEST_TERM_DEFINITION, "Test Flavor"
@@ -317,7 +317,7 @@ class TestPipelineFlavorService:
 
             # Verify result (includes default flavors + user flavors)
             assert isinstance(result, list)
-            assert len(result) >= 2  # At least default flavors for each pipeline type  # noqa: E501
+            assert len(result) >= 2  # At least default flavors for each pipeline type
             # The exact count depends on how many default flavors are generated
 
     def test_list_flavors_by_pipeline(self, flavor_service, mock_flavor_row):
@@ -325,7 +325,7 @@ class TestPipelineFlavorService:
         with patch("llm.flavor_service.get_pipeline_session") as mock_db:
             mock_session = Mock()
             mock_db.return_value.__enter__.return_value = mock_session
-            mock_session.execute.return_value.fetchall.return_value = [mock_flavor_row]  # noqa: E501
+            mock_session.execute.return_value.fetchall.return_value = [mock_flavor_row]
 
             result = flavor_service.list_flavors(
                 PipelineType.SUGGEST_TERM_DEFINITION
@@ -342,7 +342,7 @@ class TestPipelineFlavorService:
         with patch("llm.flavor_service.get_pipeline_session") as mock_db:
             mock_session = Mock()
             mock_db.return_value.__enter__.return_value = mock_session
-            mock_session.execute.return_value.fetchall.return_value = [mock_flavor_row]  # noqa: E501
+            mock_session.execute.return_value.fetchall.return_value = [mock_flavor_row]
 
             result = flavor_service.get_enabled_flavors(
                 PipelineType.SUGGEST_TERM_DEFINITION
@@ -429,9 +429,9 @@ class TestPipelineFlavorValidation:
 
     def test_pipeline_type_enum(self):
         """Test pipeline type enumeration"""
-        assert PipelineType.SUGGEST_TERM_DEFINITION == "suggest_term_definition"  # noqa: E501
-        assert PipelineType.SUGGEST_LAYER_DEFINITION == "suggest_layer_definition"  # noqa: E501
-        assert PipelineType.SUGGEST_DOMAIN_DEFINITION == "suggest_domain_definition"  # noqa: E501
+        assert PipelineType.SUGGEST_TERM_DEFINITION == "suggest_term_definition"
+        assert PipelineType.SUGGEST_LAYER_DEFINITION == "suggest_layer_definition"
+        assert PipelineType.SUGGEST_DOMAIN_DEFINITION == "suggest_domain_definition"
 
     def test_create_request_field_validation(self):
         """Test field validation in create request"""

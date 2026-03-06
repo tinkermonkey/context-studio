@@ -1,7 +1,7 @@
 """
 Unit Tests for node_conversion module
 
-Tests embedding deserialization from numpy binary format and node conversion utilities.  # noqa: E501
+Tests embedding deserialization from numpy binary format and node conversion utilities.
 """
 
 import sys
@@ -32,7 +32,7 @@ class TestNodeConversionEmbeddingDeserialization:
         """Convert numpy array to bytes using tobytes() method."""
         return sample_embedding_data.tobytes()
 
-    def test_deserialize_title_embedding_from_numpy_bytes(self, sample_embedding_bytes):  # noqa: E501
+    def test_deserialize_title_embedding_from_numpy_bytes(self, sample_embedding_bytes):
         """Test deserialization of title embedding from numpy binary format."""
         # Create mock StructureNode with title embedding
         node = Mock(spec=StructureNode)
@@ -60,8 +60,8 @@ class TestNodeConversionEmbeddingDeserialization:
         assert abs(result.title_embedding[1] - 0.2) < 1e-6
         assert abs(result.title_embedding[2] - 0.3) < 1e-6
 
-    def test_deserialize_definition_embedding_from_numpy_bytes(self, sample_embedding_bytes):  # noqa: E501
-        """Test deserialization of definition embedding from numpy binary format."""  # noqa: E501
+    def test_deserialize_definition_embedding_from_numpy_bytes(self, sample_embedding_bytes):
+        """Test deserialization of definition embedding from numpy binary format."""
         # Create mock StructureNode with definition embedding
         node = Mock(spec=StructureNode)
         node.id = UUID('12345678-1234-5678-1234-567812345678')
@@ -84,7 +84,7 @@ class TestNodeConversionEmbeddingDeserialization:
         assert isinstance(result.definition_embedding, list)
         assert len(result.definition_embedding) == 5
 
-    def test_both_embeddings_deserialized_correctly(self, sample_embedding_bytes):  # noqa: E501
+    def test_both_embeddings_deserialized_correctly(self, sample_embedding_bytes):
         """Test that both title and definition embeddings are deserialized."""
         node = Mock(spec=StructureNode)
         node.id = UUID('12345678-1234-5678-1234-567812345678')
@@ -108,8 +108,8 @@ class TestNodeConversionEmbeddingDeserialization:
         assert len(result.title_embedding) == 5
         assert len(result.definition_embedding) == 5
 
-    def test_no_embeddings_when_include_embeddings_false(self, sample_embedding_bytes):  # noqa: E501
-        """Test that embeddings are not processed when include_embeddings is False."""  # noqa: E501
+    def test_no_embeddings_when_include_embeddings_false(self, sample_embedding_bytes):
+        """Test that embeddings are not processed when include_embeddings is False."""
         node = Mock(spec=StructureNode)
         node.id = UUID('12345678-1234-5678-1234-567812345678')
         node.title = "Test Node"
@@ -197,8 +197,8 @@ class TestNodeConversionEmbeddingDeserialization:
         assert result.title_embedding is None
 
     def test_large_embedding_array_deserialized_correctly(self):
-        """Test deserialization of large embedding arrays (typical case: 768 dimensions)."""  # noqa: E501
-        # Create a 768-dimensional embedding with fixed values for reproducibility  # noqa: E501
+        """Test deserialization of large embedding arrays (typical case: 768 dimensions)."""
+        # Create a 768-dimensional embedding with fixed values for reproducibility
         large_embedding = np.linspace(0.0, 1.0, 768, dtype=np.float32)
         large_embedding_bytes = large_embedding.tobytes()
 
@@ -246,7 +246,7 @@ class TestNodeConversionIntegration:
         node.structural_predicate_id = predicate_id
         node.created_at = datetime(2024, 1, 1, 12, 0, 0, tzinfo=timezone.utc)
         node.version = 5
-        node.last_modified = datetime(2024, 1, 15, 12, 0, 0, tzinfo=timezone.utc)  # noqa: E501
+        node.last_modified = datetime(2024, 1, 15, 12, 0, 0, tzinfo=timezone.utc)
 
         # Convert to API model
         result = to_node_out(node, include_embeddings=False)
@@ -286,7 +286,7 @@ class TestNodeConversionIntegration:
         # Verify embeddings are not included in list responses
         assert len(result['data']) == 3
         assert all(item.title_embedding is None for item in result['data'])
-        assert all(item.definition_embedding is None for item in result['data'])  # noqa: E501
+        assert all(item.definition_embedding is None for item in result['data'])
         assert result['total'] == 10
         assert result['skip'] == 0
         assert result['limit'] == 3
@@ -366,7 +366,7 @@ class TestEmbeddingErrorRecovery:
 
         assert result.id is not None
         assert result.title == "Test Node"
-        assert result.title_embedding is None  # Misaligned embedding should be excluded when error occurs  # noqa: E501
+        assert result.title_embedding is None  # Misaligned embedding should be excluded when error occurs
 
     def test_node_returned_even_if_both_embeddings_fail(self):
         """Test that node is still returned even if both embeddings fail."""

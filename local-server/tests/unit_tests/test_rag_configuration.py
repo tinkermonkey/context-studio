@@ -1,14 +1,14 @@
 """
 Unit tests for RAG pipeline configuration.
 
-Tests configuration defaults, field types, and validation for RAGPipelineConfig.  # noqa: E501
+Tests configuration defaults, field types, and validation for RAGPipelineConfig.
 """
 
 import sys
 import os
 
 sys.path.append(
-    os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))  # noqa: E501
+    os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 )
 
 import pytest  # noqa: E402
@@ -77,7 +77,7 @@ def test_rag_config_field_types():
     assert isinstance(config.gap_detection_deps, list)
 
     # Optional fields
-    assert config.llm_pipeline_flavor is None or isinstance(config.llm_pipeline_flavor, str)  # noqa: E501
+    assert config.llm_pipeline_flavor is None or isinstance(config.llm_pipeline_flavor, str)
 
 
 def test_rag_config_kg_context_top_k_validation():
@@ -153,7 +153,7 @@ def test_rag_config_web_search_validation():
 def test_rag_config_observability_validation():
     """Test observability field validation."""
     # Valid retention days
-    config = RAGPipelineConfig(observability_retention_days=60, trace_retention_days=14)  # noqa: E501
+    config = RAGPipelineConfig(observability_retention_days=60, trace_retention_days=14)
     assert config.observability_retention_days == 60
     assert config.trace_retention_days == 14
 
@@ -235,10 +235,10 @@ def test_rag_config_field_descriptions():
     ]
 
     for field_name in required_fields:
-        assert field_name in model_fields, f"Field {field_name} not found in model"  # noqa: E501
+        assert field_name in model_fields, f"Field {field_name} not found in model"
         field_info = model_fields[field_name]
-        assert field_info.description is not None, f"Field {field_name} has no description"  # noqa: E501
-        assert len(field_info.description) > 0, f"Field {field_name} has empty description"  # noqa: E501
+        assert field_info.description is not None, f"Field {field_name} has no description"
+        assert len(field_info.description) > 0, f"Field {field_name} has empty description"
 
 
 def test_rag_config_custom_values():

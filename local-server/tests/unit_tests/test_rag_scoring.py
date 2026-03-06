@@ -9,7 +9,7 @@ import sys
 import os
 
 # Add parent directory to path for imports
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))  # noqa: E501
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
 import pytest  # noqa: E402
 
@@ -145,7 +145,7 @@ class TestScoringScenarios:
 
     def setup_method(self):
         self.service = RAGTestScoringService(overlap_threshold=0.8)
-        self.paragraph_text = "Apple Inc. is a technology company founded by Steve Jobs."  # noqa: E501
+        self.paragraph_text = "Apple Inc. is a technology company founded by Steve Jobs."
 
     def _create_extracted_entity(
         self,
@@ -179,7 +179,7 @@ class TestScoringScenarios:
             AnnotationSpan(47, 58, "node2", "Steve Jobs")
         ]
 
-        result = self.service.score_extraction(extracted, annotations, self.paragraph_text)  # noqa: E501
+        result = self.service.score_extraction(extracted, annotations, self.paragraph_text)
 
         assert result.precision == 1.0
         assert result.recall == 1.0
@@ -198,7 +198,7 @@ class TestScoringScenarios:
             AnnotationSpan(0, 10, "node1", "Apple Inc.")
         ]
 
-        result = self.service.score_extraction(extracted, annotations, self.paragraph_text)  # noqa: E501
+        result = self.service.score_extraction(extracted, annotations, self.paragraph_text)
 
         assert result.precision == 0.0
         assert result.recall == 0.0
@@ -210,8 +210,8 @@ class TestScoringScenarios:
     def test_partial_matches(self):
         """Test scenario with some correct and some incorrect extractions."""
         extracted = [
-            self._create_extracted_entity("Apple Inc.", 0, 10, "node1"),  # Correct  # noqa: E501
-            self._create_extracted_entity("technology", 16, 26, "node3"),  # Extra (FP)  # noqa: E501
+            self._create_extracted_entity("Apple Inc.", 0, 10, "node1"),  # Correct
+            self._create_extracted_entity("technology", 16, 26, "node3"),  # Extra (FP)
         ]
 
         annotations = [
@@ -219,7 +219,7 @@ class TestScoringScenarios:
             AnnotationSpan(47, 58, "node2", "Steve Jobs")  # Missed (FN)
         ]
 
-        result = self.service.score_extraction(extracted, annotations, self.paragraph_text)  # noqa: E501
+        result = self.service.score_extraction(extracted, annotations, self.paragraph_text)
 
         assert result.true_positives == 1
         assert result.false_positives == 1
@@ -240,7 +240,7 @@ class TestScoringScenarios:
             AnnotationSpan(0, 10, "node1", "Apple Inc.")
         ]
 
-        result = self.service.score_extraction(extracted, annotations, self.paragraph_text)  # noqa: E501
+        result = self.service.score_extraction(extracted, annotations, self.paragraph_text)
 
         # "Apple" (0-5, length 5) vs "Apple Inc." (0-10, length 10)
         # Intersection: 0-5 (length 5)
@@ -261,7 +261,7 @@ class TestScoringScenarios:
             AnnotationSpan(0, 10, "node1", "Apple Inc.")
         ]
 
-        result = self.service.score_extraction(extracted, annotations, self.paragraph_text)  # noqa: E501
+        result = self.service.score_extraction(extracted, annotations, self.paragraph_text)
 
         # "Inc." (6-10, length 4) vs "Apple Inc." (0-10, length 10)
         # Intersection: 6-10 (length 4)
@@ -277,7 +277,7 @@ class TestScoringScenarios:
             AnnotationSpan(0, 10, "node1", "Apple Inc.")
         ]
 
-        result = self.service.score_extraction(extracted, annotations, self.paragraph_text)  # noqa: E501
+        result = self.service.score_extraction(extracted, annotations, self.paragraph_text)
 
         assert result.precision == 0.0
         assert result.recall == 0.0
@@ -294,7 +294,7 @@ class TestScoringScenarios:
 
         annotations = []
 
-        result = self.service.score_extraction(extracted, annotations, self.paragraph_text)  # noqa: E501
+        result = self.service.score_extraction(extracted, annotations, self.paragraph_text)
 
         assert result.precision == 0.0  # No ground truth to match
         assert result.recall == 0.0
@@ -307,14 +307,14 @@ class TestScoringScenarios:
         """Test scenario with multiple extractions for same annotation."""
         extracted = [
             self._create_extracted_entity("Apple Inc.", 0, 10, "node1"),
-            self._create_extracted_entity("Apple", 0, 5, "node1")  # Overlapping extraction  # noqa: E501
+            self._create_extracted_entity("Apple", 0, 5, "node1")  # Overlapping extraction
         ]
 
         annotations = [
             AnnotationSpan(0, 10, "node1", "Apple Inc.")
         ]
 
-        result = self.service.score_extraction(extracted, annotations, self.paragraph_text)  # noqa: E501
+        result = self.service.score_extraction(extracted, annotations, self.paragraph_text)
 
         # Should match one extraction to the annotation, other becomes FP
         assert result.true_positives == 1
@@ -331,7 +331,7 @@ class TestScoringScenarios:
             AnnotationSpan(0, 10, "correct_node", "Apple Inc.")
         ]
 
-        result = self.service.score_extraction(extracted, annotations, self.paragraph_text)  # noqa: E501
+        result = self.service.score_extraction(extracted, annotations, self.paragraph_text)
 
         # Spans overlap perfectly but node IDs don't match
         assert result.true_positives == 0
@@ -339,16 +339,16 @@ class TestScoringScenarios:
         assert result.false_negatives == 1
 
     def test_null_matched_kg_node(self):
-        """Test extraction with no matched_kg_node (should still match by span)."""  # noqa: E501
+        """Test extraction with no matched_kg_node (should still match by span)."""
         extracted = [
-            self._create_extracted_entity("Apple Inc.", 0, 10, None)  # No node match  # noqa: E501
+            self._create_extracted_entity("Apple Inc.", 0, 10, None)  # No node match
         ]
 
         annotations = [
             AnnotationSpan(0, 10, "node1", "Apple Inc.")
         ]
 
-        result = self.service.score_extraction(extracted, annotations, self.paragraph_text)  # noqa: E501
+        result = self.service.score_extraction(extracted, annotations, self.paragraph_text)
 
         # Should match by span alone when no node is matched
         assert result.true_positives == 1
@@ -377,15 +377,15 @@ class TestCustomThreshold:
         ]
 
         annotations = [
-            AnnotationSpan(0, 10, "node1", "Test paragraph")  # Much longer span  # noqa: E501
+            AnnotationSpan(0, 10, "node1", "Test paragraph")  # Much longer span
         ]
 
-        # Strict threshold: "Test" (0-4, len 4) vs "Test paragraph" (0-10, len 10)  # noqa: E501
+        # Strict threshold: "Test" (0-4, len 4) vs "Test paragraph" (0-10, len 10)
         # Intersection: 0-4 (len 4), Overlap: 4/4 = 1.0 -> Matches!
-        result_strict = service_strict.score_extraction(extracted, annotations, paragraph)  # noqa: E501
+        result_strict = service_strict.score_extraction(extracted, annotations, paragraph)
 
         # Loose threshold: Same calculation, should also match
-        result_loose = service_loose.score_extraction(extracted, annotations, paragraph)  # noqa: E501
+        result_loose = service_loose.score_extraction(extracted, annotations, paragraph)
 
         # Both should match in this case
         assert result_strict.true_positives == 1

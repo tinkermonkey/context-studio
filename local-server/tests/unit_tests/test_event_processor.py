@@ -2,7 +2,7 @@ import sys
 import os
 
 sys.path.insert(
-    0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))  # noqa: E501
+    0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 )
 import time  # noqa: E402
 import uuid  # noqa: E402
@@ -17,7 +17,7 @@ pytestmark = pytest.mark.event_processor
 
 
 def insert_event_via_sqlalchemy(
-    event_type, record_type, processed=0, ts=None, record_id=None, test_session_id=None  # noqa: E501
+    event_type, record_type, processed=0, ts=None, record_id=None, test_session_id=None
 ):
     """Insert an event using SQLAlchemy engine (same as EventProcessor uses)"""
     if ts is None:
@@ -32,23 +32,23 @@ def insert_event_via_sqlalchemy(
         record_id = f"{test_session_id}-{record_id}"
 
     # Create JSON data with test session ID for comprehensive cleanup
-    test_marker = f"test-session-{test_session_id}" if test_session_id else "test-data"  # noqa: E501
-    new_data = f'{{"title": "Test {record_type}", "test_marker": "{test_marker}"}}'  # noqa: E501
+    test_marker = f"test-session-{test_session_id}" if test_session_id else "test-data"
+    new_data = f'{{"title": "Test {record_type}", "test_marker": "{test_marker}"}}'
     old_data = (
-        f'{{"title": "Old Test {record_type}", "test_marker": "{test_marker}"}}' if event_type == "update" else None  # noqa: E501
+        f'{{"title": "Old Test {record_type}", "test_marker": "{test_marker}"}}' if event_type == "update" else None
     )
 
     engine = get_current_engine()
     if engine is None:
-        # If no engine available, skip insertion (this can happen in full test suite context)  # noqa: E501
+        # If no engine available, skip insertion (this can happen in full test suite context)
         return
     with engine.connect() as conn:
         conn.execute(
             text(
                 """
             INSERT INTO change_events
-            (event_type, record_type, record_id, old_data, new_data, timestamp, processed)  # noqa: E501
-            VALUES (:event_type, :record_type, :record_id, :old_data, :new_data, :ts, :processed)  # noqa: E501
+            (event_type, record_type, record_id, old_data, new_data, timestamp, processed)
+            VALUES (:event_type, :record_type, :record_id, :old_data, :new_data, :ts, :processed)
         """
             ),
             {
@@ -67,7 +67,7 @@ def insert_event_via_sqlalchemy(
 def get_event_count_via_sqlalchemy(processed=None):
     """Get count of events using SQLAlchemy (same as EventProcessor uses)"""
     if processed is not None:
-        query = "SELECT COUNT(*) FROM change_events WHERE processed = :processed"  # noqa: E501
+        query = "SELECT COUNT(*) FROM change_events WHERE processed = :processed"
         params = {"processed": processed}
     else:
         query = "SELECT COUNT(*) FROM change_events"
@@ -75,7 +75,7 @@ def get_event_count_via_sqlalchemy(processed=None):
 
     engine = get_current_engine()
     if engine is None:
-        # If no engine available, return 0 (this can happen in full test suite context)  # noqa: E501
+        # If no engine available, return 0 (this can happen in full test suite context)
         return 0
     with engine.connect() as conn:
         result = conn.execute(text(query), params)
@@ -86,7 +86,7 @@ def cleanup_events(test_session_id=None):
     """Clean up test events comprehensively"""
     engine = get_current_engine()
     if engine is None:
-        # If no engine available, skip cleanup (this can happen in full test suite context)  # noqa: E501
+        # If no engine available, skip cleanup (this can happen in full test suite context)
         return
     with engine.connect() as conn:
         # Check if table exists first
@@ -135,7 +135,7 @@ def cleanup_events(test_session_id=None):
 
 @pytest.fixture(autouse=True)
 def test_session_isolation(shared_app, request):
-    """Provide test session isolation with unique ID and comprehensive cleanup"""  # noqa: E501
+    """Provide test session isolation with unique ID and comprehensive cleanup"""
     app, engine, session_local = shared_app
 
     # Ensure current engine is set for database operations
@@ -151,13 +151,13 @@ def test_session_isolation(shared_app, request):
     # Clean up any existing test data before test
     cleanup_events()
 
-    # CRITICAL: Stop any existing event processor from the shared app to prevent conflicts  # noqa: E501
+    # CRITICAL: Stop any existing event processor from the shared app to prevent conflicts
     if hasattr(app.state, 'event_processor') and app.state.event_processor:
         try:
             app.state.event_processor.stop()
-            print(f"[ISOLATION] Stopped shared app event processor for test {request.node.name}")  # noqa: E501
+            print(f"[ISOLATION] Stopped shared app event processor for test {request.node.name}")
         except Exception as e:
-            print(f"[ISOLATION] Warning: Could not stop shared app event processor: {e}")  # noqa: E501
+            print(f"[ISOLATION] Warning: Could not stop shared app event processor: {e}")
 
     yield test_session_id
 
@@ -168,13 +168,13 @@ def test_session_isolation(shared_app, request):
     cleanup_events()
 
 
-def test_event_processor_processes_events(shared_app, test_session_isolation, request):  # noqa: E501
+def test_event_processor_processes_events(shared_app, test_session_isolation, request):
     """Test that EventProcessor processes events for all record types."""
     test_session_id = request.node.test_session_id
 
-    # Insert unprocessed events for each record type with unique test session ID  # noqa: E501
+    # Insert unprocessed events for each record type with unique test session ID
     for record_type in ["structure_node", "structure_node_link", "predicate"]:
-        insert_event_via_sqlalchemy("create", record_type, test_session_id=test_session_id)  # noqa: E501
+        insert_event_via_sqlalchemy("create", record_type, test_session_id=test_session_id)
 
     print("[TEST] Starting test_event_processor_processes_events")
 
@@ -208,12 +208,12 @@ def test_event_processor_processes_events(shared_app, test_session_isolation, re
             waited += check_interval
 
         if waited >= max_wait_time:
-            print(f"[TEST] Timeout after {max_wait_time}s, some events may be unprocessed")  # noqa: E501
+            print(f"[TEST] Timeout after {max_wait_time}s, some events may be unprocessed")
 
     finally:
         try:
             processor.stop()
-            print(f"[TEST] EventProcessor stopped for session {test_session_id}")  # noqa: E501
+            print(f"[TEST] EventProcessor stopped for session {test_session_id}")
         except Exception as e:
             print(f"[TEST] Warning: Error stopping EventProcessor: {e}")
 
@@ -225,14 +225,14 @@ def test_event_processor_processes_events(shared_app, test_session_isolation, re
     assert unprocessed_count == 0
 
 
-def test_event_processor_handles_all_record_types(shared_app, test_session_isolation, request):  # noqa: E501
-    """Test that EventProcessor handles structure_node, structure_node_link, and predicate events."""  # noqa: E501
+def test_event_processor_handles_all_record_types(shared_app, test_session_isolation, request):
+    """Test that EventProcessor handles structure_node, structure_node_link, and predicate events."""
     test_session_id = request.node.test_session_id
     print("[TEST] Starting test_event_processor_handles_all_record_types")
 
     # Insert events for all record types with unique test session ID
     for record_type in ["structure_node", "structure_node_link", "predicate"]:
-        insert_event_via_sqlalchemy("create", record_type, test_session_id=test_session_id)  # noqa: E501
+        insert_event_via_sqlalchemy("create", record_type, test_session_id=test_session_id)
 
     # Get the database URL from the current engine
     from database.utils import get_current_engine
@@ -241,7 +241,7 @@ def test_event_processor_handles_all_record_types(shared_app, test_session_isola
     database_url = str(engine.url)
 
     processor = EventProcessor(
-        database_url=database_url, poll_interval=0.01, max_events=10  # Faster polling for tests  # noqa: E501
+        database_url=database_url, poll_interval=0.01, max_events=10  # Faster polling for tests
     )
 
     # Capture logs to verify handlers are called
@@ -287,7 +287,7 @@ def test_event_processor_handles_all_record_types(shared_app, test_session_isola
     assert unprocessed_count == 0
 
 
-def test_event_processor_cleanup_old_events(shared_app, test_session_isolation, request, capsys):  # noqa: E501
+def test_event_processor_cleanup_old_events(shared_app, test_session_isolation, request, capsys):
     """Test cleanup of old processed events."""
     test_session_id = request.node.test_session_id
 
@@ -296,9 +296,9 @@ def test_event_processor_cleanup_old_events(shared_app, test_session_isolation, 
 
     # Insert processed event older than 48h (timezone-aware)
     old_ts = (datetime.now(timezone.utc) - timedelta(hours=49)).isoformat()
-    insert_event_via_sqlalchemy("delete", "structure_node", processed=1, ts=old_ts, test_session_id=test_session_id)  # noqa: E501
+    insert_event_via_sqlalchemy("delete", "structure_node", processed=1, ts=old_ts, test_session_id=test_session_id)
     # Insert recent processed event
-    insert_event_via_sqlalchemy("delete", "structure_node", processed=1, test_session_id=test_session_id)  # noqa: E501
+    insert_event_via_sqlalchemy("delete", "structure_node", processed=1, test_session_id=test_session_id)
 
     print("[TEST] Starting test_event_processor_cleanup_old_events")
 
@@ -306,7 +306,7 @@ def test_event_processor_cleanup_old_events(shared_app, test_session_isolation, 
     pre_cleanup_count = get_event_count_via_sqlalchemy(processed=1)
     assert (
         pre_cleanup_count == initial_processed_count + 2
-    ), f"Expected {initial_processed_count + 2} events, got {pre_cleanup_count}"  # noqa: E501
+    ), f"Expected {initial_processed_count + 2} events, got {pre_cleanup_count}"
 
     # Get the database URL from the current engine
     from database.utils import get_current_engine
@@ -329,18 +329,18 @@ def test_event_processor_cleanup_old_events(shared_app, test_session_isolation, 
     processed_count = get_event_count_via_sqlalchemy(processed=1)
     assert (
         processed_count == initial_processed_count + 1
-    ), f"Expected {initial_processed_count + 1} events after cleanup, got {processed_count}"  # noqa: E501
+    ), f"Expected {initial_processed_count + 1} events after cleanup, got {processed_count}"
 
 
-def test_predicate_event_processing(shared_app, test_session_isolation, request):  # noqa: E501
+def test_predicate_event_processing(shared_app, test_session_isolation, request):
     """Test processing of predicate-specific events."""
     test_session_id = request.node.test_session_id
     print("[TEST] Starting test_predicate_event_processing")
 
     # Insert predicate events with unique test session IDs
-    insert_event_via_sqlalchemy("create", "predicate", record_id=f"test-predicate-123-{str(uuid.uuid4())[:8]}", test_session_id=test_session_id)  # noqa: E501
-    insert_event_via_sqlalchemy("update", "predicate", record_id=f"test-predicate-456-{str(uuid.uuid4())[:8]}", test_session_id=test_session_id)  # noqa: E501
-    insert_event_via_sqlalchemy("delete", "predicate", record_id=f"test-predicate-789-{str(uuid.uuid4())[:8]}", test_session_id=test_session_id)  # noqa: E501
+    insert_event_via_sqlalchemy("create", "predicate", record_id=f"test-predicate-123-{str(uuid.uuid4())[:8]}", test_session_id=test_session_id)
+    insert_event_via_sqlalchemy("update", "predicate", record_id=f"test-predicate-456-{str(uuid.uuid4())[:8]}", test_session_id=test_session_id)
+    insert_event_via_sqlalchemy("delete", "predicate", record_id=f"test-predicate-789-{str(uuid.uuid4())[:8]}", test_session_id=test_session_id)
 
     # Get the database URL from the current engine
     from database.utils import get_current_engine
@@ -349,7 +349,7 @@ def test_predicate_event_processing(shared_app, test_session_isolation, request)
     database_url = str(engine.url)
 
     processor = EventProcessor(
-        database_url=database_url, poll_interval=0.01, max_events=10  # Faster polling for tests  # noqa: E501
+        database_url=database_url, poll_interval=0.01, max_events=10  # Faster polling for tests
     )
 
     # Capture logs to verify predicate handler is called
@@ -395,7 +395,7 @@ def test_predicate_event_processing(shared_app, test_session_isolation, request)
     assert unprocessed_count == 0
 
 
-def test_event_processor_thread_start_stop_idempotent(shared_app, test_session_isolation):  # noqa: E501
+def test_event_processor_thread_start_stop_idempotent(shared_app, test_session_isolation):
     print("[TEST] Starting test_event_processor_thread_start_stop_idempotent")
 
     # Get the database URL from the current engine
@@ -405,7 +405,7 @@ def test_event_processor_thread_start_stop_idempotent(shared_app, test_session_i
     database_url = str(engine.url)
 
     processor = EventProcessor(
-        database_url=database_url, poll_interval=0.01, max_events=10  # Faster polling for tests  # noqa: E501
+        database_url=database_url, poll_interval=0.01, max_events=10  # Faster polling for tests
     )
     try:
         processor.start()

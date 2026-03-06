@@ -8,7 +8,7 @@ import pytest
 from unittest.mock import AsyncMock, MagicMock, patch
 
 sys.path.append(
-    os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))  # noqa: E501
+    os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 )
 
 from llm.service import LLMService  # noqa: E402
@@ -30,10 +30,10 @@ class TestGenericPipelineExecution:
     @pytest.fixture
     def mock_llm_service(self):
         """Create a mock LLM service with required dependencies"""
-        with patch.dict("os.environ", {"OPENAI_API_KEY": "sk-test1234567890abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMN"}):  # noqa: E501
+        with patch.dict("os.environ", {"OPENAI_API_KEY": "sk-test1234567890abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMN"}):
             # Create a mock provider router with proper configuration
             mock_provider_router = MagicMock()
-            mock_provider_router.get_enabled_models.return_value = ["gpt-3.5-turbo"]  # noqa: E501
+            mock_provider_router.get_enabled_models.return_value = ["gpt-3.5-turbo"]
 
             # Create a mock model config for validation
             mock_model_config = MagicMock()
@@ -46,9 +46,9 @@ class TestGenericPipelineExecution:
             mock_model_config.provider_type = ProviderType.NATIVE_OPENAI
 
             mock_provider_router.models_manager = MagicMock()
-            mock_provider_router.models_manager.get_model_config.return_value = mock_model_config  # noqa: E501
+            mock_provider_router.models_manager.get_model_config.return_value = mock_model_config
 
-            with patch('llm.service.get_provider_router', return_value=mock_provider_router):  # noqa: E501
+            with patch('llm.service.get_provider_router', return_value=mock_provider_router):
                 with patch('llm.service.PipelineFlavorService'):
                     with patch('llm.service.ExecutionTracker'):
                         service = LLMService()
@@ -77,23 +77,23 @@ class TestGenericPipelineExecution:
         flavor.title = "Test Flavor"
         flavor.version = 1
         flavor.system_prompt = "You are a helpful assistant."
-        flavor.user_prompt = "Define the term: {term} in domain: {domain_title}"  # noqa: E501
+        flavor.user_prompt = "Define the term: {term} in domain: {domain_title}"
         flavor.llm_provider = "openai"
         flavor.llm_model = "gpt-3.5-turbo"
         flavor.llm_config.model_dump.return_value = {"temperature": 0.0}
         return flavor
 
     @pytest.mark.asyncio
-    async def test_execute_pipeline_flavor_success(self, mock_llm_service, sample_request, mock_flavor):  # noqa: E501
+    async def test_execute_pipeline_flavor_success(self, mock_llm_service, sample_request, mock_flavor):
         """Test successful generic pipeline execution"""
         # Mock dependencies
-        mock_llm_service.flavor_service.get_default_flavor.return_value = mock_flavor  # noqa: E501
-        mock_llm_service.execution_tracker.start_execution.return_value = "exec-123"  # noqa: E501
+        mock_llm_service.flavor_service.get_default_flavor.return_value = mock_flavor
+        mock_llm_service.execution_tracker.start_execution.return_value = "exec-123"
 
         # Mock LLM response with structured output attributes
         mock_llm = AsyncMock()
         mock_response = MagicMock()
-        # Set structured output attributes that match StructuredOutputDefinition  # noqa: E501
+        # Set structured output attributes that match StructuredOutputDefinition
         mock_response.definition = "Test definition"
         mock_response.reasoning = "Test reasoning"
         mock_response.discrepancies = "Test discrepancies"
@@ -106,9 +106,9 @@ class TestGenericPipelineExecution:
         }
         mock_llm.ainvoke.return_value = mock_response
 
-        with patch.object(mock_llm_service, '_create_llm_from_flavor', return_value=mock_llm):  # noqa: E501
-            with patch.object(mock_llm_service, '_get_flavor', return_value=mock_flavor):  # noqa: E501
-                result = await mock_llm_service.execute_pipeline_flavor(sample_request)  # noqa: E501
+        with patch.object(mock_llm_service, '_create_llm_from_flavor', return_value=mock_llm):
+            with patch.object(mock_llm_service, '_get_flavor', return_value=mock_flavor):
+                result = await mock_llm_service.execute_pipeline_flavor(sample_request)
 
         # Assertions
         assert isinstance(result, PipelineExecutionResponse)
@@ -123,61 +123,61 @@ class TestGenericPipelineExecution:
 
         # Verify execution tracking
         mock_llm_service.execution_tracker.start_execution.assert_called_once()
-        mock_llm_service.execution_tracker.complete_execution.assert_called_once()  # noqa: E501
+        mock_llm_service.execution_tracker.complete_execution.assert_called_once()
 
     @pytest.mark.asyncio
-    async def test_execute_pipeline_flavor_timeout(self, mock_llm_service, sample_request, mock_flavor):  # noqa: E501
+    async def test_execute_pipeline_flavor_timeout(self, mock_llm_service, sample_request, mock_flavor):
         """Test generic pipeline execution with timeout"""
         # Mock dependencies
-        mock_llm_service.flavor_service.get_default_flavor.return_value = mock_flavor  # noqa: E501
-        mock_llm_service.execution_tracker.start_execution.return_value = "exec-123"  # noqa: E501
+        mock_llm_service.flavor_service.get_default_flavor.return_value = mock_flavor
+        mock_llm_service.execution_tracker.start_execution.return_value = "exec-123"
 
         # Mock LLM timeout
         mock_llm = AsyncMock()
 
-        with patch.object(mock_llm_service, '_create_llm_from_flavor', return_value=mock_llm):  # noqa: E501
-            with patch.object(mock_llm_service, '_get_flavor', return_value=mock_flavor):  # noqa: E501
+        with patch.object(mock_llm_service, '_create_llm_from_flavor', return_value=mock_llm):
+            with patch.object(mock_llm_service, '_get_flavor', return_value=mock_flavor):
                 with patch('asyncio.wait_for', side_effect=TimeoutError()):
                     with pytest.raises(LLMTimeoutError):
-                        await mock_llm_service.execute_pipeline_flavor(sample_request)  # noqa: E501
+                        await mock_llm_service.execute_pipeline_flavor(sample_request)
 
         # Verify error tracking
-        mock_llm_service.execution_tracker.complete_execution.assert_called_once()  # noqa: E501
-        call_args = mock_llm_service.execution_tracker.complete_execution.call_args  # noqa: E501
+        mock_llm_service.execution_tracker.complete_execution.assert_called_once()
+        call_args = mock_llm_service.execution_tracker.complete_execution.call_args
         assert call_args[1]['execution_id'] == "exec-123"
         assert call_args[1]['success'] is False
-        assert "Configuration or timeout error" in call_args[1]['error_message']  # noqa: E501
+        assert "Configuration or timeout error" in call_args[1]['error_message']
 
     @pytest.mark.asyncio
-    async def test_execute_pipeline_flavor_processing_error(self, mock_llm_service, sample_request, mock_flavor):  # noqa: E501
+    async def test_execute_pipeline_flavor_processing_error(self, mock_llm_service, sample_request, mock_flavor):
         """Test generic pipeline execution with processing error"""
         # Mock dependencies
-        mock_llm_service.flavor_service.get_default_flavor.return_value = mock_flavor  # noqa: E501
-        mock_llm_service.execution_tracker.start_execution.return_value = "exec-123"  # noqa: E501
+        mock_llm_service.flavor_service.get_default_flavor.return_value = mock_flavor
+        mock_llm_service.execution_tracker.start_execution.return_value = "exec-123"
 
         # Mock LLM error
         mock_llm = AsyncMock()
         mock_llm.ainvoke.side_effect = Exception("Test processing error")
 
-        with patch.object(mock_llm_service, '_create_llm_from_flavor', return_value=mock_llm):  # noqa: E501
-            with patch.object(mock_llm_service, '_get_flavor', return_value=mock_flavor):  # noqa: E501
+        with patch.object(mock_llm_service, '_create_llm_from_flavor', return_value=mock_llm):
+            with patch.object(mock_llm_service, '_get_flavor', return_value=mock_flavor):
                 with pytest.raises(LLMProcessingError) as exc_info:
-                    await mock_llm_service.execute_pipeline_flavor(sample_request)  # noqa: E501
+                    await mock_llm_service.execute_pipeline_flavor(sample_request)
 
         assert "Failed to execute pipeline" in str(exc_info.value)
 
         # Verify error tracking
-        mock_llm_service.execution_tracker.complete_execution.assert_called_once()  # noqa: E501
-        call_args = mock_llm_service.execution_tracker.complete_execution.call_args  # noqa: E501
+        mock_llm_service.execution_tracker.complete_execution.assert_called_once()
+        call_args = mock_llm_service.execution_tracker.complete_execution.call_args
         assert call_args[1]['success'] is False
         assert "Unexpected error" in call_args[1]['error_message']
 
     @pytest.mark.asyncio
-    async def test_execute_pipeline_flavor_streaming_success(self, mock_llm_service, sample_request, mock_flavor):  # noqa: E501
+    async def test_execute_pipeline_flavor_streaming_success(self, mock_llm_service, sample_request, mock_flavor):
         """Test successful generic streaming pipeline execution"""
         # Mock dependencies
-        mock_llm_service.flavor_service.get_default_flavor.return_value = mock_flavor  # noqa: E501
-        mock_llm_service.execution_tracker.start_execution.return_value = "exec-123"  # noqa: E501
+        mock_llm_service.flavor_service.get_default_flavor.return_value = mock_flavor
+        mock_llm_service.execution_tracker.start_execution.return_value = "exec-123"
 
         # Mock streaming LLM response
         mock_llm = AsyncMock()
@@ -198,14 +198,14 @@ class TestGenericPipelineExecution:
 
         mock_llm.astream = mock_astream
 
-        with patch.object(mock_llm_service, '_create_llm_from_flavor', return_value=mock_llm):  # noqa: E501
-            with patch.object(mock_llm_service, '_get_flavor', return_value=mock_flavor):  # noqa: E501
+        with patch.object(mock_llm_service, '_create_llm_from_flavor', return_value=mock_llm):
+            with patch.object(mock_llm_service, '_get_flavor', return_value=mock_flavor):
                 chunks = []
-                async for chunk in mock_llm_service.execute_pipeline_flavor_streaming(sample_request):  # noqa: E501
+                async for chunk in mock_llm_service.execute_pipeline_flavor_streaming(sample_request):
                     chunks.append(chunk)
 
         # Verify streaming response structure
-        assert len(chunks) >= 3  # Initial response + content chunks + completion  # noqa: E501
+        assert len(chunks) >= 3  # Initial response + content chunks + completion
 
         # Check initial response
         initial_chunk = chunks[0]
@@ -220,11 +220,11 @@ class TestGenericPipelineExecution:
         assert final_chunk.error is None
 
     @pytest.mark.asyncio
-    async def test_execute_pipeline_flavor_streaming_error(self, mock_llm_service, sample_request, mock_flavor):  # noqa: E501
+    async def test_execute_pipeline_flavor_streaming_error(self, mock_llm_service, sample_request, mock_flavor):
         """Test generic streaming pipeline execution with error"""
         # Mock dependencies
-        mock_llm_service.flavor_service.get_default_flavor.return_value = mock_flavor  # noqa: E501
-        mock_llm_service.execution_tracker.start_execution.return_value = "exec-123"  # noqa: E501
+        mock_llm_service.flavor_service.get_default_flavor.return_value = mock_flavor
+        mock_llm_service.execution_tracker.start_execution.return_value = "exec-123"
 
         # Mock streaming LLM error
         mock_llm = AsyncMock()
@@ -236,10 +236,10 @@ class TestGenericPipelineExecution:
         # Assign the function itself, not call it
         mock_llm.astream = mock_astream_error
 
-        with patch.object(mock_llm_service, '_create_llm_from_flavor', return_value=mock_llm):  # noqa: E501
-            with patch.object(mock_llm_service, '_get_flavor', return_value=mock_flavor):  # noqa: E501
+        with patch.object(mock_llm_service, '_create_llm_from_flavor', return_value=mock_llm):
+            with patch.object(mock_llm_service, '_get_flavor', return_value=mock_flavor):
                 chunks = []
-                async for chunk in mock_llm_service.execute_pipeline_flavor_streaming(sample_request):  # noqa: E501
+                async for chunk in mock_llm_service.execute_pipeline_flavor_streaming(sample_request):
                     chunks.append(chunk)
 
         # Verify error response
@@ -247,33 +247,33 @@ class TestGenericPipelineExecution:
         final_chunk = chunks[-1]
         assert final_chunk.done is True
         assert final_chunk.error is not None
-        # The error message might be about async iteration or the actual streaming error  # noqa: E501
+        # The error message might be about async iteration or the actual streaming error
         assert final_chunk.error is not None
 
     def test_render_user_prompt_generic_success(self, mock_llm_service):
         """Test generic user prompt rendering with valid context data"""
-        template = "Define the term: {term} in domain: {domain_title}. Current definition: {current_definition}"  # noqa: E501
+        template = "Define the term: {term} in domain: {domain_title}. Current definition: {current_definition}"
         context_data = {
             "term": "apple",
             "domain_title": "Food",
             "current_definition": "A fruit"
         }
 
-        result = mock_llm_service._render_user_prompt_generic(template, context_data)  # noqa: E501
+        result = mock_llm_service._render_user_prompt_generic(template, context_data)
 
-        expected = "Define the term: apple in domain: Food. Current definition: A fruit"  # noqa: E501
+        expected = "Define the term: apple in domain: Food. Current definition: A fruit"
         assert result == expected
 
-    def test_render_user_prompt_generic_with_none_values(self, mock_llm_service):  # noqa: E501
+    def test_render_user_prompt_generic_with_none_values(self, mock_llm_service):
         """Test generic user prompt rendering with None values"""
-        template = "Term: {term}, Domain: {domain_title}, Definition: {current_definition}"  # noqa: E501
+        template = "Term: {term}, Domain: {domain_title}, Definition: {current_definition}"
         context_data = {
             "term": "apple",
             "domain_title": None,
             "current_definition": "A fruit"
         }
 
-        result = mock_llm_service._render_user_prompt_generic(template, context_data, strict=False)  # noqa: E501
+        result = mock_llm_service._render_user_prompt_generic(template, context_data, strict=False)
 
         expected = "Term: apple, Domain: Not specified, Definition: A fruit"
         assert result == expected
@@ -286,7 +286,7 @@ class TestGenericPipelineExecution:
             "numbers": [1, 2, 3]
         }
 
-        result = mock_llm_service._render_user_prompt_generic(template, context_data, strict=False)  # noqa: E501
+        result = mock_llm_service._render_user_prompt_generic(template, context_data, strict=False)
 
         expected = "Terms: apple, orange, banana, Numbers: [1, 2, 3]"
         assert result == expected
@@ -298,20 +298,20 @@ class TestGenericPipelineExecution:
             "context": {"key1": "value1", "key2": "value2"}
         }
 
-        result = mock_llm_service._render_user_prompt_generic(template, context_data)  # noqa: E501
+        result = mock_llm_service._render_user_prompt_generic(template, context_data)
 
         assert "Context: " in result
         assert "key1" in result
 
-    def test_render_user_prompt_generic_missing_variable(self, mock_llm_service):  # noqa: E501
-        """Test generic user prompt rendering with missing template variable - now returns 'Not specified'"""  # noqa: E501
+    def test_render_user_prompt_generic_missing_variable(self, mock_llm_service):
+        """Test generic user prompt rendering with missing template variable - now returns 'Not specified'"""
         template = "Term: {term}, Missing: {missing_var}"
         context_data = {
             "term": "apple"
         }
 
-        # Missing variables should now return "Not specified" instead of raising an error  # noqa: E501
-        result = mock_llm_service._render_user_prompt_generic(template, context_data, strict=False)  # noqa: E501
+        # Missing variables should now return "Not specified" instead of raising an error
+        result = mock_llm_service._render_user_prompt_generic(template, context_data, strict=False)
 
         assert "apple" in result
         assert "Not specified" in result
@@ -329,7 +329,7 @@ class TestGenericPipelineExecution:
         assert request.context_data == {"term": "test"}
 
     def test_generic_pipeline_request_empty_context_validation(self):
-        """Test GenericPipelineExecutionRequest validation with empty context_data"""  # noqa: E501
+        """Test GenericPipelineExecutionRequest validation with empty context_data"""
         with pytest.raises(ValueError) as exc_info:
             PipelineExecutionRequest(
                 flavor_id="test-flavor",
@@ -346,7 +346,7 @@ class TestGenericPipelineExecution:
             execution_id="exec-123",
             flavor_id="flavor-456",
             pipeline_type="suggest_term_definition",
-            token_usage={"input_tokens": 10, "output_tokens": 20, "total_tokens": 30}  # noqa: E501
+            token_usage={"input_tokens": 10, "output_tokens": 20, "total_tokens": 30}
         )
 
         assert response.response_content == "Test response"

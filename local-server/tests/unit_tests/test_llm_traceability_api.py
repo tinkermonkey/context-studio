@@ -54,7 +54,7 @@ class TestLLMTraceabilityAPI:
 
         mock_tracker = Mock()
         mock_tracker_class.return_value = mock_tracker
-        mock_tracker.record_selection.side_effect = ValueError("Execution not found")  # noqa: E501
+        mock_tracker.record_selection.side_effect = ValueError("Execution not found")
 
         response = client.post("/api/llm/record-selection", json={
             "execution_id": "nonexistent",
@@ -118,7 +118,7 @@ class TestLLMTraceabilityAPI:
         mock_tracker.get_execution_analytics.assert_called_once_with(None, 7)
 
     @patch('api.llm_traceability.ExecutionTracker')
-    def test_get_execution_analytics_with_pipeline_type(self, mock_tracker_class):  # noqa: E501
+    def test_get_execution_analytics_with_pipeline_type(self, mock_tracker_class):
         """Test execution analytics with pipeline type filter."""
 
         mock_tracker = Mock()
@@ -158,7 +158,7 @@ class TestLLMTraceabilityAPI:
 
         mock_tracker = Mock()
         mock_tracker_class.return_value = mock_tracker
-        mock_tracker.get_execution_analytics.side_effect = Exception("Analytics error")  # noqa: E501
+        mock_tracker.get_execution_analytics.side_effect = Exception("Analytics error")
 
         response = client.get("/api/llm/execution-analytics")
 
@@ -226,7 +226,7 @@ class TestLLMTraceabilityAPI:
 
         mock_tracker = Mock()
         mock_tracker_class.return_value = mock_tracker
-        mock_tracker.get_execution_details.side_effect = Exception("Database error")  # noqa: E501
+        mock_tracker.get_execution_details.side_effect = Exception("Database error")
 
         response = client.get("/api/llm/execution-details/exec-123")
 
@@ -260,7 +260,7 @@ class TestLLMTraceabilityAPI:
 
         mock_tracker = Mock()
         mock_tracker_class.return_value = mock_tracker
-        mock_tracker.get_execution_analytics.side_effect = Exception("Health check failed")  # noqa: E501
+        mock_tracker.get_execution_analytics.side_effect = Exception("Health check failed")
 
         response = client.get("/api/llm/health")
 
@@ -283,7 +283,7 @@ class TestLLMTraceabilityAPI:
     def test_get_execution_analytics_invalid_pipeline_type(self):
         """Test analytics with invalid pipeline type."""
 
-        response = client.get("/api/llm/execution-analytics?pipeline_type=invalid_type")  # noqa: E501
+        response = client.get("/api/llm/execution-analytics?pipeline_type=invalid_type")
 
         assert response.status_code == 422  # Validation error
 
@@ -313,7 +313,7 @@ class TestLLMTraceabilityAPI:
             "flavor_id": "test-flavor-123"
         }
 
-        response = client.get("/api/llm/execution-history?flavor_id=test-flavor-123&limit=10")  # noqa: E501
+        response = client.get("/api/llm/execution-history?flavor_id=test-flavor-123&limit=10")
 
         assert response.status_code == 200
         data = response.json()
@@ -324,7 +324,7 @@ class TestLLMTraceabilityAPI:
         assert data["executions"][0]["status"] == "success"
 
         # Verify tracker was called with correct parameters
-        mock_tracker.get_flavor_execution_history.assert_called_once_with("test-flavor-123", 10)  # noqa: E501
+        mock_tracker.get_flavor_execution_history.assert_called_once_with("test-flavor-123", 10)
 
     @patch('api.llm_traceability.ExecutionTracker')
     def test_get_execution_history_invalid_flavor(self, mock_tracker_class):
@@ -338,7 +338,7 @@ class TestLLMTraceabilityAPI:
             "flavor_id": "nonexistent-flavor"
         }
 
-        response = client.get("/api/llm/execution-history?flavor_id=nonexistent-flavor&limit=10")  # noqa: E501
+        response = client.get("/api/llm/execution-history?flavor_id=nonexistent-flavor&limit=10")
 
         assert response.status_code == 200
         data = response.json()
@@ -347,7 +347,7 @@ class TestLLMTraceabilityAPI:
         assert len(data["executions"]) == 0
 
         # Verify tracker was called with correct parameters
-        mock_tracker.get_flavor_execution_history.assert_called_once_with("nonexistent-flavor", 10)  # noqa: E501
+        mock_tracker.get_flavor_execution_history.assert_called_once_with("nonexistent-flavor", 10)
 
     @patch('api.llm_traceability.ExecutionTracker')
     def test_get_execution_history_error(self, mock_tracker_class):
@@ -355,9 +355,9 @@ class TestLLMTraceabilityAPI:
 
         mock_tracker = Mock()
         mock_tracker_class.return_value = mock_tracker
-        mock_tracker.get_flavor_execution_history.side_effect = Exception("Database error")  # noqa: E501
+        mock_tracker.get_flavor_execution_history.side_effect = Exception("Database error")
 
-        response = client.get("/api/llm/execution-history?flavor_id=test-flavor-123")  # noqa: E501
+        response = client.get("/api/llm/execution-history?flavor_id=test-flavor-123")
 
         assert response.status_code == 500
         data = response.json()
@@ -383,7 +383,7 @@ class TestLLMTraceabilityAPI:
             "time_range_days": 7
         }
 
-        response = client.get("/api/llm/flavor-analytics/test-flavor-123?days_back=7")  # noqa: E501
+        response = client.get("/api/llm/flavor-analytics/test-flavor-123?days_back=7")
 
         assert response.status_code == 200
         data = response.json()
@@ -394,7 +394,7 @@ class TestLLMTraceabilityAPI:
         assert data["analytics"]["total_selections"] == 15
 
         # Verify tracker was called with correct parameters
-        mock_tracker.get_flavor_analytics.assert_called_once_with("test-flavor-123", 7)  # noqa: E501
+        mock_tracker.get_flavor_analytics.assert_called_once_with("test-flavor-123", 7)
 
     @patch('api.llm_traceability.ExecutionTracker')
     def test_get_flavor_analytics_error(self, mock_tracker_class):
@@ -402,7 +402,7 @@ class TestLLMTraceabilityAPI:
 
         mock_tracker = Mock()
         mock_tracker_class.return_value = mock_tracker
-        mock_tracker.get_flavor_analytics.side_effect = Exception("Analytics error")  # noqa: E501
+        mock_tracker.get_flavor_analytics.side_effect = Exception("Analytics error")
 
         response = client.get("/api/llm/flavor-analytics/test-flavor-123")
 
@@ -448,6 +448,6 @@ class TestLLMTraceabilityAPI:
         """Test flavor analytics with invalid days_back parameter."""
 
         # Invalid days_back parameter (should be int but provided as string)
-        response = client.get("/api/llm/flavor-analytics/test-flavor?days_back=invalid")  # noqa: E501
+        response = client.get("/api/llm/flavor-analytics/test-flavor?days_back=invalid")
 
         assert response.status_code == 422  # Validation error

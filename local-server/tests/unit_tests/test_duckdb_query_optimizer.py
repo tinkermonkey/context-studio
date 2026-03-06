@@ -1,14 +1,14 @@
 """
-Unit tests for DuckDBQueryOptimizer - Testing advanced query optimization functionality.  # noqa: E501
+Unit tests for DuckDBQueryOptimizer - Testing advanced query optimization functionality.
 
-Tests query optimization strategies, caching, materialized views, and performance metrics.  # noqa: E501
+Tests query optimization strategies, caching, materialized views, and performance metrics.
 """
 
 import sys
 import os
 
 sys.path.append(
-    os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))  # noqa: E501
+    os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 )
 
 import pytest  # noqa: E402
@@ -36,7 +36,7 @@ class TestIntelligentQueryCache:
         assert query_cache.max_cache_size == 10
         assert query_cache.ttl_seconds == 60
         assert len(query_cache.cache) == 0
-        assert query_cache.cache_stats == {'hits': 0, 'misses': 0, 'evictions': 0}  # noqa: E501
+        assert query_cache.cache_stats == {'hits': 0, 'misses': 0, 'evictions': 0}
 
     def test_cache_miss(self, query_cache):
         """Test cache miss scenario."""
@@ -114,7 +114,7 @@ class TestIntelligentQueryCache:
 
         assert stats['cache_size'] == 1
         assert stats['max_cache_size'] == 10
-        assert stats['hit_rate'] == 0.3333333333333333  # 1 hit out of 3 requests  # noqa: E501
+        assert stats['hit_rate'] == 0.3333333333333333  # 1 hit out of 3 requests
         assert stats['total_requests'] == 3
         assert stats['hits'] == 1
         assert stats['misses'] == 2
@@ -128,7 +128,7 @@ class TestSanitizationMethods:
     def mock_duckdb_conn(self):
         """Create a mock DuckDB connection."""
         mock_conn = Mock()
-        mock_conn.execute.return_value.fetchall.return_value = [('result1',), ('result2',)]  # noqa: E501
+        mock_conn.execute.return_value.fetchall.return_value = [('result1',), ('result2',)]
         return mock_conn
 
     @pytest.fixture
@@ -160,7 +160,7 @@ class TestSanitizationMethods:
             '_'
         ]
         for identifier in valid_identifiers:
-            assert query_optimizer._is_valid_identifier(identifier), f"Should accept: {identifier}"  # noqa: E501
+            assert query_optimizer._is_valid_identifier(identifier), f"Should accept: {identifier}"
 
     def test_is_valid_identifier_empty_string(self, query_optimizer):
         """Test that empty string is rejected."""
@@ -194,8 +194,8 @@ class TestSanitizationMethods:
                 f"Should reject: {identifier}"
 
     def test_is_valid_identifier_sql_keywords(self, query_optimizer):
-        """Test that SQL keywords are still validated as identifiers (not prevented)."""  # noqa: E501
-        # SQL keywords can be used as identifiers if properly quoted, so validation  # noqa: E501
+        """Test that SQL keywords are still validated as identifiers (not prevented)."""
+        # SQL keywords can be used as identifiers if properly quoted, so validation
         # should just check syntax, not prevent keywords
         keyword_identifiers = [
             'select',
@@ -231,7 +231,7 @@ class TestSanitizationMethods:
     def test_escape_sql_value_string_simple(self, query_optimizer):
         """Test that simple strings are quoted."""
         assert query_optimizer._escape_sql_value("test") == "'test'"
-        assert query_optimizer._escape_sql_value("hello world") == "'hello world'"  # noqa: E501
+        assert query_optimizer._escape_sql_value("hello world") == "'hello world'"
 
     def test_escape_sql_value_string_with_single_quotes(self, query_optimizer):
         """Test that single quotes in strings are escaped."""
@@ -246,7 +246,7 @@ class TestSanitizationMethods:
         # Basic injection - single quotes are escaped (doubled)
         payload = "'; DROP TABLE changes; --"
         result = query_optimizer._escape_sql_value(payload)
-        # The payload is now in a quoted string with quotes escaped, so it can't break out  # noqa: E501
+        # The payload is now in a quoted string with quotes escaped, so it can't break out
         assert result == "'''; DROP TABLE changes; --'"
         assert result.startswith("'") and result.endswith("'")
 
@@ -292,13 +292,13 @@ class TestSanitizationMethods:
             assert query_optimizer._is_valid_date_string(date_str) is False, \
                 f"Should reject: {date_str}"
 
-    def test_is_valid_date_string_format_validation_only(self, query_optimizer):  # noqa: E501
+    def test_is_valid_date_string_format_validation_only(self, query_optimizer):
         """Test that date validation is format-only, not semantic."""
         # Date validation checks format, not whether the date actually exists
         # This is acceptable for this use case (S3 path patterns)
-        assert query_optimizer._is_valid_date_string('2024-13-01') is True  # invalid month  # noqa: E501
-        assert query_optimizer._is_valid_date_string('2024-01-32') is True  # invalid day  # noqa: E501
-        assert query_optimizer._is_valid_date_string('2024-02-30') is True  # invalid for February  # noqa: E501
+        assert query_optimizer._is_valid_date_string('2024-13-01') is True  # invalid month
+        assert query_optimizer._is_valid_date_string('2024-01-32') is True  # invalid day
+        assert query_optimizer._is_valid_date_string('2024-02-30') is True  # invalid for February
 
     # Integration tests
     def test_column_pruning_with_malicious_column_names(self, query_optimizer):
@@ -315,7 +315,7 @@ class TestSanitizationMethods:
             ]
         }
 
-        optimized_query, metrics = query_optimizer.optimize_query(test_query, context)  # noqa: E501
+        optimized_query, metrics = query_optimizer.optimize_query(test_query, context)
 
         # Should only include valid column names
         assert 'id' in optimized_query
@@ -326,9 +326,9 @@ class TestSanitizationMethods:
         # Should not include invalid column names
         assert '123invalid' not in optimized_query
 
-    def test_partition_elimination_with_malicious_values(self, query_optimizer):  # noqa: E501
+    def test_partition_elimination_with_malicious_values(self, query_optimizer):
         """Test that partition elimination sanitizes malicious values."""
-        test_query = "SELECT * FROM changes/*/*/*.parquet WHERE year = {year} AND month IN ({month})"  # noqa: E501
+        test_query = "SELECT * FROM changes/*/*/*.parquet WHERE year = {year} AND month IN ({month})"
         context = {
             'partition_filter': {
                 'year': "2024' OR '1'='1",
@@ -336,16 +336,16 @@ class TestSanitizationMethods:
             }
         }
 
-        optimized_query, metrics = query_optimizer.optimize_query(test_query, context)  # noqa: E501
+        optimized_query, metrics = query_optimizer.optimize_query(test_query, context)
 
         # Query should be optimized without SQL injection
         # The exact format depends on how partition elimination is applied
         assert isinstance(optimized_query, str)
         assert len(optimized_query) > 0
 
-    def test_predicate_pushdown_with_malicious_entity_types(self, query_optimizer):  # noqa: E501
+    def test_predicate_pushdown_with_malicious_entity_types(self, query_optimizer):
         """Test that predicate pushdown sanitizes malicious entity_types."""
-        test_query = "SELECT * FROM changes/*/*/*.parquet WHERE entity_type = 'test'"  # noqa: E501
+        test_query = "SELECT * FROM changes/*/*/*.parquet WHERE entity_type = 'test'"
         context = {
             'entity_types': [
                 'valid_type',
@@ -355,13 +355,13 @@ class TestSanitizationMethods:
             ]
         }
 
-        optimized_query, metrics = query_optimizer.optimize_query(test_query, context)  # noqa: E501
+        optimized_query, metrics = query_optimizer.optimize_query(test_query, context)
 
         # Should safely include valid types
         assert 'valid_type' in optimized_query
         assert 'another_type' in optimized_query
 
-        # Values are escaped with doubled single quotes, preventing SQL injection  # noqa: E501
+        # Values are escaped with doubled single quotes, preventing SQL injection
         # The malicious payloads are now string literals that can't break out
         assert isinstance(optimized_query, str)
         assert len(optimized_query) > 0
@@ -374,7 +374,7 @@ class TestDuckDBQueryOptimizer:
     def mock_duckdb_conn(self):
         """Create a mock DuckDB connection."""
         mock_conn = Mock()
-        mock_conn.execute.return_value.fetchall.return_value = [('result1',), ('result2',)]  # noqa: E501
+        mock_conn.execute.return_value.fetchall.return_value = [('result1',), ('result2',)]
         return mock_conn
 
     @pytest.fixture
@@ -434,7 +434,7 @@ class TestDuckDBQueryOptimizer:
 
     def test_predicate_pushdown_optimization(self, query_optimizer):
         """Test predicate pushdown optimization strategy."""
-        test_query = "SELECT * FROM changes/*/*/*.parquet WHERE entity_type = 'test'"  # noqa: E501
+        test_query = "SELECT * FROM changes/*/*/*.parquet WHERE entity_type = 'test'"
         context = {
             'time_range': {
                 'start': '2024-01-01',
@@ -443,10 +443,10 @@ class TestDuckDBQueryOptimizer:
             'entity_types': ['test', 'example']
         }
 
-        optimized_query, metrics = query_optimizer.optimize_query(test_query, context)  # noqa: E501
+        optimized_query, metrics = query_optimizer.optimize_query(test_query, context)
 
         # Should have applied time-based partitioning
-        assert '2024-01-01' in optimized_query or 'changes/*/*/*2024-01-01*2024-01-31*.parquet' in optimized_query  # noqa: E501
+        assert '2024-01-01' in optimized_query or 'changes/*/*/*2024-01-01*2024-01-31*.parquet' in optimized_query
 
         # Should have applied entity type filtering
         assert "entity_type IN ('test', 'example')" in optimized_query
@@ -458,7 +458,7 @@ class TestDuckDBQueryOptimizer:
             'required_columns': ['id', 'name', 'created_at']
         }
 
-        optimized_query, metrics = query_optimizer.optimize_query(test_query, context)  # noqa: E501
+        optimized_query, metrics = query_optimizer.optimize_query(test_query, context)
 
         # Should replace SELECT * with specific columns
         assert "SELECT id, name, created_at" in optimized_query
@@ -481,15 +481,15 @@ class TestDuckDBQueryOptimizer:
         cache_stats = query_optimizer.query_cache.get_cache_stats()
         assert cache_stats['hits'] >= 1
 
-    def test_materialized_view_creation(self, query_optimizer, mock_duckdb_conn):  # noqa: E501
+    def test_materialized_view_creation(self, query_optimizer, mock_duckdb_conn):
         """Test materialized view creation."""
         view_name = "test_view"
-        view_query = "SELECT entity_type, COUNT(*) FROM entities GROUP BY entity_type"  # noqa: E501
+        view_query = "SELECT entity_type, COUNT(*) FROM entities GROUP BY entity_type"
 
         # Mock successful table creation
         mock_duckdb_conn.execute.return_value = None
 
-        success = query_optimizer.create_materialized_view(view_name, view_query)  # noqa: E501
+        success = query_optimizer.create_materialized_view(view_name, view_query)
 
         assert success is True
         assert view_name in query_optimizer.materialized_views
@@ -500,7 +500,7 @@ class TestDuckDBQueryOptimizer:
         assert 'created_at' in view_config
         assert 'last_refreshed' in view_config
 
-    def test_materialized_view_refresh(self, query_optimizer, mock_duckdb_conn):  # noqa: E501
+    def test_materialized_view_refresh(self, query_optimizer, mock_duckdb_conn):
         """Test materialized view refresh functionality."""
         view_name = "test_view"
         view_query = "SELECT COUNT(*) FROM test_table"
@@ -522,7 +522,7 @@ class TestDuckDBQueryOptimizer:
         ]
 
         # Check that refresh operations were called
-        call_args = [str(call) for call in mock_duckdb_conn.execute.call_args_list]  # noqa: E501
+        call_args = [str(call) for call in mock_duckdb_conn.execute.call_args_list]
         for expected in expected_calls:
             assert any(expected in call for call in call_args)
 
@@ -554,7 +554,7 @@ class TestDuckDBQueryOptimizer:
         assert metrics.query_text == test_query
         assert metrics.execution_time_ms > 0
         assert metrics.rows_processed >= 0
-        assert metrics.optimization_level in ['none', 'basic', 'advanced', 'failed']  # noqa: E501
+        assert metrics.optimization_level in ['none', 'basic', 'advanced', 'failed']
         assert isinstance(metrics.created_at, datetime)
 
         # Check that metrics were stored
@@ -599,24 +599,24 @@ class TestDuckDBQueryOptimizer:
         assert "SELECT 1099" in last_metric.query_text
 
     @patch('services.duckdb_query_optimizer.logger')
-    def test_error_handling_during_query_execution(self, mock_logger, query_optimizer, mock_duckdb_conn):  # noqa: E501
+    def test_error_handling_during_query_execution(self, mock_logger, query_optimizer, mock_duckdb_conn):
         """Test error handling when query execution fails."""
         # Make query execution fail
-        mock_duckdb_conn.execute.side_effect = Exception("Query execution failed")  # noqa: E501
+        mock_duckdb_conn.execute.side_effect = Exception("Query execution failed")
 
-        # Query optimization should not raise exception but return error metrics  # noqa: E501
-        optimized_query, metrics = query_optimizer.optimize_query("SELECT * FROM invalid_table")  # noqa: E501
+        # Query optimization should not raise exception but return error metrics
+        optimized_query, metrics = query_optimizer.optimize_query("SELECT * FROM invalid_table")
 
         assert metrics.optimization_level == "failed"
         assert metrics.rows_processed == 0
         mock_logger.error.assert_called()
 
-    def test_materialized_view_error_handling(self, query_optimizer, mock_duckdb_conn):  # noqa: E501
+    def test_materialized_view_error_handling(self, query_optimizer, mock_duckdb_conn):
         """Test error handling in materialized view operations."""
         # Make view creation fail
-        mock_duckdb_conn.execute.side_effect = Exception("Table creation failed")  # noqa: E501
+        mock_duckdb_conn.execute.side_effect = Exception("Table creation failed")
 
-        success = query_optimizer.create_materialized_view("test_view", "SELECT * FROM invalid")  # noqa: E501
+        success = query_optimizer.create_materialized_view("test_view", "SELECT * FROM invalid")
 
         assert success is False
         assert "test_view" not in query_optimizer.materialized_views
@@ -635,7 +635,7 @@ class TestDuckDBQueryOptimizer:
             'partition_filter': {'year': 2024, 'month': [1, 2, 3]}
         }
 
-        optimized_query, metrics = query_optimizer.optimize_query(complex_query, context)  # noqa: E501
+        optimized_query, metrics = query_optimizer.optimize_query(complex_query, context)
 
         # Should apply multiple optimization strategies
         # The exact optimized query will depend on implementation details
@@ -653,7 +653,7 @@ class TestDuckDBQueryOptimizer:
 
         def optimize_query():
             try:
-                query = f"SELECT * FROM table_{threading.current_thread().ident}"  # noqa: E501
+                query = f"SELECT * FROM table_{threading.current_thread().ident}"
                 result = query_optimizer.optimize_query(query)
                 results.append(result)
             except Exception as e:

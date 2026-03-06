@@ -10,7 +10,7 @@ import sys
 import os
 
 sys.path.append(
-    os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))  # noqa: E501
+    os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 )
 
 import pytest  # noqa: E402
@@ -54,7 +54,7 @@ class MigrationTestHarness:
             return [m for m in all_migrations if m.version <= 17]
 
         # Monkey patch to exclude migration 018
-        self.migration_manager._discover_migrations = discover_migrations_up_to_17  # noqa: E501
+        self.migration_manager._discover_migrations = discover_migrations_up_to_17
 
         # Apply migrations 1-17
         success = self.migration_manager.migrate_to_latest()
@@ -81,28 +81,28 @@ class MigrationTestHarness:
             # Create a layer
             cursor.execute(
                 """
-                INSERT INTO structure_nodes (id, node_type, title, definition, created_at, version, last_modified)  # noqa: E501
+                INSERT INTO structure_nodes (id, node_type, title, definition, created_at, version, last_modified)
                 VALUES
-                    ('node-1', 'layer', 'Test Layer', 'Test layer definition', '2023-01-01 10:00:00', 1, '2023-01-01 10:00:00')  # noqa: E501
+                    ('node-1', 'layer', 'Test Layer', 'Test layer definition', '2023-01-01 10:00:00', 1, '2023-01-01 10:00:00')
             """
             )
 
             # Create a domain
             cursor.execute(
                 """
-                INSERT INTO structure_nodes (id, node_type, parent_node_id, title, definition, created_at, version, last_modified)  # noqa: E501
+                INSERT INTO structure_nodes (id, node_type, parent_node_id, title, definition, created_at, version, last_modified)
                 VALUES
-                    ('node-2', 'domain', 'node-1', 'Test Domain', 'Test domain definition', '2023-01-02 10:00:00', 1, '2023-01-02 10:00:00')  # noqa: E501
+                    ('node-2', 'domain', 'node-1', 'Test Domain', 'Test domain definition', '2023-01-02 10:00:00', 1, '2023-01-02 10:00:00')
             """
             )
 
             # Create terms
             cursor.execute(
                 """
-                INSERT INTO structure_nodes (id, node_type, parent_node_id, title, definition, created_at, version, last_modified)  # noqa: E501
+                INSERT INTO structure_nodes (id, node_type, parent_node_id, title, definition, created_at, version, last_modified)
                 VALUES
-                    ('node-3', 'term', 'node-2', 'Bank', 'Financial institution', '2023-01-03 10:00:00', 1, '2023-01-03 10:00:00'),  # noqa: E501
-                    ('node-4', 'term', 'node-2', 'River Bank', 'Edge of a river', '2023-01-04 10:00:00', 1, '2023-01-04 10:00:00')  # noqa: E501
+                    ('node-3', 'term', 'node-2', 'Bank', 'Financial institution', '2023-01-03 10:00:00', 1, '2023-01-03 10:00:00'),
+                    ('node-4', 'term', 'node-2', 'River Bank', 'Edge of a river', '2023-01-04 10:00:00', 1, '2023-01-04 10:00:00')
             """
             )
 
@@ -157,8 +157,8 @@ class MigrationTestHarness:
                 conn.execute(
                     text(
                         """
-                    INSERT INTO schema_history (version, description, migration_file, checksum, execution_time_ms)  # noqa: E501
-                    VALUES (:version, :description, :migration_file, :checksum, :execution_time_ms)  # noqa: E501
+                    INSERT INTO schema_history (version, description, migration_file, checksum, execution_time_ms)
+                    VALUES (:version, :description, :migration_file, :checksum, :execution_time_ms)
                 """
                     ),
                     {
@@ -185,12 +185,12 @@ class MigrationTestHarness:
             with conn.begin():
                 migration_018.down(conn)
                 # Remove from schema_history
-                conn.execute(text("DELETE FROM schema_history WHERE version = 18"))  # noqa: E501
+                conn.execute(text("DELETE FROM schema_history WHERE version = 18"))
 
         # Update current version
         self.migration_manager.current_version = 17
 
-    def insert_node_with_attributes(self, node_id: str, attributes: List[Dict]):  # noqa: E501
+    def insert_node_with_attributes(self, node_id: str, attributes: List[Dict]):
         """Insert a structure_node with attributes."""
         conn = self.get_connection()
         cursor = conn.cursor()
@@ -199,7 +199,7 @@ class MigrationTestHarness:
             cursor.execute(
                 """
                 INSERT INTO structure_nodes
-                (id, node_type, title, definition, attributes, created_at, version, last_modified)  # noqa: E501
+                (id, node_type, title, definition, attributes, created_at, version, last_modified)
                 VALUES (?, ?, ?, ?, ?, datetime('now'), 1, datetime('now'))
             """,
                 (
@@ -217,7 +217,7 @@ class MigrationTestHarness:
         finally:
             cursor.close()
 
-    def update_node_attributes(self, node_id: str, attributes: List[Dict] = None):  # noqa: E501
+    def update_node_attributes(self, node_id: str, attributes: List[Dict] = None):
         """Update attributes for a structure_node."""
         conn = self.get_connection()
         cursor = conn.cursor()
@@ -288,13 +288,13 @@ class TestMigration018SchemaChanges:
     def test_migration_adds_attributes_column(self, migration_harness):
         """Test that migration adds attributes column."""
         # Verify column doesn't exist before migration
-        assert not migration_harness.verify_column_exists("structure_nodes", "attributes")  # noqa: E501
+        assert not migration_harness.verify_column_exists("structure_nodes", "attributes")
 
         # Run migration
         migration_harness.run_migration_018()
 
         # Verify column exists after migration
-        assert migration_harness.verify_column_exists("structure_nodes", "attributes")  # noqa: E501
+        assert migration_harness.verify_column_exists("structure_nodes", "attributes")
 
     def test_attributes_column_type(self, migration_harness):
         """Test that attributes column has correct type."""
@@ -302,7 +302,7 @@ class TestMigration018SchemaChanges:
         migration_harness.run_migration_018()
 
         # Verify column type is TEXT
-        column_type = migration_harness.get_column_type("structure_nodes", "attributes")  # noqa: E501
+        column_type = migration_harness.get_column_type("structure_nodes", "attributes")
         assert column_type == "TEXT"
 
 
@@ -339,7 +339,7 @@ class TestMigration018DataPreservation:
 
         try:
             cursor.execute(
-                "SELECT id, node_type, title, definition FROM structure_nodes WHERE id = 'node-3'"  # noqa: E501
+                "SELECT id, node_type, title, definition FROM structure_nodes WHERE id = 'node-3'"
             )
             node = cursor.fetchone()
             assert node is not None
@@ -382,10 +382,10 @@ class TestMigration018NewColumnFunctionality:
 
         # Insert node with attributes
         attributes = [
-            {"key": "source_language", "title": "Source Language", "value_type": "string", "value": "English"},  # noqa: E501
-            {"key": "confidence_score", "title": "Confidence Score", "value_type": "number", "value": 0.95}  # noqa: E501
+            {"key": "source_language", "title": "Source Language", "value_type": "string", "value": "English"},
+            {"key": "confidence_score", "title": "Confidence Score", "value_type": "number", "value": 0.95}
         ]
-        migration_harness.insert_node_with_attributes("test-node-1", attributes)  # noqa: E501
+        migration_harness.insert_node_with_attributes("test-node-1", attributes)
 
         # Verify data was stored correctly
         result = migration_harness.get_node_attributes("test-node-1")
@@ -402,7 +402,7 @@ class TestMigration018NewColumnFunctionality:
 
         # Update existing node with attributes data
         attributes = [
-            {"key": "domain_category", "title": "Domain Category", "value_type": "string", "value": "Finance"}  # noqa: E501
+            {"key": "domain_category", "title": "Domain Category", "value_type": "string", "value": "Finance"}
         ]
         migration_harness.update_node_attributes("node-3", attributes)
 
@@ -444,13 +444,13 @@ class TestMigration018Rollback:
         """Test that rollback removes attributes column."""
         # Run migration
         migration_harness.run_migration_018()
-        assert migration_harness.verify_column_exists("structure_nodes", "attributes")  # noqa: E501
+        assert migration_harness.verify_column_exists("structure_nodes", "attributes")
 
         # Rollback migration
         migration_harness.rollback_migration_018()
 
         # Verify column is removed
-        assert not migration_harness.verify_column_exists("structure_nodes", "attributes")  # noqa: E501
+        assert not migration_harness.verify_column_exists("structure_nodes", "attributes")
 
     def test_rollback_preserves_existing_data(self, migration_harness):
         """Test that rollback preserves all original data."""
@@ -474,7 +474,7 @@ class TestMigration018Rollback:
 
         try:
             cursor.execute(
-                "SELECT id, node_type, title, definition, parent_node_id FROM structure_nodes WHERE id = 'node-3'"  # noqa: E501
+                "SELECT id, node_type, title, definition, parent_node_id FROM structure_nodes WHERE id = 'node-3'"
             )
             node = cursor.fetchone()
             assert node is not None
@@ -495,7 +495,7 @@ class TestMigration018Rollback:
         migration_harness.run_migration_018()
 
         # Add data to attributes column
-        attributes = [{"key": "test_key", "title": "Test", "value_type": "string", "value": "test"}]  # noqa: E501
+        attributes = [{"key": "test_key", "title": "Test", "value_type": "string", "value": "test"}]
         migration_harness.update_node_attributes("node-3", attributes)
 
         # Rollback migration
@@ -515,7 +515,7 @@ class TestMigration018Rollback:
             assert node[1] == "Bank"
 
             # Verify attributes column doesn't exist
-            assert not migration_harness.verify_column_exists("structure_nodes", "attributes")  # noqa: E501
+            assert not migration_harness.verify_column_exists("structure_nodes", "attributes")
         finally:
             cursor.close()
 
@@ -533,7 +533,7 @@ class TestMigration018EdgeCases:
         migration_harness.run_migration_018()
 
         # Verify migration succeeded
-        assert migration_harness.verify_column_exists("structure_nodes", "attributes")  # noqa: E501
+        assert migration_harness.verify_column_exists("structure_nodes", "attributes")
 
         # Verify count is still 0
         count_after = migration_harness.get_structure_nodes_count()
@@ -546,11 +546,11 @@ class TestMigration018EdgeCases:
 
         # Insert node with complex JSON data
         attributes = [
-            {"key": "language", "title": "Language", "value_type": "string", "value": "English"},  # noqa: E501
-            {"key": "year", "title": "Year", "value_type": "number", "value": 2023},  # noqa: E501
-            {"key": "is_verified", "title": "Is Verified", "value_type": "boolean", "value": True},  # noqa: E501
-            {"key": "founding_date", "title": "Founding Date", "value_type": "date", "value": "2023-01-15"},  # noqa: E501
-            {"key": "homepage", "title": "Homepage", "value_type": "url", "value": "https://example.com"}  # noqa: E501
+            {"key": "language", "title": "Language", "value_type": "string", "value": "English"},
+            {"key": "year", "title": "Year", "value_type": "number", "value": 2023},
+            {"key": "is_verified", "title": "Is Verified", "value_type": "boolean", "value": True},
+            {"key": "founding_date", "title": "Founding Date", "value_type": "date", "value": "2023-01-15"},
+            {"key": "homepage", "title": "Homepage", "value_type": "url", "value": "https://example.com"}
         ]
         migration_harness.insert_node_with_attributes("test-json", attributes)
 

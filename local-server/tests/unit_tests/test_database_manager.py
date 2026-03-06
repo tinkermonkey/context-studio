@@ -1,7 +1,7 @@
 """
-Unit tests for DatabaseManager - Testing enhanced database management functionality.  # noqa: E501
+Unit tests for DatabaseManager - Testing enhanced database management functionality.
 
-Tests connection pooling strategies, health monitoring, performance optimization,  # noqa: E501
+Tests connection pooling strategies, health monitoring, performance optimization,
 and resource cleanup.
 """
 
@@ -9,7 +9,7 @@ import sys
 import os
 
 sys.path.append(
-    os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))  # noqa: E501
+    os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 )
 
 import pytest  # noqa: E402
@@ -62,11 +62,11 @@ class TestDatabaseManager:
     def test_get_optimal_pool_strategy(self, database_manager):
         """Test optimal pool strategy selection."""
         # SQLite file database should use NULL_POOL
-        strategy = database_manager.get_optimal_pool_strategy("sqlite:///test.db")  # noqa: E501
+        strategy = database_manager.get_optimal_pool_strategy("sqlite:///test.db")
         assert strategy == PoolStrategy.NULL_POOL
 
         # SQLite in-memory should use STATIC_POOL
-        strategy = database_manager.get_optimal_pool_strategy("sqlite:///:memory:")  # noqa: E501
+        strategy = database_manager.get_optimal_pool_strategy("sqlite:///:memory:")
         assert strategy == PoolStrategy.STATIC_POOL
 
         # PostgreSQL should use QUEUE_POOL
@@ -95,9 +95,9 @@ class TestDatabaseManager:
         config = database_manager.get_pool_configuration("postgresql://test")
         assert config.connect_args == {}  # Should be empty for non-SQLite
 
-    def test_create_optimized_engine_sqlite_file(self, database_manager, test_db_url):  # noqa: E501
+    def test_create_optimized_engine_sqlite_file(self, database_manager, test_db_url):
         """Test optimized engine creation for SQLite file database."""
-        engine = database_manager.create_optimized_engine(test_db_url, "test_engine")  # noqa: E501
+        engine = database_manager.create_optimized_engine(test_db_url, "test_engine")
 
         assert engine is not None
         assert "test_engine" in database_manager._engines
@@ -107,7 +107,7 @@ class TestDatabaseManager:
         assert isinstance(engine.pool, NullPool)
 
         # Test that same engine ID returns cached engine
-        engine2 = database_manager.create_optimized_engine(test_db_url, "test_engine")  # noqa: E501
+        engine2 = database_manager.create_optimized_engine(test_db_url, "test_engine")
         assert engine is engine2
 
         # Cleanup
@@ -130,7 +130,7 @@ class TestDatabaseManager:
         # Cleanup
         engine.dispose()
 
-    def test_create_optimized_engine_custom_config(self, database_manager, test_db_url):  # noqa: E501
+    def test_create_optimized_engine_custom_config(self, database_manager, test_db_url):
         """Test engine creation with custom pool configuration."""
         custom_config = PoolConfiguration(
             pool_size=10,
@@ -150,7 +150,7 @@ class TestDatabaseManager:
         # Cleanup
         engine.dispose()
 
-    def test_get_optimized_session_context_manager(self, database_manager, test_db_url):  # noqa: E501
+    def test_get_optimized_session_context_manager(self, database_manager, test_db_url):
         """Test optimized session context manager."""
         engine_id = "session_test"
 
@@ -166,7 +166,7 @@ class TestDatabaseManager:
             # Session should be active during context
             assert session.is_active is True
 
-        # After context manager, session should be closed (but may still be active)  # noqa: E501
+        # After context manager, session should be closed (but may still be active)
         # The important thing is that it's no longer bound to a transaction
         assert not session.in_transaction()
 
@@ -179,7 +179,7 @@ class TestDatabaseManager:
         """Test auto-creation of engine when not found."""
         engine_id = "auto_create_test"
 
-        with database_manager.get_optimized_session(engine_id, test_db_url) as session:  # noqa: E501
+        with database_manager.get_optimized_session(engine_id, test_db_url) as session:
             assert session is not None
             # Engine should have been created automatically
             assert engine_id in database_manager._engines
@@ -367,8 +367,8 @@ class TestDatabaseManager:
         # Cleanup
         database_manager._engines[engine_id].dispose()
 
-    def test_generate_performance_recommendations(self, database_manager, test_db_url):  # noqa: E501
-        """Test performance recommendation generation with actual database activity."""  # noqa: E501
+    def test_generate_performance_recommendations(self, database_manager, test_db_url):
+        """Test performance recommendation generation with actual database activity."""
         # Create engine and generate some database activity
         engine_id = "recommendations_test"
         database_manager.create_optimized_engine(test_db_url, engine_id)
@@ -388,12 +388,12 @@ class TestDatabaseManager:
         database_manager.metrics.pool_misses = 2  # 88% hit rate
 
         # Set reasonable performance metrics
-        database_manager.metrics.avg_connection_time_ms = 50  # Below 100ms threshold  # noqa: E501
+        database_manager.metrics.avg_connection_time_ms = 50  # Below 100ms threshold
         database_manager.metrics.avg_query_time_ms = 25  # Below 50ms threshold
         database_manager.metrics.peak_connections = 5  # Below 50 threshold
 
         # Get recommendations
-        recommendations = database_manager._generate_performance_recommendations()  # noqa: E501
+        recommendations = database_manager._generate_performance_recommendations()
 
         assert isinstance(recommendations, list)
         assert len(recommendations) > 0
@@ -412,9 +412,9 @@ class TestDatabaseManager:
         def create_engine_and_session():
             try:
                 engine_id = f"thread_test_{threading.current_thread().ident}"
-                database_manager.create_optimized_engine(test_db_url, engine_id)  # noqa: E501
+                database_manager.create_optimized_engine(test_db_url, engine_id)
 
-                with database_manager.get_optimized_session(engine_id) as session:  # noqa: E501
+                with database_manager.get_optimized_session(engine_id) as session:
                     result = session.execute(text("SELECT 1")).scalar()
                     results.append(result)
 
@@ -568,7 +568,7 @@ class TestGlobalDatabaseManager:
         ), "Should get a new manager instance after cleanup"
         assert (
             len(new_manager._engines) == 0
-        ), f"New manager should be clean, but has engines: {list(new_manager._engines.keys())}"  # noqa: E501
+        ), f"New manager should be clean, but has engines: {list(new_manager._engines.keys())}"
 
 
 if __name__ == "__main__":

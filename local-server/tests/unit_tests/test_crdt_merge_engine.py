@@ -8,7 +8,7 @@ import sys
 import os
 
 sys.path.append(
-    os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))  # noqa: E501
+    os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 )
 
 import pytest  # noqa: E402
@@ -50,7 +50,7 @@ class TestCRDTMergeEngine:
         return Mock(spec=VersionManager)
 
     @pytest.fixture
-    def crdt_merge_engine(self, mock_db_session, mock_changeset_manager, mock_version_manager):  # noqa: E501
+    def crdt_merge_engine(self, mock_db_session, mock_changeset_manager, mock_version_manager):
         """Create CRDTMergeEngine instance for testing."""
         return CRDTMergeEngine(
             db=mock_db_session,
@@ -68,13 +68,13 @@ class TestCRDTMergeEngine:
         changeset.created_at = datetime.now(timezone.utc)
         return changeset
 
-    def test_initialization(self, crdt_merge_engine, mock_db_session, mock_changeset_manager, mock_version_manager):  # noqa: E501
+    def test_initialization(self, crdt_merge_engine, mock_db_session, mock_changeset_manager, mock_version_manager):
         """Test CRDTMergeEngine initialization."""
         assert crdt_merge_engine.db == mock_db_session
         assert crdt_merge_engine.changeset_manager == mock_changeset_manager
         assert crdt_merge_engine.version_manager == mock_version_manager
 
-    def test_merge_changeset_success(self, crdt_merge_engine, mock_changeset_manager, mock_version_manager):  # noqa: E501
+    def test_merge_changeset_success(self, crdt_merge_engine, mock_changeset_manager, mock_version_manager):
         """Test successful changeset merging."""
         # Mock approved changeset
         mock_changeset = Mock()
@@ -86,26 +86,26 @@ class TestCRDTMergeEngine:
         mock_version.id = "version123"
         mock_version_manager.create_version.return_value = mock_version
 
-        with patch.object(crdt_merge_engine, '_get_changeset_versions', return_value=[]):  # noqa: E501
-            with patch.object(crdt_merge_engine, '_group_versions_by_entity', return_value={}):  # noqa: E501
+        with patch.object(crdt_merge_engine, '_get_changeset_versions', return_value=[]):
+            with patch.object(crdt_merge_engine, '_group_versions_by_entity', return_value={}):
                 with patch.object(crdt_merge_engine, 'db') as mock_db:
                     mock_db.commit.return_value = None
 
-                    result = crdt_merge_engine.merge_changeset("changeset123", "user123")  # noqa: E501
+                    result = crdt_merge_engine.merge_changeset("changeset123", "user123")
 
         assert isinstance(result, ChangesetMergeResult)
         assert result.changeset_id == "changeset123"
         assert result.merged_entities == 0
         assert result.conflicts == 0
 
-    def test_merge_changeset_not_found(self, crdt_merge_engine, mock_changeset_manager):  # noqa: E501
+    def test_merge_changeset_not_found(self, crdt_merge_engine, mock_changeset_manager):
         """Test merging with invalid changeset."""
         mock_changeset_manager.get_changeset.return_value = None
 
         with pytest.raises(ValueError, match="not found"):
             crdt_merge_engine.merge_changeset("nonexistent", "user123")
 
-    def test_merge_changeset_invalid_state(self, crdt_merge_engine, mock_changeset_manager):  # noqa: E501
+    def test_merge_changeset_invalid_state(self, crdt_merge_engine, mock_changeset_manager):
         """Test merging changeset in invalid state."""
         mock_changeset = Mock()
         mock_changeset.state = ChangesetState.DRAFT
@@ -114,35 +114,35 @@ class TestCRDTMergeEngine:
         with pytest.raises(ValueError, match="Cannot merge changeset"):
             crdt_merge_engine.merge_changeset("changeset1", "user123")
 
-    # Note: merge_changeset takes a single changeset_id, not a list, so empty list test not applicable  # noqa: E501
+    # Note: merge_changeset takes a single changeset_id, not a list, so empty list test not applicable
 
-    # Note: auto_merge_proposal method does not exist in the actual implementation  # noqa: E501
+    # Note: auto_merge_proposal method does not exist in the actual implementation
 
-    # Note: auto_merge_proposal method does not exist in the actual implementation  # noqa: E501
+    # Note: auto_merge_proposal method does not exist in the actual implementation
 
-    # Note: _resolve_conflicts method does not exist in the actual implementation  # noqa: E501
+    # Note: _resolve_conflicts method does not exist in the actual implementation
 
-    # Note: _resolve_conflicts method does not exist in the actual implementation  # noqa: E501
+    # Note: _resolve_conflicts method does not exist in the actual implementation
 
-    # Note: _resolve_conflicts and _get_author_priority methods do not exist in the actual implementation  # noqa: E501
+    # Note: _resolve_conflicts and _get_author_priority methods do not exist in the actual implementation
 
-    # Note: _detect_conflicts method does not exist in the actual implementation  # noqa: E501
+    # Note: _detect_conflicts method does not exist in the actual implementation
 
-    # Note: _detect_conflicts method does not exist in the actual implementation  # noqa: E501
+    # Note: _detect_conflicts method does not exist in the actual implementation
 
-    # Note: _detect_conflicts method does not exist in the actual implementation  # noqa: E501
+    # Note: _detect_conflicts method does not exist in the actual implementation
 
-    # Note: _compute_merge_plan method does not exist in the actual implementation  # noqa: E501
+    # Note: _compute_merge_plan method does not exist in the actual implementation
 
-    # Note: _execute_merge_plan method does not exist in the actual implementation  # noqa: E501
+    # Note: _execute_merge_plan method does not exist in the actual implementation
 
-    # Note: _validate_merge_preconditions method does not exist in the actual implementation  # noqa: E501
+    # Note: _validate_merge_preconditions method does not exist in the actual implementation
 
-    # Note: _validate_merge_preconditions method does not exist in the actual implementation  # noqa: E501
+    # Note: _validate_merge_preconditions method does not exist in the actual implementation
 
-    # Note: _record_merge_result method does not exist in the actual implementation  # noqa: E501
+    # Note: _record_merge_result method does not exist in the actual implementation
 
-    # Note: _get_author_priority method does not exist in the actual implementation  # noqa: E501
+    # Note: _get_author_priority method does not exist in the actual implementation
 
     def test_merge_strategy_enum_values(self):
         """Test MergeStrategy enum has expected values."""
@@ -169,14 +169,14 @@ class TestCRDTMergeEngine:
         assert result.error_message is None
         assert result.conflicts is None
 
-    def test_database_transaction_rollback_on_error(self, crdt_merge_engine, mock_db_session, mock_changeset_manager, mock_version_manager):  # noqa: E501
+    def test_database_transaction_rollback_on_error(self, crdt_merge_engine, mock_db_session, mock_changeset_manager, mock_version_manager):
         """Test database rollback on merge error."""
         mock_changeset = Mock()
         mock_changeset.state = ChangesetState.APPROVED
         mock_changeset_manager.get_changeset.return_value = mock_changeset
 
-        with patch.object(crdt_merge_engine, '_get_changeset_versions', side_effect=Exception("Merge error")):  # noqa: E501
-            with pytest.raises(RuntimeError, match="Failed to merge changeset"):  # noqa: E501
+        with patch.object(crdt_merge_engine, '_get_changeset_versions', side_effect=Exception("Merge error")):
+            with pytest.raises(RuntimeError, match="Failed to merge changeset"):
                 crdt_merge_engine.merge_changeset("changeset1", "user123")
 
         mock_db_session.rollback.assert_called_once()
@@ -206,7 +206,7 @@ class TestCRDTMergeEngine:
         assert result.conflict_details == []
         assert result.merge_commit_id == "commit123"
 
-    def test_resolve_conflict_success(self, crdt_merge_engine, mock_version_manager):  # noqa: E501
+    def test_resolve_conflict_success(self, crdt_merge_engine, mock_version_manager):
         """Test manual conflict resolution."""
         mock_version = Mock()
         mock_version.id = "resolved_version123"
@@ -216,9 +216,9 @@ class TestCRDTMergeEngine:
             with patch.object(crdt_merge_engine, 'db') as mock_db:
                 mock_db.commit.return_value = None
 
-                resolution_content = {"title": "Resolved Title", "description": "Resolved Description"}  # noqa: E501
+                resolution_content = {"title": "Resolved Title", "description": "Resolved Description"}
                 result = crdt_merge_engine.resolve_conflict(
-                    "test_entity", "entity123", resolution_content, "resolver123"  # noqa: E501
+                    "test_entity", "entity123", resolution_content, "resolver123"
                 )
 
         assert result.id == "resolved_version123"

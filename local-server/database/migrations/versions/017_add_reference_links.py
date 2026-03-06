@@ -1,4 +1,4 @@
-"""Migration 017: Add reference_links and word_senses columns to structure_nodes"""  # noqa: E501
+"""Migration 017: Add reference_links and word_senses columns to structure_nodes"""
 
 from sqlalchemy.engine import Connection
 from sqlalchemy import text
@@ -9,18 +9,18 @@ logger = logging.getLogger(__name__)
 
 
 class Migration017(Migration):
-    """Add reference_links and word_senses JSON columns to structure_nodes table."""  # noqa: E501
+    """Add reference_links and word_senses JSON columns to structure_nodes table."""
 
     version = 17
     description = "Add reference_links and word_senses columns"
 
     def up(self, connection: Connection) -> None:
         """Apply the migration."""
-        logger.info("Adding reference_links and word_senses columns to structure_nodes table...")  # noqa: E501
+        logger.info("Adding reference_links and word_senses columns to structure_nodes table...")
 
         # Add reference_links column (JSON array stored as TEXT)
         # Stores external reference node identifiers like:
-        # [{"source": "schema.org", "external_id": "Person"}, {"source": "wikidata", "external_id": "Q5"}]  # noqa: E501
+        # [{"source": "schema.org", "external_id": "Person"}, {"source": "wikidata", "external_id": "Q5"}]
         connection.execute(text("""
             ALTER TABLE structure_nodes
             ADD COLUMN reference_links TEXT NULL
@@ -29,23 +29,23 @@ class Migration017(Migration):
 
         # Add word_senses column (JSON array stored as TEXT)
         # Stores NLP-identified word sense disambiguations like:
-        # [{"term": "bank", "sense_type": "wordnet", "sense_id": "bank.n.01", "definition": "financial institution", "domain": "noun.group"}]  # noqa: E501
+        # [{"term": "bank", "sense_type": "wordnet", "sense_id": "bank.n.01", "definition": "financial institution", "domain": "noun.group"}]
         connection.execute(text("""
             ALTER TABLE structure_nodes
             ADD COLUMN word_senses TEXT NULL
         """))
         logger.info("Added word_senses column")
 
-        logger.info("Successfully added reference_links and word_senses columns to structure_nodes")  # noqa: E501
+        logger.info("Successfully added reference_links and word_senses columns to structure_nodes")
 
     def down(self, connection: Connection) -> None:
         """Rollback the migration."""
-        logger.info("Removing reference_links and word_senses columns from structure_nodes table...")  # noqa: E501
+        logger.info("Removing reference_links and word_senses columns from structure_nodes table...")
 
-        # SQLite doesn't support DROP COLUMN directly, so we need to recreate the table  # noqa: E501
+        # SQLite doesn't support DROP COLUMN directly, so we need to recreate the table
         # This is the standard SQLite approach for removing columns
 
-        # Step 1: Create a temporary table with the original schema (without the new columns)  # noqa: E501
+        # Step 1: Create a temporary table with the original schema (without the new columns)
         connection.execute(text("""
             CREATE TABLE structure_nodes_temp (
                 id TEXT PRIMARY KEY,
@@ -59,7 +59,7 @@ class Migration017(Migration):
                 created_at DATETIME,
                 version INTEGER DEFAULT 1,
                 last_modified DATETIME,
-                FOREIGN KEY (parent_node_id) REFERENCES structure_nodes(id) ON DELETE CASCADE,  # noqa: E501
+                FOREIGN KEY (parent_node_id) REFERENCES structure_nodes(id) ON DELETE CASCADE,  
                 FOREIGN KEY (structural_predicate_id) REFERENCES predicates(id)
             )
         """))
@@ -82,7 +82,7 @@ class Migration017(Migration):
         connection.execute(text("DROP TABLE structure_nodes"))
 
         # Step 4: Rename the temp table to the original name
-        connection.execute(text("ALTER TABLE structure_nodes_temp RENAME TO structure_nodes"))  # noqa: E501
+        connection.execute(text("ALTER TABLE structure_nodes_temp RENAME TO structure_nodes"))
 
         # Step 5: Recreate indexes that existed on the original table
         # Check for existing indexes in migration 013
@@ -91,4 +91,4 @@ class Migration017(Migration):
             ON structure_nodes(title)
         """))
 
-        logger.info("Successfully removed reference_links and word_senses columns from structure_nodes")  # noqa: E501
+        logger.info("Successfully removed reference_links and word_senses columns from structure_nodes")

@@ -19,26 +19,26 @@ class Migration016(Migration):
         logger.info("Creating RAG observability tables...")
 
         # Create rag_processing_metrics table
-        # This table stores metrics for each RAG request with layer-by-layer timing and counts  # noqa: E501
+        # This table stores metrics for each RAG request with layer-by-layer timing and counts
         connection.execute(text("""
             CREATE TABLE IF NOT EXISTS rag_processing_metrics (
                 id TEXT PRIMARY KEY,
                 request_id TEXT NOT NULL,
                 sentence_text TEXT NOT NULL,
 
-                -- Layer 0: Knowledge Graph Context Preparation (vector search for relevant KG concepts)  # noqa: E501
+                -- Layer 0: Knowledge Graph Context Preparation (vector search for relevant KG concepts)  
                 layer_0_time_ms INTEGER,
                 layer_0_count INTEGER,
 
-                -- Layer 1: LLM-based Entity Extraction (primary concept extraction using LLM)  # noqa: E501
+                -- Layer 1: LLM-based Entity Extraction (primary concept extraction using LLM)  
                 layer_1_time_ms INTEGER,
                 layer_1_count INTEGER,
 
-                -- Layer 2: spaCy Syntactic Gap Analysis (grammatical analysis for unrecognized spans)  # noqa: E501
+                -- Layer 2: spaCy Syntactic Gap Analysis (grammatical analysis for unrecognized spans)  
                 layer_2_time_ms INTEGER,
                 layer_2_count INTEGER,
 
-                -- Layer 3: Concept Resolution via KG and Web Search (resolve unrecognized concepts)  # noqa: E501
+                -- Layer 3: Concept Resolution via KG and Web Search (resolve unrecognized concepts)  
                 layer_3_time_ms INTEGER,
                 layer_3_count INTEGER,
 
@@ -68,7 +68,7 @@ class Migration016(Migration):
         logger.info("Created rag_processing_metrics table")
 
         # Create rag_observability_trace table
-        # This table stores detailed layer input/output traces (optional, controlled by API parameter)  # noqa: E501
+        # This table stores detailed layer input/output traces (optional, controlled by API parameter)
         connection.execute(text("""
             CREATE TABLE IF NOT EXISTS rag_observability_trace (
                 id TEXT PRIMARY KEY,
@@ -83,10 +83,10 @@ class Migration016(Migration):
                 -- Timestamp for retention management
                 timestamp DATETIME DEFAULT CURRENT_TIMESTAMP NOT NULL,
 
-                -- Retention period: 7 days for traces (more detailed, shorter retention)  # noqa: E501
+                -- Retention period: 7 days for traces (more detailed, shorter retention)  
                 retention_days INTEGER DEFAULT 7 NOT NULL
 
-                -- Note: No foreign key constraint to allow independent trace storage  # noqa: E501
+                -- Note: No foreign key constraint to allow independent trace storage  
             )
         """))
 
@@ -108,29 +108,29 @@ class Migration016(Migration):
             ON rag_observability_trace(timestamp)
         """))
 
-        # Create composite index for efficient filtering by request_id and sentence_index  # noqa: E501
+        # Create composite index for efficient filtering by request_id and sentence_index
         connection.execute(text("""
             CREATE INDEX IF NOT EXISTS idx_rag_trace_request_sentence
             ON rag_observability_trace(request_id, sentence_index)
         """))
 
         logger.info("Created rag_observability_trace table")
-        logger.info("Successfully created RAG observability tables with indexes")  # noqa: E501
+        logger.info("Successfully created RAG observability tables with indexes")
 
     def down(self, connection: Connection) -> None:
         """Rollback the migration."""
         logger.info("Dropping RAG observability tables...")
 
         # Drop trace table first (has foreign key to metrics table)
-        connection.execute(text("DROP INDEX IF EXISTS idx_rag_trace_request_sentence"))  # noqa: E501
-        connection.execute(text("DROP INDEX IF EXISTS idx_rag_trace_timestamp"))  # noqa: E501
-        connection.execute(text("DROP INDEX IF EXISTS idx_rag_trace_layer_name"))  # noqa: E501
-        connection.execute(text("DROP INDEX IF EXISTS idx_rag_trace_request_id"))  # noqa: E501
-        connection.execute(text("DROP TABLE IF EXISTS rag_observability_trace"))  # noqa: E501
+        connection.execute(text("DROP INDEX IF EXISTS idx_rag_trace_request_sentence"))
+        connection.execute(text("DROP INDEX IF EXISTS idx_rag_trace_timestamp"))
+        connection.execute(text("DROP INDEX IF EXISTS idx_rag_trace_layer_name"))
+        connection.execute(text("DROP INDEX IF EXISTS idx_rag_trace_request_id"))
+        connection.execute(text("DROP TABLE IF EXISTS rag_observability_trace"))
 
         # Drop metrics table
-        connection.execute(text("DROP INDEX IF EXISTS idx_rag_metrics_timestamp"))  # noqa: E501
-        connection.execute(text("DROP INDEX IF EXISTS idx_rag_metrics_request_id"))  # noqa: E501
+        connection.execute(text("DROP INDEX IF EXISTS idx_rag_metrics_timestamp"))
+        connection.execute(text("DROP INDEX IF EXISTS idx_rag_metrics_request_id"))
         connection.execute(text("DROP TABLE IF EXISTS rag_processing_metrics"))
 
-        logger.info("Successfully dropped RAG observability tables and indexes")  # noqa: E501
+        logger.info("Successfully dropped RAG observability tables and indexes")

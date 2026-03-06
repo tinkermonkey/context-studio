@@ -7,9 +7,9 @@ from database.migrations.migration_manager import Migration
 
 
 class Migration005(Migration):
-    """Add predicate sets functionality with predicates table and related schema changes."""  # noqa: E501
+    """Add predicate sets functionality with predicates table and related schema changes."""
     version = 5
-    description = "Add predicate sets functionality with predicates table and related schema changes."  # noqa: E501
+    description = "Add predicate sets functionality with predicates table and related schema changes."
 
     def up(self, connection: Connection) -> None:
         """Apply the migration."""
@@ -29,7 +29,7 @@ class Migration005(Migration):
         """))
 
         # 2. Create index for efficient lookup by identifier
-        connection.execute(text("CREATE INDEX idx_predicates_identifier ON predicates(identifier);"))  # noqa: E501
+        connection.execute(text("CREATE INDEX idx_predicates_identifier ON predicates(identifier);"))
 
         # 3. Create trigger to update date_modified on updates
         connection.execute(text("""
@@ -37,7 +37,7 @@ class Migration005(Migration):
                 AFTER UPDATE ON predicates
                 FOR EACH ROW
             BEGIN
-                UPDATE predicates SET date_modified = CURRENT_TIMESTAMP WHERE id = NEW.id;  # noqa: E501
+                UPDATE predicates SET date_modified = CURRENT_TIMESTAMP WHERE id = NEW.id;  
             END;
         """))
 
@@ -56,17 +56,17 @@ class Migration005(Migration):
                 primary_predicate TEXT,
                 primary_predicate_id TEXT,
                 predicate_set TEXT,
-                FOREIGN KEY (layer_id) REFERENCES layers (id) ON DELETE CASCADE,  # noqa: E501
-                FOREIGN KEY (primary_predicate_id) REFERENCES predicates (id) ON DELETE SET NULL,  # noqa: E501
+                FOREIGN KEY (layer_id) REFERENCES layers (id) ON DELETE CASCADE,  
+                FOREIGN KEY (primary_predicate_id) REFERENCES predicates (id) ON DELETE SET NULL,  
                 UNIQUE (layer_id, title)
             );
         """))
 
         # Copy existing domains data
         connection.execute(text("""
-            INSERT INTO domains_new (id, layer_id, title, definition, title_embedding, definition_embedding,  # noqa: E501
+            INSERT INTO domains_new (id, layer_id, title, definition, title_embedding, definition_embedding,  
                                    created_at, version, last_modified)
-            SELECT id, layer_id, title, definition, title_embedding, definition_embedding,  # noqa: E501
+            SELECT id, layer_id, title, definition, title_embedding, definition_embedding,  
                    created_at, version, last_modified
             FROM domains;
         """))
@@ -84,23 +84,23 @@ class Migration005(Migration):
                 predicate TEXT NOT NULL,
                 predicate_id TEXT,
                 created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-                FOREIGN KEY (source_term_id) REFERENCES terms (id) ON DELETE CASCADE,  # noqa: E501
-                FOREIGN KEY (target_term_id) REFERENCES terms (id) ON DELETE CASCADE,  # noqa: E501
-                FOREIGN KEY (predicate_id) REFERENCES predicates (id) ON DELETE SET NULL,  # noqa: E501
+                FOREIGN KEY (source_term_id) REFERENCES terms (id) ON DELETE CASCADE,  
+                FOREIGN KEY (target_term_id) REFERENCES terms (id) ON DELETE CASCADE,  
+                FOREIGN KEY (predicate_id) REFERENCES predicates (id) ON DELETE SET NULL,  
                 UNIQUE (source_term_id, target_term_id, predicate)
             );
         """))
 
         # Copy existing term_relationships data
         connection.execute(text("""
-            INSERT INTO term_relationships_new (id, source_term_id, target_term_id, predicate, created_at)  # noqa: E501
+            INSERT INTO term_relationships_new (id, source_term_id, target_term_id, predicate, created_at)  
             SELECT id, source_term_id, target_term_id, predicate, created_at
             FROM term_relationships;
         """))
 
         # Drop old term_relationships table and rename new one
         connection.execute(text("DROP TABLE term_relationships;"))
-        connection.execute(text("ALTER TABLE term_relationships_new RENAME TO term_relationships;"))  # noqa: E501
+        connection.execute(text("ALTER TABLE term_relationships_new RENAME TO term_relationships;"))
 
         # 6. Recreate layers table without primary_predicate field
         connection.execute(text("""
@@ -118,9 +118,9 @@ class Migration005(Migration):
 
         # Copy existing layers data (excluding primary_predicate if it exists)
         connection.execute(text("""
-            INSERT INTO layers_new (id, title, definition, title_embedding, definition_embedding,  # noqa: E501
+            INSERT INTO layers_new (id, title, definition, title_embedding, definition_embedding,  
                                   created_at, version, last_modified)
-            SELECT id, title, definition, title_embedding, definition_embedding,  # noqa: E501
+            SELECT id, title, definition, title_embedding, definition_embedding,  
                    created_at, version, last_modified
             FROM layers;
         """))
@@ -132,7 +132,7 @@ class Migration005(Migration):
         # 7. Create vector table for predicates (if sqlite-vec is available)
         self._create_predicates_vector_table(connection)
 
-        # 8. Update existing term_relationships to reference predicate IDs where possible  # noqa: E501
+        # 8. Update existing term_relationships to reference predicate IDs where possible
         self._update_existing_predicate_references(connection)
 
         connection.execute(text("PRAGMA foreign_keys=on;"))
@@ -158,9 +158,9 @@ class Migration005(Migration):
 
         # Copy layers data back
         connection.execute(text("""
-            INSERT INTO layers_old (id, title, definition, title_embedding, definition_embedding,  # noqa: E501
+            INSERT INTO layers_old (id, title, definition, title_embedding, definition_embedding,  
                                   created_at, version, last_modified)
-            SELECT id, title, definition, title_embedding, definition_embedding,  # noqa: E501
+            SELECT id, title, definition, title_embedding, definition_embedding,  
                    created_at, version, last_modified
             FROM layers;
         """))
@@ -176,21 +176,21 @@ class Migration005(Migration):
                 target_term_id TEXT NOT NULL,
                 predicate TEXT NOT NULL,
                 created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-                FOREIGN KEY (source_term_id) REFERENCES terms (id) ON DELETE CASCADE,  # noqa: E501
-                FOREIGN KEY (target_term_id) REFERENCES terms (id) ON DELETE CASCADE,  # noqa: E501
+                FOREIGN KEY (source_term_id) REFERENCES terms (id) ON DELETE CASCADE,  
+                FOREIGN KEY (target_term_id) REFERENCES terms (id) ON DELETE CASCADE,  
                 UNIQUE (source_term_id, target_term_id, predicate)
             );
         """))
 
         # Copy term_relationships data back (excluding predicate_id)
         connection.execute(text("""
-            INSERT INTO term_relationships_old (id, source_term_id, target_term_id, predicate, created_at)  # noqa: E501
+            INSERT INTO term_relationships_old (id, source_term_id, target_term_id, predicate, created_at)  
             SELECT id, source_term_id, target_term_id, predicate, created_at
             FROM term_relationships;
         """))
 
         connection.execute(text("DROP TABLE term_relationships;"))
-        connection.execute(text("ALTER TABLE term_relationships_old RENAME TO term_relationships;"))  # noqa: E501
+        connection.execute(text("ALTER TABLE term_relationships_old RENAME TO term_relationships;"))
 
         # 3. Recreate domains table without predicate fields
         connection.execute(text("""
@@ -204,16 +204,16 @@ class Migration005(Migration):
                 created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
                 version INTEGER DEFAULT 1,
                 last_modified DATETIME DEFAULT CURRENT_TIMESTAMP,
-                FOREIGN KEY (layer_id) REFERENCES layers (id) ON DELETE CASCADE,  # noqa: E501
+                FOREIGN KEY (layer_id) REFERENCES layers (id) ON DELETE CASCADE,  
                 UNIQUE (layer_id, title)
             );
         """))
 
         # Copy domains data back (excluding predicate fields)
         connection.execute(text("""
-            INSERT INTO domains_old (id, layer_id, title, definition, title_embedding, definition_embedding,  # noqa: E501
+            INSERT INTO domains_old (id, layer_id, title, definition, title_embedding, definition_embedding,  
                                    created_at, version, last_modified)
-            SELECT id, layer_id, title, definition, title_embedding, definition_embedding,  # noqa: E501
+            SELECT id, layer_id, title, definition, title_embedding, definition_embedding,  
                    created_at, version, last_modified
             FROM domains;
         """))
@@ -223,8 +223,8 @@ class Migration005(Migration):
 
         # 4. Drop predicates table and related objects
         connection.execute(text("DROP TABLE IF EXISTS predicates_vec;"))
-        connection.execute(text("DROP TRIGGER IF EXISTS update_predicates_date_modified;"))  # noqa: E501
-        connection.execute(text("DROP INDEX IF EXISTS idx_predicates_identifier;"))  # noqa: E501
+        connection.execute(text("DROP TRIGGER IF EXISTS update_predicates_date_modified;"))
+        connection.execute(text("DROP INDEX IF EXISTS idx_predicates_identifier;"))
         connection.execute(text("DROP TABLE predicates;"))
 
         connection.execute(text("PRAGMA foreign_keys=on;"))
@@ -232,15 +232,15 @@ class Migration005(Migration):
     def _create_predicates_vector_table(self, connection: Connection) -> None:
         """Create vector table for predicates if sqlite-vec is available."""
         try:
-            # Try to create the vector table - this requires sqlite-vec extension  # noqa: E501
+            # Try to create the vector table - this requires sqlite-vec extension
             try:
                 import sqlite_vec
             except ImportError:
                 # If sqlite-vec is not available, skip vector table creation
-                # This allows the migration to succeed even without the extension  # noqa: E501
+                # This allows the migration to succeed even without the extension
                 import logging
                 logger = logging.getLogger(__name__)
-                logger.warning("sqlite-vec extension not available. Skipping predicates vector table creation.")  # noqa: E501
+                logger.warning("sqlite-vec extension not available. Skipping predicates vector table creation.")
                 return
 
             raw_connection = connection.connection
@@ -264,8 +264,8 @@ class Migration005(Migration):
             logger = logging.getLogger(__name__)
             logger.warning(f"Could not create predicates vector table: {e}")
 
-    def _update_existing_predicate_references(self, connection: Connection) -> None:  # noqa: E501
-        """Update existing term_relationships to reference predicate IDs where possible."""  # noqa: E501
+    def _update_existing_predicate_references(self, connection: Connection) -> None:
+        """Update existing term_relationships to reference predicate IDs where possible."""
         # Get all existing predicates from term_relationships
         existing_predicates = connection.execute(text("""
             SELECT DISTINCT predicate FROM term_relationships
@@ -297,11 +297,11 @@ class Migration005(Migration):
     def _generate_identifier_from_title(self, title: str) -> str:
         """
         Generate a code-safe identifier from a title.
-        Converts CamelCase to underscore_lowercase and handles spaces/special chars.  # noqa: E501
+        Converts CamelCase to underscore_lowercase and handles spaces/special chars.
         """
         import re
         # First, convert CamelCase to underscore_case
-        # Insert underscore before uppercase letters that follow lowercase letters or digits  # noqa: E501
+        # Insert underscore before uppercase letters that follow lowercase letters or digits
         identifier = re.sub(r'([a-z0-9])([A-Z])', r'\1_\2', title)
         # Convert to lowercase
         identifier = identifier.lower()

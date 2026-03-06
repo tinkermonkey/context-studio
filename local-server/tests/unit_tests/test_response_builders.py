@@ -2,7 +2,7 @@
 
 import sys
 import os
-sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))  # noqa: E501
+sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
 import pytest  # noqa: E402
 
@@ -68,7 +68,7 @@ class TestResponseBuilder:
             )
         ]
 
-    def test_build_single_source_response_success(self, builder, sample_nodes, sample_links):  # noqa: E501
+    def test_build_single_source_response_success(self, builder, sample_nodes, sample_links):
         """Test successful single source response building."""
         response = builder.build_single_source_response(
             source=SourceType.DBPEDIA,
@@ -132,7 +132,7 @@ class TestResponseBuilder:
         assert response.search_time_ms == 0.0
         assert response.source_errors == {}
 
-    def test_build_multi_source_response_success(self, builder, sample_nodes, sample_links):  # noqa: E501
+    def test_build_multi_source_response_success(self, builder, sample_nodes, sample_links):
         """Test successful multi-source response building."""
         response = builder.build_multi_source_response(
             query="python programming",
@@ -150,7 +150,7 @@ class TestResponseBuilder:
         assert response.links == sample_links
         assert response.total_results == 2
         assert response.total_links == 2
-        assert response.sources_queried == ["dbpedia", "wikidata", "conceptnet"]  # noqa: E501
+        assert response.sources_queried == ["dbpedia", "wikidata", "conceptnet"]
         assert response.source_errors == {"conceptnet": "rate limit exceeded"}
         assert response.limit == 15
         assert response.offset == 5
@@ -229,7 +229,7 @@ class TestResponseBuilder:
         assert response.total_results == 0
         assert response.total_links == 0
         assert response.sources_queried == ["dbpedia"]
-        assert response.source_errors == {"dbpedia": "Database connection failed"}  # noqa: E501
+        assert response.source_errors == {"dbpedia": "Database connection failed"}
         assert response.limit == 30
         assert response.offset == 20
         assert response.search_time_ms == 0.0
@@ -352,7 +352,7 @@ class TestResponseBuilder:
             links=[],
             total_results=0,
             total_links=0,
-            sources_queried=["wikidata", "conceptnet"],  # wikidata is duplicate  # noqa: E501
+            sources_queried=["wikidata", "conceptnet"],  # wikidata is duplicate
             source_errors={},
             offset=0,
             limit=10,
@@ -386,7 +386,7 @@ class TestResponseBuilder:
             total_results=0,
             total_links=0,
             sources_queried=["dbpedia"],
-            source_errors={"dbpedia": "connection error"},  # Different error for same source  # noqa: E501
+            source_errors={"dbpedia": "connection error"},  # Different error for same source
             offset=0,
             limit=10,
             search_time_ms=150.0
@@ -434,7 +434,7 @@ class TestResponseBuilder:
         assert merged.search_time_ms == 300.0  # But search time is summed
 
     def test_response_consistency(self, builder, sample_nodes, sample_links):
-        """Test that different build methods produce consistent response structures."""  # noqa: E501
+        """Test that different build methods produce consistent response structures."""
         # Build responses using different methods
         single_source = builder.build_single_source_response(
             source=SourceType.DBPEDIA,
@@ -460,7 +460,7 @@ class TestResponseBuilder:
         assert single_source.sources_queried == multi_source.sources_queried
 
     def test_timing_wrapper_functionality(self, builder):
-        """Test the timing wrapper decorator concept (though it's a static method)."""  # noqa: E501
+        """Test the timing wrapper decorator concept (though it's a static method)."""
         # This tests the concept shown in the timing wrapper
         import asyncio
 
@@ -480,7 +480,7 @@ class TestResponseBuilder:
                 search_time_ms=0.0  # Will be updated by wrapper
             )
 
-        # Note: This is testing the concept, but the actual wrapper implementation  # noqa: E501
+        # Note: This is testing the concept, but the actual wrapper implementation
         # would need to be properly implemented as a real decorator
         # For now, we just verify the method exists and has the right signature
         assert hasattr(ResponseBuilder, 'create_timing_wrapper')

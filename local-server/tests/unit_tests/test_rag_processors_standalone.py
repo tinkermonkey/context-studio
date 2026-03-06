@@ -8,7 +8,7 @@ import sys
 import os
 
 # Add parent directory to path
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))  # noqa: E501
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
 import pytest  # noqa: E402
 from unittest.mock import Mock  # noqa: E402
@@ -47,7 +47,7 @@ def test_processor_input_validation():
     assert input_data.text == "Test text"
     assert not input_data.enable_trace
 
-    # Test validation of whitespace-only text (if custom validator is implemented)  # noqa: E501
+    # Test validation of whitespace-only text (if custom validator is implemented)
     # Note: Pydantic validates min_length but not whitespace-only by default
     try:
         # This may or may not raise depending on validation implementation
@@ -311,15 +311,15 @@ def test_concept_resolution_confidence_calculation():
     processor = ConceptResolutionProcessor(mock_db_session)
 
     # Test cached KG confidence
-    conf = processor._calculate_confidence(ResolutionMethod.CACHED_KG, similarity=0.9)  # noqa: E501
+    conf = processor._calculate_confidence(ResolutionMethod.CACHED_KG, similarity=0.9)
     assert 0.7 <= conf <= 0.8
 
     # Test full KG confidence
-    conf = processor._calculate_confidence(ResolutionMethod.FULL_KG, similarity=0.7)  # noqa: E501
+    conf = processor._calculate_confidence(ResolutionMethod.FULL_KG, similarity=0.7)
     assert 0.6 <= conf <= 0.75
 
     # Test web search confidence
-    conf = processor._calculate_confidence(ResolutionMethod.WEB_SEARCH, snippet_length=150)  # noqa: E501
+    conf = processor._calculate_confidence(ResolutionMethod.WEB_SEARCH, snippet_length=150)
     assert 0.5 <= conf <= 0.6
 
 

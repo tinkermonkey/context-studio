@@ -1,14 +1,14 @@
 """
-Unit tests for ProposalManager - Testing proposal creation, voting, and lifecycle management.  # noqa: E501
+Unit tests for ProposalManager - Testing proposal creation, voting, and lifecycle management.
 
-Tests proposal workflows, voting logic, auto-approval/rejection, and S3 integration.  # noqa: E501
+Tests proposal workflows, voting logic, auto-approval/rejection, and S3 integration.
 """
 
 import sys
 import os
 
 sys.path.append(
-    os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))  # noqa: E501
+    os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 )
 
 import pytest  # noqa: E402
@@ -51,7 +51,7 @@ class TestProposalManager:
         return s3_sync
 
     @pytest.fixture
-    def proposal_manager(self, mock_db_session, mock_changeset_manager, mock_s3_sync_manager):  # noqa: E501
+    def proposal_manager(self, mock_db_session, mock_changeset_manager, mock_s3_sync_manager):
         """Create ProposalManager instance for testing."""
         return ProposalManager(
             db=mock_db_session,
@@ -76,21 +76,21 @@ class TestProposalManager:
         proposal.title = "Test Proposal"
         proposal.status = ProposalStatus.OPEN
         proposal.required_approvals = 2
-        proposal.to_dict.return_value = {"id": "proposal123", "title": "Test Proposal"}  # noqa: E501
+        proposal.to_dict.return_value = {"id": "proposal123", "title": "Test Proposal"}
         return proposal
 
-    def test_initialization(self, proposal_manager, mock_db_session, mock_changeset_manager, mock_s3_sync_manager):  # noqa: E501
+    def test_initialization(self, proposal_manager, mock_db_session, mock_changeset_manager, mock_s3_sync_manager):
         """Test ProposalManager initialization."""
         assert proposal_manager.db == mock_db_session
         assert proposal_manager.changeset_manager == mock_changeset_manager
         assert proposal_manager.s3_sync == mock_s3_sync_manager
 
-    def test_create_proposal_success(self, proposal_manager, mock_changeset_manager, mock_changeset):  # noqa: E501
+    def test_create_proposal_success(self, proposal_manager, mock_changeset_manager, mock_changeset):
         """Test successful proposal creation."""
         mock_changeset_manager.get_changeset.return_value = mock_changeset
 
         with patch('uuid.uuid4') as mock_uuid:
-            mock_uuid.return_value = uuid.UUID('12345678-1234-5678-9abc-123456789abc')  # noqa: E501
+            mock_uuid.return_value = uuid.UUID('12345678-1234-5678-9abc-123456789abc')
 
             proposal = proposal_manager.create_proposal(
                 changeset_id="changeset123",
@@ -108,11 +108,11 @@ class TestProposalManager:
         assert proposal.required_approvals == 2
         assert proposal.status == ProposalStatus.OPEN
 
-    def test_create_proposal_changeset_not_found(self, proposal_manager, mock_changeset_manager):  # noqa: E501
+    def test_create_proposal_changeset_not_found(self, proposal_manager, mock_changeset_manager):
         """Test proposal creation when changeset not found."""
         mock_changeset_manager.get_changeset.return_value = None
 
-        with pytest.raises(ValueError, match="Changeset changeset123 not found"):  # noqa: E501
+        with pytest.raises(ValueError, match="Changeset changeset123 not found"):
             proposal_manager.create_proposal(
                 changeset_id="changeset123",
                 title="Test Proposal",
@@ -120,13 +120,13 @@ class TestProposalManager:
                 created_by="user123"
             )
 
-    def test_create_proposal_invalid_changeset_state(self, proposal_manager, mock_changeset_manager):  # noqa: E501
+    def test_create_proposal_invalid_changeset_state(self, proposal_manager, mock_changeset_manager):
         """Test proposal creation with invalid changeset state."""
         mock_changeset = Mock()
         mock_changeset.state = ChangesetState.MERGED
         mock_changeset_manager.get_changeset.return_value = mock_changeset
 
-        with pytest.raises(ValueError, match=r"Cannot create proposal for changeset in MERGED state"):  # noqa: E501
+        with pytest.raises(ValueError, match=r"Cannot create proposal for changeset in MERGED state"):
             proposal_manager.create_proposal(
                 changeset_id="changeset123",
                 title="Test Proposal",
@@ -134,11 +134,11 @@ class TestProposalManager:
                 created_by="user123"
             )
 
-    def test_create_proposal_invalid_approvals(self, proposal_manager, mock_changeset_manager, mock_changeset):  # noqa: E501
+    def test_create_proposal_invalid_approvals(self, proposal_manager, mock_changeset_manager, mock_changeset):
         """Test proposal creation with invalid required approvals."""
         mock_changeset_manager.get_changeset.return_value = mock_changeset
 
-        with pytest.raises(ValueError, match="Required approvals must be at least 1"):  # noqa: E501
+        with pytest.raises(ValueError, match="Required approvals must be at least 1"):
             proposal_manager.create_proposal(
                 changeset_id="changeset123",
                 title="Test Proposal",
@@ -149,11 +149,11 @@ class TestProposalManager:
 
     def test_vote_on_proposal_success(self, proposal_manager, mock_proposal):
         """Test successful voting on proposal."""
-        with patch.object(proposal_manager, 'get_proposal', return_value=mock_proposal):  # noqa: E501
-            with patch.object(proposal_manager, 'get_user_vote', return_value=None):  # noqa: E501
+        with patch.object(proposal_manager, 'get_proposal', return_value=mock_proposal):
+            with patch.object(proposal_manager, 'get_user_vote', return_value=None):
                 with patch.object(proposal_manager, '_store_vote_locally'):
                     with patch.object(proposal_manager, '_push_vote_to_s3'):
-                        with patch.object(proposal_manager, '_evaluate_proposal_status'):  # noqa: E501
+                        with patch.object(proposal_manager, '_evaluate_proposal_status'):
 
                             vote = proposal_manager.vote_on_proposal(
                                 proposal_id="proposal123",
@@ -169,7 +169,7 @@ class TestProposalManager:
 
     def test_vote_on_proposal_invalid_vote(self, proposal_manager):
         """Test voting with invalid vote value."""
-        with pytest.raises(ValueError, match="Vote must be 'approve', 'reject', or 'abstain'"):  # noqa: E501
+        with pytest.raises(ValueError, match="Vote must be 'approve', 'reject', or 'abstain'"):
             proposal_manager.vote_on_proposal(
                 proposal_id="proposal123",
                 user_id="user456",
@@ -180,7 +180,7 @@ class TestProposalManager:
     def test_vote_on_proposal_not_found(self, proposal_manager):
         """Test voting on non-existent proposal."""
         with patch.object(proposal_manager, 'get_proposal', return_value=None):
-            with pytest.raises(ValueError, match="Proposal proposal123 not found"):  # noqa: E501
+            with pytest.raises(ValueError, match="Proposal proposal123 not found"):
                 proposal_manager.vote_on_proposal(
                     proposal_id="proposal123",
                     user_id="user456",
@@ -192,8 +192,8 @@ class TestProposalManager:
         mock_proposal = Mock()
         mock_proposal.status = ProposalStatus.APPROVED
 
-        with patch.object(proposal_manager, 'get_proposal', return_value=mock_proposal):  # noqa: E501
-            with pytest.raises(ValueError, match="Cannot vote on proposal with status approved"):  # noqa: E501
+        with patch.object(proposal_manager, 'get_proposal', return_value=mock_proposal):
+            with pytest.raises(ValueError, match="Cannot vote on proposal with status approved"):
                 proposal_manager.vote_on_proposal(
                     proposal_id="proposal123",
                     user_id="user456",
@@ -205,11 +205,11 @@ class TestProposalManager:
         existing_vote = Mock()
         existing_vote.vote = "abstain"
 
-        with patch.object(proposal_manager, 'get_proposal', return_value=mock_proposal):  # noqa: E501
-            with patch.object(proposal_manager, 'get_user_vote', return_value=existing_vote):  # noqa: E501
-                with patch.object(proposal_manager, '_store_vote_locally') as mock_store:  # noqa: E501
+        with patch.object(proposal_manager, 'get_proposal', return_value=mock_proposal):
+            with patch.object(proposal_manager, 'get_user_vote', return_value=existing_vote):
+                with patch.object(proposal_manager, '_store_vote_locally') as mock_store:
                     with patch.object(proposal_manager, '_push_vote_to_s3'):
-                        with patch.object(proposal_manager, '_evaluate_proposal_status'):  # noqa: E501
+                        with patch.object(proposal_manager, '_evaluate_proposal_status'):
 
                             proposal_manager.vote_on_proposal(
                                 proposal_id="proposal123",
@@ -224,7 +224,7 @@ class TestProposalManager:
 
     def test_get_proposal_success(self, proposal_manager, mock_db_session):
         """Test successful proposal retrieval."""
-        # Mock database response as tuple matching row_to_proposal() expectations  # noqa: E501
+        # Mock database response as tuple matching row_to_proposal() expectations
         mock_row = (
             "proposal123",                      # id
             "changeset123",                     # changeset_id
@@ -256,9 +256,9 @@ class TestProposalManager:
 
         assert proposal is None
 
-    def test_list_proposals_with_filters(self, proposal_manager, mock_db_session):  # noqa: E501
+    def test_list_proposals_with_filters(self, proposal_manager, mock_db_session):
         """Test listing proposals with filters."""
-        # Mock database response as tuple matching row_to_proposal() expectations  # noqa: E501
+        # Mock database response as tuple matching row_to_proposal() expectations
         mock_row = (
             "proposal123",                      # id
             "changeset123",                     # changeset_id
@@ -314,7 +314,7 @@ class TestProposalManager:
             Mock(vote="abstain", user_id="user4")
         ]
 
-        with patch.object(proposal_manager, 'get_proposal_votes', return_value=mock_votes):  # noqa: E501
+        with patch.object(proposal_manager, 'get_proposal_votes', return_value=mock_votes):
             summary = proposal_manager.get_vote_summary("proposal123")
 
         assert summary["total_votes"] == 4
@@ -336,15 +336,15 @@ class TestProposalManager:
             "total_votes": 2
         }
 
-        with patch.object(proposal_manager, 'get_proposal', return_value=mock_proposal):  # noqa: E501
-            with patch.object(proposal_manager, 'get_proposal_votes', return_value=[]):  # noqa: E501
-                with patch.object(proposal_manager, 'get_vote_summary', return_value=vote_summary):  # noqa: E501
-                    with patch.object(proposal_manager, '_update_proposal_status') as mock_update:  # noqa: E501
-                        with patch.object(proposal_manager, '_auto_merge_if_enabled'):  # noqa: E501
+        with patch.object(proposal_manager, 'get_proposal', return_value=mock_proposal):
+            with patch.object(proposal_manager, 'get_proposal_votes', return_value=[]):
+                with patch.object(proposal_manager, 'get_vote_summary', return_value=vote_summary):
+                    with patch.object(proposal_manager, '_update_proposal_status') as mock_update:
+                        with patch.object(proposal_manager, '_auto_merge_if_enabled'):
 
-                            proposal_manager._evaluate_proposal_status("proposal123")  # noqa: E501
+                            proposal_manager._evaluate_proposal_status("proposal123")
 
-        mock_update.assert_called_once_with("proposal123", ProposalStatus.APPROVED)  # noqa: E501
+        mock_update.assert_called_once_with("proposal123", ProposalStatus.APPROVED)
 
     def test_evaluate_proposal_status_auto_reject(self, proposal_manager):
         """Test auto-rejection when reject threshold met."""
@@ -359,51 +359,51 @@ class TestProposalManager:
             "total_votes": 2
         }
 
-        with patch.object(proposal_manager, 'get_proposal', return_value=mock_proposal):  # noqa: E501
-            with patch.object(proposal_manager, 'get_proposal_votes', return_value=[]):  # noqa: E501
-                with patch.object(proposal_manager, 'get_vote_summary', return_value=vote_summary):  # noqa: E501
-                    with patch.object(proposal_manager, '_update_proposal_status') as mock_update:  # noqa: E501
+        with patch.object(proposal_manager, 'get_proposal', return_value=mock_proposal):
+            with patch.object(proposal_manager, 'get_proposal_votes', return_value=[]):
+                with patch.object(proposal_manager, 'get_vote_summary', return_value=vote_summary):
+                    with patch.object(proposal_manager, '_update_proposal_status') as mock_update:
 
-                        proposal_manager._evaluate_proposal_status("proposal123")  # noqa: E501
+                        proposal_manager._evaluate_proposal_status("proposal123")
 
-        mock_update.assert_called_once_with("proposal123", ProposalStatus.REJECTED)  # noqa: E501
+        mock_update.assert_called_once_with("proposal123", ProposalStatus.REJECTED)
 
-    def test_update_proposal_status_with_changeset_update(self, proposal_manager, mock_changeset_manager):  # noqa: E501
+    def test_update_proposal_status_with_changeset_update(self, proposal_manager, mock_changeset_manager):
         """Test proposal status update also updates changeset state."""
         mock_proposal = Mock()
         mock_proposal.changeset_id = "changeset123"
 
-        with patch.object(proposal_manager, 'get_proposal', return_value=mock_proposal):  # noqa: E501
-            proposal_manager._update_proposal_status("proposal123", ProposalStatus.APPROVED)  # noqa: E501
+        with patch.object(proposal_manager, 'get_proposal', return_value=mock_proposal):
+            proposal_manager._update_proposal_status("proposal123", ProposalStatus.APPROVED)
 
         mock_changeset_manager.update_changeset_state.assert_called_once_with(
             "changeset123", ChangesetState.APPROVED
         )
 
-    def test_push_vote_to_s3_success(self, proposal_manager, mock_s3_sync_manager):  # noqa: E501
+    def test_push_vote_to_s3_success(self, proposal_manager, mock_s3_sync_manager):
         """Test successful vote push to S3."""
         mock_vote = Mock()
         mock_vote.proposal_id = "proposal123"
         mock_vote.user_id = "user456"
-        mock_vote.to_dict.return_value = {"proposal_id": "proposal123", "user_id": "user456"}  # noqa: E501
+        mock_vote.to_dict.return_value = {"proposal_id": "proposal123", "user_id": "user456"}
 
         proposal_manager._push_vote_to_s3(mock_vote)
 
         mock_s3_sync_manager.write_metadata_to_s3.assert_called_once()
 
-    def test_push_vote_to_s3_failure_handling(self, proposal_manager, mock_s3_sync_manager):  # noqa: E501
+    def test_push_vote_to_s3_failure_handling(self, proposal_manager, mock_s3_sync_manager):
         """Test S3 push failure doesn't break operation."""
         mock_vote = Mock()
         mock_vote.proposal_id = "proposal123"
         mock_vote.user_id = "user456"
-        mock_vote.to_dict.return_value = {"proposal_id": "proposal123", "user_id": "user456"}  # noqa: E501
+        mock_vote.to_dict.return_value = {"proposal_id": "proposal123", "user_id": "user456"}
 
-        mock_s3_sync_manager.write_metadata_to_s3.side_effect = Exception("S3 error")  # noqa: E501
+        mock_s3_sync_manager.write_metadata_to_s3.side_effect = Exception("S3 error")
 
         # Should not raise exception
         proposal_manager._push_vote_to_s3(mock_vote)
 
-    def test_push_vote_to_s3_when_not_configured(self, mock_db_session, mock_changeset_manager):  # noqa: E501
+    def test_push_vote_to_s3_when_not_configured(self, mock_db_session, mock_changeset_manager):
         """Test S3 push is skipped when S3 is not configured."""
         # Create mock S3 sync manager with s3_config = None
         mock_s3_sync = Mock(spec=S3SyncManager)
@@ -419,7 +419,7 @@ class TestProposalManager:
         mock_vote = Mock()
         mock_vote.proposal_id = "proposal123"
         mock_vote.user_id = "user456"
-        mock_vote.to_dict.return_value = {"proposal_id": "proposal123", "user_id": "user456"}  # noqa: E501
+        mock_vote.to_dict.return_value = {"proposal_id": "proposal123", "user_id": "user456"}
 
         # Should not raise exception and should not call parquet_writer
         proposal_manager._push_vote_to_s3(mock_vote)
@@ -427,7 +427,7 @@ class TestProposalManager:
         # Verify parquet_writer was never called
         mock_s3_sync.parquet_writer.write_metadata.assert_not_called()
 
-    def test_push_proposal_to_s3_when_not_configured(self, mock_db_session, mock_changeset_manager):  # noqa: E501
+    def test_push_proposal_to_s3_when_not_configured(self, mock_db_session, mock_changeset_manager):
         """Test S3 push is skipped when S3 is not configured."""
         # Create mock S3 sync manager with s3_config = None
         mock_s3_sync = Mock(spec=S3SyncManager)
@@ -450,7 +450,7 @@ class TestProposalManager:
         # Verify parquet_writer was never called
         mock_s3_sync.parquet_writer.write_metadata.assert_not_called()
 
-    def test_database_transaction_rollback_on_error(self, proposal_manager, mock_db_session, mock_changeset_manager, mock_changeset):  # noqa: E501
+    def test_database_transaction_rollback_on_error(self, proposal_manager, mock_db_session, mock_changeset_manager, mock_changeset):
         """Test database rollback on error."""
         mock_changeset_manager.get_changeset.return_value = mock_changeset
         mock_db_session.execute.side_effect = Exception("Database error")

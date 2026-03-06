@@ -1,7 +1,7 @@
 """
 Unit Tests for domain ontology value objects
 
-Tests the immutable value objects including NodeType, ExternalReference, LexicalSense,  # noqa: E501
+Tests the immutable value objects including NodeType, ExternalReference, LexicalSense,
 DataPropertyValue, OntologyMapping, and SearchCriteria.
 """
 
@@ -137,7 +137,7 @@ class TestNodeTypeFromLegacy:
             assert result.value == modern
 
     def test_from_legacy_idempotent_for_modern_values(self):
-        """Test that modern values can be processed by from_legacy and return unchanged."""  # noqa: E501
+        """Test that modern values can be processed by from_legacy and return unchanged."""
         modern_values = ["taxonomy", "concept_scheme", "class", "individual"]
 
         for modern_value in modern_values:
@@ -145,7 +145,7 @@ class TestNodeTypeFromLegacy:
             assert result.value == modern_value
 
     def test_from_legacy_symmetry(self):
-        """Test that legacy and modern values produce the same NodeType enum."""  # noqa: E501
+        """Test that legacy and modern values produce the same NodeType enum."""
         # These pairs should all produce the same enum value
         pairs = [
             ("layer", "taxonomy"),
@@ -179,7 +179,7 @@ class TestNodeTypeFromLegacy:
             NodeType.from_legacy(1)
 
     def test_from_legacy_multiple_calls_consistent(self):
-        """Test that multiple calls to from_legacy return consistent results."""  # noqa: E501
+        """Test that multiple calls to from_legacy return consistent results."""
         result1 = NodeType.from_legacy("layer")
         result2 = NodeType.from_legacy("layer")
         result3 = NodeType.from_legacy("layer")

@@ -1,7 +1,7 @@
 """
 Unit Tests for ConflictResolutionEngine Service
 
-Tests the advanced conflict resolution functionality including intelligent detection,  # noqa: E501
+Tests the advanced conflict resolution functionality including intelligent detection,
 automatic resolution, and manual conflict resolution in Phase 4 implementation.
 """
 
@@ -15,7 +15,7 @@ from datetime import datetime, timezone  # noqa: E402
 from sqlalchemy.orm import Session  # noqa: E402
 
 from services.conflict_resolution_engine import (  # noqa: E402
-    ConflictResolutionEngine, IntelligentConflictDetector, ConflictDescriptor, ConflictType  # noqa: E501
+    ConflictResolutionEngine, IntelligentConflictDetector, ConflictDescriptor, ConflictType
 )
 
 
@@ -39,9 +39,9 @@ class TestConflictResolutionEngine:
         return Mock()
 
     @pytest.fixture
-    def conflict_engine(self, mock_db, mock_conflict_detector, mock_version_manager):  # noqa: E501
-        """Create ConflictResolutionEngine instance with mocked dependencies."""  # noqa: E501
-        return ConflictResolutionEngine(db=mock_db, conflict_detector=mock_conflict_detector, version_manager=mock_version_manager)  # noqa: E501
+    def conflict_engine(self, mock_db, mock_conflict_detector, mock_version_manager):
+        """Create ConflictResolutionEngine instance with mocked dependencies."""
+        return ConflictResolutionEngine(db=mock_db, conflict_detector=mock_conflict_detector, version_manager=mock_version_manager)
 
     @pytest.fixture
     def sample_conflict(self):
@@ -95,33 +95,33 @@ class TestConflictResolutionEngine:
             created_at=datetime.now(timezone.utc)
         )
 
-    def test_init_conflict_engine(self, mock_db, mock_conflict_detector, mock_version_manager):  # noqa: E501
+    def test_init_conflict_engine(self, mock_db, mock_conflict_detector, mock_version_manager):
         """Test ConflictResolutionEngine initialization."""
-        engine = ConflictResolutionEngine(db=mock_db, conflict_detector=mock_conflict_detector, version_manager=mock_version_manager)  # noqa: E501
+        engine = ConflictResolutionEngine(db=mock_db, conflict_detector=mock_conflict_detector, version_manager=mock_version_manager)
 
         assert engine.db == mock_db
         assert engine.conflict_detector == mock_conflict_detector
         assert engine.version_manager == mock_version_manager
 
     @patch('services.conflict_resolution_engine.uuid.uuid4')
-    def test_detect_conflicts_between_versions_success(self, mock_uuid, conflict_engine, mock_db, sample_conflict):  # noqa: E501
+    def test_detect_conflicts_between_versions_success(self, mock_uuid, conflict_engine, mock_db, sample_conflict):
         """Test successful conflict detection between versions."""
         # Setup
         mock_uuid.return_value = MagicMock()
         mock_uuid.return_value.__str__ = Mock(return_value="conflict-123")
 
         local_versions = [
-            {"entity_id": "entity-1", "version_id": "v1-local", "data": {"name": "Local"}}  # noqa: E501
+            {"entity_id": "entity-1", "version_id": "v1-local", "data": {"name": "Local"}}
         ]
         remote_versions = [
-            {"entity_id": "entity-1", "version_id": "v1-remote", "data": {"name": "Remote"}}  # noqa: E501
+            {"entity_id": "entity-1", "version_id": "v1-remote", "data": {"name": "Remote"}}
         ]
 
         # Mock conflict detector to return iterable list of conflicts
-        conflict_engine.conflict_detector.detect_conflicts.return_value = [sample_conflict]  # noqa: E501
+        conflict_engine.conflict_detector.detect_conflicts.return_value = [sample_conflict]
 
         # Mock database operations
-        mock_db.execute.return_value.fetchone.return_value = ("v1-local", "v1-remote")  # noqa: E501
+        mock_db.execute.return_value.fetchone.return_value = ("v1-local", "v1-remote")
         mock_db.commit = Mock()
 
         # Execute
@@ -133,13 +133,13 @@ class TestConflictResolutionEngine:
         assert len(result) >= 0  # May detect conflicts based on logic
         mock_db.execute.assert_called()
 
-    def test_resolve_conflict_manually_success(self, conflict_engine, mock_db, sample_conflict):  # noqa: E501
+    def test_resolve_conflict_manually_success(self, conflict_engine, mock_db, sample_conflict):
         """Test successful manual conflict resolution."""
         # Setup
         mock_db.execute.return_value.fetchone.return_value = (
             sample_conflict.conflict_id, sample_conflict.conflict_type.value,
             sample_conflict.entity_type, sample_conflict.entity_id,
-            sample_conflict.local_version_id, sample_conflict.remote_version_id,  # noqa: E501
+            sample_conflict.local_version_id, sample_conflict.remote_version_id,
             '{"field": "name"}', '[]', sample_conflict.severity,
             sample_conflict.created_at.isoformat(), None, None, None
         )
@@ -162,7 +162,7 @@ class TestConflictResolutionEngine:
         mock_db.execute.assert_called()
         mock_db.commit.assert_called_once()
 
-    def test_resolve_conflict_manually_not_found(self, conflict_engine, mock_db):  # noqa: E501
+    def test_resolve_conflict_manually_not_found(self, conflict_engine, mock_db):
         """Test manual resolution of non-existent conflict."""
         # Setup
         mock_db.execute.return_value.fetchone.return_value = None
@@ -175,13 +175,13 @@ class TestConflictResolutionEngine:
                 resolution_choice={"strategy": "prefer_local"}
             )
 
-    def test_resolve_conflict_already_resolved(self, conflict_engine, mock_db, sample_conflict):  # noqa: E501
+    def test_resolve_conflict_already_resolved(self, conflict_engine, mock_db, sample_conflict):
         """Test resolution of already resolved conflict."""
         # Setup - conflict already resolved
         mock_db.execute.return_value.fetchone.return_value = (
             sample_conflict.conflict_id, sample_conflict.conflict_type.value,
             sample_conflict.entity_type, sample_conflict.entity_id,
-            sample_conflict.local_version_id, sample_conflict.remote_version_id,  # noqa: E501
+            sample_conflict.local_version_id, sample_conflict.remote_version_id,
             '{"field": "name"}', '[]', sample_conflict.severity,
             sample_conflict.created_at.isoformat(),
             datetime.now(timezone.utc).isoformat(),  # Already resolved
@@ -196,14 +196,14 @@ class TestConflictResolutionEngine:
                 resolution_choice={"strategy": "prefer_remote"}
             )
 
-    def test_resolve_conflict_automatically_success(self, conflict_engine, mock_db, sample_conflict):  # noqa: E501
+    def test_resolve_conflict_automatically_success(self, conflict_engine, mock_db, sample_conflict):
         """Test successful automatic conflict resolution."""
         # Setup
         mock_db.execute.return_value.fetchone.return_value = (
             sample_conflict.conflict_id, sample_conflict.conflict_type.value,
             sample_conflict.entity_type, sample_conflict.entity_id,
-            sample_conflict.local_version_id, sample_conflict.remote_version_id,  # noqa: E501
-            '{"field": "name"}', '[{"type": "prefer_local", "confidence": 0.9}]',  # noqa: E501
+            sample_conflict.local_version_id, sample_conflict.remote_version_id,
+            '{"field": "name"}', '[{"type": "prefer_local", "confidence": 0.9}]',
             sample_conflict.severity, sample_conflict.created_at.isoformat(),
             None, None, None
         )
@@ -224,14 +224,14 @@ class TestConflictResolutionEngine:
         mock_db.execute.assert_called()
         mock_db.commit.assert_called_once()
 
-    def test_resolve_conflict_automatically_low_confidence(self, conflict_engine, mock_db, sample_conflict):  # noqa: E501
+    def test_resolve_conflict_automatically_low_confidence(self, conflict_engine, mock_db, sample_conflict):
         """Test automatic resolution with low confidence."""
         # Setup
         mock_db.execute.return_value.fetchone.return_value = (
             sample_conflict.conflict_id, sample_conflict.conflict_type.value,
             sample_conflict.entity_type, sample_conflict.entity_id,
-            sample_conflict.local_version_id, sample_conflict.remote_version_id,  # noqa: E501
-            '{"field": "name"}', '[{"type": "prefer_local", "confidence": 0.5}]',  # noqa: E501
+            sample_conflict.local_version_id, sample_conflict.remote_version_id,
+            '{"field": "name"}', '[{"type": "prefer_local", "confidence": 0.5}]',
             sample_conflict.severity, sample_conflict.created_at.isoformat(),
             None, None, None
         )
@@ -250,8 +250,8 @@ class TestConflictResolutionEngine:
         assert result["reason"] == "Confidence below threshold"
         assert "suggestions" in result
 
-    @patch('services.conflict_resolution_engine.ConflictResolutionEngine.get_conflict')  # noqa: E501
-    def test_batch_resolve_conflicts_success(self, mock_get_conflict, conflict_engine, mock_db):  # noqa: E501
+    @patch('services.conflict_resolution_engine.ConflictResolutionEngine.get_conflict')
+    def test_batch_resolve_conflicts_success(self, mock_get_conflict, conflict_engine, mock_db):
         """Test successful batch conflict resolution."""
         # Setup
         conflict_ids = ["conflict-1", "conflict-2", "conflict-3"]
@@ -324,7 +324,7 @@ class TestConflictResolutionEngine:
         """Test listing conflicts with various filters."""
         # Setup
         mock_db.execute.return_value.fetchall.return_value = [
-            ("conflict-1", "concurrent_modification", "structure_node", "entity-1", "v1", "v2",  # noqa: E501
+            ("conflict-1", "concurrent_modification", "structure_node", "entity-1", "v1", "v2",
              '{}', '[]', "medium", "2024-01-01T00:00:00Z", None, None, None)
         ]
 
@@ -345,13 +345,13 @@ class TestConflictResolutionEngine:
         assert result[0]["severity"] == "medium"
         mock_db.execute.assert_called_once()
 
-    def test_get_conflict_success(self, conflict_engine, mock_db, sample_conflict):  # noqa: E501
+    def test_get_conflict_success(self, conflict_engine, mock_db, sample_conflict):
         """Test successful conflict retrieval."""
         # Setup
         mock_db.execute.return_value.fetchone.return_value = (
             sample_conflict.conflict_id, sample_conflict.conflict_type.value,
             sample_conflict.entity_type, sample_conflict.entity_id,
-            sample_conflict.local_version_id, sample_conflict.remote_version_id,  # noqa: E501
+            sample_conflict.local_version_id, sample_conflict.remote_version_id,
             '{"field": "name"}', '[]', sample_conflict.severity,
             sample_conflict.created_at.isoformat(), None, None, None
         )
@@ -382,9 +382,9 @@ class TestConflictResolutionEngine:
         """Test getting conflicts for specific entity."""
         # Setup
         mock_db.execute.return_value.fetchall.return_value = [
-            ("conflict-1", "concurrent_modification", "structure_node", "entity-1", "v1", "v2",  # noqa: E501
+            ("conflict-1", "concurrent_modification", "structure_node", "entity-1", "v1", "v2",
              '{}', '[]', "medium", "2024-01-01T00:00:00Z", None, None, None),
-            ("conflict-2", "structural_conflict", "structure_node", "entity-1", "v3", "v4",  # noqa: E501
+            ("conflict-2", "structural_conflict", "structure_node", "entity-1", "v3", "v4",
              '{}', '[]', "low", "2024-01-01T00:00:00Z", None, None, None)
         ]
 
@@ -400,14 +400,14 @@ class TestConflictResolutionEngine:
         assert all(c["entity_id"] == "entity-1" for c in result)
         mock_db.execute.assert_called_once()
 
-    def test_get_resolution_suggestions(self, conflict_engine, mock_db, sample_conflict):  # noqa: E501
+    def test_get_resolution_suggestions(self, conflict_engine, mock_db, sample_conflict):
         """Test getting resolution suggestions for conflict."""
         # Setup
         mock_db.execute.return_value.fetchone.return_value = (
             sample_conflict.conflict_id, sample_conflict.conflict_type.value,
             sample_conflict.entity_type, sample_conflict.entity_id,
-            sample_conflict.local_version_id, sample_conflict.remote_version_id,  # noqa: E501
-            '{"field": "name", "local_value": "Local", "remote_value": "Remote"}',  # noqa: E501
+            sample_conflict.local_version_id, sample_conflict.remote_version_id,
+            '{"field": "name", "local_value": "Local", "remote_value": "Remote"}',
             '[{"type": "prefer_local", "confidence": 0.8}]',
             sample_conflict.severity, sample_conflict.created_at.isoformat(),
             None, None, None
@@ -430,13 +430,13 @@ class TestConflictResolutionEngine:
         # Setup - Configure mock for different query types
         mock_execute = mock_db.execute.return_value
 
-        # Sequential calls: fetchone(), fetchall(), fetchall(), fetchone(), fetchall()  # noqa: E501
+        # Sequential calls: fetchone(), fetchall(), fetchall(), fetchone(), fetchall()
         mock_execute.fetchone.side_effect = [
             (25,),  # Total conflicts
             (20, 5, 0.8, 2.5)  # Resolution rates
         ]
         mock_execute.fetchall.side_effect = [
-            [("concurrent_modification", 10), ("structural_conflict", 8)],  # By type  # noqa: E501
+            [("concurrent_modification", 10), ("structural_conflict", 8)],  # By type
             [("high", 5), ("medium", 15), ("low", 5)],  # By severity
             [("structure_node", "entity-1", 3)]  # Top conflict entities
         ]
@@ -475,8 +475,8 @@ class TestConflictResolutionEngine:
 
         assert mock_db.execute.call_count == 3
 
-    @patch('services.conflict_resolution_engine.ConflictResolutionEngine.get_conflict')  # noqa: E501
-    def test_resolve_conflicts_prefer_local(self, mock_get_conflict, conflict_engine, mock_db):  # noqa: E501
+    @patch('services.conflict_resolution_engine.ConflictResolutionEngine.get_conflict')
+    def test_resolve_conflicts_prefer_local(self, mock_get_conflict, conflict_engine, mock_db):
         """Test resolving conflicts with prefer local strategy."""
         # Setup
         conflict_ids = ["conflict-1", "conflict-2"]
@@ -589,7 +589,7 @@ class TestIntelligentConflictDetector:
         return IntelligentConflictDetector(mock_version_manager)
 
     def test_detect_concurrent_modification_conflict(self, detector):
-        """Test detection of concurrent modification conflicts using main detect_conflicts method."""  # noqa: E501
+        """Test detection of concurrent modification conflicts using main detect_conflicts method."""
         # Setup - Create EntityVersion objects
         from services.version_manager import EntityVersion, ChangeState
 
@@ -623,23 +623,23 @@ class TestIntelligentConflictDetector:
         result = detector.detect_conflicts([local_version], [remote_version])
 
         # Verify
-        assert len(result) >= 0  # May detect conflicts based on timing and content  # noqa: E501
+        assert len(result) >= 0  # May detect conflicts based on timing and content
 
     def test_detect_structural_conflict(self, detector):
         """Test detection of structural conflicts."""
-        # Setup - Provide Dict objects as expected by _detect_structural_conflicts  # noqa: E501
+        # Setup - Provide Dict objects as expected by _detect_structural_conflicts
         local_content = {"type": "node", "children": ["child-1"]}
         remote_content = {"type": "node", "children": ["child-2"]}
 
         # Execute
-        result = detector._detect_structural_conflicts(local_content, remote_content)  # noqa: E501
+        result = detector._detect_structural_conflicts(local_content, remote_content)
 
         # Verify
         assert len(result) >= 0  # May detect structural differences
 
     def test_generate_resolution_suggestions(self, detector):
         """Test generation of resolution suggestions."""
-        # Setup - Create EntityVersion objects as required by the method signature  # noqa: E501
+        # Setup - Create EntityVersion objects as required by the method signature
         from services.version_manager import EntityVersion, ChangeState
         from services.conflict_resolution_engine import ConflictType
 
@@ -677,9 +677,9 @@ class TestIntelligentConflictDetector:
         )
 
         # Verify
-        assert len(result) >= 2  # Should suggest at least take_local and take_remote  # noqa: E501
+        assert len(result) >= 2  # Should suggest at least take_local and take_remote
         assert any(s["type"] in ["take_local", "prefer_local"] for s in result)
-        assert any(s["type"] in ["take_remote", "prefer_remote"] for s in result)  # noqa: E501
+        assert any(s["type"] in ["take_remote", "prefer_remote"] for s in result)
         assert all(0 <= s.get("confidence", 0.5) <= 1 for s in result)
 
 

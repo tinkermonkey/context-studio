@@ -7,7 +7,7 @@ import os
 
 # Add the project root to the path
 sys.path.append(
-    os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))  # noqa: E501
+    os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 )
 
 from utils.logger import get_logger  # noqa: E402
@@ -31,20 +31,20 @@ def test_predicate_set_parsing():
             try:
                 parsed_set = json.loads(domain.predicate_set)
                 # Handle two formats:
-                # 1. List format: ["predicate1", "predicate2"] (newer format from API)  # noqa: E501
-                # 2. Object format: {"predicates": ["predicate1", "predicate2"]} (older format)  # noqa: E501
+                # 1. List format: ["predicate1", "predicate2"] (newer format from API)
+                # 2. Object format: {"predicates": ["predicate1", "predicate2"]} (older format)
                 if isinstance(parsed_set, list):
                     predicate_set_list = parsed_set
                 elif isinstance(parsed_set, dict):
                     predicate_set_list = parsed_set.get("predicates", [])
                 else:
                     logger.warning(
-                        f"Domain {domain.id} predicate_set has unexpected format after JSON parsing: {type(parsed_set)}"  # noqa: E501
+                        f"Domain {domain.id} predicate_set has unexpected format after JSON parsing: {type(parsed_set)}"
                     )
                     predicate_set_list = None
             except (json.JSONDecodeError, TypeError) as e:
                 logger.warning(
-                    f"Invalid JSON in domain {domain.id} predicate_set: {domain.predicate_set}, error: {e}"  # noqa: E501
+                    f"Invalid JSON in domain {domain.id} predicate_set: {domain.predicate_set}, error: {e}"
                 )
                 predicate_set_list = None
         return predicate_set_list

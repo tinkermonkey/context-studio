@@ -2,7 +2,7 @@ import sys
 import os
 import uuid
 
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "../../")))  # noqa: E501
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "../../")))
 
 # All fixtures are now provided by conftest.py
 
@@ -21,7 +21,7 @@ def create_layer(shared_client, title="Test Layer"):
 
 def debug_list_layers(shared_client):
     resp = shared_client.get("/api/structure_nodes/?node_type=layer")
-    print(f"DEBUG: Layers in DB before domain creation: {resp.status_code} {resp.text}")  # noqa: E501
+    print(f"DEBUG: Layers in DB before domain creation: {resp.status_code} {resp.text}")
     return resp
 
 
@@ -80,7 +80,7 @@ def test_domain_duplicate_title(shared_client):
         },
     )
     if resp2.status_code != 409:
-        print(f"Duplicate domain test failed: {resp2.status_code} {resp2.text}")  # noqa: E501
+        print(f"Duplicate domain test failed: {resp2.status_code} {resp2.text}")
     assert (
         resp2.status_code == 409
     )  # Conflict is more appropriate than Bad Request for duplicates
@@ -152,8 +152,8 @@ def test_list_domains(shared_client):
 def test_move_domains_basic(shared_client):
     """Test basic domain movement between layers using new move API"""
     # Create two layers
-    source_layer_id = create_layer(shared_client, f"Source Layer {uuid.uuid4()}")  # noqa: E501
-    target_layer_id = create_layer(shared_client, f"Target Layer {uuid.uuid4()}")  # noqa: E501
+    source_layer_id = create_layer(shared_client, f"Source Layer {uuid.uuid4()}")
+    target_layer_id = create_layer(shared_client, f"Target Layer {uuid.uuid4()}")
 
     # Create a domain in the source layer
     domain_resp = shared_client.post(
@@ -193,8 +193,8 @@ def test_move_domains_basic(shared_client):
 def test_move_domains_with_terms(shared_client):
     """Test moving domains with their terms using new move API"""
     # Create two layers
-    source_layer_id = create_layer(shared_client, f"Source Layer {uuid.uuid4()}")  # noqa: E501
-    target_layer_id = create_layer(shared_client, f"Target Layer {uuid.uuid4()}")  # noqa: E501
+    source_layer_id = create_layer(shared_client, f"Source Layer {uuid.uuid4()}")
+    target_layer_id = create_layer(shared_client, f"Target Layer {uuid.uuid4()}")
 
     # Create a domain in the source layer
     domain_resp = shared_client.post(
@@ -247,8 +247,8 @@ def test_move_domains_with_terms(shared_client):
 def test_move_domains_conflict_warning(shared_client):
     """Test that domain move detects title conflicts"""
     # Create two layers
-    source_layer_id = create_layer(shared_client, f"Source Layer {uuid.uuid4()}")  # noqa: E501
-    target_layer_id = create_layer(shared_client, f"Target Layer {uuid.uuid4()}")  # noqa: E501
+    source_layer_id = create_layer(shared_client, f"Source Layer {uuid.uuid4()}")
+    target_layer_id = create_layer(shared_client, f"Target Layer {uuid.uuid4()}")
 
     domain_title = f"Conflicting Domain {uuid.uuid4()}"
 
@@ -292,12 +292,12 @@ def test_move_domains_conflict_warning(shared_client):
 
     # Should have warnings about title conflict
     assert len(move_data["warnings"]) > 0
-    assert any("already exists" in warning for warning in move_data["warnings"])  # noqa: E501
+    assert any("already exists" in warning for warning in move_data["warnings"])
 
 
 def test_move_domains_invalid_target(shared_client):
     """Test moving domain to non-existent parent"""
-    source_layer_id = create_layer(shared_client, f"Source Layer {uuid.uuid4()}")  # noqa: E501
+    source_layer_id = create_layer(shared_client, f"Source Layer {uuid.uuid4()}")
     invalid_layer_id = str(uuid.uuid4())
 
     # Create a domain

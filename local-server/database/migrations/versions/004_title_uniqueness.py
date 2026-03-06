@@ -1,4 +1,4 @@
-"""Migration 004: Enforce uniqueness for domain title within layer and term title within domain."""  # noqa: E501
+"""Migration 004: Enforce uniqueness for domain title within layer and term title within domain."""
 
 from sqlalchemy.engine import Connection
 from sqlalchemy import text
@@ -6,9 +6,9 @@ from database.migrations.migration_manager import Migration
 
 
 class Migration004(Migration):
-    """Enforce uniqueness for domain title within layer and term title within domain."""  # noqa: E501
+    """Enforce uniqueness for domain title within layer and term title within domain."""
     version = 4
-    description = "Enforce uniqueness for domain title within layer and term title within domain."  # noqa: E501
+    description = "Enforce uniqueness for domain title within layer and term title within domain."
 
     def up(self, connection: Connection) -> None:
         """Apply the migration."""
@@ -25,11 +25,11 @@ class Migration004(Migration):
                 created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
                 version INTEGER DEFAULT 1,
                 last_modified DATETIME DEFAULT CURRENT_TIMESTAMP,
-                FOREIGN KEY (layer_id) REFERENCES layers (id) ON DELETE CASCADE,  # noqa: E501
+                FOREIGN KEY (layer_id) REFERENCES layers (id) ON DELETE CASCADE,  
                 UNIQUE (layer_id, title)
             );
         """))
-        connection.execute(text("INSERT INTO domains_new SELECT * FROM domains;"))  # noqa: E501
+        connection.execute(text("INSERT INTO domains_new SELECT * FROM domains;"))
         connection.execute(text("DROP TABLE domains;"))
         connection.execute(text("ALTER TABLE domains_new RENAME TO domains;"))
         # Terms table
@@ -46,9 +46,9 @@ class Migration004(Migration):
                 version INTEGER DEFAULT 1,
                 last_modified DATETIME DEFAULT CURRENT_TIMESTAMP,
                 parent_term_id TEXT,
-                FOREIGN KEY (domain_id) REFERENCES domains (id) ON DELETE CASCADE,  # noqa: E501
-                FOREIGN KEY (layer_id) REFERENCES layers (id) ON DELETE CASCADE,  # noqa: E501
-                FOREIGN KEY (parent_term_id) REFERENCES terms (id) ON DELETE SET NULL,  # noqa: E501
+                FOREIGN KEY (domain_id) REFERENCES domains (id) ON DELETE CASCADE,  
+                FOREIGN KEY (layer_id) REFERENCES layers (id) ON DELETE CASCADE,  
+                FOREIGN KEY (parent_term_id) REFERENCES terms (id) ON DELETE SET NULL,  
                 UNIQUE (domain_id, title)
             );
         """))
@@ -75,7 +75,7 @@ class Migration004(Migration):
                 FOREIGN KEY (layer_id) REFERENCES layers (id) ON DELETE CASCADE
             );
         """))
-        connection.execute(text("INSERT INTO domains_old SELECT * FROM domains;"))  # noqa: E501
+        connection.execute(text("INSERT INTO domains_old SELECT * FROM domains;"))
         connection.execute(text("DROP TABLE domains;"))
         connection.execute(text("ALTER TABLE domains_old RENAME TO domains;"))
         # Terms table
@@ -92,9 +92,9 @@ class Migration004(Migration):
                 version INTEGER DEFAULT 1,
                 last_modified DATETIME DEFAULT CURRENT_TIMESTAMP,
                 parent_term_id TEXT,
-                FOREIGN KEY (domain_id) REFERENCES domains (id) ON DELETE CASCADE,  # noqa: E501
-                FOREIGN KEY (layer_id) REFERENCES layers (id) ON DELETE CASCADE,  # noqa: E501
-                FOREIGN KEY (parent_term_id) REFERENCES terms (id) ON DELETE SET NULL,  # noqa: E501
+                FOREIGN KEY (domain_id) REFERENCES domains (id) ON DELETE CASCADE,  
+                FOREIGN KEY (layer_id) REFERENCES layers (id) ON DELETE CASCADE,  
+                FOREIGN KEY (parent_term_id) REFERENCES terms (id) ON DELETE SET NULL,  
                 UNIQUE (layer_id, title)
             );
         """))

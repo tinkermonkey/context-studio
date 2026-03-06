@@ -73,7 +73,7 @@ class TestExecutionTracker:
             execution_id="exec-123",
             response_message="Test response",
             success=True,
-            token_usage={"input_tokens": 10, "output_tokens": 15, "total_tokens": 25},  # noqa: E501
+            token_usage={"input_tokens": 10, "output_tokens": 15, "total_tokens": 25},
             start_time=1000000000.0
         )
 
@@ -145,7 +145,7 @@ class TestExecutionTracker:
             selected_content="Selected definition text"
         )
 
-        with pytest.raises(ValueError, match="Execution nonexistent-exec not found"):  # noqa: E501
+        with pytest.raises(ValueError, match="Execution nonexistent-exec not found"):
             self.tracker.record_selection(selection_request)
 
         mock_session.close.assert_called_once()
@@ -295,7 +295,7 @@ class TestExecutionTracker:
     def test_database_error_handling(self, mock_get_session):
         """Test database error handling in analytics."""
         mock_session = Mock()
-        mock_session.execute.side_effect = Exception("Database connection failed")  # noqa: E501
+        mock_session.execute.side_effect = Exception("Database connection failed")
         mock_get_session.return_value = mock_session
 
         analytics = self.tracker.get_execution_analytics()

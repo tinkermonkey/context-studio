@@ -187,10 +187,10 @@ class TestRAGCleanupScheduler:
             assert mock_store.cleanup_old_data.call_count >= 2
 
     @pytest.mark.asyncio
-    async def test_cleanup_operation_logging(self, mock_db_session):  # noqa: E501
+    async def test_cleanup_operation_logging(self, mock_db_session):
         """Test that cleanup operations are logged."""
         with patch('rag.cleanup_scheduler.RAGObservabilityStore') as MockStore, \
-             patch('rag.cleanup_scheduler.logger') as mock_logger:  # noqa: E501
+             patch('rag.cleanup_scheduler.logger') as mock_logger:
 
             mock_store = MockStore.return_value
             mock_store.cleanup_old_data.return_value = {
@@ -210,7 +210,7 @@ class TestRAGCleanupScheduler:
 
             # Check for cleanup completion log
             log_calls = [str(call) for call in mock_logger.info.call_args_list]
-            assert any("cleanup completed" in str(call).lower() for call in log_calls)  # noqa: E501
+            assert any("cleanup completed" in str(call).lower() for call in log_calls)
 
     @pytest.mark.asyncio
     async def test_graceful_cancellation(self, mock_db_session):

@@ -58,9 +58,9 @@ class Migration001(Migration):
                 version INTEGER DEFAULT 1,
                 last_modified DATETIME DEFAULT CURRENT_TIMESTAMP,
                 parent_term_id TEXT,
-                FOREIGN KEY (domain_id) REFERENCES domains (id) ON DELETE CASCADE,  # noqa: E501
-                FOREIGN KEY (layer_id) REFERENCES layers (id) ON DELETE CASCADE,  # noqa: E501
-                FOREIGN KEY (parent_term_id) REFERENCES terms (id) ON DELETE SET NULL,  # noqa: E501
+                FOREIGN KEY (domain_id) REFERENCES domains (id) ON DELETE CASCADE,  
+                FOREIGN KEY (layer_id) REFERENCES layers (id) ON DELETE CASCADE,  
+                FOREIGN KEY (parent_term_id) REFERENCES terms (id) ON DELETE SET NULL,  
                 UNIQUE (domain_id, title)
             )
         """))
@@ -73,8 +73,8 @@ class Migration001(Migration):
                 target_term_id TEXT NOT NULL,
                 predicate TEXT NOT NULL,
                 created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-                FOREIGN KEY (source_term_id) REFERENCES terms (id) ON DELETE CASCADE,  # noqa: E501
-                FOREIGN KEY (target_term_id) REFERENCES terms (id) ON DELETE CASCADE,  # noqa: E501
+                FOREIGN KEY (source_term_id) REFERENCES terms (id) ON DELETE CASCADE,  
+                FOREIGN KEY (target_term_id) REFERENCES terms (id) ON DELETE CASCADE,  
                 UNIQUE (source_term_id, target_term_id, predicate)
             )
         """))

@@ -1,5 +1,5 @@
 """
-Unit tests for VersionManager - Testing entity version management functionality.  # noqa: E501
+Unit tests for VersionManager - Testing entity version management functionality.
 
 Tests version creation, retrieval, rollback, and state management operations.
 """
@@ -8,7 +8,7 @@ import sys
 import os
 
 sys.path.append(
-    os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))  # noqa: E501
+    os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 )
 
 import pytest  # noqa: E402
@@ -60,7 +60,7 @@ class TestVersionManager:
         assert version.author_id == "test-user"
         assert isinstance(version.created_at, datetime)
 
-    def test_create_version_invalid_entity_type(self, version_manager, sample_content):  # noqa: E501
+    def test_create_version_invalid_entity_type(self, version_manager, sample_content):
         """Test version creation with invalid entity type."""
         with pytest.raises(ValueError, match="Invalid entity_type"):
             version_manager.create_version(
@@ -74,7 +74,7 @@ class TestVersionManager:
         self, version_manager, sample_content
     ):
         """Test version creation with missing required fields."""
-        with pytest.raises(ValueError, match="entity_id and author_id are required"):  # noqa: E501
+        with pytest.raises(ValueError, match="entity_id and author_id are required"):
             version_manager.create_version(
                 entity_type="structure_node",
                 entity_id="",
@@ -82,7 +82,7 @@ class TestVersionManager:
                 author_id="test-user",
             )
 
-        with pytest.raises(ValueError, match="entity_id and author_id are required"):  # noqa: E501
+        with pytest.raises(ValueError, match="entity_id and author_id are required"):
             version_manager.create_version(
                 entity_type="structure_node",
                 entity_id="test-123",
@@ -140,7 +140,7 @@ class TestVersionManager:
             )
 
         # Retrieve all versions
-        versions = version_manager.get_entity_versions("structure_node", "test-123")  # noqa: E501
+        versions = version_manager.get_entity_versions("structure_node", "test-123")
 
         assert len(versions) == 3
         assert versions[0].version_number == 1
@@ -229,12 +229,12 @@ class TestVersionManager:
         )
 
         assert rollback_version.version_number == 4  # New version created
-        assert rollback_version.content["version"] == 2  # Content from version 2  # noqa: E501
+        assert rollback_version.content["version"] == 2  # Content from version 2
         assert rollback_version.parent_version_id == versions[1].id
         assert rollback_version.metadata["operation"] == "rollback"
         assert rollback_version.metadata["target_version"] == 2
 
-    def test_rollback_to_nonexistent_version(self, version_manager, sample_content):  # noqa: E501
+    def test_rollback_to_nonexistent_version(self, version_manager, sample_content):
         """Test rollback to a non-existent version."""
         # Create one version
         version_manager.create_version(
@@ -245,7 +245,7 @@ class TestVersionManager:
         )
 
         # Try to rollback to non-existent version
-        with pytest.raises(ValueError, match="Target version 5 does not exist"):  # noqa: E501
+        with pytest.raises(ValueError, match="Target version 5 does not exist"):
             version_manager.rollback_to_version(
                 "structure_node", "test-123", 5, "test-user"
             )
@@ -306,7 +306,7 @@ class TestVersionManager:
         )
 
         # Get all STAGED versions
-        staged_versions = version_manager.get_versions_by_state(ChangeState.STAGED)  # noqa: E501
+        staged_versions = version_manager.get_versions_by_state(ChangeState.STAGED)
 
         assert len(staged_versions) == 2
         assert all(v.state == ChangeState.STAGED for v in staged_versions)
@@ -335,9 +335,9 @@ class TestVersionManager:
 
         assert child_version.parent_version_id == parent_version.id
 
-    def test_version_with_invalid_parent(self, version_manager, sample_content):  # noqa: E501
+    def test_version_with_invalid_parent(self, version_manager, sample_content):
         """Test creating version with non-existent parent."""
-        with pytest.raises(ValueError, match="Parent version .* does not exist"):  # noqa: E501
+        with pytest.raises(ValueError, match="Parent version .* does not exist"):
             version_manager.create_version(
                 entity_type="structure_node",
                 entity_id="test-123",

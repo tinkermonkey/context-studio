@@ -1,14 +1,14 @@
 """
-Unit tests for PerformanceMonitor - Testing comprehensive performance monitoring.  # noqa: E501
+Unit tests for PerformanceMonitor - Testing comprehensive performance monitoring.
 
-Tests performance metrics collection, trend analysis, automated optimization, and alerting.  # noqa: E501
+Tests performance metrics collection, trend analysis, automated optimization, and alerting.
 """
 
 import sys
 import os
 
 sys.path.append(
-    os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))  # noqa: E501
+    os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 )
 
 import pytest  # noqa: E402
@@ -40,7 +40,7 @@ class TestPerformanceMonitor:
             # Subsequent calls: per-table row counts
             cursor.fetchall.return_value = [('main', 'database', 'test.db', 2)]
             cursor.fetchone.side_effect = [
-                (150, 45, 12),  # total_objects, table_count, index_count from stats query  # noqa: E501
+                (150, 45, 12),  # total_objects, table_count, index_count from stats query
                 (100,),  # entity_versions row count
                 (50,),   # changesets row count
                 (25,),   # proposals row count
@@ -66,9 +66,9 @@ class TestPerformanceMonitor:
         return mock_sync
 
     @pytest.fixture(scope="function")
-    def performance_monitor(self, mock_sqlite_conn, mock_duckdb_conn, mock_s3_sync):  # noqa: E501
+    def performance_monitor(self, mock_sqlite_conn, mock_duckdb_conn, mock_s3_sync):
         """Create a PerformanceMonitor instance for testing."""
-        monitor = PerformanceMonitor(mock_sqlite_conn, mock_duckdb_conn, mock_s3_sync)  # noqa: E501
+        monitor = PerformanceMonitor(mock_sqlite_conn, mock_duckdb_conn, mock_s3_sync)
         # Ensure fresh state for each test
         monitor.alerts = []
         monitor.metrics_history = []
@@ -92,8 +92,8 @@ class TestPerformanceMonitor:
 
         # Check all expected thresholds are present
         expected_thresholds = [
-            'query_metrics.avg_execution_time_ms', 's3_metrics.avg_sync_time_ms', 'system_metrics.memory_usage_mb',  # noqa: E501
-            'system_metrics.error_rate_percent', 'batch_metrics.avg_throughput_per_second', 'cache_metrics.hit_rate',  # noqa: E501
+            'query_metrics.avg_execution_time_ms', 's3_metrics.avg_sync_time_ms', 'system_metrics.memory_usage_mb',
+            'system_metrics.error_rate_percent', 'batch_metrics.avg_throughput_per_second', 'cache_metrics.hit_rate',
             'batch_metrics.storage_growth_rate_mb_per_hour'
         ]
 
@@ -126,7 +126,7 @@ class TestPerformanceMonitor:
         assert len(performance_monitor.metrics_history) == 1
         assert performance_monitor.metrics_history[0] == metrics
 
-    def test_database_metrics_collection(self, performance_monitor, mock_sqlite_conn):  # noqa: E501
+    def test_database_metrics_collection(self, performance_monitor, mock_sqlite_conn):
         """Test database metrics collection."""
         metrics = performance_monitor.collect_performance_metrics()
         db_metrics = metrics['database_metrics']
@@ -185,7 +185,7 @@ class TestPerformanceMonitor:
 
     def test_system_metrics_fallback_without_psutil(self, performance_monitor):
         """Test system metrics fallback when psutil is not available."""
-        with patch('psutil.cpu_percent', side_effect=ImportError("psutil not available")):  # noqa: E501
+        with patch('psutil.cpu_percent', side_effect=ImportError("psutil not available")):
             metrics = performance_monitor.collect_performance_metrics()
             system_metrics = metrics['system_metrics']
 
@@ -214,7 +214,7 @@ class TestPerformanceMonitor:
             }
             performance_monitor.metrics_history.append(metrics)
 
-        trends = performance_monitor.analyze_performance_trends(window_hours=24)  # noqa: E501
+        trends = performance_monitor.analyze_performance_trends(window_hours=24)
 
         # Check trends structure
         assert 'analysis_window_hours' in trends
@@ -236,15 +236,15 @@ class TestPerformanceMonitor:
 
     def test_performance_alert_generation(self, performance_monitor):
         """Test performance alert generation."""
-        # Get the dynamically calculated memory threshold to ensure our test value exceeds it  # noqa: E501
-        memory_threshold = performance_monitor.performance_thresholds['system_metrics.memory_usage_mb']  # noqa: E501
+        # Get the dynamically calculated memory threshold to ensure our test value exceeds it
+        memory_threshold = performance_monitor.performance_thresholds['system_metrics.memory_usage_mb']
 
         # Create metrics that exceed thresholds
         high_performance_metrics = {
             'timestamp': datetime.now(timezone.utc).isoformat(),
-            'query_metrics': {'avg_execution_time_ms': 12000},  # Above 10000ms threshold  # noqa: E501
+            'query_metrics': {'avg_execution_time_ms': 12000},  # Above 10000ms threshold
             'system_metrics': {
-                'memory_usage_mb': memory_threshold * 1.2,  # 20% above the dynamic threshold  # noqa: E501
+                'memory_usage_mb': memory_threshold * 1.2,  # 20% above the dynamic threshold
                 'error_rate_percent': 6.0  # Above 5.0% threshold
             },
             'cache_metrics': {'hit_rate': 0.4}  # Below 0.5 threshold
@@ -253,11 +253,11 @@ class TestPerformanceMonitor:
         performance_monitor.metrics_history.append(high_performance_metrics)
         performance_monitor._check_performance_alerts(high_performance_metrics)
 
-        # Should have generated 4 alerts (query time, memory, error rate, cache hit rate)  # noqa: E501
+        # Should have generated 4 alerts (query time, memory, error rate, cache hit rate)
         assert len(performance_monitor.alerts) == 4
 
         # Check alert types - verify the key alerts are present
-        alert_metrics = [alert.metric_name for alert in performance_monitor.alerts]  # noqa: E501
+        alert_metrics = [alert.metric_name for alert in performance_monitor.alerts]
         assert 'query_metrics.avg_execution_time_ms' in alert_metrics
         assert 'system_metrics.memory_usage_mb' in alert_metrics
         assert 'system_metrics.error_rate_percent' in alert_metrics
@@ -276,7 +276,7 @@ class TestPerformanceMonitor:
             's3_metrics': {'storage_growth_rate_mb_per_hour': 150}
         }
 
-        with patch.object(performance_monitor, 'collect_performance_metrics', return_value=poor_metrics):  # noqa: E501
+        with patch.object(performance_monitor, 'collect_performance_metrics', return_value=poor_metrics):
             result = performance_monitor.auto_optimize_based_on_metrics()
 
         # Should have executed optimizations
@@ -290,7 +290,7 @@ class TestPerformanceMonitor:
     def test_optimization_cooldown(self, performance_monitor):
         """Test optimization cooldown period."""
         # Set recent optimization time
-        performance_monitor.last_optimization_time = time.time() - 1800  # 30 minutes ago  # noqa: E501
+        performance_monitor.last_optimization_time = time.time() - 1800  # 30 minutes ago
 
         result = performance_monitor.auto_optimize_based_on_metrics()
 
@@ -308,7 +308,7 @@ class TestPerformanceMonitor:
     def test_optimization_actions(self, performance_monitor):
         """Test individual optimization actions."""
         # Test query optimization
-        with patch.object(performance_monitor, '_is_metric_above_threshold', return_value=True):  # noqa: E501
+        with patch.object(performance_monitor, '_is_metric_above_threshold', return_value=True):
             action = performance_monitor._optimize_slow_queries()
 
             assert action is not None
@@ -318,7 +318,7 @@ class TestPerformanceMonitor:
 
     def test_materialized_view_refresh(self, performance_monitor):
         """Test materialized view refresh optimization."""
-        with patch.object(performance_monitor, '_are_materialized_views_stale', return_value=True):  # noqa: E501
+        with patch.object(performance_monitor, '_are_materialized_views_stale', return_value=True):
             action = performance_monitor._refresh_stale_materialized_views()
 
             assert action is not None
@@ -329,7 +329,7 @@ class TestPerformanceMonitor:
     def test_cache_optimization(self, performance_monitor):
         """Test cache optimization action."""
 
-        with patch.object(performance_monitor, '_is_metric_below_threshold', return_value=True):  # noqa: E501
+        with patch.object(performance_monitor, '_is_metric_below_threshold', return_value=True):
             action = performance_monitor._optimize_cache_settings()
 
             assert action is not None
@@ -365,10 +365,10 @@ class TestPerformanceMonitor:
         """Test health score calculation."""
         # Create test trends data with excellent values
         trends = {
-            'query_time_trend': {'current_value': 1000},  # Excellent performance (1s vs 10s max)  # noqa: E501
-            'memory_usage_trend': {'current_value': 100},  # Excellent memory usage (100MB vs 1000MB max)  # noqa: E501
+            'query_time_trend': {'current_value': 1000},  # Excellent performance (1s vs 10s max)
+            'memory_usage_trend': {'current_value': 100},  # Excellent memory usage (100MB vs 1000MB max)
             'error_rate_trend': {'current_value': 0.1},  # Very low error rate
-            'cache_hit_rate_trend': {'current_value': 0.95},  # Excellent cache performance  # noqa: E501
+            'cache_hit_rate_trend': {'current_value': 0.95},  # Excellent cache performance
             'throughput_trend': {'current_value': 500}  # Excellent throughput
         }
 
@@ -390,7 +390,7 @@ class TestPerformanceMonitor:
         ]
 
         for health_score, expected_grade in test_cases:
-            grade = performance_monitor._calculate_performance_grade(health_score)  # noqa: E501
+            grade = performance_monitor._calculate_performance_grade(health_score)
             assert grade == expected_grade
 
     def test_metric_threshold_checking(self, performance_monitor):
@@ -402,7 +402,7 @@ class TestPerformanceMonitor:
 
         # Test above threshold
         above = performance_monitor._is_metric_above_threshold(
-            test_metrics, 'query_metrics.avg_execution_time_ms', 'query_metrics.avg_execution_time_ms'  # noqa: E501
+            test_metrics, 'query_metrics.avg_execution_time_ms', 'query_metrics.avg_execution_time_ms'
         )
         assert above is True
 
@@ -477,7 +477,7 @@ class TestPerformanceMonitor:
 
         # Check for expected issue types
         issue_types = [issue['type'] for issue in issues]
-        expected_types = ['query_performance_degradation', 'high_error_rate', 'low_cache_hit_rate']  # noqa: E501
+        expected_types = ['query_performance_degradation', 'high_error_rate', 'low_cache_hit_rate']
 
         for expected_type in expected_types:
             assert expected_type in issue_types
@@ -492,7 +492,7 @@ class TestPerformanceMonitor:
             {'type': 'query_performance_degradation', 'current_value': 7000}
         ]
 
-        recommendations = performance_monitor._generate_optimization_recommendations(trends, issues)  # noqa: E501
+        recommendations = performance_monitor._generate_optimization_recommendations(trends, issues)
 
         assert len(recommendations) > 0
 
@@ -605,7 +605,7 @@ class TestOptimizationAction:
         assert action.action_id == 'action_123'
         assert action.action_type == 'query_optimization'
         assert action.description == 'Optimized slow-performing queries'
-        assert action.parameters == {'queries_optimized': 5, 'avg_improvement_ms': 2000}  # noqa: E501
+        assert action.parameters == {'queries_optimized': 5, 'avg_improvement_ms': 2000}
         assert isinstance(action.executed_at, datetime)
         assert action.success is True
         assert action.impact_metrics == {'performance_gain_percent': 40}

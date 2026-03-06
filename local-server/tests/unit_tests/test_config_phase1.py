@@ -36,7 +36,7 @@ class TestSchemaOrgPathRemoval:
             "operations_path",
         ]
         for field in required_fields:
-            assert hasattr(db_config, field), f"Required field '{field}' is missing"  # noqa: E501
+            assert hasattr(db_config, field), f"Required field '{field}' is missing"
 
     def test_backward_compatibility_with_deprecated_field(self):
         """Test that old configs with schema_org_path are handled gracefully"""
@@ -80,7 +80,7 @@ class TestSchemaOrgPathRemoval:
         assert settings is not None
 
         # Create temporary config file
-        with tempfile.NamedTemporaryFile(mode="w", suffix=".json", delete=False) as f:  # noqa: E501
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".json", delete=False) as f:
             json.dump(valid_config, f)
             temp_config = f.name
 
@@ -105,7 +105,7 @@ class TestSchemaOrgPathRemoval:
             pytest.skip(f"config.json not found at {config_file}")
 
         # Create a temporary copy to avoid modifying the actual config file
-        with tempfile.NamedTemporaryFile(mode="w", suffix=".json", delete=False) as f:  # noqa: E501
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".json", delete=False) as f:
             temp_config = f.name
             # Copy the config content
             with open(config_file, "r") as original:
@@ -148,7 +148,7 @@ class TestSchemaOrgPathRemoval:
             }
         }
 
-        with tempfile.NamedTemporaryFile(mode="w", suffix=".json", delete=False) as f:  # noqa: E501
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".json", delete=False) as f:
             temp_config = f.name
 
         try:
@@ -163,7 +163,7 @@ class TestSchemaOrgPathRemoval:
 
             # Verify
             assert (
-                config_manager2.settings.database.default_url == "sqlite:///./test.db"  # noqa: E501
+                config_manager2.settings.database.default_url == "sqlite:///./test.db"
             )
             assert (
                 config_manager2.settings.database.reference_path
@@ -186,7 +186,7 @@ class TestSchemaOrgPathRemoval:
         assert db_config.default_url == "sqlite:///./datafiles/local.db"
         assert db_config.default_dataset_filename == "default.db"
         assert db_config.reference_path == "./datafiles/reference.db"
-        assert db_config.reference_cache_path == "./datafiles/reference_api_cache.db"  # noqa: E501
+        assert db_config.reference_cache_path == "./datafiles/reference_api_cache.db"
         assert db_config.operations_path == "./datafiles/operations.db"
         assert not db_config.check_same_thread  # Should be False by default
         assert db_config.pool_timeout == 30
@@ -221,5 +221,5 @@ class TestSchemaOrgPathRemoval:
         settings = Settings(**empty_config)
 
         # Should have default database config
-        assert settings.database.default_url == "sqlite:///./datafiles/local.db"  # noqa: E501
+        assert settings.database.default_url == "sqlite:///./datafiles/local.db"
         assert settings.database.reference_path == "./datafiles/reference.db"

@@ -78,7 +78,7 @@ class TestReferenceAPIProxyManager:
                 },
             },
             "throttling": {
-                "domain_limits": {"conceptnet": 3600, "dbpedia_spotlight": 3600}  # noqa: E501
+                "domain_limits": {"conceptnet": 3600, "dbpedia_spotlight": 3600}
             },
         }
         mock_get_settings.return_value = mock_settings
@@ -117,7 +117,7 @@ class TestReferenceAPIProxyManager:
                 },
             },
             "throttling": {
-                "domain_limits": {"conceptnet": 3600, "dbpedia_spotlight": 3600}  # noqa: E501
+                "domain_limits": {"conceptnet": 3600, "dbpedia_spotlight": 3600}
             },
         }
         mock_get_settings.return_value = mock_settings
@@ -243,7 +243,7 @@ class TestReferenceAPIProxyManager:
                 },
             },
             "throttling": {
-                "domain_limits": {"conceptnet": 3600, "dbpedia_spotlight": 3600}  # noqa: E501
+                "domain_limits": {"conceptnet": 3600, "dbpedia_spotlight": 3600}
             },
         }
         mock_get_settings.return_value = mock_settings

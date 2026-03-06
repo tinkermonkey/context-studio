@@ -24,7 +24,7 @@ class TestRAGScoringService:
 
     @pytest.fixture
     def strict_scoring_service(self):
-        """Create a scoring service with strict threshold (1.0 for exact match only)."""  # noqa: E501
+        """Create a scoring service with strict threshold (1.0 for exact match only)."""
         return RAGTestScoringService(overlap_threshold=1.0)
 
     # ==================== Overlap Calculation Tests ====================
@@ -63,30 +63,30 @@ class TestRAGScoringService:
         assert overlap == 0.0
 
     def test_adjacent_spans(self, scoring_service):
-        """Test that adjacent spans (touching but not overlapping) return 0.0."""  # noqa: E501
+        """Test that adjacent spans (touching but not overlapping) return 0.0."""
         overlap = scoring_service._calculate_overlap((0, 10), (10, 20))
         assert overlap == 0.0
 
-    # ==================== Precision/Recall/F1 Calculation Tests ====================  # noqa: E501
+    # ==================== Precision/Recall/F1 Calculation Tests ====================
 
     def test_perfect_precision(self, scoring_service):
         """Test precision with no false positives."""
-        precision = scoring_service._calculate_precision(true_positives=10, false_positives=0)  # noqa: E501
+        precision = scoring_service._calculate_precision(true_positives=10, false_positives=0)
         assert precision == 1.0
 
     def test_perfect_recall(self, scoring_service):
         """Test recall with no false negatives."""
-        recall = scoring_service._calculate_recall(true_positives=10, false_negatives=0)  # noqa: E501
+        recall = scoring_service._calculate_recall(true_positives=10, false_negatives=0)
         assert recall == 1.0
 
     def test_zero_precision(self, scoring_service):
         """Test precision when there are no true positives."""
-        precision = scoring_service._calculate_precision(true_positives=0, false_positives=10)  # noqa: E501
+        precision = scoring_service._calculate_precision(true_positives=0, false_positives=10)
         assert precision == 0.0
 
     def test_zero_recall(self, scoring_service):
         """Test recall when there are no true positives."""
-        recall = scoring_service._calculate_recall(true_positives=0, false_negatives=10)  # noqa: E501
+        recall = scoring_service._calculate_recall(true_positives=0, false_negatives=10)
         assert recall == 0.0
 
     def test_f1_perfect_score(self, scoring_service):
@@ -163,7 +163,7 @@ class TestRAGScoringService:
                 confidence=0.95,
                 source_layer="llm",
                 sentence_index=0,
-                metadata={"char_range": [0, 6], "matched_kg_node": "node_python"}  # noqa: E501
+                metadata={"char_range": [0, 6], "matched_kg_node": "node_python"}
             )
         ]
 
@@ -188,7 +188,7 @@ class TestRAGScoringService:
         assert result.false_negatives == 0
 
     def test_no_extractions(self, scoring_service):
-        """Test scoring when no entities are extracted (all false negatives)."""  # noqa: E501
+        """Test scoring when no entities are extracted (all false negatives)."""
         paragraph_text = "Python is a programming language."
 
         extracted_entities = []
@@ -220,7 +220,7 @@ class TestRAGScoringService:
         assert result.false_negatives == 2
 
     def test_no_ground_truth(self, scoring_service):
-        """Test scoring when there are no ground truth annotations (all false positives)."""  # noqa: E501
+        """Test scoring when there are no ground truth annotations (all false positives)."""
         paragraph_text = "Python is a programming language."
 
         extracted_entities = [
@@ -267,7 +267,7 @@ class TestRAGScoringService:
                 confidence=0.95,
                 source_layer="llm",
                 sentence_index=0,
-                metadata={"char_range": [0, 7], "matched_kg_node": "node_python"}  # noqa: E501
+                metadata={"char_range": [0, 7], "matched_kg_node": "node_python"}
             )
         ]
 
@@ -302,7 +302,7 @@ class TestRAGScoringService:
                 confidence=0.95,
                 source_layer="llm",
                 sentence_index=0,
-                metadata={"char_range": [0, 7], "matched_kg_node": "node_python"}  # noqa: E501
+                metadata={"char_range": [0, 7], "matched_kg_node": "node_python"}
             )
         ]
 
@@ -325,7 +325,7 @@ class TestRAGScoringService:
         assert result.true_positives == 1
 
     def test_multiple_entities_mixed_results(self, scoring_service):
-        """Test scoring with mix of correct, missed, and spurious extractions."""  # noqa: E501
+        """Test scoring with mix of correct, missed, and spurious extractions."""
         paragraph_text = "Python is a programming language developed by Guido."
 
         extracted_entities = [
@@ -336,7 +336,7 @@ class TestRAGScoringService:
                 confidence=0.95,
                 source_layer="llm",
                 sentence_index=0,
-                metadata={"char_range": [0, 6], "matched_kg_node": "node_python"}  # noqa: E501
+                metadata={"char_range": [0, 6], "matched_kg_node": "node_python"}
             ),
             # False positive - not in ground truth
             ExtractedEntity(
@@ -387,7 +387,7 @@ class TestRAGScoringService:
                 confidence=0.95,
                 source_layer="llm",
                 sentence_index=0,
-                metadata={"char_range": [0, 6], "matched_kg_node": "node_wrong"}  # noqa: E501
+                metadata={"char_range": [0, 6], "matched_kg_node": "node_wrong"}
             )
         ]
 
@@ -453,7 +453,7 @@ class TestRAGScoringService:
                 confidence=0.95,
                 source_layer="llm",
                 sentence_index=0,
-                metadata={"char_range": [0, 6], "matched_kg_node": "node_python"}  # noqa: E501
+                metadata={"char_range": [0, 6], "matched_kg_node": "node_python"}
             )
         ]
 
@@ -493,7 +493,7 @@ class TestRAGScoringService:
                 confidence=0.95,
                 source_layer="llm",
                 sentence_index=0,
-                metadata={"char_range": [0, 6], "matched_kg_node": "node_python"}  # noqa: E501
+                metadata={"char_range": [0, 6], "matched_kg_node": "node_python"}
             ),
             ExtractedEntity(
                 text="Java",

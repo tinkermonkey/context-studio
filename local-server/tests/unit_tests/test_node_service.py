@@ -13,7 +13,7 @@ import uuid
 from unittest.mock import Mock
 
 sys.path.insert(
-    0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))  # noqa: E501
+    0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 )
 
 from services.node_service import NodeService  # noqa: E402
@@ -78,9 +78,9 @@ class TestNodeServiceValidation:
     """Test NodeService validation rules as specified in the design."""
 
     def test_layer_validation_no_parent_allowed(self, node_service, mock_db):
-        """Test layer validation rule: Layers cannot have parent structure_nodes."""  # noqa: E501
+        """Test layer validation rule: Layers cannot have parent structure_nodes."""
         # Setup mock for unique title check first (pass this check)
-        mock_db.query.return_value.filter.return_value.first.return_value = None  # noqa: E501
+        mock_db.query.return_value.filter.return_value.first.return_value = None
 
         layer_data = {
             "node_type": "layer",
@@ -89,7 +89,7 @@ class TestNodeServiceValidation:
         }
 
         with pytest.raises(
-            InvalidHierarchyError, match="Layers cannot have parent structure_nodes"  # noqa: E501
+            InvalidHierarchyError, match="Layers cannot have parent structure_nodes"
         ):
             node_service.create_node(layer_data)
 
@@ -107,11 +107,11 @@ class TestNodeServiceValidation:
         with pytest.raises(ValueError, match="Layer title must be unique"):
             node_service.create_node(sample_layer_data)
 
-    def test_domain_validation_requires_parent(self, node_service, sample_domain_data):  # noqa: E501
+    def test_domain_validation_requires_parent(self, node_service, sample_domain_data):
         """Test domain validation rule: Domains must have a parent layer."""
         del sample_domain_data["parent_node_id"]
 
-        with pytest.raises(InvalidHierarchyError, match="Domains must have a parent layer"):  # noqa: E501
+        with pytest.raises(InvalidHierarchyError, match="Domains must have a parent layer"):
             node_service.create_node(sample_domain_data)
 
     def test_domain_validation_parent_must_be_layer(
@@ -125,13 +125,13 @@ class TestNodeServiceValidation:
             parent_domain
         )
 
-        with pytest.raises(InvalidHierarchyError, match="Domain parent must be a layer"):  # noqa: E501
+        with pytest.raises(InvalidHierarchyError, match="Domain parent must be a layer"):
             node_service.create_node(sample_domain_data)
 
     def test_domain_validation_unique_title_within_layer(
         self, node_service, sample_domain_data, mock_db
     ):
-        """Test domain validation rule: Domain titles must be unique within layer."""  # noqa: E501
+        """Test domain validation rule: Domain titles must be unique within layer."""
         # Setup mocks
         parent_layer = Mock(spec=StructureNode)
         parent_layer.node_type = NodeType.LAYER
@@ -161,11 +161,11 @@ class TestNodeServiceValidation:
         ):
             node_service.create_node(sample_domain_data)
 
-    def test_term_validation_requires_parent(self, node_service, sample_term_data):  # noqa: E501
-        """Test term validation rule: Terms must have a parent domain or term."""  # noqa: E501
+    def test_term_validation_requires_parent(self, node_service, sample_term_data):
+        """Test term validation rule: Terms must have a parent domain or term."""
         del sample_term_data["parent_node_id"]
 
-        with pytest.raises(InvalidHierarchyError, match="Terms must have a parent domain or term"):  # noqa: E501
+        with pytest.raises(InvalidHierarchyError, match="Terms must have a parent domain or term"):
             node_service.create_node(sample_term_data)
 
     def test_term_validation_parent_must_be_domain_or_term(
@@ -175,9 +175,9 @@ class TestNodeServiceValidation:
         # Setup mock to return layer parent (invalid for term)
         parent_layer = Mock(spec=StructureNode)
         parent_layer.node_type = NodeType.LAYER
-        mock_db.query.return_value.filter.return_value.first.return_value = parent_layer  # noqa: E501
+        mock_db.query.return_value.filter.return_value.first.return_value = parent_layer
 
-        with pytest.raises(InvalidHierarchyError, match="Term parent must be a domain or term"):  # noqa: E501
+        with pytest.raises(InvalidHierarchyError, match="Term parent must be a domain or term"):
             node_service.create_node(sample_term_data)
 
 
@@ -185,13 +185,13 @@ class TestCircularReferenceValidation:
     """Test circular reference prevention as specified in the design."""
 
     def test_circular_reference_prevention_direct(self, node_service):
-        """Test preventing direct circular reference: structure_node cannot be its own parent."""  # noqa: E501
+        """Test preventing direct circular reference: structure_node cannot be its own parent."""
         node_id = str(uuid.uuid4())
 
-        with pytest.raises(CircularReferenceError, match="StructureNode cannot be its own parent"):  # noqa: E501
+        with pytest.raises(CircularReferenceError, match="StructureNode cannot be its own parent"):
             node_service._validate_no_circular_reference(node_id, node_id)
 
-    def test_circular_reference_prevention_indirect(self, node_service, mock_db):  # noqa: E501
+    def test_circular_reference_prevention_indirect(self, node_service, mock_db):
         """Test preventing indirect circular reference using ancestor chain."""
         # Create hierarchy: Layer -> Domain -> Term1 -> Term2
         layer_id = str(uuid.uuid4())
@@ -231,9 +231,9 @@ class TestCircularReferenceValidation:
         node_service.get_node = Mock(side_effect=mock_get_node)
 
         # Try to make term1 child of term2 - should detect circular reference
-        # This would create: term2 -> term1 -> domain -> layer, but term2 is already child of term1  # noqa: E501
+        # This would create: term2 -> term1 -> domain -> layer, but term2 is already child of term1
         with pytest.raises(
-            CircularReferenceError, match="Operation would create circular reference"  # noqa: E501
+            CircularReferenceError, match="Operation would create circular reference"
         ):
             node_service._validate_no_circular_reference(term1_id, term2_id)
 
@@ -262,7 +262,7 @@ class TestNodeServiceCRUD:
         existing_node.title = "Old Title"
         existing_node.version = 1
 
-        # Mock database queries - first call gets the structure_node, second checks uniqueness  # noqa: E501
+        # Mock database queries - first call gets the structure_node, second checks uniqueness
         def mock_query_side_effect(*args):
             query_mock = Mock()
             filter_mock = Mock()
@@ -288,12 +288,12 @@ class TestNodeServiceCRUD:
         # Verify updates
         assert existing_node.title == "New Title"
         assert existing_node.version == 2
-        assert mock_db.commit.call_count == 2  # StructureNode update + NodeEvent  # noqa: E501
+        assert mock_db.commit.call_count == 2  # StructureNode update + NodeEvent
         mock_db.refresh.assert_called_once()
 
     def test_update_node_not_found(self, node_service, mock_db):
         """Test updating non-existent structure_node."""
-        mock_db.query.return_value.filter.return_value.first.return_value = None  # noqa: E501
+        mock_db.query.return_value.filter.return_value.first.return_value = None
 
         with pytest.raises(NotFoundError, match="StructureNode not found"):
             node_service.update_node(str(uuid.uuid4()), {"title": "New Title"})
@@ -316,7 +316,7 @@ class TestNodeServiceCRUD:
             # First call: get structure_node for deletion
             if mock_db.query.call_count == 1:
                 filter_mock.first.return_value = existing_node
-            # Second call: get descendants (should return empty list - no children)  # noqa: E501
+            # Second call: get descendants (should return empty list - no children)
             elif mock_db.query.call_count == 2:
                 filter_mock.all.return_value = []  # No descendants
 
@@ -331,11 +331,11 @@ class TestNodeServiceCRUD:
 
         assert result is True
         mock_db.delete.assert_called_once_with(existing_node)
-        assert mock_db.commit.call_count == 2  # StructureNode deletion + NodeEvent  # noqa: E501
+        assert mock_db.commit.call_count == 2  # StructureNode deletion + NodeEvent
 
     def test_delete_node_not_found(self, node_service, mock_db):
         """Test deleting non-existent structure_node."""
-        mock_db.query.return_value.filter.return_value.first.return_value = None  # noqa: E501
+        mock_db.query.return_value.filter.return_value.first.return_value = None
 
         with pytest.raises(NotFoundError, match="StructureNode not found"):
             node_service.delete_node(str(uuid.uuid4()))
@@ -366,7 +366,7 @@ class TestNodeServiceCRUD:
         mock_db.query.return_value = query_mock
 
         result = node_service.list_nodes(
-            node_type=NodeType.LAYER, parent_node_id=str(uuid.uuid4()), skip=0, limit=10  # noqa: E501
+            node_type=NodeType.LAYER, parent_node_id=str(uuid.uuid4()), skip=0, limit=10
         )
 
         assert result == expected_nodes
@@ -392,7 +392,7 @@ class TestNodeHierarchy:
     def test_get_node_children_direct(self, node_service, mock_db):
         """Test getting direct children of a structure_node."""
         parent_id = str(uuid.uuid4())
-        expected_children = [Mock(spec=StructureNode), Mock(spec=StructureNode)]  # noqa: E501
+        expected_children = [Mock(spec=StructureNode), Mock(spec=StructureNode)]
 
         query_mock = Mock()
         query_mock.filter.return_value = query_mock
@@ -460,9 +460,9 @@ class TestTitleUniquenessValidation:
         mock_db.query.return_value = query_mock
 
         # Mock _get_all_terms_in_domain to return some term IDs
-        node_service._get_all_terms_in_domain = Mock(return_value=[str(uuid.uuid4())])  # noqa: E501
+        node_service._get_all_terms_in_domain = Mock(return_value=[str(uuid.uuid4())])
 
-        result = node_service._check_title_uniqueness_in_domain(domain_id, title)  # noqa: E501
+        result = node_service._check_title_uniqueness_in_domain(domain_id, title)
 
         assert result is True  # Title exists (not unique)
 
@@ -472,14 +472,14 @@ class TestTitleUniquenessValidation:
         title = "Test Title"
         exclude_id = str(uuid.uuid4())
 
-        # Setup query mocks - first filter call with multiple conditions, second filter for exclude_id  # noqa: E501
+        # Setup query mocks - first filter call with multiple conditions, second filter for exclude_id
         query_mock = Mock()
         first_filter_mock = Mock()
         second_filter_mock = Mock()
 
         query_mock.filter.return_value = first_filter_mock
         first_filter_mock.filter.return_value = second_filter_mock
-        second_filter_mock.first.return_value = None  # No other term with same title  # noqa: E501
+        second_filter_mock.first.return_value = None  # No other term with same title
 
         mock_db.query.return_value = query_mock
 
@@ -492,7 +492,7 @@ class TestTitleUniquenessValidation:
             domain_id, title, exclude_id=exclude_id
         )
 
-        # Should be False because no other structure_nodes (excluding the specified one) have the title  # noqa: E501
+        # Should be False because no other structure_nodes (excluding the specified one) have the title
         assert result is False
 
 
@@ -572,8 +572,8 @@ class TestMoveWithTypeConversion:
         assert converted_nodes[0] == node
         mock_db.add.assert_called_with(node)
 
-    def test_convert_node_type_recursive_layer_to_domain(self, node_service, mock_db):  # noqa: E501
-        """Test recursive conversion: layer becomes domain, children become domains."""  # noqa: E501
+    def test_convert_node_type_recursive_layer_to_domain(self, node_service, mock_db):
+        """Test recursive conversion: layer becomes domain, children become domains."""
         parent_node = Mock(spec=StructureNode)
         parent_node.id = str(uuid.uuid4())
         parent_node.node_type = NodeType.LAYER
@@ -624,7 +624,7 @@ class TestMoveWithTypeConversion:
         assert child1 in converted_nodes
         assert child2 in converted_nodes
 
-    def test_convert_node_type_recursive_deep_hierarchy(self, node_service, mock_db):  # noqa: E501
+    def test_convert_node_type_recursive_deep_hierarchy(self, node_service, mock_db):
         """Test recursive conversion through multiple levels."""
         # Create hierarchy: domain -> term -> term (3 levels)
         domain = Mock(spec=StructureNode)
@@ -673,7 +673,7 @@ class TestMoveWithTypeConversion:
         assert len(converted_nodes) == 1
         assert domain in converted_nodes
 
-    def test_check_move_conflicts_layer_global_uniqueness(self, node_service, mock_db):  # noqa: E501
+    def test_check_move_conflicts_layer_global_uniqueness(self, node_service, mock_db):
         """Test conflict checking for layers (global uniqueness)."""
         node = Mock(spec=StructureNode)
         node.id = str(uuid.uuid4())
@@ -688,12 +688,12 @@ class TestMoveWithTypeConversion:
         mock_db.query.return_value = query_mock
 
         # Should detect conflict (handle_conflicts="error")
-        with pytest.raises(ValueError, match="already exists at target location"):  # noqa: E501
+        with pytest.raises(ValueError, match="already exists at target location"):
             node_service._check_move_conflicts_with_type(
                 node, None, NodeType.LAYER, "error"
             )
 
-    def test_check_move_conflicts_domain_scoped_uniqueness(self, node_service, mock_db):  # noqa: E501
+    def test_check_move_conflicts_domain_scoped_uniqueness(self, node_service, mock_db):
         """Test conflict checking for domains (unique within layer)."""
         node = Mock(spec=StructureNode)
         node.id = str(uuid.uuid4())
@@ -711,12 +711,12 @@ class TestMoveWithTypeConversion:
         mock_db.query.return_value = query_mock
 
         # Should detect conflict with error mode
-        with pytest.raises(ValueError, match="already exists at target location"):  # noqa: E501
+        with pytest.raises(ValueError, match="already exists at target location"):
             node_service._check_move_conflicts_with_type(
                 node, target_layer_id, NodeType.DOMAIN, "error"
             )
 
-    def test_check_move_conflicts_term_scoped_uniqueness(self, node_service, mock_db):  # noqa: E501
+    def test_check_move_conflicts_term_scoped_uniqueness(self, node_service, mock_db):
         """Test conflict checking for terms (unique within parent)."""
         node = Mock(spec=StructureNode)
         node.id = str(uuid.uuid4())
@@ -734,7 +734,7 @@ class TestMoveWithTypeConversion:
         mock_db.query.return_value = query_mock
 
         # Should detect conflict with error mode
-        with pytest.raises(ValueError, match="already exists at target location"):  # noqa: E501
+        with pytest.raises(ValueError, match="already exists at target location"):
             node_service._check_move_conflicts_with_type(
                 node, target_parent_id, NodeType.TERM, "error"
             )
@@ -772,11 +772,11 @@ class TestMoveWithTypeConversion:
         existing_layer = Mock(spec=StructureNode)
         existing_layer.title = "Conflicting Title"
 
-        # Mock _title_exists_at_target to simulate finding conflict then no conflict  # noqa: E501
+        # Mock _title_exists_at_target to simulate finding conflict then no conflict
         def mock_title_exists(title, parent_id, target_type, exclude_id):
             return title == original_title
 
-        node_service._title_exists_at_target = Mock(side_effect=mock_title_exists)  # noqa: E501
+        node_service._title_exists_at_target = Mock(side_effect=mock_title_exists)
 
         query_mock = Mock()
         query_mock.filter.return_value.first.return_value = existing_layer
@@ -793,7 +793,7 @@ class TestMoveWithTypeConversion:
         assert warning is not None
         assert "renamed" in warning.lower()
 
-    def test_validate_node_move_allows_term_under_term(self, node_service, mock_db):  # noqa: E501
+    def test_validate_node_move_allows_term_under_term(self, node_service, mock_db):
         """Test that validation allows terms to be placed under other terms."""
         term = Mock(spec=StructureNode)
         term.id = str(uuid.uuid4())
@@ -819,7 +819,7 @@ class TestMoveWithTypeConversion:
         term = Mock(spec=StructureNode)
         term.node_type = NodeType.TERM
 
-        with pytest.raises(InvalidHierarchyError, match="Terms must have a parent"):  # noqa: E501
+        with pytest.raises(InvalidHierarchyError, match="Terms must have a parent"):
             node_service._validate_node_move(term, None)
 
     def test_validate_node_move_layer_no_parent(self, node_service):
@@ -839,7 +839,7 @@ class TestNodeAttributeParsing:
 
     def test_parse_attributes_json_valid(self, node_service):
         """Test parsing valid JSON attributes."""
-        attributes_json = '[{"key":"category","title":"Category","value":"legal","value_type":"string"}]'  # noqa: E501
+        attributes_json = '[{"key":"category","title":"Category","value":"legal","value_type":"string"}]'
         result = node_service._parse_attributes_json(attributes_json)
 
         assert len(result) == 1
@@ -851,7 +851,7 @@ class TestNodeAttributeParsing:
         """Test parsing multiple attributes from JSON."""
         attributes_json = '''[
             {"key":"category","title":"Category","value":"legal","value_type":"string"},
-            {"key":"jurisdiction","title":"Jurisdiction","value":"US Federal","value_type":"string"},  # noqa: E501
+            {"key":"jurisdiction","title":"Jurisdiction","value":"US Federal","value_type":"string"},
             {"key":"version","title":"Version","value":1,"value_type":"number"}
         ]'''
         result = node_service._parse_attributes_json(attributes_json)
@@ -873,11 +873,11 @@ class TestNodeAttributeParsing:
 
     def test_parse_attributes_json_invalid(self, node_service):
         """Test parsing invalid JSON raises ValueError for data corruption."""
-        with pytest.raises(ValueError, match="Node has corrupted attribute data"):  # noqa: E501
+        with pytest.raises(ValueError, match="Node has corrupted attribute data"):
             node_service._parse_attributes_json("{ invalid json }")
 
     def test_parse_attributes_json_invalid_structure(self, node_service):
-        """Test parsing JSON with invalid attribute structure raises ValueError."""  # noqa: E501
+        """Test parsing JSON with invalid attribute structure raises ValueError."""
         # JSON with missing required field 'key'
         invalid_attrs = json.dumps([{"title": "Name"}])
         with pytest.raises(ValueError, match="Node attributes are invalid"):
@@ -904,8 +904,8 @@ class TestNodeAttributeOperations:
 
         # Create attributes
         attributes = [
-            StructureNodeAttribute(key="category", title="Category", value="legal", value_type="string"),  # noqa: E501
-            StructureNodeAttribute(key="jurisdiction", title="Jurisdiction", value="US Federal", value_type="string"),  # noqa: E501
+            StructureNodeAttribute(key="category", title="Category", value="legal", value_type="string"),
+            StructureNodeAttribute(key="jurisdiction", title="Jurisdiction", value="US Federal", value_type="string"),
         ]
 
         # Set attributes
@@ -940,7 +940,7 @@ class TestNodeAttributeOperations:
         node_id = str(uuid.uuid4())
         node_service.get_node = Mock(return_value=None)
 
-        attributes = [StructureNodeAttribute(key="test", title="Test", value="value", value_type="string")]  # noqa: E501
+        attributes = [StructureNodeAttribute(key="test", title="Test", value="value", value_type="string")]
 
         with pytest.raises(ValueError, match="not found"):
             node_service.set_node_attributes(node_id, attributes)
@@ -951,7 +951,7 @@ class TestNodeAttributeOperations:
 
         node = Mock(spec=StructureNode)
         node.id = node_id
-        node.attributes = '[{"key":"category","title":"Category","value":"legal","value_type":"string"}]'  # noqa: E501
+        node.attributes = '[{"key":"category","title":"Category","value":"legal","value_type":"string"}]'
 
         node_service.get_node = Mock(return_value=node)
 
@@ -990,7 +990,7 @@ class TestNodeAttributeOperations:
         node = Mock(spec=StructureNode)
         node.id = node_id
         node.version = 1
-        node.attributes = '[{"key":"category","title":"Category","value":"legal","value_type":"string"},{"key":"jurisdiction","title":"Jurisdiction","value":"US","value_type":"string"}]'  # noqa: E501
+        node.attributes = '[{"key":"category","title":"Category","value":"legal","value_type":"string"},{"key":"jurisdiction","title":"Jurisdiction","value":"US","value_type":"string"}]'
 
         node_service.get_node = Mock(return_value=node)
         mock_db.commit = Mock()
@@ -1011,7 +1011,7 @@ class TestNodeAttributeOperations:
         node = Mock(spec=StructureNode)
         node.id = node_id
         node.version = 1
-        node.attributes = '[{"key":"category","title":"Category","value":"legal","value_type":"string"}]'  # noqa: E501
+        node.attributes = '[{"key":"category","title":"Category","value":"legal","value_type":"string"}]'
 
         node_service.get_node = Mock(return_value=node)
         mock_db.commit = Mock()
@@ -1031,7 +1031,7 @@ class TestNodeAttributeOperations:
         node = Mock(spec=StructureNode)
         node.id = node_id
         node.version = 1
-        node.attributes = '[{"key":"test","title":"Test","value":"value","value_type":"string"}]'  # noqa: E501
+        node.attributes = '[{"key":"test","title":"Test","value":"value","value_type":"string"}]'
 
         node_service.get_node = Mock(return_value=node)
         mock_db.commit = Mock()
@@ -1052,7 +1052,7 @@ class TestNodeAttributeInheritance:
 
         node = Mock(spec=StructureNode)
         node.id = node_id
-        node.attributes = '[{"key":"category","title":"Category","value":"legal","value_type":"string"}]'  # noqa: E501
+        node.attributes = '[{"key":"category","title":"Category","value":"legal","value_type":"string"}]'
 
         node_service.get_node = Mock(return_value=node)
         node_service.get_node_ancestors = Mock(return_value=[])
@@ -1072,11 +1072,11 @@ class TestNodeAttributeInheritance:
 
         layer = Mock(spec=StructureNode)
         layer.id = layer_id
-        layer.attributes = '[{"key":"category","title":"Category","value":"legal","value_type":"string"}]'  # noqa: E501
+        layer.attributes = '[{"key":"category","title":"Category","value":"legal","value_type":"string"}]'
 
         domain = Mock(spec=StructureNode)
         domain.id = domain_id
-        domain.attributes = '[{"key":"jurisdiction","title":"Jurisdiction","value":"US Federal","value_type":"string"}]'  # noqa: E501
+        domain.attributes = '[{"key":"jurisdiction","title":"Jurisdiction","value":"US Federal","value_type":"string"}]'
 
         node_service.get_node = Mock(return_value=domain)
         node_service.get_node_ancestors = Mock(return_value=[layer])
@@ -1100,11 +1100,11 @@ class TestNodeAttributeInheritance:
 
         parent = Mock(spec=StructureNode)
         parent.id = parent_id
-        parent.attributes = '[{"key":"jurisdiction","title":"Jurisdiction","value":"US Federal","value_type":"string"}]'  # noqa: E501
+        parent.attributes = '[{"key":"jurisdiction","title":"Jurisdiction","value":"US Federal","value_type":"string"}]'
 
         child = Mock(spec=StructureNode)
         child.id = child_id
-        child.attributes = '[{"key":"jurisdiction","title":"Jurisdiction","value":"New York State","value_type":"string"}]'  # noqa: E501
+        child.attributes = '[{"key":"jurisdiction","title":"Jurisdiction","value":"New York State","value_type":"string"}]'
 
         node_service.get_node = Mock(return_value=child)
         node_service.get_node_ancestors = Mock(return_value=[parent])
@@ -1128,33 +1128,33 @@ class TestNodeAttributeInheritance:
 
         layer = Mock(spec=StructureNode)
         layer.id = layer_id
-        layer.attributes = '[{"key":"level","title":"Level","value":"layer","value_type":"string"}]'  # noqa: E501
+        layer.attributes = '[{"key":"level","title":"Level","value":"layer","value_type":"string"}]'
 
         domain = Mock(spec=StructureNode)
         domain.id = domain_id
-        domain.attributes = '[{"key":"domain_attr","title":"Domain Attr","value":"domain_val","value_type":"string"}]'  # noqa: E501
+        domain.attributes = '[{"key":"domain_attr","title":"Domain Attr","value":"domain_val","value_type":"string"}]'
 
         term1 = Mock(spec=StructureNode)
         term1.id = term1_id
-        term1.attributes = '[{"key":"term1_attr","title":"Term1 Attr","value":"term1_val","value_type":"string"}]'  # noqa: E501
+        term1.attributes = '[{"key":"term1_attr","title":"Term1 Attr","value":"term1_val","value_type":"string"}]'
 
         term2 = Mock(spec=StructureNode)
         term2.id = term2_id
-        term2.attributes = '[{"key":"term2_attr","title":"Term2 Attr","value":"term2_val","value_type":"string"}]'  # noqa: E501
+        term2.attributes = '[{"key":"term2_attr","title":"Term2 Attr","value":"term2_val","value_type":"string"}]'
 
         term3 = Mock(spec=StructureNode)
         term3.id = term3_id
-        term3.attributes = '[{"key":"term3_attr","title":"Term3 Attr","value":"term3_val","value_type":"string"}]'  # noqa: E501
+        term3.attributes = '[{"key":"term3_attr","title":"Term3 Attr","value":"term3_val","value_type":"string"}]'
 
         node_service.get_node = Mock(return_value=term3)
-        node_service.get_node_ancestors = Mock(return_value=[layer, domain, term1, term2])  # noqa: E501
+        node_service.get_node_ancestors = Mock(return_value=[layer, domain, term1, term2])
 
         result = node_service.resolve_node_attributes(term3_id)
 
         # Should have all attributes
         assert len(result) == 5
         keys = {r.key for r in result}
-        assert keys == {"level", "domain_attr", "term1_attr", "term2_attr", "term3_attr"}  # noqa: E501
+        assert keys == {"level", "domain_attr", "term1_attr", "term2_attr", "term3_attr"}
         # All but last should be inherited
         term3_attr = [r for r in result if r.key == "term3_attr"][0]
         assert term3_attr.inherited is False
@@ -1166,11 +1166,11 @@ class TestNodeAttributeInheritance:
 
         parent = Mock(spec=StructureNode)
         parent.id = parent_id
-        parent.attributes = '[{"key":"attr1","title":"Attr 1","value":"parent1","value_type":"string"},{"key":"attr2","title":"Attr 2","value":"parent2","value_type":"string"}]'  # noqa: E501
+        parent.attributes = '[{"key":"attr1","title":"Attr 1","value":"parent1","value_type":"string"},{"key":"attr2","title":"Attr 2","value":"parent2","value_type":"string"}]'
 
         child = Mock(spec=StructureNode)
         child.id = child_id
-        child.attributes = '[{"key":"attr3","title":"Attr 3","value":"child3","value_type":"string"}]'  # noqa: E501
+        child.attributes = '[{"key":"attr3","title":"Attr 3","value":"child3","value_type":"string"}]'
 
         node_service.get_node = Mock(return_value=child)
         node_service.get_node_ancestors = Mock(return_value=[parent])
@@ -1195,27 +1195,27 @@ class TestAttributeValueTypeValidation:
 
     def test_attribute_value_type_string(self, node_service):
         """Test string value type."""
-        attr = StructureNodeAttribute(key="title", title="Title", value="Test String", value_type="string")  # noqa: E501
+        attr = StructureNodeAttribute(key="title", title="Title", value="Test String", value_type="string")
         assert attr.value_type == "string"
 
     def test_attribute_value_type_number(self, node_service):
         """Test number value type."""
-        attr = StructureNodeAttribute(key="count", title="Count", value=42, value_type="number")  # noqa: E501
+        attr = StructureNodeAttribute(key="count", title="Count", value=42, value_type="number")
         assert attr.value_type == "number"
 
     def test_attribute_value_type_boolean(self, node_service):
         """Test boolean value type."""
-        attr = StructureNodeAttribute(key="active", title="Active", value=True, value_type="boolean")  # noqa: E501
+        attr = StructureNodeAttribute(key="active", title="Active", value=True, value_type="boolean")
         assert attr.value_type == "boolean"
 
     def test_attribute_value_type_date(self, node_service):
         """Test date value type."""
-        attr = StructureNodeAttribute(key="created", title="Created", value="2025-01-15", value_type="date")  # noqa: E501
+        attr = StructureNodeAttribute(key="created", title="Created", value="2025-01-15", value_type="date")
         assert attr.value_type == "date"
 
     def test_attribute_value_type_url(self, node_service):
         """Test URL value type."""
-        attr = StructureNodeAttribute(key="reference", title="Reference", value="https://example.com", value_type="url")  # noqa: E501
+        attr = StructureNodeAttribute(key="reference", title="Reference", value="https://example.com", value_type="url")
         assert attr.value_type == "url"
 
 
@@ -1234,21 +1234,21 @@ class TestLegalDomainHierarchyFixture:
         layer = Mock(spec=StructureNode)
         layer.id = layer_id
         layer.title = "Legal Domain"
-        layer.attributes = '[{"key":"category","title":"Category","value":"domain_classification","value_type":"string"}]'  # noqa: E501
+        layer.attributes = '[{"key":"category","title":"Category","value":"domain_classification","value_type":"string"}]'
 
         # Contract Law domain
         domain = Mock(spec=StructureNode)
         domain.id = domain_id
         domain.title = "Contract Law"
         domain.parent_node_id = layer_id
-        domain.attributes = '[{"key":"jurisdiction","title":"Jurisdiction","value":"US Federal","value_type":"string"}]'  # noqa: E501
+        domain.attributes = '[{"key":"jurisdiction","title":"Jurisdiction","value":"US Federal","value_type":"string"}]'
 
         # Force Majeure term
         term1 = Mock(spec=StructureNode)
         term1.id = term1_id
         term1.title = "Force Majeure"
         term1.parent_node_id = domain_id
-        term1.attributes = '[{"key":"jurisdiction","title":"Jurisdiction","value":"New York State","value_type":"string"},{"key":"definition_date","title":"Definition Date","value":"2025-01-15","value_type":"date"}]'  # noqa: E501
+        term1.attributes = '[{"key":"jurisdiction","title":"Jurisdiction","value":"New York State","value_type":"string"},{"key":"definition_date","title":"Definition Date","value":"2025-01-15","value_type":"date"}]'
 
         # Indemnification term (no local attributes, inherits all)
         term2 = Mock(spec=StructureNode)
@@ -1263,7 +1263,7 @@ class TestLegalDomainHierarchyFixture:
 
         result = node_service.resolve_node_attributes(term1_id)
 
-        # Should have category (inherited), jurisdiction (overridden), and definition_date (local)  # noqa: E501
+        # Should have category (inherited), jurisdiction (overridden), and definition_date (local)
         assert len(result) == 3
         keys = {r.key for r in result}
         assert keys == {"category", "jurisdiction", "definition_date"}
@@ -1292,14 +1292,14 @@ class TestLegalDomainHierarchyFixture:
 def test_create_node_version_management_failure(mock_db, mock_graph_service):
     """Test that node creation is aborted when version management fails.
 
-    When version_manager.create_version() or working_tree_manager.initialize_entity_in_working_tree()  # noqa: E501
+    When version_manager.create_version() or working_tree_manager.initialize_entity_in_working_tree()
     raise exceptions, the handler should:
     1. Log the error with full traceback
     2. Rollback the database
     3. Raise ValidationError with specific message (not ValueError)
     4. NOT catch and re-raise as ValueError
 
-    This ensures the API consumer receives the correct error type and status code.  # noqa: E501
+    This ensures the API consumer receives the correct error type and status code.
     """
     from services.exceptions import ValidationError
 
@@ -1351,10 +1351,10 @@ def test_create_node_version_management_failure(mock_db, mock_graph_service):
     mock_db.rollback.assert_called()
 
 
-def test_create_node_version_management_failure_working_tree(mock_db, mock_graph_service):  # noqa: E501
-    """Test that node creation is aborted when working tree initialization fails.  # noqa: E501
+def test_create_node_version_management_failure_working_tree(mock_db, mock_graph_service):
+    """Test that node creation is aborted when working tree initialization fails.
 
-    Similar to test_create_node_version_management_failure but tests the case where  # noqa: E501
+    Similar to test_create_node_version_management_failure but tests the case where
     working_tree_manager.initialize_entity_in_working_tree() fails.
     """
     from services.exceptions import ValidationError
@@ -1387,14 +1387,14 @@ def test_create_node_version_management_failure_working_tree(mock_db, mock_graph
     mock_db.refresh = Mock(side_effect=refresh_side_effect)
     mock_db.rollback = Mock()
 
-    # Mock version_manager.create_version() to succeed but working tree init to fail  # noqa: E501
+    # Mock version_manager.create_version() to succeed but working tree init to fail
     mock_version = Mock()
     mock_version.id = uuid.uuid4()
     mock_version_manager.create_version.return_value = mock_version
 
-    # Simulate working_tree_manager.initialize_entity_in_working_tree() raising an exception  # noqa: E501
+    # Simulate working_tree_manager.initialize_entity_in_working_tree() raising an exception
     tree_error = Exception("Working tree database transaction failed")
-    mock_working_tree_manager.initialize_entity_in_working_tree.side_effect = tree_error  # noqa: E501
+    mock_working_tree_manager.initialize_entity_in_working_tree.side_effect = tree_error
 
     # Attempt to create node
     with pytest.raises(ValidationError) as exc_info:
@@ -1414,4 +1414,4 @@ def test_create_node_version_management_failure_working_tree(mock_db, mock_graph
     mock_version_manager.create_version.assert_called_once()
 
     # Verify initialize_entity_in_working_tree was called
-    mock_working_tree_manager.initialize_entity_in_working_tree.assert_called_once()  # noqa: E501
+    mock_working_tree_manager.initialize_entity_in_working_tree.assert_called_once()

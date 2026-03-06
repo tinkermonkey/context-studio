@@ -8,7 +8,7 @@ import sys
 import os
 
 sys.path.append(
-    os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))  # noqa: E501
+    os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 )
 
 from config import Settings  # noqa: E402
@@ -37,13 +37,13 @@ def test_environment_variables():
     if model_name == "gpt-3.5-turbo":
         print("  ✓ LLM_MODEL_NAME matches default specification")
     else:
-        print(f"  ⚠️  LLM_MODEL_NAME: {model_name} (different from spec default)")  # noqa: E501
+        print(f"  ⚠️  LLM_MODEL_NAME: {model_name} (different from spec default)")
 
     temperature = os.getenv("LLM_TEMPERATURE")
     if temperature == "0":
         print("  ✓ LLM_TEMPERATURE matches default specification")
     else:
-        print(f"  ⚠️  LLM_TEMPERATURE: {temperature} (different from spec default)")  # noqa: E501
+        print(f"  ⚠️  LLM_TEMPERATURE: {temperature} (different from spec default)")
 
 
 def test_configuration_schema(test_settings):
@@ -68,12 +68,12 @@ def test_configuration_schema(test_settings):
                 if value is None or isinstance(value, int):
                     print(f"  ✓ {field_name}: {value} (Optional[int])")
                 else:
-                    print(f"  ❌ {field_name}: {value} (wrong type: {type(value)})")  # noqa: E501
+                    print(f"  ❌ {field_name}: {value} (wrong type: {type(value)})")
             else:
                 if isinstance(value, expected_type):
-                    print(f"  ✓ {field_name}: {value} ({expected_type.__name__})")  # noqa: E501
+                    print(f"  ✓ {field_name}: {value} ({expected_type.__name__})")
                 else:
-                    print(f"  ❌ {field_name}: {value} (wrong type: {type(value)})")  # noqa: E501
+                    print(f"  ❌ {field_name}: {value} (wrong type: {type(value)})")
         else:
             print(f"  ❌ {field_name}: Missing from Settings class")
 
@@ -91,7 +91,7 @@ def test_configuration_schema(test_settings):
         if actual_value == expected_default:
             print(f"    ✓ {field_name}: {actual_value} (matches spec)")
         else:
-            print(f"    ⚠️  {field_name}: {actual_value} (expected {expected_default})")  # noqa: E501
+            print(f"    ⚠️  {field_name}: {actual_value} (expected {expected_default})")
 
 
 def test_field_validation():
@@ -160,7 +160,7 @@ def test_field_descriptions():
                 print(f"  ✓ {field_name}: '{actual_desc}'")
             else:
                 print(
-                    f"  ⚠️  {field_name}: '{actual_desc}' (expected '{expected_desc}')"  # noqa: E501
+                    f"  ⚠️  {field_name}: '{actual_desc}' (expected '{expected_desc}')"
                 )
         else:
             print(f"  ❌ {field_name}: Field not found")

@@ -2,15 +2,15 @@
 """
 Unit tests for Migration 006 - The Great Normalization.
 
-Tests the migration from layers/domains/terms to the unified structure_nodes table,  # noqa: E501
-including data integrity, parent-child relationships, and rollback functionality.  # noqa: E501
+Tests the migration from layers/domains/terms to the unified structure_nodes table,
+including data integrity, parent-child relationships, and rollback functionality.
 """
 
 import sys
 import os
 
 sys.path.append(
-    os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))  # noqa: E501
+    os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 )
 
 import pytest  # noqa: E402
@@ -53,7 +53,7 @@ class MigrationTestHarness:
             return [m for m in all_migrations if m.version <= 5]
 
         # Monkey patch to exclude migration 006
-        self.migration_manager._discover_migrations = discover_migrations_up_to_5  # noqa: E501
+        self.migration_manager._discover_migrations = discover_migrations_up_to_5
 
         # Apply migrations 1-5
         success = self.migration_manager.migrate_to_latest()
@@ -82,56 +82,56 @@ class MigrationTestHarness:
             # Create layers
             cursor.execute(
                 """
-                INSERT INTO layers (id, title, definition, created_at, version, last_modified)  # noqa: E501
+                INSERT INTO layers (id, title, definition, created_at, version, last_modified)
                 VALUES
-                    ('layer-1', 'Science Layer', 'Scientific concepts', '2023-01-01 10:00:00', 1, '2023-01-01 10:00:00'),  # noqa: E501
-                    ('layer-2', 'Technology Layer', 'Technical concepts', '2023-01-02 10:00:00', 1, '2023-01-02 10:00:00')  # noqa: E501
+                    ('layer-1', 'Science Layer', 'Scientific concepts', '2023-01-01 10:00:00', 1, '2023-01-01 10:00:00'),
+                    ('layer-2', 'Technology Layer', 'Technical concepts', '2023-01-02 10:00:00', 1, '2023-01-02 10:00:00')
             """
             )
 
             # Create domains
             cursor.execute(
                 """
-                INSERT INTO domains (id, layer_id, title, definition, primary_predicate_id, created_at, version, last_modified)  # noqa: E501
+                INSERT INTO domains (id, layer_id, title, definition, primary_predicate_id, created_at, version, last_modified)
                 VALUES
-                    ('domain-1', 'layer-1', 'Biology', 'Study of living organisms', 'pred-1', '2023-01-03 10:00:00', 1, '2023-01-03 10:00:00'),  # noqa: E501
-                    ('domain-2', 'layer-1', 'Chemistry', 'Study of matter and chemical reactions', 'pred-2', '2023-01-04 10:00:00', 1, '2023-01-04 10:00:00'),  # noqa: E501
-                    ('domain-3', 'layer-2', 'Software Engineering', 'Development of software systems', NULL, '2023-01-05 10:00:00', 1, '2023-01-05 10:00:00')  # noqa: E501
+                    ('domain-1', 'layer-1', 'Biology', 'Study of living organisms', 'pred-1', '2023-01-03 10:00:00', 1, '2023-01-03 10:00:00'),
+                    ('domain-2', 'layer-1', 'Chemistry', 'Study of matter and chemical reactions', 'pred-2', '2023-01-04 10:00:00', 1, '2023-01-04 10:00:00'),
+                    ('domain-3', 'layer-2', 'Software Engineering', 'Development of software systems', NULL, '2023-01-05 10:00:00', 1, '2023-01-05 10:00:00')
             """
             )
 
             # Create terms with hierarchical relationships
             cursor.execute(
                 """
-                INSERT INTO terms (id, domain_id, layer_id, title, definition, parent_term_id, created_at, version, last_modified)  # noqa: E501
+                INSERT INTO terms (id, domain_id, layer_id, title, definition, parent_term_id, created_at, version, last_modified)
                 VALUES
-                    ('term-1', 'domain-1', 'layer-1', 'Cell', 'Basic unit of life', NULL, '2023-01-06 10:00:00', 1, '2023-01-06 10:00:00'),  # noqa: E501
-                    ('term-2', 'domain-1', 'layer-1', 'Animal Cell', 'Cell from animal organism', 'term-1', '2023-01-07 10:00:00', 1, '2023-01-07 10:00:00'),  # noqa: E501
-                    ('term-3', 'domain-1', 'layer-1', 'Plant Cell', 'Cell from plant organism', 'term-1', '2023-01-08 10:00:00', 1, '2023-01-08 10:00:00'),  # noqa: E501
-                    ('term-4', 'domain-2', 'layer-1', 'Molecule', 'Group of atoms bonded together', NULL, '2023-01-09 10:00:00', 1, '2023-01-09 10:00:00'),  # noqa: E501
-                    ('term-5', 'domain-2', 'layer-1', 'Water Molecule', 'H2O molecule', 'term-4', '2023-01-10 10:00:00', 1, '2023-01-10 10:00:00'),  # noqa: E501
-                    ('term-6', 'domain-3', 'layer-2', 'Algorithm', 'Step-by-step procedure', NULL, '2023-01-11 10:00:00', 1, '2023-01-11 10:00:00')  # noqa: E501
+                    ('term-1', 'domain-1', 'layer-1', 'Cell', 'Basic unit of life', NULL, '2023-01-06 10:00:00', 1, '2023-01-06 10:00:00'),
+                    ('term-2', 'domain-1', 'layer-1', 'Animal Cell', 'Cell from animal organism', 'term-1', '2023-01-07 10:00:00', 1, '2023-01-07 10:00:00'),
+                    ('term-3', 'domain-1', 'layer-1', 'Plant Cell', 'Cell from plant organism', 'term-1', '2023-01-08 10:00:00', 1, '2023-01-08 10:00:00'),
+                    ('term-4', 'domain-2', 'layer-1', 'Molecule', 'Group of atoms bonded together', NULL, '2023-01-09 10:00:00', 1, '2023-01-09 10:00:00'),
+                    ('term-5', 'domain-2', 'layer-1', 'Water Molecule', 'H2O molecule', 'term-4', '2023-01-10 10:00:00', 1, '2023-01-10 10:00:00'),
+                    ('term-6', 'domain-3', 'layer-2', 'Algorithm', 'Step-by-step procedure', NULL, '2023-01-11 10:00:00', 1, '2023-01-11 10:00:00')
             """
             )
 
             # Create term relationships
             cursor.execute(
                 """
-                INSERT INTO term_relationships (id, source_term_id, target_term_id, predicate, predicate_id, created_at)  # noqa: E501
+                INSERT INTO term_relationships (id, source_term_id, target_term_id, predicate, predicate_id, created_at)
                 VALUES
-                    ('rel-1', 'term-2', 'term-3', 'related_to', 'pred-3', '2023-01-12 10:00:00'),  # noqa: E501
-                    ('rel-2', 'term-1', 'term-4', 'composed_of', 'pred-4', '2023-01-13 10:00:00')  # noqa: E501
+                    ('rel-1', 'term-2', 'term-3', 'related_to', 'pred-3', '2023-01-12 10:00:00'),
+                    ('rel-2', 'term-1', 'term-4', 'composed_of', 'pred-4', '2023-01-13 10:00:00')
             """
             )
 
             # Create graph events
             cursor.execute(
                 """
-                INSERT INTO graph_events (event_type, entity_type, old_data, new_data, timestamp, processed)  # noqa: E501
+                INSERT INTO graph_events (event_type, entity_type, old_data, new_data, timestamp, processed)
                 VALUES
-                    ('create', 'layer', NULL, '{"id": "layer-1", "title": "Science Layer"}', '2023-01-01 10:00:00', 0),  # noqa: E501
-                    ('create', 'domain', NULL, '{"id": "domain-1", "title": "Biology"}', '2023-01-03 10:00:00', 1),  # noqa: E501
-                    ('create', 'term', NULL, '{"id": "term-1", "title": "Cell"}', '2023-01-06 10:00:00', 0)  # noqa: E501
+                    ('create', 'layer', NULL, '{"id": "layer-1", "title": "Science Layer"}', '2023-01-01 10:00:00', 0),
+                    ('create', 'domain', NULL, '{"id": "domain-1", "title": "Biology"}', '2023-01-03 10:00:00', 1),
+                    ('create', 'term', NULL, '{"id": "term-1", "title": "Cell"}', '2023-01-06 10:00:00', 0)
             """
             )
 
@@ -188,12 +188,12 @@ class MigrationTestHarness:
 
             # Count by structure_node type
             cursor.execute(
-                "SELECT COUNT(*) FROM structure_nodes WHERE node_type = 'layer'"  # noqa: E501
+                "SELECT COUNT(*) FROM structure_nodes WHERE node_type = 'layer'"
             )
             counts["layer_nodes"] = cursor.fetchone()[0]
 
             cursor.execute(
-                "SELECT COUNT(*) FROM structure_nodes WHERE node_type = 'domain'"  # noqa: E501
+                "SELECT COUNT(*) FROM structure_nodes WHERE node_type = 'domain'"
             )
             counts["domain_nodes"] = cursor.fetchone()[0]
 
@@ -225,8 +225,8 @@ class MigrationTestHarness:
                 conn.execute(
                     text(
                         """
-                    INSERT INTO schema_history (version, description, migration_file, checksum, execution_time_ms)  # noqa: E501
-                    VALUES (:version, :description, :migration_file, :checksum, :execution_time_ms)  # noqa: E501
+                    INSERT INTO schema_history (version, description, migration_file, checksum, execution_time_ms)
+                    VALUES (:version, :description, :migration_file, :checksum, :execution_time_ms)
                 """
                     ),
                     {
@@ -254,7 +254,7 @@ class MigrationTestHarness:
             with conn.begin():
                 migration_006.down(conn)
                 # Remove from schema_history
-                conn.execute(text("DELETE FROM schema_history WHERE version = 6"))  # noqa: E501
+                conn.execute(text("DELETE FROM schema_history WHERE version = 6"))
 
         # Update current version
         self.migration_manager.current_version = 5
@@ -269,7 +269,7 @@ class MigrationTestHarness:
                 """
                 SELECT COUNT(*) FROM structure_nodes n1
                 WHERE n1.parent_node_id IS NOT NULL
-                AND NOT EXISTS (SELECT 1 FROM structure_nodes n2 WHERE n2.id = n1.parent_node_id)  # noqa: E501
+                AND NOT EXISTS (SELECT 1 FROM structure_nodes n2 WHERE n2.id = n1.parent_node_id)
             """
             )
             invalid_count = cursor.fetchone()[0]
@@ -288,12 +288,12 @@ class MigrationTestHarness:
             cursor.execute(
                 """
                 SELECT COUNT(*) FROM structure_nodes
-                WHERE title_embedding IS NOT NULL OR definition_embedding IS NOT NULL  # noqa: E501
+                WHERE title_embedding IS NOT NULL OR definition_embedding IS NOT NULL
             """
             )
             cursor.fetchone()[0]
 
-            # For this test, we'll assume embeddings migration is successful if no error occurs  # noqa: E501
+            # For this test, we'll assume embeddings migration is successful if no error occurs
             # In real scenarios, you'd have actual embedding data to validate
             return True
 
@@ -301,7 +301,7 @@ class MigrationTestHarness:
             cursor.close()
 
     def validate_hierarchy_preservation(self) -> bool:
-        """Validate that the original hierarchy is preserved after migration."""  # noqa: E501
+        """Validate that the original hierarchy is preserved after migration."""
         conn = self.get_connection()
         cursor = conn.cursor()
 
@@ -321,7 +321,7 @@ class MigrationTestHarness:
                 """
                 SELECT COUNT(*) FROM structure_nodes t
                 JOIN structure_nodes p ON t.parent_node_id = p.id
-                WHERE t.node_type = 'term' AND p.node_type NOT IN ('domain', 'term')  # noqa: E501
+                WHERE t.node_type = 'term' AND p.node_type NOT IN ('domain', 'term')
             """
             )
             invalid_term_parents = cursor.fetchone()[0]
@@ -340,7 +340,7 @@ class MigrationTestHarness:
         try:
             # Get all tables
             cursor.execute(
-                "SELECT name FROM sqlite_master WHERE type='table' ORDER BY name"  # noqa: E501
+                "SELECT name FROM sqlite_master WHERE type='table' ORDER BY name"
             )
             tables = [row[0] for row in cursor.fetchall()]
 
@@ -359,7 +359,7 @@ class MigrationTestHarness:
         finally:
             cursor.close()
 
-    def database_matches_snapshot(self, snapshot: Dict[str, List[Dict]]) -> bool:  # noqa: E501
+    def database_matches_snapshot(self, snapshot: Dict[str, List[Dict]]) -> bool:
         """Check if current database matches the provided snapshot."""
         conn = self.get_connection()
         cursor = conn.cursor()
@@ -371,7 +371,7 @@ class MigrationTestHarness:
 
                 # Check if table exists
                 cursor.execute(
-                    "SELECT name FROM sqlite_master WHERE type='table' AND name=?",  # noqa: E501
+                    "SELECT name FROM sqlite_master WHERE type='table' AND name=?",
                     (table,),
                 )
                 if not cursor.fetchone():
@@ -457,7 +457,7 @@ class TestMigration006DataIntegrity:
         )
         assert (
             post_counts["structure_nodes"] == expected_nodes
-        ), f"Expected {expected_nodes} structure_nodes, got {post_counts['structure_nodes']}"  # noqa: E501
+        ), f"Expected {expected_nodes} structure_nodes, got {post_counts['structure_nodes']}"
 
         # Validate individual type counts
         assert post_counts["layer_nodes"] == pre_counts["layers"]
@@ -465,7 +465,7 @@ class TestMigration006DataIntegrity:
         assert post_counts["term_nodes"] == pre_counts["terms"]
 
         # Validate links
-        assert post_counts["structure_node_links"] == pre_counts["term_relationships"]  # noqa: E501
+        assert post_counts["structure_node_links"] == pre_counts["term_relationships"]
 
         # Validate events
         assert post_counts["change_events"] == pre_counts["graph_events"]
@@ -495,7 +495,7 @@ class TestMigration006DataIntegrity:
         try:
             # Check layer migration
             cursor.execute(
-                "SELECT id, title, node_type FROM structure_nodes WHERE id = 'layer-1'"  # noqa: E501
+                "SELECT id, title, node_type FROM structure_nodes WHERE id = 'layer-1'"
             )
             layer_row = cursor.fetchone()
             assert layer_row is not None
@@ -504,20 +504,20 @@ class TestMigration006DataIntegrity:
 
             # Check domain migration with parent reference
             cursor.execute(
-                "SELECT id, title, node_type, parent_node_id, structural_predicate_id FROM structure_nodes WHERE id = 'domain-1'"  # noqa: E501
+                "SELECT id, title, node_type, parent_node_id, structural_predicate_id FROM structure_nodes WHERE id = 'domain-1'"
             )
             domain_row = cursor.fetchone()
             assert domain_row is not None
             assert domain_row[1] == "Biology"
             assert domain_row[2] == "domain"
-            assert domain_row[3] == "layer-1"  # parent_node_id should be layer-1  # noqa: E501
+            assert domain_row[3] == "layer-1"  # parent_node_id should be layer-1
             assert (
                 domain_row[4] == "pred-1"
             )  # structural_predicate_id from primary_predicate_id
 
             # Check term migration with correct parent assignment
             cursor.execute(
-                "SELECT id, title, node_type, parent_node_id FROM structure_nodes WHERE id = 'term-2'"  # noqa: E501
+                "SELECT id, title, node_type, parent_node_id FROM structure_nodes WHERE id = 'term-2'"
             )
             term_row = cursor.fetchone()
             assert term_row is not None
@@ -529,13 +529,13 @@ class TestMigration006DataIntegrity:
 
             # Check term with domain parent
             cursor.execute(
-                "SELECT id, title, node_type, parent_node_id FROM structure_nodes WHERE id = 'term-1'"  # noqa: E501
+                "SELECT id, title, node_type, parent_node_id FROM structure_nodes WHERE id = 'term-1'"
             )
             term_root_row = cursor.fetchone()
             assert term_root_row is not None
             assert term_root_row[1] == "Cell"
             assert term_root_row[2] == "term"
-            assert term_root_row[3] == "domain-1"  # parent_node_id should be domain-1  # noqa: E501
+            assert term_root_row[3] == "domain-1"  # parent_node_id should be domain-1
 
         finally:
             cursor.close()
@@ -564,7 +564,7 @@ class TestMigration006ParentChildRelationships:
         try:
             # Test layer has no parent
             cursor.execute(
-                "SELECT parent_node_id FROM structure_nodes WHERE node_type = 'layer' AND id = 'layer-1'"  # noqa: E501
+                "SELECT parent_node_id FROM structure_nodes WHERE node_type = 'layer' AND id = 'layer-1'"
             )
             layer_parent = cursor.fetchone()[0]
             assert layer_parent is None, "Layers should not have parents"
@@ -607,24 +607,24 @@ class TestMigration006ParentChildRelationships:
         cursor = conn.cursor()
 
         try:
-            # Create a deep term hierarchy: term-root -> term-level1 -> term-level2 -> term-level3  # noqa: E501
+            # Create a deep term hierarchy: term-root -> term-level1 -> term-level2 -> term-level3
             cursor.execute(
                 """
-                INSERT INTO layers (id, title, definition) VALUES ('layer-deep', 'Deep Layer', 'For hierarchy testing')  # noqa: E501
+                INSERT INTO layers (id, title, definition) VALUES ('layer-deep', 'Deep Layer', 'For hierarchy testing')
             """
             )
             cursor.execute(
                 """
-                INSERT INTO domains (id, layer_id, title, definition) VALUES ('domain-deep', 'layer-deep', 'Deep Domain', 'For hierarchy testing')  # noqa: E501
+                INSERT INTO domains (id, layer_id, title, definition) VALUES ('domain-deep', 'layer-deep', 'Deep Domain', 'For hierarchy testing')
             """
             )
             cursor.execute(
                 """
-                INSERT INTO terms (id, domain_id, layer_id, title, definition, parent_term_id) VALUES  # noqa: E501
-                    ('term-root', 'domain-deep', 'layer-deep', 'Root Term', 'Root of hierarchy', NULL),  # noqa: E501
-                    ('term-l1', 'domain-deep', 'layer-deep', 'Level 1 Term', 'First level', 'term-root'),  # noqa: E501
-                    ('term-l2', 'domain-deep', 'layer-deep', 'Level 2 Term', 'Second level', 'term-l1'),  # noqa: E501
-                    ('term-l3', 'domain-deep', 'layer-deep', 'Level 3 Term', 'Third level', 'term-l2')  # noqa: E501
+                INSERT INTO terms (id, domain_id, layer_id, title, definition, parent_term_id) VALUES
+                    ('term-root', 'domain-deep', 'layer-deep', 'Root Term', 'Root of hierarchy', NULL),
+                    ('term-l1', 'domain-deep', 'layer-deep', 'Level 1 Term', 'First level', 'term-root'),
+                    ('term-l2', 'domain-deep', 'layer-deep', 'Level 2 Term', 'Second level', 'term-l1'),
+                    ('term-l3', 'domain-deep', 'layer-deep', 'Level 3 Term', 'Third level', 'term-l2')
             """
             )
             conn.commit()
@@ -640,22 +640,22 @@ class TestMigration006ParentChildRelationships:
         try:
             # Check each level of hierarchy
             cursor.execute(
-                "SELECT parent_node_id FROM structure_nodes WHERE id = 'term-root'"  # noqa: E501
+                "SELECT parent_node_id FROM structure_nodes WHERE id = 'term-root'"
             )
             assert cursor.fetchone()[0] == "domain-deep"
 
             cursor.execute(
-                "SELECT parent_node_id FROM structure_nodes WHERE id = 'term-l1'"  # noqa: E501
+                "SELECT parent_node_id FROM structure_nodes WHERE id = 'term-l1'"
             )
             assert cursor.fetchone()[0] == "term-root"
 
             cursor.execute(
-                "SELECT parent_node_id FROM structure_nodes WHERE id = 'term-l2'"  # noqa: E501
+                "SELECT parent_node_id FROM structure_nodes WHERE id = 'term-l2'"
             )
             assert cursor.fetchone()[0] == "term-l1"
 
             cursor.execute(
-                "SELECT parent_node_id FROM structure_nodes WHERE id = 'term-l3'"  # noqa: E501
+                "SELECT parent_node_id FROM structure_nodes WHERE id = 'term-l3'"
             )
             assert cursor.fetchone()[0] == "term-l2"
 
@@ -702,9 +702,9 @@ class TestMigration006Rollback:
             assert domain[1] == "Biology"
             assert domain[2] == "layer-1"
 
-            # Check that original term exists with correct domain_id and parent_term_id  # noqa: E501
+            # Check that original term exists with correct domain_id and parent_term_id
             cursor.execute(
-                "SELECT id, title, domain_id, parent_term_id FROM terms WHERE id = 'term-2'"  # noqa: E501
+                "SELECT id, title, domain_id, parent_term_id FROM terms WHERE id = 'term-2'"
             )
             term = cursor.fetchone()
             assert term is not None
@@ -728,13 +728,13 @@ class TestMigration006EdgeCases:
         try:
             cursor.execute(
                 """
-                INSERT INTO layers (id, title, definition) VALUES ('layer-test', 'Test Layer', 'Test')  # noqa: E501
+                INSERT INTO layers (id, title, definition) VALUES ('layer-test', 'Test Layer', 'Test')
             """
             )
             cursor.execute(
                 """
-                INSERT INTO domains (id, layer_id, title, definition, primary_predicate_id)  # noqa: E501
-                VALUES ('domain-test', 'layer-test', 'Test Domain', 'Test', 'nonexistent-predicate')  # noqa: E501
+                INSERT INTO domains (id, layer_id, title, definition, primary_predicate_id)
+                VALUES ('domain-test', 'layer-test', 'Test Domain', 'Test', 'nonexistent-predicate')
             """
             )
             conn.commit()
@@ -749,7 +749,7 @@ class TestMigration006EdgeCases:
         cursor = conn.cursor()
         try:
             cursor.execute(
-                "SELECT structural_predicate_id FROM structure_nodes WHERE id = 'domain-test'"  # noqa: E501
+                "SELECT structural_predicate_id FROM structure_nodes WHERE id = 'domain-test'"
             )
             result = cursor.fetchone()
             assert (
@@ -777,7 +777,7 @@ class TestMigration006EdgeCases:
         assert post_counts["change_events"] == 0
 
     def test_migration_with_orphaned_terms(self, migration_harness):
-        """Test migration handling of terms with invalid domain/layer references."""  # noqa: E501
+        """Test migration handling of terms with invalid domain/layer references."""
         # Create test data with orphaned term
         conn = migration_harness.get_connection()
         cursor = conn.cursor()
@@ -785,20 +785,20 @@ class TestMigration006EdgeCases:
         try:
             cursor.execute(
                 """
-                INSERT INTO layers (id, title, definition) VALUES ('layer-orphan', 'Orphan Layer', 'Test')  # noqa: E501
+                INSERT INTO layers (id, title, definition) VALUES ('layer-orphan', 'Orphan Layer', 'Test')
             """
             )
             cursor.execute(
                 """
                 INSERT INTO domains (id, layer_id, title, definition)
-                VALUES ('domain-orphan', 'layer-orphan', 'Orphan Domain', 'Test')  # noqa: E501
+                VALUES ('domain-orphan', 'layer-orphan', 'Orphan Domain', 'Test')
             """
             )
             # Create term with invalid domain_id
             cursor.execute(
                 """
                 INSERT INTO terms (id, domain_id, layer_id, title, definition)
-                VALUES ('term-orphan', 'nonexistent-domain', 'layer-orphan', 'Orphan Term', 'Test')  # noqa: E501
+                VALUES ('term-orphan', 'nonexistent-domain', 'layer-orphan', 'Orphan Term', 'Test')
             """
             )
             conn.commit()
@@ -808,7 +808,7 @@ class TestMigration006EdgeCases:
 
         # Migration should fail due to data integrity validation
         with pytest.raises(
-            Exception, match="Found 1 structure_nodes with invalid parent references"  # noqa: E501
+            Exception, match="Found 1 structure_nodes with invalid parent references"
         ):
             migration_harness.run_migration_006()
 

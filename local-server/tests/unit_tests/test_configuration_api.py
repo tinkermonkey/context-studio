@@ -73,7 +73,7 @@ class TestConfigurationAPI:
 
     def test_patch_invalid_configuration_path(self):
         """Test PATCH with invalid path returns 400"""
-        update_data = {"path": "invalid.nonexistent.path", "value": "test_value"}  # noqa: E501
+        update_data = {"path": "invalid.nonexistent.path", "value": "test_value"}
 
         response = self.client.patch("/api/config/", json=update_data)
 
@@ -155,11 +155,11 @@ class TestConfigurationAPI:
         assert response.status_code == 422
 
         # Missing value field
-        response = self.client.patch("/api/config/", json={"path": "server.port"})  # noqa: E501
+        response = self.client.patch("/api/config/", json={"path": "server.port"})
         assert response.status_code == 422
 
         # Empty path
-        response = self.client.patch("/api/config/", json={"path": "", "value": "test"})  # noqa: E501
+        response = self.client.patch("/api/config/", json={"path": "", "value": "test"})
         assert response.status_code == 400
 
     def test_configuration_endpoint_error_handling(self):

@@ -1,4 +1,4 @@
-"""Migration 008: Add Collaboration System - Changesets, proposals, voting, and identity management."""  # noqa: E501
+"""Migration 008: Add Collaboration System - Changesets, proposals, voting, and identity management."""
 
 from sqlalchemy.engine import Connection
 from sqlalchemy import text
@@ -9,10 +9,10 @@ logger = logging.getLogger(__name__)
 
 
 class Migration008(Migration):
-    """Add comprehensive collaboration system for change management workflows."""  # noqa: E501
+    """Add comprehensive collaboration system for change management workflows."""
 
     version = 8
-    description = "Add Collaboration System - Changesets, proposals, voting, and identity management"  # noqa: E501
+    description = "Add Collaboration System - Changesets, proposals, voting, and identity management"
 
     def up(self, connection: Connection) -> None:
         """Apply the migration."""
@@ -45,7 +45,7 @@ class Migration008(Migration):
             # Step 8: Validate migration
             self._validate_migration(connection)
 
-            logger.info("Collaboration System migration completed successfully!")  # noqa: E501
+            logger.info("Collaboration System migration completed successfully!")
 
         except Exception as e:
             logger.error(f"Collaboration System migration failed: {e}")
@@ -61,8 +61,8 @@ class Migration008(Migration):
 
         try:
             # Drop all tables in reverse order
-            connection.execute(text("DROP TABLE IF EXISTS verification_codes;"))  # noqa: E501
-            connection.execute(text("DROP TABLE IF EXISTS user_trust_relationships;"))  # noqa: E501
+            connection.execute(text("DROP TABLE IF EXISTS verification_codes;"))
+            connection.execute(text("DROP TABLE IF EXISTS user_trust_relationships;"))
             connection.execute(text("DROP TABLE IF EXISTS user_identities;"))
             connection.execute(text("DROP TABLE IF EXISTS proposal_votes;"))
             connection.execute(text("DROP TABLE IF EXISTS proposals;"))
@@ -85,7 +85,7 @@ class Migration008(Migration):
                 id TEXT PRIMARY KEY,
                 title TEXT NOT NULL,
                 description TEXT,
-                state TEXT NOT NULL CHECK (state IN ('DRAFT', 'PROPOSED', 'APPROVED', 'MERGED', 'REJECTED')),  # noqa: E501
+                state TEXT NOT NULL CHECK (state IN ('DRAFT', 'PROPOSED', 'APPROVED', 'MERGED', 'REJECTED')),  
                 branch_name TEXT,
                 parent_changeset_id TEXT,
                 author_id TEXT NOT NULL,
@@ -109,7 +109,7 @@ class Migration008(Migration):
                 changeset_id TEXT NOT NULL,
                 title TEXT NOT NULL,
                 description TEXT,
-                status TEXT NOT NULL CHECK (status IN ('open', 'approved', 'rejected', 'merged')),  # noqa: E501
+                status TEXT NOT NULL CHECK (status IN ('open', 'approved', 'rejected', 'merged')),  
                 required_approvals INTEGER DEFAULT 1,
                 created_by TEXT NOT NULL,
                 created_at TEXT NOT NULL,
@@ -131,7 +131,7 @@ class Migration008(Migration):
             CREATE TABLE proposal_votes (
                 proposal_id TEXT NOT NULL,
                 user_id TEXT NOT NULL,
-                vote TEXT NOT NULL CHECK (vote IN ('approve', 'reject', 'abstain')),  # noqa: E501
+                vote TEXT NOT NULL CHECK (vote IN ('approve', 'reject', 'abstain')),  
                 comment TEXT,
                 voted_at TEXT NOT NULL,
 
@@ -161,7 +161,7 @@ class Migration008(Migration):
 
         logger.info("Successfully created user_identities table")
 
-    def _create_user_trust_relationships_table(self, connection: Connection) -> None:  # noqa: E501
+    def _create_user_trust_relationships_table(self, connection: Connection) -> None:
         """Create the user_trust_relationships table."""
         logger.info("Creating user_trust_relationships table...")
 
@@ -172,8 +172,8 @@ class Migration008(Migration):
                 created_at TEXT NOT NULL,
 
                 PRIMARY KEY (trustee_user_id, trusted_user_id),
-                FOREIGN KEY (trustee_user_id) REFERENCES user_identities(user_id),  # noqa: E501
-                FOREIGN KEY (trusted_user_id) REFERENCES user_identities(user_id)  # noqa: E501
+                FOREIGN KEY (trustee_user_id) REFERENCES user_identities(user_id),  
+                FOREIGN KEY (trusted_user_id) REFERENCES user_identities(user_id)  
             );
         """))
 
@@ -201,34 +201,34 @@ class Migration008(Migration):
         logger.info("Creating indexes...")
 
         # Changesets indexes
-        connection.execute(text("CREATE INDEX IF NOT EXISTS idx_changesets_author ON changesets(author_id);"))  # noqa: E501
-        connection.execute(text("CREATE INDEX IF NOT EXISTS idx_changesets_state ON changesets(state);"))  # noqa: E501
-        connection.execute(text("CREATE INDEX IF NOT EXISTS idx_changesets_created ON changesets(created_at);"))  # noqa: E501
-        connection.execute(text("CREATE INDEX IF NOT EXISTS idx_changesets_parent ON changesets(parent_changeset_id);"))  # noqa: E501
+        connection.execute(text("CREATE INDEX IF NOT EXISTS idx_changesets_author ON changesets(author_id);"))
+        connection.execute(text("CREATE INDEX IF NOT EXISTS idx_changesets_state ON changesets(state);"))
+        connection.execute(text("CREATE INDEX IF NOT EXISTS idx_changesets_created ON changesets(created_at);"))
+        connection.execute(text("CREATE INDEX IF NOT EXISTS idx_changesets_parent ON changesets(parent_changeset_id);"))
 
         # Proposals indexes
-        connection.execute(text("CREATE INDEX IF NOT EXISTS idx_proposals_changeset ON proposals(changeset_id);"))  # noqa: E501
-        connection.execute(text("CREATE INDEX IF NOT EXISTS idx_proposals_status ON proposals(status);"))  # noqa: E501
-        connection.execute(text("CREATE INDEX IF NOT EXISTS idx_proposals_created_by ON proposals(created_by);"))  # noqa: E501
-        connection.execute(text("CREATE INDEX IF NOT EXISTS idx_proposals_created ON proposals(created_at);"))  # noqa: E501
+        connection.execute(text("CREATE INDEX IF NOT EXISTS idx_proposals_changeset ON proposals(changeset_id);"))
+        connection.execute(text("CREATE INDEX IF NOT EXISTS idx_proposals_status ON proposals(status);"))
+        connection.execute(text("CREATE INDEX IF NOT EXISTS idx_proposals_created_by ON proposals(created_by);"))
+        connection.execute(text("CREATE INDEX IF NOT EXISTS idx_proposals_created ON proposals(created_at);"))
 
         # Proposal votes indexes
-        connection.execute(text("CREATE INDEX IF NOT EXISTS idx_proposal_votes_proposal ON proposal_votes(proposal_id);"))  # noqa: E501
-        connection.execute(text("CREATE INDEX IF NOT EXISTS idx_proposal_votes_user ON proposal_votes(user_id);"))  # noqa: E501
-        connection.execute(text("CREATE INDEX IF NOT EXISTS idx_proposal_votes_vote ON proposal_votes(vote);"))  # noqa: E501
-        connection.execute(text("CREATE INDEX IF NOT EXISTS idx_proposal_votes_voted_at ON proposal_votes(voted_at);"))  # noqa: E501
+        connection.execute(text("CREATE INDEX IF NOT EXISTS idx_proposal_votes_proposal ON proposal_votes(proposal_id);"))
+        connection.execute(text("CREATE INDEX IF NOT EXISTS idx_proposal_votes_user ON proposal_votes(user_id);"))
+        connection.execute(text("CREATE INDEX IF NOT EXISTS idx_proposal_votes_vote ON proposal_votes(vote);"))
+        connection.execute(text("CREATE INDEX IF NOT EXISTS idx_proposal_votes_voted_at ON proposal_votes(voted_at);"))
 
         # User identities indexes
-        connection.execute(text("CREATE INDEX IF NOT EXISTS idx_user_identities_email ON user_identities(email);"))  # noqa: E501
-        connection.execute(text("CREATE INDEX IF NOT EXISTS idx_user_identities_verified ON user_identities(verified);"))  # noqa: E501
-        connection.execute(text("CREATE INDEX IF NOT EXISTS idx_user_identities_trust_level ON user_identities(trust_level);"))  # noqa: E501
+        connection.execute(text("CREATE INDEX IF NOT EXISTS idx_user_identities_email ON user_identities(email);"))
+        connection.execute(text("CREATE INDEX IF NOT EXISTS idx_user_identities_verified ON user_identities(verified);"))
+        connection.execute(text("CREATE INDEX IF NOT EXISTS idx_user_identities_trust_level ON user_identities(trust_level);"))
 
         # User trust relationships indexes
-        connection.execute(text("CREATE INDEX IF NOT EXISTS idx_user_trust_trusted ON user_trust_relationships(trusted_user_id);"))  # noqa: E501
-        connection.execute(text("CREATE INDEX IF NOT EXISTS idx_user_trust_trustee ON user_trust_relationships(trustee_user_id);"))  # noqa: E501
+        connection.execute(text("CREATE INDEX IF NOT EXISTS idx_user_trust_trusted ON user_trust_relationships(trusted_user_id);"))
+        connection.execute(text("CREATE INDEX IF NOT EXISTS idx_user_trust_trustee ON user_trust_relationships(trustee_user_id);"))
 
         # Verification codes indexes
-        connection.execute(text("CREATE INDEX IF NOT EXISTS idx_verification_codes_expires ON verification_codes(expires_at);"))  # noqa: E501
+        connection.execute(text("CREATE INDEX IF NOT EXISTS idx_verification_codes_expires ON verification_codes(expires_at);"))
 
         logger.info("Successfully created all indexes")
 
@@ -244,7 +244,7 @@ class Migration008(Migration):
 
         for table_name in required_tables:
             result = connection.execute(text(f"""
-                SELECT name FROM sqlite_master WHERE type='table' AND name='{table_name}'  # noqa: E501
+                SELECT name FROM sqlite_master WHERE type='table' AND name='{table_name}'
             """)).fetchone()
 
             if not result:
@@ -262,40 +262,40 @@ class Migration008(Migration):
         """)).fetchall()
 
         if len(indexes) < 17:  # We created 17 indexes
-            logger.warning(f"Expected 17 collaboration indexes, found {len(indexes)}")  # noqa: E501
+            logger.warning(f"Expected 17 collaboration indexes, found {len(indexes)}")
 
         # Test table constraints by attempting invalid inserts
         try:
             # Test invalid changeset state
             connection.execute(text("""
-                INSERT INTO changesets (id, title, state, author_id, created_at)  # noqa: E501
+                INSERT INTO changesets (id, title, state, author_id, created_at)  
                 VALUES ('test', 'test', 'INVALID', 'test', datetime('now'))
             """))
             raise Exception("Changeset state constraint failed")
         except Exception as e:
             if "CHECK constraint failed" not in str(e):
-                raise Exception("Changeset state constraint validation failed unexpectedly")  # noqa: E501
+                raise Exception("Changeset state constraint validation failed unexpectedly")
 
         try:
             # Test invalid proposal status
             connection.execute(text("""
-                INSERT INTO proposals (id, changeset_id, title, status, created_by, created_at)  # noqa: E501
-                VALUES ('test', 'test', 'test', 'invalid', 'test', datetime('now'))  # noqa: E501
+                INSERT INTO proposals (id, changeset_id, title, status, created_by, created_at)  
+                VALUES ('test', 'test', 'test', 'invalid', 'test', datetime('now'))  
             """))
             raise Exception("Proposal status constraint failed")
         except Exception as e:
             if "CHECK constraint failed" not in str(e):
-                raise Exception("Proposal status constraint validation failed unexpectedly")  # noqa: E501
+                raise Exception("Proposal status constraint validation failed unexpectedly")
 
         try:
             # Test invalid vote
             connection.execute(text("""
-                INSERT INTO proposal_votes (proposal_id, user_id, vote, voted_at)  # noqa: E501
+                INSERT INTO proposal_votes (proposal_id, user_id, vote, voted_at)  
                 VALUES ('test', 'test', 'invalid', datetime('now'))
             """))
             raise Exception("Vote constraint failed")
         except Exception as e:
             if "CHECK constraint failed" not in str(e):
-                raise Exception("Vote constraint validation failed unexpectedly")  # noqa: E501
+                raise Exception("Vote constraint validation failed unexpectedly")
 
         logger.info("Migration validation passed!")

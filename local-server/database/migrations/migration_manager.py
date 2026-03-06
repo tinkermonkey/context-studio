@@ -44,10 +44,10 @@ class MigrationManager:
         )
         self.current_version = self._get_current_schema_version()
         self.target_version = self._get_latest_migration_version()
-        logger.info(f"MigrationManager initialized: current_version={self.current_version}, target_version={self.target_version}")  # noqa: E501
+        logger.info(f"MigrationManager initialized: current_version={self.current_version}, target_version={self.target_version}")
 
     def get_current_version(self) -> int:
-        """Get the current schema version (alias for current_version property)."""  # noqa: E501
+        """Get the current schema version (alias for current_version property)."""
         return self.current_version
 
     def _ensure_schema_history_table(self, connection: Connection) -> None:
@@ -70,7 +70,7 @@ class MigrationManager:
             return 0
 
         try:
-            engine = create_engine(self.database_url, connect_args={"check_same_thread": False})  # noqa: E501
+            engine = create_engine(self.database_url, connect_args={"check_same_thread": False})
             with engine.connect() as conn:
                 self._ensure_schema_history_table(conn)
                 result = conn.execute(text(
@@ -93,7 +93,7 @@ class MigrationManager:
         migrations: List[Migration] = []
 
         if not os.path.exists(self.migrations_dir):
-            logger.warning(f"Migrations directory not found: {self.migrations_dir}")  # noqa: E501
+            logger.warning(f"Migrations directory not found: {self.migrations_dir}")
             return migrations
 
         for filename in sorted(os.listdir(self.migrations_dir)):
@@ -110,7 +110,7 @@ class MigrationManager:
 
     def _load_migration(self, migration_path: str) -> Optional[Migration]:
         """Load a migration from a Python file."""
-        spec = importlib.util.spec_from_file_location("migration", migration_path)  # noqa: E501
+        spec = importlib.util.spec_from_file_location("migration", migration_path)
         if not spec or not spec.loader:
             return None
 
@@ -137,7 +137,7 @@ class MigrationManager:
         if isinstance(target_version, str):
             target_version = int(target_version)
 
-        logger.info(f"Migrating to version {target_version} from {self.current_version}")  # noqa: E501
+        logger.info(f"Migrating to version {target_version} from {self.current_version}")
 
         if target_version == self.current_version:
             logger.info(f"Already at version {target_version}")
@@ -154,9 +154,9 @@ class MigrationManager:
                 logger.info("No migrations to apply")
                 return True
 
-            logger.info(f"Applying {len(pending_migrations)} migrations to reach version {target_version}")  # noqa: E501
+            logger.info(f"Applying {len(pending_migrations)} migrations to reach version {target_version}")
 
-            engine = create_engine(self.database_url, connect_args={"check_same_thread": False})  # noqa: E501
+            engine = create_engine(self.database_url, connect_args={"check_same_thread": False})
 
             try:
                 with engine.connect() as conn:
@@ -170,34 +170,34 @@ class MigrationManager:
                             with conn.begin():
                                 start_time = time.time()
 
-                                logger.info(f"Applying migration {migration.version}: {migration.description}")  # noqa: E501
+                                logger.info(f"Applying migration {migration.version}: {migration.description}")
                                 migration.up(conn)
 
-                                execution_time = int((time.time() - start_time) * 1000)  # noqa: E501
-                                checksum = self._calculate_migration_checksum(migration)  # noqa: E501
+                                execution_time = int((time.time() - start_time) * 1000)
+                                checksum = self._calculate_migration_checksum(migration)
 
                                 # Record migration in history
                                 conn.execute(text("""
                                     INSERT INTO schema_history
-                                    (version, description, migration_file, checksum, execution_time_ms)  # noqa: E501
-                                    VALUES (:version, :description, :migration_file, :checksum, :execution_time)  # noqa: E501
+                                    (version, description, migration_file, checksum, execution_time_ms)
+                                    VALUES (:version, :description, :migration_file, :checksum, :execution_time)
                                 """), {
                                     "version": migration.version,
                                     "description": migration.description,
-                                    "migration_file": f"{migration.version:03d}_{migration.description.lower().replace(' ', '_')}.py",  # noqa: E501
+                                    "migration_file": f"{migration.version:03d}_{migration.description.lower().replace(' ', '_')}.py",
                                     "checksum": checksum,
                                     "execution_time": execution_time
                                 })
 
-                                logger.info(f"Migration {migration.version} completed in {execution_time}ms")  # noqa: E501
+                                logger.info(f"Migration {migration.version} completed in {execution_time}ms")
 
                         except Exception as e:
-                            logger.error(f"Migration {migration.version} failed: {e}")  # noqa: E501
+                            logger.error(f"Migration {migration.version} failed: {e}")
                             raise
 
                 # Update current version
                 self.current_version = self._get_current_schema_version()
-                logger.info(f"Forward migration completed. Current version: {self.current_version}")  # noqa: E501
+                logger.info(f"Forward migration completed. Current version: {self.current_version}")
                 return True
 
             except Exception as e:
@@ -211,7 +211,7 @@ class MigrationManager:
 
     def migrate_to_latest(self, skip_on_error: bool = False) -> bool:
         """Apply all pending migrations to bring database to latest version."""
-        logger.info(f"Migrate to latest: current schema version: {self.current_version}, target version: {self.target_version}")  # noqa: E501
+        logger.info(f"Migrate to latest: current schema version: {self.current_version}, target version: {self.target_version}")
         migrations = self._discover_migrations()
         pending_migrations = [
             m for m in migrations
@@ -224,7 +224,7 @@ class MigrationManager:
 
         logger.info(f"Applying {len(pending_migrations)} pending migrations")
 
-        engine = create_engine(self.database_url, connect_args={"check_same_thread": False})  # noqa: E501
+        engine = create_engine(self.database_url, connect_args={"check_same_thread": False})
 
         try:
             with engine.connect() as conn:
@@ -238,36 +238,36 @@ class MigrationManager:
                         with conn.begin():
                             start_time = time.time()
 
-                            logger.info(f"Applying migration {migration.version}: {migration.description}")  # noqa: E501
+                            logger.info(f"Applying migration {migration.version}: {migration.description}")
                             migration.up(conn)
 
-                            execution_time = int((time.time() - start_time) * 1000)  # noqa: E501
-                            checksum = self._calculate_migration_checksum(migration)  # noqa: E501
+                            execution_time = int((time.time() - start_time) * 1000)
+                            checksum = self._calculate_migration_checksum(migration)
 
                             # Record migration in history
                             conn.execute(text("""
                                 INSERT INTO schema_history
-                                (version, description, migration_file, checksum, execution_time_ms)  # noqa: E501
-                                VALUES (:version, :description, :migration_file, :checksum, :execution_time)  # noqa: E501
+                                (version, description, migration_file, checksum, execution_time_ms)  
+                                VALUES (:version, :description, :migration_file, :checksum, :execution_time)  
                             """), {
                                 "version": migration.version,
                                 "description": migration.description,
-                                "migration_file": f"{migration.version:03d}_{migration.description.lower().replace(' ', '_')}.py",  # noqa: E501
+                                "migration_file": f"{migration.version:03d}_{migration.description.lower().replace(' ', '_')}.py",
                                 "checksum": checksum,
                                 "execution_time": execution_time
                             })
 
-                            logger.info(f"Migration {migration.version} completed in {execution_time}ms")  # noqa: E501
+                            logger.info(f"Migration {migration.version} completed in {execution_time}ms")
 
                     except Exception as e:
-                        logger.error(f"Migration {migration.version} failed: {e}")  # noqa: E501
+                        logger.error(f"Migration {migration.version} failed: {e}")
                         if not skip_on_error:
                             raise
                         continue
 
             # Update current version
             self.current_version = self._get_current_schema_version()
-            logger.info(f"Migrations completed. Current version: {self.current_version}")  # noqa: E501
+            logger.info(f"Migrations completed. Current version: {self.current_version}")
             return True
 
         except Exception as e:
@@ -310,7 +310,7 @@ class MigrationManager:
 
         logger.info(f"Rolling back {len(rollback_migrations)} migrations")
 
-        engine = create_engine(self.database_url, connect_args={"check_same_thread": False})  # noqa: E501
+        engine = create_engine(self.database_url, connect_args={"check_same_thread": False})
 
         try:
             with engine.connect() as conn:
@@ -318,23 +318,23 @@ class MigrationManager:
                     try:
                         # Use a separate transaction for each rollback
                         with conn.begin():
-                            logger.info(f"Rolling back migration {migration.version}: {migration.description}")  # noqa: E501
+                            logger.info(f"Rolling back migration {migration.version}: {migration.description}")
                             migration.down(conn)
 
                             # Remove from history
                             conn.execute(text(
-                                "DELETE FROM schema_history WHERE version = :version"  # noqa: E501
+                                "DELETE FROM schema_history WHERE version = :version"
                             ), {"version": migration.version})
 
-                            logger.info(f"Migration {migration.version} rolled back")  # noqa: E501
+                            logger.info(f"Migration {migration.version} rolled back")
 
                     except Exception as e:
-                        logger.error(f"Rollback of migration {migration.version} failed: {e}")  # noqa: E501
+                        logger.error(f"Rollback of migration {migration.version} failed: {e}")
                         raise
 
             # Update current version
             self.current_version = self._get_current_schema_version()
-            logger.info(f"Rollback completed. Current version: {self.current_version}")  # noqa: E501
+            logger.info(f"Rollback completed. Current version: {self.current_version}")
             return True
 
         except Exception as e:
@@ -346,7 +346,7 @@ class MigrationManager:
     def generate_migration(self, description: str) -> str:
         """Generate a new migration file template."""
         next_version = self.target_version + 1
-        filename = f"{next_version:03d}_{description.lower().replace(' ', '_')}.py"  # noqa: E501
+        filename = f"{next_version:03d}_{description.lower().replace(' ', '_')}.py"
         filepath = os.path.join(self.migrations_dir, filename)
 
         template = f'''"""Migration {next_version}: {description}"""

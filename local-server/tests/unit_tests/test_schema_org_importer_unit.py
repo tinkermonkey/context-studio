@@ -72,7 +72,7 @@ class TestURLValidation:
     def test_https_url_accepted(self):
         """Test HTTPS URLs are accepted."""
         config = ReferenceConfig(
-            schema_org_api_url="https://schema.org/version/latest/schemaorg-current-https.jsonld"  # noqa: E501
+            schema_org_api_url="https://schema.org/version/latest/schemaorg-current-https.jsonld"
         )
         importer = SchemaOrgImporter(config, Mock())
 
@@ -156,7 +156,7 @@ class TestRetryLogic:
 
                 # Should sleep 1s, 2s (exponential backoff)
                 assert mock_sleep.call_count == 2
-                sleep_calls = [call[0][0] for call in mock_sleep.call_args_list]  # noqa: E501
+                sleep_calls = [call[0][0] for call in mock_sleep.call_args_list]
                 assert sleep_calls == [1, 2]
 
     def test_retry_count_configurable(self):
@@ -209,9 +209,9 @@ class TestBatchProcessing:
             for i in range(5)
         ]
 
-        # Mock embedding generation - patch where it's used, not where it's defined  # noqa: E501
+        # Mock embedding generation - patch where it's used, not where it's defined
         with patch('reference_db.schema_org_importer.generate_embedding',
-                  return_value=b'\x00' * (384 * 4)):  # 384 dimensions * 4 bytes per float32  # noqa: E501, E128
+                  return_value=b'\x00' * (384 * 4)):  # 384 dimensions * 4 bytes per float32, E128
             result = importer._generate_embeddings_batch(items, batch_size=2)
 
             assert len(result) == 5
@@ -254,7 +254,7 @@ class TestEmbeddingFields:
             assert len(result) == 1
             assert result[0]["title_embedding"] is not None
             assert result[0]["definition_embedding"] is not None
-            assert call_count == 2  # Called twice: once for title, once for definition  # noqa: E501
+            assert call_count == 2  # Called twice: once for title, once for definition
 
     def test_empty_fields_skip_embedding(self):
         """Test empty title or definition fields skip embedding generation."""
@@ -305,7 +305,7 @@ class TestRelationshipExtraction:
             "https://schema.org/Thing": "uuid-thing"
         }
 
-        # This would normally be called within _insert_relationships_transaction  # noqa: E501
+        # This would normally be called within _insert_relationships_transaction
         # For unit test, we'll verify the logic works correctly
         subclass = item.get("rdfs:subClassOf")
         parent_id = importer._extract_id(subclass)
@@ -465,7 +465,7 @@ class TestErrorMessages:
         importer = SchemaOrgImporter(config, mock_manager)
 
         items = [
-            {"@id": "https://schema.org/Thing", "rdfs:label": "Thing", "rdfs:comment": "Test"}  # noqa: E501
+            {"@id": "https://schema.org/Thing", "rdfs:label": "Thing", "rdfs:comment": "Test"}
         ]
 
         with patch('reference_db.schema_org_importer.generate_embedding',

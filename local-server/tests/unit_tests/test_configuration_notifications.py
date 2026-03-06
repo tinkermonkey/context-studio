@@ -64,7 +64,7 @@ class TestConfigurationNotifications:
 
     @pytest.mark.asyncio
     async def test_path_specific_listeners(self):
-        """Test that path-specific listeners only receive relevant notifications"""  # noqa: E501
+        """Test that path-specific listeners only receive relevant notifications"""
         config_manager = get_config_manager()
         notifier = get_config_notifier()
 
@@ -136,9 +136,9 @@ class TestConfigurationNotifications:
         config_manager.set("server.port", 9002)
         await asyncio.sleep(0.1)
 
-        # The good listener should still receive notifications despite the failing one  # noqa: E501
+        # The good listener should still receive notifications despite the failing one
         assert len(self.capture.notifications) >= 1
-        assert any(notif[0] == "server.port" for notif in self.capture.notifications)  # noqa: E501
+        assert any(notif[0] == "server.port" for notif in self.capture.notifications)
 
     def test_notifier_initialization(self):
         """Test that configuration notifier initializes correctly"""
@@ -163,7 +163,7 @@ class TestConfigurationNotifications:
         assert len(notifier.global_listeners) == 1
 
     def test_config_manager_set_triggers_notifications(self):
-        """Test that ConfigurationManager.set() method includes notification triggering"""  # noqa: E501
+        """Test that ConfigurationManager.set() method includes notification triggering"""
         config_manager = get_config_manager()
 
         # Test that set method returns True for valid operations
@@ -172,7 +172,7 @@ class TestConfigurationNotifications:
         assert result is True
 
         # Test that set method returns False for invalid operations
-        result = config_manager.set("invalid.path.that.does.not.exist", "value")  # noqa: E501
+        result = config_manager.set("invalid.path.that.does.not.exist", "value")
         assert result is False
 
     @pytest.mark.asyncio
@@ -191,7 +191,7 @@ class TestConfigurationNotifications:
         ]
 
         for pattern in expected_patterns:
-            assert pattern in notifier.listeners, f"Missing handler for {pattern}"  # noqa: E501
+            assert pattern in notifier.listeners, f"Missing handler for {pattern}"
             assert (
                 len(notifier.listeners[pattern]) > 0
             ), f"No handlers registered for {pattern}"

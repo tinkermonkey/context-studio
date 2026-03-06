@@ -392,11 +392,11 @@ def test_fake_event_publisher_clear():
 
 
 def test_in_memory_repository_satisfies_protocol():
-    """Smoke test verifying InMemoryOntologyRepository satisfies OntologyRepository protocol."""  # noqa: E501
+    """Smoke test verifying InMemoryOntologyRepository satisfies OntologyRepository protocol."""
 
     repo = InMemoryOntologyRepository()
 
-    # Verify structural protocol compliance by checking all protocol methods exist  # noqa: E501
+    # Verify structural protocol compliance by checking all protocol methods exist
     protocol_methods = {
         "get_taxonomy",
         "list_taxonomies",

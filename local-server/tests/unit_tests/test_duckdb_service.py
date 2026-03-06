@@ -1,7 +1,7 @@
 """
 Unit Tests for DuckDBService and ChangeAnalyticsEngine
 
-Tests the DuckDB integration and analytics functionality including query execution,  # noqa: E501
+Tests the DuckDB integration and analytics functionality including query execution,
 view creation, and comprehensive analytics reporting in Phase 4 implementation.
 """
 
@@ -31,14 +31,14 @@ class TestDuckDBService:
 
     @patch('services.duckdb_service.DUCKDB_AVAILABLE', True)
     @patch('services.duckdb_service.duckdb')
-    def test_init_duckdb_service_with_duckdb_available(self, mock_duckdb, sample_s3_config):  # noqa: E501
+    def test_init_duckdb_service_with_duckdb_available(self, mock_duckdb, sample_s3_config):
         """Test DuckDBService initialization when DuckDB is available."""
         # Setup
         mock_connection = Mock()
         mock_duckdb.connect.return_value = mock_connection
 
         # Execute
-        service = DuckDBService(db_path="/test/path", s3_config=sample_s3_config)  # noqa: E501
+        service = DuckDBService(db_path="/test/path", s3_config=sample_s3_config)
 
         # Verify
         assert service.db_path == "/test/path"
@@ -81,7 +81,7 @@ class TestDuckDBService:
         assert "col1" in result.columns
         assert "col2" in result.columns
 
-        mock_connection.execute.assert_called_once_with("SELECT * FROM test_table")  # noqa: E501
+        mock_connection.execute.assert_called_once_with("SELECT * FROM test_table")
 
 
 class TestChangeAnalyticsEngine:
@@ -104,7 +104,7 @@ class TestChangeAnalyticsEngine:
         return ChangeAnalyticsEngine(duckdb_service=mock_duckdb_service)
 
     @patch('services.duckdb_service.DUCKDB_AVAILABLE', True)
-    def test_get_change_summary_with_data(self, analytics_engine, mock_duckdb_service):  # noqa: E501
+    def test_get_change_summary_with_data(self, analytics_engine, mock_duckdb_service):
         """Test change summary retrieval with actual data."""
         # Setup
         sample_data = pd.DataFrame({

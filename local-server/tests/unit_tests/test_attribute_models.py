@@ -2,13 +2,13 @@
 Unit tests for structure node attribute models with type validation.
 
 Tests the StructureNodeAttribute and ResolvedAttribute Pydantic models,
-including key format validation, value type validation, and inheritance markers.  # noqa: E501
+including key format validation, value type validation, and inheritance markers.
 """
 import sys
 import os
 from uuid import UUID, uuid4
 
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "../../")))  # noqa: E501
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "../../")))
 
 from pydantic import ValidationError  # noqa: E402
 import pytest  # noqa: E402
@@ -103,7 +103,7 @@ class TestStructureNodeAttribute:
         assert attr.value == "2024-01-15T10:30:00Z"
 
     def test_valid_date_attribute_basic_iso8601(self):
-        """Test creating a valid date attribute with basic ISO 8601 format (YYYY-MM-DD)."""  # noqa: E501
+        """Test creating a valid date attribute with basic ISO 8601 format (YYYY-MM-DD)."""
         attr = StructureNodeAttribute(
             key="birth_date",
             title="Birth Date",
@@ -271,7 +271,7 @@ class TestStructureNodeAttribute:
         assert "ISO 8601" in str(exc_info.value)
 
     def test_date_accepts_semantically_invalid_but_formatted_month(self):
-        """Test that date regex accepts any MM format even if semantically invalid (format-only validation)."""  # noqa: E501
+        """Test that date regex accepts any MM format even if semantically invalid (format-only validation)."""
         # The regex only validates format YYYY-MM-DD, not semantic validity
         attr = StructureNodeAttribute(
             key="publication_date",
@@ -282,7 +282,7 @@ class TestStructureNodeAttribute:
         assert attr.value == "2024-13-01"
 
     def test_date_accepts_semantically_invalid_but_formatted_day(self):
-        """Test that date regex accepts any DD format even if semantically invalid (format-only validation)."""  # noqa: E501
+        """Test that date regex accepts any DD format even if semantically invalid (format-only validation)."""
         # The regex only validates format YYYY-MM-DD, not semantic validity
         attr = StructureNodeAttribute(
             key="publication_date",
@@ -417,7 +417,7 @@ class TestResolvedAttribute:
         assert isinstance(attr.source_node_id, UUID)
 
     def test_resolved_attribute_inherits_validation(self):
-        """Test that ResolvedAttribute inherits validation from StructureNodeAttribute."""  # noqa: E501
+        """Test that ResolvedAttribute inherits validation from StructureNodeAttribute."""
         # Invalid key should fail
         with pytest.raises(ValidationError):
             ResolvedAttribute(
@@ -436,7 +436,7 @@ class TestResolvedAttribute:
                 value_type=AttributeValueType.STRING,
                 value="value",
                 inherited=True,
-                source_node_id=None,  # Invalid: inherited=True but source_node_id=None  # noqa: E501
+                source_node_id=None,  # Invalid: inherited=True but source_node_id=None
             )
         assert "source_node_id" in str(exc_info.value).lower()
 
@@ -455,7 +455,7 @@ class TestResolvedAttribute:
         assert attr.source_node_id is None
 
     def test_inherited_false_with_source_node_id(self):
-        """Test that inherited=False can have source_node_id (allowed but semantically unusual)."""  # noqa: E501
+        """Test that inherited=False can have source_node_id (allowed but semantically unusual)."""
         node_id = uuid4()
         attr = ResolvedAttribute(
             key="local_attr",
@@ -469,7 +469,7 @@ class TestResolvedAttribute:
         assert attr.source_node_id == node_id
 
     def test_inherited_true_with_valid_source_node_id(self):
-        """Test that inherited=True with valid source_node_id passes validation."""  # noqa: E501
+        """Test that inherited=True with valid source_node_id passes validation."""
         node_id = uuid4()
         attr = ResolvedAttribute(
             key="inherited_attr",
@@ -552,7 +552,7 @@ class TestAttributeIntegration:
             ),
         ]
         assert len(attributes) == 3
-        assert all(not attr.inherited for attr in attributes if hasattr(attr, "inherited"))  # noqa: E501
+        assert all(not attr.inherited for attr in attributes if hasattr(attr, "inherited"))
 
     def test_resolve_attribute_hierarchy(self):
         """Test resolving attributes with inheritance from parent."""

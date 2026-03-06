@@ -1,7 +1,7 @@
 """
 Unit Tests for domain ontology entities
 
-Tests the business logic validation in Class, Taxonomy, ConceptScheme, and other domain entities.  # noqa: E501
+Tests the business logic validation in Class, Taxonomy, ConceptScheme, and other domain entities.
 """
 
 import sys
@@ -38,7 +38,7 @@ class TestClassEntity:
         """Test creating a Class entity."""
         assert sample_class.id == "class-001"
         assert sample_class.title == "Animal"
-        assert sample_class.definition == "A living organism classified in the kingdom Animalia"  # noqa: E501
+        assert sample_class.definition == "A living organism classified in the kingdom Animalia"
         assert sample_class.node_type == NodeType.CLASS
         assert sample_class.subclass_of == []
 
@@ -86,7 +86,7 @@ class TestClassEntity:
 
     def test_add_subclass_of_prevents_self_reference(self, sample_class):
         """Test that add_subclass_of prevents self-reference."""
-        with pytest.raises(ValueError, match="A class cannot be a subclass of itself"):  # noqa: E501
+        with pytest.raises(ValueError, match="A class cannot be a subclass of itself"):
             sample_class.add_subclass_of("class-001")
 
     def test_add_subclass_of_multiple_parents(self, sample_class):
@@ -101,7 +101,7 @@ class TestClassEntity:
         assert parent2 in sample_class.subclass_of
         assert len(sample_class.subclass_of) == 2
 
-    def test_add_subclass_of_duplicate_parent_not_added_twice(self, sample_class):  # noqa: E501
+    def test_add_subclass_of_duplicate_parent_not_added_twice(self, sample_class):
         """Test that duplicate parent relationships are not added."""
         parent_id = "parent-001"
 
@@ -225,7 +225,7 @@ class TestTaxonomyEntity:
         sample_taxonomy.concept_schemes = scheme_ids
 
         assert len(sample_taxonomy.concept_schemes) == 3
-        assert all(sid in sample_taxonomy.concept_schemes for sid in scheme_ids)  # noqa: E501
+        assert all(sid in sample_taxonomy.concept_schemes for sid in scheme_ids)
 
 
 class TestConceptSchemeEntity:
@@ -302,7 +302,7 @@ class TestClassBusinessLogicInvariants:
         )
 
         # Attempting to make a class a subclass of itself should fail
-        with pytest.raises(ValueError, match="A class cannot be a subclass of itself"):  # noqa: E501
+        with pytest.raises(ValueError, match="A class cannot be a subclass of itself"):
             cls.add_subclass_of(cls.id)
 
     def test_class_title_cannot_become_empty_through_rename(self):
@@ -331,7 +331,7 @@ class TestClassBusinessLogicInvariants:
         assert cls.title == "First"
 
     def test_class_subclass_relationships_form_directed_graph(self):
-        """Test that subclass relationships can form complex directed structures."""  # noqa: E501
+        """Test that subclass relationships can form complex directed structures."""
         # Create a diamond-shaped inheritance graph
         # Animal <- (Mammal, Bird)
         # Mammal <- (Dog, Cat)

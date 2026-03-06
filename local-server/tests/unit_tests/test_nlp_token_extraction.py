@@ -27,7 +27,7 @@ def nlp():
                 'concepcy_relations': [],
                 'filter_missing_text': True,
                 'edge_weight_filter': 0.1,
-                'auto_download_models': False,  # Disable auto-download in tests  # noqa: E501
+                'auto_download_models': False,  # Disable auto-download in tests
                 'download_timeout': 60
             })(),
             'reference_sources': type('RefSources', (), {
@@ -38,7 +38,7 @@ def nlp():
                 'dbpedia_spotlight': type('DBpedia', (), {
                     'enabled': False,  # Disable to avoid component issues
                     'use_proxy': False,
-                    'upstream_url': 'https://api.dbpedia-spotlight.org/en/annotate'  # noqa: E501
+                    'upstream_url': 'https://api.dbpedia-spotlight.org/en/annotate'
                 })()
             })(),
             'proxy_server': type('ProxyServer', (), {
@@ -79,7 +79,7 @@ def test_concepcy_extraction(nlp):
     for token in tokens:
         assert (
             token.concepcy is None
-        ), f"Expected no concepcy data for '{token.text}', but found: {token.concepcy}"  # noqa: E501
+        ), f"Expected no concepcy data for '{token.text}', but found: {token.concepcy}"
 
 
 def test_wordnet_extraction(nlp):
@@ -116,7 +116,7 @@ def test_spacy_specific_token_data(nlp):
     assert "noun.plant" in domains
 
     # Find the token for 'Cupertino'
-    cupertino_token = next((t for t in tokens if t.text.lower() == "cupertino"), None)  # noqa: E501
+    cupertino_token = next((t for t in tokens if t.text.lower() == "cupertino"), None)
     assert cupertino_token is not None, "Token 'Cupertino' not found."
     assert cupertino_token.lemma == "Cupertino"
     assert cupertino_token.pos == "PROPN"
@@ -129,19 +129,19 @@ def test_spacy_specific_token_data(nlp):
 def test_concepcy_specific_data(nlp):
     doc = nlp("Apple is a company based in Cupertino.")
     tokens = extract_token_data(doc)
-    company_token = next((t for t in tokens if t.text.lower() == "company"), None)  # noqa: E501
+    company_token = next((t for t in tokens if t.text.lower() == "company"), None)
     assert company_token is not None, "Token 'company' not found."
     # Currently concepcy component is not populating token attributes,
     # so we expect concepcy to be None
     assert (
         company_token.concepcy is None
-    ), f"Expected no concepcy data for 'company', but found: {company_token.concepcy}"  # noqa: E501
+    ), f"Expected no concepcy data for 'company', but found: {company_token.concepcy}"
 
 
 def test_wordnet_specific_data(nlp):
     doc = nlp("Apple is a company based in Cupertino.")
     tokens = extract_token_data(doc)
-    company_token = next((t for t in tokens if t.text.lower() == "company"), None)  # noqa: E501
+    company_token = next((t for t in tokens if t.text.lower() == "company"), None)
     assert company_token is not None, "Token 'company' not found."
     wn = company_token.wordnet
     assert wn is not None, "No wordnet data for 'company'."

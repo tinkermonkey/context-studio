@@ -85,7 +85,7 @@ class TestReferenceModels:
         """
         node = ReferenceNode(
             id="test-uuid-123",
-            title="A very long title that should be truncated in the repr output",  # noqa: E501
+            title="A very long title that should be truncated in the repr output",
             definition="Test definition",
             source="schema.org",
             external_id="Person",
@@ -132,7 +132,7 @@ class TestReferenceModels:
         Test ReferenceLink __repr__ method returns readable output.
 
         Validates:
-        - __repr__ includes key fields (id, subject_node, predicate, object_node)  # noqa: E501
+        - __repr__ includes key fields (id, subject_node, predicate, object_node)
         - Output is readable and useful for debugging
         """
         link = ReferenceLink(
@@ -227,7 +227,7 @@ class TestReferenceConfig:
         config_localhost = ReferenceConfig(
             schema_org_api_url="http://localhost:8000/api"
         )
-        assert config_localhost.schema_org_api_url == "http://localhost:8000/api"  # noqa: E501
+        assert config_localhost.schema_org_api_url == "http://localhost:8000/api"
 
         # HTTP for 127.0.0.1 should be accepted
         config_ip = ReferenceConfig(
@@ -247,17 +247,17 @@ class TestReferenceConfig:
         """
         # Test value above max
         with pytest.raises(ValidationError) as exc_info:
-            ReferenceConfig(similarity_threshold=INVALID_SIMILARITY_THRESHOLD_HIGH)  # noqa: E501
+            ReferenceConfig(similarity_threshold=INVALID_SIMILARITY_THRESHOLD_HIGH)
 
         error = str(exc_info.value)
-        assert "must be between 0.0 and 1.0" in error and "similarity_threshold" in error  # noqa: E501
+        assert "must be between 0.0 and 1.0" in error and "similarity_threshold" in error
 
         # Test value below min
         with pytest.raises(ValidationError) as exc_info:
-            ReferenceConfig(similarity_threshold=INVALID_SIMILARITY_THRESHOLD_LOW)  # noqa: E501
+            ReferenceConfig(similarity_threshold=INVALID_SIMILARITY_THRESHOLD_LOW)
 
         error = str(exc_info.value)
-        assert "must be between 0.0 and 1.0" in error and "similarity_threshold" in error  # noqa: E501
+        assert "must be between 0.0 and 1.0" in error and "similarity_threshold" in error
 
     def test_batch_size_validation(self):
         """
@@ -334,7 +334,7 @@ class TestReferenceManagerCore:
         try:
             manager = ReferenceManager(config, db_path=db_path)
             try:
-                assert manager.config.similarity_threshold == VALID_SIMILARITY_THRESHOLD  # noqa: E501
+                assert manager.config.similarity_threshold == VALID_SIMILARITY_THRESHOLD
                 assert manager.config.batch_size == VALID_BATCH_SIZE
             finally:
                 manager.close()
@@ -444,7 +444,7 @@ class TestReferenceManagerCore:
             manager.close()
 
             # Force a rebuild by modifying schema version expectation
-            # (In practice, this would happen when REFERENCE_SCHEMA_VERSION changes)  # noqa: E501
+            # (In practice, this would happen when REFERENCE_SCHEMA_VERSION changes)
             # For this test, we'll just verify the backup logic by checking
             # that a backup was created
             backup_pattern = f"{db_path}.backup."
@@ -464,7 +464,7 @@ class TestReferenceManagerVector:
     """
     Test suite for ReferenceManager vector operations.
 
-    These tests require sqlite-vec extension and will be skipped if not available.  # noqa: E501
+    These tests require sqlite-vec extension and will be skipped if not available.
     """
 
     @pytest.fixture(autouse=True)
@@ -473,7 +473,7 @@ class TestReferenceManagerVector:
         try:
             import sqlite_vec  # noqa: F401
         except ImportError:
-            pytest.skip("sqlite-vec not available (expected in Docker environment)")  # noqa: E501
+            pytest.skip("sqlite-vec not available (expected in Docker environment)")
 
     def test_manager_initialization_with_vector_extension(self):
         """
@@ -518,7 +518,7 @@ class TestReferenceManagerVector:
         try:
             with ReferenceManager(config, db_path=db_path) as manager:
                 # Create fake embedding (128 dimensions * 4 bytes = 512 bytes)
-                fake_embedding = b'\x00' * (EMBEDDING_DIMS_SMALL * BYTES_PER_FLOAT32)  # noqa: E501
+                fake_embedding = b'\x00' * (EMBEDDING_DIMS_SMALL * BYTES_PER_FLOAT32)
 
                 node = manager.add_reference_node(
                     title="Person",
@@ -535,7 +535,7 @@ class TestReferenceManagerVector:
                 assert node.title_embedding == fake_embedding
 
                 # Try to add duplicate - should fail with UNIQUE constraint
-                with pytest.raises(Exception):  # SQLAlchemy will raise IntegrityError  # noqa: E501
+                with pytest.raises(Exception):  # SQLAlchemy will raise IntegrityError
                     manager.add_reference_node(
                         title="Person (duplicate)",
                         definition="Duplicate entry",
@@ -564,7 +564,7 @@ class TestReferenceManagerVector:
         try:
             with ReferenceManager(config, db_path=db_path) as manager:
                 # Create embedding with wrong dimensions
-                wrong_size_embedding = b'\x00' * 256  # 64 dimensions instead of 128  # noqa: E501
+                wrong_size_embedding = b'\x00' * 256  # 64 dimensions instead of 128
 
                 with pytest.raises(ValueError) as exc_info:
                     manager.add_reference_node(

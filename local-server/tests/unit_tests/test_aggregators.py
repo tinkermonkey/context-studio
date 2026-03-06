@@ -2,7 +2,7 @@
 
 import sys
 import os
-sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))  # noqa: E501
+sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
 import pytest  # noqa: E402
 
@@ -55,7 +55,7 @@ class TestResultAggregator:
                 id="schema_org:ComputerLanguage",
                 source=SourceType.SCHEMA_ORG,
                 title="ComputerLanguage",
-                definition="This type covers computer languages such as Scheme and Lisp",  # noqa: E501
+                definition="This type covers computer languages such as Scheme and Lisp",
                 attributes={"identifier": "ComputerLanguage"},
                 source_url="https://schema.org/ComputerLanguage",
                 relevance_score=0.80
@@ -99,7 +99,7 @@ class TestResultAggregator:
         """Test successful node deduplication."""
         # Add duplicate node
         duplicate_node = SearchNode(
-            id="dbpedia:http://dbpedia.org/resource/Python",  # Same ID as first node  # noqa: E501
+            id="dbpedia:http://dbpedia.org/resource/Python",  # Same ID as first node
             source=SourceType.DBPEDIA,
             title="Python (duplicate)",
             definition="Duplicate node",
@@ -114,7 +114,7 @@ class TestResultAggregator:
 
         # Should keep only the first occurrence of each ID
         assert len(unique_nodes) == 4  # Original 4 nodes, duplicate removed
-        assert unique_nodes[0].title == "Python (programming language)"  # First occurrence kept  # noqa: E501
+        assert unique_nodes[0].title == "Python (programming language)"  # First occurrence kept
 
         # Verify all IDs are unique
         ids = [node.id for node in unique_nodes]
@@ -134,7 +134,7 @@ class TestResultAggregator:
             "wikidata:http://www.wikidata.org/entity/Q9143"
         }
 
-        unique_links = aggregator.deduplicate_links(sample_links, valid_node_ids)  # noqa: E501
+        unique_links = aggregator.deduplicate_links(sample_links, valid_node_ids)
 
         # Should have 2 unique links (duplicate "link1" removed)
         assert len(unique_links) == 2
@@ -148,7 +148,7 @@ class TestResultAggregator:
             assert link.subject in valid_node_ids
             assert link.object in valid_node_ids
 
-    def test_deduplicate_links_invalid_nodes_filtered(self, aggregator, sample_links):  # noqa: E501
+    def test_deduplicate_links_invalid_nodes_filtered(self, aggregator, sample_links):
         """Test that links with invalid node references are filtered out."""
         # Only include some of the referenced nodes
         valid_node_ids = {
@@ -156,9 +156,9 @@ class TestResultAggregator:
             "wikidata:http://www.wikidata.org/entity/Q28865"
         }
 
-        unique_links = aggregator.deduplicate_links(sample_links, valid_node_ids)  # noqa: E501
+        unique_links = aggregator.deduplicate_links(sample_links, valid_node_ids)
 
-        # Should have 0 links because all links reference nodes not in valid_node_ids  # noqa: E501
+        # Should have 0 links because all links reference nodes not in valid_node_ids
         assert len(unique_links) == 0
 
     def test_discover_cross_references_success(self, aggregator):
@@ -205,7 +205,7 @@ class TestResultAggregator:
             assert link.source == SourceType.CONCEPTNET
             assert link.attributes["link_type"] == "cross_reference"
             assert "confidence" in link.attributes
-            assert link.attributes["confidence"] >= 0.8  # High confidence threshold  # noqa: E501
+            assert link.attributes["confidence"] >= 0.8  # High confidence threshold
 
     def test_discover_cross_references_no_matches(self, aggregator):
         """Test cross-reference discovery with no matching titles."""
@@ -236,7 +236,7 @@ class TestResultAggregator:
         assert len(cross_links) == 0
 
     def test_discover_cross_references_same_source(self, aggregator):
-        """Test that cross-references are not created between nodes from the same source."""  # noqa: E501
+        """Test that cross-references are not created between nodes from the same source."""
         nodes = [
             SearchNode(
                 id="dbpedia:http://dbpedia.org/resource/Python1",
@@ -377,8 +377,8 @@ class TestResultAggregator:
         """Test title normalization for cross-reference matching."""
         # Test basic normalization
         assert aggregator._normalize_title("  Python  ") == "python"
-        assert aggregator._normalize_title("The Python Language") == "python language"  # noqa: E501
-        assert aggregator._normalize_title("A Python (programming)") == "python"  # noqa: E501
+        assert aggregator._normalize_title("The Python Language") == "python language"
+        assert aggregator._normalize_title("A Python (programming)") == "python"
 
         # Test file type handling
         assert aggregator._normalize_title("image file") == "image file"
@@ -391,27 +391,27 @@ class TestResultAggregator:
     def test_calculate_title_similarity_success(self, aggregator):
         """Test title similarity calculation."""
         # Identical titles
-        assert aggregator._calculate_title_similarity("python", "python") == 1.0  # noqa: E501
+        assert aggregator._calculate_title_similarity("python", "python") == 1.0
 
-        # Similar titles (case differences are normalized away, so these are identical)  # noqa: E501
+        # Similar titles (case differences are normalized away, so these are identical)
         similarity = aggregator._calculate_title_similarity("python", "Python")
         assert similarity == 1.0  # Should be identical after normalization
 
         # Actually similar but not identical titles
-        similarity = aggregator._calculate_title_similarity("python", "python lang")  # noqa: E501
+        similarity = aggregator._calculate_title_similarity("python", "python lang")
         assert 0.5 < similarity < 1.0  # Should be high but not perfect
 
         # Different titles
         similarity = aggregator._calculate_title_similarity("python", "java")
         assert similarity < 0.5
 
-        # Empty titles (should return 0.0 as they can't be meaningfully compared)  # noqa: E501
+        # Empty titles (should return 0.0 as they can't be meaningfully compared)
         assert aggregator._calculate_title_similarity("", "") == 0.0
         assert aggregator._calculate_title_similarity("python", "") == 0.0
         assert aggregator._calculate_title_similarity("", "python") == 0.0
 
     def test_cross_reference_confidence_threshold(self, aggregator):
-        """Test that cross-references are only created above confidence threshold."""  # noqa: E501
+        """Test that cross-references are only created above confidence threshold."""
         nodes = [
             SearchNode(
                 id="dbpedia:python",
@@ -480,7 +480,7 @@ class TestResultAggregator:
         assert len(response.links) > 0  # Should have cross-reference links
 
         # Verify cross-reference link exists
-        cross_ref_links = [link for link in response.links if link.predicate == "sameAs"]  # noqa: E501
+        cross_ref_links = [link for link in response.links if link.predicate == "sameAs"]
         assert len(cross_ref_links) > 0
 
         cross_ref = cross_ref_links[0]
