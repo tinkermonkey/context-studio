@@ -141,8 +141,8 @@ export class ConfigurationService extends BaseService {
     this.validateRequired(path, "path");
 
     return this.withErrorContext(async () => {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    return this.getResource<any>(`/api/config/${encodeURIComponent(path)}`);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      return this.getResource<any>(`/api/config/${encodeURIComponent(path)}`);
     }, `getting configuration value for ${path}`);
   }
 
@@ -169,7 +169,7 @@ export class ConfigurationService extends BaseService {
   async getConfigurationSchema(): Promise<any> {
     return this.withErrorContext(async () => {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    return this.getResource<any>("/api/config/schema/");
+      return this.getResource<any>("/api/config/schema/");
     }, "getting configuration schema");
   }
 

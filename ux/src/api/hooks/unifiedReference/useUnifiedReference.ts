@@ -127,8 +127,7 @@ export const useNodeLinks = (
     queryKey: createQueryKey(UNIFIED_QUERY_KEYS.UNIFIED_REFERENCE, "links", {
       nodeId,
     }),
-    queryFn: () =>
-      nodeId ? unifiedReferenceService.getLinks(nodeId) : [],
+    queryFn: () => (nodeId ? unifiedReferenceService.getLinks(nodeId) : []),
     enabled: !!nodeId,
     staleTime: 5 * 60 * 1000, // 5 minutes
     ...options,
