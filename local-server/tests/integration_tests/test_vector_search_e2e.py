@@ -21,7 +21,7 @@ from reference_db.manager import ReferenceManager
 def check_sqlite_vec():
     """Check if sqlite-vec is available and working, skip tests if not."""
     try:
-        import sqlite_vec  # type: ignore[import-untyped]
+        import sqlite_vec  # noqa: F401 # type: ignore[import-untyped]
     except ImportError:
         pytest.skip("sqlite-vec not available (expected in Docker environment)")  # noqa: E501
 

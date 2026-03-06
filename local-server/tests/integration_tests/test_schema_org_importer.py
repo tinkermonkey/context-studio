@@ -339,7 +339,7 @@ class TestSchemaOrgImporterVectorTables:
     def check_sqlite_vec(self):
         """Skip tests if sqlite-vec not available."""
         try:
-            import sqlite_vec  # type: ignore[import-untyped]
+            import sqlite_vec  # noqa: F401 # type: ignore[import-untyped]
         except ImportError:
             pytest.skip("sqlite-vec not available")
 
