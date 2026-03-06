@@ -342,11 +342,8 @@ def export_analytics_csv(
             df = pd.DataFrame(trends.get("daily_trends", []))
         else:
             raise HTTPException(status_code=400, detail=f"Unsupported report type: {report_type}")
-        
-        if df.empty:
-            raise HTTPException(status_code=404, detail="No data available for specified criteria")
-        
-        # Convert to CSV
+
+        # Convert to CSV (even if empty)
         csv_buffer = io.StringIO()
         df.to_csv(csv_buffer, index=False)
         csv_buffer.seek(0)
