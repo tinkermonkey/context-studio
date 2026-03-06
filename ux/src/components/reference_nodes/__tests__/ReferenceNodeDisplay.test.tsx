@@ -3,10 +3,7 @@
  */
 
 import React from "react";
-import { render,
-  screen,
-  cleanup,
-  } from "@testing-library/react";
+import { render, screen, cleanup } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { vi, describe, it, expect, beforeEach, afterEach } from "vitest";
 
@@ -47,14 +44,14 @@ describe("ReferenceNodeDisplay", () => {
 
     // Mock window.open and store reference
     mockWindowOpen = vi.fn().mockReturnValue(null);
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     window.open = mockWindowOpen as any;
 
     // Default mock for remove mutation
     mockUseRemoveReferenceLink.mockReturnValue({
       mutate: vi.fn(),
       isPending: false,
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } as any);
   });
 
@@ -157,7 +154,7 @@ describe("ReferenceNodeDisplay", () => {
     mockUseRemoveReferenceLink.mockReturnValue({
       mutate: mockMutate,
       isPending: false,
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } as any);
 
     render(
