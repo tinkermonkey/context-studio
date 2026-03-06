@@ -1,6 +1,6 @@
 import React from "react";
 import { createColumnHelper } from "@tanstack/react-table";
-import { Checkbox,  } from "flowbite-react";
+import { Checkbox } from "flowbite-react";
 import { StructureNode } from "@/api/types/structureNodes";
 import { renderShortDateTime, renderShortUuid } from "@/utils/renderers";
 import { BaseNodeTable } from "./node_table";
@@ -148,7 +148,7 @@ export interface DomainsTableProps {
   onQueryParamsChange?: (params: Record<string, unknown>) => void;
 }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const DomainsTable = React.forwardRef<any, DomainsTableProps>((props) => {
   const { queryParams = {}, onQueryParamsChange } = props;
 
