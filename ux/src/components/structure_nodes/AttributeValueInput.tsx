@@ -5,11 +5,7 @@
  */
 
 import React from "react";
-import { TextInput,
-  Checkbox,
-  HelperText,
-  Label,
-   } from "flowbite-react";
+import { TextInput, Checkbox, HelperText, Label } from "flowbite-react";
 import { AlertCircle } from "lucide-react";
 import type { AttributeValueType } from "@/api/types/structureNodes";
 
