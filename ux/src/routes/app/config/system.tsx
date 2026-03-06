@@ -92,8 +92,8 @@ function RouteComponent() {
     return labels[path] || path;
   };
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const handleUpdateServerConfig = async (path: string, value: any) => {
-    // eslint-disable-line @typescript-eslint/no-explicit-any
     const label = getConfigLabel(path);
     await updateConfigMutation.mutateAsync(
       {
@@ -113,8 +113,8 @@ function RouteComponent() {
     );
   };
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const handleUpdateLoggingConfig = async (path: string, value: any) => {
-    // eslint-disable-line @typescript-eslint/no-explicit-any
     const label = getConfigLabel(path);
     await updateConfigMutation.mutateAsync(
       {
@@ -134,8 +134,8 @@ function RouteComponent() {
     );
   };
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const handleUpdateSecurityConfig = async (path: string, value: any) => {
-    // eslint-disable-line @typescript-eslint/no-explicit-any
     const label = getConfigLabel(path);
     await updateConfigMutation.mutateAsync(
       {
@@ -223,7 +223,8 @@ function ServerSettingsSection({
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   config: any;
 
-  onUpdate: (path: string, value: any) => void; // eslint-disable-line @typescript-eslint/no-explicit-any
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  onUpdate: (path: string, value: any) => void;
   isUpdating: boolean;
 }) {
   if (!config) {
@@ -369,7 +370,8 @@ function LoggingConfigurationSection({
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   config: any;
 
-  onUpdate: (path: string, value: any) => void; // eslint-disable-line @typescript-eslint/no-explicit-any
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  onUpdate: (path: string, value: any) => void;
   isUpdating: boolean;
 }) {
   if (!config) {
@@ -563,7 +565,8 @@ function SecuritySettingsSection({
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   config: any;
 
-  onUpdate: (path: string, value: any) => void; // eslint-disable-line @typescript-eslint/no-explicit-any
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  onUpdate: (path: string, value: any) => void;
   isUpdating: boolean;
 }) {
   if (!config) {

@@ -75,9 +75,10 @@ const PipelineResultView: React.FC<PipelineResultViewProps> = ({
   const currentContextSnapshotLocal = React.useMemo(() => {
     try {
       return JSON.stringify(apiContext || buildApiContext());
-    } catch (_e) {
-      // eslint-disable-line @typescript-eslint/no-unused-vars
-
+    } catch (
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      _e
+    ) {
       return null;
     }
   }, [apiContext, buildApiContext]);
@@ -105,8 +106,8 @@ const PipelineResultView: React.FC<PipelineResultViewProps> = ({
     savedVisibleLocal,
   ]);
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const handleSaveLocal = async (res: any) => {
-    // eslint-disable-line @typescript-eslint/no-explicit-any
     // Extract definition from structured_output, legacy format, or raw response
     const definition =
       res?.data?.structured_output?.definition ||
@@ -116,9 +117,8 @@ const PipelineResultView: React.FC<PipelineResultViewProps> = ({
     setSaveMessageLocal(null);
     setIsSavingLocal(true);
 
-    const payload: any =
-      // eslint-disable-line @typescript-eslint/no-explicit-any
-      { definition };
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const payload: any = { definition };
     try {
       if (termId) {
         await updateTerm.mutateAsync({ id: termId, data: payload });
@@ -137,15 +137,17 @@ const PipelineResultView: React.FC<PipelineResultViewProps> = ({
         const snapshot = JSON.stringify(apiContext || buildApiContext());
         setSavedContextSnapshotLocal(snapshot);
         setSavedVisibleLocal(true);
-      } catch (_e) {
-        // eslint-disable-line @typescript-eslint/no-unused-vars
-
+      } catch (
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        _e
+      ) {
         setSavedContextSnapshotLocal(null);
         setSavedVisibleLocal(false);
       }
       setIsSavingLocal(false);
     } catch (
-      err: any // eslint-disable-line @typescript-eslint/no-explicit-any
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      err: any
     ) {
       setSaveMessageLocal(err?.message || "Failed to save definition");
       setIsSavingLocal(false);

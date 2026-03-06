@@ -159,9 +159,8 @@ export const SelectionTracker: React.FC<SelectionTrackerProps> = ({
 
     // Look for common selection props and enhance them
 
-    const enhancedProps: any =
-      // eslint-disable-line @typescript-eslint/no-explicit-any
-      {};
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const enhancedProps: any = {};
 
     // Check if this is a DOM element (lowercase tag name) vs React component (uppercase or function)
     const isDOMElement =
@@ -174,7 +173,8 @@ export const SelectionTracker: React.FC<SelectionTrackerProps> = ({
 
       const createHandler =
         (
-          originalHandler: any, // eslint-disable-line @typescript-eslint/no-explicit-any
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          originalHandler: any,
         ) =>
         (content: string) => {
           if (!hasTrackedThisEvent) {
@@ -201,7 +201,8 @@ export const SelectionTracker: React.FC<SelectionTrackerProps> = ({
 
       const createHandler =
         (
-          originalHandler: any, // eslint-disable-line @typescript-eslint/no-explicit-any
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          originalHandler: any,
         ) =>
         (content: string) => {
           if (!isProcessingEvent) {

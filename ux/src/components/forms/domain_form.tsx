@@ -49,12 +49,11 @@ const DomainForm: React.FC<DomainFormProps> = ({
             data: value,
           });
         } else {
-          const createData: any =
-            // eslint-disable-line @typescript-eslint/no-explicit-any
-            {
-              title: value.title,
-              definition: value.definition,
-            };
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          const createData: any = {
+            title: value.title,
+            definition: value.definition,
+          };
 
           // Only include structural_predicate_id if it has a value
           if (value.structural_predicate_id) {
@@ -69,7 +68,8 @@ const DomainForm: React.FC<DomainFormProps> = ({
         if (onSuccess) onSuccess(result);
         form.reset();
       } catch (
-        error: any // eslint-disable-line @typescript-eslint/no-explicit-any
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        error: any
       ) {
         let message: string;
         // Log the full error for debugging

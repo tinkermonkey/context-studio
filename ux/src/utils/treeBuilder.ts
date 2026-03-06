@@ -97,8 +97,8 @@ export function buildNodeHierarchy(nodes: any[]): {
   const topLevelNodes: HierarchyNode[] = [];
 
   // First pass: create all node entries
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   nodes.forEach((node: any) => {
-    // eslint-disable-line @typescript-eslint/no-explicit-any
     if (!node.id) {
       console.warn("Node missing id:", node);
       return;
@@ -121,8 +121,8 @@ export function buildNodeHierarchy(nodes: any[]): {
   });
 
   // Second pass: establish parent-child relationships
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   nodes.forEach((node: any) => {
-    // eslint-disable-line @typescript-eslint/no-explicit-any
     const hierarchyNode = nodeMap.get(node.id);
     if (!hierarchyNode) return;
 

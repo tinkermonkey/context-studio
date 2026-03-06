@@ -51,8 +51,8 @@ function RouteComponent() {
     return labels[path] || path;
   };
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const handleUpdateProxyConfig = async (path: string, value: any) => {
-    // eslint-disable-line @typescript-eslint/no-explicit-any
     const label = getProxyConfigLabel(path);
     await updateConfigMutation.mutateAsync(
       {
@@ -134,7 +134,8 @@ function ProxyServerSection({
 }: {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   config: any;
-  onUpdate: (path: string, value: any) => void; // eslint-disable-line @typescript-eslint/no-explicit-any
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  onUpdate: (path: string, value: any) => void;
   isUpdating: boolean;
 }) {
   if (!config) {
@@ -276,7 +277,8 @@ function CacheSettingsSection({
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   config: any;
 
-  onUpdate: (path: string, value: any) => void; // eslint-disable-line @typescript-eslint/no-explicit-any
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  onUpdate: (path: string, value: any) => void;
   isUpdating: boolean;
 }) {
   if (!config) {
@@ -426,7 +428,8 @@ function RateLimitingSection({
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   config: any;
 
-  onUpdate: (path: string, value: any) => void; // eslint-disable-line @typescript-eslint/no-explicit-any
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  onUpdate: (path: string, value: any) => void;
   isUpdating: boolean;
 }) {
   if (!config) {

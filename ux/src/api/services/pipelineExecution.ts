@@ -160,11 +160,12 @@ export class PipelineExecutionService extends BaseService {
    * Convert new generic response to legacy term definition response format
    */
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   convertToLegacyTermResponse(response: PipelineExecutionResponse): any {
-    // eslint-disable-line @typescript-eslint/no-explicit-any
     // Parse the response_content as JSON if it's a string
 
-    let parsedResult: any = response.response_content; // eslint-disable-line @typescript-eslint/no-explicit-any
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    let parsedResult: any = response.response_content;
     if (typeof response.response_content === "string") {
       try {
         parsedResult = JSON.parse(response.response_content);
@@ -187,9 +188,10 @@ export class PipelineExecutionService extends BaseService {
    * Convert new generic response to legacy domain definition response format
    */
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   convertToLegacyDomainResponse(response: PipelineExecutionResponse): any {
-    // eslint-disable-line @typescript-eslint/no-explicit-any
-    let parsedResult: any = response.response_content; // eslint-disable-line @typescript-eslint/no-explicit-any
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    let parsedResult: any = response.response_content;
     if (typeof response.response_content === "string") {
       try {
         parsedResult = JSON.parse(response.response_content);
@@ -210,9 +212,10 @@ export class PipelineExecutionService extends BaseService {
    * Convert new generic response to legacy layer definition response format
    */
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   convertToLegacyLayerResponse(response: PipelineExecutionResponse): any {
-    // eslint-disable-line @typescript-eslint/no-explicit-any
-    let parsedResult: any = response.response_content; // eslint-disable-line @typescript-eslint/no-explicit-any
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    let parsedResult: any = response.response_content;
     if (typeof response.response_content === "string") {
       try {
         parsedResult = JSON.parse(response.response_content);

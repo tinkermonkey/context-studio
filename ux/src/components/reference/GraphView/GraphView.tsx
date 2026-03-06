@@ -105,8 +105,8 @@ export const GraphView: React.FC<GraphViewProps> = ({
   }, [nodes, edges]);
 
   // Handle node selection
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const handleNodeClick = (node: any) => {
-    // eslint-disable-line @typescript-eslint/no-explicit-any
     if (node.data) {
       // For grouped structure, only handle clicks on data nodes (not predicate nodes)
       if (
@@ -390,8 +390,8 @@ export const GraphView: React.FC<GraphViewProps> = ({
                 setPinnedPosition(null);
                 setHoveredNode(null);
               }}
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
               onNodePointerOver={(node: any) => {
-                // eslint-disable-line @typescript-eslint/no-explicit-any
                 if (node && node.data) {
                   // For grouped structure, only show tooltips for data nodes
                   if (
