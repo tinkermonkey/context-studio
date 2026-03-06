@@ -6,10 +6,7 @@
  */
 
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { render,
-  screen,
-  cleanup,
-  } from "@testing-library/react";
+import { render, screen, cleanup } from "@testing-library/react";
 import { userEvent } from "@testing-library/user-event";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import React from "react";
@@ -84,7 +81,7 @@ describe("AnalyticsDashboard", () => {
     document.body.appendChild(root);
 
     // Default successful responses
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     (useAnalyticsForTimeRange as any).mockReturnValue({
       data: mockAnalyticsData,
       isLoading: false,
@@ -92,7 +89,7 @@ describe("AnalyticsDashboard", () => {
       refetch: vi.fn(),
     });
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     (useAnalyticsWithRefresh as any).mockReturnValue({
       data: mockAnalyticsData,
       isLoading: false,
@@ -100,7 +97,7 @@ describe("AnalyticsDashboard", () => {
       refetch: vi.fn(),
     });
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     (useLLMTraceabilityHealth as any).mockReturnValue({
       data: mockHealthData,
       isLoading: false,
@@ -108,7 +105,7 @@ describe("AnalyticsDashboard", () => {
     });
 
     // Add missing flavor analytics mocks
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     (useFlavorAnalytics as any).mockReturnValue({
       data: mockAnalyticsData,
       isLoading: false,
@@ -116,7 +113,7 @@ describe("AnalyticsDashboard", () => {
       refetch: vi.fn(),
     });
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     (useFlavorAnalyticsWithRefresh as any).mockReturnValue({
       data: mockAnalyticsData,
       isLoading: false,
@@ -205,7 +202,7 @@ describe("AnalyticsDashboard", () => {
 
   describe("Loading States", () => {
     it("should show loading spinner when analytics are loading", () => {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (useAnalyticsForTimeRange as any).mockReturnValue({
         data: null,
         isLoading: true,
@@ -224,7 +221,7 @@ describe("AnalyticsDashboard", () => {
 
     it("should show loading spinner in refresh button when refreshing", () => {
       const mockRefetch = vi.fn();
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (useAnalyticsForTimeRange as any).mockReturnValue({
         data: mockAnalyticsData,
         isLoading: true,
@@ -244,7 +241,7 @@ describe("AnalyticsDashboard", () => {
     });
 
     it("should show health loading state", () => {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (useLLMTraceabilityHealth as any).mockReturnValue({
         data: null,
         isLoading: true,
@@ -264,7 +261,7 @@ describe("AnalyticsDashboard", () => {
 
   describe("Error States", () => {
     it("should show error alert when analytics fail to load", () => {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (useAnalyticsForTimeRange as any).mockReturnValue({
         data: null,
         isLoading: false,
@@ -283,7 +280,7 @@ describe("AnalyticsDashboard", () => {
     });
 
     it("should show degraded health status", () => {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (useLLMTraceabilityHealth as any).mockReturnValue({
         data: { ...mockHealthData, status: "degraded" },
         isLoading: false,
@@ -300,7 +297,7 @@ describe("AnalyticsDashboard", () => {
     });
 
     it("should show unhealthy status with red indicator", () => {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (useLLMTraceabilityHealth as any).mockReturnValue({
         data: { ...mockHealthData, status: "unhealthy" },
         isLoading: false,
@@ -337,7 +334,7 @@ describe("AnalyticsDashboard", () => {
       const user = userEvent.setup();
       const mockRefetch = vi.fn();
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (useAnalyticsForTimeRange as any).mockReturnValue({
         data: mockAnalyticsData,
         isLoading: false,
@@ -375,12 +372,12 @@ describe("AnalyticsDashboard", () => {
       const mockCreateObjectURL = vi.fn(() => "mock-url");
       const mockRevokeObjectURL = vi.fn();
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       global.Blob = mockBlob as any;
       global.URL = {
         createObjectURL: mockCreateObjectURL,
         revokeObjectURL: mockRevokeObjectURL,
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
       } as any;
 
       // Mock only anchor element creation specifically
@@ -396,7 +393,7 @@ describe("AnalyticsDashboard", () => {
 
       vi.spyOn(document, "createElement").mockImplementation((tagName) => {
         if (tagName === "a") {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
           return mockLink as any;
         }
         return originalCreateElement.call(document, tagName);
@@ -484,7 +481,7 @@ describe("AnalyticsDashboard", () => {
 
   describe("No Data State", () => {
     it("should show no data message when analytics data is empty", () => {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (useAnalyticsForTimeRange as any).mockReturnValue({
         data: null,
         isLoading: false,
