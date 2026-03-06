@@ -1,5 +1,5 @@
 import React, { useState, useCallback, ReactNode } from "react";
-import { Alert, Badge, Button, Spinner  } from "flowbite-react";;
+import { Alert, Badge, Button, Spinner } from "flowbite-react";
 import { Play, CheckCircle, XCircle, Clock } from "lucide-react";
 import {
   usePipelineFlavors,
@@ -128,7 +128,7 @@ export const LlmPipelineRun: React.FC<LlmPipelineRunProps> = ({
       const startTime = Date.now();
 
       try {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         let data: any;
 
         // Construct the new generic pipeline execution request format
@@ -140,15 +140,15 @@ export const LlmPipelineRun: React.FC<LlmPipelineRunProps> = ({
 
         switch (pipelineType) {
           case "suggest_term_definition":
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             data = await termMutation.mutateAsync(pipelineRequest as any);
             break;
           case "suggest_domain_definition":
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             data = await domainMutation.mutateAsync(pipelineRequest as any);
             break;
           case "suggest_layer_definition":
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             data = await layerMutation.mutateAsync(pipelineRequest as any);
             break;
           default:
@@ -299,7 +299,7 @@ export const LlmPipelineRun: React.FC<LlmPipelineRunProps> = ({
   // Default result template
   const defaultResultTemplate = (result: PipelineResult) => {
     if (result.status === "success" && result.data) {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const data = result.data as any;
       return (
         <div className="space-y-3">

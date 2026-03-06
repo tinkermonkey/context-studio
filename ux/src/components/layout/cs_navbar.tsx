@@ -1,4 +1,14 @@
-import { Badge, Dropdown, DropdownItem, Navbar, NavbarBrand, NavbarCollapse, NavbarLink, NavbarToggle, TextInput  } from "flowbite-react";;
+import {
+  Badge,
+  Dropdown,
+  DropdownItem,
+  Navbar,
+  NavbarBrand,
+  NavbarCollapse,
+  NavbarLink,
+  NavbarToggle,
+  TextInput,
+} from "flowbite-react";
 import { Search, Settings } from "lucide-react";
 import { useMatchRoute } from "@tanstack/react-router";
 
