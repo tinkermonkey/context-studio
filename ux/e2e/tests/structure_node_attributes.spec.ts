@@ -250,8 +250,7 @@ test.describe("Structure Node Attributes E2E", () => {
       `/api/structure_nodes/${testHierarchy.term1.id}/attributes`,
     );
     const createdAttr = nodeResponse.find(
-       
-      (attr: any) => attr.key === attributeKey,  // eslint-disable-line @typescript-eslint/no-explicit-any
+      (attr: any) => attr.key === attributeKey, // eslint-disable-line @typescript-eslint/no-explicit-any
     );
     expect(createdAttr).toBeDefined();
     expect(createdAttr.value).toBe("test_value");
@@ -346,8 +345,7 @@ test.describe("Structure Node Attributes E2E", () => {
       `/api/structure_nodes/${testHierarchy.term1.id}/attributes`,
     );
     const jurisdictionAttr = attributes.find(
-       
-      (a: any) => a.key === "jurisdiction",  // eslint-disable-line @typescript-eslint/no-explicit-any
+      (a: any) => a.key === "jurisdiction", // eslint-disable-line @typescript-eslint/no-explicit-any
     );
     expect(jurisdictionAttr.value).toBe("California");
   });
@@ -745,32 +743,27 @@ test.describe("Structure Node Attributes E2E", () => {
     expect(attributes.length).toBe(5);
     expect(
       attributes.some(
-         
-        (a: any) => a.key === "string_attr" && a.value_type === "string",  // eslint-disable-line @typescript-eslint/no-explicit-any
+        (a: any) => a.key === "string_attr" && a.value_type === "string", // eslint-disable-line @typescript-eslint/no-explicit-any
       ),
     ).toBe(true);
     expect(
       attributes.some(
-         
-        (a: any) => a.key === "number_attr" && a.value_type === "number",  // eslint-disable-line @typescript-eslint/no-explicit-any
+        (a: any) => a.key === "number_attr" && a.value_type === "number", // eslint-disable-line @typescript-eslint/no-explicit-any
       ),
     ).toBe(true);
     expect(
       attributes.some(
-         
-        (a: any) => a.key === "boolean_attr" && a.value_type === "boolean",  // eslint-disable-line @typescript-eslint/no-explicit-any
+        (a: any) => a.key === "boolean_attr" && a.value_type === "boolean", // eslint-disable-line @typescript-eslint/no-explicit-any
       ),
     ).toBe(true);
     expect(
       attributes.some(
-         
-        (a: any) => a.key === "date_attr" && a.value_type === "date",  // eslint-disable-line @typescript-eslint/no-explicit-any
+        (a: any) => a.key === "date_attr" && a.value_type === "date", // eslint-disable-line @typescript-eslint/no-explicit-any
       ),
     ).toBe(true);
     expect(
       attributes.some(
-         
-        (a: any) => a.key === "url_attr" && a.value_type === "url",  // eslint-disable-line @typescript-eslint/no-explicit-any
+        (a: any) => a.key === "url_attr" && a.value_type === "url", // eslint-disable-line @typescript-eslint/no-explicit-any
       ),
     ).toBe(true);
   });

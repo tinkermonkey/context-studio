@@ -30,7 +30,9 @@ test.describe("Reference Search", () => {
 
   test("should display the reference search interface", async ({ page }) => {
     // Verify search bar is visible
-    await expect(page.locator('[data-testid="reference-search-input"]')).toBeVisible();
+    await expect(
+      page.locator('[data-testid="reference-search-input"]'),
+    ).toBeVisible();
 
     // Verify source filter is visible
     await expect(
@@ -48,7 +50,9 @@ test.describe("Reference Search", () => {
     await page.fill('[data-testid="reference-search-input"]', "computer");
 
     // Wait for search results to appear
-    const results = page.locator('[data-testid="reference-search-result-item"]');
+    const results = page.locator(
+      '[data-testid="reference-search-result-item"]',
+    );
     await expect(results.first()).toBeVisible({ timeout: 10000 });
 
     // Verify results are displayed
@@ -66,12 +70,16 @@ test.describe("Reference Search", () => {
     ).toBeVisible({ timeout: 10000 });
 
     // Get initial result count
-    const allResults = page.locator('[data-testid="reference-search-result-item"]');
+    const allResults = page.locator(
+      '[data-testid="reference-search-result-item"]',
+    );
     const initialCount = await allResults.count();
     expect(initialCount).toBeGreaterThan(0);
 
     // Filter by a specific source
-    const sourceFilter = page.locator('[data-testid="reference-source-filter"]');
+    const sourceFilter = page.locator(
+      '[data-testid="reference-source-filter"]',
+    );
     await sourceFilter.click();
 
     // Select DBpedia from the dropdown
@@ -94,9 +102,9 @@ test.describe("Reference Search", () => {
     await page.fill('[data-testid="reference-search-input"]', "computer");
 
     // Wait for results
-    const firstResult = page.locator(
-      '[data-testid="reference-search-result-item"]',
-    ).first();
+    const firstResult = page
+      .locator('[data-testid="reference-search-result-item"]')
+      .first();
     await expect(firstResult).toBeVisible({ timeout: 10000 });
 
     // Click on the first result
@@ -140,9 +148,7 @@ test.describe("Reference Search", () => {
 
     // Wait for the no-results message
     await expect(
-      page.locator(
-        'text="No results found" | text="No results"',
-      ),
+      page.locator('text="No results found" | text="No results"'),
     ).toBeVisible({ timeout: 10000 });
   });
 
@@ -187,7 +193,9 @@ test.describe("Reference Search", () => {
     ).toBeVisible({ timeout: 10000 });
 
     // Verify results exist
-    const resultsBefore = page.locator('[data-testid="reference-search-result-item"]');
+    const resultsBefore = page.locator(
+      '[data-testid="reference-search-result-item"]',
+    );
     expect(await resultsBefore.count()).toBeGreaterThan(0);
 
     // Clear the search box
@@ -195,7 +203,9 @@ test.describe("Reference Search", () => {
     await searchInput.clear();
 
     // Verify results area is cleared or hidden
-    const resultsAfter = page.locator('[data-testid="reference-search-result-item"]');
+    const resultsAfter = page.locator(
+      '[data-testid="reference-search-result-item"]',
+    );
     const countAfter = await resultsAfter.count();
     expect(countAfter).toBe(0);
   });
