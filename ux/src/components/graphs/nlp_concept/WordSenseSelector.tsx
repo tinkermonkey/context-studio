@@ -24,11 +24,11 @@ interface WordAnalysisResult {
   pos?: string;
   tag?: string;
   concepcy?: {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     related_terms: any[];
   };
   wordnet?: {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     synsets: any[];
   };
 }
@@ -165,7 +165,6 @@ export const WordSenseSelector: React.FC<WordSenseSelectorProps> = ({
       return next;
     });
   }, []);
-
 
   // Handle node click in the chart (for sense selection)
   const handleNodeClick = useCallback((word: string, nodeId: string) => {

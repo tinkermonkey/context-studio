@@ -49,9 +49,8 @@ export const createMenuNodeBackgroundPath = (
   labelHeight: number,
   childIndex: number = 0,
   config: LayoutConfig,
-   
-  styles: any,  // eslint-disable-line @typescript-eslint/no-explicit-any
 
+  styles: any, // eslint-disable-line @typescript-eslint/no-explicit-any
 ): string => {
   const halfStroke = styles.branchLine.strokeWidth / 2;
   if (childIndex === 0) {
@@ -155,9 +154,7 @@ export interface TextMeasurementOptions {
 
 // Extract font properties from chart styles with better parsing
 export function extractFontPropertiesFromStyles(
-   
-  styleObject: any,  // eslint-disable-line @typescript-eslint/no-explicit-any
-
+  styleObject: any, // eslint-disable-line @typescript-eslint/no-explicit-any
 ): TextMeasurementOptions {
   // Parse the font shorthand property if it exists
   // Font shorthand format: [font-style] [font-variant] [font-weight] [font-size/line-height] [font-family]
