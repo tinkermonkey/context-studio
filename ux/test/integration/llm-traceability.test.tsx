@@ -44,7 +44,7 @@ const TestWrapper: React.FC<{ children: React.ReactNode }> = ({ children }) => {
         refetchOnWindowFocus: false,
         refetchOnMount: false,
         refetchOnReconnect: false,
-   
+
         staleTime: 0,
         gcTime: 0,
       },
@@ -489,7 +489,7 @@ describe("LLM Traceability Integration", () => {
       );
 
       const TestComponent = () => {
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
         const { data, isLoading, error } = useExecutionAnalytics(null, {
           retry: 0,
         } as never);
@@ -524,7 +524,7 @@ describe("LLM Traceability Integration", () => {
       );
 
       const TestComponent = () => {
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
         const { data, isLoading, error } = useLLMTraceabilityHealth({
           retry: 0,
         } as never);
