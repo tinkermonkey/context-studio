@@ -32,7 +32,7 @@ interface TreeMenuProps {
   /**
    * Optional callback when a node is clicked
    */
-  onNodeClick?: (node: any) => void;  // eslint-disable-line @typescript-eslint/no-explicit-any
+  onNodeClick?: (node: any) => void; // eslint-disable-line @typescript-eslint/no-explicit-any
   /**
    * Optional view identifier for persisting expand state
    * If not provided, expand state will not be persisted to session storage
@@ -297,21 +297,25 @@ const TreeMenu: React.FC<TreeMenuProps> = ({
         style={{ display: "block" }} // Remove default inline spacing
       >
         {/* Render all children of the root node */}
-        { }
-        {root.children.map((child: any,  // eslint-disable-line @typescript-eslint/no-explicit-any
- index: number) => {
-          child.childIndex = index;
-          return (
-            <TreeNode
-              key={child.id || index}
-              node={child}
-              parentNode={root}
-              onToggle={handleNodeToggle}
-              onNodeClick={handleNodeClick}
-              highlightedTermId={highlightedTermId}
-            />
-          );
-        })}
+        {}
+        {root.children.map(
+          (
+            child: any, // eslint-disable-line @typescript-eslint/no-explicit-any
+            index: number,
+          ) => {
+            child.childIndex = index;
+            return (
+              <TreeNode
+                key={child.id || index}
+                node={child}
+                parentNode={root}
+                onToggle={handleNodeToggle}
+                onNodeClick={handleNodeClick}
+                highlightedTermId={highlightedTermId}
+              />
+            );
+          },
+        )}
         <g>
           <circle cx={root.x} cy={root.y} r={2} style={chartStyles.mainNode} />
         </g>
