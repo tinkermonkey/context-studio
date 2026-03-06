@@ -146,7 +146,7 @@ class IdentityManager:
             )
             
             if cursor.rowcount == 0:
-                logger.warning(f"No user found with ID {user_id}")
+                logger.debug(f"No user found with ID {user_id}")
                 return False
             
             # Clean up verification code
