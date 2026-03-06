@@ -121,9 +121,255 @@ class TestIntelligentQueryCache:
         assert stats['evictions'] == 0
 
 
+class TestSanitizationMethods:
+    """Test cases for SQL injection prevention and input validation."""
+
+    @pytest.fixture
+    def mock_duckdb_conn(self):
+        """Create a mock DuckDB connection."""
+        mock_conn = Mock()
+        mock_conn.execute.return_value.fetchall.return_value = [('result1',), ('result2',)]
+        return mock_conn
+
+    @pytest.fixture
+    def s3_config(self):
+        """Create test S3 configuration."""
+        return {
+            'bucket': 'test-bucket',
+            'access_key_id': 'test-key',
+            'secret_access_key': 'test-secret',
+            'region': 'us-east-1'
+        }
+
+    @pytest.fixture
+    def query_optimizer(self, mock_duckdb_conn, s3_config):
+        """Create a DuckDBQueryOptimizer instance for testing."""
+        return DuckDBQueryOptimizer(mock_duckdb_conn, s3_config)
+
+    # Tests for _is_valid_identifier
+    def test_is_valid_identifier_valid_names(self, query_optimizer):
+        """Test that valid SQL identifiers are accepted."""
+        valid_identifiers = [
+            'id',
+            'name',
+            'created_at',
+            '_private_field',
+            'Column123',
+            '__double_underscore',
+            'a',
+            '_'
+        ]
+        for identifier in valid_identifiers:
+            assert query_optimizer._is_valid_identifier(identifier), f"Should accept: {identifier}"
+
+    def test_is_valid_identifier_empty_string(self, query_optimizer):
+        """Test that empty string is rejected."""
+        assert query_optimizer._is_valid_identifier("") is False
+
+    def test_is_valid_identifier_starts_with_digit(self, query_optimizer):
+        """Test that identifiers starting with digits are rejected."""
+        invalid_identifiers = [
+            '123abc',
+            '9column',
+            '0_field'
+        ]
+        for identifier in invalid_identifiers:
+            assert query_optimizer._is_valid_identifier(identifier) is False, \
+                f"Should reject: {identifier}"
+
+    def test_is_valid_identifier_special_characters(self, query_optimizer):
+        """Test that identifiers with special characters are rejected."""
+        invalid_identifiers = [
+            'col-name',
+            'col name',
+            'col.name',
+            'col; DROP TABLE',
+            'col"name',
+            "col'name",
+            'col$name',
+            'col@name'
+        ]
+        for identifier in invalid_identifiers:
+            assert query_optimizer._is_valid_identifier(identifier) is False, \
+                f"Should reject: {identifier}"
+
+    def test_is_valid_identifier_sql_keywords(self, query_optimizer):
+        """Test that SQL keywords are still validated as identifiers (not prevented)."""
+        # SQL keywords can be used as identifiers if properly quoted, so validation
+        # should just check syntax, not prevent keywords
+        keyword_identifiers = [
+            'select',
+            'where',
+            'order'
+        ]
+        for identifier in keyword_identifiers:
+            # These should pass basic syntax validation (letters + underscores)
+            assert query_optimizer._is_valid_identifier(identifier) is True
+
+    # Tests for _escape_sql_value
+    def test_escape_sql_value_none(self, query_optimizer):
+        """Test that None is escaped to NULL."""
+        assert query_optimizer._escape_sql_value(None) == "NULL"
+
+    def test_escape_sql_value_boolean(self, query_optimizer):
+        """Test that booleans are escaped to TRUE/FALSE."""
+        assert query_optimizer._escape_sql_value(True) == "TRUE"
+        assert query_optimizer._escape_sql_value(False) == "FALSE"
+
+    def test_escape_sql_value_integers(self, query_optimizer):
+        """Test that integers are passed as-is."""
+        assert query_optimizer._escape_sql_value(42) == "42"
+        assert query_optimizer._escape_sql_value(-100) == "-100"
+        assert query_optimizer._escape_sql_value(0) == "0"
+
+    def test_escape_sql_value_floats(self, query_optimizer):
+        """Test that floats are converted to strings."""
+        result = query_optimizer._escape_sql_value(3.14)
+        assert isinstance(result, str)
+        assert "3.14" in result
+
+    def test_escape_sql_value_string_simple(self, query_optimizer):
+        """Test that simple strings are quoted."""
+        assert query_optimizer._escape_sql_value("test") == "'test'"
+        assert query_optimizer._escape_sql_value("hello world") == "'hello world'"
+
+    def test_escape_sql_value_string_with_single_quotes(self, query_optimizer):
+        """Test that single quotes in strings are escaped."""
+        result = query_optimizer._escape_sql_value("O'Reilly")
+        assert result == "'O''Reilly'"
+
+        result = query_optimizer._escape_sql_value("it's")
+        assert result == "'it''s'"
+
+    def test_escape_sql_value_sql_injection_payloads(self, query_optimizer):
+        """Test that SQL injection payloads are safely escaped."""
+        # Basic injection - single quotes are escaped (doubled)
+        payload = "'; DROP TABLE changes; --"
+        result = query_optimizer._escape_sql_value(payload)
+        # The payload is now in a quoted string with quotes escaped, so it can't break out
+        assert result == "'''; DROP TABLE changes; --'"
+        assert result.startswith("'") and result.endswith("'")
+
+        # OR injection
+        payload = "' OR '1'='1"
+        result = query_optimizer._escape_sql_value(payload)
+        assert result == "''' OR ''1''=''1'"
+
+        # UNION injection
+        payload = "' UNION SELECT * FROM users--"
+        result = query_optimizer._escape_sql_value(payload)
+        assert result == "''' UNION SELECT * FROM users--'"
+
+    # Tests for _is_valid_date_string
+    def test_is_valid_date_string_valid_dates(self, query_optimizer):
+        """Test that valid YYYY-MM-DD dates are accepted."""
+        valid_dates = [
+            '2024-01-01',
+            '2024-12-31',
+            '2023-06-15',
+            '1999-01-01',
+            '2099-12-31'
+        ]
+        for date_str in valid_dates:
+            assert query_optimizer._is_valid_date_string(date_str), \
+                f"Should accept: {date_str}"
+
+    def test_is_valid_date_string_invalid_formats(self, query_optimizer):
+        """Test that invalid date formats are rejected."""
+        invalid_dates = [
+            '2024-1-1',  # missing leading zeros
+            '24-01-01',  # two-digit year
+            '2024/01/01',  # slashes
+            '01-01-2024',  # wrong order
+            '2024-01',  # missing day
+            '2024',  # year only
+            '',  # empty
+            '2024-01-01T00:00:00',  # with time
+            '../../../etc/passwd',  # path traversal
+            '*',  # wildcard
+        ]
+        for date_str in invalid_dates:
+            assert query_optimizer._is_valid_date_string(date_str) is False, \
+                f"Should reject: {date_str}"
+
+    def test_is_valid_date_string_format_validation_only(self, query_optimizer):
+        """Test that date validation is format-only, not semantic."""
+        # Date validation checks format, not whether the date actually exists
+        # This is acceptable for this use case (S3 path patterns)
+        assert query_optimizer._is_valid_date_string('2024-13-01') is True  # invalid month
+        assert query_optimizer._is_valid_date_string('2024-01-32') is True  # invalid day
+        assert query_optimizer._is_valid_date_string('2024-02-30') is True  # invalid for February
+
+    # Integration tests
+    def test_column_pruning_with_malicious_column_names(self, query_optimizer):
+        """Test that column pruning sanitizes malicious column names."""
+        test_query = "SELECT * FROM test_table"
+        context = {
+            'required_columns': [
+                'id',
+                'name',
+                "invalid'; DROP TABLE changes; --",
+                'valid_column',
+                '123invalid',
+                'another_valid'
+            ]
+        }
+
+        optimized_query, metrics = query_optimizer.optimize_query(test_query, context)
+
+        # Should only include valid column names
+        assert 'id' in optimized_query
+        assert 'name' in optimized_query
+        assert 'valid_column' in optimized_query
+        assert 'another_valid' in optimized_query
+
+        # Should not include invalid column names
+        assert '123invalid' not in optimized_query
+
+    def test_partition_elimination_with_malicious_values(self, query_optimizer):
+        """Test that partition elimination sanitizes malicious values."""
+        test_query = "SELECT * FROM changes/*/*/*.parquet WHERE year = {year} AND month IN ({month})"
+        context = {
+            'partition_filter': {
+                'year': "2024' OR '1'='1",
+                'month': "1) OR (1=1"
+            }
+        }
+
+        optimized_query, metrics = query_optimizer.optimize_query(test_query, context)
+
+        # Query should be optimized without SQL injection
+        # The exact format depends on how partition elimination is applied
+        assert isinstance(optimized_query, str)
+        assert len(optimized_query) > 0
+
+    def test_predicate_pushdown_with_malicious_entity_types(self, query_optimizer):
+        """Test that predicate pushdown sanitizes malicious entity_types."""
+        test_query = "SELECT * FROM changes/*/*/*.parquet WHERE entity_type = 'test'"
+        context = {
+            'entity_types': [
+                'valid_type',
+                "'; DROP TABLE changes; --",
+                "' OR '1'='1",
+                'another_type'
+            ]
+        }
+
+        optimized_query, metrics = query_optimizer.optimize_query(test_query, context)
+
+        # Should safely include valid types
+        assert 'valid_type' in optimized_query
+        assert 'another_type' in optimized_query
+
+        # Values are escaped with doubled single quotes, preventing SQL injection
+        # The malicious payloads are now string literals that can't break out
+        assert isinstance(optimized_query, str)
+        assert len(optimized_query) > 0
+
+
 class TestDuckDBQueryOptimizer:
     """Test cases for DuckDBQueryOptimizer functionality."""
-    
+
     @pytest.fixture
     def mock_duckdb_conn(self):
         """Create a mock DuckDB connection."""

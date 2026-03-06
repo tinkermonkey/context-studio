@@ -343,8 +343,17 @@ class DuckDBQueryOptimizer:
 
         # Simple column pruning - replace SELECT * with specific columns if provided
         if "required_columns" in context and "SELECT *" in query:
-            columns = ", ".join(context["required_columns"])
-            query = query.replace("SELECT *", f"SELECT {columns}")
+            # Validate and sanitize column names
+            valid_columns = []
+            for col in context["required_columns"]:
+                if self._is_valid_identifier(col):
+                    valid_columns.append(col)
+                else:
+                    logger.warning(f"Skipping invalid column name: {col}")
+
+            if valid_columns:
+                columns = ", ".join(valid_columns)
+                query = query.replace("SELECT *", f"SELECT {columns}")
 
         return query
 
@@ -367,7 +376,10 @@ class DuckDBQueryOptimizer:
         """Validate that identifier is a valid SQL identifier (alphanumeric + underscore)."""
         if not identifier:
             return False
-        # Allow alphanumeric characters and underscores
+        # SQL identifiers must start with a letter or underscore
+        if not (identifier[0].isalpha() or identifier[0] == "_"):
+            return False
+        # Allow alphanumeric characters and underscores in the rest
         return all(c.isalnum() or c == "_" for c in identifier)
 
     def _escape_sql_value(self, value: Any) -> str:
@@ -385,8 +397,23 @@ class DuckDBQueryOptimizer:
         escaped = str_value.replace("'", "''")
         return f"'{escaped}'"
 
+    def _is_valid_date_string(self, date_str: str) -> bool:
+        """Validate that date string is well-formed (YYYY-MM-DD format)."""
+        import re
+        # Match YYYY-MM-DD format (does not validate day/month ranges)
+        pattern = r'^\d{4}-\d{2}-\d{2}$'
+        return bool(re.match(pattern, date_str))
+
     def _generate_partitioned_pattern(self, start_date: str, end_date: str) -> str:
         """Generate S3 path pattern for date range."""
+
+        # Validate date strings to prevent path traversal/wildcard injection
+        if not self._is_valid_date_string(start_date):
+            logger.warning(f"Invalid start_date format: {start_date}")
+            return "changes/*/*/**.parquet"
+        if not self._is_valid_date_string(end_date):
+            logger.warning(f"Invalid end_date format: {end_date}")
+            return "changes/*/*/**.parquet"
 
         # Basic pattern generation - advanced partitioning strategies not yet implemented
         return f"changes/*/*/*{start_date}*{end_date}*.parquet"
