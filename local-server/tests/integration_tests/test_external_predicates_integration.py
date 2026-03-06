@@ -38,7 +38,9 @@ class TestExternalPredicatesIntegration:
         try:
             import sqlite_vec  # noqa: F401
         except ImportError:
-            pytest.skip("sqlite-vec not available (expected in Docker environment)")  # noqa: E501
+            pytest.skip(
+                "sqlite-vec not available (expected in Docker environment)"
+            )  # noqa: E501
 
         # Also verify that vec functions are actually available in SQLite
         test_db_path = None
@@ -47,7 +49,7 @@ class TestExternalPredicatesIntegration:
             from sqlalchemy import create_engine, text
             from database.utils import init_db
 
-            with tempfile.NamedTemporaryFile(suffix='.db', delete=False) as tf:
+            with tempfile.NamedTemporaryFile(suffix=".db", delete=False) as tf:
                 test_db_path = tf.name
 
             test_engine = create_engine(f"sqlite:///{test_db_path}")
@@ -56,9 +58,13 @@ class TestExternalPredicatesIntegration:
             # Test if vec_distance_cosine is available
             with test_engine.connect() as conn:
                 try:
-                    conn.execute(text("SELECT vec_distance_cosine(x'00000000', x'00000000')"))  # noqa: E501
+                    conn.execute(
+                        text("SELECT vec_distance_cosine(x'00000000', x'00000000')")
+                    )  # noqa: E501
                 except Exception as e:
-                    pytest.skip(f"sqlite-vec extension not properly loaded: {e}")  # noqa: E501
+                    pytest.skip(
+                        f"sqlite-vec extension not properly loaded: {e}"
+                    )  # noqa: E501
 
             test_engine.dispose()
         finally:
@@ -68,7 +74,7 @@ class TestExternalPredicatesIntegration:
     @pytest.fixture
     def temp_db(self):
         """Create a temporary database for testing."""
-        with tempfile.NamedTemporaryFile(suffix='.db', delete=False) as tf:
+        with tempfile.NamedTemporaryFile(suffix=".db", delete=False) as tf:
             db_path = tf.name
         yield db_path
         if os.path.exists(db_path):
@@ -98,24 +104,37 @@ class TestExternalPredicatesIntegration:
 
             # Check table exists
             inspector = inspect(manager.engine)
-            assert 'external_predicates' in inspector.get_table_names()
+            assert "external_predicates" in inspector.get_table_names()
 
             # Check columns
-            columns = {col['name'] for col in inspector.get_columns('external_predicates')}  # noqa: E501
+            columns = {
+                col["name"] for col in inspector.get_columns("external_predicates")
+            }  # noqa: E501
             expected_columns = {
-                'id', 'title', 'definition', 'source', 'external_id',
-                'attributes', 'title_embedding', 'definition_embedding',
-                'created_at', 'updated_at'
+                "id",
+                "title",
+                "definition",
+                "source",
+                "external_id",
+                "attributes",
+                "title_embedding",
+                "definition_embedding",
+                "created_at",
+                "updated_at",
             }
             assert expected_columns.issubset(columns)
 
             # Check indexes
             with manager.engine.connect() as conn:
                 result = conn.execute(
-                    text("SELECT name FROM sqlite_master WHERE type='index' AND tbl_name='external_predicates'")  # noqa: E501
+                    text(
+                        "SELECT name FROM sqlite_master WHERE type='index' AND tbl_name='external_predicates'"
+                    )  # noqa: E501
                 )
                 indexes = [row[0] for row in result]
-                assert len(indexes) >= 5, f"Expected at least 5 indexes, found {len(indexes)}"  # noqa: E501
+                assert (
+                    len(indexes) >= 5
+                ), f"Expected at least 5 indexes, found {len(indexes)}"  # noqa: E501
 
     def test_embedding_generation_integration(self, manager):
         """
@@ -131,7 +150,7 @@ class TestExternalPredicatesIntegration:
             title="hasProperty",
             definition="Indicates that an entity has a specific property",
             source="schema.org",
-            external_id="hasProperty"
+            external_id="hasProperty",
         )
 
         # Verify embeddings were generated
@@ -166,28 +185,26 @@ class TestExternalPredicatesIntegration:
             title="subClassOf",
             definition="Indicates that one class is a subclass of another class in a hierarchy",  # noqa: E501
             source="schema.org",
-            external_id="subClassOf"
+            external_id="subClassOf",
         )
 
         property_pred = manager.add_external_predicate(
             title="hasProperty",
             definition="Indicates that an entity has a specific property or attribute",  # noqa: E501
             source="schema.org",
-            external_id="hasProperty"
+            external_id="hasProperty",
         )
 
         color_pred = manager.add_external_predicate(
             title="color",
             definition="The color appearance of an object",
             source="schema.org",
-            external_id="color"
+            external_id="color",
         )
 
         # Search for class-related predicates
         results = manager.search_external_predicates_by_similarity(
-            "class hierarchy inheritance",
-            threshold=0.3,
-            limit=10
+            "class hierarchy inheritance", threshold=0.3, limit=10
         )
 
         assert len(results) > 0
@@ -222,22 +239,26 @@ class TestExternalPredicatesIntegration:
             title="testPredicate",
             definition="Test predicate for constraint testing",
             source="schema.org",
-            external_id="test1"
+            external_id="test1",
         )
         assert pred1.id is not None
 
         # Duplicate should fail
         from sqlalchemy.exc import IntegrityError
+
         with pytest.raises(IntegrityError) as exc_info:
             manager.add_external_predicate(
                 title="duplicatePredicate",
                 definition="This should fail",
                 source="schema.org",
-                external_id="test1"
+                external_id="test1",
             )
 
         # Verify error message mentions constraint
-        assert "UNIQUE constraint failed" in str(exc_info.value) or "unique" in str(exc_info.value).lower()  # noqa: E501
+        assert (
+            "UNIQUE constraint failed" in str(exc_info.value)
+            or "unique" in str(exc_info.value).lower()
+        )  # noqa: E501
 
         # Rollback the session after the IntegrityError to clean up the failed transaction  # noqa: E501
         manager.session.rollback()
@@ -247,7 +268,7 @@ class TestExternalPredicatesIntegration:
             title="testPredicate",
             definition="Test predicate from different source",
             source="wikidata",
-            external_id="test1"
+            external_id="test1",
         )
         assert pred2.id is not None
         assert pred2.id != pred1.id
@@ -268,7 +289,7 @@ class TestExternalPredicatesIntegration:
             title="relatedTo",
             definition="Indicates a general relationship between two entities",
             source="schema.org",
-            external_id="relatedTo"
+            external_id="relatedTo",
         )
         assert created.id is not None
 
@@ -279,7 +300,9 @@ class TestExternalPredicatesIntegration:
         assert by_id.title == "relatedTo"
 
         # READ by source
-        by_source = manager.get_external_predicate_by_source("schema.org", "relatedTo")  # noqa: E501
+        by_source = manager.get_external_predicate_by_source(
+            "schema.org", "relatedTo"
+        )  # noqa: E501
         assert by_source is not None
         assert by_source.id == created.id
 
@@ -295,9 +318,7 @@ class TestExternalPredicatesIntegration:
 
         # SEARCH
         search_results = manager.search_external_predicates_by_similarity(
-            "relationship",
-            threshold=0.3,
-            limit=10
+            "relationship", threshold=0.3, limit=10
         )
         assert len(search_results) > 0
 
@@ -318,7 +339,7 @@ class TestExternalPredicatesIntegration:
                 title="concurrentTest",
                 definition="Testing concurrent access",
                 source="test",
-                external_id="concurrent1"
+                external_id="concurrent1",
             )
             pred_id = pred.id
 
@@ -333,7 +354,7 @@ class TestExternalPredicatesIntegration:
                 title="concurrentTest2",
                 definition="Testing concurrent write",
                 source="test",
-                external_id="concurrent2"
+                external_id="concurrent2",
             )
             assert pred2.id is not None
 
@@ -358,7 +379,7 @@ class TestExternalPredicatesIntegration:
                 title=f"predicate{i}",
                 definition=f"Definition for predicate number {i}",
                 source="test_batch",
-                external_id=f"pred{i}"
+                external_id=f"pred{i}",
             )
             pred_ids.append(pred.id)
 
@@ -371,10 +392,7 @@ class TestExternalPredicatesIntegration:
 
         # Search should work with larger dataset
         results = manager.search_external_predicates_by_similarity(
-            "predicate definition",
-            source="test_batch",
-            threshold=0.2,
-            limit=20
+            "predicate definition", source="test_batch", threshold=0.2, limit=20
         )
         assert len(results) > 0
 
@@ -394,8 +412,8 @@ class TestExternalPredicatesIntegration:
                 definition="Test invalid embedding",
                 source="test",
                 external_id="invalid1",
-                title_embedding=b'\x00' * 256,  # Wrong size
-                embedding_dims=128
+                title_embedding=b"\x00" * 256,  # Wrong size
+                embedding_dims=128,
             )
         assert "dimension" in str(exc_info.value).lower()
 
@@ -404,7 +422,9 @@ class TestExternalPredicatesIntegration:
             manager.search_external_predicates_by_similarity("", threshold=0.5)
 
         with pytest.raises(ValueError):
-            manager.search_external_predicates_by_similarity("test", threshold=2.0)  # noqa: E501
+            manager.search_external_predicates_by_similarity(
+                "test", threshold=2.0
+            )  # noqa: E501
 
         with pytest.raises(ValueError):
             manager.search_external_predicates_by_similarity("test", limit=0)
@@ -414,7 +434,7 @@ class TestExternalPredicatesIntegration:
             title="afterError",
             definition="Created after error handling",
             source="test",
-            external_id="after_error"
+            external_id="after_error",
         )
         assert pred.id is not None
 
@@ -434,7 +454,7 @@ class TestExternalPredicatesIntegration:
             title=long_title,
             definition=long_definition,
             source="test",
-            external_id="long_text"
+            external_id="long_text",
         )
 
         assert pred.id is not None
@@ -459,7 +479,7 @@ class TestExternalPredicatesIntegration:
             title="Spécial Chàracters",
             definition="Unicode: 日本語, Emoji: 🔥, SQL: ' OR '1'='1",
             source="unicode_test",
-            external_id="special_chars"
+            external_id="special_chars",
         )
 
         assert pred.id is not None
@@ -472,9 +492,7 @@ class TestExternalPredicatesIntegration:
 
         # Search should work with unicode
         results = manager.search_external_predicates_by_similarity(
-            "日本語",
-            threshold=0.1,
-            limit=10
+            "日本語", threshold=0.1, limit=10
         )
         # Should at least not crash
         assert isinstance(results, list)
@@ -493,7 +511,7 @@ class TestExternalPredicatesIntegration:
             title="noAttributes",
             definition="Predicate without attributes",
             source="test",
-            external_id="no_attrs"
+            external_id="no_attrs",
         )
         assert pred1.attributes is None
 
@@ -503,7 +521,7 @@ class TestExternalPredicatesIntegration:
             definition="Predicate with empty attributes dict",
             source="test",
             external_id="empty_attrs",
-            attributes={}
+            attributes={},
         )
         # Note: Current implementation converts to string
         assert pred2.attributes is not None
@@ -522,14 +540,14 @@ class TestExternalPredicatesIntegration:
             title="computer",
             definition="An electronic device for computing",
             source="test",
-            external_id="computer"
+            external_id="computer",
         )
 
         # Search for something completely unrelated with high threshold
         results = manager.search_external_predicates_by_similarity(
             "zzzzzzzzz nonsense query xyz",
             threshold=0.99,  # Very high threshold
-            limit=10
+            limit=10,
         )
 
         assert results == []
@@ -549,22 +567,19 @@ class TestExternalPredicatesIntegration:
             title="property",
             definition="A characteristic or attribute",
             source="schema.org",
-            external_id="property1"
+            external_id="property1",
         )
 
         manager.add_external_predicate(
             title="property",
             definition="A characteristic or attribute",
             source="wikidata",
-            external_id="P31"
+            external_id="P31",
         )
 
         # Search with source filter
         schema_results = manager.search_external_predicates_by_similarity(
-            "property attribute",
-            source="schema.org",
-            threshold=0.3,
-            limit=10
+            "property attribute", source="schema.org", threshold=0.3, limit=10
         )
 
         # All results should be from schema.org
@@ -573,10 +588,7 @@ class TestExternalPredicatesIntegration:
 
         # Search non-existent source
         no_results = manager.search_external_predicates_by_similarity(
-            "property",
-            source="nonexistent_source",
-            threshold=0.3,
-            limit=10
+            "property", source="nonexistent_source", threshold=0.3, limit=10
         )
 
         assert no_results == []
@@ -594,7 +606,7 @@ class TestExternalPredicatesIntegration:
         attributes = {
             "url": "https://schema.org/subClassOf",
             "domain": "rdfs:Class",
-            "range": "rdfs:Class"
+            "range": "rdfs:Class",
         }
 
         predicate = manager.add_external_predicate(
@@ -602,7 +614,7 @@ class TestExternalPredicatesIntegration:
             definition="Indicates that one class is a subclass of another",
             source="schema.org",
             external_id="subClassOf",
-            attributes=attributes
+            attributes=attributes,
         )
 
         assert predicate.id is not None
@@ -610,7 +622,9 @@ class TestExternalPredicatesIntegration:
         assert predicate.external_id == "subClassOf"
 
         # Retrieve by source and external_id
-        retrieved = manager.get_external_predicate_by_source("schema.org", "subClassOf")  # noqa: E501
+        retrieved = manager.get_external_predicate_by_source(
+            "schema.org", "subClassOf"
+        )  # noqa: E501
         assert retrieved is not None
         assert retrieved.id == predicate.id
         assert retrieved.title == "subClassOf"
@@ -631,21 +645,21 @@ class TestExternalPredicatesIntegration:
             title="type",
             definition="The type of the item",
             source="schema.org",
-            external_id="type"
+            external_id="type",
         )
 
         manager.add_external_predicate(
             title="instance of",
             definition="That class of which this subject is a particular example",  # noqa: E501
             source="wikidata",
-            external_id="P31"
+            external_id="P31",
         )
 
         manager.add_external_predicate(
             title="IsA",
             definition="Indicates that one concept is a type of another",
             source="conceptnet",
-            external_id="/r/IsA"
+            external_id="/r/IsA",
         )
 
         # List all predicates
@@ -663,16 +677,15 @@ class TestExternalPredicatesIntegration:
         assert wikidata_preds[0].source == "wikidata"
 
         # Filter by conceptnet
-        conceptnet_preds = manager.list_external_predicates(source="conceptnet")  # noqa: E501
+        conceptnet_preds = manager.list_external_predicates(
+            source="conceptnet"
+        )  # noqa: E501
         assert len(conceptnet_preds) == 1
         assert conceptnet_preds[0].source == "conceptnet"
 
         # Search with source filter
         schema_search = manager.search_external_predicates_by_similarity(
-            "type classification",
-            source="schema.org",
-            threshold=0.3,
-            limit=10
+            "type classification", source="schema.org", threshold=0.3, limit=10
         )
         for pred, score in schema_search:
             assert pred.source == "schema.org"
@@ -691,21 +704,21 @@ class TestExternalPredicatesIntegration:
             title="subClassOf",
             definition="Indicates that one class is a subclass of another class in a hierarchy",  # noqa: E501
             source="test",
-            external_id="subclass"
+            external_id="subclass",
         )
 
         manager.add_external_predicate(
             title="parentClass",
             definition="The parent class in a class hierarchy structure",
             source="test",
-            external_id="parent"
+            external_id="parent",
         )
 
         manager.add_external_predicate(
             title="color",
             definition="The color appearance of an object",
             source="test",
-            external_id="color"
+            external_id="color",
         )
 
         # Search for class hierarchy concepts
@@ -713,7 +726,7 @@ class TestExternalPredicatesIntegration:
             "class hierarchy parent subclass",
             source="test",
             threshold=0.0,  # Get all results
-            limit=10
+            limit=10,
         )
 
         assert len(results) > 0
@@ -746,7 +759,7 @@ class TestExternalPredicatesIntegration:
             title="relatedTo",
             definition="Indicates a general relationship between entities",
             source="test",
-            external_id="related"
+            external_id="related",
         )
 
         pred_id = predicate.id
@@ -762,7 +775,9 @@ class TestExternalPredicatesIntegration:
 
         # Retrieve multiple times by source/external_id
         for _ in range(10):
-            retrieved = manager.get_external_predicate_by_source("test", "related")  # noqa: E501
+            retrieved = manager.get_external_predicate_by_source(
+                "test", "related"
+            )  # noqa: E501
             assert retrieved is not None
             assert retrieved.id == pred_id
             assert retrieved.title == "relatedTo"
@@ -791,14 +806,18 @@ class TestExternalPredicatesIntegration:
                 title=f"pred{i}",
                 definition=f"Definition {i}",
                 source="test_limit",
-                external_id=f"pred{i}"
+                external_id=f"pred{i}",
             )
 
         # Test various limits
-        results_5 = manager.list_external_predicates(source="test_limit", limit=5)  # noqa: E501
+        results_5 = manager.list_external_predicates(
+            source="test_limit", limit=5
+        )  # noqa: E501
         assert len(results_5) == 5
 
-        results_10 = manager.list_external_predicates(source="test_limit", limit=10)  # noqa: E501
+        results_10 = manager.list_external_predicates(
+            source="test_limit", limit=10
+        )  # noqa: E501
         assert len(results_10) == 10
 
         results_all = manager.list_external_predicates(source="test_limit")
