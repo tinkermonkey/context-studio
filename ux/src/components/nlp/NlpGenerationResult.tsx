@@ -1,5 +1,4 @@
 import * as React from "react";
-import { useEffect } from "react";
 import { Alert } from "flowbite-react";
 import { type PipelineType } from "../../api";
 import { LlmPipelineRun } from "../llm_pipelines/LlmPipelineRun";
@@ -174,10 +173,22 @@ export const NlpGenerationResult: React.FC<NlpGenerationResultProps> = ({
     );
   }, []);
 
+  // Build API context from selected node context
+  const buildApiContext = React.useCallback((): Record<string, unknown> => {
+    return {
+      selectedNodeContext: Array.from(selectedNodeContext.entries()),
+      term,
+      domainContext,
+      parentTermContext,
+      currentDefinition,
+    };
+  }, [selectedNodeContext, term, domainContext, parentTermContext, currentDefinition]);
+
   // Function to generate the API context JSON and prepare for pipeline execution
   React.useEffect(() => {
     // debounce 300ms
     const handler = setTimeout(() => {
+      // Build context from selected node context
       const ctx = buildApiContext();
       console.log(
         `Auto-generated ${pipelineType} API Context:`,

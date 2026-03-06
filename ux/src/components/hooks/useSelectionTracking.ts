@@ -164,7 +164,7 @@ export const useSelectionTracking = (
         }
 
         statsRef.current.failedAttempts++;
-        onError?.(error);
+        onError?.(new Error("Missing required parameters for selection tracking"));
         return;
       }
 
@@ -206,7 +206,7 @@ export const useSelectionTracking = (
         }
 
         statsRef.current.failedAttempts++;
-        onError?.(error);
+        onError?.(new Error("Invalid selection tracking request"));
         return;
       }
 

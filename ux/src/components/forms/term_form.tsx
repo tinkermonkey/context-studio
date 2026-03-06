@@ -78,6 +78,7 @@ const TermForm: React.FC<TermFormProps> = ({
           error?.body?.detail ||
           error?.detail;
 
+        let message: string;
         if (Array.isArray(detail)) {
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
           message = detail.map((d: any) => d.msg).join("; ");

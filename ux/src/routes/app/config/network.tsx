@@ -108,6 +108,7 @@ function RouteComponent() {
 // Proxy Server Section Component
 function ProxyServerSection({
   config,
+  onUpdate,
   isUpdating,
 }: {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -248,12 +249,13 @@ function ProxyServerSection({
 // Cache Settings Section Component
 function CacheSettingsSection({
   config,
+  onUpdate,
   isUpdating,
 }: {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   config: any;
-   
-  onUpdate: (path: string, value: any) => void;  // eslint-disable-line @typescript-eslint/no-explicit-any 
+
+  onUpdate: (path: string, value: any) => void;  // eslint-disable-line @typescript-eslint/no-explicit-any
   isUpdating: boolean;
 }) {
   if (!config) {
@@ -397,12 +399,13 @@ function CacheSettingsSection({
 // Rate Limiting Section Component
 function RateLimitingSection({
   config,
+  onUpdate,
   isUpdating,
 }: {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   config: any;
-   
-  onUpdate: (path: string, value: any) => void;  // eslint-disable-line @typescript-eslint/no-explicit-any 
+
+  onUpdate: (path: string, value: any) => void;  // eslint-disable-line @typescript-eslint/no-explicit-any
   isUpdating: boolean;
 }) {
   if (!config) {

@@ -75,9 +75,7 @@ export const NlpTokenAnalysisPanel: React.FC<Props> = ({
               text: token.text,
               lemma: token.lemma || token.text,
               pos: token.pos || token.tag || "",
-              concepcy: {
-                related_terms: relations,
-              },
+              inputTerm: token.text,
               wordnet: {
                 synsets: (wordnet?.synsets || []).map(
                   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -90,20 +88,9 @@ export const NlpTokenAnalysisPanel: React.FC<Props> = ({
                     domain: s.domain || "general",
                   }),
                 ),
-                definitions: (wordnet?.synsets || []).map(
-                  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                  (s: any) => s.definition || s.gloss || s.def || "",
-                ),
               },
             }}
             width={measuredWidth}
-            config={{
-              RelatedTo: 3,
-              IsA: 3,
-              HasA: 2,
-              PartOf: 2,
-              UsedFor: 2,
-            }}
             onNodeClick={onNodeClick}
             selectedNodeIds={localSelectedNodeIds}
           />

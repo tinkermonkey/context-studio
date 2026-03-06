@@ -224,7 +224,7 @@ function discoverCrossReferences(nodes: UnifiedNode[]): SearchLink[] {
 
   // Group nodes by normalized title for cross-reference detection
   nodes.forEach((node) => {
-    const normalizedTitle = node._title.toLowerCase().trim();
+    const normalizedTitle = node.title.toLowerCase().trim();
     if (!nodesByTitle.has(normalizedTitle)) {
       nodesByTitle.set(normalizedTitle, []);
     }

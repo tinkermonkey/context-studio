@@ -32,6 +32,7 @@ export const TestParagraphEditor: React.FC<TestParagraphEditorProps> = ({
 
   const isEditing = !!paragraph;
   const isLoading = createMutation.isPending || updateMutation.isPending;
+  const error = createMutation.error || updateMutation.error;
 
   // Update form when paragraph prop changes
   useEffect(() => {

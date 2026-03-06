@@ -117,6 +117,7 @@ function RouteComponent() {
 // Environment Variables Section Component
 function EnvironmentVariablesSection({
   config,
+  onUpdate,
   isUpdating,
 }: {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -284,6 +285,7 @@ function EnvironmentVariablesSection({
 // Raw Configuration Section Component
 function RawConfigurationSection({
   config,
+  onUpdate,
   isUpdating,
 }: {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any

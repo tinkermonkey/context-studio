@@ -191,12 +191,13 @@ function RouteComponent() {
 // Server Settings Section Component
 function ServerSettingsSection({
   config,
+  onUpdate,
   isUpdating,
 }: {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   config: any;
-   
-  onUpdate: (path: string, value: any) => void;  // eslint-disable-line @typescript-eslint/no-explicit-any 
+
+  onUpdate: (path: string, value: any) => void;  // eslint-disable-line @typescript-eslint/no-explicit-any
   isUpdating: boolean;
 }) {
   if (!config) {
@@ -336,12 +337,13 @@ function ServerSettingsSection({
 // Logging Configuration Section Component
 function LoggingConfigurationSection({
   config,
+  onUpdate,
   isUpdating,
 }: {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   config: any;
-   
-  onUpdate: (path: string, value: any) => void;  // eslint-disable-line @typescript-eslint/no-explicit-any 
+
+  onUpdate: (path: string, value: any) => void;  // eslint-disable-line @typescript-eslint/no-explicit-any
   isUpdating: boolean;
 }) {
   if (!config) {
@@ -529,12 +531,13 @@ function LoggingConfigurationSection({
 // Security Settings Section Component
 function SecuritySettingsSection({
   config,
+  onUpdate,
   isUpdating,
 }: {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   config: any;
-   
-  onUpdate: (path: string, value: any) => void;  // eslint-disable-line @typescript-eslint/no-explicit-any 
+
+  onUpdate: (path: string, value: any) => void;  // eslint-disable-line @typescript-eslint/no-explicit-any
   isUpdating: boolean;
 }) {
   if (!config) {

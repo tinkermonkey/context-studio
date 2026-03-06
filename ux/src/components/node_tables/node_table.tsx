@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React from "react";
 import {
   flexRender,
   getCoreRowModel,
@@ -120,7 +120,7 @@ function BaseNodeTable<T>({
     undefined,
   );
   const [selectedCount, setSelectedCount] = React.useState(0);
-  const [setIsProcessing] = React.useState(false);
+  const [, setIsProcessing] = React.useState(false);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const tableRef = React.useRef<any>(null);
   const [columnVisibility, setColumnVisibility] = React.useState<

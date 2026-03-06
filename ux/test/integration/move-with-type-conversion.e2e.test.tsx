@@ -300,6 +300,7 @@ describe("Move Forms - UI Rendering and Structure", () => {
   it("TermMoveForm: displays correct count for multiple nodes", async () => {
     const qc = makeTestQueryClient();
     const term1 = createTerm("term-1", "Term 1", "domain-1");
+    const term2 = createTerm("term-2", "Term 2", "domain-1");
 
     render(
       <TermMoveForm

@@ -8,7 +8,7 @@
 import React, { useState } from "react";
 import { Badge, Button, Card, Label, Select, Spinner, Table, TableBody, TableCell, TableHead, TableHeadCell, TableRow, TextInput  } from "flowbite-react";;
 import { Plus, Search, Trash2  } from "lucide-react";;
-import { useExternalPredicates} from "@/api/hooks/predicates";
+import { useExternalPredicates, usePredicates } from "@/api/hooks/predicates";
 import { useButterToast } from "@/hooks/useButterToast";
 
 export interface ManualMappingInterfaceProps {
@@ -59,7 +59,7 @@ export const ManualMappingInterface: React.FC<ManualMappingInterfaceProps> = ({
     );
   }, [externalPredicates?.data, searchQuery]);
 
-  const handleAddMapping = (externalPredicateId: string) => {
+  const handleAddMapping = (externalPredicateId: string): void => {
     if (!globalPredicateId) {
       toast.warning("Please select a global predicate first");
       return;
@@ -82,7 +82,7 @@ export const ManualMappingInterface: React.FC<ManualMappingInterfaceProps> = ({
     toast.success("Mapping added (not yet saved)");
   };
 
-  const handleRemoveMapping = (externalPredicateId: string) => {
+  const handleRemoveMapping = (externalPredicateId: string): void => {
     setSelectedMappings(
       selectedMappings.filter(
         (m) => m.externalPredicateId !== externalPredicateId,

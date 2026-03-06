@@ -33,7 +33,6 @@ export const usePipelineExecutionMutation = (
  * Hook to execute a pipeline with streaming response
  */
 export const usePipelineExecutionStreamMutation = (
-  onChunk?: (chunk: StreamingChunk) => void,
   options?: UseMutationOptions<
     PipelineExecutionResponse,
     Error,
@@ -42,7 +41,7 @@ export const usePipelineExecutionStreamMutation = (
 ) => {
   return useMutation({
     mutationFn: (request: PipelineExecutionRequest) =>
-      pipelineExecutionService.executePipelineStream(request, onChunk),
+      pipelineExecutionService.executePipeline(request),
     ...options,
   });
 };
@@ -72,7 +71,6 @@ export const useBatchPipelineExecutionMutation = (
  * Hook to execute multiple pipeline flavors with streaming
  */
 export const useBatchPipelineExecutionStreamMutation = (
-  onChunk?: (chunk: StreamingChunk & { flavorId: string }) => void,
   options?: UseMutationOptions<
     PipelineExecutionResponse[],
     Error,
@@ -82,9 +80,7 @@ export const useBatchPipelineExecutionStreamMutation = (
   return useMutation({
     mutationFn: async (requests: PipelineExecutionRequest[]) => {
       const promises = requests.map((request) =>
-        pipelineExecutionService.executePipelineStream(request, (chunk) => {
-          onChunk?.({ ...chunk, flavorId: request.flavor_id });
-        }),
+        pipelineExecutionService.executePipeline(request),
       );
       return Promise.all(promises);
     },

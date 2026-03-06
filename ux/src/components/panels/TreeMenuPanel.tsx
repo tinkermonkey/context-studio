@@ -107,6 +107,7 @@ export function TreeMenuPanel({
   const isLoading = layersLoading || domainsLoading || termsLoading;
 
   // Determine error state
+  const error = null;
 
   // Build chart data
   const chartData = React.useMemo((): ChartData | null => {

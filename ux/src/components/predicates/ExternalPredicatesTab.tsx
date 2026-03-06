@@ -106,12 +106,6 @@ export const ExternalPredicatesTab: React.FC<ExternalPredicatesTabProps> = ({
     },
   });
 
-  // Handle error display
-  React.useEffect(() => {
-    if (error) {
-      toast.error(`Failed to load external predicates: ${error.message}`);
-    }
-  }, [error, toast]);
 
   const handleDiscoverClick = (sources?: string[]) => {
     discoverMutation.mutate(sources ? { sources } : undefined);

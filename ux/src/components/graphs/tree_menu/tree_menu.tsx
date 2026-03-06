@@ -116,7 +116,6 @@ const TreeMenu: React.FC<TreeMenuProps> = ({
         //console.log("Container dimensions measured:", { width, height });
         lastMeasuredWidth = width; // Cache for future mounts
         setMeasuredWidth(width);
-        setContainerHeight(height);
       }
     };
 

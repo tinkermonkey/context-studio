@@ -291,7 +291,8 @@ export function measureHtmlTextHeight(
   measurementHtml.style.maxWidth = `${width}px`; // Enforce max width
 
   // Get the bounding box height
-  
+  const height = Math.ceil(measurementHtml.scrollHeight);
+
   // Validate measurement - warn if we got zero for non-empty text
   if (height === 0 && text.length > 0) {
     console.warn(
@@ -366,6 +367,7 @@ export class TextHeightCache {
       return this.cache.get(cacheKey)!;
     }
 
+    const height = measureHtmlTextHeight(text, width, this.textOptions);
     this.cache.set(cacheKey, height);
     return height;
   }

@@ -63,12 +63,14 @@ const LinkItem: React.FC<LinkItemProps> = ({
   const {
     data: targetNodeFromAPI,
     isLoading: apiLoading,
+    error: apiError,
   } = useNodeDetails(
     targetNodeFromSearch ? null : targetNodeId, // Only call API if not found in search results
   );
 
   const targetNode = targetNodeFromSearch || targetNodeFromAPI;
   const isLoading = !targetNodeFromSearch && apiLoading;
+  const error = apiError;
 
   const confidencePercent = Math.round(link.confidence_score * 100);
 

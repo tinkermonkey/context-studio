@@ -90,6 +90,7 @@ const STYLES = {
 const NlpConceptChart: React.FC<NlpConceptChartProps> = ({
   data,
   width: providedWidth,
+  onNodeClick,
 }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const [containerWidth] = useState<number>(
@@ -105,9 +106,9 @@ const NlpConceptChart: React.FC<NlpConceptChartProps> = ({
   const _handleNodeClick = useCallback(
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     (node: any) => {
-      _onNodeClick?.(node.id);
+      onNodeClick?.(node.id);
     },
-    [_onNodeClick],
+    [onNodeClick],
   );
 
   // Process the data to extract and organize the elements

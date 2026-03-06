@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React from "react";
 import {
   Spinner,
   Button,
@@ -504,7 +504,7 @@ const EditModal: React.FC<{
       queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.STRUCTURE_NODES] });
     } catch (_e) {  // eslint-disable-line @typescript-eslint/no-unused-vars
   
-      console.warn("Failed to invalidate node queries", e);
+      console.warn("Failed to invalidate node queries", _e);
     }
   };
 
@@ -560,7 +560,7 @@ const AddChildModal: React.FC<{
       queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.STRUCTURE_NODES] });
     } catch (_e) {  // eslint-disable-line @typescript-eslint/no-unused-vars
   
-      console.warn("Failed to invalidate node queries", e);
+      console.warn("Failed to invalidate node queries", _e);
     }
   };
 
@@ -637,7 +637,7 @@ const MoveModal: React.FC<{
       queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.STRUCTURE_NODES] });
     } catch (_e) {  // eslint-disable-line @typescript-eslint/no-unused-vars
   
-      console.warn("Failed to invalidate node queries", e);
+      console.warn("Failed to invalidate node queries", _e);
     }
   };
 

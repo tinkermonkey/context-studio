@@ -277,10 +277,11 @@ export const SearchResults: React.FC<SearchResultsProps> = ({
             </p>
             <div className="text-sm">
               {streamingState.errorSources.map((source) => {
+                const sourceError = streamingState.sources[source]?.error;
                 return (
                   <div key={source}>
                     <strong>{SOURCE_METADATA[source]?.label || source}:</strong>{" "}
-                    {error || "Unknown error"}
+                    {sourceError || "Unknown error"}
                   </div>
                 );
               })}

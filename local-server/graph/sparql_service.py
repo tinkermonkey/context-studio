@@ -134,8 +134,16 @@ class SPARQLService:
 
         for link in links:
             # Get source and target structure_nodes to determine their types
-            source_node: Optional[StructureNode] = self.db_session.query(StructureNode).filter(StructureNode.id == link.source_node_id).first()
-            target_node: Optional[StructureNode] = self.db_session.query(StructureNode).filter(StructureNode.id == link.target_node_id).first()
+            source_node: Optional[StructureNode] = (
+                self.db_session.query(StructureNode)
+                .filter(StructureNode.id == link.source_node_id)
+                .first()
+            )
+            target_node: Optional[StructureNode] = (
+                self.db_session.query(StructureNode)
+                .filter(StructureNode.id == link.target_node_id)
+                .first()
+            )
 
             if source_node and target_node:
                 source_uri = self.ENTITY[f"{source_node.node_type.value}/{source_node.id}"]

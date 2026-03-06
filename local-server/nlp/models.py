@@ -33,7 +33,10 @@ class ConcepcyData(BaseModel):
     """
     ConceptNet/Concepcy data for a token.
     """
-    related_terms: Optional[List[ConcepcyRelation]] = Field(default_factory=list, description="Related terms from ConceptNet.")
+    related_terms: Optional[List[ConcepcyRelation]] = Field(
+        default_factory=list,
+        description="Related terms from ConceptNet.",
+    )
 
 class WordNetData(BaseModel):
     """
@@ -41,7 +44,11 @@ class WordNetData(BaseModel):
     """
     synsets: Optional[List[dict]] = Field(
         default_factory=list,
-        description="WordNet synsets with attributes, including domain context. Each synset dict includes: name, definition, lemmas, pos, offset, domain."
+        description=(
+            "WordNet synsets with attributes, including domain context. "
+            "Each synset dict includes: name, definition, lemmas, pos, "
+            "offset, domain."
+        ),
     )
     lemmas: Optional[List[dict]] = Field(default_factory=list, description="WordNet lemmas with attributes.")
     definitions: Optional[List[str]] = Field(default_factory=list, description="WordNet definitions.")

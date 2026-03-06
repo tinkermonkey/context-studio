@@ -93,6 +93,7 @@ class HtmlTextHeightCache {
       return this.cache.get(`${text}-${width}`)!;
     }
 
+    const height = measureHtmlTextHeight(text, width, this.textOptions);
     this.cache.set(`${text}-${width}`, height);
     return height;
   }

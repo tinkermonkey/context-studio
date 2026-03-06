@@ -4,11 +4,11 @@
  * Form for creating and editing predicates
  */
 
-import React, { useEffect } from "react";
+import React from "react";
 import { useForm } from "@tanstack/react-form";
 import { TextInput, Textarea, Button, Alert, Label } from "flowbite-react";
 import { Info } from "lucide-react";
-import type { PredicateCreate} from "@/api/services/predicates";
+import type { PredicateCreate, PredicateOut } from "@/api/services/predicates";
 import {
   useCreatePredicate,
   useUpdatePredicate,

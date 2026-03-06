@@ -121,16 +121,14 @@ export const useNodeDetails = (
  */
 export const useNodeLinks = (
   nodeId: string | null,
-  direction: "from" | "to" | "both" = "both",
   options?: UseQueryOptions<UnifiedLink[], Error>,
 ) => {
   return useQuery({
     queryKey: createQueryKey(UNIFIED_QUERY_KEYS.UNIFIED_REFERENCE, "links", {
       nodeId,
-      direction,
     }),
     queryFn: () =>
-      nodeId ? unifiedReferenceService.getLinks(nodeId, direction) : [],
+      nodeId ? unifiedReferenceService.getLinks(nodeId) : [],
     enabled: !!nodeId,
     staleTime: 5 * 60 * 1000, // 5 minutes
     ...options,

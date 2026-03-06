@@ -289,7 +289,7 @@ export const WordSenseSelector: React.FC<WordSenseSelectorProps> = ({
     // Check if any word needs analysis
     for (const [word, state] of wordStates.entries()) {
       if (state.isAnalyzing && !state.analysis) {
-        analyzeWord(word, state);
+        analyzeWord(word);
       }
     }
   }, [wordStates]);
@@ -387,9 +387,7 @@ export const WordSenseSelector: React.FC<WordSenseSelectorProps> = ({
                   text: state.analysis.text,
                   lemma: state.analysis.lemma || state.analysis.text,
                   pos: state.analysis.pos || state.analysis.tag || "",
-                  concepcy: {
-                    related_terms: state.analysis.concepcy?.related_terms || [],
-                  },
+                  inputTerm: state.analysis.text,
                   wordnet: {
                     synsets: (state.analysis.wordnet?.synsets || []).map(
                       // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -403,16 +401,7 @@ export const WordSenseSelector: React.FC<WordSenseSelectorProps> = ({
                         domain: s.domain || "general",
                       }),
                     ),
-                    definitions: (state.analysis.wordnet?.synsets || []).map(
-                      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                      (s: any) => s.definition || s.gloss || s.def || "",
-                    ),
                   },
-                }}
-                config={{
-                  RelatedTo: 2,
-                  IsA: 3,
-                  HasA: 2,
                 }}
                 onNodeClick={(nodeId) => handleNodeClick(word, nodeId)}
                 selectedNodeIds={wordSelectedNodeIds}
