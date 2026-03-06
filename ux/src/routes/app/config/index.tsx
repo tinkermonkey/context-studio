@@ -1,6 +1,16 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { Badge, Card  } from "flowbite-react";;
-import { Brain, Cog, Database, ExternalLink, Globe, Server, Settings, Shield, Zap } from "lucide-react";;
+import { Badge, Card } from "flowbite-react";
+import {
+  Brain,
+  Cog,
+  Database,
+  ExternalLink,
+  Globe,
+  Server,
+  Settings,
+  Shield,
+  Zap,
+} from "lucide-react";
 import { CsMainTitle } from "@/components/layout/cs_main";
 import { ConfigBreadcrumbs } from "@/components/configuration/ConfigBreadcrumbs";
 import { useProvidersStatus, useValidateConfiguration } from "@/api/hooks";

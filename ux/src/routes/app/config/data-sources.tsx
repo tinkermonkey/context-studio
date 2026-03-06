@@ -1,8 +1,24 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { Alert, Badge, Button, Card, Checkbox, Label, Tabs, TextInput  } from "flowbite-react";;
+import {
+  Alert,
+  Badge,
+  Button,
+  Card,
+  Checkbox,
+  Label,
+  Tabs,
+  TextInput,
+} from "flowbite-react";
 import { CsMainTitle } from "@/components/layout/cs_main";
 import { ConfigBreadcrumbs } from "@/components/configuration/ConfigBreadcrumbs";
-import { AlertTriangle, CheckCircle, Database, ExternalLink, Globe, XCircle  } from "lucide-react";;
+import {
+  AlertTriangle,
+  CheckCircle,
+  Database,
+  ExternalLink,
+  Globe,
+  XCircle,
+} from "lucide-react";
 import {
   useConfiguration,
   useReferenceSourcesConfig,
@@ -415,9 +431,8 @@ function ReferenceSourceCard({
 }
 
 // Database Settings Section Component
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-function DatabaseSettingsSection({ config }: { config: any}
-) {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function DatabaseSettingsSection({ config }: { config: any }) {
   if (!config) {
     return <div>No database configuration available</div>;
   }
