@@ -90,11 +90,13 @@ export const changeEventService = new ChangeEventService();
 export const changeEventQueryKeys = {
   all: [QUERY_KEYS.CHANGE_EVENTS] as const,
   lists: () => [...changeEventQueryKeys.all, "list"] as const,
-  list: (params?: any) => [...changeEventQueryKeys.lists(), params] as const,  // eslint-disable-line @typescript-eslint/no-explicit-any
+  list: (params?: any) => [...changeEventQueryKeys.lists(), params] as const, // eslint-disable-line @typescript-eslint/no-explicit-any
   details: () => [...changeEventQueryKeys.all, "detail"] as const,
   detail: (id: number) => [...changeEventQueryKeys.details(), id] as const,
-  unprocessed: (recordType?: RecordType) => [...changeEventQueryKeys.all, "unprocessed", recordType] as const,
-  byRecord: (recordType: RecordType, recordId: string) => [...changeEventQueryKeys.all, "byRecord", recordType, recordId] as const,
+  unprocessed: (recordType?: RecordType) =>
+    [...changeEventQueryKeys.all, "unprocessed", recordType] as const,
+  byRecord: (recordType: RecordType, recordId: string) =>
+    [...changeEventQueryKeys.all, "byRecord", recordType, recordId] as const,
 };
 
 /**
@@ -148,7 +150,8 @@ export const useUnprocessedChangeEvents = (
 ) => {
   return useQuery({
     queryKey: changeEventQueryKeys.unprocessed(recordType),
-    queryFn: () => changeEventService.getUnprocessed({ record_type: recordType }),
+    queryFn: () =>
+      changeEventService.getUnprocessed({ record_type: recordType }),
     staleTime: 1000 * 10, // 10 seconds - unprocessed events should be very fresh
     refetchInterval: 1000 * 30, // Refetch every 30 seconds for real-time updates
     retry: 3,
@@ -167,7 +170,8 @@ export const useChangeEventsByRecord = (
 ) => {
   return useQuery({
     queryKey: changeEventQueryKeys.byRecord(recordType, recordId),
-    queryFn: () => changeEventService.list({ record_type: recordType, record_id: recordId }),
+    queryFn: () =>
+      changeEventService.list({ record_type: recordType, record_id: recordId }),
     enabled: !!recordType && !!recordId,
     staleTime: 1000 * 60 * 2, // 2 minutes
     retry: 3,

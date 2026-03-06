@@ -281,7 +281,6 @@ export function useOptimizationConfig(
   });
 }
 
- 
 export function useAutoOptimize(
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   options?: UseMutationOptions<any, Error, void>,
@@ -317,7 +316,6 @@ export function useOptimizeQuery(
   });
 }
 
- 
 export function useCreateMaterializedView(
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   options?: UseMutationOptions<any, Error, MaterializedViewRequest>,
@@ -349,7 +347,6 @@ export function useOptimizeStorage(
   });
 }
 
- 
 export function useSetupLifecyclePolicies(
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   options?: UseMutationOptions<any, Error, void>,
@@ -400,7 +397,6 @@ export function useBatchOperation(
   });
 }
 
- 
 export function useUpdateOptimizationConfig(
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   options?: UseMutationOptions<any, Error, Record<string, any>>,
