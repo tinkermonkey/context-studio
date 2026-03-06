@@ -31,6 +31,7 @@ class NLPEntity:
     start: int
     end: int
     confidence: float
+    linked_uri: Optional[str] = None
 
 
 @dataclass
@@ -39,7 +40,8 @@ class NLPResult:
 
     entities: List[NLPEntity]
     tokens: List[str]
-    sentences: List[str]
+    noun_chunks: List[str]
+    language: str
 
 
 @dataclass
@@ -94,7 +96,11 @@ class LLMProvider(Protocol):
 
 
 class NLPProcessor(Protocol):
-    """Processor port for natural language processing tasks."""
+    """Processor for NLP text analysis.
+
+    Wraps a full NLP pipeline (tokenization, NER, entity linking, etc.)
+    behind a simple interface.
+    """
 
     def process(self, text: str) -> NLPResult:
         """Process text and return tokenized, sentence, and entity results."""
@@ -102,6 +108,10 @@ class NLPProcessor(Protocol):
 
     def extract_entities(self, text: str) -> List[NLPEntity]:
         """Extract named entities from text."""
+        ...
+
+    def is_ready(self) -> bool:
+        """Check if the NLP processor is ready for use."""
         ...
 
 

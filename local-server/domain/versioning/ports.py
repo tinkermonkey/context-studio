@@ -5,7 +5,7 @@ Ports define the contracts between the domain core and infrastructure adapters.
 They use typing.Protocol for structural subtyping and reference only domain entity types.
 Response dataclasses are defined in this file alongside their corresponding ports.
 """
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import datetime
 from typing import Protocol, Optional, Sequence
 
@@ -26,19 +26,19 @@ class EntityVersion:
 class SyncResult:
     """Result of a sync operation with a remote target."""
 
-    sync_id: str
-    pushed_count: int
-    pulled_count: int
-    conflict_report: Optional[ConflictReport]
-    status: str
+    success: bool
+    changes_pushed: int
+    remote_version: Optional[str]
+    errors: list[str] = field(default_factory=list)
 
 
-class SyncStatus(Protocol):
-    """Status port for querying sync state."""
+@dataclass
+class SyncStatus:
+    """Status of sync operations."""
 
-    def get_last_sync(self) -> Optional[str]:
-        """Get the timestamp of the last sync (ISO datetime string)."""
-        ...
+    last_sync: Optional[datetime]
+    pending_changes: int
+    remote_reachable: bool
 
 
 class ChangeRepository(Protocol):
@@ -81,16 +81,16 @@ class ChangeRepository(Protocol):
 
 
 class SyncTarget(Protocol):
-    """Target port for syncing with remote systems."""
+    """Target for remote synchronization of changes."""
 
-    def push(self, events: Sequence[ChangeEvent]) -> SyncResult:
+    def push_changes(self, changes: Sequence[ChangeEvent], metadata: dict) -> SyncResult:
         """Push local change events to remote."""
         ...
 
-    def pull(self, since: Optional[str]) -> Sequence[ChangeEvent]:
-        """Pull remote change events since timestamp (ISO datetime string)."""
+    def pull_changes(self, since: datetime) -> Sequence[ChangeEvent]:
+        """Pull remote change events since timestamp."""
         ...
 
-    def resolve_conflicts(self, report: ConflictReport) -> MergeResult:
-        """Resolve conflicts and return merge result."""
+    def get_sync_status(self) -> SyncStatus:
+        """Get current sync status."""
         ...

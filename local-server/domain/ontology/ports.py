@@ -34,25 +34,25 @@ class OntologyRepository(Protocol):
         """Save or update a taxonomy."""
         ...
 
-    def delete_taxonomy(self, taxonomy_id: str) -> None:
-        """Delete a taxonomy."""
+    def delete_taxonomy(self, taxonomy_id: str) -> bool:
+        """Delete a taxonomy. Returns True if deleted, False if not found."""
         ...
 
     # ConceptScheme operations
-    def get_scheme(self, scheme_id: str) -> Optional[ConceptScheme]:
+    def get_concept_scheme(self, scheme_id: str) -> Optional[ConceptScheme]:
         """Retrieve a concept scheme by ID."""
         ...
 
-    def list_schemes(self, taxonomy_id: str) -> Sequence[ConceptScheme]:
-        """List all concept schemes in a taxonomy."""
+    def list_concept_schemes(self, taxonomy_id: Optional[str] = None) -> Sequence[ConceptScheme]:
+        """List all concept schemes, optionally filtered by taxonomy."""
         ...
 
-    def save_scheme(self, scheme: ConceptScheme) -> ConceptScheme:
+    def save_concept_scheme(self, scheme: ConceptScheme) -> ConceptScheme:
         """Save or update a concept scheme."""
         ...
 
-    def delete_scheme(self, scheme_id: str) -> None:
-        """Delete a concept scheme."""
+    def delete_concept_scheme(self, scheme_id: str) -> bool:
+        """Delete a concept scheme. Returns True if deleted, False if not found."""
         ...
 
     # Class operations
@@ -82,8 +82,8 @@ class OntologyRepository(Protocol):
         """Save or update a class."""
         ...
 
-    def delete_class(self, class_id: str) -> None:
-        """Delete a class."""
+    def delete_class(self, class_id: str) -> bool:
+        """Delete a class. Returns True if deleted, False if not found."""
         ...
 
     # Relationship operations
@@ -91,16 +91,21 @@ class OntologyRepository(Protocol):
         """Retrieve a relationship by ID."""
         ...
 
-    def list_relationships(self, source_id: str) -> Sequence[Relationship]:
-        """List all relationships from a source entity."""
+    def list_relationships(
+        self,
+        source_id: Optional[str] = None,
+        target_id: Optional[str] = None,
+        property_id: Optional[str] = None,
+    ) -> Sequence[Relationship]:
+        """List relationships with optional filtering by source, target, or property."""
         ...
 
     def save_relationship(self, rel: Relationship) -> Relationship:
         """Save or update a relationship."""
         ...
 
-    def delete_relationship(self, relationship_id: str) -> None:
-        """Delete a relationship."""
+    def delete_relationship(self, relationship_id: str) -> bool:
+        """Delete a relationship. Returns True if deleted, False if not found."""
         ...
 
     # PropertyDefinition operations
@@ -120,8 +125,8 @@ class OntologyRepository(Protocol):
         """Save or update a property definition."""
         ...
 
-    def delete_property_definition(self, property_id: str) -> None:
-        """Delete a property definition."""
+    def delete_property_definition(self, property_id: str) -> bool:
+        """Delete a property definition. Returns True if deleted, False if not found."""
         ...
 
     # Individual operations - NOT IMPLEMENTED until a future phase
@@ -150,7 +155,7 @@ class OntologyRepository(Protocol):
         ...
 
     def delete_individual(self, individual_id: str) -> bool:
-        """Delete an individual.
+        """Delete an individual. Returns True if deleted, False if not found.
 
         NOT IMPLEMENTED: This method is reserved for a future phase.
         Implementations MUST raise NotImplementedError.
@@ -158,7 +163,7 @@ class OntologyRepository(Protocol):
         ...
 
     # Bulk operations
-    def get_all_entities_and_relationships(self) -> tuple[Sequence, Sequence[Relationship]]:
+    def get_all_entities_and_relationships(self) -> tuple[Sequence[any], Sequence[Relationship]]:
         """Return all entities and relationships for graph building."""
         ...
 
