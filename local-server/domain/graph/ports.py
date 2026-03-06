@@ -7,7 +7,6 @@ They use typing.Protocol for structural subtyping and reference only domain enti
 from typing import Protocol, Optional, Sequence
 
 from domain.graph.entities import KnowledgeGraph, PathResult, GraphMetrics
-from domain.ontology.value_objects import SearchCriteria
 
 
 class GraphEngine(Protocol):
@@ -33,8 +32,38 @@ class GraphEngine(Protocol):
 
 
 class SemanticQueryEngine(Protocol):
-    """Engine port for semantic search within ontology structures."""
+    """Engine for semantic/SPARQL queries.
 
-    def semantic_search(self, criteria: SearchCriteria) -> Sequence[str]:
-        """Perform semantic search and return matching Class IDs."""
+    Maintains an RDF graph representation that can be queried with SPARQL.
+    The engine is lazy-loaded — the RDF graph is built on first query.
+    """
+
+    def load_ontology(
+        self,
+        nodes: Sequence[dict],
+        edges: Sequence[dict],
+        property_definitions: Sequence[dict],
+    ) -> None:
+        """Load ontology data into RDF representation."""
+        ...
+
+    def execute_sparql(self, query: str) -> list[dict]:
+        """Execute a SPARQL query and return results."""
+        ...
+
+    def get_triples(
+        self,
+        subject: Optional[str] = None,
+        predicate: Optional[str] = None,
+        object: Optional[str] = None,
+    ) -> list[tuple[str, str, str]]:
+        """Get RDF triples matching the given criteria."""
+        ...
+
+    def is_loaded(self) -> bool:
+        """Check if ontology has been loaded."""
+        ...
+
+    def triple_count(self) -> int:
+        """Get the total number of triples in the RDF graph."""
         ...

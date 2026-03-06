@@ -269,12 +269,12 @@ def test_fake_embedding_service_deterministic():
     svc = FakeEmbeddingService()
 
     # Same text produces same embedding
-    emb1 = svc.generate("hello")
-    emb2 = svc.generate("hello")
+    emb1 = svc.embed_text("hello")
+    emb2 = svc.embed_text("hello")
     assert emb1 == emb2
 
     # Different text produces different embedding
-    emb3 = svc.generate("world")
+    emb3 = svc.embed_text("world")
     assert emb1 != emb3
 
     # Embedding is 32 bytes (SHA-256)
@@ -287,12 +287,12 @@ def test_fake_embedding_service_similarity():
     svc = FakeEmbeddingService()
 
     # Identical embeddings have similarity 1.0
-    emb_a = svc.generate("same")
-    emb_b = svc.generate("same")
+    emb_a = svc.embed_text("same")
+    emb_b = svc.embed_text("same")
     assert svc.similarity(emb_a, emb_b) == 1.0
 
     # Different embeddings have similarity < 1.0
-    emb_c = svc.generate("different")
+    emb_c = svc.embed_text("different")
     similarity = svc.similarity(emb_a, emb_c)
     assert 0.0 <= similarity < 1.0
 
@@ -302,13 +302,13 @@ def test_fake_embedding_service_batch_generate():
     svc = FakeEmbeddingService()
 
     texts = ["hello", "world", "test"]
-    embeddings = svc.batch_generate(texts)
+    embeddings = svc.embed_batch(texts)
 
     assert len(embeddings) == 3
     assert all(isinstance(e, bytes) for e in embeddings)
-    assert embeddings[0] == svc.generate("hello")
-    assert embeddings[1] == svc.generate("world")
-    assert embeddings[2] == svc.generate("test")
+    assert embeddings[0] == svc.embed_text("hello")
+    assert embeddings[1] == svc.embed_text("world")
+    assert embeddings[2] == svc.embed_text("test")
 
 
 def test_fake_event_publisher_collects_events():

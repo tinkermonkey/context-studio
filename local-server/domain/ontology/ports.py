@@ -129,18 +129,24 @@ class OntologyRepository(Protocol):
 
 
 class EmbeddingService(Protocol):
-    """Service port for generating and comparing embeddings."""
+    """Service for generating vector embeddings from text.
 
-    def generate(self, text: str) -> bytes:
+    Embeddings are returned as bytes (serialized float32 numpy arrays)
+    matching the current storage format in the database.
+
+    The embed_text method must be thread-safe.
+    """
+
+    def embed_text(self, text: str) -> bytes:
         """Generate an embedding for the given text."""
+        ...
+
+    def embed_batch(self, texts: list[str]) -> list[bytes]:
+        """Generate embeddings for multiple texts."""
         ...
 
     def similarity(self, embedding_a: bytes, embedding_b: bytes) -> float:
         """Calculate the similarity between two embeddings (0.0 to 1.0)."""
-        ...
-
-    def batch_generate(self, texts: List[str]) -> List[bytes]:
-        """Generate embeddings for multiple texts."""
         ...
 
 

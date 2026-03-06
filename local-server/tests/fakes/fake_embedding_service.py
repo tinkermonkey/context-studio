@@ -15,7 +15,7 @@ class FakeEmbeddingService:
     The same text will always produce the same 32-byte embedding.
     """
 
-    def generate(self, text: str) -> bytes:
+    def embed_text(self, text: str) -> bytes:
         """Generate a deterministic 32-byte embedding for text.
 
         Args:
@@ -45,7 +45,7 @@ class FakeEmbeddingService:
         matches = sum(a == b for a, b in zip(embedding_a, embedding_b))
         return matches / max(len(embedding_a), len(embedding_b))
 
-    def batch_generate(self, texts: list) -> list:
+    def embed_batch(self, texts: list) -> list:
         """Generate embeddings for multiple texts.
 
         Args:
@@ -54,4 +54,4 @@ class FakeEmbeddingService:
         Returns:
             A list of byte embeddings corresponding to each input text.
         """
-        return [self.generate(t) for t in texts]
+        return [self.embed_text(t) for t in texts]
