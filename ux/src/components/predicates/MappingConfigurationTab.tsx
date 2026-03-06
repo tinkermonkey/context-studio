@@ -7,7 +7,7 @@
  */
 
 import React from "react";
-import { Badge, Button, Card, Spinner, ToggleSwitch } from "flowbite-react";;
+import { Badge, Button, Card, Spinner, ToggleSwitch } from "flowbite-react";
 import { RefreshCw, Filter, CheckCircle, XCircle } from "lucide-react";
 import { useFilterStatistics } from "@/api/hooks/reference/useReference";
 import { useButterToast } from "@/hooks/useButterToast";
