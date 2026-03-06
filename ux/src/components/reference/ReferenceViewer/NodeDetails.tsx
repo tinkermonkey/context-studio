@@ -5,15 +5,16 @@
  */
 
 import React, { useState } from "react";
-import { Alert, Badge, Button, Card, Modal, Spinner } from "flowbite-react";;
-import { ExternalLink,
+import { Alert, Badge, Button, Card, Modal, Spinner } from "flowbite-react";
+import {
+  ExternalLink,
   Copy,
   X,
   Database,
   Link as LinkIcon,
   Info,
   CheckCircle,
- } from "lucide-react";
+} from "lucide-react";
 import { UnifiedNode, UnifiedSearchLink } from "@/api/types/unified";
 import { SOURCE_METADATA } from "@/api/types/unified";
 import { useNodeDetails } from "@/api/hooks/unifiedReference/useUnifiedReference";
