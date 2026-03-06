@@ -6,7 +6,7 @@
  */
 
 import React from "react";
-import { Badge, Card } from "flowbite-react";;
+import { Badge, Card } from "flowbite-react";
 import { ExternalLink, ArrowRight } from "lucide-react";
 import { PredicateExample } from "@/api/services/reference";
 import { getSourceBadgeColor, getSourceUrl } from "@/utils/sourceUtils";
