@@ -17,6 +17,6 @@ from domain.ontology.events import DomainEvent
 class PipelineExecuted(DomainEvent):
     """Emitted when a pipeline execution completes."""
 
-    execution_id: str = ""
-    pipeline_id: str = ""
-    status: str = ""
+    execution_id: str
+    pipeline_id: str
+    status: str

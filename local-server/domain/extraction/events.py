@@ -17,6 +17,6 @@ from domain.ontology.events import DomainEvent
 class ExtractionCompleted(DomainEvent):
     """Emitted when an extraction pipeline run completes successfully."""
 
-    execution_id: str = ""
-    entity_count: int = 0
-    taxonomy_id: str = ""
+    execution_id: str
+    entity_count: int
+    taxonomy_id: str
