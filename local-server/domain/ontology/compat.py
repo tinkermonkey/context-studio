@@ -5,37 +5,37 @@ This module provides mappings between the old naming conventions (layer, domain,
 and the new domain-driven terminology (taxonomy, concept_scheme, class).
 
 TEMPORARY: This file will be removed when all adapters have been migrated to use
-domain types directly instead of legacy database models.
+domain types directly. See issue #269 (Empty Adapter Layer) for tracking this migration.
 """
 
-from database.models import (
-    StructureNode as LegacyStructureNode,
-    StructureNodeLink as LegacyStructureNodeLink,
-    Predicate as LegacyPredicate,
-    ChangeEvent as LegacyChangeEvent,
-    PipelineFlavor as LegacyPipelineFlavor,
+from database.enums import NodeType as LegacyNodeType
+from domain.ontology.value_objects import NodeType
+from domain.ontology.entities import (
+    Taxonomy,
+    ConceptScheme,
+    Class,
+    Relationship,
+    PropertyDefinition,
 )
 
-from domain.ontology.value_objects import NodeType
-
-# Bidirectional string mappings between legacy and new NodeType values
-# Using string values to maintain architecture boundaries
+# Bidirectional mappings between legacy and new NodeType enum instances
 NODE_TYPE_LEGACY_TO_NEW: dict = {
-    "layer": NodeType.TAXONOMY.value,
-    "domain": NodeType.CONCEPT_SCHEME.value,
-    "term": NodeType.CLASS.value,
+    LegacyNodeType.LAYER: NodeType.TAXONOMY,
+    LegacyNodeType.DOMAIN: NodeType.CONCEPT_SCHEME,
+    LegacyNodeType.TERM: NodeType.CLASS,
 }
 
 NODE_TYPE_NEW_TO_LEGACY: dict = {v: k for k, v in NODE_TYPE_LEGACY_TO_NEW.items()}
 
-# Export new domain entity types alongside legacy model aliases
+# Export new domain entity types and type mappings
 __all__ = [
-    "LegacyStructureNode",
-    "LegacyStructureNodeLink",
-    "LegacyPredicate",
-    "LegacyChangeEvent",
-    "LegacyPipelineFlavor",
+    "LegacyNodeType",
     "NodeType",
+    "Taxonomy",
+    "ConceptScheme",
+    "Class",
+    "Relationship",
+    "PropertyDefinition",
     "NODE_TYPE_LEGACY_TO_NEW",
     "NODE_TYPE_NEW_TO_LEGACY",
 ]
