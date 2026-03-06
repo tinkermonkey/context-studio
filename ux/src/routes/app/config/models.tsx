@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { Alert, Badge, Button, Card } from "flowbite-react";;
+import { Alert, Badge, Button, Card } from "flowbite-react";
 import { CsMainTitle } from "@/components/layout/cs_main";
 import { ConfigBreadcrumbs } from "@/components/configuration/ConfigBreadcrumbs";
 import {
@@ -7,7 +7,7 @@ import {
   useProvidersStatus,
   useToggleModel,
 } from "@/api/hooks";
-import { AlertTriangle, CheckCircle, Server } from "lucide-react";;
+import { AlertTriangle, CheckCircle, Server } from "lucide-react";
 import type {
   EnabledModelConfig,
   ProviderType,
@@ -285,7 +285,7 @@ function ProviderConfigurationTab({
     <div className="space-y-6">
       <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
         {Object.entries(providersStatus.providers).map(
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
           ([provider, status]: [string, any]) => (
             <ProviderStatusCard
               key={provider}

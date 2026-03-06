@@ -1,8 +1,28 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { Alert, Badge, Button, Card, Checkbox, Label, Tabs, TextInput  } from "flowbite-react";;
+import {
+  Alert,
+  Badge,
+  Button,
+  Card,
+  Checkbox,
+  Label,
+  Tabs,
+  TextInput,
+} from "flowbite-react";
 import { CsMainTitle } from "@/components/layout/cs_main";
 import { ConfigBreadcrumbs } from "@/components/configuration/ConfigBreadcrumbs";
-import { Activity, CheckCircle, Clock, Database, Globe, HardDrive, Server, Shield, Wifi, Zap  } from "lucide-react";;
+import {
+  Activity,
+  CheckCircle,
+  Clock,
+  Database,
+  Globe,
+  HardDrive,
+  Server,
+  Shield,
+  Wifi,
+  Zap,
+} from "lucide-react";
 import { useConfiguration, useUpdateConfigurationValue } from "@/api/hooks";
 import { useButterToast } from "@/hooks/useButterToast";
 
@@ -31,7 +51,8 @@ function RouteComponent() {
     return labels[path] || path;
   };
 
-  const handleUpdateProxyConfig = async (path: string, value: any) => {  // eslint-disable-line @typescript-eslint/no-explicit-any
+  const handleUpdateProxyConfig = async (path: string, value: any) => {
+    // eslint-disable-line @typescript-eslint/no-explicit-any
     const label = getProxyConfigLabel(path);
     await updateConfigMutation.mutateAsync(
       {
@@ -113,7 +134,7 @@ function ProxyServerSection({
 }: {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   config: any;
-  onUpdate: (path: string, value: any) => void;  // eslint-disable-line @typescript-eslint/no-explicit-any
+  onUpdate: (path: string, value: any) => void; // eslint-disable-line @typescript-eslint/no-explicit-any
   isUpdating: boolean;
 }) {
   if (!config) {
@@ -255,7 +276,7 @@ function CacheSettingsSection({
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   config: any;
 
-  onUpdate: (path: string, value: any) => void;  // eslint-disable-line @typescript-eslint/no-explicit-any
+  onUpdate: (path: string, value: any) => void; // eslint-disable-line @typescript-eslint/no-explicit-any
   isUpdating: boolean;
 }) {
   if (!config) {
@@ -405,7 +426,7 @@ function RateLimitingSection({
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   config: any;
 
-  onUpdate: (path: string, value: any) => void;  // eslint-disable-line @typescript-eslint/no-explicit-any
+  onUpdate: (path: string, value: any) => void; // eslint-disable-line @typescript-eslint/no-explicit-any
   isUpdating: boolean;
 }) {
   if (!config) {
