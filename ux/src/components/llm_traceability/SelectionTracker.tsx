@@ -149,7 +149,7 @@ export const SelectionTracker: React.FC<SelectionTrackerProps> = ({
     }
 
     // Capture original handlers before they might change
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const originalProps = child.props as any;
     const originalOnSelect = originalProps.onSelect;
     const originalOnAccept = originalProps.onAccept;
@@ -158,9 +158,10 @@ export const SelectionTracker: React.FC<SelectionTrackerProps> = ({
     const dataContent = originalProps["data-content"];
 
     // Look for common selection props and enhance them
-   
-    const enhancedProps: any   // eslint-disable-line @typescript-eslint/no-explicit-any
-= {};
+
+    const enhancedProps: any =
+      // eslint-disable-line @typescript-eslint/no-explicit-any
+      {};
 
     // Check if this is a DOM element (lowercase tag name) vs React component (uppercase or function)
     const isDOMElement =
@@ -171,19 +172,21 @@ export const SelectionTracker: React.FC<SelectionTrackerProps> = ({
       // Multiple children scenario: use event-level deduplication (1 call per click)
       let hasTrackedThisEvent = false;
 
-   
-      const createHandler = (originalHandler: any) =>  // eslint-disable-line @typescript-eslint/no-explicit-any
+      const createHandler =
+        (
+          originalHandler: any, // eslint-disable-line @typescript-eslint/no-explicit-any
+        ) =>
         (content: string) => {
-        if (!hasTrackedThisEvent) {
-          hasTrackedThisEvent = true;
-          handleSelection(content);
-          // Reset after current event loop to allow new user interactions
-          setTimeout(() => {
-            hasTrackedThisEvent = false;
-          }, 0);
-        }
-        originalHandler?.(content);
-      };
+          if (!hasTrackedThisEvent) {
+            hasTrackedThisEvent = true;
+            handleSelection(content);
+            // Reset after current event loop to allow new user interactions
+            setTimeout(() => {
+              hasTrackedThisEvent = false;
+            }, 0);
+          }
+          originalHandler?.(content);
+        };
 
       // Only add custom props to React components, not DOM elements
       if (!isDOMElement) {
@@ -196,23 +199,25 @@ export const SelectionTracker: React.FC<SelectionTrackerProps> = ({
       const trackedContent = new Set<string>();
       let isProcessingEvent = false;
 
-   
-      const createHandler = (originalHandler: any) =>  // eslint-disable-line @typescript-eslint/no-explicit-any
+      const createHandler =
+        (
+          originalHandler: any, // eslint-disable-line @typescript-eslint/no-explicit-any
+        ) =>
         (content: string) => {
-        if (!isProcessingEvent) {
-          isProcessingEvent = true;
-          setTimeout(() => {
-            trackedContent.clear();
-            isProcessingEvent = false;
-          }, 0);
-        }
+          if (!isProcessingEvent) {
+            isProcessingEvent = true;
+            setTimeout(() => {
+              trackedContent.clear();
+              isProcessingEvent = false;
+            }, 0);
+          }
 
-        if (!trackedContent.has(content)) {
-          trackedContent.add(content);
-          handleSelection(content);
-        }
-        originalHandler?.(content);
-      };
+          if (!trackedContent.has(content)) {
+            trackedContent.add(content);
+            handleSelection(content);
+          }
+          originalHandler?.(content);
+        };
 
       // Only add custom props to React components, not DOM elements
       if (!isDOMElement) {
