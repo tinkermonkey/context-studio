@@ -94,7 +94,7 @@ class TestReferenceLinkService:
             mock_ref_mgr.return_value = mock_manager
 
             # Execute & Assert
-            with pytest.raises(ReferenceNotFoundError, match="Reference not found in reference.db"):
+            with pytest.raises(ReferenceNotFoundError, match="Reference not found: schema.org:Person"):
                 service.add_reference_links("test-node-123", sample_links)
 
     def test_add_reference_links_prevents_duplicates(self, service, mock_db, sample_node):
@@ -281,7 +281,7 @@ class TestReferenceLinkService:
             mock_ref_mgr.return_value = mock_manager
 
             # Execute & Assert
-            with pytest.raises(ReferenceNotFoundError, match="Reference not found in reference.db"):
+            with pytest.raises(ReferenceNotFoundError, match="Reference not found: schema.org:NonExistent"):
                 service.validate_reference_link("schema.org", "NonExistent")
 
     def test_commit_failure_rollback(self, service, mock_db, sample_node, sample_links):

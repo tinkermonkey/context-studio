@@ -50,8 +50,9 @@ class ReferenceNotFoundError(NotFoundError):
         """
         self.source = source
         self.external_id = external_id
-        super(ServiceError, self).__init__(
-            f"Reference not found in reference.db: source='{source}', external_id='{external_id}'"
+        super().__init__(
+            resource_type="Reference",
+            resource_id=f"{source}:{external_id}"
         )
 
 
