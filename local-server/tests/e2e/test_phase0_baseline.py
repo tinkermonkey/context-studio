@@ -18,7 +18,6 @@ import os
 sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
 import pytest
-from uuid import UUID
 
 from tests.e2e.helpers import poll_until
 from tests.e2e.test_data import STABLE_CONCEPTS
@@ -120,18 +119,14 @@ class TestPhase0BaselineTests:
         # Step 6: Verify search functionality
         search_data = {
             "query": STABLE_CONCEPTS["class_1"]["title"],
-            "use_semantic_search": False,
         }
         search_response = e2e_client.post(
             "/api/structure_nodes/find", json=search_data
         )
         assert search_response.status_code == 200
         search_results = search_response.json()
-        # Search response can be a dict with 'results' or a list directly
-        if isinstance(search_results, dict):
-            assert "results" in search_results or "data" in search_results
-        else:
-            assert isinstance(search_results, list)
+        # API returns List[NodeSearchResult] directly
+        assert isinstance(search_results, list)
 
         # Step 7: Delete entities in reverse order (links first, then nodes)
         # Delete relationship
@@ -254,10 +249,10 @@ class TestPhase0BaselineTests:
         try:
             poll_until(
                 embeddings_generated,
-                timeout_seconds=15.0,
+                timeout=15.0,
                 error_message="Embeddings not generated within timeout",
             )
-        except AssertionError:
+        except TimeoutError:
             # Embeddings might not be generated if model is not available
             # This is acceptable for Phase 0 baseline
             pass
@@ -265,7 +260,6 @@ class TestPhase0BaselineTests:
         # Step 6: Perform semantic search on base class definition
         search_data = {
             "query": "computation and programming",
-            "use_semantic_search": True,
             "limit": 10,
         }
         search_response = e2e_client.post(
@@ -273,11 +267,8 @@ class TestPhase0BaselineTests:
         )
         assert search_response.status_code == 200
         search_results = search_response.json()
-        # Search response can be a dict with 'results' or a list directly
-        if isinstance(search_results, dict):
-            assert "results" in search_results or "data" in search_results
-        else:
-            assert isinstance(search_results, list)
+        # API returns List[NodeSearchResult] directly
+        assert isinstance(search_results, list)
 
         # Step 7: Cleanup
         for node_id in [base_class_id, similar_class_id, different_class_id, scheme_id, taxonomy_id]:
@@ -340,42 +331,38 @@ class TestPhase0BaselineTests:
         # Step 4: Retrieve change events
         change_events_response = e2e_client.get("/api/change_events/")
         assert change_events_response.status_code == 200
-        change_events_data = change_events_response.json()
-        assert "results" in change_events_data or "data" in change_events_data or isinstance(change_events_data, list)
-
-        # Get the actual events list
-        if isinstance(change_events_data, dict):
-            events = change_events_data.get("results") or change_events_data.get("data") or []
-        else:
-            events = change_events_data
+        events = change_events_response.json()
+        # API returns List[ChangeEventOut] directly
+        assert isinstance(events, list)
 
         # Step 5: Filter events to only those created by this test
         # (by checking if they reference our created entities)
         created_node_ids_str = {str(taxonomy_id), str(scheme_id)} | {str(cid) for cid in class_ids}
         test_events = [
             e for e in events
-            if (e.get("record_id") and str(e.get("record_id")) in created_node_ids_str)
-            or (e.get("entity_id") and str(e.get("entity_id")) in created_node_ids_str)
+            if e.get("record_id") and str(e.get("record_id")) in created_node_ids_str
         ]
 
         # Step 6: Verify change event counts and types
-        # We created 7 entities (1 taxonomy + 1 scheme + 5 classes), so we should have at least 7 creation events
-        # If we're not finding events by record_id/entity_id, check the total event count as a fallback
-        if len(test_events) < 7:
-            # Fallback: just verify that there are change events recorded
-            assert len(events) > 0, "No change events found in the database"
-        else:
-            assert len(test_events) >= 7, f"Expected at least 7 change events for our entities, got {len(test_events)}"
+        # We created 7 entities (1 taxonomy + 1 scheme + 5 classes), so we should have exactly 7 creation events
+        assert len(test_events) >= 7, f"Expected at least 7 change events for our entities, got {len(test_events)}"
 
-        # Step 7: Verify chronological ordering and event structure
-        # Check that events have the expected structure
-        if len(events) > 0:
-            # Verify that events have the expected fields
-            for event in events[:5]:  # Check first 5 events
-                # Events should have event type, record type, and timestamp
-                assert "event_type" in event or "type" in event, f"Event missing type field: {event.keys()}"
+        # Step 7: Verify chronological ordering
+        # Events should be returned in descending chronological order (newest first)
+        if len(test_events) > 1:
+            timestamps = [e.get("event_timestamp") for e in test_events]
+            for i in range(len(timestamps) - 1):
+                assert timestamps[i] >= timestamps[i + 1], (
+                    f"Events not in descending chronological order: "
+                    f"{timestamps[i]} should be >= {timestamps[i + 1]}"
+                )
 
-        # Step 8: Cleanup
+        # Step 8: Verify event structure
+        for event in test_events:
+            assert "event_type" in event, f"Event missing event_type field: {event.keys()}"
+            assert "event_timestamp" in event, f"Event missing event_timestamp field: {event.keys()}"
+
+        # Step 9: Cleanup
         for class_id in class_ids:
             e2e_client.delete(f"/api/structure_nodes/{class_id}")
         e2e_client.delete(f"/api/structure_nodes/{scheme_id}")
