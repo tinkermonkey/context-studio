@@ -623,7 +623,7 @@ class ConfigurationManager:
         # Load environment variables first (for .env file support)
         load_dotenv()
 
-        if os.path.exists(self.config_file):
+        if os.path.exists(self.config_file) and os.path.getsize(self.config_file) > 0:
             with open(self.config_file, 'r') as f:
                 config_data = json.load(f)
 
@@ -632,7 +632,7 @@ class ConfigurationManager:
             print(f"[ConfigurationManager] Server port: {self.settings.server.port}")
             print(f"[ConfigurationManager] Database URL: {self.settings.database.default_url}")
         else:
-            print(f"[ConfigurationManager] Config file not found: {self.config_file}, using defaults")
+            print(f"[ConfigurationManager] Config file not found or empty: {self.config_file}, using defaults")
             self.settings = Settings()
             self.save()  # Create default config file
         return self.settings
