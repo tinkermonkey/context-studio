@@ -284,13 +284,19 @@ class DuckDBQueryOptimizer:
 
         # Add entity type filters
         if "entity_types" in context:
-            entity_types = "', '".join(context["entity_types"])
-            if "WHERE" in query.upper():
-                query = query.replace(
-                    "WHERE", f"WHERE entity_type IN ('{entity_types}') AND"
-                )
-            else:
-                query += f" WHERE entity_type IN ('{entity_types}')"
+            entity_types = context["entity_types"]
+            if entity_types:
+                # Escape single quotes in entity type values
+                escaped_types = [
+                    str(t).replace("'", "''") for t in entity_types
+                ]
+                entity_types_clause = ", ".join(f"'{t}'" for t in escaped_types)
+                if "WHERE" in query.upper():
+                    query = query.replace(
+                        "WHERE", f"WHERE entity_type IN ({entity_types_clause}) AND"
+                    )
+                else:
+                    query += f" WHERE entity_type IN ({entity_types_clause})"
 
         return query
 
@@ -303,12 +309,25 @@ class DuckDBQueryOptimizer:
             partition_conditions = []
 
             for key, value in context["partition_filter"].items():
+                # Validate key is a valid identifier (alphanumeric, underscore)
+                if not self._is_valid_identifier(key):
+                    logger.warning(
+                        f"Skipping invalid partition filter key: {key}"
+                    )
+                    continue
+
                 if isinstance(value, list):
+                    # Sanitize list values - convert to strings and escape
+                    escaped_values = [
+                        self._escape_sql_value(v) for v in value
+                    ]
                     partition_conditions.append(
-                        f"{key} IN ({', '.join(map(str, value))})"
+                        f"{key} IN ({', '.join(escaped_values)})"
                     )
                 else:
-                    partition_conditions.append(f"{key} = {value}")
+                    # Sanitize single value
+                    escaped_value = self._escape_sql_value(value)
+                    partition_conditions.append(f"{key} = {escaped_value}")
 
             if partition_conditions:
                 filter_clause = " AND ".join(partition_conditions)
@@ -343,6 +362,28 @@ class DuckDBQueryOptimizer:
 
         # Basic aggregation optimization
         return query
+
+    def _is_valid_identifier(self, identifier: str) -> bool:
+        """Validate that identifier is a valid SQL identifier (alphanumeric + underscore)."""
+        if not identifier:
+            return False
+        # Allow alphanumeric characters and underscores
+        return all(c.isalnum() or c == "_" for c in identifier)
+
+    def _escape_sql_value(self, value: Any) -> str:
+        """Escape and quote a SQL value based on its type."""
+        if value is None:
+            return "NULL"
+        if isinstance(value, bool):
+            # SQL boolean representation
+            return "TRUE" if value else "FALSE"
+        if isinstance(value, (int, float)):
+            # Numeric values - validate they're actually numeric
+            return str(value)
+        # String values - escape single quotes
+        str_value = str(value)
+        escaped = str_value.replace("'", "''")
+        return f"'{escaped}'"
 
     def _generate_partitioned_pattern(self, start_date: str, end_date: str) -> str:
         """Generate S3 path pattern for date range."""
@@ -441,6 +482,11 @@ class DuckDBQueryOptimizer:
         """Create materialized view for frequently accessed queries."""
 
         try:
+            # Validate view name is a valid identifier
+            if not self._is_valid_identifier(view_name):
+                logger.error(f"Invalid materialized view name: {view_name}")
+                return False
+
             logger.info(f"Creating materialized view: {view_name}")
 
             # Check if referenced tables exist before creating the view
@@ -463,6 +509,8 @@ class DuckDBQueryOptimizer:
                     return True  # Return success but with pending status
 
             # Create local table from query
+            # Note: query parameter is user-supplied, but we trust it as it's the analytical query itself
+            # The view_name has been validated above
             create_query = f"""
             CREATE TABLE {view_name} AS
             {query}
@@ -494,6 +542,11 @@ class DuckDBQueryOptimizer:
             logger.warning(f"Materialized view {view_name} not found")
             return False
 
+        # Validate view name is a valid identifier
+        if not self._is_valid_identifier(view_name):
+            logger.error(f"Invalid materialized view name: {view_name}")
+            return False
+
         try:
             logger.info(f"Refreshing materialized view: {view_name}")
 
@@ -521,6 +574,11 @@ class DuckDBQueryOptimizer:
 
     def _get_table_row_count(self, table_name: str) -> int:
         """Get row count for a table."""
+
+        # Validate table name is a valid identifier
+        if not self._is_valid_identifier(table_name):
+            logger.warning(f"Invalid table name: {table_name}")
+            return 0
 
         try:
             result = self.duckdb_conn.execute(
