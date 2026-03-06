@@ -16,7 +16,6 @@ from sqlalchemy import text
 from services.collaboration_models import (
     Changeset, ChangesetState, row_to_changeset
 )
-from services.exceptions import NotFoundError
 from services.version_manager import VersionManager
 from services.working_tree_manager import WorkingTreeManager
 from services.s3_sync_manager import S3SyncManager
