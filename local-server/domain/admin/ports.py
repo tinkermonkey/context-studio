@@ -6,7 +6,7 @@ They use typing.Protocol for structural subtyping and reference only domain enti
 """
 from typing import Protocol
 
-from domain.admin.entities import AppConfiguration, SystemHealth
+from domain.admin.entities import AppConfiguration
 
 
 class ConfigurationStore(Protocol):

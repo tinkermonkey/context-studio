@@ -9,7 +9,7 @@ from dataclasses import dataclass, field
 from datetime import datetime
 from typing import Protocol, Optional, Sequence
 
-from domain.versioning.entities import ChangeEvent, ConflictReport, MergeResult
+from domain.versioning.entities import ChangeEvent
 
 
 @dataclass

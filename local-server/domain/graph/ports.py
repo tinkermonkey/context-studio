@@ -6,7 +6,6 @@ They use typing.Protocol for structural subtyping and reference only domain enti
 """
 from typing import Protocol, Optional, Sequence
 
-from domain.graph.entities import KnowledgeGraph, PathResult, GraphMetrics
 
 
 class GraphEngine(Protocol):
