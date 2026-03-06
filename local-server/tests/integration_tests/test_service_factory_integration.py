@@ -113,13 +113,13 @@ class TestServiceFactoryIntegration:
             assert delete_response.status_code == 204
 
     def test_database_manager_with_service_factory(
-        self, optimized_db_session, test_service_factory
+        self, managed_db_session, test_service_factory
     ):
         """
         Test that the database manager works correctly with the service factory.  # noqa: E501
         """
-        # This test uses the optimized_db_session fixture which uses DatabaseManager  # noqa: E501
-        db = optimized_db_session
+        # This test uses the managed_db_session fixture which uses DatabaseManager  # noqa: E501
+        db = managed_db_session
 
         # Get a service from the factory that uses the database
         factory = test_service_factory
@@ -283,7 +283,7 @@ class TestNewIntegrationTestTemplate:
     """
 
     def test_new_feature_with_service_factory(
-        self, test_service_factory, optimized_db_session
+        self, test_service_factory, managed_db_session
     ):
         """
         Template for new integration tests.
@@ -291,7 +291,7 @@ class TestNewIntegrationTestTemplate:
         This template shows the recommended pattern for new integration tests:
         1. Use shared_client for API testing (if needed)
         2. Use test_service_factory for service monitoring
-        3. Use optimized_db_session when direct DB access is needed
+        3. Use managed_db_session when direct DB access is needed
         4. Always clean up resources
         5. Include service factory performance monitoring
         """

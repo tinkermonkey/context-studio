@@ -522,8 +522,8 @@ def clean_db_session(shared_app):
 
 # Legacy fixtures for backwards compatibility - these now use the shared app
 @pytest.fixture(scope="function")
-def optimized_db_session(shared_app, test_database_manager):
-    """Provide optimized database session using DatabaseManager for enhanced testing."""  # noqa: E501
+def managed_db_session(shared_app, test_database_manager):
+    """Provide managed database session using DatabaseManager for testing."""  # noqa: E501
     app, engine, session_local = shared_app
 
     # Use database manager for optimized session handling

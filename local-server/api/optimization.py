@@ -160,12 +160,12 @@ class BatchOperationOut(BaseModel):
 
 
 # Dependency functions for service factory
-def get_query_optimizer():
+def get_query_analyzer():
     """Get DuckDBQueryAnalyzer instance via service factory."""
     return get_duckdb_query_analyzer_via_factory()
 
 
-def get_storage_optimizer():
+def get_storage_manager():
     """Get S3StorageManager instance via service factory."""
     return get_s3_storage_manager_via_factory()
 
@@ -190,8 +190,8 @@ def get_performance_monitor():
 
 @router.get("/health", response_model=SystemHealthOut)
 def get_optimization_system_health(
-    query_optimizer=Depends(get_query_optimizer),
-    storage_optimizer=Depends(get_storage_optimizer),
+    query_optimizer=Depends(get_query_analyzer),
+    storage_optimizer=Depends(get_storage_manager),
     performance_monitor=Depends(get_performance_monitor),
 ):
     """Get comprehensive optimization system health status."""
@@ -319,7 +319,7 @@ def trigger_auto_optimization(
 
 
 @router.get("/query/stats")
-def get_query_optimization_stats(query_optimizer=Depends(get_query_optimizer)):
+def get_query_optimization_stats(query_optimizer=Depends(get_query_analyzer)):
     """Get query optimization statistics and performance metrics."""
     try:
         stats = query_optimizer.get_optimization_statistics()
@@ -342,7 +342,7 @@ def get_query_optimization_stats(query_optimizer=Depends(get_query_optimizer)):
 
 @router.post("/query/optimize", response_model=QueryOptimizationOut)
 def optimize_query(
-    request: QueryOptimizationRequest, query_optimizer=Depends(get_query_optimizer)  # noqa: E501
+    request: QueryOptimizationRequest, query_optimizer=Depends(get_query_analyzer)  # noqa: E501
 ):
     """Optimize a specific query using advanced optimization techniques."""
     try:
@@ -370,7 +370,7 @@ def optimize_query(
 
 @router.post("/query/materialized-view")
 def create_materialized_view(
-    request: MaterializedViewRequest, query_optimizer=Depends(get_query_optimizer)  # noqa: E501
+    request: MaterializedViewRequest, query_optimizer=Depends(get_query_analyzer)  # noqa: E501
 ):
     """Create a materialized view for frequently accessed queries."""
     try:
@@ -407,7 +407,7 @@ def create_materialized_view(
 
 
 @router.get("/storage/stats")
-def get_storage_optimization_stats(storage_optimizer=Depends(get_storage_optimizer)):  # noqa: E501
+def get_storage_optimization_stats(storage_optimizer=Depends(get_storage_manager)):  # noqa: E501
     """Get storage optimization statistics and cost metrics."""
     try:
         stats = storage_optimizer.get_optimization_summary()
@@ -430,7 +430,7 @@ def get_storage_optimization_stats(storage_optimizer=Depends(get_storage_optimiz
 
 @router.post("/storage/optimize", response_model=StorageOptimizationOut)
 def optimize_storage(
-    background_tasks: BackgroundTasks, storage_optimizer=Depends(get_storage_optimizer)  # noqa: E501
+    background_tasks: BackgroundTasks, storage_optimizer=Depends(get_storage_manager)  # noqa: E501
 ):
     """Trigger comprehensive storage optimization including compression and lifecycle policies."""  # noqa: E501
     try:
@@ -467,7 +467,7 @@ def optimize_storage(
 
 
 @router.post("/storage/lifecycle-policies")
-def setup_lifecycle_policies(storage_optimizer=Depends(get_storage_optimizer)):
+def setup_lifecycle_policies(storage_optimizer=Depends(get_storage_manager)):
     """Setup intelligent S3 lifecycle policies for cost optimization."""
     try:
         success = storage_optimizer.setup_lifecycle_policies()

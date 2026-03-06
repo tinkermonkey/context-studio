@@ -598,7 +598,7 @@ class TestDuckDBQueryAnalyzer:
         last_metric = query_optimizer.performance_metrics[-1]
         assert "SELECT 1099" in last_metric.query_text
 
-    @patch('services.duckdb_query_optimizer.logger')
+    @patch('services.duckdb_query_analyzer.logger')
     def test_error_handling_during_query_execution(self, mock_logger, query_optimizer, mock_duckdb_conn):
         """Test error handling when query execution fails."""
         # Make query execution fail

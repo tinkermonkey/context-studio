@@ -59,18 +59,18 @@ class TestDatabaseManager:
         assert database_manager._loaded_connections == {}
         assert database_manager._connection_lifecycles == {}
 
-    def test_get_optimal_pool_strategy(self, database_manager):
+    def test_get_pool_strategy(self, database_manager):
         """Test optimal pool strategy selection."""
         # SQLite file database should use NULL_POOL
-        strategy = database_manager.get_optimal_pool_strategy("sqlite:///test.db")
+        strategy = database_manager.get_pool_strategy("sqlite:///test.db")
         assert strategy == PoolStrategy.NULL_POOL
 
         # SQLite in-memory should use STATIC_POOL
-        strategy = database_manager.get_optimal_pool_strategy("sqlite:///:memory:")
+        strategy = database_manager.get_pool_strategy("sqlite:///:memory:")
         assert strategy == PoolStrategy.STATIC_POOL
 
         # PostgreSQL should use QUEUE_POOL
-        strategy = database_manager.get_optimal_pool_strategy(
+        strategy = database_manager.get_pool_strategy(
             "postgresql://user:pass@host/db"
         )
         assert strategy == PoolStrategy.QUEUE_POOL
@@ -299,7 +299,7 @@ class TestDatabaseManager:
         # Cleanup
         database_manager._engines[engine_id].dispose()
 
-    def test_optimize_for_workload(self, database_manager, test_db_url):
+    def test_configure_for_workload(self, database_manager, test_db_url):
         """Test workload optimization."""
         # Create engine
         engine_id = "workload_test"
@@ -309,7 +309,7 @@ class TestDatabaseManager:
         workload_types = ["read_heavy", "write_heavy", "analytics", "mixed"]
 
         for workload in workload_types:
-            result = database_manager.optimize_for_workload(workload)
+            result = database_manager.configure_for_workload(workload)
 
             assert "workload_type" in result
             assert "optimizations_applied" in result

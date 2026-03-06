@@ -83,8 +83,8 @@ class DatabaseManager:
 
         logger.info("Database Manager initialized")
 
-    def get_optimal_pool_strategy(self, database_url: str) -> PoolStrategy:
-        """Determine optimal pooling strategy based on database type."""
+    def get_pool_strategy(self, database_url: str) -> PoolStrategy:
+        """Determine pooling strategy based on database type."""
         is_sqlite = database_url.startswith("sqlite://")
         is_memory = ":memory:" in database_url
 
@@ -125,7 +125,7 @@ class DatabaseManager:
                 logger.info(f"Reusing existing engine: {engine_id}")
                 return self._engines[engine_id]
 
-            strategy = self.get_optimal_pool_strategy(database_url)
+            strategy = self.get_pool_strategy(database_url)
             config = custom_config or self.get_pool_configuration(database_url)
 
             logger.info(f"Creating engine '{engine_id}' with {strategy.value} pooling")  # noqa: E501
@@ -388,7 +388,7 @@ class DatabaseManager:
                 )
             }
 
-    def optimize_for_workload(self, workload_type: str = "mixed") -> Dict[str, Any]:  # noqa: E501
+    def configure_for_workload(self, workload_type: str = "mixed") -> Dict[str, Any]:  # noqa: E501
         """Optimize database configurations for specific workload types."""
         optimizations = []
 

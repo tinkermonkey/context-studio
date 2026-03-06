@@ -30,7 +30,7 @@ from services.duckdb_service import DuckDBService, ChangeAnalyticsEngine
 from services.incremental_sync_engine import IncrementalSyncEngine
 # Phase 5 Optimization Services
 from services.duckdb_query_analyzer import DuckDBQueryAnalyzer
-from services.s3_storage_optimizer import S3StorageManager
+from services.s3_storage_manager import S3StorageManager
 from services.hierarchical_diff_engine import HierarchicalDiffEngine
 from services.batch_operation_processor import BatchOperationProcessor
 from services.performance_monitor import PerformanceMonitor
@@ -75,9 +75,9 @@ class ServiceType(Enum):
     DUCKDB_SERVICE = "duckdb_service"
     CHANGE_ANALYTICS_ENGINE = "change_analytics_engine"
     INCREMENTAL_SYNC_ENGINE = "incremental_sync_engine"
-    # Phase 5 Optimization Services
-    DUCKDB_QUERY_OPTIMIZER = "duckdb_query_optimizer"
-    S3_STORAGE_OPTIMIZER = "s3_storage_optimizer"
+    # Phase 5 Analysis and Management Services
+    DUCKDB_QUERY_ANALYZER = "duckdb_query_analyzer"
+    S3_STORAGE_MANAGER = "s3_storage_manager"
     HIERARCHICAL_DIFF_ENGINE = "hierarchical_diff_engine"
     BATCH_OPERATION_PROCESSOR = "batch_operation_processor"
     PERFORMANCE_MONITOR = "performance_monitor"

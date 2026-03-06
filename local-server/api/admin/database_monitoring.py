@@ -98,7 +98,7 @@ async def optimize_database_for_workload(
             )
 
         manager = get_database_manager()
-        result = manager.optimize_for_workload(workload_type)
+        result = manager.configure_for_workload(workload_type)
         return result
     except HTTPException:
         raise
@@ -154,12 +154,12 @@ async def get_environment_configuration() -> Dict[str, Any]:
         settings = get_settings()
         database_url = settings.database.default_url
 
-        optimal_strategy = manager.get_optimal_pool_strategy(database_url)
+        pool_strategy = manager.get_pool_strategy(database_url)
         pool_config = manager.get_pool_configuration(database_url)
 
         return {
             "timestamp": datetime.now().isoformat(),
-            "optimal_pool_strategy": optimal_strategy.value,
+            "pool_strategy": pool_strategy.value,
             "pool_configuration": {
                 "pool_size": pool_config.pool_size,
                 "max_overflow": pool_config.max_overflow,
@@ -174,12 +174,12 @@ async def get_environment_configuration() -> Dict[str, Any]:
         raise HTTPException(status_code=500, detail=f"Environment config failed: {str(e)}")  # noqa: E501
 
 
-@router.post("/admin/database/create-engine", summary="Create Optimized Engine")  # noqa: E501
-async def create_optimized_database_engine(
+@router.post("/admin/database/create-engine", summary="Create Database Engine")  # noqa: E501
+async def create_database_engine(
     engine_id: str,
     database_url: Optional[str] = None
 ) -> Dict[str, Any]:
-    """Create a new optimized database engine with specified configuration."""
+    """Create a new database engine with specified configuration."""
     try:
         manager = get_database_manager()
 
