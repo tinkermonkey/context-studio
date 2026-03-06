@@ -35,7 +35,7 @@ declare module "flowbite-react" {
   export interface TabsItemProps extends ComponentProps<"div"> {
     active?: boolean;
     title: string;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     icon?: any;
     children?: ReactNode;
   }
