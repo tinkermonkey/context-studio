@@ -130,10 +130,10 @@ class S3StorageManager:
         # Choose best compression based on data characteristics
         compression = self._select_compression(data_analysis)
 
-        # Improve column types
-        improved_df = self._enhance_column_types(data_df, data_analysis)
+        # Downcast column types for storage efficiency
+        downcasted_df = self._downcast_column_types(data_df, data_analysis)
 
-        # Write with improved settings
+        # Write with optimized settings
         write_options = {
             'compression': compression,
             'row_group_size': self._calculate_row_group_size(data_analysis),
@@ -147,21 +147,21 @@ class S3StorageManager:
         original_size = data_df.memory_usage(deep=True).sum()
 
         try:
-            # Write improved Parquet
-            improved_parquet_buffer = improved_df.to_parquet(**write_options)  # type: ignore[call-overload]
-            improved_size = len(improved_parquet_buffer) if isinstance(improved_parquet_buffer, bytes) else original_size
+            # Write downcast Parquet
+            parquet_buffer = downcasted_df.to_parquet(**write_options)  # type: ignore[call-overload]
+            compressed_size = len(parquet_buffer) if isinstance(parquet_buffer, bytes) else original_size
 
-            compression_ratio = original_size / improved_size if improved_size > 0 else 1.0
+            compression_ratio = original_size / compressed_size if compressed_size > 0 else 1.0
 
             # Track compression statistics
             self.compression_stats[s3_path] = {
                 'original_size': original_size,
-                'compressed_size': improved_size,
+                'compressed_size': compressed_size,
                 'compression_ratio': compression_ratio,
                 'compression_algorithm': compression,
                 'compressed_at': time.time(),
-                'row_count': len(improved_df),
-                'column_count': len(improved_df.columns)
+                'row_count': len(downcasted_df),
+                'column_count': len(downcasted_df.columns)
             }
 
             logger.info(f"Parquet compression: {compression_ratio:.2f}x ratio achieved")
@@ -397,12 +397,12 @@ class S3StorageManager:
         else:
             return 'snappy'  # Default for smaller datasets
 
-    def _enhance_column_types(self, df: pd.DataFrame, analysis: Dict[str, Any]) -> pd.DataFrame:
-        """Enhance column types for better storage efficiency."""
+    def _downcast_column_types(self, df: pd.DataFrame, analysis: Dict[str, Any]) -> pd.DataFrame:
+        """Downcast column types for better storage efficiency."""
 
-        enhanced_df = df.copy()
+        downcasted_df = df.copy()
 
-        # Enhance integer columns
+        # Downcast integer columns
         for col, dtype in analysis['column_types'].items():
             if dtype in ['int64']:
                 col_min = analysis['numeric_ranges'].get(col, {}).get('min', 0)
@@ -410,28 +410,28 @@ class S3StorageManager:
 
                 # Downcast to smaller integer types if possible
                 if col_min >= 0 and col_max <= 255:
-                    enhanced_df[col] = enhanced_df[col].astype('uint8')
+                    downcasted_df[col] = downcasted_df[col].astype('uint8')
                 elif col_min >= -128 and col_max <= 127:
-                    enhanced_df[col] = enhanced_df[col].astype('int8')
+                    downcasted_df[col] = downcasted_df[col].astype('int8')
                 elif col_min >= 0 and col_max <= 65535:
-                    enhanced_df[col] = enhanced_df[col].astype('uint16')
+                    downcasted_df[col] = downcasted_df[col].astype('uint16')
                 elif col_min >= -32768 and col_max <= 32767:
-                    enhanced_df[col] = enhanced_df[col].astype('int16')
+                    downcasted_df[col] = downcasted_df[col].astype('int16')
                 elif col_min >= 0 and col_max <= 4294967295:
-                    enhanced_df[col] = enhanced_df[col].astype('uint32')
+                    downcasted_df[col] = downcasted_df[col].astype('uint32')
                 elif col_min >= -2147483648 and col_max <= 2147483647:
-                    enhanced_df[col] = enhanced_df[col].astype('int32')
+                    downcasted_df[col] = downcasted_df[col].astype('int32')
 
-        # Enhance string columns with categorical data
-        for col in enhanced_df.select_dtypes(include=['object']).columns:
-            cardinality = analysis['cardinality'].get(col, enhanced_df[col].nunique())
-            total_rows = len(enhanced_df)
+        # Convert string columns with categorical data
+        for col in downcasted_df.select_dtypes(include=['object']).columns:
+            cardinality = analysis['cardinality'].get(col, downcasted_df[col].nunique())
+            total_rows = len(downcasted_df)
 
             # Convert to category if low cardinality
             if cardinality < total_rows * 0.5:  # Less than 50% unique values
-                enhanced_df[col] = enhanced_df[col].astype('category')
+                downcasted_df[col] = downcasted_df[col].astype('category')
 
-        return enhanced_df
+        return downcasted_df
 
     def _calculate_row_group_size(self, analysis: Dict[str, Any]) -> int:
         """Calculate row group size for Parquet files."""

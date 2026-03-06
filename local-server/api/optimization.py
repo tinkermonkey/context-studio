@@ -410,7 +410,7 @@ def create_materialized_view(
 def get_storage_optimization_stats(storage_optimizer=Depends(get_storage_manager)):  # noqa: E501
     """Get storage optimization statistics and cost metrics."""
     try:
-        stats = storage_optimizer.get_optimization_summary()
+        stats = storage_optimizer.get_management_summary()
 
         response = {
             "optimization_summary": {  # Add this wrapper
@@ -436,7 +436,7 @@ def optimize_storage(
     try:
 
         def run_storage_optimization():
-            return storage_optimizer.optimize_storage_comprehensive()
+            return storage_optimizer.manage_storage_comprehensive()
 
         # Start optimization in background
         background_tasks.add_task(run_storage_optimization)
