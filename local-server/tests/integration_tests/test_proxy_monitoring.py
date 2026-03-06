@@ -22,7 +22,7 @@ except ImportError:
     print("Warning: Monitoring analysis utilities not available")
 
 
-def test_proxy_monitoring():
+def test_proxy_monitoring() -> None:
     """Test the new proxy monitoring endpoint"""
     base_url = "http://localhost:8000"
 
