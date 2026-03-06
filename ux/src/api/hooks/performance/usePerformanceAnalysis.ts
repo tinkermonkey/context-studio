@@ -409,7 +409,7 @@ export function usePerformanceConfig(
       return response.data;
     },
     ...options,
-});
+  });
 }
 
 // Mutation Hooks
@@ -524,7 +524,6 @@ export function useBatchOperation(
   });
 }
 
- 
 export function useUpdatePerformanceConfig(
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   options?: UseMutationOptions<any, Error, PerformanceConfig>,
