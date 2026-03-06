@@ -295,7 +295,7 @@ class TestRAGPipelineService:
 
             def timeout_func(*args, **kwargs):
                 import time
-                time.sleep(2.0)  # Longer than 1s timeout
+                time.sleep(2.0)  # Longer than the configured timeout
                 return LLMExtractionOutput(
                     entities=[],
                     kg_context_size=0,
@@ -306,7 +306,8 @@ class TestRAGPipelineService:
             mock_llm_proc.process.side_effect = timeout_func
 
             # Create service with shorter Layer 1 timeout for testing
-            service = RAGPipelineService(kg_session, ops_session, timeout_layer_1=1.0)
+            # Use 2.5s timeout since the mock processor sleeps for 2s
+            service = RAGPipelineService(kg_session, ops_session, timeout_layer_1=2.5)
 
             # Setup other layers to succeed
             mock_spacy_proc = MockSpaCyProcessor.return_value
