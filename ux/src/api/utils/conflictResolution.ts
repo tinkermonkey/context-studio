@@ -43,7 +43,7 @@ export interface ConflictResolutionOptions {
   /**
    * Callback to execute after refetch completes
    */
-  onRefetchComplete?: (data: any) => void;  // eslint-disable-line @typescript-eslint/no-explicit-any
+  onRefetchComplete?: (data: any) => void; // eslint-disable-line @typescript-eslint/no-explicit-any
 }
 
 /**

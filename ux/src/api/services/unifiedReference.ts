@@ -16,9 +16,7 @@ import {
   UnifiedReferenceError,
   SourceType,
 } from "../types/unified";
-import {
-  SOURCE_ENDPOINTS,
-} from "../types/streamingReference";
+import { SOURCE_ENDPOINTS } from "../types/streamingReference";
 
 export class UnifiedReferenceService extends BaseService {
   private readonly SEARCH_ENDPOINT = `/api/reference/search`;
@@ -99,10 +97,7 @@ export class UnifiedReferenceService extends BaseService {
   /**
    * Get links for a specific node
    */
-  async getLinks(
-    nodeId: string,
-    
-  ): Promise<UnifiedLink[]> {
+  async getLinks(nodeId: string): Promise<UnifiedLink[]> {
     return this.withErrorContext(async () => {
       this.validateRequired(nodeId, "Node ID");
       this.sanitizeString(nodeId, "Node ID", 255);
@@ -198,11 +193,10 @@ export class UnifiedReferenceService extends BaseService {
     Record<SourceType, { enabled: boolean; endpoint: string }>
   > {
     return this.withErrorContext(async () => {
-       
       const sources: Record<
         SourceType,
         { enabled: boolean; endpoint: string }
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
       > = {} as any;
 
       Object.entries(SOURCE_ENDPOINTS).forEach(([source, config]) => {
