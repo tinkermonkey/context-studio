@@ -637,7 +637,6 @@ class ConfigurationManager:
             self.save()  # Create default config file
         return self.settings
 
-
     def save(self) -> bool:
         """Save current configuration to file"""
         try:

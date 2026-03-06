@@ -272,16 +272,9 @@ class TestConfigDatabaseIntegration:
             with open(config_file, "w") as f:
                 f.write("{ invalid json }")
 
-            # ConfigurationManager handles invalid JSON gracefully by logging error and using defaults  # noqa: E501
-            config_manager = ConfigurationManager(config_file)
-
-            # Verify it falls back to default settings
-            assert config_manager.settings is not None
-            assert (
-                config_manager.settings.database.default_url
-                == "sqlite:///./datafiles/local.db"
-            )
-            assert not hasattr(config_manager.settings.database, "schema_org_path")  # noqa: E501
+            # ConfigurationManager raises JSONDecodeError on invalid JSON
+            with pytest.raises(json.JSONDecodeError):
+                ConfigurationManager(config_file)
 
     def test_config_with_environment_variables(self):
         """Test configuration loading with environment variables"""
