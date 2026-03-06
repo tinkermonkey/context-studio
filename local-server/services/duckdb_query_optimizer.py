@@ -8,6 +8,7 @@ views for enterprise-scale analytical performance.
 
 import time
 import hashlib
+import re
 import duckdb
 from typing import Dict, Optional, Any, Tuple, cast
 from dataclasses import dataclass
@@ -399,7 +400,6 @@ class DuckDBQueryOptimizer:
 
     def _is_valid_date_string(self, date_str: str) -> bool:
         """Validate that date string is well-formed (YYYY-MM-DD format)."""
-        import re
         # Match YYYY-MM-DD format (does not validate day/month ranges)
         pattern = r'^\d{4}-\d{2}-\d{2}$'
         return bool(re.match(pattern, date_str))
@@ -410,10 +410,10 @@ class DuckDBQueryOptimizer:
         # Validate date strings to prevent path traversal/wildcard injection
         if not self._is_valid_date_string(start_date):
             logger.warning(f"Invalid start_date format: {start_date}")
-            return "changes/*/*/**.parquet"
+            return "changes/*/*/*.parquet"
         if not self._is_valid_date_string(end_date):
             logger.warning(f"Invalid end_date format: {end_date}")
-            return "changes/*/*/**.parquet"
+            return "changes/*/*/*.parquet"
 
         # Basic pattern generation - advanced partitioning strategies not yet implemented
         return f"changes/*/*/*{start_date}*{end_date}*.parquet"
