@@ -2,9 +2,7 @@ import React from "react";
 import { useForm } from "@tanstack/react-form";
 import { TextInput, Textarea, Button, Alert, Label } from "flowbite-react";
 import { Info, Layers } from "lucide-react";
-import type {
-  StructureNode,
-} from "@/api/types/structureNodes";
+import type { StructureNode } from "@/api/types/structureNodes";
 import { useCreateDomain } from "@/api/hooks/structure_nodes/useStructureNodeMutations";
 import { useUpdateStructureNode } from "@/api/hooks/structure_nodes/useStructureNodeMutations";
 import { LayerSelector } from "@/components/node_selectors/layer_selector";
@@ -51,12 +49,12 @@ const DomainForm: React.FC<DomainFormProps> = ({
             data: value,
           });
         } else {
-   
-          const createData: any   // eslint-disable-line @typescript-eslint/no-explicit-any
-= {
-            title: value.title,
-            definition: value.definition,
-          };
+          const createData: any =
+            // eslint-disable-line @typescript-eslint/no-explicit-any
+            {
+              title: value.title,
+              definition: value.definition,
+            };
 
           // Only include structural_predicate_id if it has a value
           if (value.structural_predicate_id) {
@@ -70,9 +68,9 @@ const DomainForm: React.FC<DomainFormProps> = ({
         }
         if (onSuccess) onSuccess(result);
         form.reset();
-   
-      } catch (error: any)  // eslint-disable-line @typescript-eslint/no-explicit-any
- {
+      } catch (
+        error: any // eslint-disable-line @typescript-eslint/no-explicit-any
+      ) {
         let message: string;
         // Log the full error for debugging
         console.error("Full error object:", error);
@@ -86,7 +84,6 @@ const DomainForm: React.FC<DomainFormProps> = ({
           error?.detail;
 
         if (Array.isArray(detail)) {
-   
           message = detail
             .map(
               // eslint-disable-next-line @typescript-eslint/no-explicit-any

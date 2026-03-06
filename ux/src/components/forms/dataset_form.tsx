@@ -2,13 +2,11 @@ import React from "react";
 import { useForm } from "@tanstack/react-form";
 import { TextInput, Button, Alert, Label } from "flowbite-react";
 import { Info } from "lucide-react";
-import type {
-  CreateDatasetRequest,
-} from "@/api/services/datasets";
+import type { CreateDatasetRequest } from "@/api/services/datasets";
 import { useCreateDataset } from "@/api/hooks/datasets/useDatasetMutations";
 
 interface DatasetFormProps {
-  onSuccess?: (dataset: any) => void;  // eslint-disable-line @typescript-eslint/no-explicit-any
+  onSuccess?: (dataset: any) => void; // eslint-disable-line @typescript-eslint/no-explicit-any
 }
 
 const DatasetForm: React.FC<DatasetFormProps> = ({ onSuccess }) => {
@@ -28,9 +26,9 @@ const DatasetForm: React.FC<DatasetFormProps> = ({ onSuccess }) => {
         );
         if (onSuccess) onSuccess(result);
         form.reset();
-   
-      } catch (error: any)  // eslint-disable-line @typescript-eslint/no-explicit-any
- {
+      } catch (
+        error: any // eslint-disable-line @typescript-eslint/no-explicit-any
+      ) {
         let message = "An error occurred";
         console.error("Full error object:", error);
         console.error("Error detail:", error?.detail);
