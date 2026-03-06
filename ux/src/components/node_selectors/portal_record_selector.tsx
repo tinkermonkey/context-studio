@@ -1,17 +1,24 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import ReactDOM from "react-dom";
-import { Badge, Button, Checkbox, Label, Spinner, TextInput  } from "flowbite-react";;
+import {
+  Badge,
+  Button,
+  Checkbox,
+  Label,
+  Spinner,
+  TextInput,
+} from "flowbite-react";
 import { ChevronDown, Search, X, CircleX } from "lucide-react";
 import SearchHighlight from "@/components/misc/search_highlight";
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export interface FieldMap<T = any> {
   value: keyof T | string;
   title: keyof T | string;
   definition?: keyof T | string;
 }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export interface PortalRecordSelectorProps<T = any> {
   records: T[];
   loading?: boolean;
@@ -27,7 +34,7 @@ export interface PortalRecordSelectorProps<T = any> {
   "data-testid"?: string;
 }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function PortalRecordSelector<T = any>(
   props: PortalRecordSelectorProps<T>,
 ): React.ReactElement {
