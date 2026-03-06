@@ -35,7 +35,7 @@ class TestExternalPredicatesE2E:
     def check_sqlite_vec(self):
         """Check if sqlite-vec is available and properly loaded, skip tests if not."""  # noqa: E501
         try:
-            import sqlite_vec  # noqa: F401
+            import sqlite_vec  # type: ignore[import-untyped]
         except ImportError:
             pytest.skip("sqlite-vec not available (expected in Docker environment)")  # noqa: E501
 

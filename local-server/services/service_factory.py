@@ -657,7 +657,7 @@ class ServiceFactory:
 
             return DuckDBQueryAnalyzer(cast(Any, duckdb_connection), s3_conf)
 
-        return self._create_service_with_factory(ServiceType.DUCKDB_QUERY_OPTIMIZER, create_service)
+        return self._create_service_with_factory(ServiceType.DUCKDB_QUERY_ANALYZER, create_service)
 
     def create_s3_storage_manager(
         self, s3_config: Optional[Dict[str, str]] = None
@@ -727,7 +727,7 @@ class ServiceFactory:
 
             return S3StorageManager(s3_client, bucket_name)
 
-        return self._create_service_with_factory(ServiceType.S3_STORAGE_OPTIMIZER, create_service)
+        return self._create_service_with_factory(ServiceType.S3_STORAGE_MANAGER, create_service)
 
     def create_hierarchical_diff_engine(
         self, db: Session, nlp_service=None
