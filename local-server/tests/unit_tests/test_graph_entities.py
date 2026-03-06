@@ -112,6 +112,15 @@ class TestGraphMetrics:
                 connected_components=1
             )
 
+        # Density is bool (even though bool is subclass of int)
+        with pytest.raises(ValueError, match="density must be a number between 0.0 and 1.0"):
+            GraphMetrics(
+                node_count=10,
+                edge_count=25,
+                density=True,
+                connected_components=1
+            )
+
     def test_graph_metrics_invalid_connected_components(self):
         """Test that invalid connected_components raises ValueError."""
         with pytest.raises(ValueError, match="connected_components must be a positive integer"):
@@ -230,6 +239,14 @@ class TestPathResult:
                 path=("node1", "node2"),
                 length=1,
                 weight="1.5"  # String instead of number
+            )
+
+        # Weight is bool (even though bool is subclass of int)
+        with pytest.raises(ValueError, match="weight must be a number"):
+            PathResult(
+                path=("node1", "node2"),
+                length=1,
+                weight=True
             )
 
 

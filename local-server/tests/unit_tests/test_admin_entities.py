@@ -93,15 +93,15 @@ class TestSystemHealth:
         assert health.status == SystemHealthStatus.DEGRADED
         assert health.embedding_service_ok is False
 
-    def test_system_health_with_dict_details(self):
-        """Test that dict details are wrapped in MappingProxyType."""
-        health = SystemHealth(
-            status=SystemHealthStatus.HEALTHY,
-            database_ok=True,
-            embedding_service_ok=True,
-            details={"uptime": "99.9%"}
-        )
-        assert isinstance(health.details, types.MappingProxyType)
+    def test_system_health_with_dict_details_raises_error(self):
+        """Test that plain dict details raises TypeError."""
+        with pytest.raises(TypeError, match="details must be a MappingProxyType"):
+            SystemHealth(
+                status=SystemHealthStatus.HEALTHY,
+                database_ok=True,
+                embedding_service_ok=True,
+                details={"uptime": "99.9%"}
+            )
 
     def test_system_health_details_immutable(self):
         """Test that details are immutable."""
@@ -246,6 +246,16 @@ class TestBackgroundTask:
                 created_at="2025-03-06T00:00:00Z"
             )
 
+        # Invalid: bool (even though bool is subclass of int)
+        with pytest.raises(ValueError, match="progress must be a number between 0.0 and 1.0"):
+            BackgroundTask(
+                id="task-1",
+                task_type=BackgroundTaskType.SYNC,
+                status=BackgroundTaskStatus.PENDING,
+                progress=True,
+                created_at="2025-03-06T00:00:00Z"
+            )
+
     def test_background_task_invalid_id(self):
         """Test that empty id raises ValueError."""
         with pytest.raises(ValueError, match="BackgroundTask id must be a non-empty string"):
@@ -319,17 +329,16 @@ class TestAppConfiguration:
             )
             assert config.log_level == log_level
 
-    def test_app_configuration_with_dict_extra(self):
-        """Test that dict extra is wrapped in MappingProxyType."""
-        config = AppConfiguration(
-            llm_provider="openai",
-            embedding_model="text-embedding-3-small",
-            database_path="/path/to/local.db",
-            log_level=LogLevel.DEBUG,
-            extra={"timeout": 30, "retries": 3}
-        )
-        assert isinstance(config.extra, types.MappingProxyType)
-        assert config.extra["timeout"] == 30
+    def test_app_configuration_with_dict_extra_raises_error(self):
+        """Test that plain dict extra raises TypeError."""
+        with pytest.raises(TypeError, match="extra must be a MappingProxyType"):
+            AppConfiguration(
+                llm_provider="openai",
+                embedding_model="text-embedding-3-small",
+                database_path="/path/to/local.db",
+                log_level=LogLevel.DEBUG,
+                extra={"timeout": 30, "retries": 3}
+            )
 
     def test_app_configuration_extra_immutable(self):
         """Test that extra is immutable."""

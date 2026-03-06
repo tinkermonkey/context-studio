@@ -44,22 +44,3 @@ class LayerName(str, Enum):
     NLP = "nlp"
     LLM = "llm"
     WEB = "web"
-
-
-class SourceLayer(str, Enum):
-    """
-    Enumeration of source layers for extracted entities.
-
-    Indicates which extraction layer produced a given entity.
-
-    Attributes:
-        KG: Extracted from knowledge graph
-        NLP: Extracted via NLP processing
-        LLM: Extracted via LLM
-        WEB: Extracted from web sources
-    """
-
-    KG = "kg"
-    NLP = "nlp"
-    LLM = "llm"
-    WEB = "web"

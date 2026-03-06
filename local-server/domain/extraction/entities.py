@@ -9,7 +9,7 @@ from __future__ import annotations
 
 import types
 from dataclasses import dataclass, field
-from typing import Optional, List
+from typing import Optional
 
 from domain.extraction.enums import EntityType, LayerName
 
@@ -43,11 +43,11 @@ class ExtractedEntity:
             raise TypeError(
                 f"entity_type must be an EntityType enum, got {type(self.entity_type).__name__}"
             )
-        if not isinstance(self.confidence, (int, float)) or not (0.0 <= self.confidence <= 1.0):
+        if isinstance(self.confidence, bool) or not isinstance(self.confidence, (int, float)) or not (0.0 <= self.confidence <= 1.0):
             raise ValueError("confidence must be a number between 0.0 and 1.0")
-        if not isinstance(self.start_pos, int) or self.start_pos < 0:
+        if isinstance(self.start_pos, bool) or not isinstance(self.start_pos, int) or self.start_pos < 0:
             raise ValueError("start_pos must be a non-negative integer")
-        if not isinstance(self.end_pos, int) or self.end_pos < 0:
+        if isinstance(self.end_pos, bool) or not isinstance(self.end_pos, int) or self.end_pos < 0:
             raise ValueError("end_pos must be a non-negative integer")
         if self.end_pos <= self.start_pos:
             raise ValueError("end_pos must be greater than start_pos")
@@ -66,12 +66,12 @@ class ExtractionLayerResult:
     Attributes:
         layer_name: The name of the extraction layer (kg, nlp, llm, web).
         entities: Entities extracted by this layer (immutable).
-        relationships: Relationships extracted by this layer as immutable read-only list.
+        relationships: Relationships extracted by this layer as immutable tuple of dicts.
     """
 
     layer_name: LayerName
     entities: tuple[ExtractedEntity, ...] = field(default_factory=tuple)
-    relationships: types.MappingProxyType = field(default_factory=lambda: types.MappingProxyType({}))
+    relationships: tuple[dict, ...] = field(default_factory=tuple)
 
     def __post_init__(self) -> None:
         """Validate extraction layer result invariants."""
@@ -84,8 +84,11 @@ class ExtractionLayerResult:
         for entity in self.entities:
             if not isinstance(entity, ExtractedEntity):
                 raise TypeError(f"All entities must be ExtractedEntity instances, got {type(entity).__name__}")
-        if not isinstance(self.relationships, types.MappingProxyType):
-            raise TypeError("relationships must be a MappingProxyType (immutable mapping)")
+        if not isinstance(self.relationships, tuple):
+            raise TypeError("relationships must be a tuple of dicts (immutable)")
+        for rel in self.relationships:
+            if not isinstance(rel, dict):
+                raise TypeError(f"All relationships must be dicts, got {type(rel).__name__}")
 
 
 @dataclass

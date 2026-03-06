@@ -96,7 +96,7 @@ class EntityVersion:
         """Validate entity version invariants."""
         if not self.entity_id or not isinstance(self.entity_id, str):
             raise ValueError("EntityVersion entity_id must be a non-empty string")
-        if not isinstance(self.version, int) or self.version <= 0:
+        if isinstance(self.version, bool) or not isinstance(self.version, int) or self.version <= 0:
             raise ValueError("EntityVersion version must be a positive integer")
         if not isinstance(self.snapshot, types.MappingProxyType):
             raise TypeError("snapshot must be a MappingProxyType (immutable mapping)")
@@ -185,9 +185,9 @@ class MergeResult:
         """Validate merge result invariants."""
         if not self.sync_id or not isinstance(self.sync_id, str):
             raise ValueError("MergeResult sync_id must be a non-empty string")
-        if not isinstance(self.merged_count, int) or self.merged_count < 0:
+        if isinstance(self.merged_count, bool) or not isinstance(self.merged_count, int) or self.merged_count < 0:
             raise ValueError("MergeResult merged_count must be a non-negative integer")
-        if not isinstance(self.conflict_count, int) or self.conflict_count < 0:
+        if isinstance(self.conflict_count, bool) or not isinstance(self.conflict_count, int) or self.conflict_count < 0:
             raise ValueError("MergeResult conflict_count must be a non-negative integer")
-        if not isinstance(self.skipped_count, int) or self.skipped_count < 0:
+        if isinstance(self.skipped_count, bool) or not isinstance(self.skipped_count, int) or self.skipped_count < 0:
             raise ValueError("MergeResult skipped_count must be a non-negative integer")

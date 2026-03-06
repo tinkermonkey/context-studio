@@ -59,10 +59,8 @@ class PipelineConfiguration:
             raise TypeError("created_at must be a string timestamp")
         if self.updated_at and not isinstance(self.updated_at, str):
             raise TypeError("updated_at must be a string timestamp")
-
-        # Wrap parameters in read-only proxy if not already wrapped
         if not isinstance(self.parameters, types.MappingProxyType):
-            object.__setattr__(self, 'parameters', types.MappingProxyType(self.parameters))
+            raise TypeError("parameters must be a MappingProxyType (immutable mapping)")
 
 
 @dataclass

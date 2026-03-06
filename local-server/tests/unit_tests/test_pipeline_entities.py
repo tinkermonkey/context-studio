@@ -75,21 +75,20 @@ class TestPipelineConfiguration:
         assert config.pipeline_type == PipelineType.EXTRACTION
         assert config.model_name == "gpt-4"
 
-    def test_pipeline_configuration_with_dict_parameters(self):
-        """Test that dict parameters are wrapped in MappingProxyType."""
-        config = PipelineConfiguration(
-            id="test-pipeline-1",
-            name="Test Pipeline",
-            description="A test pipeline",
-            pipeline_type=PipelineType.EXTRACTION,
-            model_name="gpt-4",
-            prompt_template="Extract entities from: {text}",
-            parameters={"max_tokens": 100},
-            created_at="2025-03-06T00:00:00Z",
-            updated_at="2025-03-06T00:00:00Z"
-        )
-        assert isinstance(config.parameters, types.MappingProxyType)
-        assert config.parameters["max_tokens"] == 100
+    def test_pipeline_configuration_with_dict_parameters_raises_error(self):
+        """Test that plain dict parameters raises TypeError."""
+        with pytest.raises(TypeError, match="parameters must be a MappingProxyType"):
+            PipelineConfiguration(
+                id="test-pipeline-1",
+                name="Test Pipeline",
+                description="A test pipeline",
+                pipeline_type=PipelineType.EXTRACTION,
+                model_name="gpt-4",
+                prompt_template="Extract entities from: {text}",
+                parameters={"max_tokens": 100},
+                created_at="2025-03-06T00:00:00Z",
+                updated_at="2025-03-06T00:00:00Z"
+            )
 
     def test_pipeline_configuration_parameters_immutable(self):
         """Test that parameters are immutable."""

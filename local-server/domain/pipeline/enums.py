@@ -42,20 +42,3 @@ class ExecutionStatus(str, Enum):
     RUNNING = "running"
     COMPLETED = "completed"
     FAILED = "failed"
-
-
-class PipelineFlavorExecutionStatus(str, Enum):
-    """
-    Enumeration of pipeline flavor execution statuses.
-
-    Attributes:
-        PENDING: Execution queued and waiting to run
-        SUCCESS: Execution completed successfully
-        ERROR: Execution failed with an error
-        TIMEOUT: Execution exceeded maximum time limit
-    """
-
-    PENDING = "pending"
-    SUCCESS = "success"
-    ERROR = "error"
-    TIMEOUT = "timeout"

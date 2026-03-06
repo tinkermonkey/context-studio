@@ -13,7 +13,7 @@ import types
 import pytest
 
 from domain.extraction.entities import ExtractedEntity, ExtractionLayerResult, ExtractionResult
-from domain.extraction.enums import EntityType, LayerName, SourceLayer
+from domain.extraction.enums import EntityType, LayerName
 
 
 class TestEntityType:
@@ -42,17 +42,6 @@ class TestLayerName:
         assert LayerName.NLP.value == "nlp"
         assert LayerName.LLM.value == "llm"
         assert LayerName.WEB.value == "web"
-
-
-class TestSourceLayer:
-    """Tests for SourceLayer enum."""
-
-    def test_source_layer_values(self):
-        """Test that SourceLayer has all expected values."""
-        assert SourceLayer.KG.value == "kg"
-        assert SourceLayer.NLP.value == "nlp"
-        assert SourceLayer.LLM.value == "llm"
-        assert SourceLayer.WEB.value == "web"
 
 
 class TestExtractedEntity:
@@ -110,6 +99,16 @@ class TestExtractedEntity:
                 text="Test",
                 entity_type=EntityType.CONCEPT,
                 confidence=-0.1,
+                start_pos=0,
+                end_pos=4
+            )
+
+        # Invalid: bool (even though bool is subclass of int)
+        with pytest.raises(ValueError, match="confidence must be a number between 0.0 and 1.0"):
+            ExtractedEntity(
+                text="Test",
+                entity_type=EntityType.CONCEPT,
+                confidence=True,
                 start_pos=0,
                 end_pos=4
             )
@@ -196,7 +195,7 @@ class TestExtractionLayerResult:
         result = ExtractionLayerResult(
             layer_name=LayerName.NLP,
             entities=(entity,),
-            relationships=types.MappingProxyType({"rel_1": {"type": "knows", "target": "Jane"}})
+            relationships=({"rel_1": {"type": "knows", "target": "Jane"}},)
         )
         assert result.layer_name == LayerName.NLP
         assert len(result.entities) == 1
@@ -207,7 +206,7 @@ class TestExtractionLayerResult:
         result = ExtractionLayerResult(
             layer_name=LayerName.KG,
             entities=(),
-            relationships=types.MappingProxyType({})
+            relationships=()
         )
         assert result.entities == ()
         assert len(result.relationships) == 0
@@ -224,20 +223,20 @@ class TestExtractionLayerResult:
         result = ExtractionLayerResult(
             layer_name=LayerName.LLM,
             entities=(entity,),
-            relationships=types.MappingProxyType({})
+            relationships=()
         )
         with pytest.raises((TypeError, AttributeError)):
             result.entities[0] = None
 
     def test_extraction_layer_result_relationships_immutable(self):
-        """Test that relationships mapping is immutable."""
+        """Test that relationships tuple is immutable."""
         result = ExtractionLayerResult(
             layer_name=LayerName.WEB,
             entities=(),
-            relationships=types.MappingProxyType({"rel_1": {"type": "similar"}})
+            relationships=({"rel_1": {"type": "similar"}},)
         )
-        with pytest.raises(TypeError):
-            result.relationships["rel_2"] = {"type": "related"}
+        with pytest.raises((TypeError, AttributeError)):
+            result.relationships[0] = {"rel_2": {"type": "related"}}
 
     def test_extraction_layer_result_invalid_layer_name(self):
         """Test that non-enum layer_name raises TypeError."""
@@ -245,7 +244,7 @@ class TestExtractionLayerResult:
             ExtractionLayerResult(
                 layer_name="nlp",  # String instead of enum
                 entities=(),
-                relationships=types.MappingProxyType({})
+                relationships=()
             )
 
     def test_extraction_layer_result_invalid_entities(self):
@@ -254,7 +253,7 @@ class TestExtractionLayerResult:
             ExtractionLayerResult(
                 layer_name=LayerName.NLP,
                 entities=[],  # List instead of tuple
-                relationships=types.MappingProxyType({})
+                relationships=()
             )
 
     def test_extraction_layer_result_invalid_entity_element(self):
@@ -263,16 +262,16 @@ class TestExtractionLayerResult:
             ExtractionLayerResult(
                 layer_name=LayerName.NLP,
                 entities=({"text": "invalid"},),  # Dict instead of ExtractedEntity
-                relationships=types.MappingProxyType({})
+                relationships=()
             )
 
     def test_extraction_layer_result_invalid_relationships(self):
-        """Test that non-MappingProxyType relationships raises TypeError."""
-        with pytest.raises(TypeError, match="relationships must be a MappingProxyType"):
+        """Test that non-tuple relationships raises TypeError."""
+        with pytest.raises(TypeError, match="relationships must be a tuple of dicts"):
             ExtractionLayerResult(
                 layer_name=LayerName.NLP,
                 entities=(),
-                relationships={"rel": {}}  # Dict instead of MappingProxyType
+                relationships={"rel": {}}  # Dict instead of tuple
             )
 
 
@@ -291,7 +290,7 @@ class TestExtractionResult:
         layer = ExtractionLayerResult(
             layer_name=LayerName.NLP,
             entities=(entity,),
-            relationships=types.MappingProxyType({})
+            relationships=()
         )
         result = ExtractionResult(
             source_text="John works at Acme.",
@@ -316,7 +315,7 @@ class TestExtractionResult:
         layer = ExtractionLayerResult(
             layer_name=LayerName.KG,
             entities=(),
-            relationships=types.MappingProxyType({})
+            relationships=()
         )
         result = ExtractionResult(
             source_text="Text",

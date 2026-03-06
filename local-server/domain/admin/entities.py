@@ -33,10 +33,6 @@ class SystemHealth:
 
     def __post_init__(self) -> None:
         """Validate system health invariants."""
-        # Wrap details in read-only proxy if not already wrapped
-        if not isinstance(self.details, types.MappingProxyType):
-            object.__setattr__(self, 'details', types.MappingProxyType(self.details))
-
         if not isinstance(self.status, SystemHealthStatus):
             raise TypeError(
                 f"status must be a SystemHealthStatus enum, got {type(self.status).__name__}"
@@ -45,6 +41,8 @@ class SystemHealth:
             raise TypeError("database_ok must be a boolean")
         if not isinstance(self.embedding_service_ok, bool):
             raise TypeError("embedding_service_ok must be a boolean")
+        if not isinstance(self.details, types.MappingProxyType):
+            raise TypeError("details must be a MappingProxyType (immutable mapping)")
 
 
 @dataclass
@@ -82,7 +80,7 @@ class BackgroundTask:
             raise TypeError(
                 f"status must be a BackgroundTaskStatus enum, got {type(self.status).__name__}"
             )
-        if not isinstance(self.progress, (int, float)) or not (0.0 <= self.progress <= 1.0):
+        if isinstance(self.progress, bool) or not isinstance(self.progress, (int, float)) or not (0.0 <= self.progress <= 1.0):
             raise ValueError("progress must be a number between 0.0 and 1.0")
         if not self.created_at or not isinstance(self.created_at, str):
             raise ValueError("BackgroundTask created_at must be a non-empty timestamp string")
@@ -113,10 +111,6 @@ class AppConfiguration:
 
     def __post_init__(self) -> None:
         """Validate application configuration invariants."""
-        # Wrap extra in read-only proxy if not already wrapped
-        if not isinstance(self.extra, types.MappingProxyType):
-            object.__setattr__(self, 'extra', types.MappingProxyType(self.extra))
-
         if not self.llm_provider or not isinstance(self.llm_provider, str):
             raise ValueError("AppConfiguration llm_provider must be a non-empty string")
         if not self.embedding_model or not isinstance(self.embedding_model, str):
@@ -127,3 +121,5 @@ class AppConfiguration:
             raise TypeError(
                 f"log_level must be a LogLevel enum, got {type(self.log_level).__name__}"
             )
+        if not isinstance(self.extra, types.MappingProxyType):
+            raise TypeError("extra must be a MappingProxyType (immutable mapping)")

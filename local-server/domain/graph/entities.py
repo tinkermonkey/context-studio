@@ -30,13 +30,13 @@ class GraphMetrics:
 
     def __post_init__(self) -> None:
         """Validate graph metrics invariants."""
-        if not isinstance(self.node_count, int) or self.node_count < 0:
+        if isinstance(self.node_count, bool) or not isinstance(self.node_count, int) or self.node_count < 0:
             raise ValueError("node_count must be a non-negative integer")
-        if not isinstance(self.edge_count, int) or self.edge_count < 0:
+        if isinstance(self.edge_count, bool) or not isinstance(self.edge_count, int) or self.edge_count < 0:
             raise ValueError("edge_count must be a non-negative integer")
-        if not isinstance(self.density, (int, float)) or not (0.0 <= self.density <= 1.0):
+        if isinstance(self.density, bool) or not isinstance(self.density, (int, float)) or not (0.0 <= self.density <= 1.0):
             raise ValueError("density must be a number between 0.0 and 1.0")
-        if not isinstance(self.connected_components, int) or self.connected_components < 1:
+        if isinstance(self.connected_components, bool) or not isinstance(self.connected_components, int) or self.connected_components < 1:
             raise ValueError("connected_components must be a positive integer")
 
 
@@ -63,11 +63,11 @@ class PathResult:
             for node_id in self.path:
                 if not isinstance(node_id, str):
                     raise TypeError(f"All node IDs in path must be strings, got {type(node_id).__name__}")
-        if not isinstance(self.length, int) or self.length < 0:
+        if isinstance(self.length, bool) or not isinstance(self.length, int) or self.length < 0:
             raise ValueError("length must be a non-negative integer")
         if len(self.path) > 0 and self.length != len(self.path) - 1:
             raise ValueError("length must equal number of edges (nodes - 1) in the path")
-        if not isinstance(self.weight, (int, float)):
+        if isinstance(self.weight, bool) or not isinstance(self.weight, (int, float)):
             raise ValueError("weight must be a number")
 
 
