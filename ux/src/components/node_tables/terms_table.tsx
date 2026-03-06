@@ -134,7 +134,7 @@ export interface TermsTableProps {
   onQueryParamsChange?: (params: Record<string, unknown>) => void;
 }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const TermsTable = React.forwardRef<any, TermsTableProps>((props) => {
   const { queryParams = {}, onQueryParamsChange } = props;
 
