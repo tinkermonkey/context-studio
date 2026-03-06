@@ -74,9 +74,9 @@ const PredicateForm: React.FC<PredicateFormProps> = ({
         }
         if (onSuccess) onSuccess(result);
         form.reset();
-   
-      } catch (error: any)  // eslint-disable-line @typescript-eslint/no-explicit-any
- {
+      } catch (
+        error: any // eslint-disable-line @typescript-eslint/no-explicit-any
+      ) {
         let message: string;
         // Log the full error for debugging
         console.error("Full error object:", error);
