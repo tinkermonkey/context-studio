@@ -18,7 +18,7 @@ import {
   convertToReagraphFormat,
   analyzeGraphStructure,
 } from "./graphUtils";
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { getSourceBadgeColor } from "@/utils/sourceUtils";
 
 interface GraphViewProps {
@@ -105,7 +105,8 @@ export const GraphView: React.FC<GraphViewProps> = ({
   }, [nodes, edges]);
 
   // Handle node selection
-  const handleNodeClick = (node: any) => {  // eslint-disable-line @typescript-eslint/no-explicit-any
+  const handleNodeClick = (node: any) => {
+    // eslint-disable-line @typescript-eslint/no-explicit-any
     if (node.data) {
       // For grouped structure, only handle clicks on data nodes (not predicate nodes)
       if (
@@ -161,7 +162,6 @@ export const GraphView: React.FC<GraphViewProps> = ({
     const tooltipHeight = 200; // Estimated tooltip height
     const offset = 15;
 
-     
     let x = position.x;
     let y = position.y;
     // eslint-disable-next-line no-useless-assignment
@@ -381,7 +381,7 @@ export const GraphView: React.FC<GraphViewProps> = ({
               nodes={nodes}
               edges={edges}
               theme={lightTheme}
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
               layoutType={currentLayoutType as any}
               onNodeClick={handleNodeClick}
               onCanvasClick={() => {
@@ -390,8 +390,8 @@ export const GraphView: React.FC<GraphViewProps> = ({
                 setPinnedPosition(null);
                 setHoveredNode(null);
               }}
-   
-              onNodePointerOver={(node: any) => {  // eslint-disable-line @typescript-eslint/no-explicit-any
+              onNodePointerOver={(node: any) => {
+                // eslint-disable-line @typescript-eslint/no-explicit-any
                 if (node && node.data) {
                   // For grouped structure, only show tooltips for data nodes
                   if (
