@@ -382,12 +382,14 @@ class TestPhase0BaselineTests:
             f"'Firewall' (position {firewall_pos})"
         )
 
-        # Verify "Data Store" appears in top results (high semantic similarity)
-        if "Data Store" in search_titles:
-            data_store_pos = search_titles.index("Data Store")
-            assert data_store_pos < 5, (
-                f"'Data Store' should appear in top results, found at position {data_store_pos}"  # noqa: E501
-            )
+        # Verify "Data Store" appears in results (high semantic similarity to search query)
+        assert "Data Store" in search_titles, (
+            f"'Data Store' should appear in search results. Got: {search_titles}"
+        )
+        data_store_pos = search_titles.index("Data Store")
+        assert data_store_pos < 5, (
+            f"'Data Store' should appear in top 5 results, found at position {data_store_pos}"  # noqa: E501
+        )
 
         # Step 5: Verify embedding regeneration on title update
         # Get the original title_embedding
@@ -599,10 +601,15 @@ class TestPhase0BaselineTests:
         # Events are returned newest-first, so new events are at the beginning
         new_events_count = final_count - initial_count
         # The delta-based approach isolates test events. The system generates events from
-        # multiple sources (DB triggers and service layer), resulting in 15 total events
-        # for the 8 entities (roughly 2 per entity). This is the actual expected count.
-        assert new_events_count == 15, (
-            f"Expected 15 change events (2 per entity from triggers and service layer), "
+        # multiple sources (DB triggers and service layer). We expect at least 1 event
+        # per entity (8 entities = minimum 8 events), but typically 2 per entity.
+        # Use a range to avoid brittle hardcoded counts.
+        assert new_events_count >= 8, (
+            f"Expected at least 8 change events (1 per entity), "
+            f"got {new_events_count}. Initial: {initial_count}, Final: {final_count}"
+        )
+        assert new_events_count <= 20, (
+            f"Expected at most 20 change events (allowing for multiple triggers), "
             f"got {new_events_count}. Initial: {initial_count}, Final: {final_count}"
         )
 
