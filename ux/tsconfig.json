@@ -11,5 +11,9 @@
     "paths": {
       "@/*": ["*"]
     }
-  }
+  },
+  "exclude": [
+    "src/routeTree.gen.ts",
+    ".flowbite-react"
+  ]
 }

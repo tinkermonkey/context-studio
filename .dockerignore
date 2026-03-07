@@ -21,6 +21,7 @@ venv
 venv_test
 env
 ENV
+test_env
 
 # Node.js
 node_modules
