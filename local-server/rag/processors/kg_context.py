@@ -10,6 +10,7 @@ from sqlalchemy.orm import Session
 from sqlalchemy import text
 import numpy as np
 
+from database.sql_builders import build_max_similarity_case_when
 from rag.processors.models import (
     ProcessorInput,
     KGContextOutput,
@@ -214,27 +215,15 @@ class KGContextProcessor:
                 # So similarity = 1.0 - distance gives us a 0-1 similarity score
                 # Search against both title and definition embeddings, taking the max similarity
                 # Use a CTE to compute similarity, then filter in outer query
-                query = text("""
+                similarity_case = build_max_similarity_case_when()
+                query = text(f"""
                     WITH similarities AS (
                         SELECT
                             id,
                             title,
                             node_type,
                             definition,
-                            CASE
-                                WHEN title_embedding IS NOT NULL AND definition_embedding IS NOT NULL THEN
-                                    CASE
-                                        WHEN (1.0 - vec_distance_cosine(title_embedding, :query_vec)) >=
-                                             (1.0 - vec_distance_cosine(definition_embedding, :query_vec))
-                                        THEN (1.0 - vec_distance_cosine(title_embedding, :query_vec))
-                                        ELSE (1.0 - vec_distance_cosine(definition_embedding, :query_vec))
-                                    END
-                                WHEN title_embedding IS NOT NULL THEN
-                                    (1.0 - vec_distance_cosine(title_embedding, :query_vec))
-                                WHEN definition_embedding IS NOT NULL THEN
-                                    (1.0 - vec_distance_cosine(definition_embedding, :query_vec))
-                                ELSE 0.0
-                            END as similarity
+                            {similarity_case} as similarity
                         FROM structure_nodes
                         WHERE (title_embedding IS NOT NULL OR definition_embedding IS NOT NULL)
                     )
