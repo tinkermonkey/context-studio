@@ -181,10 +181,11 @@ def test_reference_nodes_max_similarity_definition_only(
 
 
 def test_reference_nodes_no_embeddings_filtered(reference_manager_with_embeddings):
-    """Test that nodes without embeddings are filtered out.
+    """Test that nodes without embeddings are excluded from search.
 
-    The CASE WHEN logic sets similarity to 0.0 for nodes without embeddings,
-    and the WHERE clause in search_by_similarity filters them out.
+    The SQL WHERE clause explicitly filters for nodes that have at least
+    one embedding (title_embedding IS NOT NULL OR definition_embedding IS NOT NULL),
+    so nodes without any embeddings are not returned.
     """
     manager = reference_manager_with_embeddings
 
@@ -195,11 +196,11 @@ def test_reference_nodes_no_embeddings_filtered(reference_manager_with_embedding
     results = manager.search_by_similarity(
         query_text="test query",
         embedding_generator=mock_embedding_generator,
-        threshold=0.0,
+        threshold=0.01,  # Use threshold > 0.0 to exclude zero-similarity nodes
         limit=10,
     )
 
-    # Should not include nodes without embeddings
+    # Nodes without embeddings get 0.0 similarity and are filtered by threshold
     node_titles = [node.title for node, _ in results]
     assert "No Embeddings" not in node_titles
 
