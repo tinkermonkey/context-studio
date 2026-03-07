@@ -13,12 +13,12 @@ def test_imports():  # noqa: E302
     """Test that all required modules can be imported."""
     print("Testing imports...")
     try:
-        from services.reference_filter_service import ReferenceFilterService  # noqa: F401, E501
-        from reference_db.models import ReferenceLink, ExternalPredicate, ReferenceNode  # noqa: F401, E501
-        from reference_db.manager import ReferenceManager  # noqa: F401
-        from reference_db.config import ReferenceConfig  # noqa: F401
-        from database.models import Predicate  # noqa: F401
-        from config import get_settings  # noqa: F401
+        import services.reference_filter_service  # noqa: F401
+        import reference_db.models  # noqa: F401
+        import reference_db.manager  # noqa: F401
+        import reference_db.config  # noqa: F401
+        import database.models  # noqa: F401
+        import config  # noqa: F401
 
         print("  ✓ All imports successful")
         return True

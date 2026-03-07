@@ -118,7 +118,7 @@ class TestFreshInstallationE2E:
             pipeline_mgr = PipelineDatabaseManager(operations_db_path=operations_path)  # noqa: E501
             ref_config = ReferenceConfig()
             ref_mgr = ReferenceManager(ref_config, db_path=reference_path)
-            _dataset_mgr = DatasetManager(  # noqa: F841
+            DatasetManager(
                 datasets_config_path=config_path,
                 datasets_directory=datasets_dir
             )
