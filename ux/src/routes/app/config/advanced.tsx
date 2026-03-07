@@ -55,8 +55,10 @@ function RouteComponent() {
     return labels[path] || path;
   };
 
-  const handleUpdateConfig = async (path: string, value: any) => {
-    // eslint-disable-line @typescript-eslint/no-explicit-any
+  const handleUpdateConfig = async (
+    path: string,
+    value: any, // eslint-disable-line @typescript-eslint/no-explicit-any
+  ) => {
     const label = getConfigLabel(path);
     await updateConfigMutation.mutateAsync(
       {
