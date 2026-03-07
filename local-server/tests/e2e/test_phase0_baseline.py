@@ -469,8 +469,8 @@ class TestPhase0BaselineTests:
         7. All event timestamps are valid ISO8601 strings
 
         The test creates 8 entities (1 layer, 1 domain, 3 terms, 1 predicate, 2 links),
-        generating 15 total events, then verifies event structure and ordering using
-        delta-based counting.
+        typically generating 8–20 events, then verifies event structure and ordering using
+        delta-based counting (minimum 1 per entity, allowing for multiple triggers).
         """
         # Step 1: Capture initial change event count (for delta-based isolation)
         initial_events_response = e2e_client.get(

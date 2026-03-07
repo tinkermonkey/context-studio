@@ -1,8 +1,8 @@
 """
 Stable test data for E2E baseline tests.
 
-This module defines stable test concepts and predicates that are used across
-all E2E baseline tests to ensure consistent behavior and regression testing.
+This module defines stable test concepts and predicates for baseline tests
+to ensure consistent behavior and regression testing.
 
 All data is designed with the SentenceTransformer embedding model in mind
 and produces stable, reproducible results across test runs.

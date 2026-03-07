@@ -173,8 +173,7 @@ def clean_tables(e2e_app):
         # Disable foreign key checks during cleanup
         cleanup_session.execute(text("PRAGMA foreign_keys = OFF"))
 
-        # Truncate tables in reverse dependency order
-        # (links depend on nodes and predicates; nodes depend on predicates)
+        # Delete all rows from tables (order is conventional; FKs are disabled)
         for table in ["structure_node_links", "structure_nodes", "predicates", "change_events"]:
             cleanup_session.execute(text(f"DELETE FROM {table}"))
 
