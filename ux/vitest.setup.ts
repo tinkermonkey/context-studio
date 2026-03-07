@@ -83,7 +83,7 @@ Object.defineProperty(window, "matchMedia", {
 });
 
 // Mock IntersectionObserver
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 (global as any).IntersectionObserver = class IntersectionObserver {
   root: Element | Document | null = null;
   rootMargin = "";

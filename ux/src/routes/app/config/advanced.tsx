@@ -1,8 +1,33 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { Alert, Badge, Button, Card, Label, Tabs, TextInput, Textarea  } from "flowbite-react";;
+import {
+  Alert,
+  Badge,
+  Button,
+  Card,
+  Label,
+  Tabs,
+  TextInput,
+  Textarea,
+} from "flowbite-react";
 import { CsMainTitle } from "@/components/layout/cs_main";
 import { ConfigBreadcrumbs } from "@/components/configuration/ConfigBreadcrumbs";
-import { AlertTriangle, CheckCircle, CloudOff, Code, Cpu, Database, Download, HardDrive, Info, RotateCcw, Settings, Terminal, Trash2, Upload, XCircle  } from "lucide-react";;
+import {
+  AlertTriangle,
+  CheckCircle,
+  CloudOff,
+  Code,
+  Cpu,
+  Database,
+  Download,
+  HardDrive,
+  Info,
+  RotateCcw,
+  Settings,
+  Terminal,
+  Trash2,
+  Upload,
+  XCircle,
+} from "lucide-react";
 import { useConfiguration, useUpdateConfigurationValue } from "@/api/hooks";
 import { useState } from "react";
 import { useButterToast } from "@/hooks/useButterToast";
@@ -30,7 +55,8 @@ function RouteComponent() {
     return labels[path] || path;
   };
 
-  const handleUpdateConfig = async (path: string, value: any) => {  // eslint-disable-line @typescript-eslint/no-explicit-any
+  const handleUpdateConfig = async (path: string, value: any) => {
+    // eslint-disable-line @typescript-eslint/no-explicit-any
     const label = getConfigLabel(path);
     await updateConfigMutation.mutateAsync(
       {
@@ -121,7 +147,7 @@ function EnvironmentVariablesSection({
 }: {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   config: any;
-  onUpdate: (path: string, value: any) => void;  // eslint-disable-line @typescript-eslint/no-explicit-any
+  onUpdate: (path: string, value: any) => void; // eslint-disable-line @typescript-eslint/no-explicit-any
   isUpdating: boolean;
 }) {
   if (!config) {
